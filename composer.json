@@ -23,7 +23,7 @@
         "croustibat/filament-jobs-monitor": "^4.3",
         "devletes/filament-progress-bar": "^1.0",
         "filament/filament": "^5.0",
-        "filament/spatie-laravel-media-library-plugin": "^5.0",
+        "filament/spatie-laravel-media-library-plugin": "^5.6",
         "gheith3/filament-relation-pages": "^1.0",
         "guava/calendar": "^3.1",
         "harvirsidhu/filament-cards": "^1.0",
