@@ -2,6 +2,8 @@
 
 namespace App\Models\Core;
 
+use App\Observers\Core\CompanyObserver;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
@@ -17,6 +19,7 @@ use Symfony\Component\HttpFoundation\File\UploadedFile;
 /**
  * @method void prepareToAttachMedia(Media $media, FileAdder $fileAdder)
  */
+#[ObservedBy([CompanyObserver::class])]
 class Company extends Model implements HasMedia
 {
     use HasFactory, InteractsWithMedia;

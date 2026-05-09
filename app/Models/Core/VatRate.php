@@ -2,9 +2,12 @@
 
 namespace App\Models\Core;
 
+use App\Observers\Core\VatRateObserver;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+#[ObservedBy([VatRateObserver::class])]
 class VatRate extends Model
 {
     use HasFactory;
