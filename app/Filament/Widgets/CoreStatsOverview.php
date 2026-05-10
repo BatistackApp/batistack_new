@@ -30,7 +30,7 @@ class CoreStatsOverview extends StatsOverviewWidget
                 ->descriptionIcon(Phosphor::Scales)
                 ->color('info'),
 
-            Stat::make('Taux de TVA par défaut', $defaultVat?->rate.'%' ?? 'Non défini')
+            Stat::make('Taux de TVA par défaut', number_format($defaultVat?->rate, 2).'%')
                 ->description($defaultVat?->name ?? 'Veuillez définir un taux par défaut')
                 ->descriptionIcon(Phosphor::Percent)
                 ->color($defaultVat ? 'primary' : 'warning'),

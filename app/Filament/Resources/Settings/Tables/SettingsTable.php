@@ -24,6 +24,11 @@ class SettingsTable
                     ->copyable()
                     ->copyMessage('Clé copiée !'),
 
+                TextColumn::make('group')
+                    ->label('Groupe')
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->badge(),
+
                 TextColumn::make('value')
                     ->label('Valeur')
                     ->limit(40)

@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\VatRates\Tables;
 
+use App\Models\Core\VatRate;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -25,6 +26,7 @@ class VatRatesTable
                     ->label('Valeur (%)')
                     ->numeric(decimalPlaces: 2)
                     ->badge()
+                    ->formatStateUsing(fn (VatRate $record) => number_format($record?->rate, 2).'%')
                     ->color('primary'),
 
                 IconColumn::make('is_default')
