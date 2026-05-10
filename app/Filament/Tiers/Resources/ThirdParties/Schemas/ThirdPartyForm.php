@@ -1,0 +1,122 @@
+<?php
+
+namespace App\Filament\Tiers\Resources\ThirdParties\Schemas;
+
+use App\Enums\Tiers\ThirdPartyType;
+use App\Services\Core\SirenService;
+use Filament\Actions\Action;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
+use Filament\Infolists\Components\TextEntry;
+use Filament\Notifications\Notification;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Tabs;
+use Filament\Schemas\Components\Utilities\Set;
+use Filament\Schemas\Schema;
+use ToneGabes\Filament\Icons\Enums\Phosphor;
+
+class ThirdPartyForm
+{
+    public static function configure(Schema $schema): Schema
+    {
+        return $schema
+            ->components([
+                Tabs::make('Tiers')
+                    ->tabs([
+                        Tabs\Tab::make('Identité & Légal')
+                            ->icon(Phosphor::IdentificationCard)
+                            ->schema([
+                                Section::make()
+                                    ->columns(2)
+                                    ->schema([
+                                        TextInput::make('siret')
+                                            ->label('Numéro SIRET')
+                                            ->length(14)
+                                            ->required()
+                                            ->suffixAction(
+                                                Action::make('importSiren')
+                                                    ->icon(Phosphor::MagnifyingGlass)
+                                                    ->color('info')
+                                                    ->tooltip('Importer les informations SIREN')
+                                                    ->action(function ($state, Set $set) {
+                                                        if (blank($state)) {
+                                                            return;
+                                                        }
+                                                        try {
+                                                            $data = app(SirenService::class)->getInformation($state);
+                                                            if ($data) {
+                                                                $unite = $data['etablissement']['uniteLegal'];
+                                                                $set('name', $unite['denominationUniteLegale'] ?? $unite['nomUniteLegale']);
+                                                                $set('legal_name', $unite['denominationUniteLegale'] ?? null);
+                                                                $set('siren', substr($state, 0, 9));
+                                                                Notification::make()->title('Données SIREN importées')->success()->send();
+                                                            }
+                                                        } catch (\Exception $e) {
+                                                            Notification::make()->title('Erreur API SIREN')->danger()->body($e->getMessage())->send();
+                                                        }
+                                                    })
+                                            ),
+                                        TextInput::make('name')
+                                            ->label('Nom commercial')
+                                            ->required(),
+                                        TextInput::make('legal_name')
+                                            ->label('Raison sociale'),
+                                        Select::make('type')
+                                            ->label('Type de partenaire')
+                                            ->options(ThirdPartyType::class)
+                                            ->required()
+                                            ->native(false),
+                                        TextInput::make('vat_number')
+                                            ->label('N° TVA'),
+                                        Toggle::make('is_active')
+                                            ->label('Compte actif')
+                                            ->default(true)
+                                            ->onColor('success'),
+                                    ]),
+                            ]),
+
+                        Tabs\Tab::make('Coordonnées & Finance')
+                            ->icon(Phosphor::CurrencyEur)
+                            ->schema([
+                                Section::make('Contact Global')
+                                    ->columns(2)
+                                    ->schema([
+                                        TextInput::make('email')->email(),
+                                        TextInput::make('phone')->tel(),
+                                        TextInput::make('website')->url(),
+                                    ]),
+                                Section::make('Conditions Financières')
+                                    ->columns(2)
+                                    ->schema([
+                                        TextInput::make('payment_terms_days')
+                                            ->label('Délai de règlement')
+                                            ->numeric()
+                                            ->suffix('jours'),
+                                        TextInput::make('credit_limit')
+                                            ->label('Encours autorisé')
+                                            ->numeric()
+                                            ->prefix('€'),
+                                    ]),
+                            ]),
+
+                        Tabs\Tab::make('Vigilance')
+                            ->icon(Phosphor::ShieldCheck)
+                            ->schema([
+                                TextEntry::make('compliance_status')
+                                    ->label('État de conformité')
+                                    ->state(fn ($record) => $record ? 'Analyse en cours...' : 'En attente de création'),
+
+                                SpatieMediaLibraryFileUpload::make('vigilance_attestation')
+                                    ->label('Attestation Vigilance URSSAF')
+                                    ->collection('vigilance_attestation'),
+
+                                SpatieMediaLibraryFileUpload::make('decennale_insurance')
+                                    ->label('Assurance Décennale')
+                                    ->collection('decennale_insurance'),
+                            ]),
+                    ])->columnSpanFull(),
+            ]);
+    }
+}

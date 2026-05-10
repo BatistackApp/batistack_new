@@ -33,14 +33,17 @@ class AppServiceProvider extends ServiceProvider
             $panelSwitch
                 ->panels([
                     'core',
+                    'tiers',
                 ])
                 ->modalHeading('Espaces')
                 ->slideOver()
                 ->icons([
                     'core' => Phosphor::Building,
+                    'tiers' => Phosphor::Users,
                 ])
                 ->labels([
                     'core' => 'Configurations',
+                    'tiers' => 'Tiers',
                 ]);
         });
 
