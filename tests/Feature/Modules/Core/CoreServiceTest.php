@@ -1,10 +1,13 @@
 <?php
 
 use App\Models\Core\Company;
+use App\Models\Core\Setting;
 use App\Models\Core\VatRate;
 use App\Models\User;
 use App\Notifications\Core\ConfigurationChangedNotification;
 use App\Services\Core\CompanyService;
+use App\Services\Core\DeviceDetectorService;
+use App\Services\Core\GoogleMapsService;
 use App\Services\Core\SettingService;
 use App\Services\Core\VatService;
 use Illuminate\Support\Facades\Cache;
@@ -100,4 +103,74 @@ test('l\'observer company vide le cache lors d\'une mise à jour', function () {
     $company->update(['legal_name' => 'Nouveau Nom']);
 
     expect(Cache::has('core_company_singleton'))->toBeFalse();
+});
+
+/**
+ * TESTS DES SERVICES AUXILIAIRES
+ */
+describe('Service DeviceDetector', function () {
+
+    test('il peut détecter un support mobile via user agent', function () {
+        $request = request();
+        $request->headers->set('User-Agent', 'Mozilla/5.0 (iPhone; CPU iPhone OS 13_2_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.0.3 Mobile/15E148 Safari/604.1');
+
+        $detector = new DeviceDetectorService($request);
+
+        expect($detector->isMobile())->toBeTrue()
+            ->and($detector->isDesktop())->toBeFalse();
+    });
+
+    test('il peut détecter un support desktop via user agent', function () {
+        $request = request();
+        $request->headers->set('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
+
+        $detector = new DeviceDetectorService($request);
+
+        expect($detector->isDesktop())->toBeTrue()
+            ->and($detector->isMobile())->toBeFalse();
+    });
+});
+
+describe('Service GoogleMaps', function () {
+
+    test('il peut géocoder une adresse', function () {
+        Setting::factory()->create(['key' => 'google_maps_key', 'value' => 'fake_key']);
+
+        Http::fake([
+            'maps.googleapis.com/maps/api/geocode/*' => Http::response([
+                'results' => [[
+                    'geometry' => ['location' => ['lat' => 48.8566, 'lng' => 2.3522]],
+                    'formatted_address' => 'Paris, France',
+                ]],
+            ], 200),
+        ]);
+
+        $service = app(GoogleMapsService::class);
+        $result = $service->geocodeAddress('Paris');
+
+        expect($result['lat'])->toBe(48.8566)
+            ->and($result['formatted_address'])->toBe('Paris, France');
+    });
+
+    test('il peut calculer une distance entre deux points', function () {
+        Setting::factory()->create(['key' => 'google_maps_key', 'value' => 'fake_key']);
+
+        Http::fake([
+            'maps.googleapis.com/maps/api/distancematrix/*' => Http::response([
+                'rows' => [[
+                    'elements' => [[
+                        'status' => 'OK',
+                        'distance' => ['text' => '10 km', 'value' => 10000],
+                        'duration' => ['text' => '15 min', 'value' => 900],
+                    ]],
+                ]],
+            ], 200),
+        ]);
+
+        $service = app(GoogleMapsService::class);
+        $result = $service->getDistanceMatrix('Paris', 'Versailles');
+
+        expect($result['distance_value'])->toBe(10000)
+            ->and($result['duration_text'])->toBe('15 min');
+    });
 });
