@@ -4,15 +4,37 @@ namespace App\Exceptions\Tiers;
 
 use Exception;
 use Filament\Notifications\Notification;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class TiersModuleException extends Exception
 {
-    protected $code = Response::HTTP_UNPROCESSABLE_ENTITY;
-
-    public function __construct(string $message = '', int $code = 0, ?Exception $previous = null)
+    public function report(): void
     {
-        parent::__construct($message, $code ?: $this->code, $previous);
+        Log::error("TiersModuleException: {$this->getMessage()}", [
+            'exception' => $this,
+            'trace' => $this->getTraceAsString(),
+        ]);
+    }
+
+    public function render(Request $request)
+    {
+        if ($request->expectsJson()) {
+            return new JsonResponse([
+                'message' => $this->getMessage(),
+                'code' => $this->getCode(),
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+
+        return new Response($this->getMessage(), Response::HTTP_INTERNAL_SERVER_ERROR);
+    }
+
+    public function __construct(string $message = '', int $code = 0, ?Throwable $previous = null)
+    {
+        parent::__construct($message, $code, $previous);
     }
 
     public function notify()

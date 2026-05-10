@@ -27,8 +27,10 @@ class ThirdPartyService
     {
         try {
             $sirenData = $this->sirenService->getInformation($siret);
-        } catch (\Exception $e) {
-            throw (new TiersModuleException($e->getMessage(), $e->getCode(), $e))->notify();
+        } catch (\Throwable $e) {
+            $exception = new TiersModuleException($e->getMessage(), $e->getCode(), $e);
+            $exception->notify();
+            throw $exception;
         }
 
         if (! $sirenData) {
@@ -58,7 +60,7 @@ class ThirdPartyService
             });
         } catch (\Throwable $e) {
             Log::critical('Création du tiers par siret impossible: '.$e->getMessage(), (array) $e);
-            throw (new TiersModuleException('Création du tiers par siret impossible', 500, $e))->notify();
+            throw (new TiersModuleException('Création du tiers par siret impossible', 500));
         }
     }
 
@@ -75,7 +77,7 @@ class ThirdPartyService
             return $address;
         } catch (\Throwable $e) {
             Log::critical('Création de l\'adresse impossible: '.$e->getMessage(), (array) $e);
-            throw (new TiersModuleException('Création de l\'adresse impossible', 500, $e))->notify();
+            throw (new TiersModuleException('Création de l\'adresse impossible', 500))->notify();
         }
     }
 
@@ -106,7 +108,9 @@ class ThirdPartyService
             ]);
         } catch (\Throwable $e) {
             Log::critical('Création de l\'adresse par siren impossible: '.$e->getMessage(), (array) $e);
-            throw (new TiersModuleException('Création de l\'adresse par siren impossible', 500, $e))->notify();
+            $exception = new TiersModuleException('Création de l\'adresse par siren impossible', 500);
+            $exception->notify();
+            throw $exception;
         }
     }
 

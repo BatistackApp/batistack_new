@@ -21,6 +21,7 @@ class ContactFactory extends Factory
             'phone' => $this->faker->phoneNumber(),
             'mobile' => $this->faker->phoneNumber(),
             'is_primary' => false,
+            'third_party_id' => ThirdParty::factory(),
         ];
     }
 }

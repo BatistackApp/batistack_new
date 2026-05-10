@@ -30,7 +30,9 @@ class ContactService
             });
         } catch (\Throwable $e) {
             Log::critical('Création du contact impossible: '.$e->getMessage(), (array) $e);
-            throw (new TiersModuleException('Création du contact impossible', 500, $e))->notify();
+            $exception = new TiersModuleException('Création du contact impossible', 500, $e);
+            $exception->notify();
+            throw $exception;
         }
     }
 
@@ -49,7 +51,9 @@ class ContactService
             });
         } catch (\Throwable $e) {
             Log::critical('Mise à jour du contact principal impossible: '.$e->getMessage(), (array) $e);
-            throw (new TiersModuleException('Mise à jour du contact principal impossible', 500, $e))->notify();
+            $exception = new TiersModuleException('Mise à jour du contact principal impossible', 500, $e);
+            $exception->notify();
+            throw $exception;
         }
     }
 
@@ -83,7 +87,9 @@ class ContactService
             });
         } catch (\Throwable $e) {
             Log::critical('Transfert de responsabilités impossible: '.$e->getMessage(), (array) $e);
-            throw (new TiersModuleException('Transfert de responsabilités impossible', 500, $e))->notify();
+            $exception = new TiersModuleException('Transfert de responsabilités impossible', 500, $e);
+            $exception->notify();
+            throw $exception;
         }
     }
 }

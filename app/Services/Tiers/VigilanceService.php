@@ -34,7 +34,9 @@ class VigilanceService
             }
         } catch (Exception $e) {
             Log::error("VigilanceService : Erreur verification URSSAF pour {$siren}");
-            throw (new TiersModuleException("VigilanceService : Erreur verification URSSAF pour {$siren}", 500, $e))->notify();
+            $exception = new TiersModuleException("VigilanceService : Erreur verification URSSAF pour {$siren}", 500, $e);
+            $exception->notify();
+            throw $exception;
         }
 
         return ['is_valid' => false, 'error' => 'Vérification API impossible'];
