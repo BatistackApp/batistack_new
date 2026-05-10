@@ -52,6 +52,23 @@ return new class extends Migration {
             $table->string('type')->default('string');
             $table->timestamps();
         });
+
+        Schema::create('signatures', function (Blueprint $table) {
+            $table->id();
+            $table->morphs('signable');
+            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+
+            // Nouveaux champs basés sur les Enums
+            $table->string('status')->default('pending');
+            $table->string('type')->default('autograph');
+
+            $table->longText('signature_data')->nullable(); // Optionnel si refusé
+            $table->string('checksum')->index();
+            $table->ipAddress('ip_address')->nullable();
+            $table->timestamp('signed_at')->nullable();
+            $table->json('metadata')->nullable();
+            $table->timestamps();
+        });
     }
 
     public function down(): void
@@ -60,5 +77,6 @@ return new class extends Migration {
         Schema::dropIfExists('vat_rates');
         Schema::dropIfExists('units');
         Schema::dropIfExists('companies');
+        Schema::dropIfExists('signatures');
     }
 };
