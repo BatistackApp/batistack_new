@@ -3,6 +3,8 @@
 namespace App\Filament\Tiers\Resources\ThirdParties\Tables;
 
 use App\Enums\Tiers\ThirdPartyType;
+use App\Filament\Tiers\Resources\ThirdParties\Actions\PrintAction;
+use App\Filament\Tiers\Resources\ThirdParties\Actions\SynchronizeSirenAction;
 use App\Models\Tiers\ThirdParty;
 use App\Services\Tiers\VigilanceService;
 use Filament\Actions\ActionGroup;
@@ -11,6 +13,7 @@ use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
@@ -60,6 +63,8 @@ class ThirdPartiesTable
                     ViewAction::make(),
                     EditAction::make(),
                     DeleteAction::make(),
+                    PrintAction::make('details'),
+                    SynchronizeSirenAction::make(),
                 ])->color('gray'),
             ])
             ->toolbarActions([

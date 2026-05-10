@@ -2,12 +2,15 @@
 
 namespace App\Filament\Tiers\Resources\ThirdParties\Schemas;
 
+use App\Enums\Tiers\ThirdPartyType;
+use App\Models\Tiers\ThirdParty;
 use App\Services\Tiers\VigilanceService;
 use Filament\Infolists\Components\IconEntry;
 use Filament\Infolists\Components\RepeatableEntry;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Tabs;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 use ToneGabes\Filament\Icons\Enums\Phosphor;
 
@@ -49,6 +52,7 @@ class ThirdPartyInfolist
 
                         Tabs\Tab::make('Conformité')
                             ->icon(Phosphor::ShieldCheck)
+                            ->visible(fn (ThirdParty $record) => $record->type->value === ThirdPartyType::SUBCONTRACTOR->value)
                             ->schema([
                                 Section::make('Moteur de Vigilance')
                                     ->schema([

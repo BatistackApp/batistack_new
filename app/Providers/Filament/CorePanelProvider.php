@@ -4,6 +4,7 @@ namespace App\Providers\Filament;
 
 use AchyutN\FilamentLogViewer\FilamentLogViewer;
 use Caresome\FilamentAuthDesigner\AuthDesignerPlugin;
+use Croustibat\FilamentJobsMonitor\FilamentJobsMonitorPlugin;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -56,7 +57,9 @@ class CorePanelProvider extends PanelProvider
                 FilamentLogViewer::make(),
                 AuthDesignerPlugin::make()
                     ->login(),
+                FilamentJobsMonitorPlugin::make(),
             ])
+            ->databaseNotifications()
             ->authMiddleware([
                 Authenticate::class,
             ]);

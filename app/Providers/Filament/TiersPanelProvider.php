@@ -61,6 +61,7 @@ class TiersPanelProvider extends PanelProvider
                     ->setDefaultLayout('list')
                     ->displayToggleAction(true),
             ])
+            ->databaseNotifications()
             ->authMiddleware([
                 Authenticate::class,
             ]);

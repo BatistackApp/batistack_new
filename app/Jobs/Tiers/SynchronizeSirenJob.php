@@ -33,6 +33,7 @@ class SynchronizeSirenJob implements ShouldQueue
                     'legal_name' => $sirenInfo['uniteLegale']['denominationUniteLegale'] ?? $this->thirdParty->legal_name,
                     // Ajoutez d'autres champs à synchroniser ici si nécessaire
                     // Par exemple: 'address' => $sirenInfo['etablissement']['adresseEtablissement']['libelleVoie'] ?? null,
+                    'last_siren_sync_at' => now(),
                 ]);
                 Log::info("SynchronizeSirenJob: ThirdParty {$this->thirdParty->id} (SIRET: {$this->thirdParty->siret}) synchronized successfully.");
             } else {

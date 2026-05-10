@@ -13,6 +13,7 @@ use Filament\Infolists\Components\TextEntry;
 use Filament\Notifications\Notification;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Tabs;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 use ToneGabes\Filament\Icons\Enums\Phosphor;
@@ -103,6 +104,7 @@ class ThirdPartyForm
 
                         Tabs\Tab::make('Vigilance')
                             ->icon(Phosphor::ShieldCheck)
+                            ->visible(fn (Get $get) => $get('type') === ThirdPartyType::SUBCONTRACTOR->value)
                             ->schema([
                                 TextEntry::make('compliance_status')
                                     ->label('État de conformité')
