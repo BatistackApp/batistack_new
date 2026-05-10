@@ -47,7 +47,7 @@ class ThirdPartiesTable
 
                 TextColumn::make('compliance')
                     ->label('Vigilance')
-                    ->getStateUsing(fn (ThirdParty $record) => app(VigilanceService::class)->scanCompliance($record)['compliant'] ? 'Conforme' : 'Alerte')
+                    ->getStateUsing(fn (ThirdParty $record) => $record->compliant_status['compliant'] ? 'Conforme' : 'Alerte')
                     ->badge()
                     ->color(fn ($state) => $state === 'Conforme' ? 'success' : 'danger')
                     ->icon(fn ($state) => $state === 'Conforme' ? Phosphor::CheckCircle : Phosphor::Warning),

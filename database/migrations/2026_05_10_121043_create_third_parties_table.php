@@ -22,6 +22,7 @@ return new class extends Migration {
             $table->integer('payment_terms_days')->default(30);
             $table->decimal('credit_limit', 15, 2)->default(0);
             $table->timestamp('last_siren_sync_at')->nullable();
+            $table->json('compliant_status')->nullable();
             $table->timestamps();
         });
     }

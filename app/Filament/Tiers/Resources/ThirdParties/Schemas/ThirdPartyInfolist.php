@@ -52,13 +52,13 @@ class ThirdPartyInfolist
 
                         Tabs\Tab::make('Conformité')
                             ->icon(Phosphor::ShieldCheck)
-                            ->visible(fn (ThirdParty $record) => $record->type->value === ThirdPartyType::SUBCONTRACTOR->value)
                             ->schema([
                                 Section::make('Moteur de Vigilance')
                                     ->schema([
                                         TextEntry::make('compliance')
+                                            ->visible(fn (ThirdParty $record) => $record->type->value === ThirdPartyType::SUBCONTRACTOR->value)
                                             ->label('État global')
-                                            ->getStateUsing(fn ($record) => app(VigilanceService::class)->scanCompliance($record)['compliant'] ? 'CONFORME' : 'NON-CONFORME')
+                                            ->getStateUsing(fn ($record) => $record->compliant_status['compliant'] ? 'CONFORME' : 'NON-CONFORME')
                                             ->badge()
                                             ->color(fn ($state) => $state === 'CONFORME' ? 'success' : 'danger')
                                             ->icon(fn ($state) => $state === 'CONFORME' ? Phosphor::CheckCircle : Phosphor::Warning),

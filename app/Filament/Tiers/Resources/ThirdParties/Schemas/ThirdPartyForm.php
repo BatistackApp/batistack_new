@@ -48,7 +48,7 @@ class ThirdPartyForm
                                                         try {
                                                             $data = app(SirenService::class)->getInformation($state);
                                                             if ($data) {
-                                                                $unite = $data['etablissement']['uniteLegal'];
+                                                                $unite = $data['etablissement']['uniteLegale'];
                                                                 $set('name', $unite['denominationUniteLegale'] ?? $unite['nomUniteLegale']);
                                                                 $set('legal_name', $unite['denominationUniteLegale'] ?? null);
                                                                 $set('siren', substr($state, 0, 9));

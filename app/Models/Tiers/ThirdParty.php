@@ -31,6 +31,7 @@ class ThirdParty extends Model implements HasMedia
         'payment_terms_days',
         'credit_limit',
         'last_siren_sync_at',
+        'compliant_status',
     ];
 
     protected function casts(): array
@@ -40,6 +41,7 @@ class ThirdParty extends Model implements HasMedia
             'is_active' => 'boolean',
             'last_siren_sync_at' => 'datetime',
             'credit_limit' => 'decimal:2',
+            'compliant_status' => 'array',
         ];
     }
 

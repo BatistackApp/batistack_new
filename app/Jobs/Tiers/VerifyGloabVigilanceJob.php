@@ -25,6 +25,9 @@ class VerifyGloabVigilanceJob implements ShouldQueue
 
         foreach ($subcontractors as $subcontractor) {
             $compliance = $vigilanceService->scanCompliance($subcontractor);
+            $subcontractor->update([
+                'compliant_status' => json_encode($compliance),
+            ]);
 
             if (! $compliance['compliant']) {
                 $managers = User::where('is_admin', true)->get();
