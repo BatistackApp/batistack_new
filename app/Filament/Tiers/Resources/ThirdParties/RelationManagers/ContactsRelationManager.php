@@ -42,6 +42,8 @@ class ContactsRelationManager extends RelationManager
                     ->required(),
                 TextInput::make('phone')
                     ->tel(),
+                TextInput::make('mobile')
+                    ->tel(),
                 Toggle::make('is_primary')
                     ->label('Contact principal')
                     ->onColor('success'),

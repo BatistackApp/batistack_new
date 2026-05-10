@@ -47,6 +47,10 @@ class AddressesRelationManager extends RelationManager
                 TextInput::make('city')
                     ->label('Ville')
                     ->required(),
+                TextInput::make('country')
+                    ->label('Pays')
+                    ->default('France')
+                    ->required(),
                 Toggle::make('is_default')
                     ->label('Adresse par défaut')
                     ->onColor('success'),
