@@ -13,13 +13,10 @@ class TiersStatsOverview extends StatsOverviewWidget
 {
     protected function getStats(): array
     {
-        $vigilanceService = app(VigilanceService::class);
-        $totalActive = ThirdParty::where('is_active', true)->count();
-
         // Calcul des alertes de vigilance réelles
         $alertsCount = ThirdParty::where('is_active', true)
             ->get()
-            ->filter(fn ($tp) => ! $vigilanceService->scanCompliance($tp)['compliant'])
+            ->filter(fn ($tp) => ! $tp->compliant_status['compliant'])
             ->count();
 
         return [

@@ -106,10 +106,6 @@ class ThirdPartyForm
                             ->icon(Phosphor::ShieldCheck)
                             ->visible(fn (Get $get) => $get('type') === ThirdPartyType::SUBCONTRACTOR->value)
                             ->schema([
-                                TextEntry::make('compliance_status')
-                                    ->label('État de conformité')
-                                    ->state(fn ($record) => $record ? 'Analyse en cours...' : 'En attente de création'),
-
                                 SpatieMediaLibraryFileUpload::make('vigilance_attestation')
                                     ->label('Attestation Vigilance URSSAF')
                                     ->collection('vigilance_attestation'),
@@ -117,6 +113,10 @@ class ThirdPartyForm
                                 SpatieMediaLibraryFileUpload::make('decennale_insurance')
                                     ->label('Assurance Décennale')
                                     ->collection('decennale_insurance'),
+
+                                SpatieMediaLibraryFileUpload::make('kbis')
+                                    ->label('Kbis (-3 mois)')
+                                    ->collection('kbis'),
                             ]),
                     ])->columnSpanFull(),
             ]);
