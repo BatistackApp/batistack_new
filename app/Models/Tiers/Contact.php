@@ -19,6 +19,8 @@ class Contact extends Model
         'phone',
         'mobile',
         'is_primary',
+        'is_active',
+        'metadata',
     ];
 
     public function thirdParty(): BelongsTo
@@ -30,6 +32,8 @@ class Contact extends Model
     {
         return [
             'is_primary' => 'boolean',
+            'is_active' => 'boolean',
+            'metadata' => 'array',
         ];
     }
 
