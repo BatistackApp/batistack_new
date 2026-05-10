@@ -15,8 +15,9 @@ class TiersStatsOverview extends StatsOverviewWidget
     {
         // Calcul des alertes de vigilance réelles
         $alertsCount = ThirdParty::where('is_active', true)
+            ->where('type', ThirdPartyType::SUBCONTRACTOR)
+            ->whereJsonContains('compliant_status->compliant', false)
             ->get()
-            ->filter(fn ($tp) => ! $tp->compliant_status['compliant'])
             ->count();
 
         return [
@@ -33,7 +34,7 @@ class TiersStatsOverview extends StatsOverviewWidget
 
             Stat::make('Risques Conformité', $alertsCount)
                 ->description('Tiers non-conformes (Vigilance)')
-                ->descriptionIcon(Phosphor::Warning)
+                ->descriptionIcon($alertsCount > 0 ? Phosphor::Warning : Phosphor::Check)
                 ->chart([2, 5, 3, 8, 4, 9, 5, 2])
                 ->color($alertsCount > 0 ? 'danger' : 'success'),
         ];
