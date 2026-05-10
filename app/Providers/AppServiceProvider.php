@@ -2,11 +2,16 @@
 
 namespace App\Providers;
 
+use BezhanSalleh\PanelSwitch\PanelSwitch;
 use Carbon\CarbonImmutable;
+use Filament\Support\Facades\FilamentView;
+use Filament\View\PanelsRenderHook;
+use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
+use ToneGabes\Filament\Icons\Enums\Phosphor;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -24,6 +29,47 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->configureDefaults();
+        PanelSwitch::configureUsing(function (PanelSwitch $panelSwitch) {
+            $panelSwitch
+                ->panels([
+                    'core',
+                ])
+                ->modalHeading('Espaces')
+                ->slideOver()
+                ->icons([
+                    'core' => Phosphor::Building,
+                ])
+                ->labels([
+                    'core' => 'Configurations',
+                ]);
+        });
+
+        FilamentView::registerRenderHook(
+            PanelsRenderHook::HEAD_START,
+            fn (): string => Blade::render('
+                <link rel="manifest" href="/manifest.json">
+                <meta name="theme-color" content="#1d4ed8">
+                <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+                <meta name="apple-mobile-web-app-capable" content="yes">
+                <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+            '),
+        );
+
+        // Injection du script Service Worker à la fin du BODY
+        FilamentView::registerRenderHook(
+            PanelsRenderHook::BODY_END,
+            fn (): string => Blade::render('
+                <script>
+                    if ("serviceWorker" in navigator) {
+                        window.addEventListener("load", () => {
+                            navigator.serviceWorker.register("/sw.js")
+                                .then(reg => console.log("SW Filament enregistré !"))
+                                .catch(err => console.log("Erreur SW Filament", err));
+                        });
+                    }
+                </script>
+            '),
+        );
     }
 
     /**
