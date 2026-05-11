@@ -117,7 +117,7 @@ class ThirdPartyService
     /**
      * Algorithme simple pour calculer un numéro de TVA intracommunautaire FR.
      */
-    protected function calculateVatNumber(string $siren): string
+    public function calculateVatNumber(string $siren): string
     {
         $key = (12 + 3 * ($siren % 97)) % 97;
 

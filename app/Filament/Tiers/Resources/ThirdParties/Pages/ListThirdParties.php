@@ -6,6 +6,7 @@ use App\Filament\Tiers\Resources\ThirdParties\Actions\PrintAction;
 use App\Filament\Tiers\Resources\ThirdParties\ThirdPartyResource;
 use Filament\Actions\CreateAction;
 use Filament\Resources\Pages\ListRecords;
+use ToneGabes\Filament\Icons\Enums\Phosphor;
 
 class ListThirdParties extends ListRecords
 {
@@ -17,7 +18,9 @@ class ListThirdParties extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            CreateAction::make(),
+            CreateAction::make()
+                ->label('Nouveau Tiers')
+                ->icon(Phosphor::Plus),
             PrintAction::make('list'),
         ];
     }

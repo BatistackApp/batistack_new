@@ -4,12 +4,12 @@ namespace App\Filament\Tiers\Resources\ThirdParties\Schemas;
 
 use App\Enums\Tiers\ThirdPartyType;
 use App\Services\Core\SirenService;
+use App\Services\Tiers\ThirdPartyService;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
-use Filament\Infolists\Components\TextEntry;
 use Filament\Notifications\Notification;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Tabs;
@@ -70,6 +70,30 @@ class ThirdPartyForm
                                             ->required()
                                             ->native(false),
                                         TextInput::make('vat_number')
+                                            ->suffixAction(
+                                                Action::make('num_tva')
+                                                    ->icon(Phosphor::MagnifyingGlass)
+                                                    ->color('info')
+                                                    ->tooltip('Pré-calculer le Numéro de TVA')
+                                                    ->action(function ($state, Set $set, Get $get) {
+                                                        try {
+                                                            $data = app(ThirdPartyService::class)->calculateVatNumber(substr($get('siret'), 0, 9));
+
+                                                            if ($data) {
+                                                                $set('vat_number', $data);
+                                                                Notification::make()
+                                                                    ->success()
+                                                                    ->title('Numéro de TVA calculé')
+                                                                    ->send();
+                                                            }
+                                                        } catch (\Exception $e) {
+                                                            Notification::make()
+                                                                ->danger()
+                                                                ->title('Erreur de calcul du TVA')
+                                                                ->send();
+                                                        }
+                                                    }),
+                                            )
                                             ->label('N° TVA'),
                                         Toggle::make('is_active')
                                             ->label('Compte actif')
@@ -104,7 +128,7 @@ class ThirdPartyForm
 
                         Tabs\Tab::make('Vigilance')
                             ->icon(Phosphor::ShieldCheck)
-                            ->visible(fn (Get $get) => $get('type') === ThirdPartyType::SUBCONTRACTOR->value)
+                            ->visible(fn (Get $get) => $get('type')->value === ThirdPartyType::SUBCONTRACTOR->value)
                             ->schema([
                                 SpatieMediaLibraryFileUpload::make('vigilance_attestation')
                                     ->label('Attestation Vigilance URSSAF')
