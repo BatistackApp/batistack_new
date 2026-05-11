@@ -3,6 +3,7 @@
 namespace App\Filament\Tiers\Resources\ThirdParties\Pages;
 
 use App\Enums\Tiers\ThirdPartyType;
+use App\Filament\Tiers\Resources\ThirdParties\Actions\GenerateContractAction;
 use App\Filament\Tiers\Resources\ThirdParties\Actions\PrintAction;
 use App\Filament\Tiers\Resources\ThirdParties\Actions\SynchronizeSirenAction;
 use App\Filament\Tiers\Resources\ThirdParties\ThirdPartyResource;
@@ -41,6 +42,7 @@ class ViewThirdParty extends ViewRecord
                             ->title('Vérification de conformité lançé en arrière plan')
                             ->send();
                     }),
+                GenerateContractAction::make(),
             ]),
         ];
     }

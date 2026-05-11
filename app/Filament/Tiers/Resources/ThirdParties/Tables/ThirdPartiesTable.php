@@ -3,6 +3,7 @@
 namespace App\Filament\Tiers\Resources\ThirdParties\Tables;
 
 use App\Enums\Tiers\ThirdPartyType;
+use App\Filament\Tiers\Resources\ThirdParties\Actions\GenerateContractAction;
 use App\Filament\Tiers\Resources\ThirdParties\Actions\PrintAction;
 use App\Filament\Tiers\Resources\ThirdParties\Actions\SynchronizeSirenAction;
 use App\Models\Tiers\ThirdParty;
@@ -65,6 +66,7 @@ class ThirdPartiesTable
                     DeleteAction::make(),
                     PrintAction::make('details'),
                     SynchronizeSirenAction::make(),
+                    GenerateContractAction::make(),
                 ])->color('gray'),
             ])
             ->toolbarActions([

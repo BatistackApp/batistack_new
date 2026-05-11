@@ -2,6 +2,7 @@
 
 namespace App\Services\Tiers;
 
+use App\Models\Core\Company;
 use App\Models\Tiers\ThirdParty;
 use App\Services\Core\CompanyService;
 use App\Services\Core\DocumentService;
@@ -60,6 +61,25 @@ class TiersDocumentService extends DocumentService
             'fiche_tiers_'.$thirdParty->id.'_'.now()->format('Ymd_Hi'),
             'tiers',
             'portait'
+        );
+    }
+
+    public function generateContract(ThirdParty $thirdParty)
+    {
+        $thirdParty->load(['addresses', 'contacts']);
+
+        $data = [
+            'company' => Company::first(),
+            'title' => 'Contrat de Sous-Traitance',
+            'generated_at' => Carbon::now()->format('d/m/Y H:i'),
+            'tiers' => $thirdParty,
+        ];
+
+        return $this->generate(
+            'pdf.tiers.contract_subcontractor',
+            $data,
+            'contract_'.$thirdParty->id.'_'.now()->format('Ymd_Hi'),
+            'tiers'
         );
     }
 }
