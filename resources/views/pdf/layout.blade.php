@@ -58,6 +58,19 @@
     @yield('styles')
 </head>
 <body class="bg-white text-slate-900 font-sans p-8 antialiased">
+    <header class="flex flex-row border-b-2 border-b-gray-600 mb-5">
+        <div class="logo-entreprise">
+            <img src="{{ $company->getMedia('core')->first() }}" alt="">
+        </div>
+        <div class="flex flex-col">
+            <span class="font-bold text-2xl">{{ $company->legal_name }}</span>
+            <span>{{ $company->address }}</span>
+            <span>{{ $company->zip_code }} {{ $company->city }}</span>
+            <span>Téléphone: {{ $company->phone }}</span>
+            <span>Email: {{ $company->email }}</span>
+            <span>Siret: {{ $company->siret }}</span>
+        </div>
+    </header>
 @yield('content')
 </body>
 </html>

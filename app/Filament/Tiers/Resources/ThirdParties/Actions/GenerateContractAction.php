@@ -6,6 +6,9 @@ use App\Enums\Tiers\ThirdPartyType;
 use App\Models\Tiers\ThirdParty;
 use App\Services\Tiers\TiersDocumentService;
 use Filament\Actions\Action;
+use Filament\Schemas\Schema;
+use Illuminate\Http\Response;
+use Joaopaulolndev\FilamentPdfViewer\Infolists\Components\PdfViewerEntry;
 use ToneGabes\Filament\Icons\Enums\Phosphor;
 
 class GenerateContractAction
@@ -19,7 +22,7 @@ class GenerateContractAction
             ->action(function (ThirdParty $record, TiersDocumentService $service) {
                 $path = $service->generateContract($record);
 
-                return response()->download($path);
+                return \response()->download($path);
             });
     }
 }

@@ -64,7 +64,7 @@ class TiersDocumentService extends DocumentService
         );
     }
 
-    public function generateContract(ThirdParty $thirdParty)
+    public function generateContract(ThirdParty $thirdParty, bool $view = false): string
     {
         $thirdParty->load(['addresses', 'contacts']);
 
@@ -75,11 +75,14 @@ class TiersDocumentService extends DocumentService
             'tiers' => $thirdParty,
         ];
 
-        return $this->generate(
-            'pdf.tiers.contract_subcontractor',
-            $data,
-            'contract_'.$thirdParty->id.'_'.now()->format('Ymd_Hi'),
-            'tiers'
+        $pdf =  $this->generate(
+            view: 'pdf.tiers.contract_subcontractor',
+            data: $data,
+            filename: 'contract_'.$thirdParty->id.'_'.now()->format('Ymd_Hi'),
+            type: 'tiers',
+            pdfView: $view,
         );
+
+        return $pdf;
     }
 }
