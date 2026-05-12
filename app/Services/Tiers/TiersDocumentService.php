@@ -24,7 +24,7 @@ class TiersDocumentService extends DocumentService
             'thirdParties' => $thirdParties,
             'title' => 'Répertoire Général des Tiers',
             'generated_at' => Carbon::now()->format('d/m/Y H:i'),
-            'company' => app(CompanyService::class)->getDocumentHeaderData(),
+            'company' => Company::first(),
         ];
 
         return $this->generate(
@@ -52,7 +52,7 @@ class TiersDocumentService extends DocumentService
             'compliance' => $compliance,
             'title' => 'Fiche Tiers : '.$thirdParty->name,
             'generated_at' => Carbon::now()->format('d/m/Y H:i'),
-            'company' => app(CompanyService::class)->getDocumentHeaderData(),
+            'company' => Company::first(),
         ];
 
         return $this->generate(

@@ -32,14 +32,15 @@
                 <td>{{ $tp->type->getLabel() }}</td>
                 <td>{{ $tp->email ?? 'N/A' }}</td>
                 <td class="text-center">
-                    @php $compliance = app(\App\Services\Tiers\VigilanceService::class)->scanCompliance($tp); @endphp
-                    <span @class([
+                    @if ($tp->type->value === \App\Enums\Tiers\ThirdPartyType::SUBCONTRACTOR->value)
+                        <span @class([
                             'px-2 py-1 rounded-full text-white font-bold',
-                            'bg-green-600' => $compliance['compliant'],
-                            'bg-red-600' => !$compliance['compliant'],
+                            'bg-green-600' => $tp->compliant_status['compliant'],
+                            'bg-red-600' => !$tp->compliant_status['compliant'],
                         ])>
-                            {{ $compliance['compliant'] ? 'CONFORME' : 'ALERTE' }}
+                            {{ $tp->compliant_status['compliant'] ? 'CONFORME' : 'ALERTE' }}
                         </span>
+                    @endif
                 </td>
                 <td>
                     {{ $tp->is_active ? 'Actif' : 'Inactif' }}
