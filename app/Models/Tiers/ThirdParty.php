@@ -32,6 +32,8 @@ class ThirdParty extends Model implements HasMedia
         'credit_limit',
         'last_siren_sync_at',
         'compliant_status',
+        'iban',
+        'bic',
     ];
 
     protected function casts(): array

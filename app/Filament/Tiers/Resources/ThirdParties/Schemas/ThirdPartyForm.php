@@ -16,6 +16,7 @@ use Filament\Schemas\Components\Tabs;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
+use Intervention\Validation\Rules\Iban;
 use ToneGabes\Filament\Icons\Enums\Phosphor;
 
 class ThirdPartyForm
@@ -125,11 +126,23 @@ class ThirdPartyForm
                                             ->numeric()
                                             ->prefix('€'),
                                     ]),
+
+                                Section::make('Coordonnées Bancaires')
+                                    ->columns(2)
+                                    ->schema([
+                                        TextInput::make('iban')
+                                            ->label('IBAN')
+                                            ->mask('aa99 9999 9999 9999 9999 9999 9999 9999')
+                                            ->rule(new Iban),
+
+                                        TextInput::make('bic')
+                                            ->label('BIC'),
+                                    ]),
                             ]),
 
                         Tabs\Tab::make('Vigilance')
                             ->icon(Phosphor::ShieldCheck)
-                            ->visible(fn (Get $get) => !empty($get('type')) && $get('type')->value === ThirdPartyType::SUBCONTRACTOR->value)
+                            ->visible(fn (Get $get) => ! empty($get('type')) && $get('type')->value === ThirdPartyType::SUBCONTRACTOR->value)
                             ->schema([
                                 SpatieMediaLibraryFileUpload::make('vigilance_attestation')
                                     ->disk('public')
