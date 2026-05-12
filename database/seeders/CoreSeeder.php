@@ -17,6 +17,8 @@ class CoreSeeder extends Seeder
         $settings = [
             ['key' => 'google_maps_key'],
             ['key' => 'siren_api_key'],
+            ['key' => 'ocr_enabled', 'type' => 'boolean'],
+            ['key' => 'ocr_google_key'],
         ];
 
         foreach ($settings as $setting) {
