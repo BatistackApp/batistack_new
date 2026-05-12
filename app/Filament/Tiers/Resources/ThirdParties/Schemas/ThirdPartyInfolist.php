@@ -45,7 +45,6 @@ class ThirdPartyInfolist
                                     ->schema([
                                         TextEntry::make('type')->badge(),
                                         TextEntry::make('full_address')
-                                            ->getStateUsing(fn ($record) => "{$record->street}, {$record->zip_code} {$record->city}")
                                             ->icon(Phosphor::MapTrifold),
                                     ]),
                             ]),
@@ -56,7 +55,7 @@ class ThirdPartyInfolist
                                 Section::make('Moteur de Vigilance')
                                     ->schema([
                                         TextEntry::make('compliance')
-                                            ->visible(fn (ThirdParty $record) => $record->type->value === ThirdPartyType::SUBCONTRACTOR->value)
+                                            ->visible(fn (ThirdParty $record) => $record->type === ThirdPartyType::SUBCONTRACTOR)
                                             ->label('État global')
                                             ->getStateUsing(fn ($record) => $record->compliant_status['compliant'] ? 'CONFORME' : 'NON-CONFORME')
                                             ->badge()

@@ -30,9 +30,9 @@ class ViewThirdParty extends ViewRecord
             PrintAction::make('details'),
             ActionGroup::make([
                 SynchronizeSirenAction::make(),
-                Action::make('veirufy_conformity')
+                Action::make('verify_conformity')
                     ->label('Vérifier la conformité')
-                    ->visible(fn (ThirdParty $record) => $record->type->value === ThirdPartyType::SUBCONTRACTOR->value)
+                    ->visible(fn (ThirdParty $record) => $record->type === ThirdPartyType::SUBCONTRACTOR)
                     ->icon(Phosphor::ShieldCheck)
                     ->action(function (ThirdParty $record) {
                         VerifyGloabVigilanceJob::dispatch($record);

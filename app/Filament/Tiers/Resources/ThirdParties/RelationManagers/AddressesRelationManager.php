@@ -64,8 +64,7 @@ class AddressesRelationManager extends RelationManager
             ->columns([
                 TextColumn::make('type')->badge(),
                 TextColumn::make('full_address')
-                    ->label('Adresse complète')
-                    ->getStateUsing(fn ($record) => "{$record->street}, {$record->zip_code} {$record->city}"),
+                    ->label('Adresse complète'),
                 IconColumn::make('is_default')
                     ->label('Défaut')
                     ->boolean(),

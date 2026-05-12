@@ -29,7 +29,7 @@ class VigilanceExpirationNotification extends Notification
             ->greeting('Bonjour,')
             ->line("Des documents critiques pour le tiers {$this->thirdParty->name} arrivent à expiration ou sont manquants.")
             ->line("Détails : {$issuesList}")
-            ->action('Gérer le tiers', url("/tiers/{$this->thirdParty->id}/edit"))
+            ->action('Gérer le tiers', route('filament.tiers.resources.third-parties.edit', ['record' => $this->thirdParty]))
             ->line('Veuillez régulariser la situation pour éviter tout blocage de paiement.');
     }
 
@@ -43,7 +43,7 @@ class VigilanceExpirationNotification extends Notification
                 Action::make('show')
                     ->label('Gérer le tiers')
                     ->icon(Phosphor::Eye)
-                    ->url(url("/tiers/{$this->thirdParty->id}/edit")),
+                    ->url(route('filament.tiers.resources.third-parties.edit', ['record' => $this->thirdParty])),
             ])
             ->getDatabaseMessage();
     }

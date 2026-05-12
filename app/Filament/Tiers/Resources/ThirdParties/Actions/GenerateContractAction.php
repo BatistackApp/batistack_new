@@ -18,7 +18,7 @@ class GenerateContractAction
         return Action::make('generate_contract')
             ->label('Générer un contrat de sous traitant')
             ->icon(Phosphor::FileText)
-            ->visible(fn (ThirdParty $record) => $record->type->value === ThirdPartyType::SUBCONTRACTOR->value)
+            ->visible(fn (ThirdParty $record) => $record->type === ThirdPartyType::SUBCONTRACTOR)
             ->action(function (ThirdParty $record, TiersDocumentService $service) {
                 $path = $service->generateContract($record);
 

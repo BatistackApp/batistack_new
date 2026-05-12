@@ -67,7 +67,7 @@ class ThirdPartyForm
                                             ->label('Raison sociale'),
                                         Select::make('type')
                                             ->label('Type de partenaire')
-                                            ->options(ThirdPartyType::class)
+                                            ->enum(ThirdPartyType::class)
                                             ->required()
                                             ->live()
                                             ->native(false),
@@ -142,7 +142,7 @@ class ThirdPartyForm
 
                         Tabs\Tab::make('Vigilance')
                             ->icon(Phosphor::ShieldCheck)
-                            ->visible(fn (Get $get) => ! empty($get('type')) && $get('type')->value === ThirdPartyType::SUBCONTRACTOR->value)
+                            ->visible(fn (Get $get) => ! empty($get('type')) && $get('type') === ThirdPartyType::SUBCONTRACTOR)
                             ->schema([
                                 SpatieMediaLibraryFileUpload::make('vigilance_attestation')
                                     ->disk('public')

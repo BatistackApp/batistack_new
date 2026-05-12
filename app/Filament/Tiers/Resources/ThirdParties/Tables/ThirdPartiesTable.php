@@ -46,7 +46,7 @@ class ThirdPartiesTable
                     ->label('Actif')
                     ->boolean(),
 
-                TextColumn::make('compliance')
+                TextColumn::make('compliant_status_label')
                     ->label('Vigilance')
                     ->getStateUsing(fn (ThirdParty $record) => $record->compliant_status['compliant'] ? 'Conforme' : 'Alerte')
                     ->badge()

@@ -41,4 +41,9 @@ class Address extends Model
             'longitude' => 'float',
         ];
     }
+
+    public function getFullAddressAttribute(): string
+    {
+        return "{$this->street}, {$this->zip_code} {$this->city}";
+    }
 }

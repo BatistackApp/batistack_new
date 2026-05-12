@@ -61,4 +61,13 @@ class ThirdParty extends Model implements HasMedia
     {
         return $this->belongsToMany(Category::class, 'category_third_party');
     }
+
+    public function getComplianceStatusLabelAttribute(): string
+    {
+        if ($this->compliant_status['compliant']) {
+            return 'Conforme';
+        } else {
+            return 'Alerte';
+        }
+    }
 }
