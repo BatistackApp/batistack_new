@@ -5,6 +5,7 @@ namespace App\Models\Articles;
 use App\Enums\Articles\ItemType;
 use App\Models\Core\Unit;
 use App\Models\Core\VatRate;
+use App\Observers\Articles\BarcodeObserver;
 use App\Observers\Articles\ItemObserver;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -15,6 +16,7 @@ use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 
 #[ObservedBy([ItemObserver::class])]
+#[ObservedBy([BarcodeObserver::class])]
 class Item extends Model implements HasMedia
 {
     use HasFactory, InteractsWithMedia;
