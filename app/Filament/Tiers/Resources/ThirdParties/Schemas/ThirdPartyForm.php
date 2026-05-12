@@ -68,6 +68,7 @@ class ThirdPartyForm
                                             ->label('Type de partenaire')
                                             ->options(ThirdPartyType::class)
                                             ->required()
+                                            ->live()
                                             ->native(false),
                                         TextInput::make('vat_number')
                                             ->suffixAction(
@@ -128,7 +129,7 @@ class ThirdPartyForm
 
                         Tabs\Tab::make('Vigilance')
                             ->icon(Phosphor::ShieldCheck)
-                            ->visible(fn (Get $get) => $get('type')->value === ThirdPartyType::SUBCONTRACTOR->value)
+                            ->visible(fn (Get $get) => !empty($get('type')) && $get('type')->value === ThirdPartyType::SUBCONTRACTOR->value)
                             ->schema([
                                 SpatieMediaLibraryFileUpload::make('vigilance_attestation')
                                     ->disk('public')
