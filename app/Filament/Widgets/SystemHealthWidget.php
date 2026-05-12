@@ -32,6 +32,7 @@ class SystemHealthWidget extends Widget
                 'label' => 'Google Maps API',
                 'status' => ! empty($settingService->get('google_maps_key')),
                 'description' => 'Requis pour la géolocalisation des chantiers.',
+                'color' => ! empty($settingService->get('google_maps_key')) ? 'green' : 'red',
             ],
             [
                 'label' => 'Service SIREN',
@@ -40,7 +41,7 @@ class SystemHealthWidget extends Widget
             ],
             [
                 'label' => 'Service OCR',
-                'status' => $settingService->get('ocr_enabled') === '1',
+                'status' => $settingService->get('ocr_enabled') === 'true' && ! empty($settingService->get('ocr_google_key')),
                 'description' => 'Requis pour la lecture des factures et notes de frais.',
             ],
         ];

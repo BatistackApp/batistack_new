@@ -69,6 +69,7 @@ class ManageCompany extends Page
                             ->label('Logo de l\'entreprise')
                             ->collection('core')
                             ->visibility('public')
+                            ->directory('core')
                             ->downloadable()
                             ->openable()
                             ->live()

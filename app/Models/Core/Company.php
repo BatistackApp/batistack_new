@@ -41,12 +41,9 @@ class Company extends Model implements HasMedia
         'share_capital' => 'decimal:2',
     ];
 
-    /**
-     * Configuration des collections de médias pour le logo.
-     */
     public function registerMediaCollections(): void
     {
-        $this->addMediaCollection('logo')
+        $this->addMediaCollection('core')
             ->singleFile();
     }
 }
