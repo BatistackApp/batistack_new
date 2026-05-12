@@ -1,0 +1,94 @@
+<?php
+
+namespace App\Services\Articles;
+
+use App\Exceptions\Articles\ArticlesModuleException;
+use App\Models\Articles\Item;
+use App\Models\Articles\Stock;
+use App\Models\Articles\Warehouse;
+use DB;
+use Filament\Notifications\Notification;
+use Illuminate\Support\Facades\Log;
+use Throwable;
+
+class StockService
+{
+    /**
+     * Enregistre une entrée en stock et recalcule le PUMP.
+     *
+     * @throws Throwable
+     */
+    public function entry(Item $item, Warehouse $warehouse, float $quantity, float $purchasePrice): void
+    {
+        DB::transaction(function () use ($item, $warehouse, $quantity, $purchasePrice) {
+            $currentGlobalStock = $item->stocks()->sum('quantity');
+            $oldPump = (float) $item->purchase_price;
+
+            // Formule PUMP : ((Stock_Initial * PUMP_Ancien) + (Qté_Reçue * Prix_Achat)) / Total_Stock
+            $totalStock = $currentGlobalStock + $quantity;
+
+            if ($totalStock > 0) {
+                $newPump = (($currentGlobalStock * $oldPump) + ($quantity * $purchasePrice)) / $totalStock;
+                $item->update(['purchase_price' => round($newPump, 4)]);
+            }
+
+            // Mise à jour du stock physique dans le dépôt
+            $stock = Stock::firstOrNew([
+                'item_id' => $item->id,
+                'warehouse_id' => $warehouse->id,
+            ]);
+
+            $stock->quantity += $quantity;
+            $stock->save();
+
+            // Ici, nous devrions enregistrer un mouvement de stock (Audit Log)
+        });
+    }
+
+    /**
+     * Sortie de stock (consommation chantier ou vente).
+     * @throws ArticlesModuleException
+     */
+    public function exit(Item $item, Warehouse $warehouse, float $quantity, string $reason): void
+    {
+        $stock = Stock::where('item_id', $item->id)
+            ->where('warehouse_id', $warehouse->id)
+            ->first();
+
+        if (! $stock || $stock->quantity < $quantity) {
+            // Note : Selon la config (E3), on peut autoriser le stock négatif ou bloquer.
+            // Ici, nous lançons une exception par sécurité.
+            Log::alert("Stock insuffisant dans le dépôt {$warehouse->name} pour l'article {$item->reference}.");
+            $exception = new ArticlesModuleException(
+                message: "Stock insuffisant dans le dépôt {$warehouse->name} pour l'article {$item->reference}.",
+                code: 400,
+            );
+            $exception->notify();
+            throw $exception;
+        }
+
+        $stock->quantity -= $quantity;
+        $stock->save();
+
+        // Logique d'alerte si stock < seuil
+        if ($stock->quantity <= $stock->min_threshold) {
+            Notification::make()
+                ->warning()
+                ->title('Stock bas dans le dépôt')
+                ->body("Stock bas dans le dépôt {$warehouse->name} pour l'article {$item->reference}.")
+                ->send();
+        }
+    }
+
+    /**
+     * Transfère du stock entre deux dépôts.
+     * @throws Throwable
+     */
+    public function transfer(Item $item, Warehouse $from, Warehouse $to, float $quantity): void
+    {
+        DB::transaction(function () use ($item, $from, $to, $quantity) {
+            $this->exit($item, $from, $quantity, "Transfert vers {$to->name}");
+            $this->entry($item, $to, $quantity, $item->purchase_price);
+        });
+    }
+}
