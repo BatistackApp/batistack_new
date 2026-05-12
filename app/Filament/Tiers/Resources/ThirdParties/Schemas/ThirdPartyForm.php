@@ -145,22 +145,22 @@ class ThirdPartyForm
                             ->visible(fn (Get $get) => ! empty($get('type')) && $get('type') === ThirdPartyType::SUBCONTRACTOR)
                             ->schema([
                                 SpatieMediaLibraryFileUpload::make('vigilance_attestation')
-                                    ->disk('public')
-                                    ->visibility('public')
+                                    ->disk('local')
+                                    ->visibility('private')
                                     ->label('Attestation Vigilance URSSAF')
                                     ->name('vigilance_attestation')
                                     ->collection('vigilance'),
 
                                 SpatieMediaLibraryFileUpload::make('decennale_insurance')
-                                    ->disk('public')
-                                    ->visibility('public')
+                                    ->disk('local')
+                                    ->visibility('private')
                                     ->label('Assurance Décennale')
                                     ->name('decennale_insurance')
                                     ->collection('vigilance'),
 
                                 SpatieMediaLibraryFileUpload::make('kbis')
-                                    ->disk('public')
-                                    ->visibility('public')
+                                    ->disk('local')
+                                    ->visibility('private')
                                     ->label('Kbis (-3 mois)')
                                     ->name('kbis')
                                     ->collection('vigilance'),
