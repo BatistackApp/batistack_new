@@ -40,4 +40,10 @@ class Company extends Model implements HasMedia
     protected $casts = [
         'share_capital' => 'decimal:2',
     ];
+
+    public function registerMediaCollections(): void
+    {
+        $this->addMediaCollection('core')
+            ->singleFile();
+    }
 }
