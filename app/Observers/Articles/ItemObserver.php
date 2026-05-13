@@ -3,6 +3,7 @@
 namespace App\Observers\Articles;
 
 use App\Enums\Articles\ItemType;
+use App\Jobs\Articles\RecalculateWorkCostsJob;
 use App\Models\Articles\Item;
 use Illuminate\Support\Str;
 

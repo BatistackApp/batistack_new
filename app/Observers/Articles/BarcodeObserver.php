@@ -25,16 +25,16 @@ class BarcodeObserver
         ]);
 
         // Le QR Code contient l'URL de la fiche ou la référence
-        $data = route('filament.tiers.resources.items.view', $item->id);
-        $qrcode = (new QRCode($options))->render($data);
+        //$data = route('filament.articles.resources.items.view', $item->id);
+        //$qrcode = (new QRCode($options))->render($data);
 
         // On stocke le SVG dans la collection media
-        try {
-            $item->addMediaFromBase64(base64_encode($qrcode))
-                ->usingFileName("qr_{$item->reference}.svg")
-                ->toMediaCollection('barcode');
-        } catch (FileDoesNotExist|InvalidBase64Data|FileCannotBeAdded|FileIsTooBig $e) {
-            Log::warning($e->getMessage());
-        }
+        //try {
+        //    $item->addMediaFromBase64(base64_encode($qrcode))
+        //        ->usingFileName("qr_{$item->reference}.svg")
+        //        ->toMediaCollection('barcode');
+        //} catch (FileDoesNotExist|InvalidBase64Data|FileCannotBeAdded|FileIsTooBig $e) {
+        //    Log::warning($e->getMessage());
+        //}
     }
 }

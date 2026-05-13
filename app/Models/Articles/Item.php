@@ -32,6 +32,7 @@ class Item extends Model implements HasMedia
         'unit_id',
         'vat_rate_id',
         'min_stock',
+        'parent_id',
     ];
 
     public function unit(): BelongsTo
@@ -58,6 +59,11 @@ class Item extends Model implements HasMedia
     public function stocks(): HasMany
     {
         return $this->hasMany(Stock::class);
+    }
+
+    public function parent(): BelongsTo
+    {
+        return $this->belongsTo(Item::class, 'parent_id');
     }
 
     protected function casts(): array

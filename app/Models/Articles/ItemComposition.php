@@ -14,7 +14,16 @@ class ItemComposition extends Model
         'quantity',
         'parent_item_id',
         'child_item_id',
+        'loss_percentage',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'quantity' => 'decimal:4',
+            'loss_percentage' => 'decimal:4',
+        ];
+    }
 
     public function childItem(): BelongsTo
     {

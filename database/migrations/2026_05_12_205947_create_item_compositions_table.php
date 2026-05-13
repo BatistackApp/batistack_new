@@ -11,6 +11,7 @@ return new class extends Migration {
         Schema::create('item_compositions', function (Blueprint $table) {
             $table->id();
             $table->decimal('quantity', 15, 4);
+            $table->decimal('loss_percentage', 15, 4)->default(0);
             $table->foreignIdFor(Item::class, 'parent_item_id')->constrained('items')->cascadeOnDelete();
             $table->foreignIdFor(Item::class, 'child_item_id')->constrained('items')->cascadeOnDelete();
             $table->timestamps();

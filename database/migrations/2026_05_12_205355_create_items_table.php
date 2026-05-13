@@ -1,12 +1,14 @@
 <?php
 
+use App\Models\Articles\Item;
 use App\Models\Core\Unit;
 use App\Models\Core\VatRate;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration {
+return new class extends Migration
+{
     public function up(): void
     {
         Schema::create('items', function (Blueprint $table) {
@@ -21,6 +23,7 @@ return new class extends Migration {
             $table->boolean('is_active')->default(true);
             $table->foreignIdFor(Unit::class)->constrained();
             $table->foreignIdFor(VatRate::class)->constrained();
+            $table->foreignIdFor(Item::class, 'parent_id')->nullable()->constrained()->cascadeOnDelete();
             $table->timestamps();
         });
     }

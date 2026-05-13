@@ -2,6 +2,7 @@
 
 namespace Database\Factories\Articles;
 
+use App\Enums\Articles\ItemType;
 use App\Models\Articles\Item;
 use App\Models\Core\Unit;
 use App\Models\Core\VatRate;
@@ -18,7 +19,7 @@ class ItemFactory extends Factory
             'reference' => $this->faker->word(),
             'name' => $this->faker->name(),
             'description' => $this->faker->text(),
-            'type' => $this->faker->word(),
+            'type' => $this->faker->randomElement(ItemType::class),
             'purchase_price' => $this->faker->randomFloat(),
             'selling_price' => $this->faker->randomFloat(),
             'is_active' => $this->faker->boolean(),
