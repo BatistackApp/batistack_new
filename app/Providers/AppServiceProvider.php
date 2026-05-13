@@ -34,16 +34,19 @@ class AppServiceProvider extends ServiceProvider
                 ->panels([
                     'core',
                     'tiers',
+                    'articles',
                 ])
                 ->modalHeading('Espaces')
                 ->slideOver()
                 ->icons([
                     'core' => Phosphor::Building,
                     'tiers' => Phosphor::Users,
+                    'articles' => Phosphor::BoxArrowUp,
                 ])
                 ->labels([
                     'core' => 'Configurations',
                     'tiers' => 'Tiers',
+                    'articles' => 'Articles & Stocks',
                 ]);
         });
 
