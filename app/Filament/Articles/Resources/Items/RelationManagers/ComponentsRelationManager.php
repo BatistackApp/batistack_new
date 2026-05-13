@@ -36,11 +36,10 @@ class ComponentsRelationManager extends RelationManager
             ->components([
                 Select::make('child_item_id')
                     ->label('Composant (Article ou MO)')
-                    ->relationship('childItem', 'name')
+                    ->relationship('childItem', 'name', fn ($query, $livewire) => $query->whereDoesntHave('parentComponents', fn ($q) => $q->where('parent_item_id', $livewire->ownerRecord->id)))
                     ->searchable()
                     ->preload()
-                    ->required()
-                    ->disableOptionsWhenSelectedInSiblingRepeaterItems(),
+                    ->required(),
                 TextInput::make('quantity')
                     ->label('Quantité théorique')
                     ->numeric()
