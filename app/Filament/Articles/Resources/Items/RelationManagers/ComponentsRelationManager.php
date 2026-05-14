@@ -30,16 +30,22 @@ class ComponentsRelationManager extends RelationManager
         return $ownerRecord->type === ItemType::WORK;
     }
 
+    public function isReadOnly(): bool
+    {
+        return false;
+    }
+
     public function form(Schema $schema): Schema
     {
         return $schema
             ->components([
                 Select::make('child_item_id')
                     ->label('Composant (Article ou MO)')
-                    ->relationship('childItem', 'name', fn ($query, $livewire) => $query->whereDoesntHave('parentComponents', fn ($q) => $q->where('parent_item_id', $livewire->ownerRecord->id)))
+                    ->relationship('childItem', 'name')
                     ->searchable()
                     ->preload()
-                    ->required(),
+                    ->required()
+                    ->disableOptionsWhenSelectedInSiblingRepeaterItems(),
                 TextInput::make('quantity')
                     ->label('Quantité théorique')
                     ->numeric()

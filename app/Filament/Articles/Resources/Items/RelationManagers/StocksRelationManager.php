@@ -33,6 +33,11 @@ class StocksRelationManager extends RelationManager
         return $ownerRecord->type === ItemType::STOCKABLE;
     }
 
+    public function isReadOnly(): bool
+    {
+        return false;
+    }
+
     public function form(Schema $schema): Schema
     {
         return $schema
