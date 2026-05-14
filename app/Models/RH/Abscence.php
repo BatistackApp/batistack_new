@@ -2,6 +2,7 @@
 
 namespace App\Models\RH;
 
+use App\Enums\RH\AbsenceType;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -32,6 +33,7 @@ class Abscence extends Model implements HasMedia
             'start_date' => 'datetime',
             'end_date' => 'datetime',
             'is_paid' => 'boolean',
+            'type' => AbsenceType::class,
         ];
     }
 }

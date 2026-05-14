@@ -3,9 +3,11 @@
 namespace App\Enums\RH;
 
 use Filament\Support\Contracts\HasColor;
+use Filament\Support\Contracts\HasDescription;
 use Filament\Support\Contracts\HasLabel;
+use Illuminate\Contracts\Support\Htmlable;
 
-enum ContractType: string implements HasColor, HasLabel
+enum ContractType: string implements HasColor, HasLabel, HasDescription
 {
     case CDI = 'cdi';
     case CDD = 'cdd';
@@ -29,6 +31,16 @@ enum ContractType: string implements HasColor, HasLabel
             self::CDD => 'warning',
             self::INTERIM => 'info',
             self::APPRENTICE => 'gray',
+        };
+    }
+
+    public function getDescription(): string|Htmlable|null
+    {
+        return match ($this) {
+            self::CDI => 'Contrat à Durée Indéterminée',
+            self::CDD => 'Contrat à Durée Déterminée',
+            self::INTERIM => "Contrat d'Intérim (Sous convention d'entreprise)",
+            self::APPRENTICE => 'Contrat d\'Apprentissage / Alternance',
         };
     }
 }

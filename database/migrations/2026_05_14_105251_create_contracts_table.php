@@ -14,6 +14,7 @@ return new class extends Migration {
             $table->string('type');
             $table->date('start_date');
             $table->date('end_date')->nullable();
+            $table->date('trial_end_date')->nullable();
             $table->string('job_title');
             $table->decimal('hourly_rate', 15, 4);
             $table->decimal('weekly_hours', 5, 2)->default(39.00);
