@@ -5,10 +5,13 @@ namespace App\Models\RH;
 use App\Enums\RH\TimeEntryStatus;
 use App\Enums\RH\TimeEntryType;
 use App\Models\User;
+use App\Observers\RH\TimeEntryObserver;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+#[ObservedBy([TimeEntryObserver::class])]
 class TimeEntry extends Model
 {
     use HasFactory;

@@ -3,12 +3,15 @@
 namespace App\Models\RH;
 
 use App\Enums\RH\QualificationType;
+use App\Observers\RH\QualificationObserver;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 
+#[ObservedBy([QualificationObserver::class])]
 class Qualification extends Model implements HasMedia
 {
     use HasFactory, InteractsWithMedia;
