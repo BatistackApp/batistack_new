@@ -16,7 +16,7 @@ return new class extends Migration {
             $table->date('end_date')->nullable();
             $table->string('job_title');
             $table->decimal('hourly_rate', 15, 4);
-            $table->decimal('weekly_hours', 5, 5)->default(39.00);
+            $table->decimal('weekly_hours', 5, 2)->default(39.00);
             $table->timestamps();
         });
     }
