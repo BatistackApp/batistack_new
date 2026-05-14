@@ -14,6 +14,17 @@ return new class extends Migration {
             $table->date('date');
             $table->decimal('hours', 5, 2);
             $table->string('type');
+
+            // Workflow de validation
+            $table->string('status')->default('draft'); // TimeEntryStatus
+            $table->text('refusal_reason')->nullable();
+            $table->foreignId('approved_by_id')->nullable()->constrained('users')->nullOnDelete();
+            $table->timestamp('approved_at')->nullable();
+
+            // Gestion Grand Déplacement (GD)
+            $table->boolean('is_grand_deplacement')->default(false);
+            $table->decimal('gd_allowance_amount', 10, 2)->default(0); // Ex: 96.00
+
             $table->text('description')->nullable();
             $table->timestamps();
         });
