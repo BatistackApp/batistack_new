@@ -11,6 +11,7 @@ return new class extends Migration {
         Schema::create('time_entries', function (Blueprint $table) {
             $table->id();
             $table->foreignIdFor(Employee::class)->constrained()->cascadeOnDelete();
+            $table->unsignedBigInteger('job_site_id')->nullable();
             $table->date('date');
             $table->decimal('hours', 5, 2);
             $table->string('type');

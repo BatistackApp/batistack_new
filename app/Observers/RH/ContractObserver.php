@@ -15,6 +15,6 @@ class ContractObserver
             ContractType::INTERIM => $contract->trial_end_date = $contract->start_date,
             ContractType::APPRENTICE => $contract->trial_end_date = $contract->start_date->addDays(30),
         };
-        $contract->save();
+        $contract->saveQuietly();
     }
 }

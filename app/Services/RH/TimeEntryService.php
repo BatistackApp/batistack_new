@@ -2,6 +2,7 @@
 
 namespace App\Services\RH;
 
+use App\Enums\RH\TimeEntryStatus;
 use App\Models\RH\TimeEntry;
 use Exception;
 
@@ -9,14 +10,17 @@ class TimeEntryService
 {
     /**
      * Soumet un pointage pour validation.
+     * @throws Exception
      */
     public function submit(TimeEntry $entry): void
     {
-        if ($entry->status === 'approved') {
+        // Compare la valeur du statut de l'entrée avec la valeur de l'énumération
+        if ($entry->status->value === TimeEntryStatus::APPROVED->value) {
             throw new Exception('Impossible de modifier un pointage déjà approuvé.');
         }
 
-        $entry->update(['status' => 'submitted']);
+        // Met à jour le statut en utilisant la valeur de l'énumération
+        $entry->update(['status' => TimeEntryStatus::SUBMITTED->value]);
     }
 
     /**
@@ -27,7 +31,7 @@ class TimeEntryService
         $entry->update([
             'status' => 'approved',
             'approved_at' => now(),
-            'approved_by' => auth()->id(),
+            'approved_by_id' => auth()->id(),
         ]);
     }
 

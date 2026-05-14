@@ -6,6 +6,7 @@ use App\Enums\RH\TimeEntryStatus;
 use App\Models\RH\TimeEntry;
 use App\Models\User;
 use App\Notifications\RH\TimeEntryStatusNotification;
+use Illuminate\Support\Facades\Notification;
 
 class TimeEntryObserver
 {
