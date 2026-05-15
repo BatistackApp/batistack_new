@@ -22,6 +22,10 @@ class EmployeeFactory extends Factory
             'social_security_number' => $this->faker->numerify('1##########'),
             'is_active' => true,
             'user_id' => User::factory(),
+            'uuid' => $this->faker->uuid(),
+            'address' => $this->faker->streetAddress(),
+            'postal_code' => $this->faker->postcode(),
+            'city' => $this->faker->city(),
         ];
     }
 }

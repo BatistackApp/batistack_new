@@ -4,6 +4,7 @@ namespace App\Filament\RH\Resources\Employees\Schemas;
 
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
+use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Grid;
@@ -67,6 +68,27 @@ class EmployeeForm
                                         TextInput::make('phone')
                                             ->label('Téléphone')
                                             ->tel(),
+                                    ]),
+                            ]),
+
+                        Tabs\Tab::make('Adresse Postal')
+                            ->icon(Phosphor::MapPinArea)
+                            ->schema([
+                                Textarea::make('address')
+                                    ->label('Adresse')
+                                    ->rows(2)
+                                    ->required(),
+
+                                Grid::make(3)
+                                    ->schema([
+                                        TextInput::make('postal_code')
+                                            ->label('Code Postal')
+                                            ->required()
+                                            ->mask('99999'),
+                                        TextInput::make('city')
+                                            ->label('Ville')
+                                            ->columnSpan(2)
+                                            ->required(),
                                     ]),
                             ]),
 

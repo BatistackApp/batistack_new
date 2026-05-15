@@ -28,6 +28,10 @@ class Employee extends Model implements HasMedia
         'birth_date',
         'social_security_number',
         'is_active',
+        'uuid',
+        'address',
+        'postal_code',
+        'city'
     ];
 
     protected function casts(): array
@@ -81,5 +85,10 @@ class Employee extends Model implements HasMedia
     public function getFullNameAttribute(): string
     {
         return "{$this->first_name} {$this->last_name}";
+    }
+
+    public function getFullAddressAttribute(): string
+    {
+        return "{$this->address} {$this->postal_code} {$this->city}";
     }
 }

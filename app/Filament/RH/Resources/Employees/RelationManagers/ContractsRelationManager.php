@@ -3,7 +3,10 @@
 namespace App\Filament\RH\Resources\Employees\RelationManagers;
 
 use App\Enums\RH\ContractType;
+use App\Models\RH\Contract;
+use App\Services\RH\RHDocumentService;
 use BackedEnum;
+use Filament\Actions\Action;
 use Filament\Actions\AssociateAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\CreateAction;
@@ -99,6 +102,10 @@ class ContractsRelationManager extends RelationManager
             ->recordActions([
                 EditAction::make(),
                 DeleteAction::make(),
+                Action::make('print_contract')
+                    ->label('Imprimer')
+                    ->icon(Phosphor::Printer)
+                    ->action(fn (Contract $record, RHDocumentService $service) => response()->download($service->generateContract($record))),
             ]);
     }
 

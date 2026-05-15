@@ -8,6 +8,7 @@ use App\Models\RH\Contract;
 use App\Models\RH\Employee;
 use App\Services\Core\DocumentService;
 use Carbon\Carbon;
+use chillerlan\QRCode\QROptions;
 use Illuminate\Database\Eloquent\Collection;
 
 class RHDocumentService extends DocumentService
@@ -42,11 +43,14 @@ class RHDocumentService extends DocumentService
     {
         $employee->load(['qualifications', 'medicalVisits']);
 
+        $publicUrl = route('public.safety-check', ['uuid' => $employee->uuid]);
+
         $data = [
             'company' => Company::first(),
             'employee' => $employee,
             'title' => 'PASSEPORT SÉCURITÉ : '.$employee->full_name,
             'generated_at' => Carbon::now()->format('d/m/Y H:i'),
+            'publicUrl' => $publicUrl,
         ];
 
         return $this->generate(

@@ -10,11 +10,15 @@ return new class extends Migration {
     {
         Schema::create('employees', function (Blueprint $table) {
             $table->id();
+            $table->uuid();
             $table->string('registration_number')->unique();
             $table->string('first_name');
             $table->string('last_name');
             $table->string('email')->unique()->nullable();
             $table->string('phone')->nullable();
+            $table->string('address');
+            $table->string('postal_code');
+            $table->string('city');
             $table->date('birth_date')->nullable();
             $table->string('social_security_number')->nullable();
             $table->boolean('is_active')->default(true);

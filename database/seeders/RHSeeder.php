@@ -8,6 +8,7 @@ use App\Models\RH\Employee;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 class RHSeeder extends Seeder
 {
@@ -32,6 +33,10 @@ class RHSeeder extends Seeder
             'birth_date' => '1985-06-15',
             'is_active' => true,
             'user_id' => $user->id,
+            'uuid' => Str::uuid(),
+            'address' => fake()->streetAddress(),
+            'postal_code' => fake()->postcode,
+            'city' => fake()->city,
         ]);
 
         // 2. Création de son contrat
@@ -56,7 +61,7 @@ class RHSeeder extends Seeder
                 'label' => 'SST - Sauveteur Secouriste du Travail',
                 'obtained_at' => '2024-01-01',
                 'expires_at' => '2026-01-01',
-            ]
+            ],
         ]);
     }
 }

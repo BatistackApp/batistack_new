@@ -3,7 +3,7 @@
 @section('content')
     <div class="mb-8 text-center border-b-2 border-blue-batistack pb-4">
         <h1 class="text-3xl font-bold text-blue-batistack uppercase">Contrat de Travail</h1>
-        <p class="text-slate-500 italic">Type de contrat : {{ $contract->type->getLabel() }}</p>
+        <p class="text-slate-500 italic">Type de contrat : {{ $contract->type->getDescription() }}</p>
     </div>
 
     <div class="mb-10 leading-relaxed">
@@ -13,7 +13,7 @@
             Représenté par son dirigeant en exercice.
         </p>
         <p>
-            <strong>Le Salarié :</strong> M/Mme {{ $employee->full_name }}, demeurant au [Adresse Salarié], né(e) le {{ $employee->birth_date->format('d/m/Y') }}.<br>
+            <strong>Le Salarié :</strong> M/Mme {{ $employee->full_name }}, demeurant au {{ $employee->full_address }}, né(e) le {{ $employee->birth_date->format('d/m/Y') }}.<br>
             Numéro de Sécurité Sociale : <span class="font-mono">{{ $employee->social_security_number }}</span>
         </p>
     </div>
