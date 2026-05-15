@@ -17,6 +17,7 @@ return new class extends Migration {
             $table->date('birth_date')->nullable();
             $table->string('social_security_number')->nullable();
             $table->boolean('is_active')->default(true);
+            $table->foreignIdFor('user_id')->constrained()->cascadeOnDelete();
             $table->timestamps();
         });
     }

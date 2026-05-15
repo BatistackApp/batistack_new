@@ -3,6 +3,7 @@
 namespace Database\Factories\RH;
 
 use App\Models\RH\Employee;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class EmployeeFactory extends Factory
@@ -20,6 +21,7 @@ class EmployeeFactory extends Factory
             'birth_date' => $this->faker->date('Y-m-d', '-18 years'),
             'social_security_number' => $this->faker->numerify('1##########'),
             'is_active' => true,
+            'user_id' => User::factory(),
         ];
     }
 }

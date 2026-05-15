@@ -14,7 +14,7 @@ use Illuminate\Support\Str;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 use Illuminate\Database\Eloquent\Attributes\Scope;
 
-#[Fillable(['name', 'email', 'password', 'is_admin', 'is_employee', 'is_tiers'])]
+#[Fillable(['name', 'email', 'password', 'is_admin', 'is_employee', 'is_tiers', 'email_verified_at'])]
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
 class User extends Authenticatable
 {

@@ -2,14 +2,19 @@
 
 namespace App\Models\RH;
 
+use App\Models\User;
+use App\Observers\RH\EmployeeObserver;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Notifications\Notifiable;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 
+#[ObservedBy([EmployeeObserver::class])]
 class Employee extends Model implements HasMedia
 {
     use HasFactory, InteractsWithMedia, Notifiable;
@@ -56,6 +61,11 @@ class Employee extends Model implements HasMedia
     public function absences(): HasMany
     {
         return $this->hasMany(Abscence::class);
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
     }
 
     public function getFullNameAttribute(): string

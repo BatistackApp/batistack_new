@@ -61,6 +61,8 @@ class EmployeeForm
                                     ->schema([
                                         TextInput::make('email')
                                             ->label('Email professionnel')
+                                            ->required()
+                                            ->helperText('Sera utilisé pour la connexion à Batistack.')
                                             ->email(),
                                         TextInput::make('phone')
                                             ->label('Téléphone')
