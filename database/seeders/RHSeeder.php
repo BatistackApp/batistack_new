@@ -5,12 +5,23 @@ namespace Database\Seeders;
 use App\Enums\RH\ContractType;
 use App\Enums\RH\QualificationType;
 use App\Models\RH\Employee;
+use App\Models\User;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
 
 class RHSeeder extends Seeder
 {
     public function run(): void
     {
+        $user = User::create([
+            'email' => 'jean.dupont@batistack.test',
+            'password' => Hash::make('password'),
+            'name' => 'Jean Dupont',
+            'is_employee' => true,
+            'is_admin' => false,
+            'email_verified_at' => now(),
+        ]);
+
         // 1. Création d'un employé type (Couvreur)
         $employee = Employee::create([
             'registration_number' => 'MAT-2025-001',
@@ -20,6 +31,7 @@ class RHSeeder extends Seeder
             'phone' => '0601020304',
             'birth_date' => '1985-06-15',
             'is_active' => true,
+            'user_id' => $user->id,
         ]);
 
         // 2. Création de son contrat
