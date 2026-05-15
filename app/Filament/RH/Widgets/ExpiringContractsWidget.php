@@ -21,6 +21,7 @@ class ExpiringContractsWidget extends TableWidget
     public function table(Table $table): Table
     {
         return $table
+            ->emptyStateHeading('Aucune fin de contrat imminente actuellement')
             ->query(
                 Contract::whereNotNull('end_date')
                     ->where('end_date', '<=', now()->addDays(30))

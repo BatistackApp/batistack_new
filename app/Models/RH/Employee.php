@@ -53,6 +53,11 @@ class Employee extends Model implements HasMedia
         return $this->hasMany(Qualification::class);
     }
 
+    public function medicalVisits(): HasMany
+    {
+        return $this->hasMany(MedicalVisit::class);
+    }
+
     public function timeEntries(): HasMany
     {
         return $this->hasMany(TimeEntry::class);

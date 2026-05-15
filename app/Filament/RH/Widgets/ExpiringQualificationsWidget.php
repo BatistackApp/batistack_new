@@ -20,6 +20,7 @@ class ExpiringQualificationsWidget extends TableWidget
     public function table(Table $table): Table
     {
         return $table
+            ->emptyStateHeading('Aucune Habilitations n\'arrive à échéance actuellement')
             ->query(
                 Qualification::where('expires_at', '<=', now()->addDays(60))
                     ->with('employee')
