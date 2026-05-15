@@ -20,6 +20,7 @@ class Abscence extends Model implements HasMedia
         'end_date',
         'reason',
         'is_paid',
+        'cibtp_declared_at',
     ];
 
     public function employee(): BelongsTo
@@ -34,6 +35,7 @@ class Abscence extends Model implements HasMedia
             'end_date' => 'datetime',
             'is_paid' => 'boolean',
             'type' => AbsenceType::class,
+            'cibtp_declared_at' => 'datetime',
         ];
     }
 }

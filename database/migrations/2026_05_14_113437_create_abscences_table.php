@@ -16,6 +16,7 @@ return new class extends Migration {
             $table->dateTime('end_date');
             $table->text('reason')->nullable();
             $table->boolean('is_paid')->default(true);
+            $table->dateTime('cibtp_declared_at')->nullable();
             $table->timestamps();
         });
     }

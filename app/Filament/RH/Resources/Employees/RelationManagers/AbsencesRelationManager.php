@@ -3,16 +3,16 @@
 namespace App\Filament\RH\Resources\Employees\RelationManagers;
 
 use App\Enums\RH\AbsenceType;
+use App\Models\RH\Abscence;
 use App\Services\RH\LeaveBalanceService;
 use BackedEnum;
-use Filament\Actions\AssociateAction;
+use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\CreateAction;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
-use Filament\Actions\DissociateAction;
-use Filament\Actions\DissociateBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
@@ -24,6 +24,7 @@ use Filament\Schemas\Schema;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Support\HtmlString;
 use ToneGabes\Filament\Icons\Enums\Phosphor;
 
 class AbsencesRelationManager extends RelationManager
@@ -88,6 +89,15 @@ class AbsencesRelationManager extends RelationManager
                 IconColumn::make('is_paid')
                     ->label('Payé')
                     ->boolean(),
+
+                TextColumn::make('cibtp_declared_at')
+                    ->dateTime('d/m/Y H:i')
+                    ->label('Déclaré le')
+                    ->formatStateUsing(function (Abscence $record) {
+                        return $record->cibtp_declared_at ? $record->cibtp_declared_at->format('d/m/Y') : 'Non Déclaré';
+                    })
+                    ->badge()
+                    ->color(fn (Abscence $record) => $record->cibtp_declared_at ? 'success' : 'danger'),
             ])
             ->headerActions([
                 CreateAction::make()->label('Déclarer une absence'),
@@ -95,6 +105,21 @@ class AbsencesRelationManager extends RelationManager
             ->recordActions([
                 EditAction::make(),
                 DeleteAction::make(),
+                Action::make('start_declaration_cibtp')
+                    ->label('Déclarer l\'absence')
+                    ->icon(Phosphor::ShieldCheck)
+                    ->schema([
+                        DatePicker::make('cibtp_declared_at')
+                            ->label('Date de la déclaration')
+                            ->required(),
+                    ])
+                    ->action(function (Abscence $record, array $data) {
+                        $record->cibtp_declared_at = $data['cibtp_declared_at'];
+                        $record->save();
+
+                        return redirect('https://mon-espace.cibtp.fr/24/adh/connexion');
+                    })
+                    ->visible(fn (Abscence $record) => ! $record->cibtp_declared_at),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([

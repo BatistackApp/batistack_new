@@ -15,6 +15,7 @@ enum AbsenceType: string implements HasColor, HasIcon, HasLabel
     case UNPAID_LEAVE = 'unpaid_leave'; // Congé sans solde
     case WORK_ACCIDENT = 'work_accident'; // Accident du travail (Critique BTP)
     case UNJUSTIFIED = 'unjustified'; // Absence non justifiée'
+    case WEATHER_DAY = 'weather_day'; // Chomage Intempérie
 
     public function getLabel(): ?string
     {
@@ -25,6 +26,7 @@ enum AbsenceType: string implements HasColor, HasIcon, HasLabel
             self::UNPAID_LEAVE => 'Sans Solde',
             self::WORK_ACCIDENT => 'Accident du Travail',
             self::UNJUSTIFIED => 'Non justifié',
+            self::WEATHER_DAY => 'Chômage Intempérie',
         };
     }
 
@@ -34,7 +36,7 @@ enum AbsenceType: string implements HasColor, HasIcon, HasLabel
             self::PAID_LEAVE => 'success',
             self::RTT => 'info',
             self::SICK_LEAVE => 'warning',
-            self::UNPAID_LEAVE => 'gray',
+            self::UNPAID_LEAVE, self::WEATHER_DAY => 'gray',
             self::WORK_ACCIDENT, self::UNJUSTIFIED => 'danger',
         };
     }
@@ -48,6 +50,7 @@ enum AbsenceType: string implements HasColor, HasIcon, HasLabel
             self::UNPAID_LEAVE => Phosphor::Coins,
             self::WORK_ACCIDENT => Phosphor::WarningOctagon,
             self::UNJUSTIFIED => Phosphor::XCircle,
+            self::WEATHER_DAY => Phosphor::CloudRain,
         };
     }
 }

@@ -23,6 +23,7 @@ class AbscenceFactory extends Factory
             'end_date' => (clone $start)->modify('+2 days'),
             'reason' => $this->faker->sentence(),
             'is_paid' => true,
+            'cibtp_declared_at' => $this->faker->dateTimeBetween('now', '+1 month'),
         ];
     }
 }
