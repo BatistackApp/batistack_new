@@ -8,7 +8,6 @@ use App\Models\RH\Contract;
 use App\Models\RH\Employee;
 use App\Services\Core\DocumentService;
 use Carbon\Carbon;
-use chillerlan\QRCode\QROptions;
 use Illuminate\Database\Eloquent\Collection;
 
 class RHDocumentService extends DocumentService
@@ -122,6 +121,35 @@ class RHDocumentService extends DocumentService
             "releve_heures_{$employee->id}_{$year}_{$month}",
             'rh/timesheets',
             'landscape'
+        );
+    }
+
+    public function generateFullRecord(Employee $employee): string
+    {
+        // Chargement complet des relations pour éviter les requêtes N+1
+        $employee->load([
+            'currentContract',
+            'contracts',
+            'equipements',
+            'qualifications',
+            'medicalVisits',
+        ]);
+
+        $publicUrl = route('public.safety-check', ['uuid' => $employee->uuid]);
+
+        $data = [
+            'company' => Company::first(),
+            'employee' => $employee,
+            'publicUrl' => $publicUrl,
+            'title' => 'DOSSIER INDIVIDUEL : '.$employee->full_name,
+            'generated_at' => now()->format('d/m/Y H:i'),
+        ];
+
+        return $this->generate(
+            'pdf.rh.employee_record',
+            $data,
+            'fiche_salarie_'.$employee->registration_number,
+            'rh/records'
         );
     }
 }
