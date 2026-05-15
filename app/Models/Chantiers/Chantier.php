@@ -103,4 +103,11 @@ class Chantier extends Model implements HasMedia
     {
         return "{$this->address}, {$this->zip_code} {$this->city}";
     }
+
+    public function getRealHoursAttribute(): float
+    {
+        return (float) $this->timeEntries()
+            ->where('status', \App\Enums\RH\TimeEntryStatus::APPROVED)
+            ->sum('hours');
+    }
 }
