@@ -55,7 +55,7 @@ class Employee extends Model implements HasMedia
 
     public function absences(): HasMany
     {
-        return $this->hasMany(Absence::class);
+        return $this->hasMany(Abscence::class);
     }
 
     public function getFullNameAttribute(): string

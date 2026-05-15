@@ -65,33 +65,35 @@ class PayrollVariableService
     {
         $endDate = (clone $startDate)->endOfWeek();
 
-        $totalHours = TimeEntry::where('employee_id', $employee->id)
+        $totalWorkHours = TimeEntry::where('employee_id', $employee->id)
             ->whereBetween('date', [$startDate, $endDate])
             ->where('status', 'approved')
             ->sum('hours');
+
+        $totalTravelHours = TimeEntry::where('employee_id', $employee->id)
+            ->whereBetween('date', [$startDate, $endDate])
+            ->where('status', 'approved')
+            ->sum('travel_hours');
 
         $contractHours = $employee->currentContract?->weekly_hours ?? 35;
 
         $overtime25 = 0;
         $overtime50 = 0;
 
-        if ($totalHours > $contractHours) {
-            $diff = $totalHours - $contractHours;
-
-            // Les 8 premières heures sup sont à 25% (jusqu'à 43h pour un contrat 35h)
+        if ($totalWorkHours > $contractHours) {
+            $diff = $totalWorkHours - $contractHours;
             $overtime25 = min($diff, 8);
-
-            // Le reste à 50%
             if ($diff > 8) {
                 $overtime50 = $diff - 8;
             }
         }
 
         return [
-            'normal_hours' => min($totalHours, $contractHours),
+            'normal_hours' => min($totalWorkHours, $contractHours),
             'overtime_25' => $overtime25,
             'overtime_50' => $overtime50,
-            'total' => $totalHours,
+            'total_work' => $totalWorkHours,
+            'total_travel' => $totalTravelHours, // AJOUT : Distinction trajet
         ];
     }
 }

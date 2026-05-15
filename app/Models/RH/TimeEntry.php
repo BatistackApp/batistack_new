@@ -20,6 +20,7 @@ class TimeEntry extends Model
         'employee_id', 'job_site_id', 'date', 'hours', 'type',
         'status', 'refusal_reason', 'approved_by_id', 'approved_at',
         'is_grand_deplacement', 'gd_allowance_amount', 'description',
+        'travel_hours',
     ];
 
     public function employee(): BelongsTo
@@ -42,6 +43,7 @@ class TimeEntry extends Model
             'is_grand_deplacement' => 'boolean',
             'gd_allowance_amount' => 'decimal:2',
             'approved_at' => 'datetime',
+            'travel_hours' => 'decimal:2',
         ];
     }
 }

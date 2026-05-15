@@ -26,6 +26,8 @@ return new class extends Migration {
             $table->boolean('is_grand_deplacement')->default(false);
             $table->decimal('gd_allowance_amount', 10, 2)->default(0); // Ex: 96.00
 
+            $table->decimal('travel_hours', 5, 2)->nullable();
+
             $table->text('description')->nullable();
             $table->timestamps();
         });
