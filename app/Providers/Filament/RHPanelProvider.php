@@ -2,7 +2,6 @@
 
 namespace App\Providers\Filament;
 
-use Ariefng\FilamentCalculator\CalculatorPlugin;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -11,7 +10,8 @@ use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
-use Hydrat\TableLayoutToggle\TableLayoutTogglePlugin;
+use Filament\Widgets\AccountWidget;
+use Filament\Widgets\FilamentInfoWidget;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
@@ -19,31 +19,28 @@ use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 
-class ArticlesPanelProvider extends PanelProvider
+class RHPanelProvider extends PanelProvider
 {
     public function panel(Panel $panel): Panel
     {
         return $panel
-            ->id('articles')
-            ->path('articles')
-            ->login()
-            ->databaseNotifications()
-            ->sidebarCollapsibleOnDesktop()
-            ->brandName('Batistack - Articles & Stocks')
-            ->brandLogo(asset('images/rh.png'))
+            ->id('rh')
+            ->path('rh')
             ->colors([
-                'primary' => Color::Amber, // Couleur représentative du matériel/stock
+                'primary' => Color::Indigo, // Couleur distinctive pour le module RH
                 'gray' => Color::Slate,
             ])
-            ->discoverResources(in: app_path('Filament/Articles/Resources'), for: 'App\Filament\Articles\Resources')
-            ->discoverPages(in: app_path('Filament/Articles/Pages'), for: 'App\Filament\Articles\Pages')
-            ->discoverWidgets(in: app_path('Filament/Articles/Widgets'), for: 'App\Filament\Articles\Widgets')
-            ->plugins([
-                CalculatorPlugin::make(),
-                TableLayoutTogglePlugin::make()
-                    ->setDefaultLayout('list')
-                    ->displayToggleAction(true),
+            ->login()
+            ->sidebarCollapsibleOnDesktop()
+            ->databaseNotifications()
+            ->brandName('Batistack - Ressources Humaines')
+            ->brandLogo(asset('images/rh.png'))
+            ->discoverResources(in: app_path('Filament/RH/Resources'), for: 'App\Filament\RH\Resources')
+            ->discoverPages(in: app_path('Filament/RH/Pages'), for: 'App\Filament\RH\Pages')
+            ->pages([
+                Dashboard::class,
             ])
+            ->discoverWidgets(in: app_path('Filament/RH/Widgets'), for: 'App\Filament\RH\Widgets')
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,

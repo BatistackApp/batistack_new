@@ -35,6 +35,7 @@ class AppServiceProvider extends ServiceProvider
                     'core',
                     'tiers',
                     'articles',
+                    'rh',
                 ])
                 ->modalHeading('Espaces')
                 ->slideOver()
@@ -42,11 +43,13 @@ class AppServiceProvider extends ServiceProvider
                     'core' => Phosphor::Building,
                     'tiers' => Phosphor::Users,
                     'articles' => Phosphor::BoxArrowUp,
+                    'rh' => Phosphor::UsersThree,
                 ])
                 ->labels([
                     'core' => 'Configurations',
                     'tiers' => 'Tiers',
                     'articles' => 'Articles & Stocks',
+                    'rh' => 'Ressources Humaines',
                 ]);
         });
 
