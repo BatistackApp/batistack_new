@@ -4,6 +4,7 @@ namespace App\Filament\RH\Widgets;
 
 use App\Models\RH\MedicalVisit;
 use App\Notifications\RH\MedicalVisitReminderNotification;
+use App\Services\RH\RHDocumentService;
 use Filament\Actions\Action;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
@@ -52,6 +53,12 @@ class ExpiringMedicalVisitsWidget extends TableWidget
                     ->color('warning')
                     ->requiresConfirmation()
                     ->action(fn (MedicalVisit $record) => auth()->user()->notify(new MedicalVisitReminderNotification($record))),
+
+                Action::make('print_passport')
+                    ->label('Passeport Sécurité')
+                    ->icon(Phosphor::FilePdf)
+                    ->color('gray')
+                    ->action(fn (MedicalVisit $record, RHDocumentService $service) => response()->download($service->generateSafetyPassport($record->employee))),
 
                 Action::make('view_employee')
                     ->label('Gérer')

@@ -4,15 +4,11 @@ namespace App\Filament\RH\Resources\Employees\RelationManagers;
 
 use App\Enums\RH\MedicalAptitude;
 use App\Enums\RH\MedicalVisiteType;
+use App\Models\RH\MedicalVisit;
+use App\Services\RH\RHDocumentService;
 use BackedEnum;
-use Filament\Actions\AssociateAction;
-use Filament\Actions\BulkActionGroup;
+use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
-use Filament\Actions\DeleteAction;
-use Filament\Actions\DeleteBulkAction;
-use Filament\Actions\DissociateAction;
-use Filament\Actions\DissociateBulkAction;
-use Filament\Actions\EditAction;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
@@ -60,8 +56,16 @@ class MedicalVisitsRelationManager extends RelationManager
                     ->color(fn ($state) => $state->isPast() ? 'danger' : ($state->diffInDays(now()) < 30 ? 'warning' : 'success'))
                     ->weight('bold'),
             ])
+            ->recordActions([
+                Action::make('print_report')
+                    ->label('Imprimer')
+                    ->icon(Phosphor::Printer)
+                    ->color('info')
+                    ->action(fn (MedicalVisit $record, RHDocumentService $service) => response()->download($service->generateSafetyPassport($record->employee))
+                    ),
+            ])
             ->headerActions([
-                CreateAction::make()->label('Nouvelle Visite')
+                CreateAction::make()->label('Nouvelle Visite'),
             ]);
     }
 
