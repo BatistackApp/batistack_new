@@ -5,6 +5,7 @@ namespace App\Services\Chantiers;
 use App\Models\Chantiers\Chantier;
 use App\Models\Core\Company;
 use App\Services\Core\DocumentService;
+use Carbon\CarbonInterface;
 use Illuminate\Support\Carbon;
 
 /**
@@ -87,7 +88,7 @@ class ChantierDocumentService extends DocumentService
     /**
      * Génère le Journal de Chantier Hebdomadaire.
      */
-    public function generateWeeklyJournal(Chantier $chantier, Carbon $startDate): string
+    public function generateWeeklyJournal(Chantier $chantier, Carbon|CarbonInterface $startDate): string
     {
         $endDate = $startDate->copy()->endOfWeek();
         $logs = $chantier->logs()->whereBetween('date', [$startDate, $endDate])->get();

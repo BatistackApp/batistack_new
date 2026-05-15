@@ -7,6 +7,8 @@ use App\Enums\Tiers\ThirdPartyType;
 use App\Models\RH\Employee;
 use App\Models\RH\TimeEntry;
 use App\Models\Tiers\ThirdParty;
+use App\Observers\Chantiers\ChantierObserver;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -16,6 +18,7 @@ use Illuminate\Support\Str;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 
+#[ObservedBy([ChantierObserver::class])]
 class Chantier extends Model implements HasMedia
 {
     use HasFactory, InteractsWithMedia;

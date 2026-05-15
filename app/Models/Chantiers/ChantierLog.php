@@ -3,12 +3,15 @@
 namespace App\Models\Chantiers;
 
 use App\Models\User;
+use App\Observers\Chantiers\ChantierLogObserver;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 
+#[ObservedBy([ChantierLogObserver::class])]
 class ChantierLog extends Model implements HasMedia
 {
     use HasFactory, InteractsWithMedia;

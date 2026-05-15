@@ -2,10 +2,13 @@
 
 namespace App\Models\Chantiers;
 
+use App\Observers\Chantiers\ChantierTaskObserver;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+#[ObservedBy([ChantierTaskObserver::class])]
 class ChantierTask extends Model
 {
     use HasFactory;
