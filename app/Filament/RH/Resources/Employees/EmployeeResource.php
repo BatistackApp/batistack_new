@@ -8,6 +8,7 @@ use App\Filament\RH\Resources\Employees\Pages\ListEmployees;
 use App\Filament\RH\Resources\Employees\Pages\ViewEmployee;
 use App\Filament\RH\Resources\Employees\RelationManagers\AbsencesRelationManager;
 use App\Filament\RH\Resources\Employees\RelationManagers\ContractsRelationManager;
+use App\Filament\RH\Resources\Employees\RelationManagers\EquipementsRelationManager;
 use App\Filament\RH\Resources\Employees\RelationManagers\QualificationsRelationManager;
 use App\Filament\RH\Resources\Employees\Schemas\EmployeeForm;
 use App\Filament\RH\Resources\Employees\Schemas\EmployeeInfolist;
@@ -51,6 +52,7 @@ class EmployeeResource extends Resource
             ContractsRelationManager::class,
             QualificationsRelationManager::class,
             AbsencesRelationManager::class,
+            EquipementsRelationManager::class,
         ];
     }
 

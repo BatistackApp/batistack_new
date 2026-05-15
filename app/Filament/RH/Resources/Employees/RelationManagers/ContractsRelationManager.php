@@ -33,6 +33,7 @@ class ContractsRelationManager extends RelationManager
         return $schema
             ->components([
                 Section::make('Détails du Contrat')
+                    ->columnSpanFull()
                     ->schema([
                         Select::make('type')
                             ->label('Type de contrat')
