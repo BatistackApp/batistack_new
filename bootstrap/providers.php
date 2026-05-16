@@ -3,6 +3,7 @@
 return [
     App\Providers\AppServiceProvider::class,
     App\Providers\Filament\ArticlesPanelProvider::class,
+    App\Providers\Filament\ChantierPanelProvider::class,
     App\Providers\Filament\CorePanelProvider::class,
     App\Providers\Filament\RHPanelProvider::class,
     App\Providers\Filament\TiersPanelProvider::class,
