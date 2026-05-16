@@ -23,6 +23,7 @@ class AddressFactory extends Factory
             'latitude' => $this->faker->latitude(),
             'longitude' => $this->faker->longitude(),
             'is_default' => false,
+            'third_party_id' => ThirdParty::factory(),
         ];
     }
 }

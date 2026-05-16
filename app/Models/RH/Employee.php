@@ -2,12 +2,14 @@
 
 namespace App\Models\RH;
 
+use App\Models\Chantiers\Chantier;
 use App\Models\User;
 use App\Observers\RH\EmployeeObserver;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Notifications\Notifiable;
@@ -80,6 +82,11 @@ class Employee extends Model implements HasMedia
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function chantiers(): BelongsToMany
+    {
+        return $this->belongsToMany(Chantier::class, 'chantier_members');
     }
 
     public function getFullNameAttribute(): string

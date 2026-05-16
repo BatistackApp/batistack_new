@@ -3,6 +3,7 @@
 namespace App\Models\Chantiers;
 
 use App\Enums\Chantiers\ChantierStatus;
+use App\Enums\RH\TimeEntryStatus;
 use App\Enums\Tiers\ThirdPartyType;
 use App\Models\RH\Employee;
 use App\Models\RH\TimeEntry;
@@ -87,6 +88,8 @@ class Chantier extends Model implements HasMedia
             'status' => ChantierStatus::class,
             'start_date' => 'date',
             'end_date' => 'date',
+            'start_date_preview' => 'date',
+            'end_date_preview' => 'date',
             'latitude' => 'float',
             'longitude' => 'float',
             'budget_hours' => 'decimal:2',
@@ -110,7 +113,7 @@ class Chantier extends Model implements HasMedia
     public function getRealHoursAttribute(): float
     {
         return (float) $this->timeEntries()
-            ->where('status', \App\Enums\RH\TimeEntryStatus::APPROVED)
+            ->where('status', TimeEntryStatus::APPROVED)
             ->sum('hours');
     }
 }

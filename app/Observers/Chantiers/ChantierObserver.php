@@ -3,6 +3,7 @@
 namespace App\Observers\Chantiers;
 
 use App\Jobs\Chantiers\GeocodeChantierAddressJob;
+use App\Jobs\Chantiers\InitializeChantierPhasesJob;
 use App\Models\Chantiers\Chantier;
 use Illuminate\Support\Str;
 
@@ -13,6 +14,11 @@ class ChantierObserver
         if (empty($chantier->uuid)) {
             $chantier->uuid = (string) Str::uuid();
         }
+    }
+
+    public function created(Chantier $chantier): void
+    {
+        InitializeChantierPhasesJob::dispatch($chantier);
     }
 
     public function saved(Chantier $chantier): void

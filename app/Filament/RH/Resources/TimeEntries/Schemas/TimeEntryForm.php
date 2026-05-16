@@ -32,8 +32,9 @@ class TimeEntryForm
                                     ->required()
                                     ->disabledOn('edit'),
 
-                                Select::make('job_site_id')
+                                Select::make('chantier_id')
                                     ->label('Chantier / Projet')
+                                    ->relationship('chantier', 'name')
                                     ->placeholder('Rechercher un chantier...')
                                     ->required()
                                     ->searchable(),

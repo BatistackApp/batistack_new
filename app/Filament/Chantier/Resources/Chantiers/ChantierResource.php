@@ -6,6 +6,10 @@ use App\Filament\Chantier\Resources\Chantiers\Pages\CreateChantier;
 use App\Filament\Chantier\Resources\Chantiers\Pages\EditChantier;
 use App\Filament\Chantier\Resources\Chantiers\Pages\ListChantiers;
 use App\Filament\Chantier\Resources\Chantiers\Pages\ViewChantier;
+use App\Filament\Chantier\Resources\Chantiers\RelationManagers\LogsRelationManager;
+use App\Filament\Chantier\Resources\Chantiers\RelationManagers\MembersRelationManager;
+use App\Filament\Chantier\Resources\Chantiers\RelationManagers\PhasesRelationManager;
+use App\Filament\Chantier\Resources\Chantiers\RelationManagers\SubcontractorsRelationManager;
 use App\Filament\Chantier\Resources\Chantiers\Schemas\ChantierForm;
 use App\Filament\Chantier\Resources\Chantiers\Schemas\ChantierInfolist;
 use App\Filament\Chantier\Resources\Chantiers\Tables\ChantiersTable;
@@ -43,7 +47,10 @@ class ChantierResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            PhasesRelationManager::class,
+            MembersRelationManager::class,
+            SubcontractorsRelationManager::class,
+            LogsRelationManager::class,
         ];
     }
 

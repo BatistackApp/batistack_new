@@ -18,6 +18,7 @@ class ChantierInfolist
         return $schema
             ->components([
                 Section::make()
+                    ->columnSpanFull()
                     ->schema([
                         Grid::make(4)
                             ->schema([

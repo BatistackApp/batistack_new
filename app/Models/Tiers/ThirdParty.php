@@ -3,6 +3,7 @@
 namespace App\Models\Tiers;
 
 use App\Enums\Tiers\ThirdPartyType;
+use App\Models\Chantiers\Chantier;
 use App\Observers\Tiers\ThirdPartyObserver;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -60,6 +61,11 @@ class ThirdParty extends Model implements HasMedia
     public function categories(): BelongsToMany
     {
         return $this->belongsToMany(Category::class, 'category_third_party');
+    }
+
+    public function chantiers(): BelongsToMany
+    {
+        return $this->belongsToMany(Chantier::class, 'chantier_subcontractors');
     }
 
     public function getComplianceStatusLabelAttribute(): string
