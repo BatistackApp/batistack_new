@@ -4,6 +4,7 @@ namespace App\Models\RH;
 
 use App\Enums\RH\TimeEntryStatus;
 use App\Enums\RH\TimeEntryType;
+use App\Models\Chantiers\Chantier;
 use App\Models\User;
 use App\Observers\RH\TimeEntryObserver;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
@@ -17,7 +18,7 @@ class TimeEntry extends Model
     use HasFactory;
 
     protected $fillable = [
-        'employee_id', 'job_site_id', 'date', 'hours', 'type',
+        'employee_id', 'chantier_id', 'date', 'hours', 'type',
         'status', 'refusal_reason', 'approved_by_id', 'approved_at',
         'is_grand_deplacement', 'gd_allowance_amount', 'description',
         'travel_hours',
@@ -26,6 +27,11 @@ class TimeEntry extends Model
     public function employee(): BelongsTo
     {
         return $this->belongsTo(Employee::class);
+    }
+
+    public function chantier(): BelongsTo
+    {
+        return $this->belongsTo(Chantier::class);
     }
 
     public function approvedBy(): BelongsTo

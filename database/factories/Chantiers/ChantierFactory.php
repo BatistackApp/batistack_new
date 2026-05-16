@@ -7,6 +7,7 @@ use App\Models\Chantiers\Chantier;
 use App\Models\RH\Employee;
 use App\Models\Tiers\ThirdParty;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Support\Str;
 
 class ChantierFactory extends Factory
 {

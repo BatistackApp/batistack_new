@@ -4,6 +4,7 @@ namespace App\Services\Chantiers;
 
 use App\Models\Chantiers\Chantier;
 use Carbon\Carbon;
+use Carbon\CarbonImmutable;
 
 /**
  * Service de Gestion du Journal et des Événements.
@@ -13,7 +14,7 @@ class ChantierLogService
     /**
      * Génère une synthèse quotidienne pour le journal de chantier.
      */
-    public function getDailySummary(Chantier $chantier, Carbon $date): array
+    public function getDailySummary(Chantier $chantier, Carbon|CarbonImmutable $date): array
     {
         return [
             'weather' => $chantier->logs()->whereDate('date', $date)->first()?->weather_condition,
