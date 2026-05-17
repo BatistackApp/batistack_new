@@ -33,6 +33,8 @@ class Vehicle extends Model implements HasMedia
         'km_rate',
         'purchase_date',
         'purchase_price',
+        'tco_cache',
+        'pollution_control_due_at'
     ];
 
     protected function casts(): array
@@ -45,6 +47,8 @@ class Vehicle extends Model implements HasMedia
             'km_rate' => 'decimal:4',
             'purchase_date' => 'date',
             'purchase_price' => 'decimal:2',
+            'tco_cache' => 'decimal:2',
+            'pollution_control_due_at' => 'date',
         ];
     }
 
@@ -77,5 +81,13 @@ class Vehicle extends Model implements HasMedia
     {
         $this->addMediaCollection('registration_card')->singleFile(); // Carte grise
         $this->addMediaCollection('photos'); // Galerie état du véhicule
+    }
+
+    /**
+     * Helper : Détermine si le véhicule est un Utilitaire Léger soumis au contrôle pollution annuel.
+     */
+    public function isVUL(): bool
+    {
+        return $this->type === VehicleType::UTILITY;
     }
 }

@@ -18,6 +18,7 @@ return new class extends Migration {
 
             $table->decimal('odometer', 12, 2)->default(0);
             $table->string('status')->default('available');
+            $table->date('pollution_control_due_at')->nullable();
             $table->string('current_location')->nullable();
 
             $table->decimal('daily_rate', 10, 2)->default(0);
@@ -25,6 +26,7 @@ return new class extends Migration {
 
             $table->date('purchase_date')->nullable();
             $table->decimal('purchase_price', 15, 2)->default(0);
+            $table->decimal('tco_cache', 15, 2)->default(0);
 
             $table->timestamps();
         });

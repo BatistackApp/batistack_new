@@ -61,6 +61,8 @@ enum CertificationSymbol: string implements HasDescription
     case REPRISE = 'reprise'; // Visite de reprise après arrêt
     case PRE_REPRISE = 'pre_reprise';
 
+    case PERMIS = 'permis'; // Permis de conduire'
+
     public function getDescription(): string|Htmlable|null
     {
         return match ($this) {
@@ -109,6 +111,8 @@ enum CertificationSymbol: string implements HasDescription
             self::SIR => 'SIR (Renforcé)',
             self::REPRISE => 'Visite de Reprise',
             self::PRE_REPRISE => 'Visite de Pré-reprise',
+
+            self::PERMIS => 'Permis de conduire',
         };
     }
 
@@ -198,6 +202,7 @@ enum CertificationSymbol: string implements HasDescription
             default => throw new \ValueError("Conversion impossible de SafetyAidSymbol::{$safetyAidSymbol->name} en CertificationSymbol"),
         };
     }
+
 
     /**
      * Retourne le niveau de tension (Basse Tension ou Haute Tension)
