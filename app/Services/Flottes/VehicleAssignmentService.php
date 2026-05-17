@@ -9,6 +9,7 @@ use App\Models\Flottes\Vehicle;
 use App\Models\Flottes\VehicleAssignment;
 use App\Models\RH\Employee;
 use Carbon\Carbon;
+use Carbon\CarbonInterface;
 use DB;
 use Exception;
 use Throwable;
@@ -24,8 +25,8 @@ class VehicleAssignmentService
         Vehicle $vehicle,
         Employee $employee,
         ?Chantier $chantier,
-        Carbon $startedAt,
-        ?Carbon $endedAt,
+        Carbon|CarbonInterface $startedAt,
+        Carbon|CarbonInterface|null $endedAt,
         ?string $purpose = null
     ): VehicleAssignment {
         // 1. Vérification stricte des conflits d'agenda
@@ -65,7 +66,7 @@ class VehicleAssignmentService
      */
     public function endAssignment(
         VehicleAssignment $assignment,
-        Carbon $endedAt,
+        Carbon|CarbonInterface $endedAt,
         float $endOdometer
     ): void {
         if ($assignment->status !== AssignmentStatus::ACTIVE) {
@@ -104,8 +105,8 @@ class VehicleAssignmentService
     public function hasConflict(
         int $vehicleId,
         int $employeeId,
-        Carbon $startAt,
-        ?Carbon $endAt,
+        Carbon|CarbonInterface $startAt,
+        Carbon|CarbonInterface|null $endAt,
         ?int $ignoreAssignmentId = null
     ): bool {
         $query = VehicleAssignment::query()

@@ -8,6 +8,7 @@ use App\Models\Flottes\Vehicle;
 use App\Models\Flottes\VehicleMaintenance;
 use App\Models\Tiers\ThirdParty;
 use Carbon\Carbon;
+use Carbon\CarbonInterface;
 use DB;
 
 class FleetCostService
@@ -38,7 +39,7 @@ class FleetCostService
         VatRate $vatRate,
         string $type,
         float $costHt,
-        Carbon $performedAt,
+        Carbon|CarbonInterface $performedAt,
         ?string $description = null
     ): VehicleMaintenance {
         return DB::transaction(function () use ($vehicle, $supplier, $vatRate, $type, $costHt, $performedAt, $description) {
