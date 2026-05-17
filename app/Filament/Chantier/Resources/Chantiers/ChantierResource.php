@@ -13,12 +13,10 @@ use App\Filament\Chantier\Resources\Chantiers\RelationManagers\SubcontractorsRel
 use App\Filament\Chantier\Resources\Chantiers\Schemas\ChantierForm;
 use App\Filament\Chantier\Resources\Chantiers\Schemas\ChantierInfolist;
 use App\Filament\Chantier\Resources\Chantiers\Tables\ChantiersTable;
-use App\Filament\Chantier\Resources\Chantiers\Widgets\LaborDistributionChart;
 use App\Models\Chantiers\Chantier;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
-use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use ToneGabes\Filament\Icons\Enums\Phosphor;
 

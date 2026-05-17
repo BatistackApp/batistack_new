@@ -17,7 +17,9 @@ class CheckChantierComplianceCommand extends Command
     {
         $this->info('Début du scan de conformité sécurité...');
 
-        $activeChantiers = Chantier::where('status', ChantierStatus::IN_PROGRESS)->get();
+        $activeChantiers = Chantier::where('status', ChantierStatus::IN_PROGRESS)
+            ->with('members.medicalVisits', 'members.qualifications', 'members.equipements')
+            ->get();
         $issueCount = 0;
 
         foreach ($activeChantiers as $chantier) {

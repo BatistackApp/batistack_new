@@ -4,6 +4,7 @@ namespace App\Console\Commands\Chantiers;
 
 use App\Enums\Chantiers\ChantierStatus;
 use App\Models\Chantiers\Chantier;
+use App\Notifications\Chantiers\ChantierStartReminderNotification;
 use Illuminate\Console\Command;
 
 class RemindUpcomingStartsCommand extends Command

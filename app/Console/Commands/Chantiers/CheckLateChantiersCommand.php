@@ -4,6 +4,7 @@ namespace App\Console\Commands\Chantiers;
 
 use App\Enums\Chantiers\ChantierStatus;
 use App\Models\Chantiers\Chantier;
+use App\Notifications\Chantiers\ChantierOverdueNotification;
 use Illuminate\Console\Command;
 
 class CheckLateChantiersCommand extends Command
