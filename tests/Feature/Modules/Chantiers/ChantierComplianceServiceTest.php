@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\RH\CertificationSymbol;
 use App\Enums\RH\MedicalAptitude;
 use App\Models\Chantiers\Chantier;
 use App\Models\RH\Employee;
@@ -29,7 +30,7 @@ test('il détecte les non-conformités de l’équipe assignée', function () {
     Qualification::factory()->create([
         'employee_id' => $employee->id,
         'expires_at' => now()->subDay(),
-        'label' => 'CACES R482',
+        'label' => CertificationSymbol::R482,
     ]);
 
     $res = $service->checkTeamCompliance($chantier->refresh());

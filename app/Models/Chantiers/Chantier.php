@@ -82,6 +82,11 @@ class Chantier extends Model implements HasMedia
         return $this->hasMany(TimeEntry::class);
     }
 
+    public function doeDocuments(): HasMany
+    {
+        return $this->hasMany(DoeDocument::class);
+    }
+
     protected function casts(): array
     {
         return [

@@ -20,4 +20,18 @@ enum MedicalVisiteType: string implements HasLabel
             self::PRE_REPRISE => 'Visite de Pré-reprise',
         };
     }
+
+    /**
+     * Durée de validité en mois.
+     * Une valeur de -1 ou 0 indique un événement unique sans date d'expiration fixe (ex: Reprise).
+     */
+    public function validityPeriodInMonths(): int
+    {
+        return match ($this) {
+            self::VIP => 60, // 5 ans standard
+            self::SIR => 48, // 4 ans max avec examen intermédiaire
+            self::REPRISE, self::PRE_REPRISE => 0, // Contexte spécifique (généralement unique à 45 ans)
+            // Pas d'expiration, valide l'aptitude instantanément
+        };
+    }
 }

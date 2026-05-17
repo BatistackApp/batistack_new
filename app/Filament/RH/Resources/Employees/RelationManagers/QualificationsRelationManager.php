@@ -73,6 +73,7 @@ class QualificationsRelationManager extends RelationManager
                 TextColumn::make('label')
                     ->label('Habilitation')
                     ->description(fn ($record) => $record->reference_number)
+                    ->tooltip(fn ($record) => $record->label->getDescription())
                     ->searchable(),
                 TextColumn::make('obtained_at')
                     ->label('Obtenue le')

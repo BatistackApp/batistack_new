@@ -21,7 +21,7 @@ class ContractFactory extends Factory
             'start_date' => $start_date,
             'end_date' => null,
             'trial_end_date' => $start_date->modify('+15 days'),
-            'job_title' => $this->faker->jobTitle(),
+            'job_title' => $this->faker->randomElement(['Conducteur de travaux', 'Chef de chantier', 'Compagnons', 'Soudeur', 'Ouvrier']),
             'hourly_rate' => $this->faker->randomFloat(4, 11, 25),
             'weekly_hours' => 35.00,
         ];
