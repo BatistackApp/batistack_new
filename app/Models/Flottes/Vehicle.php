@@ -36,6 +36,7 @@ class Vehicle extends Model implements HasMedia
         'tco_cache',
         'pollution_control_due_at',
         'usage_unit',
+        'crit_air_level',
     ];
 
     protected function casts(): array

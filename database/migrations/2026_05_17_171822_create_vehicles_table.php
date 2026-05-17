@@ -16,6 +16,7 @@ return new class extends Migration {
             $table->string('type');
             $table->string('usage_unit')->default('km');
             $table->string('fuel_type');
+            $table->string('crit_air_level', 2)->nullable()->default(2);
 
             $table->decimal('odometer', 12, 2)->default(0);
             $table->string('status')->default('available');

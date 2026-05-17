@@ -36,6 +36,8 @@ class VehicleAssignmentService
         // 1. Contrôle réglementaire et sécuritaire du conducteur (Sécurité BTP)
         $this->validateDriverCompliance($employee, $vehicle);
 
+        $this->validateZfeCompliance($vehicle, $chantier);
+
         // 2. Vérification d'absence de conflit d'agenda
         if ($this->hasConflict($vehicle->id, $employee->id, $startedAt, $endedAt)) {
             throw new Exception("Conflit d'affectation détecté : le véhicule ou le salarié est déjà mobilisé sur cette période.");
@@ -132,6 +134,52 @@ class VehicleAssignmentService
 
             if (! $hasLicense) {
                 throw new Exception("Aucun permis de conduire valide enregistré dans le dossier RH de {$employee->full_name}. Affectation impossible.");
+            }
+        }
+    }
+
+    /**
+     * Contrôle environnemental : Valide que la vignette Crit'Air du véhicule est autorisée
+     * dans la commune de destination du chantier (ZFE).
+     *
+     * @throws Exception
+     */
+    protected function validateZfeCompliance(Vehicle $vehicle, ?Chantier $chantier): void
+    {
+        if (! $chantier || empty($chantier->city)) {
+            return;
+        }
+
+        $city = strtolower(trim($chantier->city));
+        $vehicleCritAir = strtoupper($vehicle->crit_air_level ?? '2');
+
+        // Seuils de restrictions réglementaires des ZFE (Maximum Crit'Air autorisé pour circuler)
+        $zfeRegulations = [
+            'paris' => '2',         // Crit'Air E, 1, 2 autorisés (Bannissement Crit'Air 3+)
+            'lyon' => '2',          // Crit'Air E, 1, 2 autorisés
+            'marseille' => '2',     // Crit'Air E, 1, 2 autorisés
+            'strasbourg' => '3',    // Crit'Air E, 1, 2, 3 autorisés (Bannissement Crit'Air 4+)
+            'toulouse' => '3',      // Crit'Air E, 1, 2, 3 autorisés
+            'nice' => '3',
+            'grenoble' => '3',
+            'montpellier' => '3',
+            'rouen' => '3',
+            'reims' => '3',
+            'saint-etienne' => '3',
+            'saint etienne' => '3',
+        ];
+
+        if (array_key_exists($city, $zfeRegulations)) {
+            $maxAllowed = $zfeRegulations[$city];
+
+            // Rangs de comparaison (E < 1 < 2 < 3 < 4 < 5)
+            $ranks = ['E' => 0, '1' => 1, '2' => 2, '3' => 3, '4' => 4, '5' => 5];
+
+            $vehicleRank = $ranks[$vehicleCritAir] ?? 5;
+            $maxRank = $ranks[$maxAllowed] ?? 5;
+
+            if ($vehicleRank > $maxRank) {
+                throw new Exception("Conformité ZFE violée : Le véhicule {$vehicle->reference} (Crit'Air {$vehicleCritAir}) n'est pas autorisé à circuler dans la ZFE de " . ucfirst($city) . " (Crit'Air {$maxAllowed} max autorisé).");
             }
         }
     }
