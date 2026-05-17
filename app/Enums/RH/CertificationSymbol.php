@@ -226,7 +226,7 @@ enum CertificationSymbol: string implements HasDescription
             self::B0, self::BP, self::HE_Manoeuvre, self::HE_Essai, self::HE_Mesurage, self::HE_Vérification, self::BE_Manoeuvre, self::BE_Essai, self::BE_Mesurage, self::BE_Vérification, self::BS, self::BR, self::HC, self::BC, self::H2V, self::H2, self::B2V, self::B2, self::H1V, self::H1, self::B1V, self::B1, self::H0V, self::H0 => 999, // 5 ans pour les autres
             // 5 ans standard
             self::SIR => 48, // 4 ans max avec examen intermédiaire
-            self::REPRISE, self::PRE_REPRISE => 99999, // Contexte spécifique (généralement unique à 45 ans)
+            self::REPRISE, self::PRE_REPRISE, self::PERMIS => 99999, // Contexte spécifique (généralement unique à 45 ans)
         };
     }
 }

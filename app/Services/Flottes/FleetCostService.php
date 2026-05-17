@@ -27,7 +27,10 @@ class FleetCostService
         // Somme des polices d'assurances et contrats cumulés
         $contractsCost = (float) $vehicle->contracts()->sum('annual_cost_ht');
 
-        return round($purchasePrice + $maintenancesCost + $contractsCost, 2);
+        // Somme des frais de route (Péages et parkings) HT
+        $expensesCost = (float) $vehicle->expenses()->sum('amount_ht');
+
+        return round($purchasePrice + $maintenancesCost + $contractsCost + $expensesCost, 2);
     }
 
     /**

@@ -82,22 +82,21 @@ class VehicleAssignmentService
             throw new Exception("Le kilométrage de retour ({$endOdometer} km) ne peut pas être inférieur au kilométrage de départ ({$assignment->start_odometer} km).");
         }
 
-        DB::transaction(function () use ($assignment, $endedAt, $endOdometer) {
-            $assignment->update([
-                'ended_at' => $endedAt,
-                'end_odometer' => $endOdometer,
-                'status' => AssignmentStatus::COMPLETED,
-            ]);
+        // Suppression du bloc DB::transaction interne
+        $assignment->update([
+            'ended_at' => $endedAt,
+            'end_odometer' => $endOdometer,
+            'status' => AssignmentStatus::COMPLETED,
+        ]);
 
-            $assignment->vehicle->update([
-                'odometer' => $endOdometer,
-                'status' => VehicleStatus::AVAILABLE,
-            ]);
+        $assignment->vehicle->update([
+            'odometer' => $endOdometer,
+            'status' => VehicleStatus::AVAILABLE,
+        ]);
 
-            if ($assignment->chantier_id) {
-                $this->imputeAnalyticCostToChantier($assignment);
-            }
-        });
+        if ($assignment->chantier_id) {
+            $this->imputeAnalyticCostToChantier($assignment);
+        }
     }
 
     /**

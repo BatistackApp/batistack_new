@@ -30,7 +30,8 @@ class QualificationFactory extends Factory
             QualificationType::CACES => $caces,
             QualificationType::ELECTRICAL => $electrical,
             QualificationType::MEDICAL => $medicat,
-            QualificationType::SAFETY => $safety
+            QualificationType::SAFETY => $safety,
+            QualificationType::PERMIS => 'permis',
         };
 
         // Convertissez l'instance d'énumération spécifique en CertificationSymbol pour l'attribut 'label' du modèle.
@@ -40,6 +41,7 @@ class QualificationFactory extends Factory
             QualificationType::ELECTRICAL => CertificationSymbol::fromElectricalCertification($electrical),
             QualificationType::MEDICAL => CertificationSymbol::fromMedicalVisiteType($medicat),
             QualificationType::SAFETY => CertificationSymbol::fromSafetyAidSymbol($safety),
+            QualificationType::PERMIS => CertificationSymbol::PERMIS,
         };
 
         return [

@@ -33,7 +33,8 @@ class Employee extends Model implements HasMedia
         'uuid',
         'address',
         'postal_code',
-        'city'
+        'city',
+        'pin_hash',
     ];
 
     protected function casts(): array

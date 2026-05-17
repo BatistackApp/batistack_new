@@ -83,6 +83,12 @@ class Vehicle extends Model implements HasMedia
         return $this->hasMany(FuelTransaction::class);
     }
 
+    public function expenses(): HasMany
+    {
+        return $this->hasMany(FleetExpense::class);
+    }
+
+
     public function registerMediaCollections(): void
     {
         $this->addMediaCollection('registration_card')->singleFile(); // Carte grise
