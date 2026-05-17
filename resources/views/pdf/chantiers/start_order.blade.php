@@ -33,6 +33,10 @@
                     <td class="text-slate-500 font-bold uppercase">Démarrage prévu :</td>
                     <td class="text-right font-bold">{{ $chantier->start_date_preview?->format('d/m/Y') ?? 'À définir' }}</td>
                 </tr>
+                <tr class="h-8">
+                    <td class="text-slate-500 font-bold uppercase">Délai d'exécution :</td>
+                    <td class="text-right font-bold">{{ $chantier->start_date_preview?->diffInDays($chantier->end_date_preview).' Jours' ?? 'À définir' }}</td>
+                </tr>
             </table>
         </section>
 

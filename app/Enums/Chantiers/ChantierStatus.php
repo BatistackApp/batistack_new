@@ -15,6 +15,7 @@ enum ChantierStatus: string implements HasColor, HasIcon, HasLabel
     case AWAITING_RECEPTION = 'waiting'; // Travaux finis, en attente de PV
     case FINISHED = 'finished';         // Réceptionné (Garantie active)
     case ARCHIVED = 'archived';         // Dossier clos
+    case SUSPENDED = 'suspended';       // Travaux Suspendu
 
     public function getLabel(): ?string
     {
@@ -25,6 +26,7 @@ enum ChantierStatus: string implements HasColor, HasIcon, HasLabel
             self::AWAITING_RECEPTION => 'En réception',
             self::FINISHED => 'Terminé',
             self::ARCHIVED => 'Archivé',
+            self::SUSPENDED => 'Suspendu',
         };
     }
 
@@ -37,6 +39,7 @@ enum ChantierStatus: string implements HasColor, HasIcon, HasLabel
             self::AWAITING_RECEPTION => 'primary',
             self::FINISHED => 'success',
             self::ARCHIVED => 'slate',
+            self::SUSPENDED => 'danger',
         };
     }
 
@@ -49,6 +52,7 @@ enum ChantierStatus: string implements HasColor, HasIcon, HasLabel
             self::AWAITING_RECEPTION => Phosphor::Hourglass,
             self::FINISHED => Phosphor::CheckCircle,
             self::ARCHIVED => Phosphor::Archive,
+            self::SUSPENDED => Phosphor::StopCircle,
         };
     }
 }
