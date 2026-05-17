@@ -48,7 +48,7 @@ class ContractExpiringNotification extends Notification implements ShouldQueue
             ->actions([
                 Action::make('contrat_view')
                     ->label('Fiche Vehicule')
-                    ->url("/chantiers/vehicles/{$this->contract->vehicle_id}/edit")
+                    ->url("/chantiers/vehicles/{$this->contract->vehicle_id}/edit"),
             ])
             ->getDatabaseMessage();
     }
