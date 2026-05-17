@@ -2,6 +2,7 @@
 
 namespace App\Models\RH;
 
+use App\Enums\RH\CertificationSymbol;
 use App\Enums\RH\QualificationType;
 use App\Observers\RH\QualificationObserver;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
@@ -36,6 +37,7 @@ class Qualification extends Model implements HasMedia
             'type' => QualificationType::class,
             'obtained_at' => 'date',
             'expires_at' => 'date',
+            'label' => CertificationSymbol::class,
         ];
     }
 }

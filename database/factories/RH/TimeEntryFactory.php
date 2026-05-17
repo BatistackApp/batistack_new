@@ -4,6 +4,7 @@ namespace Database\Factories\RH;
 
 use App\Enums\RH\TimeEntryStatus;
 use App\Enums\RH\TimeEntryType;
+use App\Models\Chantiers\Chantier;
 use App\Models\RH\Employee;
 use App\Models\RH\TimeEntry;
 use App\Models\User;
@@ -21,7 +22,7 @@ class TimeEntryFactory extends Factory
 
         return [
             'employee_id' => Employee::factory(),
-            'job_site_id' => $this->faker->numberBetween(1, 100),
+            'chantier_id' => Chantier::factory(),
             'date' => $this->faker->dateTimeBetween('-1 month', 'now'),
             'hours' => $this->faker->randomElement([7, 8, 8.5, 9]),
             'type' => TimeEntryType::NORMAL,

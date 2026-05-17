@@ -9,7 +9,7 @@ use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
-use Filament\Actions\EditAction;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Notifications\Notification;
 use Filament\Tables\Columns\IconColumn;
@@ -17,6 +17,9 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
+use Illuminate\Support\Collection;
+use Illuminate\Support\LazyCollection;
 use ToneGabes\Filament\Icons\Enums\Phosphor;
 
 class TimeEntriesTable
@@ -80,6 +83,25 @@ class TimeEntriesTable
                         ->action(function (TimeEntry $record, array $data, TimeEntryService $service) {
                             $service->refuse($record, $data['reason']);
                             Notification::make()->title('Pointage renvoyé pour correction')->warning()->send();
+                        }),
+                ]),
+            ])
+            ->toolbarActions([
+                BulkActionGroup::make([
+                    DeleteBulkAction::make(),
+                    Action::make('submit')
+                        ->accessSelectedRecords()
+                        ->label('Changer le status')
+                        ->schema([
+                            Select::make('status')
+                                ->label('Statut')
+                                ->options(TimeEntryStatus::class),
+                        ])
+                        ->action(function (array $data, EloquentCollection|Collection|LazyCollection $records) {
+                            $records->each(function (TimeEntry $record) use ($data) {
+                                $record->status = $data['status'];
+                                $record->save();
+                            });
                         }),
                 ]),
             ]);

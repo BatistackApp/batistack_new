@@ -41,7 +41,7 @@ class CreateTimeEntry extends CreateRecord
                 if ($workHours > 0 || $travelHours > 0) {
                     $lastCreatedRecord = TimeEntry::create([
                         'employee_id' => $data['employee_id'],
-                        'job_site_id' => $data['job_site_id'],
+                        'chantier_id' => $data['chantier_id'],
                         'date' => $weekStart->copy()->addDays($index),
                         'hours' => $workHours,
                         'travel_hours' => $travelHours,

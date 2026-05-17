@@ -34,6 +34,7 @@ class AppServiceProvider extends ServiceProvider
                 ->panels([
                     'core',
                     'tiers',
+                    'chantier',
                     'articles',
                     'rh',
                 ])
@@ -42,12 +43,14 @@ class AppServiceProvider extends ServiceProvider
                 ->icons([
                     'core' => Phosphor::Building,
                     'tiers' => Phosphor::Users,
+                    'chantier' => Phosphor::HardHat,
                     'articles' => Phosphor::BoxArrowUp,
                     'rh' => Phosphor::UsersThree,
                 ])
                 ->labels([
                     'core' => 'Configurations',
                     'tiers' => 'Tiers',
+                    'chantier' => 'Chantiers',
                     'articles' => 'Articles & Stocks',
                     'rh' => 'Ressources Humaines',
                 ]);
