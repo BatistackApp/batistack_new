@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 #[ObservedBy([VehicleAssignmentObserver::class])]
 class VehicleAssignment extends Model
@@ -41,6 +42,16 @@ class VehicleAssignment extends Model
     public function employee(): BelongsTo
     {
         return $this->belongsTo(Employee::class);
+    }
+
+    public function passengers(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            Employee::class,
+            'vehicle_assignment_passengers',
+            'vehicle_assignment_id',
+            'employee_id'
+        )->withTimestamps();
     }
 
     protected function casts(): array

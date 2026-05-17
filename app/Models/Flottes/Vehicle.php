@@ -34,7 +34,8 @@ class Vehicle extends Model implements HasMedia
         'purchase_date',
         'purchase_price',
         'tco_cache',
-        'pollution_control_due_at'
+        'pollution_control_due_at',
+        'usage_unit',
     ];
 
     protected function casts(): array
@@ -75,6 +76,11 @@ class Vehicle extends Model implements HasMedia
     public function fines(): HasMany
     {
         return $this->hasMany(TrafficFine::class);
+    }
+
+    public function fuelTransactions(): HasMany
+    {
+        return $this->hasMany(FuelTransaction::class);
     }
 
     public function registerMediaCollections(): void

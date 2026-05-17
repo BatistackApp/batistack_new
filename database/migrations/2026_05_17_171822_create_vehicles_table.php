@@ -14,6 +14,7 @@ return new class extends Migration {
             $table->string('brand');
             $table->string('model');
             $table->string('type');
+            $table->string('usage_unit')->default('km');
             $table->string('fuel_type');
 
             $table->decimal('odometer', 12, 2)->default(0);
