@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "84aa92a9e4a4fd53f78ee96f0ba623a0",
+    "content-hash": "0d693376d03f2862aa84b47ce198e76f",
     "packages": [
         {
             "name": "achyutn/filament-log-viewer",
@@ -2352,6 +2352,48 @@
                 }
             ],
             "time": "2025-10-31T18:51:33+00:00"
+        },
+        {
+            "name": "eduardoribeirodev/filament-leaflet",
+            "version": "v5.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/eduardoribeirodev/filament-leaflet.git",
+                "reference": "68c16219f85e3a41c7b124a57eec74781b14cf3a"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/eduardoribeirodev/filament-leaflet/zipball/68c16219f85e3a41c7b124a57eec74781b14cf3a",
+                "reference": "68c16219f85e3a41c7b124a57eec74781b14cf3a",
+                "shasum": ""
+            },
+            "require": {
+                "filament/filament": "^4.0|^5.0",
+                "php": "^8.1"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "EduardoRibeiroDev\\FilamentLeaflet\\FilamentLeafletServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "EduardoRibeiroDev\\FilamentLeaflet\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Um widget de mapa para FilamentPHP.",
+            "support": {
+                "issues": "https://github.com/eduardoribeirodev/filament-leaflet/issues",
+                "source": "https://github.com/eduardoribeirodev/filament-leaflet/tree/v5.0.0"
+            },
+            "time": "2026-05-10T20:25:46+00:00"
         },
         {
             "name": "egulias/email-validator",
@@ -17740,5 +17782,5 @@
         "ext-fileinfo": "*"
     },
     "platform-dev": {},
-    "plugin-api-version": "2.6.0"
+    "plugin-api-version": "2.9.0"
 }

@@ -110,6 +110,11 @@ class Chantier extends Model implements HasMedia
         return "{$this->address}, {$this->zip_code} {$this->city}";
     }
 
+    public function getLocationAttribute(): array
+    {
+        return [$this->latitude, $this->longitude];
+    }
+
     public function getRealHoursAttribute(): float
     {
         return (float) $this->timeEntries()

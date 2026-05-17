@@ -19,6 +19,7 @@ class ChantierObserver
     public function created(Chantier $chantier): void
     {
         InitializeChantierPhasesJob::dispatch($chantier);
+        GeocodeChantierAddressJob::dispatch($chantier);
     }
 
     public function saved(Chantier $chantier): void
