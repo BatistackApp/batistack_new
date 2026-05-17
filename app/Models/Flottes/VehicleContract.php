@@ -3,10 +3,13 @@
 namespace App\Models\Flottes;
 
 use App\Models\Tiers\ThirdParty;
+use App\Observers\Flottes\VehicleContractObserver;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+#[ObservedBy([VehicleContractObserver::class])]
 class VehicleContract extends Model
 {
     use HasFactory;

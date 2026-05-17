@@ -4,6 +4,7 @@ namespace App\Services\Flottes;
 
 use App\Models\Flottes\Vehicle;
 use Carbon\Carbon;
+use Carbon\CarbonInterface;
 use DB;
 use Exception;
 
@@ -19,7 +20,7 @@ class VehicleFuelService
         float $liters,
         float $costHt,
         float $odometerAtPlein,
-        Carbon $date
+        Carbon|CarbonInterface $date
     ): array {
         if ($odometerAtPlein < $vehicle->odometer) {
             throw new Exception("L'odomètre saisi lors du plein ({$odometerAtPlein} km) ne peut pas être inférieur au kilométrage actuel du véhicule ({$vehicle->odometer} km).");

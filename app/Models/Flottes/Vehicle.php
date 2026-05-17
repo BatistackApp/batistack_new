@@ -5,6 +5,8 @@ namespace App\Models\Flottes;
 use App\Enums\Flottes\AssignmentStatus;
 use App\Enums\Flottes\VehicleStatus;
 use App\Enums\Flottes\VehicleType;
+use App\Observers\Flottes\VehicleObserver;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -12,6 +14,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 
+#[ObservedBy([VehicleObserver::class])]
 class Vehicle extends Model implements HasMedia
 {
     use HasFactory, InteractsWithMedia;

@@ -5,10 +5,13 @@ namespace App\Models\Flottes;
 use App\Enums\Flottes\AssignmentStatus;
 use App\Models\Chantiers\Chantier;
 use App\Models\RH\Employee;
+use App\Observers\Flottes\VehicleAssignmentObserver;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+#[ObservedBy([VehicleAssignmentObserver::class])]
 class VehicleAssignment extends Model
 {
     use HasFactory;

@@ -4,10 +4,13 @@ namespace App\Models\Flottes;
 
 use App\Models\Core\VatRate;
 use App\Models\Tiers\ThirdParty;
+use App\Observers\Flottes\VehicleMaintenanceObserver;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+#[ObservedBy([VehicleMaintenanceObserver::class])]
 class VehicleMaintenance extends Model
 {
     use HasFactory;
