@@ -23,8 +23,13 @@ class VehicleAlertService
      * Vérifie si un véhicule à dépasser son échéance de révision kilométrique.
      * Exemple : Révision préconisée tous les 20 000 km.
      */
-    public function needsMaintenance(Vehicle $vehicle, float $intervalKm = 20000.00): bool
+    public function needsMaintenance(Vehicle $vehicle, ?float $interval = null): bool
     {
+        if ($interval === null) {
+            // RÈGLE MÉTIER BTP : Résolution automatique du seuil d'entretien par défaut
+            $interval = $vehicle->usage_unit === 'hours' ? 250.00 : 20000.00;
+        }
+
         $lastMaintenance = $vehicle->maintenances()
             ->whereNotNull('odometer_at_maintenance')
             ->latest('performed_at')
@@ -33,6 +38,6 @@ class VehicleAlertService
         $lastOdometer = $lastMaintenance ? (float) $lastMaintenance->odometer_at_maintenance : 0.0;
         $currentOdometer = (float) $vehicle->odometer;
 
-        return ($currentOdometer - $lastOdometer) >= $intervalKm;
+        return ($currentOdometer - $lastOdometer) >= $interval;
     }
 }
