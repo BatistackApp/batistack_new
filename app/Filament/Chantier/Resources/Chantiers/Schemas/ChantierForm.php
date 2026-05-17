@@ -10,6 +10,7 @@ use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Tabs;
 use Filament\Schemas\Schema;
+use Illuminate\Support\Carbon;
 use ToneGabes\Filament\Icons\Enums\Phosphor;
 
 class ChantierForm
@@ -49,7 +50,7 @@ class ChantierForm
                                         Select::make('manager_id')
                                             ->label('Conducteur de travaux')
                                             ->relationship('manager', 'last_name')
-                                            ->getOptionLabelFromRecordUsing(fn ($record) => $record->full_name)
+                                            ->getOptionLabelFromRecordUsing(fn ($record) => $record->full_name.' - '.$record->currentContract->job_title)
                                             ->searchable()
                                             ->preload(),
                                     ]),
@@ -68,12 +69,68 @@ class ChantierForm
                                 Grid::make(2)->schema([
                                     Section::make('Dates Prévisionnelles')
                                         ->schema([
-                                            DatePicker::make('start_date_preview')->label('Démarrage prévu')->native(false),
-                                            DatePicker::make('end_date_preview')->label('Fin prévue')->native(false),
+                                            DatePicker::make('start_date_preview')
+                                                ->label('Démarrage prévu')
+                                                ->native(false)
+                                                ->afterStateUpdated(function ($state, $set, $get) {
+                                                    if ($get('end_date_preview') && $state) {
+                                                        $startDate = Carbon::parse($state);
+                                                        $endDate = Carbon::parse($get('end_date_preview'));
+
+                                                        if ($endDate->lt($startDate)) {
+                                                            $set('budget_hours', 0);
+
+                                                            return;
+                                                        }
+
+                                                        $workingDays = 0;
+                                                        // Itérer sur chaque jour de la période pour compter les jours ouvrables
+                                                        while ($startDate->lte($endDate)) {
+                                                            if (! $startDate->isWeekend()) {
+                                                                $workingDays++;
+                                                            }
+                                                            $startDate->addDay();
+                                                        }
+                                                        $set('budget_hours', $workingDays * 8);
+                                                    }
+                                                })
+                                                ->reactive()
+                                                ->live(),
+                                            DatePicker::make('end_date_preview')
+                                                ->label('Fin prévue')
+                                                ->native(false)
+                                                ->afterStateUpdated(function ($state, $set, $get) {
+                                                    if ($get('start_date_preview') && $state) {
+                                                        $startDate = Carbon::parse($state);
+                                                        $endDate = Carbon::parse($get('start_date_preview'));
+
+                                                        if ($endDate->lt($startDate)) {
+                                                            $set('budget_hours', 0);
+
+                                                            return;
+                                                        }
+
+                                                        $workingDays = 0;
+                                                        // Itérer sur chaque jour de la période pour compter les jours ouvrables
+                                                        while ($startDate->lte($endDate)) {
+                                                            if (! $startDate->isWeekend()) {
+                                                                $workingDays++;
+                                                            }
+                                                            $startDate->addDay();
+                                                        }
+                                                        $set('budget_hours', $workingDays * 8);
+                                                    }
+                                                })
+                                                ->reactive()
+                                                ->live(),
                                         ])->columnSpan(1),
                                     Section::make('Enveloppes HT')
                                         ->schema([
-                                            TextInput::make('budget_hours')->label('Budget Heures')->numeric()->suffix('h'),
+                                            TextInput::make('budget_hours')
+                                                ->label('Budget Heures')
+                                                ->numeric()
+                                                ->readOnly()
+                                                ->suffix('h'),
                                             TextInput::make('budget_total_ht')->label('Montant Global Marché')->numeric()->prefix('€'),
                                         ])->columnSpan(1),
                                 ]),

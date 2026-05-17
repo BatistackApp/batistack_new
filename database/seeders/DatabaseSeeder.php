@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\RH\Contract;
 use App\Models\RH\Employee;
 use App\Models\User;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
@@ -29,6 +30,10 @@ class DatabaseSeeder extends Seeder
             'first_name' => 'John',
             'last_name' => 'Doe',
             'email' => 'admin@admin.com',
+        ]);
+
+        Contract::factory()->create([
+            'employee_id' => 1
         ]);
     }
 }

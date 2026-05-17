@@ -9,10 +9,12 @@ use Filament\Actions\AttachAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DetachAction;
 use Filament\Actions\DetachBulkAction;
+use Filament\Forms\Components\Select;
 use Filament\Notifications\Notification;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use ToneGabes\Filament\Icons\Enums\Phosphor;
 
 class MembersRelationManager extends RelationManager
@@ -44,6 +46,14 @@ class MembersRelationManager extends RelationManager
                 AttachAction::make()
                     ->label('Assigner un ouvrier')
                     ->preloadRecordSelect()
+                    ->schema([
+                        Select::make('recordId') // Le nom du champ doit être 'recordId' pour l'AttachAction
+                            ->label('Sélectionner un employé')
+                            ->options(Employee::all()->pluck('full_name', 'id')->toArray())
+                            ->getOptionLabelsUsing(fn ($record) => $record->full_name.' '.$record->currentContract->job_title)
+                            ->searchable()
+                            ->preload(),
+                    ])
                     ->after(function (array $data) {
                         $employee = Employee::find($data['recordId']);
                         $check = app(ChantierAnalyticService::class)->canAssignEmployee($this->getOwnerRecord(), $employee);

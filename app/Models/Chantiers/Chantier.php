@@ -48,7 +48,8 @@ class Chantier extends Model implements HasMedia
 
     public function client(): BelongsTo
     {
-        return $this->belongsTo(ThirdParty::class, 'client_id');
+        return $this->belongsTo(ThirdParty::class, 'client_id')
+            ->where('type', ThirdPartyType::CLIENT);
     }
 
     public function manager(): BelongsTo
