@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "0d693376d03f2862aa84b47ce198e76f",
+    "content-hash": "755bb4c16b0bd5c3337191439e1d3aa1",
     "packages": [
         {
             "name": "achyutn/filament-log-viewer",
@@ -14190,6 +14190,59 @@
             "time": "2025-12-27T19:49:13+00:00"
         },
         {
+            "name": "vodafoneziggonl/filament-multi-widget",
+            "version": "5.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/VodafoneZiggoNL/filament-multi-widget.git",
+                "reference": "f341ed445f490575a8480f3d3cf9ad456e0b9003"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/VodafoneZiggoNL/filament-multi-widget/zipball/f341ed445f490575a8480f3d3cf9ad456e0b9003",
+                "reference": "f341ed445f490575a8480f3d3cf9ad456e0b9003",
+                "shasum": ""
+            },
+            "require": {
+                "filament/filament": "^5.0",
+                "php": "^8.2",
+                "spatie/laravel-package-tools": "^1.15.0"
+            },
+            "require-dev": {
+                "tightenco/duster": "^3.0"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "VodafoneZiggoNL\\MultiWidget\\MultiWidgetServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "VodafoneZiggoNL\\MultiWidget\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "A Filament widget that encompasses multiple widgets.",
+            "homepage": "https://github.com/vodafoneziggonl/filament-multi-widget",
+            "keywords": [
+                "VodafoneZiggo",
+                "filament",
+                "laravel",
+                "multi-widget"
+            ],
+            "support": {
+                "issues": "https://github.com/VodafoneZiggoNL/filament-multi-widget/issues",
+                "source": "https://github.com/VodafoneZiggoNL/filament-multi-widget/tree/5.0.0"
+            },
+            "time": "2026-01-27T07:55:02+00:00"
+        },
+        {
             "name": "voku/portable-ascii",
             "version": "2.1.1",
             "source": {
@@ -17779,7 +17832,8 @@
     "prefer-lowest": false,
     "platform": {
         "php": "^8.3",
-        "ext-fileinfo": "*"
+        "ext-fileinfo": "*",
+        "ext-zip": "*"
     },
     "platform-dev": {},
     "plugin-api-version": "2.9.0"

@@ -31,6 +31,7 @@ test('il détecte les non-conformités de l’équipe assignée', function () {
         'employee_id' => $employee->id,
         'expires_at' => now()->subDay(),
         'label' => CertificationSymbol::R482,
+        'type' => \App\Enums\RH\QualificationType::CACES,
     ]);
 
     $res = $service->checkTeamCompliance($chantier->refresh());

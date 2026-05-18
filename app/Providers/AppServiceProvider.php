@@ -37,6 +37,7 @@ class AppServiceProvider extends ServiceProvider
                     'chantier',
                     'articles',
                     'rh',
+                    'flottes',
                 ])
                 ->modalHeading('Espaces')
                 ->slideOver()
@@ -46,6 +47,7 @@ class AppServiceProvider extends ServiceProvider
                     'chantier' => Phosphor::HardHat,
                     'articles' => Phosphor::BoxArrowUp,
                     'rh' => Phosphor::UsersThree,
+                    'flottes' => Phosphor::Truck,
                 ])
                 ->labels([
                     'core' => 'Configurations',
@@ -53,6 +55,7 @@ class AppServiceProvider extends ServiceProvider
                     'chantier' => 'Chantiers',
                     'articles' => 'Articles & Stocks',
                     'rh' => 'Ressources Humaines',
+                    'flottes' => 'Flottes',
                 ]);
         });
 

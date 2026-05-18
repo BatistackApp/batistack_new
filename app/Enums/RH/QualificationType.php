@@ -12,6 +12,7 @@ enum QualificationType: string implements HasIcon, HasLabel
     case ELECTRICAL = 'electrical'; // Habilitation électrique
     case MEDICAL = 'medical';       // Visite médicale
     case SAFETY = 'safety';         // SST, Secourisme, Travail en hauteur
+    case PERMIS = 'permis';
 
     public function getLabel(): ?string
     {
@@ -20,6 +21,7 @@ enum QualificationType: string implements HasIcon, HasLabel
             self::ELECTRICAL => 'Habilitation Électrique',
             self::MEDICAL => 'Visite Médicale',
             self::SAFETY => 'Sécurité / Prévention',
+            self::PERMIS => 'Permis B / Permis de Conduire',
         };
     }
 
@@ -30,6 +32,7 @@ enum QualificationType: string implements HasIcon, HasLabel
             self::ELECTRICAL => Phosphor::Lightning,
             self::MEDICAL => Phosphor::Stethoscope,
             self::SAFETY => Phosphor::FirstAid,
+            self::PERMIS => Phosphor::Car,
         };
     }
 }

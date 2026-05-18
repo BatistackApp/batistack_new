@@ -40,3 +40,11 @@ Schedule::command('chantiers:missing-alert-logs')
 Schedule::command('chantiers:sync-metrics --all')
     ->dailyAt('02:30')
     ->withoutOverlapping();
+
+// Flottes
+Schedule::command('flottes:fleet-supervisor')->dailyAt('06:00');
+Schedule::command('flottes:fleet-supervisor --alert')->weeklyOn(1, '19:00');
+Schedule::command('flottes:fleet-remind-assignments')
+    ->dailyAt('18:00')
+    ->timezone('Europe/Paris')
+    ->onFailure(fn () => logger()->error("Échec de la commande de rappel d'affectation Flotte."));

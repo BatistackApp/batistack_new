@@ -12,5 +12,6 @@ class DemoSeeder extends Seeder
         $this->call(TiersSeeder::class);
         $this->call(ItemSeeder::class);
         $this->call(RHSeeder::class);
+        $this->call(FlotteSeeder::class);
     }
 }
