@@ -17,11 +17,14 @@ class FleetDocumentService extends DocumentService
      */
     public function generateAssignmentForm(VehicleAssignment $assignment): string
     {
-        $assignment->load(['vehicle', 'employee', 'chantier']);
+        // Chargement eager de l'inventaire outillage lié au véhicule
+        $assignment->load(['vehicle.inventories.item', 'employee', 'chantier']);
 
         $data = [
             'company' => Company::first(),
             'assignment' => $assignment,
+            // Récupération directe de l'outillage de valeur présent dans le fourgon
+            'onboardInventory' => $assignment->vehicle->inventories,
             'title' => 'FICHE DE MISE À DISPOSITION : '.$assignment->vehicle->reference,
             'generated_at' => Carbon::now()->format('d/m/Y H:i'),
         ];

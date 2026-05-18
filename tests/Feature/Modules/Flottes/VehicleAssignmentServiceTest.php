@@ -1,12 +1,18 @@
 <?php
 
+use App\Enums\Articles\ItemType;
+use App\Enums\Core\UnitType;
 use App\Enums\Flottes\AssignmentStatus;
 use App\Enums\Flottes\VehicleStatus;
 use App\Enums\Flottes\VehicleType;
 use App\Enums\RH\MedicalAptitude;
+use App\Models\Articles\Item;
 use App\Models\Chantiers\Chantier;
+use App\Models\Core\Unit;
+use App\Models\Core\VatRate;
 use App\Models\Flottes\Vehicle;
 use App\Models\Flottes\VehicleAssignment;
+use App\Models\Flottes\VehicleInventory;
 use App\Models\RH\Employee;
 use App\Models\RH\MedicalVisit;
 use App\Models\RH\Qualification;
@@ -62,6 +68,26 @@ beforeEach(function () {
         'address' => '10 Rue de la Paix',
         'zip_code' => '75002',
         'city' => 'Paris',
+    ]);
+
+    $this->unit = Unit::create([
+        'name' => 'Unité',
+        'symbol' => 'u',
+        'type' => UnitType::UNIT,
+    ]);
+
+    $this->vatRate = VatRate::create([
+        'name' => 'TVA 20%',
+        'rate' => 20.0000,
+        'is_default' => true,
+    ]);
+
+    $this->perfo = Item::create([
+        'reference' => 'OUT-PERFO-HILTI',
+        'name' => 'Perforateur Burineur Hilti TE 70',
+        'type' => ItemType::STOCKABLE,
+        'unit_id' => $this->unit->id,
+        'vat_rate_id' => $this->vatRate->id,
     ]);
 });
 
@@ -329,5 +355,26 @@ describe('VehicleAssignmentService - Clôture des trajets et calcul kilométriqu
         // Le log d'imputation calcule en arrière-plan :
         // Rate d'amortissement = 50000 / 100200 = 0.4990 €/km
         // Coût complet = 200 * (0.40 + 0.499) = 179.80 € HT imputés au chantier
+    });
+});
+
+describe('VehicleInventory - Gestion du matériel embarqué', function () {
+
+    test('il peut lier du matériel de valeur à un véhicule et récupérer l’inventaire complet', function () {
+        // Enregistrement d'un outillage Hilti dans le Boxer
+        VehicleInventory::create([
+            'vehicle_id' => $this->vehicle->id,
+            'item_id' => $this->perfo->id,
+            'serial_number' => 'HLT-70-12345',
+            'quantity' => 1,
+        ]);
+
+        // Interrogation de l'inventaire via le service d'affectation
+        $inventory = $this->assignmentService->getOnboardInventory($this->vehicle);
+
+        expect($inventory)->toHaveCount(1)
+            ->and($inventory->first()->item->name)->toBe('Perforateur Burineur Hilti TE 70')
+            ->and($inventory->first()->serial_number)->toBe('HLT-70-12345')
+            ->and($inventory->first()->quantity)->toBe(1);
     });
 });

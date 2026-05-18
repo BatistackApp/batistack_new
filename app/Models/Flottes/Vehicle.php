@@ -89,6 +89,12 @@ class Vehicle extends Model implements HasMedia
         return $this->hasMany(FleetExpense::class);
     }
 
+    public function inventories(): HasMany
+    {
+        return $this->hasMany(VehicleInventory::class);
+    }
+
+
 
     public function registerMediaCollections(): void
     {

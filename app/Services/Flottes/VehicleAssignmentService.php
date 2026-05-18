@@ -15,6 +15,7 @@ use Carbon\Carbon;
 use Carbon\CarbonInterface;
 use DB;
 use Exception;
+use Illuminate\Database\Eloquent\Collection;
 use Throwable;
 
 class VehicleAssignmentService
@@ -139,6 +140,14 @@ class VehicleAssignmentService
     }
 
     /**
+     * Récupère l'inventaire complet de l'outillage embarqué dans le véhicule.
+     */
+    public function getOnboardInventory(Vehicle $vehicle): Collection
+    {
+        return $vehicle->inventories()->with('item')->get();
+    }
+
+    /**
      * Contrôle environnemental : Valide que la vignette Crit'Air du véhicule est autorisée
      * dans la commune de destination du chantier (ZFE).
      *
@@ -179,7 +188,7 @@ class VehicleAssignmentService
             $maxRank = $ranks[$maxAllowed] ?? 5;
 
             if ($vehicleRank > $maxRank) {
-                throw new Exception("Conformité ZFE violée : Le véhicule {$vehicle->reference} (Crit'Air {$vehicleCritAir}) n'est pas autorisé à circuler dans la ZFE de " . ucfirst($city) . " (Crit'Air {$maxAllowed} max autorisé).");
+                throw new Exception("Conformité ZFE violée : Le véhicule {$vehicle->reference} (Crit'Air {$vehicleCritAir}) n'est pas autorisé à circuler dans la ZFE de ".ucfirst($city)." (Crit'Air {$maxAllowed} max autorisé).");
             }
         }
     }
