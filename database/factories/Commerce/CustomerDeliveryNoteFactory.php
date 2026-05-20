@@ -3,28 +3,28 @@
 namespace Database\Factories\Commerce;
 
 use App\Models\Chantiers\Chantier;
+use App\Models\Commerce\CustomerDeliveryNote;
 use App\Models\Commerce\CustomerOrder;
-use App\Models\Commerce\CustomerSituation;
+use App\Models\Tiers\ThirdParty;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Carbon;
 
-class CustomerSituationFactory extends Factory
+class CustomerDeliveryNoteFactory extends Factory
 {
-    protected $model = CustomerSituation::class;
+    protected $model = CustomerDeliveryNote::class;
 
     public function definition(): array
     {
         return [
-            'number' => $this->faker->randomNumber(),
+            'reference' => $this->faker->word(),
             'status' => $this->faker->word(),
-            'total_ht' => $this->faker->word(),
-            'retenue_garantie_amount' => $this->faker->word(),
-            'prorata_amount' => $this->faker->word(),
+            'delivery_date' => Carbon::now(),
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
 
-            'customer_order_id' => CustomerOrder::factory(),
+            'client_id' => ThirdParty::factory(),
             'chantier_id' => Chantier::factory(),
+            'customer_order_id' => CustomerOrder::factory(),
         ];
     }
 }

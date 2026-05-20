@@ -8,19 +8,17 @@ use Filament\Support\Contracts\HasLabel;
 enum InvoiceStatus: string implements HasColor, HasLabel
 {
     case DRAFT = 'draft';
-    case SUBMITTED = 'submitted';
-    case APPROVED = 'approved'; // Bon à payer côté achat
-    case LITIGE = 'litige';       // Écart détecté au rapprochement
+    case VALIDATED = 'validated';
+    case LITIGE = 'litige';
     case PAID = 'paid';
 
     public function getLabel(): ?string
     {
         return match ($this) {
             self::DRAFT => 'Brouillon',
-            self::SUBMITTED => 'Soumise à validation',
-            self::APPROVED => 'Bon à Payer / Approuvée',
-            self::LITIGE => 'En Litige (Écart)',
-            self::PAID => 'Payée',
+            self::VALIDATED => 'Validée / BAP',
+            self::LITIGE => 'En litige',
+            self::PAID => 'Payée'
         };
     }
 
@@ -28,10 +26,9 @@ enum InvoiceStatus: string implements HasColor, HasLabel
     {
         return match ($this) {
             self::DRAFT => 'gray',
-            self::SUBMITTED => 'warning',
-            self::APPROVED => 'info',
+            self::VALIDATED => 'primary',
             self::LITIGE => 'danger',
-            self::PAID => 'success',
+            self::PAID => 'success'
         };
     }
 }

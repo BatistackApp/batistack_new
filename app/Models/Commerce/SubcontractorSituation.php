@@ -4,28 +4,29 @@ namespace App\Models\Commerce;
 
 use App\Enums\Commerce\InvoiceStatus;
 use App\Models\Chantiers\Chantier;
+use App\Models\Tiers\ThirdParty;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class CustomerSituation extends Model
+class SubcontractorSituation extends Model
 {
     use HasFactory;
 
     protected $fillable = [
-        'customer_order_id',
+        'third_party_id',
         'chantier_id',
-        'number',
-        'status',
+        'purchase_order_id',
+        'reference',
+        'progress_percentage',
         'total_ht',
         'retenue_garantie_amount',
-        'prorata_amount',
+        'status',
     ];
 
-    public function order(): BelongsTo
+    public function subcontractor(): BelongsTo
     {
-        return $this->belongsTo(CustomerOrder::class, 'customer_order_id');
+        return $this->belongsTo(ThirdParty::class, 'subcontractor_id');
     }
 
     public function chantier(): BelongsTo
@@ -33,16 +34,18 @@ class CustomerSituation extends Model
         return $this->belongsTo(Chantier::class);
     }
 
-    public function items(): HasMany
+    public function order(): BelongsTo
     {
-        return $this->hasMany(CustomerSituationItem::class);
+        return $this->belongsTo(PurchaseOrder::class, 'purchase_order_id');
     }
 
     protected function casts(): array
     {
         return [
             'status' => InvoiceStatus::class,
+            'progress_percentage' => 'integer',
             'total_ht' => 'decimal:2',
+            'retenue_garantie_amount' => 'decimal:2',
         ];
     }
 }

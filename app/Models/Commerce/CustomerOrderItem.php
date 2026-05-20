@@ -8,24 +8,22 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class CustomerQuoteItem extends Model
+class CustomerOrderItem extends Model
 {
     use HasFactory;
 
     protected $fillable = [
-        'customer_quote_id',
+        'customer_order_id',
         'item_id',
-        'lot_label',
         'name',
         'quantity',
-        'purchase_price',
         'selling_price',
         'vat_rate_id',
     ];
 
-    public function quote(): BelongsTo
+    public function order(): BelongsTo
     {
-        return $this->belongsTo(CustomerQuote::class, 'customer_quote_id');
+        return $this->belongsTo(CustomerOrder::class, 'customer_order_id');
     }
 
     public function item(): BelongsTo
@@ -42,7 +40,6 @@ class CustomerQuoteItem extends Model
     {
         return [
             'quantity' => 'decimal:4',
-            'purchase_price' => 'decimal:4',
             'selling_price' => 'decimal:4',
         ];
     }

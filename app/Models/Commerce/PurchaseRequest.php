@@ -5,25 +5,25 @@ namespace App\Models\Commerce;
 use App\Enums\Commerce\QuoteStatus;
 use App\Models\Chantiers\Chantier;
 use App\Models\Tiers\ThirdParty;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class CustomerQuote extends Model
+class PurchaseRequest extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
-        'client_id',
+        'supplier_id',
         'chantier_id',
         'reference',
         'status',
-        'total_ht',
-        'total_ttc',
-        'signed_at',
     ];
 
-    public function client(): BelongsTo
+    public function supplier(): BelongsTo
     {
-        return $this->belongsTo(ThirdParty::class, 'client_id');
+        return $this->belongsTo(ThirdParty::class, 'supplier_id');
     }
 
     public function chantier(): BelongsTo
@@ -33,16 +33,13 @@ class CustomerQuote extends Model
 
     public function items(): HasMany
     {
-        return $this->hasMany(CustomerQuoteItem::class);
+        return $this->hasMany(PurchaseRequestItem::class);
     }
 
     protected function casts(): array
     {
         return [
             'status' => QuoteStatus::class,
-            'total_ht' => 'decimal:2',
-            'total_ttc' => 'decimal:2',
-            'signed_at' => 'datetime',
         ];
     }
 }

@@ -14,6 +14,8 @@ enum CacesSymbol: string implements HasDescription
     case R489 = 'R489'; // Chariots de manutention à conducteur porté (Clark, transpalettes portés)
     case R490 = 'R490'; // Grues de chargement
 
+    case PERMIS = 'PERMIS';
+
     public function getDescription(): string|Htmlable|null
     {
         return match ($this) {
@@ -23,6 +25,7 @@ enum CacesSymbol: string implements HasDescription
             self::R486 => 'CACES R486 (Nacelles / PEMT)',
             self::R489 => 'CACES R489 (Chariots élévateurs de manutention)',
             self::R490 => 'CACES R490 (Grues de chargement / auxiliaires de chargement)',
+            self::PERMIS => 'Permis de conduire',
         };
     }
 
@@ -34,6 +37,7 @@ enum CacesSymbol: string implements HasDescription
         return match ($this) {
             self::R482 => 120, // 10 ans pour les engins de chantier
             self::R484, self::R485, self::R486, self::R489, self::R490 => 60, // 5 ans pour les autres
+            self::PERMIS => 9999,
         };
     }
 }

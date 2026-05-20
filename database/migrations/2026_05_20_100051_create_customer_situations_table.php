@@ -1,7 +1,7 @@
 <?php
 
 use App\Models\Chantiers\Chantier;
-use App\Models\Commerce\CustomerQuote;
+use App\Models\Commerce\CustomerOrder;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -11,15 +11,13 @@ return new class extends Migration {
     {
         Schema::create('customer_situations', function (Blueprint $table) {
             $table->id();
-            $table->foreignIdFor(CustomerQuote::class);
-            $table->foreignIdFor(Chantier::class);
+            $table->foreignIdFor(CustomerOrder::class)->constrained()->cascadeOnDelete();
+            $table->foreignIdFor(Chantier::class)->constrained();
             $table->integer('number');
-            $table->string('status');
-            $table->decimal('total_ht');
-            $table->decimal('total_ttc');
-            $table->decimal('retenue_garantie_amount');
-            $table->decimal('prorata_amount');
-            $table->timestamp('approved_at')->nullable();
+            $table->string('status')->default('draft');
+            $table->string('total_ht', 15)->default(0);
+            $table->string('retenue_garantie_amount', 15)->default(0);
+            $table->string('prorata_amount', 15)->default(0);
             $table->timestamps();
         });
     }
