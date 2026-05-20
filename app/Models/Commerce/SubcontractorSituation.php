@@ -14,7 +14,7 @@ class SubcontractorSituation extends Model
     use HasFactory;
 
     protected $fillable = [
-        'third_party_id',
+        'subcontractor_id',
         'chantier_id',
         'purchase_order_id',
         'reference',

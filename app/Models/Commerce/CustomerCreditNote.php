@@ -12,7 +12,7 @@ class CustomerCreditNote extends Model
     use HasFactory;
 
     protected $fillable = [
-        'third_party_id',
+        'client_id',
         'customer_invoice_id',
         'reference',
         'status',
