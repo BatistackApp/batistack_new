@@ -45,6 +45,7 @@ class CommerceSeeder extends Seeder
             'status' => QuoteStatus::SIGNED,
             'total_ht' => 1500.00,
             'signed_at' => now()->subWeeks(3),
+            'responsable_id' => 1,
         ]);
 
         $order = CustomerOrder::create([
@@ -54,6 +55,7 @@ class CommerceSeeder extends Seeder
             'reference' => 'CMD-2026-001',
             'status' => OrderStatus::DELIVERED,
             'total_ht' => 1500.00,
+            'responsable_id' => 1,
         ]);
 
         $delivery = CustomerDeliveryNote::create([
@@ -63,6 +65,7 @@ class CommerceSeeder extends Seeder
             'reference' => 'BL-2026-001',
             'status' => DeliveryStatus::DELIVERED,
             'delivery_date' => now()->subDays(5),
+            'responsable_id' => 1,
         ]);
 
         $invoice = CustomerInvoice::create([
@@ -73,6 +76,7 @@ class CommerceSeeder extends Seeder
             'type' => InvoiceType::SIMPLE,
             'status' => InvoiceStatus::VALIDATED,
             'total_ht' => 1500.00,
+            'responsable_id' => 1,
         ]);
 
 

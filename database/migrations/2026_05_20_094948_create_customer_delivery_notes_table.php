@@ -3,6 +3,7 @@
 use App\Models\Chantiers\Chantier;
 use App\Models\Commerce\CustomerOrder;
 use App\Models\Tiers\ThirdParty;
+use App\Models\User;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -15,6 +16,7 @@ return new class extends Migration {
             $table->foreignIdFor(ThirdParty::class, 'client_id')->constrained();
             $table->foreignIdFor(Chantier::class)->nullable()->constrained();
             $table->foreignIdFor(CustomerOrder::class)->nullable()->constrained()->nullOnDelete();
+            $table->foreignIdFor(User::class, 'responsable_id')->constrained();
             $table->string('reference')->unique();
             $table->string('status')->default('preparation');
             $table->date('delivery_date')->nullable();

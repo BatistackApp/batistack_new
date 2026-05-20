@@ -5,6 +5,7 @@ namespace App\Models\Commerce;
 use App\Enums\Commerce\OrderStatus;
 use App\Models\Chantiers\Chantier;
 use App\Models\Tiers\ThirdParty;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -22,6 +23,7 @@ class CustomerOrder extends Model
         'status',
         'total_ht',
         'total_ttc',
+        'responsable_id',
     ];
 
     public function client(): BelongsTo
@@ -42,6 +44,11 @@ class CustomerOrder extends Model
     public function items(): HasMany
     {
         return $this->hasMany(CustomerOrderItem::class);
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'responsable_id');
     }
 
     protected function casts(): array

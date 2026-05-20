@@ -15,6 +15,8 @@ enum QuoteStatus: string implements HasColor, HasIcon, HasLabel
     case REJECTED = 'rejected';
     case CANCELLED = 'cancelled';
 
+    case EXPIRED = 'expired';
+
     public function getLabel(): ?string
     {
         return match ($this) {
@@ -23,6 +25,7 @@ enum QuoteStatus: string implements HasColor, HasIcon, HasLabel
             self::SIGNED => 'Accepté / Signé',
             self::REJECTED => 'Refusé',
             self::CANCELLED => 'Annulé',
+            self::EXPIRED => 'Expiré',
         };
     }
 
@@ -32,7 +35,7 @@ enum QuoteStatus: string implements HasColor, HasIcon, HasLabel
             self::DRAFT, self::CANCELLED => 'gray',
             self::SENT => 'warning',
             self::SIGNED => 'success',
-            self::REJECTED => 'danger',
+            self::REJECTED, self::EXPIRED => 'danger',
         };
     }
 
@@ -44,6 +47,7 @@ enum QuoteStatus: string implements HasColor, HasIcon, HasLabel
             self::SIGNED => Phosphor::CheckCircle,
             self::REJECTED => Phosphor::XCircle,
             self::CANCELLED => Phosphor::Prohibit,
+            self::EXPIRED => Phosphor::ClockCounterClockwise,
         };
     }
 }

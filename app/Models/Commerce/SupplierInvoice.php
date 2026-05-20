@@ -4,11 +4,14 @@ namespace App\Models\Commerce;
 
 use App\Enums\Commerce\InvoiceStatus;
 use App\Models\Tiers\ThirdParty;
+use App\Observers\Commerce\SupplierInvoiceObserver;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+#[ObservedBy([SupplierInvoiceObserver::class])]
 class SupplierInvoice extends Model
 {
     use HasFactory;
@@ -21,6 +24,7 @@ class SupplierInvoice extends Model
         'amount_ttc',
         'status',
         'dispute_reason',
+        'due_date',
     ];
 
     public function supplier(): BelongsTo
@@ -44,6 +48,7 @@ class SupplierInvoice extends Model
             'status' => InvoiceStatus::class,
             'amount_ht' => 'decimal:2',
             'amount_ttc' => 'decimal:2',
+            'due_date' => 'datetime',
         ];
     }
 }

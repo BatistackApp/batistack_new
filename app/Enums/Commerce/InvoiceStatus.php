@@ -12,13 +12,18 @@ enum InvoiceStatus: string implements HasColor, HasLabel
     case LITIGE = 'litige';
     case PAID = 'paid';
 
+    case AUDIT = 'audit';
+    case BON_A_PAYER = 'bon_a_payer';
+
     public function getLabel(): ?string
     {
         return match ($this) {
             self::DRAFT => 'Brouillon',
             self::VALIDATED => 'Validée / BAP',
             self::LITIGE => 'En litige',
-            self::PAID => 'Payée'
+            self::PAID => 'Payée',
+            self::AUDIT => 'Controle',
+            self::BON_A_PAYER => 'A Payer',
         };
     }
 
@@ -28,7 +33,8 @@ enum InvoiceStatus: string implements HasColor, HasLabel
             self::DRAFT => 'gray',
             self::VALIDATED => 'primary',
             self::LITIGE => 'danger',
-            self::PAID => 'success'
+            self::PAID => 'success',
+            self::AUDIT, self::BON_A_PAYER => 'warning',
         };
     }
 }

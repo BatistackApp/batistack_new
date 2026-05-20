@@ -6,11 +6,15 @@ use App\Enums\Commerce\InvoiceStatus;
 use App\Enums\Commerce\InvoiceType;
 use App\Models\Chantiers\Chantier;
 use App\Models\Tiers\ThirdParty;
+use App\Models\User;
+use App\Observers\Commerce\CustomerInvoiceObserver;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+#[ObservedBy([CustomerInvoiceObserver::class])]
 class CustomerInvoice extends Model
 {
     use HasFactory;
@@ -25,6 +29,9 @@ class CustomerInvoice extends Model
         'status',
         'total_ht',
         'total_ttc',
+        'due_date',
+        'cancellation_reason',
+        'responsable_id',
     ];
 
     public function client(): BelongsTo
@@ -52,6 +59,11 @@ class CustomerInvoice extends Model
         return $this->hasMany(CustomerInvoiceItem::class);
     }
 
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'responsable_id');
+    }
+
     protected function casts(): array
     {
         return [
@@ -59,6 +71,7 @@ class CustomerInvoice extends Model
             'status' => InvoiceStatus::class,
             'total_ht' => 'decimal:2',
             'total_ttc' => 'decimal:2',
+            'due_date' => 'datetime',
         ];
     }
 }
