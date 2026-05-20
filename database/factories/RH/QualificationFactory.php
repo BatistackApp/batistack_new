@@ -18,6 +18,7 @@ class QualificationFactory extends Factory
 
     public function definition(): array
     {
+        \Notification::fake();
         $obtainedAt = $this->faker->dateTimeBetween('-3 years', 'now');
         $type = $this->faker->randomElement(QualificationType::class);
         // Ces variables contiennent les instances d'énumérations spécifiques (ex: CacesSymbol, ElectricalCertification)
@@ -27,22 +28,22 @@ class QualificationFactory extends Factory
         $medicat = $this->faker->randomElement(MedicalVisiteType::class);
 
         $specificEnumInstance = match ($type) {
-            QualificationType::CACES => $caces,
+            QualificationType::CACES, QualificationType::PERMIS => $caces,
             QualificationType::ELECTRICAL => $electrical,
             QualificationType::MEDICAL => $medicat,
             QualificationType::SAFETY => $safety,
-            QualificationType::PERMIS => 'permis',
         };
 
         // Convertissez l'instance d'énumération spécifique en CertificationSymbol pour l'attribut 'label' du modèle.
         // Cette conversion nécessitera des méthodes statiques dans votre enum CertificationSymbol.
         $certificationLabel = match ($type) {
-            QualificationType::CACES => CertificationSymbol::fromCacesSymbol($caces),
+            QualificationType::CACES, QualificationType::PERMIS => CertificationSymbol::fromCacesSymbol($caces),
             QualificationType::ELECTRICAL => CertificationSymbol::fromElectricalCertification($electrical),
             QualificationType::MEDICAL => CertificationSymbol::fromMedicalVisiteType($medicat),
             QualificationType::SAFETY => CertificationSymbol::fromSafetyAidSymbol($safety),
-            QualificationType::PERMIS => CertificationSymbol::PERMIS,
         };
+
+        $validity = $specificEnumInstance->validityPeriodInMonths() ?? 2;
 
         return [
             'employee_id' => Employee::factory(),
@@ -50,7 +51,7 @@ class QualificationFactory extends Factory
             'label' => $certificationLabel,
             'reference_number' => $this->faker->bothify('CERT-####-????'),
             'obtained_at' => $obtainedAt,
-            'expires_at' => (clone $obtainedAt)->modify('+'.$specificEnumInstance->validityPeriodInMonths().' months'),
+            'expires_at' => (clone $obtainedAt)->modify('+'.$validity.' months'),
         ];
     }
 }
