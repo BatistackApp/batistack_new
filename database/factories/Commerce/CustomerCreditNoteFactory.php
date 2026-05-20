@@ -5,6 +5,7 @@ namespace Database\Factories\Commerce;
 use App\Models\Commerce\CustomerCreditNote;
 use App\Models\Commerce\CustomerInvoice;
 use App\Models\Tiers\ThirdParty;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Carbon;
 
@@ -24,6 +25,7 @@ class CustomerCreditNoteFactory extends Factory
 
             'third_party_id' => ThirdParty::factory(),
             'customer_invoice_id' => CustomerInvoice::factory(),
+            'responsable_id' => User::factory(),
         ];
     }
 }

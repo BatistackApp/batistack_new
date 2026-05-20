@@ -8,13 +8,17 @@ use App\Models\Tiers\ThirdParty;
 use App\Models\User;
 use App\Observers\Commerce\CustomerQuoteObserver;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 #[ObservedBy([CustomerQuoteObserver::class])]
 class CustomerQuote extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
         'client_id',
         'chantier_id',
@@ -45,6 +49,11 @@ class CustomerQuote extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class, 'responsable_id');
+    }
+
+    public function order(): HasOne
+    {
+        return $this->hasOne(CustomerOrder::class);
     }
 
     protected function casts(): array
