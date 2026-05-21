@@ -33,14 +33,14 @@ beforeEach(function () {
     // Création de 2 lignes (Fondations et Structure)
     $this->order->items()->createMany([
         [
-            'item_id' => Item::factory()->create()->id,
+            'item_id' => Item::factory()->create(['reference' => 'ITEM1'])->id,
             'name' => 'Fondations',
             'quantity' => 1,
             'selling_price' => 40000.00,
             'vat_rate_id' => $this->vatRate->id,
         ],
         [
-            'item_id' => Item::factory()->create()->id,
+            'item_id' => Item::factory()->create(['reference' => 'ITEM2'])->id,
             'name' => 'Structure Métallique',
             'quantity' => 1,
             'selling_price' => 60000.00,
