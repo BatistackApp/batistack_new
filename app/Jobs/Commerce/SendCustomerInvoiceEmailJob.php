@@ -4,6 +4,7 @@ namespace App\Jobs\Commerce;
 
 use App\Models\Commerce\CustomerInvoice;
 use App\Models\User;
+use App\Notifications\Commerce\InvoiceGeneratedNotification;
 use App\Notifications\Commerce\InvoiceSendingFailedNotification;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -47,7 +48,7 @@ class SendCustomerInvoiceEmailJob implements ShouldQueue
             }
 
             // 3. Envoi de l'email avec la facture en pièce jointe
-            $contact->notify(new InvoiceEmailNotification($this->invoice));
+            $contact->notify(new InvoiceGeneratedNotification($this->invoice));
 
             // 4. Marquage du timestamp d'envoi
             $this->invoice->updateQuietly([

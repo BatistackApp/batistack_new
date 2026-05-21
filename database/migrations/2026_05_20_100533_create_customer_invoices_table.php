@@ -26,6 +26,7 @@ return new class extends Migration {
             $table->decimal('total_ttc', 15)->default(0);
             $table->timestamp('due_date')->nullable();
             $table->text('cancellation_reason')->nullable();
+            $table->timestamp('sent_at')->nullable();
             $table->timestamps();
         });
     }

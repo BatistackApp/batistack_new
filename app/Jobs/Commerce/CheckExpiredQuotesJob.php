@@ -4,6 +4,7 @@ namespace App\Jobs\Commerce;
 
 use App\Enums\Commerce\QuoteStatus;
 use App\Models\Commerce\CustomerQuote;
+use App\Notifications\Commerce\QuoteExpiredNotification;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -38,7 +39,7 @@ class CheckExpiredQuotesJob implements ShouldQueue
             // Passage en EXPIRED
             $quote->update([
                 'status' => QuoteStatus::EXPIRED,
-                'expired_at' => now(),
+                'expires_at' => now(),
             ]);
 
             // Notification au commercial (créateur du devis)

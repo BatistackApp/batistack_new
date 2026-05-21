@@ -32,6 +32,7 @@ class CustomerInvoice extends Model
         'due_date',
         'cancellation_reason',
         'responsable_id',
+        'sent_at',
     ];
 
     public function client(): BelongsTo
@@ -72,6 +73,7 @@ class CustomerInvoice extends Model
             'total_ht' => 'decimal:2',
             'total_ttc' => 'decimal:2',
             'due_date' => 'datetime',
+            'sent_at' => 'datetime',
         ];
     }
 }

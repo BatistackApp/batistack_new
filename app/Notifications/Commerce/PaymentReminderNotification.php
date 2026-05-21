@@ -12,7 +12,7 @@ class PaymentReminderNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 
-    protected array $levels = [
+    public array $levels = [
         1 => [
             'subject' => '⏰ Rappel : Paiement en attente',
             'greeting' => 'Rappel de paiement',
@@ -31,9 +31,9 @@ class PaymentReminderNotification extends Notification implements ShouldQueue
     ];
 
     public function __construct(
-        protected CustomerInvoice $invoice,
-        protected int $level,
-        protected int $daysLate
+        public CustomerInvoice $invoice,
+        public int $level,
+        public int $daysLate
     ) {}
 
     public function via($notifiable): array

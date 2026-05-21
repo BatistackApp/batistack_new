@@ -4,6 +4,7 @@ namespace App\Jobs\Commerce;
 
 use App\Enums\Commerce\InvoiceStatus;
 use App\Models\Commerce\CustomerInvoice;
+use App\Notifications\Commerce\PaymentReminderNotification;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -40,9 +41,9 @@ class CheckOverdueInvoicesJob implements ShouldQueue
             $reminderLevel = $this->determineReminderLevel($daysLate);
 
             // Vérification : pas de relance si elle a déjà été envoyée récemment
-            if ($this->hasRecentReminder($invoice, $reminderLevel)) {
-                continue;
-            }
+            // if ($this->hasRecentReminder($invoice, $reminderLevel)) {
+            //     continue;
+            // }
 
             $this->sendReminder($invoice, $reminderLevel, $daysLate);
         }
@@ -67,18 +68,18 @@ class CheckOverdueInvoicesJob implements ShouldQueue
     /**
      * Vérifie si une relance de ce niveau a déjà été envoyée récemment.
      */
-    protected function hasRecentReminder(CustomerInvoice $invoice, int $level): bool
-    {
-        // Récupération du dernier log de relance
-        $lastReminder = $invoice->auditLogs() // Supposant une relation de logs d'audit
-            ->where('action', 'reminder_sent')
-            ->where('metadata->level', $level)
-            ->where('created_at', '>=', now()->subDays(7))
-            ->latest()
-            ->first();
+    // protected function hasRecentReminder(CustomerInvoice $invoice, int $level): bool
+    // {
+    //     // Récupération du dernier log de relance
+    //     $lastReminder = $invoice->auditLogs() // Supposant une relation de logs d'audit
+    //         ->where('action', 'reminder_sent')
+    //         ->where('metadata->level', $level)
+    //         ->where('created_at', '>=', now()->subDays(7))
+    //         ->latest()
+    //         ->first();
 
-        return $lastReminder !== null;
-    }
+    //     return $lastReminder !== null;
+    // }
 
     /**
      * Envoie la relance au client.
