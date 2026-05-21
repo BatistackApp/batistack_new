@@ -29,6 +29,7 @@ class DocumentService
                 ->margins(10, 10, 10, 10)
                 ->showBackground()
                 ->waitUntilNetworkIdle()
+                ->noSandbox()
                 ->pdf();
         } else {
             $pdfContent = Browsershot::html($html)
@@ -39,6 +40,7 @@ class DocumentService
                 ->showBackground()
                 ->landscape()
                 ->waitUntilNetworkIdle()
+                ->noSandbox()
                 ->pdf();
         }
 
