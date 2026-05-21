@@ -5,6 +5,8 @@ namespace App\Observers\Commerce;
 use App\Enums\Commerce\InvoiceStatus;
 use App\Models\Commerce\SupplierInvoice;
 use App\Models\User;
+use App\Notifications\Commerce\SupplierInvoiceAuditFailedNotification;
+use App\Notifications\Commerce\SupplierInvoiceReadyForPaymentNotification;
 use App\Services\Commerce\SupplierInvoiceAuditService;
 use Illuminate\Support\Facades\Notification;
 

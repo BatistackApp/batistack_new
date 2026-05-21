@@ -13,6 +13,8 @@ use App\Models\Core\VatRate;
 use App\Models\Tiers\ThirdParty;
 use App\Models\User;
 use App\Services\Commerce\QuoteService;
+use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Queue;
 
 beforeEach(function () {
     $this->quoteService = app(QuoteService::class);
@@ -23,6 +25,10 @@ beforeEach(function () {
     // Création d'un chantier associé
     $this->chantier = Chantier::factory()->create(['client_id' => $this->customer->id]);
     $this->responsable = User::factory()->create();
+
+    // Création d'un taux de TVA par défaut
+    $this->defaultVatRate = VatRate::factory()->create(['is_default' => true, 'rate' => 20]);
+
     Notification::fake();
     Queue::fake();
 });
@@ -41,13 +47,14 @@ describe('QuoteService - Acceptation de devis', function () {
         ]);
 
         // Acceptation du devis
-        $order = $this->quoteService->acceptQuote($quote);
+        $order = $this->quoteService->acceptQuote($quote, $this->responsable);
 
         // Vérifications
         expect($order)->toBeInstanceOf(CustomerOrder::class)
             ->and($order->status)->toBe(OrderStatus::CONFIRMED)
-            ->and($order->total_ht)->toBe(10000.00)
-            ->and($order->total_ttc)->toBe(12000.00)
+            ->and($order->responsable_id)->toBe($this->responsable->id)
+            ->and($order->total_ht)->toEqual(10000.00) // Utiliser toEqual pour la comparaison de nombres
+            ->and($order->total_ttc)->toEqual(12000.00) // Utiliser toEqual pour la comparaison de nombres
             ->and($quote->fresh()->status)->toBe(QuoteStatus::SIGNED)
             ->and($quote->fresh()->signed_at)->not->toBeNull();
     });
@@ -61,12 +68,12 @@ describe('QuoteService - Acceptation de devis', function () {
             'responsable_id' => $this->responsable->id,
         ]);
 
-        $order = $this->quoteService->acceptQuote($quote);
+        $order = $this->quoteService->acceptQuote($quote, $this->responsable);
 
         // Le chantier doit avoir été créé
         expect($quote->fresh()->chantier_id)->not->toBeNull()
             ->and($quote->fresh()->chantier->status)->toBe(ChantierStatus::PLANNED)
-            ->and($quote->fresh()->chantier->budget_total_ht)->toBe(5000.00);
+            ->and($quote->fresh()->chantier->budget_total_ht)->toEqual(5000.00); // Utiliser toEqual
     });
 
     test('duplique les lignes du devis dans la commande de manière immuable', function () {
@@ -82,20 +89,22 @@ describe('QuoteService - Acceptation de devis', function () {
             [
                 'item_id' => Item::factory()->create()->id,
                 'name' => 'Matériau A',
+                'purchase_price' => 25.00, // Ajout du prix d'achat manquant
                 'quantity' => 100,
                 'selling_price' => 50.00,
-                'vat_rate_id' => VatRate::where('is_default', true)->first()->id,
+                'vat_rate_id' => $this->defaultVatRate->id,
             ],
             [
                 'item_id' => Item::factory()->create()->id,
                 'name' => 'Main d\'œuvre',
+                'purchase_price' => 30.00, // Ajout du prix d'achat manquant
                 'quantity' => 40,
                 'selling_price' => 75.00,
-                'vat_rate_id' => VatRate::where('is_default', true)->first()->id,
+                'vat_rate_id' => $this->defaultVatRate->id,
             ],
         ]);
 
-        $order = $this->quoteService->acceptQuote($quote);
+        $order = $this->quoteService->acceptQuote($quote, $this->responsable);
 
         // Les lignes doivent être copiées dans la commande
         expect($order->items)->toHaveCount(2)
@@ -109,14 +118,14 @@ describe('QuoteService - Acceptation de devis', function () {
         ]);
 
         $this->expectException(Exception::class);
-        $this->expectExceptionMessage('Ce devis ne peut pas être accepté');
+        $this->expectExceptionMessage('Ce devis ne peut pas être accepté dans son état actuel.');
 
-        $this->quoteService->acceptQuote($quote);
+        $this->quoteService->acceptQuote($quote, $this->responsable);
     });
 
     test('utilise la date d\'adresse du client comme adresse du chantier par défaut', function () {
         // Créer une adresse pour le client
-        $address = $this->customer->addresses()->create([
+        $this->customer->addresses()->create([
             'street' => '123 Rue de la Paix',
             'zip_code' => '75000',
             'city' => 'Paris',
@@ -131,7 +140,7 @@ describe('QuoteService - Acceptation de devis', function () {
             'responsable_id' => $this->responsable->id,
         ]);
 
-        $order = $this->quoteService->acceptQuote($quote);
+        $order = $this->quoteService->acceptQuote($quote, $this->responsable);
 
         $chantier = $quote->fresh()->chantier;
         expect($chantier->address)->toBe('123 Rue de la Paix')
@@ -152,9 +161,9 @@ describe('QuoteService - Gestion des montants', function () {
             'responsable_id' => $this->responsable->id,
         ]);
 
-        $order = $this->quoteService->acceptQuote($quote);
+        $order = $this->quoteService->acceptQuote($quote, $this->responsable);
 
-        expect($order->total_ht)->toBe(8500.50)
-            ->and($order->total_ttc)->toBe(10200.60);
+        expect($order->total_ht)->toEqual(8500.50) // Utiliser toEqual
+            ->and($order->total_ttc)->toEqual(10200.60); // Utiliser toEqual
     });
 });

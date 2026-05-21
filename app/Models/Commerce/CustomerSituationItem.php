@@ -13,7 +13,7 @@ class CustomerSituationItem extends Model
     protected $fillable = [
         'customer_situation_id',
         'customer_order_item_id',
-        'porogess_percentage',
+        'progress_percentage', // Correction de la faute de frappe
         'amount_ht',
     ];
 

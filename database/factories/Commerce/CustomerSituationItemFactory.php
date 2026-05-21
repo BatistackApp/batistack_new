@@ -15,7 +15,7 @@ class CustomerSituationItemFactory extends Factory
     public function definition(): array
     {
         return [
-            'porogess_percentage' => $this->faker->randomNumber(),
+            'progress_percentage' => $this->faker->randomNumber(), // Correction de la faute de frappe
             'amount_ht' => $this->faker->randomFloat(),
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),

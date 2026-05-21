@@ -3,6 +3,7 @@
 namespace App\Observers\Commerce;
 
 use App\Models\Commerce\CustomerInvoice;
+use App\Notifications\Commerce\InvoiceGeneratedNotification;
 use App\Notifications\Commerce\InvoicePaidNotification;
 use App\Services\Commerce\CommerceDocumentationService;
 use App\Services\Commerce\InvoiceLegalizationService;

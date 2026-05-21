@@ -13,7 +13,7 @@ return new class extends Migration {
             $table->id();
             $table->foreignIdFor(CustomerSituation::class)->constrained()->cascadeOnDelete();
             $table->foreignIdFor(CustomerOrderItem::class)->constrained()->cascadeOnDelete();
-            $table->integer('porogess_percentage');
+            $table->integer('progress_percentage'); // Correction de la faute de frappe
             $table->decimal('amount_ht', 15);
             $table->timestamps();
         });

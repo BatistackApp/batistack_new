@@ -8,6 +8,7 @@ use App\Enums\Commerce\QuoteStatus;
 use App\Models\Chantiers\Chantier;
 use App\Models\Commerce\CustomerOrder;
 use App\Models\Commerce\CustomerQuote;
+use App\Models\User;
 use DB;
 use Exception;
 
@@ -18,13 +19,13 @@ class QuoteService
      * @throws Exception
      * @throws \Throwable
      */
-    public function acceptQuote(CustomerQuote $quote): CustomerOrder
+    public function acceptQuote(CustomerQuote $quote, User $responsable): CustomerOrder
     {
         if ($quote->status !== QuoteStatus::SENT && $quote->status !== QuoteStatus::DRAFT) {
             throw new Exception('Ce devis ne peut pas être accepté dans son état actuel.');
         }
 
-        return DB::transaction(function () use ($quote) {
+        return DB::transaction(function () use ($quote, $responsable) {
             // 1. Mise à jour du statut du devis
             $quote->update([
                 'status' => QuoteStatus::SIGNED,
@@ -53,6 +54,7 @@ class QuoteService
                 'client_id' => $quote->client_id,
                 'chantier_id' => $chantier->id,
                 'customer_quote_id' => $quote->id,
+                'responsable_id' => $responsable->id, // Ajout du responsable
                 'reference' => 'CMD-'.str_replace('DEV-', '', $quote->reference),
                 'status' => OrderStatus::CONFIRMED,
                 'total_ht' => $quote->total_ht,
@@ -63,6 +65,7 @@ class QuoteService
             foreach ($quote->items as $item) {
                 $order->items()->create([
                     'item_id' => $item->item_id,
+                    'purchase_price' => $item->purchase_price, // Ajout du prix d'achat
                     'name' => $item->name,
                     'quantity' => $item->quantity,
                     'selling_price' => $item->selling_price,

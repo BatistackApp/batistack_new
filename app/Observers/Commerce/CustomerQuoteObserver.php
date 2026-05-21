@@ -6,6 +6,7 @@ use App\Enums\Commerce\QuoteStatus;
 use App\Models\Commerce\CustomerQuote;
 use App\Notifications\Commerce\QuoteAcceptedNotification;
 use App\Notifications\Commerce\QuoteRejectedNotification;
+use App\Notifications\Commerce\QuoteSentNotification;
 use App\Services\Commerce\CommerceDocumentationService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Storage;

@@ -10,6 +10,7 @@ use App\Models\Commerce\CustomerSituationItem;
 use App\Models\Commerce\PurchaseOrder;
 use App\Models\Commerce\SubcontractorSituation;
 use App\Models\Tiers\ThirdParty;
+use App\Models\User;
 use DB;
 use Exception;
 
@@ -27,11 +28,12 @@ class SituationService
      */
     public function generateNextSituation(
         CustomerOrder $order,
+        User $responsable,
         array $progressData,
         float $retenueGarantieRate = 5.0,
         float $prorataRate = 0.0
     ): CustomerSituation {
-        return DB::transaction(function () use ($order, $progressData, $retenueGarantieRate, $prorataRate) {
+        return DB::transaction(function () use ($order, $responsable, $progressData, $retenueGarantieRate, $prorataRate) {
 
             // Récupérer la dernière situation validée pour connaître l'antériorité
             $lastSituation = CustomerSituation::where('customer_order_id', $order->id)
@@ -94,6 +96,7 @@ class SituationService
             $situation = CustomerSituation::create([
                 'customer_order_id' => $order->id,
                 'chantier_id' => $order->chantier_id,
+                'responsable_id' => $responsable->id,
                 'number' => $newSituationNumber,
                 'status' => InvoiceStatus::DRAFT,
                 'total_ht' => round($netHtToBill, 2),
