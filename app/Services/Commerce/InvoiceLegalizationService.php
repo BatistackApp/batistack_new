@@ -17,7 +17,9 @@ class InvoiceLegalizationService
      */
     public function legalizeCustomerInvoice(CustomerInvoice $invoice): void
     {
-        if ($invoice->status !== InvoiceStatus::DRAFT) {
+        $isDraft = $invoice->status === InvoiceStatus::DRAFT || $invoice->getOriginal('status') === InvoiceStatus::DRAFT;
+
+        if (!$isDraft) {
             throw new Exception('Seule une facture en brouillon peut être légalisée et scellée.');
         }
 
@@ -34,9 +36,10 @@ class InvoiceLegalizationService
                 $sequence = (int) $matches[1] + 1;
             }
 
-            $definitiveRef = sprintf('FC-%s-%05d', $year, $sequence);
+            $definitiveRef = sprintf('FACT-%s-%05d', $year, $sequence);
 
-            $invoice->update([
+            // On utilise updateQuietly pour ne pas re-déclencher les observers en boucle
+            $invoice->updateQuietly([
                 'reference' => $definitiveRef,
                 'status' => InvoiceStatus::VALIDATED,
             ]);

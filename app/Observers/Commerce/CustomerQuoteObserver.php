@@ -3,6 +3,7 @@
 namespace App\Observers\Commerce;
 
 use App\Enums\Commerce\QuoteStatus;
+use App\Jobs\Commerce\GenerateDocumentJob;
 use App\Models\Commerce\CustomerQuote;
 use App\Notifications\Commerce\QuoteAcceptedNotification;
 use App\Notifications\Commerce\QuoteRejectedNotification;
@@ -17,12 +18,10 @@ class CustomerQuoteObserver
         protected CommerceDocumentationService $documentService
     ) {}
 
-    public function created(CustomerQuote $quote): void
+    public function creating(CustomerQuote $quote): void
     {
         if (! $quote->expires_at) {
-            $quote->updateQuietly([
-                'expires_at' => Carbon::now()->addDays(30),
-            ]);
+            $quote->expires_at = Carbon::now()->addDays(30);
         }
     }
 
@@ -55,17 +54,7 @@ class CustomerQuoteObserver
     protected function handleQuoteSent(CustomerQuote $quote): void
     {
         // 1. Génération PDF du devis
-        try {
-            $pdfPath = $this->documentService->generateQuotePdf($quote);
-
-            // Optionnel : Stockage du chemin PDF pour téléchargement ultérieur
-            $quote->updateQuietly([
-                'pdf_path' => $pdfPath,
-                'sent_at' => now(),
-            ]);
-        } catch (\Exception $e) {
-            \Log::error("Erreur génération PDF devis {$quote->reference}", ['error' => $e->getMessage()]);
-        }
+        GenerateDocumentJob::dispatch('quote', $quote);
 
         // 2. Notification client
         if ($quote->client && $quote->client->primaryContact) {

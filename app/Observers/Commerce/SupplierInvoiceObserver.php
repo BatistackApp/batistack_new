@@ -80,12 +80,9 @@ class SupplierInvoiceObserver
      */
     protected function handleAuditPassed(SupplierInvoice $invoice): void
     {
-        // Notification au service Compta/Trésorerie
-        if ($invoice->order && $invoice->order->supplier) {
-            $invoice->order->supplier->notify(
-                new SupplierInvoiceReadyForPaymentNotification($invoice)
-            );
-        }
+        // Notification au service Compta/Trésorerie (les admins)
+        $admins = User::where('is_admin', true)->get();
+        Notification::send($admins, new SupplierInvoiceReadyForPaymentNotification($invoice));
 
         \Log::info("Facture fournisseur {$invoice->reference} validée - Bon à payer");
     }
@@ -104,9 +101,7 @@ class SupplierInvoiceObserver
     protected function notifyAuditFailure(SupplierInvoice $invoice, array $disputes): void
     {
         // Récupération des utilisateurs du service Achats (par exemple, rôle 'Procurement')
-        $procurement = User::whereHas('roles', function ($q) {
-            $q->where('name', 'Procurement');
-        })->get();
+        $procurement = User::where('is_admin', true)->get();
 
         // Notification
         Notification::send(
