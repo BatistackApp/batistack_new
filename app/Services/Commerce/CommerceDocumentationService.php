@@ -13,13 +13,14 @@ use App\Models\Core\Company;
 use App\Models\Tiers\ThirdParty;
 use App\Services\Core\DocumentService;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Model;
 
 class CommerceDocumentationService extends DocumentService
 {
     /**
      * Génère un Devis Client au format PDF.
      */
-    public function generateQuotePdf(CustomerQuote $quote): string
+    public function generateQuotePdf(CustomerQuote|Model $quote): string
     {
         $quote->load(['client', 'chantier', 'items.item', 'items.vatRate']);
 
@@ -41,7 +42,7 @@ class CommerceDocumentationService extends DocumentService
     /**
      * Génère un Bon de Commande Client au format PDF.
      */
-    public function generateOrderPdf(CustomerOrder $order): string
+    public function generateOrderPdf(CustomerOrder|Model $order): string
     {
         $order->load(['client', 'chantier', 'items.item', 'items.vatRate', 'quote']);
 
@@ -63,7 +64,7 @@ class CommerceDocumentationService extends DocumentService
     /**
      * Génère un Bon de Livraison Client au format PDF.
      */
-    public function generateDeliveryNotePdf(CustomerDeliveryNote $delivery): string
+    public function generateDeliveryNotePdf(CustomerDeliveryNote|Model $delivery): string
     {
         $delivery->load(['client', 'chantier', 'order', 'items.item']);
 
@@ -85,7 +86,7 @@ class CommerceDocumentationService extends DocumentService
     /**
      * Génère une Facture Client au format PDF.
      */
-    public function generateInvoicePdf(CustomerInvoice $invoice): string
+    public function generateInvoicePdf(CustomerInvoice|Model $invoice): string
     {
         $invoice->load(['client', 'chantier', 'order', 'items.item', 'items.vatRate', 'situation']);
 
@@ -107,7 +108,7 @@ class CommerceDocumentationService extends DocumentService
     /**
      * Génère une Situation de Travaux au format PDF.
      */
-    public function generateSituationPdf(CustomerSituation $situation): string
+    public function generateSituationPdf(CustomerSituation|Model $situation): string
     {
         $situation->load(['order.client', 'chantier', 'items.quoteItem.item']);
 
@@ -130,7 +131,7 @@ class CommerceDocumentationService extends DocumentService
     /**
      * Génère un Bon de Commande Fournisseur au format PDF.
      */
-    public function generatePurchaseOrderPdf(PurchaseOrder $order): string
+    public function generatePurchaseOrderPdf(PurchaseOrder|Model $order): string
     {
         $order->load(['supplier', 'chantier', 'items.item', 'items.vatRate']);
 
@@ -152,7 +153,7 @@ class CommerceDocumentationService extends DocumentService
     /**
      * Génère un rapport d'état de la facture fournisseur (après audit).
      */
-    public function generateSupplierInvoiceAuditReport(SupplierInvoice $invoice, array $auditResult): string
+    public function generateSupplierInvoiceAuditReport(SupplierInvoice|Model $invoice, array $auditResult): string
     {
         $invoice->load(['supplier', 'order.items', 'items']);
 
