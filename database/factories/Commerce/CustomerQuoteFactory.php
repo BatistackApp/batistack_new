@@ -6,6 +6,7 @@ use App\Enums\Commerce\QuoteStatus;
 use App\Models\Chantiers\Chantier;
 use App\Models\Commerce\CustomerQuote;
 use App\Models\Tiers\ThirdParty;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class CustomerQuoteFactory extends Factory
@@ -21,6 +22,7 @@ class CustomerQuoteFactory extends Factory
             'status' => $this->faker->randomElement(QuoteStatus::cases()),
             'total_ht' => $this->faker->randomFloat(2, 5000, 150000),
             'total_ttc' => $this->faker->randomFloat(2, 6000, 180000),
+            'responsable_id' => User::factory(),
         ];
     }
 }

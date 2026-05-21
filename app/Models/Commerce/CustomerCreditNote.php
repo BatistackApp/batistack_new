@@ -3,6 +3,7 @@
 namespace App\Models\Commerce;
 
 use App\Models\Tiers\ThirdParty;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -18,6 +19,7 @@ class CustomerCreditNote extends Model
         'status',
         'total_ht',
         'total_ttc',
+        'responsable_id',
     ];
 
     public function client(): BelongsTo
@@ -28,5 +30,10 @@ class CustomerCreditNote extends Model
     public function invoice(): BelongsTo
     {
         return $this->belongsTo(CustomerInvoice::class, 'customer_invoice_id');
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'responsable_id');
     }
 }

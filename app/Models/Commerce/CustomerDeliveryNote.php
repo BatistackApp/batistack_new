@@ -5,6 +5,7 @@ namespace App\Models\Commerce;
 use App\Enums\Commerce\DeliveryStatus;
 use App\Models\Chantiers\Chantier;
 use App\Models\Tiers\ThirdParty;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -21,6 +22,7 @@ class CustomerDeliveryNote extends Model
         'reference',
         'status',
         'delivery_date',
+        'responsable_id',
     ];
 
     public function client(): BelongsTo
@@ -41,6 +43,11 @@ class CustomerDeliveryNote extends Model
     public function items(): HasMany
     {
         return $this->hasMany(CustomerDeliveryNoteItem::class);
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'responsable_id');
     }
 
     protected function casts(): array

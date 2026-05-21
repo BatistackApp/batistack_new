@@ -18,6 +18,7 @@ return new class extends Migration {
             $table->decimal('amount_ttc', 15);
             $table->string('status')->default('draft');
             $table->string('dispute_reason')->nullable();
+            $table->timestamp('due_date')->nullable();
             $table->timestamps();
         });
     }

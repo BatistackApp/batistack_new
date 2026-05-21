@@ -12,6 +12,7 @@ use App\Models\Commerce\CustomerInvoice;
 use App\Models\Commerce\CustomerOrder;
 use App\Models\Commerce\CustomerSituation;
 use App\Models\Core\VatRate;
+use App\Models\User;
 use DB;
 use Exception;
 
@@ -22,13 +23,14 @@ class CustomerOrderService
      *
      * @throws \Throwable
      */
-    public function createDeliveryNote(CustomerOrder $order, array $itemsData): CustomerDeliveryNote
+    public function createDeliveryNote(CustomerOrder $order, array $itemsData, User $responsable): CustomerDeliveryNote
     {
-        return DB::transaction(function () use ($order, $itemsData) {
+        return DB::transaction(function () use ($order, $itemsData, $responsable) {
             $delivery = CustomerDeliveryNote::create([
                 'client_id' => $order->client_id,
                 'chantier_id' => $order->chantier_id,
                 'customer_order_id' => $order->id,
+                'responsable_id' => $responsable->id,
                 'reference' => 'BL-'.str_replace('CMD-', '', $order->reference).'-'.uniqid(),
                 'status' => DeliveryStatus::PREPARATION,
                 'delivery_date' => now(),
@@ -43,6 +45,8 @@ class CustomerOrderService
 
             $order->update(['status' => OrderStatus::PARTIALLY_DELIVERED]);
 
+            $delivery->load('items');
+
             return $delivery;
         });
     }
@@ -54,16 +58,18 @@ class CustomerOrderService
     public function createInvoice(
         CustomerOrder $order,
         InvoiceType $type,
+        User $responsable,
         ?CustomerSituation $situation = null,
         ?float $acompteAmount = null
     ): CustomerInvoice {
-        return DB::transaction(function () use ($order, $type, $situation, $acompteAmount) {
+        return DB::transaction(function () use ($order, $type, $responsable, $situation, $acompteAmount) {
             $reference = 'FACT-'.date('Y').'-'.strtoupper(uniqid());
 
             $invoice = CustomerInvoice::create([
                 'client_id' => $order->client_id,
                 'chantier_id' => $order->chantier_id,
                 'customer_order_id' => $order->id,
+                'responsable_id' => $responsable->id,
                 'customer_situation_id' => $situation?->id,
                 'reference' => $reference,
                 'type' => $type,
@@ -132,6 +138,8 @@ class CustomerOrderService
                 'total_ttc' => round($totalTtc, 2),
             ]);
 
+            $invoice->load('items');
+
             return $invoice;
         });
     }
@@ -140,7 +148,7 @@ class CustomerOrderService
      * Génère un Avoir Client (Credit Note) pour annuler ou corriger une facture.
      * @throws Exception
      */
-    public function createCreditNote(CustomerInvoice $invoice, float $amountHt, string $reason): CustomerCreditNote
+    public function createCreditNote(CustomerInvoice $invoice, float $amountHt, string $reason, User $responsable): CustomerCreditNote
     {
         if ($invoice->status !== InvoiceStatus::VALIDATED && $invoice->status !== InvoiceStatus::PAID) {
             throw new Exception("Seules les factures validées ou payées peuvent faire l'objet d'un avoir.");
@@ -151,6 +159,7 @@ class CustomerOrderService
         return CustomerCreditNote::create([
             'client_id' => $invoice->client_id,
             'customer_invoice_id' => $invoice->id,
+            'responsable_id' => $responsable->id,
             'reference' => 'AV-CL-'.str_replace('FACT-', '', $invoice->reference),
             'status' => InvoiceStatus::VALIDATED,
             'total_ht' => $amountHt,

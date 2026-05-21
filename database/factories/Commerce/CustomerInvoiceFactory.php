@@ -6,6 +6,7 @@ use App\Enums\Commerce\InvoiceStatus;
 use App\Enums\Commerce\InvoiceType;
 use App\Models\Commerce\CustomerInvoice;
 use App\Models\Tiers\ThirdParty;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class CustomerInvoiceFactory extends Factory
@@ -20,6 +21,7 @@ class CustomerInvoiceFactory extends Factory
             'type' => $this->faker->randomElement(InvoiceType::cases()),
             'status' => $this->faker->randomElement(InvoiceStatus::cases()),
             'total_ht' => $this->faker->randomFloat(2, 1000, 50000),
+            'responsable_id' => User::factory(),
         ];
     }
 }

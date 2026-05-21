@@ -6,6 +6,7 @@ use App\Models\Chantiers\Chantier;
 use App\Models\Commerce\CustomerDeliveryNote;
 use App\Models\Commerce\CustomerOrder;
 use App\Models\Tiers\ThirdParty;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Carbon;
 
@@ -25,6 +26,7 @@ class CustomerDeliveryNoteFactory extends Factory
             'client_id' => ThirdParty::factory(),
             'chantier_id' => Chantier::factory(),
             'customer_order_id' => CustomerOrder::factory(),
+            'responsable_id' => User::factory(),
         ];
     }
 }
