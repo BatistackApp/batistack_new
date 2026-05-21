@@ -16,6 +16,7 @@ use App\Models\User;
 use App\Services\Commerce\CustomerOrderService;
 
 beforeEach(function () {
+    \App\Models\Core\Company::factory()->create();
     $this->orderService = app(CustomerOrderService::class);
 
     // Données de base
@@ -43,6 +44,9 @@ beforeEach(function () {
         'selling_price' => 50.00,
         'vat_rate_id' => $this->vatRate->id,
     ]);
+
+    Queue::fake();
+    Notification::fake();
 });
 
 describe('CustomerOrderService - Bons de livraison', function () {

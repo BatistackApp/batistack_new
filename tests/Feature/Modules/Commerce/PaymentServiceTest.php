@@ -10,6 +10,7 @@ use App\Models\Tiers\ThirdParty;
 use App\Services\Commerce\PaymentService;
 
 beforeEach(function () {
+    \App\Models\Core\Company::factory()->create();
     $this->paymentService = app(PaymentService::class);
 
     // Données de base
@@ -33,6 +34,9 @@ beforeEach(function () {
         'amount' => 9600.00,
         'payment_date' => now(),
     ]);
+
+    Queue::fake();
+    Notification::fake();
 });
 
 describe('PaymentService - Allocation de paiements', function () {
