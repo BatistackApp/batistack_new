@@ -36,6 +36,7 @@ class AppServiceProvider extends ServiceProvider
                     'tiers',
                     'chantier',
                     'articles',
+                    'commerce',
                     'rh',
                     'flottes',
                 ])
@@ -46,6 +47,7 @@ class AppServiceProvider extends ServiceProvider
                     'tiers' => Phosphor::Users,
                     'chantier' => Phosphor::HardHat,
                     'articles' => Phosphor::BoxArrowUp,
+                    'commerce' => Phosphor::ShoppingBag,
                     'rh' => Phosphor::UsersThree,
                     'flottes' => Phosphor::Truck,
                 ])
@@ -54,6 +56,7 @@ class AppServiceProvider extends ServiceProvider
                     'tiers' => 'Tiers',
                     'chantier' => 'Chantiers',
                     'articles' => 'Articles & Stocks',
+                    'commerce' => 'Commerces & Facturations',
                     'rh' => 'Ressources Humaines',
                     'flottes' => 'Flottes',
                 ]);

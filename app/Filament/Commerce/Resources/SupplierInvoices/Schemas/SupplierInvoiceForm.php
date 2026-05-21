@@ -1,0 +1,121 @@
+<?php
+
+namespace App\Filament\Commerce\Resources\SupplierInvoices\Schemas;
+
+use App\Enums\Commerce\InvoiceStatus;
+use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Repeater;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Schema;
+
+class SupplierInvoiceForm
+{
+    public static function configure(Schema $schema): Schema
+    {
+        return $schema
+            ->components([
+                Section::make('Informations de facture')
+                    ->columnSpanFull()
+                    ->columns(2)
+                    ->schema([
+                        TextInput::make('reference')
+                            ->label('Numéro de facture')
+                            ->required(),
+
+                        Select::make('supplier_id')
+                            ->label('Fournisseur')
+                            ->relationship('supplier', 'name')
+                            ->searchable()
+                            ->preload()
+                            ->required(),
+
+                        Select::make('purchase_order_id')
+                            ->label('Bon de commande')
+                            ->relationship('order', 'reference')
+                            ->searchable()
+                            ->preload(),
+
+                        DatePicker::make('due_date')
+                            ->label('Échéance')
+                            ->required(),
+
+                        Select::make('status')
+                            ->label('Statut')
+                            ->options(InvoiceStatus::class)
+                            ->required()
+                            ->native(false)
+                            ->disabled(),
+
+                        TextInput::make('invoice_date')
+                            ->label('Date de facture')
+                            ->type('date')
+                            ->required(),
+                    ]),
+
+                Section::make('Lignes de facture')
+                    ->columnSpanFull()
+                    ->schema([
+                        Repeater::make('items')
+                            ->relationship()
+                            ->columns(4)
+                            ->schema([
+                                TextInput::make('name')
+                                    ->label('Description')
+                                    ->required(),
+
+                                TextInput::make('quantity')
+                                    ->label('Quantité')
+                                    ->numeric()
+                                    ->required(),
+
+                                TextInput::make('price_unit')
+                                    ->label('Prix unitaire HT')
+                                    ->numeric()
+                                    ->required()
+                                    ->prefix('€'),
+
+                                TextInput::make('subtotal_ht')
+                                    ->label('Sous-total HT')
+                                    ->disabled()
+                                    ->prefix('€'),
+                            ]),
+                    ]),
+
+                Section::make('Totaux')
+                    ->columns(3)
+                    ->schema([
+                        TextInput::make('amount_ht')
+                            ->label('Total HT')
+                            ->disabled()
+                            ->prefix('€'),
+
+                        TextInput::make('amount_tax')
+                            ->label('Total TVA')
+                            ->disabled()
+                            ->prefix('€'),
+
+                        TextInput::make('amount_ttc')
+                            ->label('Total TTC')
+                            ->disabled()
+                            ->prefix('€'),
+                    ]),
+
+                Section::make('Audit 3 voies')
+                    ->schema([
+                        Select::make('status')
+                            ->label('Statut de l\'audit')
+                            ->options(InvoiceStatus::class)
+                            ->required()
+                            ->native(false),
+
+                        Textarea::make('dispute_reason')
+                            ->label('Raison du litige (si applicable)')
+                            ->rows(3)
+                            ->visible(fn ($get) => $get('status') === InvoiceStatus::LITIGE->value),
+                    ]),
+            ]);
+    }
+}

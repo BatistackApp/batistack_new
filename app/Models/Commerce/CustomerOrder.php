@@ -51,6 +51,16 @@ class CustomerOrder extends Model
         return $this->belongsTo(User::class, 'responsable_id');
     }
 
+    public function deliveryNotes(): HasMany
+    {
+        return $this->hasMany(CustomerDeliveryNote::class);
+    }
+
+    public function invoices(): HasMany
+    {
+        return $this->hasMany(CustomerInvoice::class);
+    }
+
     protected function casts(): array
     {
         return [
