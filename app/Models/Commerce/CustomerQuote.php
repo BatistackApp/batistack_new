@@ -66,4 +66,16 @@ class CustomerQuote extends Model
             'expires_at' => 'datetime',
         ];
     }
+
+    public function getTotalTvaAttribute(): float
+    {
+        $items = $this->items;
+        $totalTva = 0;
+
+        foreach ($items as $item) {
+            $totalTva += $item->selling_price * $item->vatRate->rate;
+        }
+
+        return $totalTva;
+    }
 }

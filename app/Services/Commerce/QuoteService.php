@@ -16,6 +16,7 @@ class QuoteService
 {
     /**
      * Valide un devis client, génère la commande officielle et initialise le chantier.
+     *
      * @throws Exception
      * @throws \Throwable
      */
@@ -75,5 +76,24 @@ class QuoteService
 
             return $order;
         });
+    }
+
+    public function generateReferenceQuote(): string
+    {
+        $year = date('Y');
+        $latestQuote = CustomerQuote::where('reference', 'like', "DEV-{$year}-%")
+            ->orderByDesc('reference')
+            ->first();
+
+        $sequenceNumber = 1;
+        if ($latestQuote) {
+            // Extract the numeric part after 'DVS-YYYY-'
+            $parts = explode('-', $latestQuote->reference);
+            if (count($parts) === 3 && is_numeric($parts[2])) {
+                $sequenceNumber = (int) $parts[2] + 1;
+            }
+        }
+
+        return "DEV-{$year}-".str_pad($sequenceNumber, 3, '0', STR_PAD_LEFT);
     }
 }

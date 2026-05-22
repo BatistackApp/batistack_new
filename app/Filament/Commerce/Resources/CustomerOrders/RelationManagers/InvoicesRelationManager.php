@@ -4,6 +4,7 @@ namespace App\Filament\Commerce\Resources\CustomerOrders\RelationManagers;
 
 use App\Enums\Commerce\InvoiceStatus;
 use App\Enums\Commerce\InvoiceType;
+use App\Models\Commerce\CustomerInvoice;
 use App\Services\Commerce\CommerceDocumentationService;
 use App\Services\Commerce\CustomerOrderService;
 use App\Services\Commerce\InvoiceLegalizationService;
@@ -16,7 +17,9 @@ use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Notifications\Notification;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
@@ -62,6 +65,7 @@ class InvoicesRelationManager extends RelationManager
     {
         return $table
             ->recordTitleAttribute('reference')
+            ->defaultSort('created_at', 'desc')
             ->columns([
                 TextColumn::make('reference')
                     ->label('Numéro')
@@ -150,6 +154,49 @@ class InvoicesRelationManager extends RelationManager
                         ->icon(Phosphor::Bank)
                         ->visible(fn (Model $record) => $record->status !== InvoiceStatus::PAID)
                         ->url(fn (Model $record) => route('filament.commerce.resources.payments.create', ['invoice' => $record->id])),
+
+                    Action::make('sendReminder')
+                        ->label('Relancer')
+                        ->icon(Phosphor::BellRinging)
+                        ->visible(fn (CustomerInvoice $record) => $record->status === InvoiceStatus::VALIDATED && $record->due_date < now())
+                        ->action(fn (CustomerInvoice $record) => Notification::make()
+                            ->title('Relance envoyée')
+                            ->body("Email de relance envoyé à {$record->client->name}")
+                            ->success()
+                            ->send()),
+
+                    Action::make('createCreditNote')
+                        ->label('Créer avoir')
+                        ->icon(Phosphor::ArrowsIn)
+                        ->visible(fn (CustomerInvoice $record) => $record->status === InvoiceStatus::VALIDATED)
+                        ->schema([
+                            TextInput::make('amount')
+                                ->label('Montant de l\'avoir')
+                                ->numeric()
+                                ->required()
+                                ->prefix('€'),
+
+                            Textarea::make('reason')
+                                ->label('Motif')
+                                ->required()
+                                ->rows(2),
+                        ])
+                        ->action(function (array $data, CustomerInvoice $record) {
+                            $orderService = app(CustomerOrderService::class);
+                            $creditNote = $orderService->createCreditNote(
+                                invoice: $record,
+                                amountHt: $data['amount'],
+                                reason: $data['reason'],
+                                responsable: Auth::user()->id,
+                            );
+
+                            Notification::make()
+                                ->title('Avoir crée')
+                                ->body("Avoir n°{$creditNote->reference} créé avec succès")
+                                ->success()
+                                ->send();
+                        }),
+
                 ]),
             ])
             ->toolbarActions([

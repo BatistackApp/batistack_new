@@ -13,12 +13,13 @@ return new class extends Migration {
         Schema::create('customer_quote_items', function (Blueprint $table) {
             $table->id();
             $table->foreignIdFor(CustomerQuote::class)->constrained()->cascadeOnDelete();
-            $table->foreignIdFor(Item::class)->constrained();
+            $table->foreignIdFor(Item::class)->nullable()->constrained();
             $table->string('lot_label')->nullable();
             $table->string('name');
             $table->decimal('quantity', 15, 4);
             $table->decimal('purchase_price', 15, 4);
             $table->decimal('selling_price', 15, 4);
+            $table->decimal('total_ht', 15, 4)->default(0);
             $table->foreignIdFor(VatRate::class)->constrained();
             $table->timestamps();
         });

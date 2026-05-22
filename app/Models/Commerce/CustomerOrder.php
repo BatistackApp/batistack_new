@@ -61,6 +61,11 @@ class CustomerOrder extends Model
         return $this->hasMany(CustomerInvoice::class);
     }
 
+    public function situations(): HasMany
+    {
+        return $this->hasMany(CustomerSituation::class);
+    }
+
     protected function casts(): array
     {
         return [

@@ -6,6 +6,7 @@ use App\Filament\Commerce\Resources\CustomerQuotes\Pages\CreateCustomerQuote;
 use App\Filament\Commerce\Resources\CustomerQuotes\Pages\EditCustomerQuote;
 use App\Filament\Commerce\Resources\CustomerQuotes\Pages\ListCustomerQuotes;
 use App\Filament\Commerce\Resources\CustomerQuotes\Pages\ViewCustomerQuote;
+use App\Filament\Commerce\Resources\CustomerQuotes\RelationManagers\ItemsRelationManager;
 use App\Filament\Commerce\Resources\CustomerQuotes\RelationManagers\OrdersRelationManager;
 use App\Filament\Commerce\Resources\CustomerQuotes\Schemas\CustomerQuoteForm;
 use App\Filament\Commerce\Resources\CustomerQuotes\Schemas\CustomerQuoteInfolist;
@@ -51,7 +52,7 @@ class CustomerQuoteResource extends Resource
     public static function getRelations(): array
     {
         return [
-            OrdersRelationManager::class,
+            ItemsRelationManager::class,
         ];
     }
 

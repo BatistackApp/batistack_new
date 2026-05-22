@@ -19,6 +19,7 @@ class CustomerOrderItem extends Model
         'quantity',
         'selling_price',
         'vat_rate_id',
+        'total_ht',
     ];
 
     public function order(): BelongsTo
@@ -41,6 +42,7 @@ class CustomerOrderItem extends Model
         return [
             'quantity' => 'decimal:4',
             'selling_price' => 'decimal:4',
+            'total_ht' => 'decimal:4',
         ];
     }
 }
