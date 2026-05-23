@@ -3,12 +3,14 @@
 namespace App\Observers\Commerce;
 
 use App\Enums\Commerce\QuoteStatus;
+use App\Enums\Core\SignatureType;
 use App\Jobs\Commerce\GenerateDocumentJob;
 use App\Models\Commerce\CustomerQuote;
 use App\Notifications\Commerce\QuoteAcceptedNotification;
 use App\Notifications\Commerce\QuoteRejectedNotification;
 use App\Notifications\Commerce\QuoteSentNotification;
 use App\Services\Commerce\CommerceDocumentationService;
+use App\Services\Core\SignatureService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Storage;
 
@@ -60,6 +62,8 @@ class CustomerQuoteObserver
         if ($quote->client && $quote->client->primaryContact) {
             $quote->client->primaryContact->notify(new QuoteSentNotification($quote));
         }
+
+        app(SignatureService::class)->requestSignature($quote, SignatureType::AUTOGRAPH);
 
         // 3. Log d'audit
         \Log::info("Devis {$quote->reference} envoyé au client {$quote->client->name}");

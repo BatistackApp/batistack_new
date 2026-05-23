@@ -2,6 +2,7 @@
 
 namespace App\Filament\Commerce\Resources\CustomerQuotes\RelationManagers;
 
+use App\Enums\Commerce\QuoteStatus;
 use App\Models\Articles\Item;
 use App\Models\Core\VatRate;
 use Filament\Actions\BulkActionGroup;
@@ -162,6 +163,6 @@ class ItemsRelationManager extends RelationManager
 
     public function isReadOnly(): bool
     {
-        return false;
+        return $this->getOwnerRecord()->status->value !== QuoteStatus::DRAFT->value;
     }
 }

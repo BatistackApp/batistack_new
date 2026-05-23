@@ -15,6 +15,7 @@ use Filament\Schemas\Schema;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Model;
 use ToneGabes\Filament\Icons\Enums\Phosphor;
 
 class ContactsRelationManager extends RelationManager
@@ -72,7 +73,11 @@ class ContactsRelationManager extends RelationManager
             ])
             ->recordActions([
                 EditAction::make(),
-                DeleteAction::make(),
+                DeleteAction::make()
+                    ->action(function (Model $record) {
+                        $record->user->delete();
+                        $record->delete();
+                    }),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([

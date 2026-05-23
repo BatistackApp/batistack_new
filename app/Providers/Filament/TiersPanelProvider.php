@@ -3,6 +3,7 @@
 namespace App\Providers\Filament;
 
 use AchyutN\FilamentLogViewer\FilamentLogViewer;
+use App\Http\Middleware\EnsureUserIsAdmin;
 use App\Services\Core\CompanyService;
 use Ariefng\FilamentCalculator\CalculatorPlugin;
 use Filament\Http\Middleware\Authenticate;
@@ -64,6 +65,7 @@ class TiersPanelProvider extends PanelProvider
             ->databaseNotifications()
             ->authMiddleware([
                 Authenticate::class,
+                EnsureUserIsAdmin::class,
             ]);
     }
 }
