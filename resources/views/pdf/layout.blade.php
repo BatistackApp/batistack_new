@@ -16,6 +16,7 @@
             font-family: 'Noto Sans', sans-serif;
             font-size: 12px;
             color: #1a202c;
+            margin: 20mm;
         }
         /* Style spécifique pour les sauts de page mentionné dans le Canvas */
         .page-break {
@@ -70,6 +71,11 @@
             border-bottom: 3px solid #1e40af;
             padding-bottom: 15px;
             margin-bottom: 20px;
+        }
+
+        .company-info {
+            display: flex;
+            align-items: flex-start;
         }
 
         .company-info h1 {
@@ -152,6 +158,7 @@
         .items-table {
             width: 100%;
             border-collapse: collapse;
+            border-radius: 5em;
             margin: 20px 0;
         }
 
@@ -266,8 +273,8 @@
             font-size: 9px;
             color: #999;
             text-align: center;
-            position: absolute;
-            bottom: 20mm;
+            position: fixed;
+            bottom: 10mm;
             left: 20mm;
             right: 20mm;
         }
@@ -279,22 +286,29 @@
     @yield('styles')
 </head>
 <body class="bg-white text-slate-900 font-sans p-8 antialiased">
-<header class="flex flex-row border-b-2 border-b-gray-600 mb-5 header">
+<header class="header">
     <div class="company-info">
-        <div class="logo-entreprise">
-            <img src="{{ $company->getMedia('core')->first() }}" alt="">
+        <div class="logo-entreprise" style="vertical-align: top;">
+            @if($company->getMedia('core')->first())
+                <img src="{{ $company->getMedia('core')->first()->getFullUrl() }}" alt="logo" style="max-width: 150px; max-height: 70px;">
+            @endif
         </div>
-        <div class="flex flex-col">
-            <span class="font-bold text-2xl">{{ $company->legal_name }}</span>
-            <span>{{ $company->address }}</span>
-            <span>{{ $company->zip_code }} {{ $company->city }}</span>
-            <span>Téléphone: {{ $company->phone }}</span>
+        <div class="company-details" style="display: inline-block; margin-left: 20px;">
+            <span style="font-weight: bold; font-size: 1.2rem; color: #1e40af;">{{ $company->legal_name }}</span><br>
+            <span>{{ $company->address }}</span><br>
+            <span>{{ $company->zip_code }} {{ $company->city }}</span><br>
+            <span>Téléphone: {{ $company->phone }}</span><br>
             <span>Email: {{ $company->email }}</span>
-            <span>Siret: {{ $company->siret }}</span>
         </div>
     </div>
     @yield("header_right")
 </header>
-@yield('content')
+<main style="padding-bottom: 30mm;">
+    @yield('content')
+</main>
+<div class="footer">
+    {{ $company->legal_name }} @if($company->capital)au capital de {{ number_format($company->capital, 2, ',', ' ') }}€@endif - SIRET: {{ $company->siret }} <br>
+    {{ $company->address }}, {{ $company->zip_code }} {{ $company->city }} - TVA Intracommunautaire: {{ $company->vat_number ?? 'Non applicable' }}
+</div>
 </body>
 </html>

@@ -39,15 +39,15 @@ enum QuoteStatus: string implements HasColor, HasIcon, HasLabel
         };
     }
 
-    public function getIcon(): Phosphor
+    public function getIcon(): Phosphor|string
     {
         return match ($this) {
-            self::DRAFT => Phosphor::PencilLine,
-            self::SENT => Phosphor::PaperPlaneTilt,
-            self::SIGNED => Phosphor::CheckCircle,
-            self::REJECTED => Phosphor::XCircle,
-            self::CANCELLED => Phosphor::Prohibit,
-            self::EXPIRED => Phosphor::ClockCounterClockwise,
+            self::DRAFT => Phosphor::PencilLine->getLabel(),
+            self::SENT => Phosphor::PaperPlaneTilt->getLabel(),
+            self::SIGNED => Phosphor::CheckCircle->getLabel(),
+            self::REJECTED => Phosphor::XCircle->getLabel(),
+            self::CANCELLED => Phosphor::Prohibit->getLabel(),
+            self::EXPIRED => Phosphor::ClockCounterClockwise->getLabel(),
         };
     }
 }
