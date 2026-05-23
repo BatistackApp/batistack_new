@@ -34,4 +34,9 @@ return [
             'channel' => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
         ],
     ],
+
+    'docuseal' => [
+        'endpoint' => env('DOCUSEAL_ENDPOINT'),
+        'api_key' => env('DOCUSEAL_API_KEY'),
+    ]
 ];
