@@ -74,4 +74,16 @@ class CustomerOrder extends Model
             'total_ttc' => 'decimal:2',
         ];
     }
+
+    public function getTotalTvaAttribute(): float
+    {
+        $items = $this->items;
+        $totalTva = 0;
+
+        foreach ($items as $item) {
+            $totalTva += $item->selling_price * $item->vatRate->rate;
+        }
+
+        return $totalTva;
+    }
 }

@@ -45,7 +45,7 @@ class CustomerQuoteItem extends Model
             'quantity' => 'decimal:4',
             'purchase_price' => 'decimal:4',
             'selling_price' => 'decimal:4',
-            'total_ht'  => 'decimal:4',
+            'total_ht' => 'decimal:4',
         ];
     }
 }

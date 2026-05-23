@@ -17,6 +17,7 @@ return new class extends Migration {
             $table->string('name');
             $table->decimal('quantity', 15, 4);
             $table->decimal('selling_price', 15, 4);
+            $table->decimal('total_ht', 15, 4)->default(0);
             $table->foreignIdFor(VatRate::class)->constrained();
             $table->timestamps();
         });

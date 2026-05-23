@@ -6,6 +6,7 @@ use App\Enums\Commerce\DeliveryStatus;
 use App\Enums\Commerce\OrderStatus;
 use App\Models\Commerce\CustomerDeliveryNote;
 use App\Services\Commerce\CommerceDocumentationService;
+use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
@@ -31,6 +32,7 @@ class DeliveryNotesRelationManager extends RelationManager
 {
     protected static string $relationship = 'deliveryNotes';
     protected static ?string $title = 'Bon de Livraison';
+    protected static string | BackedEnum | null $icon = Phosphor::Truck;
 
     public function form(Schema $schema): Schema
     {

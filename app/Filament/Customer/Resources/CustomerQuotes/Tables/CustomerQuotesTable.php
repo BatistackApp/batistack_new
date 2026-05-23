@@ -21,6 +21,7 @@ class CustomerQuotesTable
                     ->where('status', '!=', QuoteStatus::DRAFT)
                     ->newQuery()
             )
+            ->defaultSort('reference', 'desc')
             ->columns([
                 TextColumn::make('reference')
                     ->label('Numéro')

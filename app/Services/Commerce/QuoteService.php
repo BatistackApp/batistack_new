@@ -71,6 +71,7 @@ class QuoteService
                     'quantity' => $item->quantity,
                     'selling_price' => $item->selling_price,
                     'vat_rate_id' => $item->vat_rate_id,
+                    'total_ht' => $item->selling_price * $item->quantity,
                 ]);
             }
 

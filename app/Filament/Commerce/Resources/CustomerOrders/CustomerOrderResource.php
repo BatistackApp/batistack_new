@@ -8,6 +8,7 @@ use App\Filament\Commerce\Resources\CustomerOrders\Pages\ListCustomerOrders;
 use App\Filament\Commerce\Resources\CustomerOrders\Pages\ViewCustomerOrder;
 use App\Filament\Commerce\Resources\CustomerOrders\RelationManagers\DeliveryNotesRelationManager;
 use App\Filament\Commerce\Resources\CustomerOrders\RelationManagers\InvoicesRelationManager;
+use App\Filament\Commerce\Resources\CustomerOrders\RelationManagers\ItemsRelationManager;
 use App\Filament\Commerce\Resources\CustomerOrders\RelationManagers\SituationsRelationManager;
 use App\Filament\Commerce\Resources\CustomerOrders\Schemas\CustomerOrderForm;
 use App\Filament\Commerce\Resources\CustomerOrders\Schemas\CustomerOrderInfolist;
@@ -50,6 +51,7 @@ class CustomerOrderResource extends Resource
     public static function getRelations(): array
     {
         return [
+            ItemsRelationManager::class,
             DeliveryNotesRelationManager::class,
             SituationsRelationManager::class,
             InvoicesRelationManager::class,

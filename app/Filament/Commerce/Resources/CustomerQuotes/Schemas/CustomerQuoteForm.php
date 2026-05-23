@@ -3,8 +3,10 @@
 namespace App\Filament\Commerce\Resources\CustomerQuotes\Schemas;
 
 use App\Enums\Commerce\QuoteStatus;
+use App\Enums\Tiers\ThirdPartyType;
 use App\Models\Articles\Item;
 use App\Models\Core\VatRate;
+use App\Models\Tiers\ThirdParty;
 use App\Models\User;
 use App\Services\Commerce\QuoteService;
 use Filament\Forms\Components\DatePicker;
@@ -42,7 +44,7 @@ class CustomerQuoteForm
 
                         Select::make('client_id')
                             ->label('Client')
-                            ->relationship('client', 'name')
+                            ->options(ThirdParty::where('type', ThirdPartyType::CLIENT)->pluck('name', 'id'))
                             ->searchable()
                             ->preload()
                             ->required()

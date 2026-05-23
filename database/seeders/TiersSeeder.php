@@ -11,7 +11,7 @@ class TiersSeeder extends Seeder
 {
     public function run(): void
     {
-        $tiers = ThirdParty::factory(rand(10, 50))->create();
+        $tiers = ThirdParty::factory(10)->create();
 
         foreach ($tiers as $tier) {
             Address::factory()->create([
