@@ -56,7 +56,7 @@ class QuoteService
                 'chantier_id' => $chantier->id,
                 'customer_quote_id' => $quote->id,
                 'responsable_id' => $responsable->id, // Ajout du responsable
-                'reference' => 'CMD-'.str_replace('DEV-', '', $quote->reference),
+                'reference' => app(CustomerOrderService::class)->generateReferenceOrder(),
                 'status' => OrderStatus::CONFIRMED,
                 'total_ht' => $quote->total_ht,
                 'total_ttc' => $quote->total_ttc,

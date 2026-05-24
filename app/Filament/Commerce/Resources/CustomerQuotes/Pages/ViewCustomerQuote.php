@@ -6,7 +6,9 @@ use App\Enums\Commerce\QuoteStatus;
 use App\Filament\Commerce\Resources\CustomerQuotes\CustomerQuoteResource;
 use App\Models\Commerce\CustomerQuote;
 use App\Services\Commerce\CommerceDocumentationService;
+use App\Services\Commerce\QuoteService;
 use Filament\Actions\Action;
+use Filament\Actions\ActionGroup;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
 use Filament\Support\Enums\Width;
@@ -50,19 +52,36 @@ class ViewCustomerQuote extends ViewRecord
                         ->send();
                 }),
 
-            Action::make('viewOrder')
-                ->label('Voir la commande')
-                ->icon(Phosphor::ShoppingBag)
-                ->color('gray')
-                ->visible(fn (CustomerQuote $record) => $record->status === QuoteStatus::SIGNED)
-                ->url(fn (CustomerQuote $record) => url(route('filament.commerce.resources.customer-orders.view', ['record' => $record->order]))),
-
             MediaAction::make()
                 ->label('Imprimer PDF')
                 ->icon(Phosphor::Printer)
                 ->mediaType(MediaAction::TYPE_PDF)
                 ->modalWidth(Width::Container)
                 ->media(fn (Model $record) => Storage::url('documents/commerce/quotes/devis_'.$record->reference.'.pdf')),
+
+            ActionGroup::make([
+                Action::make('manualAccept')
+                    ->visible(fn (Model $record) => $record->status === QuoteStatus::SENT)
+                    ->label('Accepter')
+                    ->color('success')
+                    ->requiresConfirmation()
+                    ->modalHeading('Accepter le devis')
+                    ->modalDescription('Accepter le devis va valider automatiquement le devis, vous ne pourrez plus le modifier, Etes-vous sur ?')
+                    ->action(function (Model $record) {
+                        app(QuoteService::class)->acceptQuote($record, auth()->user());
+                    }),
+
+                Action::make('manualRefused')
+                    ->visible(fn (Model $record) => $record->status === QuoteStatus::SENT)
+                    ->label('Refuser')
+                    ->color('danger')
+                    ->requiresConfirmation()
+                    ->modalHeading('Refuser le devis')
+                    ->modalDescription('Refuser le devis va valider automatiquement le devis, vous ne pourrez plus le modifier, Etes-vous sur ?')
+                    ->action(function (Model $record) {
+                        $record->update(['status' => QuoteStatus::REJECTED]);
+                    }),
+            ]),
         ];
     }
 }

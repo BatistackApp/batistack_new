@@ -142,7 +142,7 @@ class SituationsRelationManager extends RelationManager
 
                         $situation = $service->generateNextSituation(
                             order: $order,
-                            responsable: Auth::user()->id,
+                            responsable: Auth::user(),
                             progressData: $progressData->toArray(),
                         );
 
