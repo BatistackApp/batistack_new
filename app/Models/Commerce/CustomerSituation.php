@@ -29,6 +29,8 @@ class CustomerSituation extends Model
         'periode_start',
         'periode_end',
         'situation_period',
+        'total_tax',
+        'total_ttc',
     ];
 
     protected $appends = [
@@ -72,6 +74,8 @@ class CustomerSituation extends Model
             'total_ht' => 'decimal:2',
             'periode_start' => 'date',
             'periode_end' => 'date',
+            'total_tax' => 'decimal:4',
+            'total_ttc' => 'decimal:4',
         ];
     }
 

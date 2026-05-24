@@ -35,6 +35,8 @@ class SituationService
         float $retenueGarantieRate = 5.0,
         float $prorataRate = 0.0,
     ): CustomerSituation {
+        $order->load('items.vatRate');
+
         return DB::transaction(function () use ($order, $responsable, $progressData, $retenueGarantieRate, $prorataRate, $startPeriod, $endPeriod) {
 
             $lastSituation = CustomerSituation::where('customer_order_id', $order->id)
@@ -63,6 +65,7 @@ class SituationService
 
             $newSituationNumber = $lastSituation ? $lastSituation->number + 1 : 1;
             $totalHtThisMonth = 0.0;
+            $totalTaxThisMonth = 0.0;
             $itemsData = [];
 
             foreach ($order->items as $orderItem) {
@@ -85,9 +88,13 @@ class SituationService
 
                 $toBillThisMonth = $cumulLigneHt - $previousBilled;
 
+                $vatRate = $orderItem->vatRate ? $orderItem->vatRate->rate / 100 : 0.0;
+                $taxToBillThisMonth = $toBillThisMonth * $vatRate;
+
                 // On ne facture pas les montants négatifs (au cas où, par ex. un arrondi)
                 if ($toBillThisMonth > 0) {
                     $totalHtThisMonth += $toBillThisMonth;
+                    $totalTaxThisMonth += $taxToBillThisMonth; // << On ajoute la TVA de la ligne au total
                 } else {
                     $toBillThisMonth = 0;
                 }
@@ -102,6 +109,7 @@ class SituationService
             $retenueGarantieAmount = $totalHtThisMonth * ($retenueGarantieRate / 100);
             $prorataAmount = $totalHtThisMonth * ($prorataRate / 100);
             $netHtToBill = $totalHtThisMonth - $retenueGarantieAmount - $prorataAmount;
+            $netTtcToBill = $netHtToBill + $totalTaxThisMonth;
 
             $situation = CustomerSituation::create([
                 'customer_order_id' => $order->id,
@@ -110,6 +118,8 @@ class SituationService
                 'number' => $newSituationNumber,
                 'status' => InvoiceStatus::DRAFT,
                 'total_ht' => round($netHtToBill, 2),
+                'total_tax' => round($totalTaxThisMonth, 2),
+                'total_ttc' => round($netTtcToBill, 2),
                 'retenue_garantie_amount' => round($retenueGarantieAmount, 2),
                 'prorata_amount' => round($prorataAmount, 2),
                 'periode_start' => $startPeriod,

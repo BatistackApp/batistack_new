@@ -18,6 +18,8 @@ return new class extends Migration {
             $table->integer('number');
             $table->string('status')->default('draft');
             $table->string('total_ht', 15)->default(0);
+            $table->decimal('total_tax', 15, 4)->default(0.00);
+            $table->decimal('total_ttc', 15, 4)->default(0.00);
             $table->string('retenue_garantie_amount', 15)->default(0);
             $table->string('prorata_amount', 15)->default(0);
             $table->date('periode_start');

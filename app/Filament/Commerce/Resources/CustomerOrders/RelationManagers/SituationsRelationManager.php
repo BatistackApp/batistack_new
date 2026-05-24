@@ -179,7 +179,7 @@ class SituationsRelationManager extends RelationManager
                             'type' => InvoiceType::SITUATION,
                             'status' => InvoiceStatus::DRAFT,
                             'total_ht' => $situation->total_ht,
-                            'total_ttc' => $situation->total_ht * 1.2, // TODO: A changer plus tard
+                            'total_ttc' => $situation->total_ttc,
                             'due_date' => now()->addDays(30),
                             'responsable_id' => \auth()->user()->id,
                             'reference' => app(CustomerOrderService::class)->generateReferenceInvoice(),
