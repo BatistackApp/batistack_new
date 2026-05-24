@@ -2,6 +2,7 @@
 
 namespace App\Models\Tiers;
 
+use App\Models\User;
 use App\Observers\Tiers\ContactObserver;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -25,11 +26,17 @@ class Contact extends Model
         'is_primary',
         'is_active',
         'metadata',
+        'user_id',
     ];
 
     public function thirdParty(): BelongsTo
     {
         return $this->belongsTo(ThirdParty::class);
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
     }
 
     protected function casts(): array

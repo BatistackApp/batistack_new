@@ -6,12 +6,14 @@ use App\Models\Articles\Item;
 use App\Models\Chantiers\Chantier;
 use App\Models\Commerce\CustomerOrder;
 use App\Models\Commerce\CustomerSituation;
+use App\Models\Core\Company;
 use App\Models\Core\VatRate;
 use App\Models\Tiers\ThirdParty;
 use App\Models\User;
 use App\Services\Commerce\SituationService;
 
 beforeEach(function () {
+    Company::factory()->create();
     $this->situationService = app(SituationService::class);
 
     // Données de base
@@ -59,8 +61,10 @@ describe('SituationService - Génération de situations', function () {
                 $this->order->items[0]->id => 100, // Fondations 100%
                 $this->order->items[1]->id => 10,  // Structure 10%
             ],
+            startPeriod: now()->subDays(30),
+            endPeriod: now()->subDays(20),
             retenueGarantieRate: 5.0,
-            prorataRate: 0.0
+            prorataRate: 0.0,
         );
 
         expect($situation)->toBeInstanceOf(CustomerSituation::class)
@@ -81,6 +85,8 @@ describe('SituationService - Génération de situations', function () {
                 $this->order->items[0]->id => 50,
                 $this->order->items[1]->id => 50,
             ],
+            startPeriod: now()->subDays(30),
+            endPeriod: now()->subDays(20),
             retenueGarantieRate: 5.0,
             prorataRate: 0.0
         );
@@ -101,7 +107,9 @@ describe('SituationService - Génération de situations', function () {
             progressData: [
                 $this->order->items[0]->id => 50,
                 $this->order->items[1]->id => 50,
-            ]
+            ],
+            startPeriod: now()->subDays(30),
+            endPeriod: now()->subDays(20),
         );
 
         // Situation 2 : on essaie de passer à 40% (recul)
@@ -114,7 +122,9 @@ describe('SituationService - Génération de situations', function () {
             progressData: [
                 $this->order->items[0]->id => 40,
                 $this->order->items[1]->id => 40,
-            ]
+            ],
+            startPeriod: now()->subDays(30),
+            endPeriod: now()->subDays(20),
         );
     });
 
@@ -125,7 +135,9 @@ describe('SituationService - Génération de situations', function () {
             progressData: [
                 $this->order->items[0]->id => 30,
                 $this->order->items[1]->id => 30,
-            ]
+            ],
+            startPeriod: now()->subDays(30),
+            endPeriod: now()->subDays(20),
         );
 
         $sit2 = $this->situationService->generateNextSituation(
@@ -134,7 +146,9 @@ describe('SituationService - Génération de situations', function () {
             progressData: [
                 $this->order->items[0]->id => 100,
                 $this->order->items[1]->id => 60,
-            ]
+            ],
+            startPeriod: now()->subDays(19),
+            endPeriod: now()->subDays(9),
         );
 
         expect($sit1->number)->toBe(1)
@@ -150,7 +164,9 @@ describe('SituationService - Génération de situations', function () {
             $this->responsable,
             progressData: [
                 $this->order->items[0]->id => 150, // > 100
-            ]
+            ],
+            startPeriod: now()->subDays(30),
+            endPeriod: now()->subDays(20),
         );
     });
 });
@@ -165,6 +181,8 @@ describe('SituationService - Retenue de garantie et prorata', function () {
                 $this->order->items[0]->id => 100,
                 $this->order->items[1]->id => 25,
             ],
+            startPeriod: now()->subDays(30),
+            endPeriod: now()->subDays(20),
             retenueGarantieRate: 5.0,
             prorataRate: 0.0
         );
@@ -183,6 +201,8 @@ describe('SituationService - Retenue de garantie et prorata', function () {
                 $this->order->items[0]->id => 50,
                 $this->order->items[1]->id => 50,
             ],
+            startPeriod: now()->subDays(30),
+            endPeriod: now()->subDays(20),
             retenueGarantieRate: 5.0,
             prorataRate: 1.0
         );
@@ -209,6 +229,8 @@ describe('SituationService - Calcul du delta facturé', function () {
                 $this->order->items[0]->id => 100,
                 $this->order->items[1]->id => 0,
             ],
+            startPeriod: now()->subDays(30),
+            endPeriod: now()->subDays(20),
             retenueGarantieRate: 5.0
         );
 
@@ -223,6 +245,8 @@ describe('SituationService - Calcul du delta facturé', function () {
                 $this->order->items[0]->id => 100,
                 $this->order->items[1]->id => 50,
             ],
+            startPeriod: now()->subDays(19),
+            endPeriod: now()->subDays(9),
             retenueGarantieRate: 5.0
         );
 

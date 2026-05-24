@@ -11,6 +11,7 @@ use App\Models\Commerce\CustomerOrder;
 use App\Models\Commerce\CustomerQuote;
 use App\Models\Commerce\SupplierInvoice;
 use App\Models\Tiers\ThirdParty;
+use Carbon\CarbonInterface;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -19,11 +20,11 @@ class CommerceAnalyticService
     /**
      * Calcule le Chiffre d'Affaires (CA) sur une période donnée.
      *
-     * @param  Carbon|null  $startDate  Date de début (par défaut : début du mois)
-     * @param  Carbon|null  $endDate  Date de fin (par défaut : maintenant)
+     * @param Carbon|CarbonInterface|null $startDate Date de début (par défaut : début du mois)
+     * @param Carbon|CarbonInterface|null $endDate Date de fin (par défaut : maintenant)
      * @return array
      */
-    public function getRevenueMetrics(?Carbon $startDate = null, ?Carbon $endDate = null): array
+    public function getRevenueMetrics(Carbon|CarbonInterface|null $startDate = null, Carbon|CarbonInterface|null $endDate = null): array
     {
         $start = $startDate ?? Carbon::now()->startOfMonth();
         $end = $endDate ?? Carbon::now();

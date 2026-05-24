@@ -33,6 +33,7 @@ class CustomerInvoice extends Model
         'cancellation_reason',
         'responsable_id',
         'sent_at',
+        'signature_hash',
     ];
 
     public function client(): BelongsTo

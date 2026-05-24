@@ -21,6 +21,7 @@ class CustomerQuoteItem extends Model
         'purchase_price',
         'selling_price',
         'vat_rate_id',
+        'total_ht',
     ];
 
     public function quote(): BelongsTo
@@ -44,6 +45,7 @@ class CustomerQuoteItem extends Model
             'quantity' => 'decimal:4',
             'purchase_price' => 'decimal:4',
             'selling_price' => 'decimal:4',
+            'total_ht' => 'decimal:4',
         ];
     }
 }

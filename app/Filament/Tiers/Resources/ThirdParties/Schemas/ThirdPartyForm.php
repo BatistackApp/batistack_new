@@ -6,6 +6,7 @@ use App\Enums\Tiers\ThirdPartyType;
 use App\Services\Core\SirenService;
 use App\Services\Tiers\ThirdPartyService;
 use Filament\Actions\Action;
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
 use Filament\Forms\Components\TextInput;
@@ -138,32 +139,6 @@ class ThirdPartyForm
                                         TextInput::make('bic')
                                             ->label('BIC'),
                                     ]),
-                            ]),
-
-                        Tabs\Tab::make('Vigilance')
-                            ->icon(Phosphor::ShieldCheck)
-                            ->visible(fn (Get $get) => ! empty($get('type')) && $get('type') === ThirdPartyType::SUBCONTRACTOR)
-                            ->schema([
-                                SpatieMediaLibraryFileUpload::make('vigilance_attestation')
-                                    ->disk('local')
-                                    ->visibility('private')
-                                    ->label('Attestation Vigilance URSSAF')
-                                    ->name('vigilance_attestation')
-                                    ->collection('vigilance'),
-
-                                SpatieMediaLibraryFileUpload::make('decennale_insurance')
-                                    ->disk('local')
-                                    ->visibility('private')
-                                    ->label('Assurance Décennale')
-                                    ->name('decennale_insurance')
-                                    ->collection('vigilance'),
-
-                                SpatieMediaLibraryFileUpload::make('kbis')
-                                    ->disk('local')
-                                    ->visibility('private')
-                                    ->label('Kbis (-3 mois)')
-                                    ->name('kbis')
-                                    ->collection('vigilance'),
                             ]),
                     ])->columnSpanFull(),
             ]);

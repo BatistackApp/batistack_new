@@ -6,6 +6,7 @@ use App\Models\Articles\Item;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class CustomerDeliveryNoteItem extends Model
 {
@@ -25,6 +26,11 @@ class CustomerDeliveryNoteItem extends Model
     public function item(): BelongsTo
     {
         return $this->belongsTo(Item::class);
+    }
+
+    public function orderItem(): HasMany
+    {
+        return $this->hasMany(CustomerOrderItem::class);
     }
 
     protected function casts(): array

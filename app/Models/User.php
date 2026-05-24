@@ -4,6 +4,8 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use App\Models\RH\Employee;
+use App\Models\Tiers\Contact;
+use App\Models\Tiers\ThirdParty;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
@@ -54,6 +56,11 @@ class User extends Authenticatable
     public function salarie(): HasOne
     {
         return $this->hasOne(Employee::class);
+    }
+
+    public function customer(): HasOne
+    {
+        return $this->hasOne(Contact::class);
     }
 
     #[Scope]

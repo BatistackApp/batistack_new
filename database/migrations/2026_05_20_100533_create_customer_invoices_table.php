@@ -22,6 +22,7 @@ return new class extends Migration {
             $table->string('reference')->unique();
             $table->string('type');
             $table->string('status')->default('draft');
+            $table->text('signature_hash')->nullable();
             $table->decimal('total_ht', 15)->default(0);
             $table->decimal('total_ttc', 15)->default(0);
             $table->timestamp('due_date')->nullable();

@@ -1,0 +1,17 @@
+<?php
+
+namespace App\Observers\Commerce;
+
+use App\Enums\Commerce\OrderStatus;
+use App\Models\Commerce\CustomerOrder;
+use App\Services\Commerce\CommerceDocumentationService;
+
+class CustomerOrderObserver
+{
+    public function saved(CustomerOrder $customerOrder): void
+    {
+        if ($customerOrder->isDirty('status') && $customerOrder->status === OrderStatus::CONFIRMED) {
+            app(CommerceDocumentationService::class)->generateOrderPdf($customerOrder);
+        }
+    }
+}

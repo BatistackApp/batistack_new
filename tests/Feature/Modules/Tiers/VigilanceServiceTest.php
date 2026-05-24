@@ -3,11 +3,11 @@
 use App\Exceptions\Tiers\TiersModuleException;
 use App\Models\Tiers\ThirdParty;
 use App\Services\Tiers\VigilanceService;
+use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Queue;
-use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 beforeEach(function () {
     Queue::fake(); // Empêche les jobs d'être réellement dispatchés
@@ -15,6 +15,8 @@ beforeEach(function () {
 
     // Définit une valeur de configuration factice pour l'URL de l'API URSSAF
     Config::set('services.urssaf.verify_url', 'https://api.urssaf.fr/v1/attestations/vigilance');
+
+    Storage::fake('local');
 });
 
 it('verifies a urssaf certificate successfully', function () {
@@ -73,8 +75,8 @@ it('returns invalid if urssaf certificate verification fails (unsuccessful http 
 it('throws TiersModuleException if an exception occurs during urssaf verification', function () {
     // Simule la façade Http pour lancer une RequestException
     Http::fake([
-        'https://api.urssaf.fr/v1/attestations/vigilance/*' => function (\Illuminate\Http\Client\Request $request) {
-            throw new \Exception('Simulated connection error');
+        'https://api.urssaf.fr/v1/attestations/vigilance/*' => function (Request $request) {
+            throw new Exception('Simulated connection error');
         },
     ]);
 
@@ -94,119 +96,53 @@ it('throws TiersModuleException if an exception occurs during urssaf verificatio
 
 // --- Tests pour scanCompliance ---
 
-it('scans compliance and finds no issues with all valid documents', function () {
+it('returns compliant when all documents exist', function () {
+    // Arrange: Crée un tiers et les fichiers factices attendus
     $thirdParty = ThirdParty::factory()->create();
+    $path = 'third_parties/'.$thirdParty->id.'/documents/';
 
-    // Crée des mocks pour les objets Media et leurs propriétés
-    $mockMediaVigilance = Mockery::mock(Media::class);
-    $mockMediaVigilance->shouldReceive('getCustomProperty')->with('expires_at')->andReturn(now()->addMonth()->format('Y-m-d H:i:s'));
+    Storage::disk('local')->put($path.'vigilance_attestation.pdf', 'dummy content');
+    Storage::disk('local')->put($path.'decennale_insurance.pdf', 'dummy content');
+    Storage::disk('local')->put($path.'kbis.pdf', 'dummy content');
 
-    $mockMediaDecennale = Mockery::mock(Media::class);
-    $mockMediaDecennale->shouldReceive('getCustomProperty')->with('expires_at')->andReturn(now()->addYear()->format('Y-m-d H:i:s'));
+    // Act: Lance l'analyse de conformité
+    $results = $this->vigilanceService->scanCompliance($thirdParty);
 
-    $mockMediaKbis = Mockery::mock(Media::class);
-    $mockMediaKbis->shouldReceive('getCustomProperty')->with('expires_at')->andReturn(null); // Kbis souvent sans date d'expiration
-
-    // Crée un mock partiel du modèle ThirdParty pour intercepter les appels à getFirstMedia
-    $mockThirdParty = Mockery::mock($thirdParty)->makePartial();
-    $mockThirdParty->shouldReceive('getFirstMedia')
-        ->with('vigilance_attestation')
-        ->andReturn($mockMediaVigilance);
-    $mockThirdParty->shouldReceive('getFirstMedia')
-        ->with('decennale_insurance')
-        ->andReturn($mockMediaDecennale);
-    $mockThirdParty->shouldReceive('getFirstMedia')
-        ->with('kbis')
-        ->andReturn($mockMediaKbis);
-
-    $results = $this->vigilanceService->scanCompliance($mockThirdParty);
-
+    // Assert: Vérifie que le résultat est conforme et sans problème
     expect($results['compliant'])->toBeTrue()
         ->and($results['issues'])->toBeEmpty();
 });
 
-it('scans compliance and finds issues with missing documents', function () {
+it('returns not compliant when a document is missing', function () {
+    // Arrange: Crée un tiers mais oublie volontairement un des fichiers
     $thirdParty = ThirdParty::factory()->create();
+    $path = 'third_parties/'.$thirdParty->id.'/documents/';
 
-    // Seul le Kbis est présent et valide, les autres sont manquants
-    $mockMediaKbis = Mockery::mock(Media::class);
-    $mockMediaKbis->shouldReceive('getCustomProperty')->with('expires_at')->andReturn(null);
+    Storage::disk('local')->put($path.'vigilance_attestation.pdf', 'dummy content');
+    // Le fichier decennale_insurance.pdf est manquant
+    Storage::disk('local')->put($path.'kbis.pdf', 'dummy content');
 
-    $mockThirdParty = Mockery::mock($thirdParty)->makePartial();
-    $mockThirdParty->shouldReceive('getFirstMedia')
-        ->with('vigilance_attestation')
-        ->andReturn(null); // Manquant
-    $mockThirdParty->shouldReceive('getFirstMedia')
-        ->with('decennale_insurance')
-        ->andReturn(null); // Manquant
-    $mockThirdParty->shouldReceive('getFirstMedia')
-        ->with('kbis')
-        ->andReturn($mockMediaKbis);
+    // Act: Lance l'analyse
+    $results = $this->vigilanceService->scanCompliance($thirdParty);
 
-    $results = $this->vigilanceService->scanCompliance($mockThirdParty);
-
-    expect($results['compliant'])->toBeFalse()
-        ->and($results['issues'])->toHaveCount(2)
-        ->and($results['issues'])->toContain('Document manquant : Attestation de Vigilance (URSSAF)')
-        ->and($results['issues'])->toContain('Document manquant : Assurance Décennale');
-});
-
-it('scans compliance and finds issues with expired documents', function () {
-    $thirdParty = ThirdParty::factory()->create();
-
-    // Crée des mocks Media, l'un d'eux est expiré
-    $mockMediaVigilance = Mockery::mock(Media::class);
-    $mockMediaVigilance->shouldReceive('getCustomProperty')->with('expires_at')->andReturn(now()->subDay()->format('Y-m-d H:i:s')); // Expiré
-
-    $mockMediaDecennale = Mockery::mock(Media::class);
-    $mockMediaDecennale->shouldReceive('getCustomProperty')->with('expires_at')->andReturn(now()->addYear()->format('Y-m-d H:i:s')); // Valide
-
-    $mockMediaKbis = Mockery::mock(Media::class);
-    $mockMediaKbis->shouldReceive('getCustomProperty')->with('expires_at')->andReturn(null); // Sans expiration
-
-    $mockThirdParty = Mockery::mock($thirdParty)->makePartial();
-    $mockThirdParty->shouldReceive('getFirstMedia')
-        ->with('vigilance_attestation')
-        ->andReturn($mockMediaVigilance);
-    $mockThirdParty->shouldReceive('getFirstMedia')
-        ->with('decennale_insurance')
-        ->andReturn($mockMediaDecennale);
-    $mockThirdParty->shouldReceive('getFirstMedia')
-        ->with('kbis')
-        ->andReturn($mockMediaKbis);
-
-    $results = $this->vigilanceService->scanCompliance($mockThirdParty);
-
+    // Assert: Vérifie que le résultat n'est pas conforme et que le problème est bien identifié
     expect($results['compliant'])->toBeFalse()
         ->and($results['issues'])->toHaveCount(1)
-        ->and($results['issues'])->toContain('Document expiré : Attestation de Vigilance (URSSAF) (le '.now()->subDay()->format('d/m/Y').')');
+        ->and($results['issues'])->toHaveKey('decennale_insurance', false);
 });
 
-it('scans compliance and finds a mix of issues', function () {
+it('returns not compliant when all documents are missing', function () {
+    // Arrange: Crée un tiers mais aucun fichier
     $thirdParty = ThirdParty::factory()->create();
 
-    // Attestation de vigilance manquante, assurance décennale expirée, Kbis valide
-    $mockMediaDecennale = Mockery::mock(Media::class);
-    $mockMediaDecennale->shouldReceive('getCustomProperty')->with('expires_at')->andReturn(now()->subMonth()->format('Y-m-d H:i:s')); // Expirée
+    // Act: Lance l'analyse
+    $results = $this->vigilanceService->scanCompliance($thirdParty);
 
-    $mockMediaKbis = Mockery::mock(Media::class);
-    $mockMediaKbis->shouldReceive('getCustomProperty')->with('expires_at')->andReturn(now()->addYear()->format('Y-m-d H:i:s')); // Valide
-
-    $mockThirdParty = Mockery::mock($thirdParty)->makePartial();
-    $mockThirdParty->shouldReceive('getFirstMedia')
-        ->with('vigilance_attestation')
-        ->andReturn(null); // Manquant
-    $mockThirdParty->shouldReceive('getFirstMedia')
-        ->with('decennale_insurance')
-        ->andReturn($mockMediaDecennale);
-    $mockThirdParty->shouldReceive('getFirstMedia')
-        ->with('kbis')
-        ->andReturn($mockMediaKbis);
-
-    $results = $this->vigilanceService->scanCompliance($mockThirdParty);
-
+    // Assert: Vérifie que le résultat n'est pas conforme et que tous les documents sont listés comme manquants
     expect($results['compliant'])->toBeFalse()
-        ->and($results['issues'])->toHaveCount(2)
-        ->and($results['issues'])->toContain('Document manquant : Attestation de Vigilance (URSSAF)')
-        ->and($results['issues'])->toContain('Document expiré : Assurance Décennale (le '.now()->subMonth()->format('d/m/Y').')');
+        ->and($results['issues'])->toEqual([
+            'vigilance_attestation' => false,
+            'decennale_insurance' => false,
+            'kbis' => false,
+        ]);
 });

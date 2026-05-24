@@ -11,7 +11,7 @@ class TiersSeeder extends Seeder
 {
     public function run(): void
     {
-        $tiers = ThirdParty::factory(rand(10, 50))->create();
+        $tiers = ThirdParty::factory(10)->create();
 
         foreach ($tiers as $tier) {
             Address::factory()->create([
@@ -20,6 +20,7 @@ class TiersSeeder extends Seeder
 
             Contact::factory()->create([
                 'third_party_id' => $tier->id,
+                'is_primary' => true,
             ]);
         }
 

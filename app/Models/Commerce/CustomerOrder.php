@@ -6,11 +6,14 @@ use App\Enums\Commerce\OrderStatus;
 use App\Models\Chantiers\Chantier;
 use App\Models\Tiers\ThirdParty;
 use App\Models\User;
+use App\Observers\Commerce\CustomerOrderObserver;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+#[ObservedBy([CustomerOrderObserver::class])]
 class CustomerOrder extends Model
 {
     use HasFactory;
@@ -51,6 +54,21 @@ class CustomerOrder extends Model
         return $this->belongsTo(User::class, 'responsable_id');
     }
 
+    public function deliveryNotes(): HasMany
+    {
+        return $this->hasMany(CustomerDeliveryNote::class);
+    }
+
+    public function invoices(): HasMany
+    {
+        return $this->hasMany(CustomerInvoice::class);
+    }
+
+    public function situations(): HasMany
+    {
+        return $this->hasMany(CustomerSituation::class);
+    }
+
     protected function casts(): array
     {
         return [
@@ -58,5 +76,17 @@ class CustomerOrder extends Model
             'total_ht' => 'decimal:2',
             'total_ttc' => 'decimal:2',
         ];
+    }
+
+    public function getTotalTvaAttribute(): float
+    {
+        $items = $this->items;
+        $totalTva = 0;
+
+        foreach ($items as $item) {
+            $totalTva += $item->selling_price * $item->vatRate->rate;
+        }
+
+        return $totalTva;
     }
 }

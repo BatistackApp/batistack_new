@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Queue;
 
 beforeEach(function () {
+    \App\Models\Core\Company::factory()->create();
     $this->quoteService = app(QuoteService::class);
 
     // Création d'un client test
@@ -105,6 +106,7 @@ describe('QuoteService - Acceptation de devis', function () {
         ]);
 
         $order = $this->quoteService->acceptQuote($quote, $this->responsable);
+        $order->refresh();
 
         // Les lignes doivent être copiées dans la commande
         expect($order->items)->toHaveCount(2)

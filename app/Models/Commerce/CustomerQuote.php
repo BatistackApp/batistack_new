@@ -4,6 +4,7 @@ namespace App\Models\Commerce;
 
 use App\Enums\Commerce\QuoteStatus;
 use App\Models\Chantiers\Chantier;
+use App\Models\Core\Signature;
 use App\Models\Tiers\ThirdParty;
 use App\Models\User;
 use App\Observers\Commerce\CustomerQuoteObserver;
@@ -11,8 +12,10 @@ use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 #[ObservedBy([CustomerQuoteObserver::class])]
 class CustomerQuote extends Model
@@ -56,6 +59,11 @@ class CustomerQuote extends Model
         return $this->hasOne(CustomerOrder::class);
     }
 
+    public function signatures(): MorphMany
+    {
+        return $this->morphMany(Signature::class, 'signable');
+    }
+
     protected function casts(): array
     {
         return [
@@ -65,5 +73,22 @@ class CustomerQuote extends Model
             'signed_at' => 'datetime',
             'expires_at' => 'datetime',
         ];
+    }
+
+    public function getIsExpiredAttribute(): bool
+    {
+        return $this->expires_at < now();
+    }
+
+    public function getTotalTvaAttribute(): float
+    {
+        $items = $this->items;
+        $totalTva = 0;
+
+        foreach ($items as $item) {
+            $totalTva += $item->selling_price * $item->vatRate->rate;
+        }
+
+        return $totalTva;
     }
 }
