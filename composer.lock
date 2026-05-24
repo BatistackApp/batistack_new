@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "543335e152dd998b0ac85e6d1fcc0c01",
+    "content-hash": "be2246a107ec409a702d58dd71e4c62e",
     "packages": [
         {
             "name": "achyutn/filament-log-viewer",
@@ -1127,6 +1127,55 @@
                 }
             ],
             "time": "2026-03-21T13:21:02+00:00"
+        },
+        {
+            "name": "codewithkyrian/filament-date-range",
+            "version": "2.2.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/CodeWithKyrian/filament-date-range.git",
+                "reference": "fd4c29d2bd70aef5e36e81c2538af643d34d3440"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/CodeWithKyrian/filament-date-range/zipball/fd4c29d2bd70aef5e36e81c2538af643d34d3440",
+                "reference": "fd4c29d2bd70aef5e36e81c2538af643d34d3440",
+                "shasum": ""
+            },
+            "require": {
+                "filament/forms": "^4.0||^5.0",
+                "filament/tables": "^4.0||^5.0",
+                "php": "^8.2"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "CodeWithKyrian\\FilamentDateRange\\DateRangeServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "CodeWithKyrian\\FilamentDateRange\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Kyrian Obikwelu",
+                    "email": "kyrianobikwelu@gmail.com"
+                }
+            ],
+            "description": "A date range field and filter for Filament v3.",
+            "support": {
+                "issues": "https://github.com/CodeWithKyrian/filament-date-range/issues",
+                "source": "https://github.com/CodeWithKyrian/filament-date-range/tree/2.2.1"
+            },
+            "time": "2026-03-23T12:11:18+00:00"
         },
         {
             "name": "composer/semver",

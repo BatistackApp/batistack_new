@@ -21,6 +21,7 @@
         "bezhansalleh/filament-panel-switch": "^3.1",
         "caresome/filament-auth-designer": "^3.1",
         "chillerlan/php-qrcode": "*",
+        "codewithkyrian/filament-date-range": "^2.2",
         "croustibat/filament-jobs-monitor": "^4.3",
         "devletes/filament-progress-bar": "^1.0",
         "docusealco/docuseal-php": "^1.0",

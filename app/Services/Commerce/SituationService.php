@@ -30,10 +30,12 @@ class SituationService
         CustomerOrder $order,
         User $responsable,
         array $progressData,
+        $startPeriod,
+        $endPeriod,
         float $retenueGarantieRate = 5.0,
-        float $prorataRate = 0.0
+        float $prorataRate = 0.0,
     ): CustomerSituation {
-        return DB::transaction(function () use ($order, $responsable, $progressData, $retenueGarantieRate, $prorataRate) {
+        return DB::transaction(function () use ($order, $responsable, $progressData, $retenueGarantieRate, $prorataRate, $startPeriod, $endPeriod) {
 
             $lastSituation = CustomerSituation::where('customer_order_id', $order->id)
                 ->orderBy('number', 'desc')
@@ -110,8 +112,9 @@ class SituationService
                 'total_ht' => round($netHtToBill, 2),
                 'retenue_garantie_amount' => round($retenueGarantieAmount, 2),
                 'prorata_amount' => round($prorataAmount, 2),
+                'periode_start' => $startPeriod,
+                'periode_end' => $endPeriod,
             ]);
-
 
             $situation->items()->createMany($itemsData);
 
@@ -122,6 +125,7 @@ class SituationService
     /**
      * Enregistre et valide la situation de travaux d'un sous-traitant (Flux Achat).
      * Calcule automatiquement la retenue de garantie de 5% (Loi de 1975).
+     *
      * @throws Exception
      */
     public function submitSubcontractorSituation(

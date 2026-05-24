@@ -3,6 +3,7 @@
 namespace App\Observers\Commerce;
 
 use App\Enums\Commerce\InvoiceStatus;
+use App\Enums\Commerce\OrderStatus;
 use App\Jobs\Commerce\GenerateDocumentJob;
 use App\Jobs\Commerce\SendCustomerInvoiceEmailJob;
 use App\Models\Commerce\CustomerInvoice;
@@ -31,8 +32,10 @@ class CustomerInvoiceObserver
         // Génération automatique du PDF via un Job
         GenerateDocumentJob::dispatch('invoice', $invoice);
 
-        if ($invoice->status === InvoiceStatus::VALIDATED) {
-            $this->handleInvoiceValidated($invoice);
+        if ($invoice->customer_order_id) {
+            $invoice->order->update([
+                'status' => OrderStatus::BILLED,
+            ]);
         }
 
         // Log d'audit

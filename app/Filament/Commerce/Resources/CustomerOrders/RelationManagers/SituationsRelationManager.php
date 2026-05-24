@@ -12,6 +12,7 @@ use App\Services\Commerce\CommerceDocumentationService;
 use App\Services\Commerce\CustomerOrderService;
 use App\Services\Commerce\InvoiceLegalizationService;
 use App\Services\Commerce\SituationService;
+use CodeWithKyrian\FilamentDateRange\Forms\Components\DateRangePicker;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
@@ -20,12 +21,14 @@ use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
+use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Notifications\Notification;
 use Filament\Resources\RelationManagers\RelationManager;
+use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
@@ -126,6 +129,16 @@ class SituationsRelationManager extends RelationManager
                                     ->required(),
                             ]),
 
+                        Grid::make(2)
+                            ->schema([
+                                DatePicker::make('periode_start')
+                                    ->label('Date de début de la situation'),
+
+                                DatePicker::make('periode_end')
+                                    ->label('Date de fin de la situation'),
+                            ])
+                            ->columnSpanFull(),
+
                         TextInput::make('retention_rate')
                             ->label('Retenue de garantie (%)')
                             ->numeric()
@@ -152,6 +165,8 @@ class SituationsRelationManager extends RelationManager
                             order: $order,
                             responsable: Auth::user(),
                             progressData: $progressData,
+                            startPeriod: $data['periode_start'],
+                            endPeriod: $data['periode_end'],
                             retenueGarantieRate: $data['retention_rate'],
                             prorataRate: $data['prorata_rate'],
                         );

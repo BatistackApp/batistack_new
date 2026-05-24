@@ -20,6 +20,8 @@ return new class extends Migration {
             $table->string('total_ht', 15)->default(0);
             $table->string('retenue_garantie_amount', 15)->default(0);
             $table->string('prorata_amount', 15)->default(0);
+            $table->date('periode_start');
+            $table->date('periode_end');
             $table->timestamps();
         });
     }

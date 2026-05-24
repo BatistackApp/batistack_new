@@ -20,6 +20,7 @@ class TiersSeeder extends Seeder
 
             Contact::factory()->create([
                 'third_party_id' => $tier->id,
+                'is_primary' => true,
             ]);
         }
 

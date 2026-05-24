@@ -110,7 +110,7 @@ class CommerceDocumentationService extends DocumentService
      */
     public function generateSituationPdf(CustomerSituation|Model $situation): string
     {
-        $situation->load(['order.client', 'chantier', 'items.quoteItem.item']);
+        $situation->load(['order.client', 'chantier', 'items.item']);
 
         $data = [
             'company' => Company::first(),
