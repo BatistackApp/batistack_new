@@ -52,7 +52,7 @@ class VigilanceService
             'issues' => [],
         ];
 
-        // 1. Vérification Documentaire (Spatie MediaLibrary)
+        // 1. Vérification Documentaire
         $docs = [
             'vigilance_attestation' => 'Attestation de Vigilance (URSSAF)',
             'decennale_insurance' => 'Assurance Décennale',
@@ -60,19 +60,10 @@ class VigilanceService
         ];
 
         foreach ($docs as $collection => $label) {
-            $media = $thirdParty->getFirstMedia($collection);
-
-            if (! $media) {
-                $results['issues'][] = "Document manquant : {$label}";
+            // On vérifie que chaque fichier ont été transmis
+            if (!\Storage::disk('local')->exists('third_parties/'.$thirdParty->id.'/documents/'.$collection.'.pdf')) {
                 $results['compliant'] = false;
-
-                continue;
-            }
-
-            $expiry = $media->getCustomProperty('expires_at');
-            if ($expiry && now()->parse($expiry)->isPast()) {
-                $results['issues'][] = "Document expiré : {$label} (le ".now()->parse($expiry)->format('d/m/Y').')';
-                $results['compliant'] = false;
+                $results['issues'] = [$collection => false];
             }
         }
 

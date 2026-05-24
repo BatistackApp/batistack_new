@@ -6,6 +6,7 @@ use App\Enums\Tiers\ThirdPartyType;
 use App\Filament\Tiers\Resources\ThirdParties\Actions\GenerateContractAction;
 use App\Filament\Tiers\Resources\ThirdParties\Actions\PrintAction;
 use App\Filament\Tiers\Resources\ThirdParties\Actions\SynchronizeSirenAction;
+use App\Filament\Tiers\Resources\ThirdParties\Actions\VigilanceTransfertAction;
 use App\Filament\Tiers\Resources\ThirdParties\ThirdPartyResource;
 use App\Jobs\Tiers\VerifyGloabVigilanceJob;
 use App\Models\Tiers\ThirdParty;
@@ -43,6 +44,7 @@ class ViewThirdParty extends ViewRecord
                             ->send();
                     }),
                 GenerateContractAction::make(),
+                VigilanceTransfertAction::make(),
             ]),
         ];
     }
