@@ -160,11 +160,6 @@ class ItemsRelationManager extends RelationManager
                     ->iconButton()
                     ->icon(Phosphor::XBold)
                     ->tooltip('Supprimer'),
-            ])
-            ->toolbarActions([
-                BulkActionGroup::make([
-                    DeleteBulkAction::make(),
-                ]),
             ]);
     }
 
