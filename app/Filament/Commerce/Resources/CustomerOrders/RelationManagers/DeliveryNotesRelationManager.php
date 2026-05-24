@@ -226,6 +226,30 @@ class DeliveryNotesRelationManager extends RelationManager
                         ])
                         ->action(function (array $data, CustomerDeliveryNote $record) {
                             $record->update(['status' => $data['status']]);
+
+                            if ($data['status'] === DeliveryStatus::DELIVERED) {
+                                $state = false;
+                                foreach ($record->items as $item) {
+                                    $orderedQte = 0;
+                                    $orderItem = $item->customerDeliveryNote->order->items()->firstWhere('item_id', $item->item_id);
+                                    if ($orderItem->item->type === ItemType::STOCKABLE || $orderItem->item->type === ItemType::CONSUMABLE) {
+                                        if ($orderItem) {
+                                            $orderedQte = $orderItem->quantity;
+                                        }
+                                        if ($item->quantity_delivered < $orderedQte) {
+                                            $state = true;
+                                        } else {
+                                            $state = false;
+                                        }
+                                    }
+                                }
+
+                                if ($state === true) {
+                                    $record->order->update(['status' => OrderStatus::DELIVERED]);
+                                } else {
+                                    $record->order->update(['status' => OrderStatus::PARTIALLY_DELIVERED]);
+                                }
+                            }
                         }),
                 ]),
             ])
