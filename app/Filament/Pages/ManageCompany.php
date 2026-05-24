@@ -4,12 +4,14 @@ namespace App\Filament\Pages;
 
 use App\Models\Core\Company;
 use Filament\Actions\Action;
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
+use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 use ToneGabes\Filament\Icons\Enums\Phosphor;
 
 class ManageCompany extends Page
@@ -65,15 +67,12 @@ class ManageCompany extends Page
 
                 Section::make('Identité Visuelle')
                     ->schema([
-                        SpatieMediaLibraryFileUpload::make('logo')
+                        FileUpload::make('company_logo')
+                            ->disk('public')
                             ->label('Logo de l\'entreprise')
-                            ->collection('core')
-                            ->visibility('public')
                             ->directory('core')
-                            ->downloadable()
-                            ->openable()
-                            ->live()
-                            ->helperText('Utilisé pour les documents officiels (Factures, Devis).'),
+                            ->visibility('public')
+                            ->getUploadedFileNameForStorageUsing(fn (TemporaryUploadedFile $file) => 'company_logo.png'),
                     ]),
             ])
             ->statePath('data');

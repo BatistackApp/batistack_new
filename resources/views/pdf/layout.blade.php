@@ -289,7 +289,7 @@
 <header class="header">
     <div class="company-info">
         <div class="logo-entreprise" style="vertical-align: top;">
-            <img src="{{ $company->getMedia('core')->first()->getFullUrl() }}" alt="logo" style="max-width: 150px; max-height: 70px;">
+            <img src="{{ \Illuminate\Support\Facades\Storage::get('core/company_logo.png') }}" alt="logo" style="max-width: 150px; max-height: 70px;">
         </div>
         <div class="company-details" style="display: inline-block; margin-left: 20px;">
             <span style="font-weight: bold; font-size: 1.2rem; color: #1e40af;">{{ $company->legal_name }}</span><br>
