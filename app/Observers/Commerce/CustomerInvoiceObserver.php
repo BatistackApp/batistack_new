@@ -31,6 +31,10 @@ class CustomerInvoiceObserver
         // Génération automatique du PDF via un Job
         GenerateDocumentJob::dispatch('invoice', $invoice);
 
+        if ($invoice->status === InvoiceStatus::VALIDATED) {
+            $this->handleInvoiceValidated($invoice);
+        }
+
         // Log d'audit
         \Log::info("Facture {$invoice->reference} créée pour {$invoice->client->name}");
     }

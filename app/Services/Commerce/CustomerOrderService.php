@@ -188,4 +188,24 @@ class CustomerOrderService
 
         return "CMD-{$year}-".str_pad($sequenceNumber, 3, '0', STR_PAD_LEFT);
     }
+
+    public function generateReferenceInvoice(): string
+    {
+        $year = date('Y');
+        $latestInvoice = CustomerInvoice::where('reference', 'like', "FACT-{$year}-%")
+            ->orderByDesc('reference')
+            ->first();
+
+        $sequenceNumber = 1;
+
+        if ($latestInvoice) {
+            // Extract the numeric part after 'CMD-YYYY-'
+            $parts = explode('-', $latestInvoice->reference);
+            if (count($parts) === 3 && is_numeric($parts[2])) {
+                $sequenceNumber = (int) $parts[2] + 1;
+            }
+        }
+
+        return "FACT-{$year}-".str_pad($sequenceNumber, 3, '0', STR_PAD_LEFT);
+    }
 }

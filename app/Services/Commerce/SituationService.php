@@ -35,49 +35,60 @@ class SituationService
     ): CustomerSituation {
         return DB::transaction(function () use ($order, $responsable, $progressData, $retenueGarantieRate, $prorataRate) {
 
-            // Récupérer la dernière situation validée pour connaître l'antériorité
             $lastSituation = CustomerSituation::where('customer_order_id', $order->id)
                 ->orderBy('number', 'desc')
                 ->first();
 
-            $newSituationNumber = $lastSituation ? $lastSituation->number + 1 : 1;
+            // --- OPTIMISATION : Début ---
+            // On récupère toutes les lignes des situations précédentes en une seule fois.
+            $previousItemsBilled = collect();
+            $previousItemsProgress = collect();
 
+            if ($lastSituation) {
+                // On récupère la somme déjà facturée pour chaque article sur toutes les situations
+                $previousItemsBilled = CustomerSituationItem::whereHas('situation', function ($q) use ($order) {
+                    $q->where('customer_order_id', $order->id);
+                })
+                    ->select('customer_order_item_id', DB::raw('SUM(amount_ht) as total_billed'))
+                    ->groupBy('customer_order_item_id')
+                    ->pluck('total_billed', 'customer_order_item_id');
+
+                // On récupère le dernier pourcentage d'avancement pour chaque article
+                $previousItemsProgress = CustomerSituationItem::where('customer_situation_id', $lastSituation->id)
+                    ->pluck('progress_percentage', 'customer_order_item_id');
+            }
+            // --- OPTIMISATION : Fin ---
+
+            $newSituationNumber = $lastSituation ? $lastSituation->number + 1 : 1;
             $totalHtThisMonth = 0.0;
             $itemsData = [];
 
             foreach ($order->items as $orderItem) {
                 $newProgress = $progressData[$orderItem->id] ?? 0;
 
-                // Vérification basique
                 if ($newProgress < 0 || $newProgress > 100) {
                     throw new Exception("Le pourcentage d'avancement doit être entre 0 et 100.");
                 }
 
-                // Valeur cumulée théorique de la ligne
-                $cumulLigneHt = ($newProgress / 100) * ($orderItem->quantity * $orderItem->selling_price);
-
-                // Valeur déjà facturée lors de la/les situation(s) précédente(s)
-                $previousBilled = 0.0;
-                if ($lastSituation) {
-                    $lastItem = CustomerSituationItem::where('customer_situation_id', $lastSituation->id)
-                        ->where('customer_order_item_id', $orderItem->id)
-                        ->first();
-
-                    if ($lastItem && $newProgress < $lastItem->progress_percentage) {
-                        throw new Exception("L'avancement de la ligne {$orderItem->name} ne peut pas reculer (Ancien: {$lastItem->progress_percentage}%, Nouveau: {$newProgress}%).");
-                    }
-
-                    // Somme des montants de cette ligne sur toutes les situations précédentes
-                    $previousBilled = CustomerSituationItem::whereHas('situation', function ($q) use ($order) {
-                        $q->where('customer_order_id', $order->id);
-                    })
-                        ->where('customer_order_item_id', $orderItem->id)
-                        ->sum('amount_ht');
+                // On récupère le dernier avancement depuis la collection pré-chargée
+                $lastProgress = $previousItemsProgress->get($orderItem->id, 0);
+                if ($newProgress < $lastProgress) {
+                    throw new Exception("L'avancement de la ligne {$orderItem->name} ne peut pas reculer (Ancien: {$lastProgress}%, Nouveau: {$newProgress}%).");
                 }
 
-                // Montant HT net à facturer sur CETTE situation
+                $cumulLigneHt = ($newProgress / 100) * ($orderItem->quantity * $orderItem->selling_price);
+
+                // On récupère le total déjà facturé depuis la collection pré-chargée
+                $previousBilled = $previousItemsBilled->get($orderItem->id, 0.0);
+
                 $toBillThisMonth = $cumulLigneHt - $previousBilled;
-                $totalHtThisMonth += $toBillThisMonth;
+
+                // On ne facture pas les montants négatifs (au cas où, par ex. un arrondi)
+                if ($toBillThisMonth > 0) {
+                    $totalHtThisMonth += $toBillThisMonth;
+                } else {
+                    $toBillThisMonth = 0;
+                }
 
                 $itemsData[] = [
                     'customer_order_item_id' => $orderItem->id,
@@ -86,13 +97,10 @@ class SituationService
                 ];
             }
 
-            // Calcul des retenues
             $retenueGarantieAmount = $totalHtThisMonth * ($retenueGarantieRate / 100);
             $prorataAmount = $totalHtThisMonth * ($prorataRate / 100);
-
             $netHtToBill = $totalHtThisMonth - $retenueGarantieAmount - $prorataAmount;
 
-            // Création de l'entité Situation
             $situation = CustomerSituation::create([
                 'customer_order_id' => $order->id,
                 'chantier_id' => $order->chantier_id,
@@ -104,10 +112,8 @@ class SituationService
                 'prorata_amount' => round($prorataAmount, 2),
             ]);
 
-            // Enregistrement des lignes
-            foreach ($itemsData as $data) {
-                $situation->items()->create($data);
-            }
+
+            $situation->items()->createMany($itemsData);
 
             return $situation;
         });

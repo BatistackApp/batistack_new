@@ -8,6 +8,7 @@ use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class CustomerSituation extends Model
@@ -45,9 +46,14 @@ class CustomerSituation extends Model
         return $this->belongsTo(User::class, 'responsable_id');
     }
 
-    public function orderItem(): HasMany
+    public function orderItem(): BelongsToMany
     {
-        return $this->hasMany(CustomerOrderItem::class);
+        return $this->belongsToMany(
+            CustomerOrderItem::class,
+            'customer_situation_items',
+            'customer_situation_id',
+            'customer_order_item_id'
+        )->withPivot(['progress_percentage', 'amount_ht']);
     }
 
     protected function casts(): array

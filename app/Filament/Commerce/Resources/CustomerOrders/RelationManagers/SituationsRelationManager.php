@@ -2,11 +2,14 @@
 
 namespace App\Filament\Commerce\Resources\CustomerOrders\RelationManagers;
 
+use App\Enums\Articles\ItemType;
 use App\Enums\Commerce\InvoiceStatus;
 use App\Enums\Commerce\InvoiceType;
 use App\Models\Commerce\CustomerInvoice;
+use App\Models\Commerce\CustomerOrderItem;
 use App\Models\Commerce\CustomerSituation;
 use App\Services\Commerce\CommerceDocumentationService;
+use App\Services\Commerce\CustomerOrderService;
 use App\Services\Commerce\InvoiceLegalizationService;
 use App\Services\Commerce\SituationService;
 use Filament\Actions\Action;
@@ -28,8 +31,10 @@ use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 use ToneGabes\Filament\Icons\Enums\Phosphor;
+use function Pest\Laravel\options;
 
 class SituationsRelationManager extends RelationManager
 {
@@ -106,7 +111,9 @@ class SituationsRelationManager extends RelationManager
                             ->schema([
                                 Select::make('item_id')
                                     ->label('Section de travaux')
-                                    ->relationship('orderItem', 'name')
+                                    ->options(fn (RelationManager $livewire) => CustomerOrderItem::with('item')
+                                        ->where('customer_order_id', $livewire->getOwnerRecord()->id)
+                                        ->pluck('name', 'id'))
                                     ->searchable()
                                     ->preload()
                                     ->required(),
@@ -134,16 +141,19 @@ class SituationsRelationManager extends RelationManager
                     ])
                     ->using(function (array $data, RelationManager $livewire, SituationService $service, InvoiceLegalizationService $legalService) {
                         $order = $livewire->getOwnerRecord();
-                        $progressData = collect();
+                        $progressData = [];
 
                         foreach ($data['progress_data'] ?? [] as $progress) {
-                            $progressData->push([$progress['item_id'] => $progress['percentage']]);
+                            // La clé est l'ID de l'item, la valeur est le pourcentage
+                            $progressData[$progress['item_id']] = $progress['percentage'];
                         }
 
                         $situation = $service->generateNextSituation(
                             order: $order,
                             responsable: Auth::user(),
-                            progressData: $progressData->toArray(),
+                            progressData: $progressData,
+                            retenueGarantieRate: $data['retention_rate'],
+                            prorataRate: $data['prorata_rate'],
                         );
 
                         $invoice = CustomerInvoice::create([
@@ -156,6 +166,8 @@ class SituationsRelationManager extends RelationManager
                             'total_ht' => $situation->total_ht,
                             'total_ttc' => $situation->total_ht * 1.2, // TODO: A changer plus tard
                             'due_date' => now()->addDays(30),
+                            'responsable_id' => \auth()->user()->id,
+                            'reference' => app(CustomerOrderService::class)->generateReferenceInvoice(),
                         ]);
 
                         $legalService->legalizeCustomerInvoice($invoice);
