@@ -29,11 +29,14 @@ use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
+use Filament\Support\Enums\Width;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Hugomyb\FilamentMediaAction\Actions\MediaAction;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
 use ToneGabes\Filament\Icons\Enums\Phosphor;
 
 class DeliveryNotesRelationManager extends RelationManager
@@ -198,10 +201,12 @@ class DeliveryNotesRelationManager extends RelationManager
 
                     EditAction::make(),
                     DeleteAction::make(),
-                    Action::make('pdf')
-                        ->label('Imprimer')
+                    MediaAction::make()
+                        ->label('Imprimer PDF')
                         ->icon(Phosphor::Printer)
-                        ->action(fn (Model $record, CommerceDocumentationService $service) => response()->download($service->generateDeliveryNotePdf($record))),
+                        ->mediaType(MediaAction::TYPE_PDF)
+                        ->modalWidth(Width::Container)
+                        ->media(fn (Model $record) => Storage::url('documents/commerce/deliveries/bl_'.$record->reference.'.pdf')),
 
                     Action::make('createInvoice')
                         ->label('Facturer')

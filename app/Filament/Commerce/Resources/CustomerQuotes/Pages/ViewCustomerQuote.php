@@ -9,7 +9,10 @@ use App\Services\Commerce\CommerceDocumentationService;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
+use Filament\Support\Enums\Width;
+use Hugomyb\FilamentMediaAction\Actions\MediaAction;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
 use ToneGabes\Filament\Icons\Enums\Phosphor;
 
 class ViewCustomerQuote extends ViewRecord
@@ -54,10 +57,12 @@ class ViewCustomerQuote extends ViewRecord
                 ->visible(fn (CustomerQuote $record) => $record->status === QuoteStatus::SIGNED)
                 ->url(fn (CustomerQuote $record) => url(route('filament.commerce.resources.customer-orders.view', ['record' => $record->order]))),
 
-            Action::make('printQuote')
-                ->label('Imprimer le PDF')
-                ->action(fn (Model $record, CommerceDocumentationService $service) => response()->download($service->generateQuotePdf($record)))
-                ->icon(Phosphor::Printer),
+            MediaAction::make()
+                ->label('Imprimer PDF')
+                ->icon(Phosphor::Printer)
+                ->mediaType(MediaAction::TYPE_PDF)
+                ->modalWidth(Width::Container)
+                ->media(fn (Model $record) => Storage::url('documents/commerce/quotes/devis_'.$record->reference.'.pdf')),
         ];
     }
 }

@@ -12,9 +12,14 @@ use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
+use Filament\Support\Enums\Width;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Hugomyb\FilamentMediaAction\Actions\MediaAction;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
+use ToneGabes\Filament\Icons\Enums\Phosphor;
 
 class CustomerQuotesTable
 {
@@ -73,10 +78,12 @@ class CustomerQuotesTable
                         ->action(fn (CustomerQuote $record) => $record->update(['status' => QuoteStatus::SENT]))
                         ->requiresConfirmation(),
 
-                    Action::make('viewPdf')
-                        ->label('PDF')
-                        ->icon('heroicon-o-document')
-                        ->action(fn (CustomerQuote $record, CommerceDocumentationService $service) => response()->download($service->generateQuotePdf($record))),
+                    MediaAction::make()
+                        ->label('Imprimer PDF')
+                        ->icon(Phosphor::Printer)
+                        ->mediaType(MediaAction::TYPE_PDF)
+                        ->modalWidth(Width::Container)
+                        ->media(fn (Model $record) => Storage::url('documents/commerce/quotes/devis_'.$record->reference.'.pdf')),
                 ]),
             ])
             ->toolbarActions([

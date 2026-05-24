@@ -20,9 +20,6 @@ class PrinterAction
             ->icon(Phosphor::Printer)
             ->mediaType(MediaAction::TYPE_PDF)
             ->modalWidth(Width::Container)
-            ->before(function (Model $record) {
-                return app(CommerceDocumentationService::class)->generateOrderPdf($record);
-            })
             ->media(fn (Model $record) => Storage::url('documents/commerce/orders/commande_'.$record->reference.'.pdf'));
     }
 }
