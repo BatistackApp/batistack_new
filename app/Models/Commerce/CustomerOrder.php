@@ -6,11 +6,14 @@ use App\Enums\Commerce\OrderStatus;
 use App\Models\Chantiers\Chantier;
 use App\Models\Tiers\ThirdParty;
 use App\Models\User;
+use App\Observers\Commerce\CustomerOrderObserver;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+#[ObservedBy([CustomerOrderObserver::class])]
 class CustomerOrder extends Model
 {
     use HasFactory;

@@ -165,6 +165,6 @@ class ItemsRelationManager extends RelationManager
 
     public function isReadOnly(): bool
     {
-        return $this->ownerRecord->status === OrderStatus::DRAFT;
+        return $this->ownerRecord->status !== OrderStatus::DRAFT;
     }
 }

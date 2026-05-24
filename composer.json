@@ -30,6 +30,7 @@
         "gheith3/filament-relation-pages": "^1.0",
         "guava/calendar": "^3.1",
         "harvirsidhu/filament-cards": "^1.0",
+        "hugomyb/filament-media-action": "^5.0",
         "hydrat/filament-table-layout-toggle": "4.0",
         "intervention/validation": "^4.6",
         "joaopaulolndev/filament-pdf-viewer": "^3.0",

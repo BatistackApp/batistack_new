@@ -3,6 +3,10 @@
 namespace App\Filament\Commerce\Resources\CustomerOrders\Tables;
 
 use App\Enums\Commerce\OrderStatus;
+use App\Filament\Commerce\Resources\CustomerOrders\Actions\CancelAction;
+use App\Filament\Commerce\Resources\CustomerOrders\Actions\ConfirmedAction;
+use App\Filament\Commerce\Resources\CustomerOrders\Actions\PrinterAction;
+use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -11,6 +15,7 @@ use Filament\Tables\Columns\Summarizers\Sum;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Model;
 
 class CustomerOrdersTable
 {
@@ -59,7 +64,12 @@ class CustomerOrdersTable
             ])
             ->recordActions([
                 ViewAction::make(),
-                EditAction::make(),
+                EditAction::make()->visible(fn (Model $record) => $record->status === OrderStatus::DRAFT),
+                ActionGroup::make([
+                    ConfirmedAction::make(),
+                    CancelAction::make(),
+                    PrinterAction::make(),
+                ]),
             ]);
     }
 }

@@ -53,6 +53,7 @@ class CustomerOrderService
 
     /**
      * Génère une Facture Client (Simple, Acompte ou sur Situation de travaux).
+     *
      * @throws \Throwable
      */
     public function createInvoice(
@@ -146,6 +147,7 @@ class CustomerOrderService
 
     /**
      * Génère un Avoir Client (Credit Note) pour annuler ou corriger une facture.
+     *
      * @throws Exception
      */
     public function createCreditNote(CustomerInvoice $invoice, float $amountHt, string $reason, User $responsable): CustomerCreditNote
@@ -165,5 +167,25 @@ class CustomerOrderService
             'total_ht' => $amountHt,
             'total_ttc' => $amountHt * (1 + ($defaultVat->rate / 100)),
         ]);
+    }
+
+    public function generateReferenceOrder(): string
+    {
+        $year = date('Y');
+        $latestOrder = CustomerOrder::where('reference', 'like', "CMD-{$year}-%")
+            ->orderByDesc('reference')
+            ->first();
+
+        $sequenceNumber = 1;
+
+        if ($latestOrder) {
+            // Extract the numeric part after 'CMD-YYYY-'
+            $parts = explode('-', $latestOrder->reference);
+            if (count($parts) === 3 && is_numeric($parts[2])) {
+                $sequenceNumber = (int) $parts[2] + 1;
+            }
+        }
+
+        return "CMD-{$year}-".str_pad($sequenceNumber, 3, '0', STR_PAD_LEFT);
     }
 }

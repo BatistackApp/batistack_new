@@ -3,13 +3,21 @@
 namespace App\Filament\Commerce\Resources\CustomerOrders\Schemas;
 
 use App\Enums\Commerce\OrderStatus;
+use App\Enums\Tiers\AddressType;
+use App\Models\Tiers\ThirdParty;
+use App\Models\User;
+use App\Services\Commerce\CustomerOrderService;
+use Filament\Actions\Action;
 use Filament\Forms\Components\DatePicker;
-use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Notifications\Notification;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
+use Illuminate\Support\Facades\Auth;
 
 class CustomerOrderForm
 {
@@ -23,7 +31,8 @@ class CustomerOrderForm
                     ->schema([
                         TextInput::make('reference')
                             ->label('Numéro de commande')
-                            ->disabled()
+                            ->readOnly()
+                            ->default(fn (CustomerOrderService $service) => $service->generateReferenceOrder())
                             ->required(),
 
                         Select::make('client_id')
@@ -33,12 +42,17 @@ class CustomerOrderForm
                             ->preload()
                             ->required(),
 
+                        Select::make('responsable_id')
+                            ->label('Commercial')
+                            ->options(User::admin()->get()->pluck('name', 'id'))
+                            ->default(Auth::user()->id)
+                            ->required(),
+
                         Select::make('chantier_id')
                             ->label('Chantier')
                             ->relationship('chantier', 'reference')
                             ->searchable()
-                            ->preload()
-                            ->required(),
+                            ->preload(),
 
                         Select::make('quote_id')
                             ->label('Devis d\'origine')
@@ -50,65 +64,13 @@ class CustomerOrderForm
                             ->label('Statut')
                             ->options(OrderStatus::class)
                             ->required()
+                            ->default(OrderStatus::DRAFT)
                             ->native(false),
 
                         DatePicker::make('ordered_at')
                             ->label('Date de commande')
+                            ->default(now())
                             ->required(),
-                    ]),
-
-                Section::make('Lignes de commande')
-                    ->columnSpanFull()
-                    ->schema([
-                        Repeater::make('items')
-                            ->relationship()
-                            ->columns(5)
-                            ->schema([
-                                Select::make('item_id')
-                                    ->label('Article')
-                                    ->relationship('item', 'name')
-                                    ->searchable()
-                                    ->preload(),
-
-                                TextInput::make('name')
-                                    ->label('Description')
-                                    ->required(),
-
-                                TextInput::make('quantity')
-                                    ->label('Quantité')
-                                    ->numeric()
-                                    ->required(),
-
-                                TextInput::make('selling_price')
-                                    ->label('Prix unitaire HT')
-                                    ->numeric()
-                                    ->required()
-                                    ->prefix('€'),
-
-                                TextInput::make('subtotal_ht')
-                                    ->label('Sous-total HT')
-                                    ->disabled()
-                                    ->prefix('€'),
-                            ]),
-                    ]),
-
-                Section::make('Totaux')
-                    ->columns(3)
-                    ->schema([
-                        TextInput::make('total_ht')
-                            ->label('Total HT')
-                            ->disabled()
-                            ->prefix('€'),
-
-                        TextInput::make('total_tax')
-                            ->label('Total TVA')
-                            ->disabled()
-                            ->prefix('€'),
-
-                        TextInput::make('total_ttc')
-                            ->label('Total TTC')
-                            ->disabled()
-                            ->prefix('€'),
                     ]),
 
                 Section::make('Conditions')
@@ -118,7 +80,19 @@ class CustomerOrderForm
                             ->rows(3),
 
                         TextInput::make('delivery_address')
-                            ->label('Adresse de livraison'),
+                            ->label('Adresse de livraison')
+                            ->suffixActions([
+                                Action::make('select')
+                                    ->label('Définir')
+                                    ->action(function (Get $get, Set $set) {
+                                        $address = ThirdParty::find($get('client_id'))->addresses()->where('type', AddressType::DELIVERY)->first();
+                                        if (!empty($address)) {
+                                            $set('delivery_address', $address->full_address);
+                                        } else {
+                                            Notification::make()->danger()->title('Aucune adresse de livraison définie')->send();
+                                        }
+                                    }),
+                            ]),
                     ]),
             ]);
     }
