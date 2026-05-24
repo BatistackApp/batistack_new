@@ -27,13 +27,6 @@ class QuoteService
         }
 
         return DB::transaction(function () use ($quote, $responsable) {
-            // 1. Mise à jour du statut du devis
-            $quote->update([
-                'status' => QuoteStatus::SIGNED,
-                'signed_at' => now(),
-            ]);
-
-            // 2. Création ou mise à jour du Chantier lié
             $chantier = $quote->chantier;
             if (! $chantier) {
                 $chantier = Chantier::create([
@@ -62,18 +55,28 @@ class QuoteService
                 'total_ttc' => $quote->total_ttc,
             ]);
 
-            // 4. Duplication immuable des lignes (Snapshot)
-            foreach ($quote->items as $item) {
-                $order->items()->create([
-                    'item_id' => $item->item_id,
-                    'purchase_price' => $item->purchase_price, // Ajout du prix d'achat
-                    'name' => $item->name,
-                    'quantity' => $item->quantity,
-                    'selling_price' => $item->selling_price,
-                    'vat_rate_id' => $item->vat_rate_id,
-                    'total_ht' => $item->selling_price * $item->quantity,
-                ]);
+            $quote->load('items');
+
+            $itemsToCreate = $quote->items->map(function ($quoteItem) {
+                return [
+                    'item_id' => $quoteItem->item_id,
+                    'purchase_price' => $quoteItem->purchase_price, // Ajout du prix d'achat
+                    'name' => $quoteItem->name,
+                    'quantity' => $quoteItem->quantity,
+                    'selling_price' => $quoteItem->selling_price,
+                    'vat_rate_id' => $quoteItem->vat_rate_id,
+                    'total_ht' => $quoteItem->selling_price * $quoteItem->quantity,
+                ];
+            });
+
+            if ($itemsToCreate->isNotEmpty()) {
+                $order->items()->createMany($itemsToCreate->all());
             }
+
+            $quote->update([
+                'status' => QuoteStatus::SIGNED,
+                'signed_at' => now(),
+            ]);
 
             return $order;
         });

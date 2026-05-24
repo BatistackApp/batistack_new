@@ -61,9 +61,9 @@ class VigilanceService
 
         foreach ($docs as $collection => $label) {
             // On vérifie que chaque fichier ont été transmis
-            if (!\Storage::disk('local')->exists('third_parties/'.$thirdParty->id.'/documents/'.$collection.'.pdf')) {
+            if (! \Storage::disk('local')->exists('third_parties/'.$thirdParty->id.'/documents/'.$collection.'.pdf')) {
                 $results['compliant'] = false;
-                $results['issues'] = [$collection => false];
+                $results['issues'][$collection] = false;
             }
         }
 

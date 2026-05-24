@@ -16,7 +16,7 @@ class ItemFactory extends Factory
     public function definition(): array
     {
         return [
-            'reference' => $this->faker->word(),
+            'reference' => $this->faker->unique()->word(),
             'name' => $this->faker->name(),
             'description' => $this->faker->text(),
             'type' => $this->faker->randomElement(ItemType::class),

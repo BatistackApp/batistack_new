@@ -6,12 +6,14 @@ use App\Models\Articles\Item;
 use App\Models\Chantiers\Chantier;
 use App\Models\Commerce\CustomerOrder;
 use App\Models\Commerce\CustomerSituation;
+use App\Models\Core\Company;
 use App\Models\Core\VatRate;
 use App\Models\Tiers\ThirdParty;
 use App\Models\User;
 use App\Services\Commerce\SituationService;
 
 beforeEach(function () {
+    Company::factory()->create();
     $this->situationService = app(SituationService::class);
 
     // Données de base
