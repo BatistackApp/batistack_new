@@ -162,12 +162,77 @@ jobs:
 
       - name: Wait for deployment
         run: |
-          echo "Attente du déploiement..."
-          aws elasticbeanstalk wait environment-updated \
-            --application-name ${{ env.EB_APPLICATION_NAME }} \
-            --environment-name ${{ env.EB_ENVIRONMENT_NAME }} \
-            --max-attempts 30 \
-            --delay 20
+          echo "⏳ Attente du déploiement (max 15 minutes)..."
+          echo ""
+
+          START_TIME=$(date +%s)
+          ATTEMPT=0
+          MAX_ATTEMPTS=45  # 45 × 20s = 15 minutes
+
+          while [ $ATTEMPT -lt $MAX_ATTEMPTS ]; do
+          ATTEMPT=$((ATTEMPT + 1))
+          ELAPSED=$(($(date +%s) - START_TIME))
+          ELAPSED_MIN=$((ELAPSED / 60))
+          ELAPSED_SEC=$((ELAPSED % 60))
+
+          # Récupérer les informations de l'environnement
+          ENV_INFO=$(aws elasticbeanstalk describe-environments \
+          --application-name ${{ env.EB_APPLICATION_NAME }} \
+          --environment-names ${{ env.EB_ENVIRONMENT_NAME }} \
+          --output json)
+
+          STATUS=$(echo $ENV_INFO | jq -r '.Environments[0].Status')
+          HEALTH=$(echo $ENV_INFO | jq -r '.Environments[0].Health')
+          HEALTH_STATUS=$(echo $ENV_INFO | jq -r '.Environments[0].HealthStatus // "Unknown"')
+          VERSION=$(echo $ENV_INFO | jq -r '.Environments[0].VersionLabel')
+
+          # Afficher le statut
+          echo "[$ELAPSED_MIN:$(printf '%02d' $ELAPSED_SEC)] Tentative $ATTEMPT/$MAX_ATTEMPTS"
+          echo "   📊 Status: $STATUS"
+          echo "   💚 Health: $HEALTH ($HEALTH_STATUS)"
+          echo "   📦 Version: $VERSION"
+
+          # Vérifier si le déploiement est terminé
+          if [ "$STATUS" = "Ready" ] && [ "$VERSION" = "${{ needs.build.outputs.version }}" ]; then
+          echo ""
+          echo "✅ Déploiement réussi en ${ELAPSED_MIN}m${ELAPSED_SEC}s!"
+          echo "   Version déployée: $VERSION"
+          echo "   Health: $HEALTH"
+          exit 0
+          fi
+
+          # Vérifier les erreurs
+          if [ "$STATUS" = "Terminated" ] || [ "$STATUS" = "Terminating" ]; then
+          echo ""
+          echo "❌ Erreur: Environnement en cours de terminaison"
+          exit 1
+          fi
+
+          # Récupérer les derniers événements pour voir ce qui se passe
+          if [ $((ATTEMPT % 3)) -eq 0 ]; then
+          echo "   📝 Derniers événements:"
+          aws elasticbeanstalk describe-events \
+          --application-name ${{ env.EB_APPLICATION_NAME }} \
+          --environment-name ${{ env.EB_ENVIRONMENT_NAME }} \
+          --max-records 3 \
+          --query 'Events[*].[EventDate,Severity,Message]' \
+          --output text | sed 's/^/      /'
+          fi
+
+          echo ""
+          sleep 20
+          done
+
+          echo "❌ Timeout: Le déploiement a dépassé 15 minutes"
+          echo ""
+          echo "📋 Derniers événements:"
+          aws elasticbeanstalk describe-events \
+          --application-name ${{ env.EB_APPLICATION_NAME }} \
+          --environment-name ${{ env.EB_ENVIRONMENT_NAME }} \
+          --max-records 10 \
+          --query 'Events[*].[EventDate,Severity,Message]' \
+          --output table
+          exit 1
 
   post-deployment:
     needs:
