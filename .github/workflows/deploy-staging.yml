@@ -8,7 +8,7 @@ on:
     types: [completed]
   workflow_dispatch:
   pull_request:  # ← NOUVEAU : déployer automatiquement les PR
-    types: [opened, synchronize, reopened]
+    types: [closed]
     branches: [master]
 
 env:
