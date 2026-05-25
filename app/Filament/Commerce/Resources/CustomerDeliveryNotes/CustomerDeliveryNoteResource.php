@@ -6,6 +6,7 @@ use App\Filament\Commerce\Resources\CustomerDeliveryNotes\Pages\CreateCustomerDe
 use App\Filament\Commerce\Resources\CustomerDeliveryNotes\Pages\EditCustomerDeliveryNote;
 use App\Filament\Commerce\Resources\CustomerDeliveryNotes\Pages\ListCustomerDeliveryNotes;
 use App\Filament\Commerce\Resources\CustomerDeliveryNotes\Pages\ViewCustomerDeliveryNote;
+use App\Filament\Commerce\Resources\CustomerDeliveryNotes\RelationManagers\ItemsRelationManager;
 use App\Filament\Commerce\Resources\CustomerDeliveryNotes\Schemas\CustomerDeliveryNoteForm;
 use App\Filament\Commerce\Resources\CustomerDeliveryNotes\Schemas\CustomerDeliveryNoteInfolist;
 use App\Filament\Commerce\Resources\CustomerDeliveryNotes\Tables\CustomerDeliveryNotesTable;
@@ -50,7 +51,7 @@ class CustomerDeliveryNoteResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            ItemsRelationManager::class,
         ];
     }
 
