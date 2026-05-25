@@ -13,6 +13,7 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Tables\Table;
 use ToneGabes\Filament\Icons\Enums\Phosphor;
+use UnitEnum;
 
 class CustomerQuoteResource extends Resource
 {
@@ -23,6 +24,8 @@ class CustomerQuoteResource extends Resource
     protected static ?string $navigationLabel = 'Mes Devis';
     protected static ?string $modelLabel = 'Devis';
     protected static ?string $pluralModelLabel = 'Devis';
+    protected static ?int $navigationSort = 1;
+    protected static string | UnitEnum | null $navigationGroup = 'Mes Achats et Prestations';
 
     protected static ?string $recordTitleAttribute = 'reference';
 

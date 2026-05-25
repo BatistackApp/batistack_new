@@ -13,6 +13,7 @@ use App\Models\Core\Company;
 use App\Models\Tiers\ThirdParty;
 use App\Services\Core\DocumentService;
 use Carbon\Carbon;
+use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Model;
 
 class CommerceDocumentationService extends DocumentService
@@ -176,7 +177,7 @@ class CommerceDocumentationService extends DocumentService
     /**
      * Génère un relevé de compte client (liste des factures et paiements).
      */
-    public function generateCustomerStatement(int $clientId, ?Carbon $startDate = null, ?Carbon $endDate = null): string
+    public function generateCustomerStatement(int $clientId, Carbon|CarbonInterface|null $startDate = null, Carbon|CarbonInterface|null $endDate = null): string
     {
         $client = ThirdParty::findOrFail($clientId);
         $client->load(['customerInvoices', 'payments']);

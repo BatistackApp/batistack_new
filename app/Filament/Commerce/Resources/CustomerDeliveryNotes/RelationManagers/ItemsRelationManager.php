@@ -5,15 +5,10 @@ namespace App\Filament\Commerce\Resources\CustomerDeliveryNotes\RelationManagers
 use App\Enums\Articles\ItemType;
 use App\Models\Commerce\CustomerDeliveryNoteItem;
 use App\Models\Commerce\CustomerOrderItem;
-use App\Services\Commerce\CustomerOrderService;
-use Filament\Actions\AssociateAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\CreateAction;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
-use Filament\Actions\DissociateAction;
-use Filament\Actions\DissociateBulkAction;
-use Filament\Actions\EditAction;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Infolists\Components\TextEntry;
@@ -99,10 +94,12 @@ class ItemsRelationManager extends RelationManager
 
                 TextColumn::make('quantity_in_stock')
                     ->badge()
+                    ->numeric(2)
                     ->label('Qte en stock'),
 
                 TextColumn::make('quantity_delivered')
                     ->badge()
+                    ->numeric(2)
                     ->label('Qte Livrée'),
             ])
             ->filters([
@@ -110,6 +107,7 @@ class ItemsRelationManager extends RelationManager
             ])
             ->headerActions([
                 CreateAction::make()
+                    ->label('Ajouter un article')
                     ->action(function (array $data, RelationManager $livewire) {
                         $orderItem = $livewire->getOwnerRecord()->order->items()->where('id', $data['item_id'])->first();
                         CustomerDeliveryNoteItem::create([
@@ -119,16 +117,12 @@ class ItemsRelationManager extends RelationManager
                             'quantity_delivered' => $data['quantity_delivered'],
                         ]);
                     }),
-                AssociateAction::make(),
             ])
             ->recordActions([
-                EditAction::make(),
-                DissociateAction::make(),
                 DeleteAction::make(),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
-                    DissociateBulkAction::make(),
                     DeleteBulkAction::make(),
                 ]),
             ]);

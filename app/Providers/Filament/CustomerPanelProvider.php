@@ -27,6 +27,7 @@ class CustomerPanelProvider extends PanelProvider
         return $panel
             ->id('customer')
             ->path('customer')
+            ->viteTheme('resources/css/filament/customer/theme.css')
             ->colors([
                 'primary' => Color::Blue,
                 'gray' => Color::Stone,
