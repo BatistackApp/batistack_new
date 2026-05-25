@@ -7,7 +7,6 @@ use App\Filament\Commerce\Resources\CustomerQuotes\Pages\EditCustomerQuote;
 use App\Filament\Commerce\Resources\CustomerQuotes\Pages\ListCustomerQuotes;
 use App\Filament\Commerce\Resources\CustomerQuotes\Pages\ViewCustomerQuote;
 use App\Filament\Commerce\Resources\CustomerQuotes\RelationManagers\ItemsRelationManager;
-use App\Filament\Commerce\Resources\CustomerQuotes\RelationManagers\OrdersRelationManager;
 use App\Filament\Commerce\Resources\CustomerQuotes\Schemas\CustomerQuoteForm;
 use App\Filament\Commerce\Resources\CustomerQuotes\Schemas\CustomerQuoteInfolist;
 use App\Filament\Commerce\Resources\CustomerQuotes\Tables\CustomerQuotesTable;
@@ -17,12 +16,15 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Tables\Table;
 use ToneGabes\Filament\Icons\Enums\Phosphor;
+use UnitEnum;
 
 class CustomerQuoteResource extends Resource
 {
     protected static ?string $model = CustomerQuote::class;
 
     protected static string|BackedEnum|null $navigationIcon = Phosphor::FileText;
+
+    protected static string|UnitEnum|null $navigationGroup = 'Ventes';
 
     protected static ?string $navigationLabel = 'Devis';
 

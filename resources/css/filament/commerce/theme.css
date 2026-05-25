@@ -1,0 +1,8 @@
+@import '../../../../vendor/filament/filament/resources/css/theme.css';
+
+@source '../../../../app/Filament/Commerce/**/*';
+@source '../../../../resources/views/filament/commerce/**/*';
+
+.bg-danger {background-color: #dc2626;}
+.bg-success {background-color: #28a745;}
+.bg-warning {background-color: #f0ad4e;}

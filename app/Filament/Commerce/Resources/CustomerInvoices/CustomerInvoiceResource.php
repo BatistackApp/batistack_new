@@ -16,6 +16,7 @@ use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use ToneGabes\Filament\Icons\Enums\Phosphor;
+use UnitEnum;
 
 class CustomerInvoiceResource extends Resource
 {
@@ -23,6 +24,7 @@ class CustomerInvoiceResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Phosphor::Receipt;
     protected static ?string $navigationLabel = 'Factures client';
+    protected static string | UnitEnum | null $navigationGroup = 'Ventes';
     protected static ?string $modelLabel = 'Facture';
     protected static ?string $pluralModelLabel = 'Factures';
     protected static ?int $navigationSort = 4;

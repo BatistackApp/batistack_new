@@ -27,6 +27,7 @@ class CommercePanelProvider extends PanelProvider
         return $panel
             ->id('commerce')
             ->path('commerce')
+            ->viteTheme('resources/css/filament/commerce/theme.css')
             ->login()
             ->sidebarCollapsibleOnDesktop()
             ->databaseNotifications()

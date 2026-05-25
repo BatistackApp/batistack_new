@@ -69,4 +69,24 @@ class DeliveryNoteService
 
         return $deliveryNote;
     }
+
+    public function generateReference(): string
+    {
+        $year = date('Y');
+        $latestDelivery = CustomerDeliveryNote::where('reference', 'like', "BL-{$year}-%")
+            ->orderByDesc('reference')
+            ->first();
+
+        $sequenceNumber = 1;
+
+        if ($latestDelivery) {
+            // Extract the numeric part after 'CMD-YYYY-'
+            $parts = explode('-', $latestDelivery->reference);
+            if (count($parts) === 3 && is_numeric($parts[2])) {
+                $sequenceNumber = (int) $parts[2] + 1;
+            }
+        }
+
+        return "BL-{$year}-".str_pad($sequenceNumber, 3, '0', STR_PAD_LEFT);
+    }
 }
