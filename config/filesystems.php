@@ -60,6 +60,36 @@ return [
             'report' => false,
         ],
 
+        // ✅ Disk S3 public (pour les fichiers accessibles publiquement)
+        's3-public' => [
+            'driver' => 's3',
+            'key' => env('AWS_ACCESS_KEY_ID'),
+            'secret' => env('AWS_SECRET_ACCESS_KEY'),
+            'region' => env('AWS_DEFAULT_REGION', 'eu-west-3'),
+            'bucket' => env('AWS_BUCKET'),
+            'url' => env('AWS_URL'),
+            'endpoint' => env('AWS_ENDPOINT'),
+            'use_path_style_endpoint' => env('AWS_USE_PATH_STYLE_ENDPOINT', false),
+            'throw' => false,
+            'visibility' => 'public',
+            'options' => [
+                'CacheControl' => 'max-age=31536000', // Cache 1 an
+            ],
+        ],
+
+        // ✅ Disk pour les documents privés (factures, devis, etc.)
+        's3-private' => [
+            'driver' => 's3',
+            'key' => env('AWS_ACCESS_KEY_ID'),
+            'secret' => env('AWS_SECRET_ACCESS_KEY'),
+            'region' => env('AWS_DEFAULT_REGION', 'eu-west-3'),
+            'bucket' => env('AWS_BUCKET'),
+            'url' => env('AWS_URL'),
+            'root' => 'private', // Sous-dossier dans le bucket
+            'throw' => false,
+            'visibility' => 'private',
+        ],
+
     ],
 
     /*
