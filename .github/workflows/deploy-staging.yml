@@ -14,7 +14,7 @@ on:
 env:
   AWS_REGION: eu-west-3
   EB_APPLICATION_NAME: batistack-erp  # Même application
-  EB_ENVIRONMENT_NAME: batistack-staging  # ← DIFFÉRENCE : environnement différent
+  EB_ENVIRONMENT_NAME: batistack-erp-env  # ← DIFFÉRENCE : environnement différent
   S3_DEPLOYMENT_BUCKET: batistack-deployments
 
 jobs:
