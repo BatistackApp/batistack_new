@@ -8,7 +8,7 @@ on:
     types: [completed]
   workflow_dispatch:
   pull_request:  # ← NOUVEAU : déployer automatiquement les PR
-    types: [closed]
+    types: [synchronize, closed]
     branches: [master]
 
 env:
@@ -76,7 +76,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'npm'
 
       - name: Install NPM dependencies
@@ -99,27 +99,48 @@ jobs:
 
       - name: Prepare deployment package
         run: |
+          echo "📦 Création du répertoire de build..."
           mkdir -p build
 
-          rsync -av --progress . build/ \
-            --exclude .git \
-            --exclude .github \
-            --exclude node_modules \
-            --exclude .env \
-            --exclude .env.example \
-            --exclude .phpunit.cache \
-            --exclude storage/app/* \
-            --exclude storage/framework/cache/* \
-            --exclude storage/framework/sessions/* \
-            --exclude storage/framework/views/* \
-            --exclude storage/logs/*
+          echo "📋 Copie des fichiers..."
+          # Copier tous les fichiers
+          cp -r . build/
 
+          echo "🧹 Nettoyage des fichiers inutiles..."
+          # Supprimer les répertoires à exclure
+          rm -rf build/.git
+          rm -rf build/.github
+          rm -rf build/node_modules
+          rm -rf build/tests
+          rm -rf build/.env*
+          rm -rf build/.phpunit.cache
+          rm -rf build/storage/app/*
+          rm -rf build/storage/framework/cache/*
+          rm -rf build/storage/framework/sessions/*
+          rm -rf build/storage/framework/views/*
+          rm -rf build/storage/logs/*
+
+          echo "📁 Création des répertoires storage..."
+          # Recréer les répertoires nécessaires avec .gitkeep
           mkdir -p build/storage/app/public
-          mkdir -p build/storage/framework/{cache,sessions,views}
+          mkdir -p build/storage/framework/cache
+          mkdir -p build/storage/framework/sessions
+          mkdir -p build/storage/framework/views
           mkdir -p build/storage/logs
 
+          # Créer des fichiers .gitkeep pour préserver la structure
+          touch build/storage/app/.gitkeep
+          touch build/storage/app/public/.gitkeep
+          touch build/storage/framework/cache/.gitkeep
+          touch build/storage/framework/sessions/.gitkeep
+          touch build/storage/framework/views/.gitkeep
+          touch build/storage/logs/.gitkeep
+
+          echo "🔐 Configuration des permissions..."
           chmod -R 755 build/storage
           chmod -R 755 build/bootstrap/cache
+
+          echo "✅ Package préparé avec succès"
 
       - name: Create deployment archive
         run: |

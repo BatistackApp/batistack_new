@@ -122,5 +122,6 @@ return [
         'driver' => env('APP_MAINTENANCE_DRIVER', 'file'),
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
+    'version' => env('APP_VERSION', file_exists(base_path('version.txt')) ? trim(file_get_contents(base_path('version.txt'))) : 'unknown'),
 
 ];
