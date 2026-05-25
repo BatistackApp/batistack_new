@@ -20,10 +20,11 @@ class CustomerOrderResource extends Resource
     protected static ?string $model = CustomerOrder::class;
 
     protected static string|BackedEnum|null $navigationIcon = Phosphor::ShoppingBag;
+    protected static ?string $navigationLabel = 'Mes Commandes';
 
-    protected static ?string $modelLabel = 'Bon de Commande';
+    protected static ?string $modelLabel = 'Commande';
 
-    protected static ?string $pluralModelLabel = 'Bon de Commandes';
+    protected static ?string $pluralModelLabel = 'Commandes';
 
     protected static ?int $navigationSort = 2;
 
