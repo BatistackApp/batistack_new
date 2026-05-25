@@ -26,6 +26,7 @@ class CustomerOrderResource extends Resource
     protected static ?string $model = CustomerOrder::class;
 
     protected static string|BackedEnum|null $navigationIcon = Phosphor::ShoppingBag;
+    protected static string|null|\UnitEnum $navigationGroup = 'Ventes';
     protected static ?string $navigationLabel = 'Bon de Commandes';
     protected static ?string $modelLabel = 'Commande';
     protected static ?string $pluralModelLabel = 'Commandes';

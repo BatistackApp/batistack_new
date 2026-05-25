@@ -3,11 +3,13 @@
 namespace App\Filament\Commerce\Resources\CustomerOrders\Pages;
 
 use App\Enums\Commerce\OrderStatus;
+use App\Filament\Actions\GenerateDocument;
 use App\Filament\Commerce\Resources\CustomerOrders\Actions\CancelAction;
 use App\Filament\Commerce\Resources\CustomerOrders\Actions\ConfirmedAction;
 use App\Filament\Commerce\Resources\CustomerOrders\Actions\PrinterAction;
 use App\Filament\Commerce\Resources\CustomerOrders\CustomerOrderResource;
 use Filament\Actions\Action;
+use Filament\Actions\ActionGroup;
 use Filament\Resources\Pages\ViewRecord;
 use Illuminate\Database\Eloquent\Model;
 use ToneGabes\Filament\Icons\Enums\Phosphor;
@@ -22,6 +24,9 @@ class ViewCustomerOrder extends ViewRecord
             CancelAction::make(),
             ConfirmedAction::make(),
             PrinterAction::make()->iconButton(),
+            ActionGroup::make([
+                GenerateDocument::make('commande_client'),
+            ])
         ];
     }
 }
