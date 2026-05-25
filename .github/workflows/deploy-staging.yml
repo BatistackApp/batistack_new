@@ -99,48 +99,59 @@ jobs:
 
       - name: Prepare deployment package
         run: |
-          echo "📦 Création du répertoire de build..."
+          set -e  # Arrêter si erreur
+
+          echo "📦 Préparation du package de déploiement..."
+
+          # Créer le répertoire de build
           mkdir -p build
 
-          echo "📋 Copie des fichiers..."
-          # Copier tous les fichiers
-          cp -r . build/
+          echo "📋 Copie sélective des fichiers..."
 
-          echo "🧹 Nettoyage des fichiers inutiles..."
-          # Supprimer les répertoires à exclure
-          rm -rf build/.git
-          rm -rf build/.github
-          rm -rf build/node_modules
-          rm -rf build/tests
-          rm -rf build/.env*
-          rm -rf build/.phpunit.cache
-          rm -rf build/storage/app/*
-          rm -rf build/storage/framework/cache/*
-          rm -rf build/storage/framework/sessions/*
-          rm -rf build/storage/framework/views/*
-          rm -rf build/storage/logs/*
+          # Copier les dossiers essentiels
+          cp -r app build/
+          cp -r bootstrap build/
+          cp -r config build/
+          cp -r database build/
+          cp -r lang build/ 2>/dev/null || true  # Optionnel (Laravel 9+)
+          cp -r public build/
+          cp -r resources build/
+          cp -r routes build/
+          cp -r vendor build/
 
-          echo "📁 Création des répertoires storage..."
-          # Recréer les répertoires nécessaires avec .gitkeep
+          # Copier .ebextensions si existe
+          [ -d .ebextensions ] && cp -r .ebextensions build/
+          [ -d .platform ] && cp -r .platform build/
+
+          # Copier les fichiers racine importants
+          cp artisan build/
+          cp composer.json build/
+          cp composer.lock build/
+          cp package.json build/ 2>/dev/null || true
+          cp package-lock.json build/ 2>/dev/null || true
+
+          # Copier .env.example comme référence
+          [ -f .env.example ] && cp .env.example build/
+
+          echo "📁 Création de la structure storage..."
           mkdir -p build/storage/app/public
-          mkdir -p build/storage/framework/cache
-          mkdir -p build/storage/framework/sessions
-          mkdir -p build/storage/framework/views
+          mkdir -p build/storage/framework/{cache,sessions,views,testing}
           mkdir -p build/storage/logs
 
-          # Créer des fichiers .gitkeep pour préserver la structure
-          touch build/storage/app/.gitkeep
-          touch build/storage/app/public/.gitkeep
-          touch build/storage/framework/cache/.gitkeep
-          touch build/storage/framework/sessions/.gitkeep
-          touch build/storage/framework/views/.gitkeep
-          touch build/storage/logs/.gitkeep
+          # Créer .gitkeep pour préserver la structure
+          find build/storage -type d -exec sh -c 'touch "$1/.gitkeep"' _ {} \;
 
-          echo "🔐 Configuration des permissions..."
+          echo "🔐 Application des permissions..."
           chmod -R 755 build/storage
           chmod -R 755 build/bootstrap/cache
 
-          echo "✅ Package préparé avec succès"
+          # Statistiques
+          FILE_COUNT=$(find build -type f | wc -l)
+          BUILD_SIZE=$(du -sh build | cut -f1)
+
+          echo "✅ Package créé avec succès"
+          echo "   📊 Fichiers: $FILE_COUNT"
+          echo "   💾 Taille: $BUILD_SIZE"
 
       - name: Create deployment archive
         run: |
