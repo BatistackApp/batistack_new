@@ -9,10 +9,12 @@ use App\Models\Tiers\ThirdParty;
 use App\Models\User;
 use App\Observers\Commerce\CustomerInvoiceObserver;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Date;
 
 #[ObservedBy([CustomerInvoiceObserver::class])]
 class CustomerInvoice extends Model
@@ -76,5 +78,24 @@ class CustomerInvoice extends Model
             'due_date' => 'datetime',
             'sent_at' => 'datetime',
         ];
+    }
+
+    public function getTotalTvaAttribute(): float
+    {
+        $items = $this->items;
+        $totalTva = 0;
+
+        foreach ($items as $item) {
+            $totalTva += $item->selling_price * $item->vatRate->rate;
+        }
+
+        return $totalTva;
+    }
+
+    protected function isOverdue(): Attribute
+    {
+        return Attribute::make(
+            get: fn () => ($this->status !== InvoiceStatus::PAID && $this->status !== InvoiceStatus::CANCELED) && Date::parse($this->due_date)->isPast(),
+        );
     }
 }

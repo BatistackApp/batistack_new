@@ -58,6 +58,8 @@ class CustomerInvoicesTable
                 IconColumn::make('is_overdue')
                     ->label('En retard')
                     ->boolean()
+                    ->trueColor('danger')
+                    ->falseColor('success')
                     ->trueIcon('heroicon-o-exclamation-triangle')
                     ->falseIcon('heroicon-o-check-circle'),
             ])
@@ -95,11 +97,6 @@ class CustomerInvoicesTable
                             ->title('Relance envoyée')
                             ->success()
                             ->send()),
-                ]),
-            ])
-            ->toolbarActions([
-                BulkActionGroup::make([
-                    DeleteBulkAction::make(),
                 ]),
             ]);
     }
