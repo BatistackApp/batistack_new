@@ -7,6 +7,7 @@ use App\Models\Commerce\Payment;
 use App\Models\Commerce\PaymentAllocation;
 use DB;
 use Illuminate\Database\Eloquent\Model;
+use Log;
 
 class PaymentService
 {
@@ -17,6 +18,8 @@ class PaymentService
     public function allocatePayment(Payment $payment, Model $payable, float $amountToAllocate): PaymentAllocation
     {
         return DB::transaction(function () use ($payment, $payable, $amountToAllocate) {
+            // ← AJOUTER : Lock + Validation
+            $this->validateAllocation($payable, $amountToAllocate);
 
             // 1. Création de la ligne d'affectation
             $allocation = PaymentAllocation::create([
@@ -38,10 +41,27 @@ class PaymentService
             if ($totalAllocated >= ($targetAmount - 0.05)) {
                 if (method_exists($payable, 'update')) {
                     $payable->update(['status' => InvoiceStatus::PAID]);
+                    Log::info('Invoice PAID', ['invoice' => $payable->id]);
                 }
             }
 
             return $allocation;
         });
+    }
+
+    private function validateAllocation(Model $payable, float $amount): void
+    {
+        $targetAmount = $payable->total_ttc ?? $payable->amount_ttc ?? 0;
+        $existing = PaymentAllocation::where('payable_type', $payable->getMorphClass())
+            ->where('payable_id', $payable->id)
+            ->sum('allocated_amount');
+
+        $remaining = $targetAmount - $existing;
+
+        if ($amount > $remaining + 0.05) {
+            throw new AllocationOverflowException(
+                "Cannot allocate {$amount}€ (only {$remaining}€ remaining)"
+            );
+        }
     }
 }

@@ -42,6 +42,9 @@ class CustomerInvoiceObserver
         \Log::info("Facture {$invoice->reference} créée pour {$invoice->client->name}");
     }
 
+    /**
+     * @throws \Throwable
+     */
     public function updated(CustomerInvoice $invoice): void
     {
         // Validation : Légalisation (attribution du numéro final) et expédition
