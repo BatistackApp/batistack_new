@@ -36,6 +36,7 @@ class CustomerInvoice extends Model
         'responsable_id',
         'sent_at',
         'signature_hash',
+        'total_tva',
     ];
 
     public function client(): BelongsTo
@@ -78,18 +79,6 @@ class CustomerInvoice extends Model
             'due_date' => 'datetime',
             'sent_at' => 'datetime',
         ];
-    }
-
-    public function getTotalTvaAttribute(): float
-    {
-        $items = $this->items;
-        $totalTva = 0;
-
-        foreach ($items as $item) {
-            $totalTva += $item->selling_price * $item->vatRate->rate;
-        }
-
-        return $totalTva;
     }
 
     protected function isOverdue(): Attribute

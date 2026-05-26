@@ -7,6 +7,7 @@ use App\Filament\Commerce\Resources\CustomerInvoices\CustomerInvoiceResource;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
+use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Database\Eloquent\Model;
 use ToneGabes\Filament\Icons\Enums\Phosphor;
 
@@ -47,5 +48,10 @@ class ViewCustomerInvoice extends ViewRecord
                 })
                 ->visible(fn (Model $record) => $record->status === InvoiceStatus::DRAFT),
         ];
+    }
+
+    public function getTitle(): string|Htmlable
+    {
+        return 'Facture n°'.$this->getRecord()->reference;
     }
 }

@@ -19,6 +19,7 @@ class CustomerInvoiceItem extends Model
         'quantity',
         'price_unit',
         'vat_rate_id',
+        'total_ht',
     ];
 
     public function invoice(): BelongsTo
@@ -41,6 +42,7 @@ class CustomerInvoiceItem extends Model
         return [
             'quantity' => 'decimal:4',
             'price_unit' => 'decimal:4',
+            'total_ht' => 'decimal:4',
         ];
     }
 }

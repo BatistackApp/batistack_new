@@ -107,6 +107,7 @@ class CustomerInvoiceInfolist
 
                                 ViewEntry::make('total')
                                     ->columnSpanFull()
+                                    ->poll('2s')
                                     ->view('filament.commerce.infolists.invoice_total'),
                             ]),
                     ]),

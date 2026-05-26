@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Model;
 class CreateCustomerInvoice extends CreateRecord
 {
     protected static string $resource = CustomerInvoiceResource::class;
+    protected static ?string $title = 'Nouvelle facture';
 
     /**
      * @throws \Throwable

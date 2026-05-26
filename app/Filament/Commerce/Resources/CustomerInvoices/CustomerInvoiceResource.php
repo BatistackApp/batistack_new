@@ -6,6 +6,7 @@ use App\Filament\Commerce\Resources\CustomerInvoices\Pages\CreateCustomerInvoice
 use App\Filament\Commerce\Resources\CustomerInvoices\Pages\EditCustomerInvoice;
 use App\Filament\Commerce\Resources\CustomerInvoices\Pages\ListCustomerInvoices;
 use App\Filament\Commerce\Resources\CustomerInvoices\Pages\ViewCustomerInvoice;
+use App\Filament\Commerce\Resources\CustomerInvoices\RelationManagers\ItemsRelationManager;
 use App\Filament\Commerce\Resources\CustomerInvoices\Schemas\CustomerInvoiceForm;
 use App\Filament\Commerce\Resources\CustomerInvoices\Schemas\CustomerInvoiceInfolist;
 use App\Filament\Commerce\Resources\CustomerInvoices\Tables\CustomerInvoicesTable;
@@ -49,7 +50,7 @@ class CustomerInvoiceResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            ItemsRelationManager::class,
         ];
     }
 
