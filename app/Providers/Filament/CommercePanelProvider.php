@@ -3,6 +3,7 @@
 namespace App\Providers\Filament;
 
 use App\Http\Middleware\EnsureUserIsAdmin;
+use Ariefng\FilamentCalculator\CalculatorPlugin;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -40,6 +41,9 @@ class CommercePanelProvider extends PanelProvider
             ->discoverPages(in: app_path('Filament/Commerce/Pages'), for: 'App\Filament\Commerce\Pages')
             ->pages([
                 Dashboard::class,
+            ])
+            ->plugins([
+                CalculatorPlugin::make(),
             ])
             ->discoverWidgets(in: app_path('Filament/Commerce/Widgets'), for: 'App\Filament\Commerce\Widgets')
             ->middleware([

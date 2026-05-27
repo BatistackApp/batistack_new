@@ -182,7 +182,7 @@ describe('PaymentService - Polymorphisme', function () {
         $allocation = $this->paymentService->allocatePayment(
             $this->payment,
             $situation,
-            6000.00
+            5000.00
         );
 
         expect($allocation->payable_type)->toBe('App\Models\Commerce\CustomerSituation')

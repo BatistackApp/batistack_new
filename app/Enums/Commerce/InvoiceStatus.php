@@ -14,6 +14,7 @@ enum InvoiceStatus: string implements HasColor, HasLabel
 
     case AUDIT = 'audit';
     case BON_A_PAYER = 'bon_a_payer';
+    case CANCELED = 'canceled';
 
     public function getLabel(): ?string
     {
@@ -24,6 +25,7 @@ enum InvoiceStatus: string implements HasColor, HasLabel
             self::PAID => 'Payée',
             self::AUDIT => 'Controle',
             self::BON_A_PAYER => 'A Payer',
+            self::CANCELED => 'Annulée',
         };
     }
 
@@ -35,6 +37,7 @@ enum InvoiceStatus: string implements HasColor, HasLabel
             self::LITIGE => 'danger',
             self::PAID => 'success',
             self::AUDIT, self::BON_A_PAYER => 'warning',
+            self::CANCELED => 'danger',
         };
     }
 }

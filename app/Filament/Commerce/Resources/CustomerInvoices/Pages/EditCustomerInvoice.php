@@ -6,6 +6,7 @@ use App\Filament\Commerce\Resources\CustomerInvoices\CustomerInvoiceResource;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\ViewAction;
 use Filament\Resources\Pages\EditRecord;
+use Illuminate\Contracts\Support\Htmlable;
 
 class EditCustomerInvoice extends EditRecord
 {
@@ -13,9 +14,11 @@ class EditCustomerInvoice extends EditRecord
 
     protected function getHeaderActions(): array
     {
-        return [
-            ViewAction::make(),
-            DeleteAction::make(),
-        ];
+        return [];
+    }
+
+    public function getTitle(): string|Htmlable
+    {
+        return 'Editer Facture n°'.$this->getRecord()->reference;
     }
 }
