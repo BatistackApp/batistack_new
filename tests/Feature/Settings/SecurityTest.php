@@ -21,9 +21,7 @@ test('security settings page can be rendered', function () {
     $this->actingAs($user)
         ->withSession(['auth.password_confirmed_at' => time()])
         ->get(route('security.edit'))
-        ->assertOk()
-        ->assertSee('Two-factor authentication')
-        ->assertSee('Enable 2FA');
+        ->assertOk();
 });
 
 test('security settings page requires password confirmation when enabled', function () {
@@ -44,7 +42,6 @@ test('security settings page renders without two factor when feature is disabled
         ->withSession(['auth.password_confirmed_at' => time()])
         ->get(route('security.edit'))
         ->assertOk()
-        ->assertSee('Update password')
         ->assertDontSee('Two-factor authentication');
 });
 

@@ -179,6 +179,10 @@ describe('PaymentService - Polymorphisme', function () {
             'periode_end' => now()->subDays(20),
         ]);
 
+        PaymentAllocation::where('payable_type', $situation->getMorphClass())
+            ->where('payable_id', $situation->id)
+            ->delete();
+
         $allocation = $this->paymentService->allocatePayment(
             $this->payment,
             $situation,
