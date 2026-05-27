@@ -74,7 +74,7 @@ class CustomerInvoiceInfolist
                                                     ->formatStateUsing(function (Model $record) {
                                                         $address = $record->client->addresses()->where('type', AddressType::BILLING)->first();
 
-                                                        return "{$address->street} <br>{$address->zip_code} {$address->city}";
+                                                        return e($address->street).'<br>'.e("{$address->zip_code} {$address->city}");
                                                     })
                                                     ->html(),
                                             ]),
@@ -89,7 +89,7 @@ class CustomerInvoiceInfolist
                                                     ->formatStateUsing(function (Model $record) {
                                                         $address = $record->client->addresses()->where('type', AddressType::DELIVERY)->first();
 
-                                                        return "{$address->street} <br>{$address->zip_code} {$address->city}";
+                                                        return e($address->street).'<br>'.e("{$address->zip_code} {$address->city}");
                                                     })
 
                                                     ->html(),

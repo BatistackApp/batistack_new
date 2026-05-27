@@ -26,6 +26,7 @@ class FortifyServiceProvider extends ServiceProvider
                 if ($request->user()->is_admin) return redirect('/core');
                 if ($request->user()->is_tiers) return redirect('/customer');
                 if ($request->user()->is_employee) return redirect('/employee');
+                return redirect('/');
             }
         });
     }

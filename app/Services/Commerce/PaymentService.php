@@ -20,7 +20,8 @@ class PaymentService
     {
         return DB::transaction(function () use ($payment, $payable, $amountToAllocate) {
             // ← AJOUTER : Lock + Validation
-            $this->validateAllocation($payable, $amountToAllocate);
+            $lockedPayable = $payable->newQuery()->whereKey($payable->getKey())->lockForUpdate()->firstOrFail();
+            $this->validateAllocation($lockedPayable, $amountToAllocate);
 
             // 1. Création de la ligne d'affectation
             $allocation = PaymentAllocation::create([

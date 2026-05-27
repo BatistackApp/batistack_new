@@ -5,14 +5,14 @@ namespace App\Services\Commerce;
 use App\Enums\Commerce\PaymentMethod;
 use App\Enums\Commerce\PaymentStatus;
 use App\Enums\Commerce\PaymentType;
-use App\Events\Commerce\PaymentRecordedEvent;
 use App\Events\Commerce\PaymentCancelledEvent;
+use App\Events\Commerce\PaymentRecordedEvent;
 use App\Models\Commerce\Payment;
 use App\Models\Tiers\ThirdParty;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Carbon\Carbon;
 
 class PaymentRecordingService
 {
@@ -31,16 +31,16 @@ class PaymentRecordingService
      *     notes: 'Virement client ABC'
      * );
      *
-     * @param ThirdParty $third_party      Le client ou fournisseur
-     * @param PaymentType $type            'in' (encaissement) ou 'out' (décaissement)
-     * @param PaymentMethod $method        Moyen de paiement
-     * @param float $amount                Montant du paiement
-     * @param Carbon $payment_date         Date du paiement
-     * @param string|null $reference       Numéro/référence du paiement (généré si null)
-     * @param string|null $notes           Notes additionnelles
+     * @param  ThirdParty  $third_party  Le client ou fournisseur
+     * @param  PaymentType  $type  'in' (encaissement) ou 'out' (décaissement)
+     * @param  PaymentMethod  $method  Moyen de paiement
+     * @param  float  $amount  Montant du paiement
+     * @param  Carbon  $payment_date  Date du paiement
+     * @param  string|null  $reference  Numéro/référence du paiement (généré si null)
+     * @param  string|null  $notes  Notes additionnelles
+     * @return Payment Le paiement créé
      *
-     * @return Payment                     Le paiement créé
-     * @throws \Exception                  Si validation échoue
+     * @throws \Exception Si validation échoue
      */
     public function recordPayment(
         ThirdParty $third_party,
@@ -57,7 +57,7 @@ class PaymentRecordingService
             $this->validatePayment($third_party, $type, $method, $amount, $payment_date);
 
             // 2. Générer la référence si non fournie
-            if (!$reference) {
+            if (! $reference) {
                 $reference = $this->generatePaymentReference($type, $method);
             }
 
@@ -113,16 +113,16 @@ class PaymentRecordingService
      *     ],
      * );
      *
-     * @param ThirdParty $third_party      Le tiers
-     * @param PaymentType $type            Type de paiement
-     * @param PaymentMethod $method        Méthode
-     * @param float $amount                Montant total
-     * @param Carbon $payment_date         Date
-     * @param array $allocations           Array d'allocations [['invoice' => Model, 'amount' => float]]
-     * @param string|null $reference       Référence (auto-générée si null)
-     * @param string|null $notes           Notes
+     * @param  ThirdParty  $third_party  Le tiers
+     * @param  PaymentType  $type  Type de paiement
+     * @param  PaymentMethod  $method  Méthode
+     * @param  float  $amount  Montant total
+     * @param  Carbon  $payment_date  Date
+     * @param  array  $allocations  Array d'allocations [['invoice' => Model, 'amount' => float]]
+     * @param  string|null  $reference  Référence (auto-générée si null)
+     * @param  string|null  $notes  Notes
+     * @return Payment Le paiement créé avec allocations
      *
-     * @return Payment                     Le paiement créé avec allocations
      * @throws \Exception
      */
     public function recordPaymentWithAllocations(
@@ -189,13 +189,13 @@ class PaymentRecordingService
      *     notes: 'Correction'  // Modifier les notes
      * );
      *
-     * @param Payment $payment        Le paiement à modifier
-     * @param float|null $amount      Nouveau montant (null = ne pas modifier)
-     * @param Carbon|null $date       Nouvelle date (null = ne pas modifier)
-     * @param string|null $notes      Nouvelles notes (null = ne pas modifier)
+     * @param  Payment  $payment  Le paiement à modifier
+     * @param  float|null  $amount  Nouveau montant (null = ne pas modifier)
+     * @param  Carbon|null  $date  Nouvelle date (null = ne pas modifier)
+     * @param  string|null  $notes  Nouvelles notes (null = ne pas modifier)
+     * @return Payment Le paiement modifié
      *
-     * @return Payment               Le paiement modifié
-     * @throws \Exception            Si le paiement ne peut pas être modifié
+     * @throws \Exception Si le paiement ne peut pas être modifié
      */
     public function updatePayment(
         Payment $payment,
@@ -206,7 +206,7 @@ class PaymentRecordingService
         return DB::transaction(function () use ($payment, $amount, $date, $notes) {
 
             // Vérifier que le paiement peut être modifié
-            if ($payment->status === PaymentStatus::CANCELLED) {
+            if ($payment->status === PaymentStatus::FAILED) {
                 throw new \Exception('Impossible de modifier un paiement annulé');
             }
 
@@ -219,9 +219,15 @@ class PaymentRecordingService
 
             // Mettre à jour
             $data = [];
-            if ($amount !== null) $data['amount'] = $amount;
-            if ($date !== null) $data['payment_date'] = $date;
-            if ($notes !== null) $data['notes'] = $notes;
+            if ($amount !== null) {
+                $data['amount'] = $amount;
+            }
+            if ($date !== null) {
+                $data['payment_date'] = $date;
+            }
+            if ($notes !== null) {
+                $data['notes'] = $notes;
+            }
 
             $payment->update($data);
 
@@ -241,11 +247,11 @@ class PaymentRecordingService
      * Exemple :
      * $paymentService->cancelPayment($payment, 'Erreur de saisie');
      *
-     * @param Payment $payment         Le paiement à annuler
-     * @param string $reason           Raison de l'annulation
+     * @param  Payment  $payment  Le paiement à annuler
+     * @param  string  $reason  Raison de l'annulation
+     * @return Payment Le paiement annulé
      *
-     * @return Payment                 Le paiement annulé
-     * @throws \Exception              Si paiement déjà annulé
+     * @throws \Exception|\Throwable Si paiement déjà annulé
      */
     public function cancelPayment(Payment $payment, string $reason = ''): Payment
     {
@@ -257,6 +263,7 @@ class PaymentRecordingService
             }
 
             // Dé-lettrer tous les allocations
+            $deallocatedCount = $payment->allocations()->count();
             foreach ($payment->allocations as $allocation) {
                 // Récupérer la facture et dé-lettrer
                 $payable = $allocation->payable;
@@ -272,13 +279,13 @@ class PaymentRecordingService
             // Annuler le paiement
             $payment->update([
                 'status' => PaymentStatus::FAILED,
-                'notes' => ($payment->notes ? $payment->notes . "\n" : '') . "Annulé : {$reason}",
+                'notes' => ($payment->notes ? $payment->notes."\n" : '')."Annulé : {$reason}",
             ]);
 
             Log::warning('Payment cancelled', [
                 'payment_id' => $payment->id,
                 'reason' => $reason,
-                'deallocated_count' => $payment->allocations()->count(),
+                'deallocated_count' => $deallocatedCount,
             ]);
 
             event(new PaymentCancelledEvent($payment, $reason));
@@ -292,10 +299,9 @@ class PaymentRecordingService
      *
      * Utile pour les paiements récurrents
      *
-     * @param Payment $payment              Le paiement à dupliquer
-     * @param Carbon|null $new_payment_date Nouvelle date (null = maintenant)
-     *
-     * @return Payment                      Le nouveau paiement créé
+     * @param  Payment  $payment  Le paiement à dupliquer
+     * @param  Carbon|null  $new_payment_date  Nouvelle date (null = maintenant)
+     * @return Payment Le nouveau paiement créé
      */
     public function duplicatePayment(Payment $payment, ?Carbon $new_payment_date = null): Payment
     {
@@ -314,6 +320,7 @@ class PaymentRecordingService
 
     /**
      * Valider un paiement avant enregistrement
+     * @throws \Exception
      */
     private function validatePayment(
         ThirdParty $third_party,
@@ -333,7 +340,7 @@ class PaymentRecordingService
         }
 
         // Tiers existe
-        if (!$third_party->exists) {
+        if (! $third_party->exists) {
             throw new \Exception('Le tiers n\'existe pas');
         }
 
@@ -345,16 +352,6 @@ class PaymentRecordingService
         // Date pas trop loin dans le passé (> 10 ans)
         if ($payment_date->diffInYears(now()) > 10) {
             throw new \Exception('La date du paiement est trop ancienne');
-        }
-
-        // Type valide
-        if (!PaymentType::tryFrom($type)) {
-            throw new \Exception('Type de paiement invalide');
-        }
-
-        // Méthode valide
-        if (!PaymentMethod::tryFrom($method)) {
-            throw new \Exception('Méthode de paiement invalide');
         }
     }
 
@@ -386,7 +383,7 @@ class PaymentRecordingService
             $nextNumber = (int) $matches[1] + 1;
         }
 
-        return sprintf('{%s-%d-%05d}', $prefix, $year, $nextNumber);
+        return sprintf('%s-%d-%05d', $prefix, $year, $nextNumber);
     }
 
     /**

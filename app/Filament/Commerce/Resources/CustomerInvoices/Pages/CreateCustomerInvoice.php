@@ -19,7 +19,7 @@ class CreateCustomerInvoice extends CreateRecord
     protected function handleRecordCreation(array $data): Model
     {
         return app(CustomerOrderService::class)->createInvoice(
-            order: CustomerOrder::find($data['order_id']),
+            order: CustomerOrder::query()->findOrFail($data['order_id']),
             type: $data['type'],
             responsable: auth()->user(),
             situation: null,

@@ -25,8 +25,8 @@ class ViewCustomerInvoice extends ViewRecord
                 ->requiresConfirmation()
                 ->modalHeading('Valider la facture')
                 ->modalDescription('Etes-vous sur de valider la facture ?')
-                ->before(function (Model $record) {
-                    $countItems = $record->items->count();
+                ->action(function (Model $record) {
+                    $countItems = $record->items()->count();
                     if ($countItems === 0) {
                         Notification::make()
                             ->danger()
@@ -35,8 +35,6 @@ class ViewCustomerInvoice extends ViewRecord
 
                         return;
                     }
-                })
-                ->action(function (Model $record) {
                     $record->update([
                         'status' => InvoiceStatus::VALIDATED,
                     ]);

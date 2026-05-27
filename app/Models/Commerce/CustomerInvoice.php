@@ -183,7 +183,7 @@ class CustomerInvoice extends Model
     protected function isUnpaid(): Attribute
     {
         return Attribute::make(
-            get: fn () => $this->total_allocated === 0,
+            get: fn () => abs($this->total_allocated) < 0.05,
         );
     }
 
@@ -253,13 +253,8 @@ class CustomerInvoice extends Model
     public function scopeUnpaid($query)
     {
         return $query->where('status', InvoiceStatus::VALIDATED)
-            ->where(function ($q) {
-                $q->whereDoesntHave('allocations')
-                    ->orWhere(function ($subQuery) {
-                        $subQuery->withSum('allocations', 'allocated_amount')
-                            ->havingRaw('COALESCE(SUM(allocated_amount), 0) < total_ttc');
-                    });
-            });
+            ->withSum('allocations', 'allocated_amount')
+            ->havingRaw('COALESCE(allocations_sum_allocated_amount, 0) < total_ttc');
     }
 
     /**
@@ -270,7 +265,7 @@ class CustomerInvoice extends Model
      */
     public function scopeOverdue($query)
     {
-        return $query->where('status', '!=', InvoiceStatus::PAID)
+        return $query->whereNotIn('status', [InvoiceStatus::PAID, InvoiceStatus::CANCELED])
             ->where('due_date', '<', now());
     }
 

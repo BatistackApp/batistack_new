@@ -5,12 +5,9 @@ namespace App\Filament\Commerce\Resources\CustomerInvoices\RelationManagers;
 use App\Enums\Articles\ItemType;
 use App\Enums\Commerce\InvoiceStatus;
 use App\Models\Articles\Item;
-use App\Models\Commerce\CustomerInvoiceItem;
 use BackedEnum;
-use Filament\Actions\BulkActionGroup;
 use Filament\Actions\CreateAction;
 use Filament\Actions\DeleteAction;
-use Filament\Actions\DeleteBulkAction;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Resources\RelationManagers\RelationManager;
@@ -22,6 +19,7 @@ use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 use ToneGabes\Filament\Icons\Enums\Phosphor;
 
 class ItemsRelationManager extends RelationManager
@@ -64,7 +62,20 @@ class ItemsRelationManager extends RelationManager
                             })
                             ->preload()
                             ->afterStateUpdated(function (Get $get, Set $set, string $state) {
+                                if (is_null($state)) {
+                                    $set('name', null);
+                                    $set('price_unit', null);
+
+                                    return;
+                                }
                                 $item = Item::find($state);
+
+                                if (is_null($item)) {
+                                    $set('name', null);
+                                    $set('price_unit', null);
+
+                                    return;
+                                }
 
                                 $set('name', $item->name);
                                 $set('price_unit', $item->selling_price);
@@ -81,7 +92,12 @@ class ItemsRelationManager extends RelationManager
                             ->numeric()
                             ->reactive()
                             ->afterStateUpdated(function (Get $get, Set $set, string $state) {
-                                $set('total_ht', $state * $get('quantity'));
+                                $quantity = $get('quantity');
+                                $totalHt = 0.00;
+                                if (! is_null($state) && ! is_null($quantity)) {
+                                    $totalHt = $state * (float) $quantity;
+                                }
+                                $set('total_ht', $totalHt);
                             })
                             ->required(),
 
@@ -90,7 +106,12 @@ class ItemsRelationManager extends RelationManager
                             ->required()
                             ->reactive()
                             ->afterStateUpdated(function (Get $get, Set $set, string $state) {
-                                $set('total_ht', $state * $get('price_unit'));
+                                $priceUnit = $get('price_unit');
+                                $totalHt = 0.00;
+                                if (! is_null($state) && ! is_null($priceUnit)) {
+                                    $totalHt = $state * (float) $priceUnit;
+                                }
+                                $set('total_ht', $totalHt);
                             })
                             ->numeric(),
 
@@ -157,15 +178,17 @@ class ItemsRelationManager extends RelationManager
                     ->label('Ajouter un ligne')
                     ->modalHeading('Ajouter un ligne')
                     ->action(function (array $data, RelationManager $livewire) {
-                        $data['customer_invoice_id'] = $livewire->getOwnerRecord()->id;
-                        $data['total_ht'] = $data['price_unit'] * $data['quantity'];
-                        $invoiceItem = $livewire->getOwnerRecord()->items()->create($data);
+                        DB::transaction(function () use ($data, $livewire) {
+                            $data['customer_invoice_id'] = $livewire->getOwnerRecord()->id;
+                            $data['total_ht'] = $data['price_unit'] * $data['quantity'];
+                            $livewire->getOwnerRecord()->items()->create($data);
 
-                        $livewire->getOwnerRecord()->update([
-                            'total_ht' => $livewire->getOwnerRecord()->items()->sum(\DB::raw('customer_invoice_items.quantity * customer_invoice_items.price_unit')),
-                            'total_tva' => $livewire->getOwnerRecord()->items()->sum(\DB::raw('customer_invoice_items.quantity * customer_invoice_items.price_unit * ( (SELECT rate FROM vat_rates WHERE id = customer_invoice_items.vat_rate_id) / 100)')),
-                            'total_ttc' => $livewire->getOwnerRecord()->items()->sum(\DB::raw('customer_invoice_items.quantity * customer_invoice_items.price_unit * (1 + (SELECT rate FROM vat_rates WHERE id = customer_invoice_items.vat_rate_id) / 100)')),
-                        ]);
+                            $livewire->getOwnerRecord()->update([
+                                'total_ht' => $livewire->getOwnerRecord()->items()->sum(\DB::raw('customer_invoice_items.quantity * customer_invoice_items.price_unit')),
+                                'total_tva' => $livewire->getOwnerRecord()->items()->sum(\DB::raw('customer_invoice_items.quantity * customer_invoice_items.price_unit * ( (SELECT rate FROM vat_rates WHERE id = customer_invoice_items.vat_rate_id) / 100)')),
+                                'total_ttc' => $livewire->getOwnerRecord()->items()->sum(\DB::raw('customer_invoice_items.quantity * customer_invoice_items.price_unit * (1 + (SELECT rate FROM vat_rates WHERE id = customer_invoice_items.vat_rate_id) / 100)')),
+                            ]);
+                        });
                     }),
             ])
             ->recordActions([

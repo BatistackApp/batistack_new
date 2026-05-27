@@ -14,7 +14,7 @@ return new class extends Migration
         });
 
         Schema::table('customer_invoice_items', function (Blueprint $table) {
-            $table->decimal('total_ht', 8, 2)->default();
+            $table->decimal('total_ht', 8, 2)->default(0);
         });
     }
 
@@ -22,6 +22,10 @@ return new class extends Migration
     {
         Schema::table('customer_delivery_note_items', function (Blueprint $table) {
             $table->dropColumn('customer_order_item_id');
+        });
+
+        Schema::table('customer_invoice_items', function (Blueprint $table) {
+            $table->dropColumn('total_ht');
         });
     }
 };

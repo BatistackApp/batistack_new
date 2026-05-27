@@ -25,7 +25,7 @@ enum InvoiceStatus: string implements HasColor, HasLabel
             self::PAID => 'Payée',
             self::AUDIT => 'Controle',
             self::BON_A_PAYER => 'A Payer',
-            self::CANCELED => 'Annuler',
+            self::CANCELED => 'Annulée',
         };
     }
 
