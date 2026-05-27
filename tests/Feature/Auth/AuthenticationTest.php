@@ -10,7 +10,7 @@ test('login screen can be rendered', function () {
 });
 
 test('users can authenticate using the login screen', function () {
-    $user = User::factory()->create();
+    $user = User::factory()->create(['is_admin' => true]);
 
     $response = $this->post(route('login.store'), [
         'email' => $user->email,
@@ -19,7 +19,7 @@ test('users can authenticate using the login screen', function () {
 
     $response
         ->assertSessionHasNoErrors()
-        ->assertRedirect(route('dashboard', absolute: false));
+        ->assertRedirect(route('filament.core.pages.dashboard', absolute: false));
 
     $this->assertAuthenticated();
 });

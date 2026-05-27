@@ -3,6 +3,7 @@
 namespace App\Services\Commerce;
 
 use App\Enums\Commerce\InvoiceStatus;
+use App\Exceptions\Commerce\AllocationOverflowException;
 use App\Models\Commerce\Payment;
 use App\Models\Commerce\PaymentAllocation;
 use DB;
@@ -49,9 +50,12 @@ class PaymentService
         });
     }
 
+    /**
+     * @throws AllocationOverflowException
+     */
     private function validateAllocation(Model $payable, float $amount): void
     {
-        $targetAmount = $payable->total_ttc ?? $payable->amount_ttc ?? 0;
+        $targetAmount = $payable->total_ttc ?? $payable->amount_ttc ?? $payable->total_ht ?? 0;
         $existing = PaymentAllocation::where('payable_type', $payable->getMorphClass())
             ->where('payable_id', $payable->id)
             ->sum('allocated_amount');
