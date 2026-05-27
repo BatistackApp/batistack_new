@@ -2,6 +2,9 @@
 
 namespace App\Filament\Commerce\Resources\Payments\Schemas;
 
+use App\Enums\Commerce\PaymentMethod;
+use App\Enums\Commerce\PaymentStatus;
+use App\Enums\Commerce\PaymentType;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
@@ -26,22 +29,13 @@ class PaymentForm
 
                         Select::make('type')
                             ->label('Type')
-                            ->options([
-                                'in' => 'Encaissement (Client)',
-                                'out' => 'Décaissement (Fournisseur)',
-                            ])
+                            ->options(PaymentType::class)
                             ->required()
                             ->native(false),
 
                         Select::make('method')
                             ->label('Moyen de paiement')
-                            ->options([
-                                'bank_transfer' => 'Virement bancaire',
-                                'check' => 'Chèque',
-                                'cash' => 'Espèces',
-                                'credit_card' => 'Carte bancaire',
-                                'other' => 'Autre',
-                            ])
+                            ->options(PaymentMethod::class)
                             ->required()
                             ->native(false),
 
@@ -57,11 +51,7 @@ class PaymentForm
 
                         Select::make('status')
                             ->label('Statut')
-                            ->options([
-                                'pending' => 'En attente',
-                                'completed' => 'Complété',
-                                'cancelled' => 'Annulé',
-                            ])
+                            ->options(PaymentStatus::class)
                             ->required()
                             ->native(false),
                     ]),
