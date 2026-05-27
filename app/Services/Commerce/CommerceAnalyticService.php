@@ -3,26 +3,22 @@
 namespace App\Services\Commerce;
 
 use App\Enums\Commerce\InvoiceStatus;
-use App\Enums\Commerce\OrderStatus;
 use App\Enums\Commerce\QuoteStatus;
 use App\Models\Chantiers\Chantier;
 use App\Models\Commerce\CustomerInvoice;
 use App\Models\Commerce\CustomerOrder;
 use App\Models\Commerce\CustomerQuote;
 use App\Models\Commerce\SupplierInvoice;
-use App\Models\Tiers\ThirdParty;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\DB;
 
 class CommerceAnalyticService
 {
     /**
      * Calcule le Chiffre d'Affaires (CA) sur une période donnée.
      *
-     * @param Carbon|CarbonInterface|null $startDate Date de début (par défaut : début du mois)
-     * @param Carbon|CarbonInterface|null $endDate Date de fin (par défaut : maintenant)
-     * @return array
+     * @param  Carbon|CarbonInterface|null  $startDate  Date de début (par défaut : début du mois)
+     * @param  Carbon|CarbonInterface|null  $endDate  Date de fin (par défaut : maintenant)
      */
     public function getRevenueMetrics(Carbon|CarbonInterface|null $startDate = null, Carbon|CarbonInterface|null $endDate = null): array
     {
@@ -60,11 +56,8 @@ class CommerceAnalyticService
 
     /**
      * Calcule le taux de transformation Devis → Commande.
-     *
-     * @param  Carbon|null  $startDate
-     * @param  Carbon|null  $endDate
      */
-    public function getQuoteConversionRate(?Carbon $startDate = null, ?Carbon $endDate = null): array
+    public function getQuoteConversionRate(?CarbonInterface $startDate = null, ?CarbonInterface $endDate = null): array
     {
         $start = $startDate ?? Carbon::now()->startOfMonth();
         $end = $endDate ?? Carbon::now();
@@ -87,8 +80,6 @@ class CommerceAnalyticService
      * Récupère le Top N des clients par CA.
      *
      * @param  int  $limit  Nombre de clients à retourner
-     * @param  Carbon|null  $startDate
-     * @param  Carbon|null  $endDate
      */
     public function getTopCustomers(int $limit = 10, ?Carbon $startDate = null, ?Carbon $endDate = null): array
     {
@@ -115,9 +106,6 @@ class CommerceAnalyticService
 
     /**
      * Calcule la Marge Brute d'un chantier (Vente - Achats).
-     *
-     * @param  Chantier  $chantier
-     * @return array
      */
     public function getChantierMargin(Chantier $chantier): array
     {
@@ -148,8 +136,6 @@ class CommerceAnalyticService
 
     /**
      * Analyse des délais moyens de paiement client.
-     *
-     * @return array
      */
     public function getAveragePaymentDelay(): array
     {
@@ -181,26 +167,22 @@ class CommerceAnalyticService
 
     /**
      * Récupère le volume de commandes par mois sur l'année en cours.
-     *
-     * @return array
      */
     public function getMonthlyOrderVolume(): array
     {
         $year = Carbon::now()->year;
 
-        $ordersByMonth = CustomerOrder::selectRaw('MONTH(created_at) as month, COUNT(*) as total, SUM(total_ht) as amount')
-            ->whereYear('created_at', $year)
-            ->groupBy('month')
-            ->orderBy('month')
-            ->get()
-            ->keyBy('month');
+        $orders = CustomerOrder::whereYear('created_at', $year)->get();
+
+        $ordersByMonth = $orders->groupBy(fn ($order) => $order->created_at->month);
 
         $months = [];
         for ($i = 1; $i <= 12; $i++) {
+            $monthData = $ordersByMonth->get($i);
             $months[] = [
                 'month' => Carbon::create($year, $i)->format('F'),
-                'order_count' => $ordersByMonth->get($i)->total ?? 0,
-                'total_ht' => (float) ($ordersByMonth->get($i)->amount ?? 0),
+                'order_count' => $monthData ? $monthData->count() : 0,
+                'total_ht' => $monthData ? (float) $monthData->sum('total_ht') : 0.0,
             ];
         }
 
@@ -209,8 +191,6 @@ class CommerceAnalyticService
 
     /**
      * Dashboard global du module Commerce.
-     *
-     * @return array
      */
     public function getDashboardMetrics(): array
     {
