@@ -10,6 +10,8 @@ use App\Events\Commerce\PaymentRecordedEvent;
 use App\Models\Commerce\Payment;
 use App\Models\Tiers\ThirdParty;
 use Carbon\Carbon;
+use Carbon\CarbonImmutable;
+use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -47,7 +49,7 @@ class PaymentRecordingService
         PaymentType $type,
         PaymentMethod $method,
         float $amount,
-        Carbon $payment_date,
+        Carbon|CarbonInterface|CarbonImmutable $payment_date,
         ?string $reference = null,
         ?string $notes = null,
     ): Payment {
@@ -200,7 +202,7 @@ class PaymentRecordingService
     public function updatePayment(
         Payment $payment,
         ?float $amount = null,
-        ?Carbon $date = null,
+        ?CarbonInterface $date = null,
         ?string $notes = null,
     ): Payment {
         return DB::transaction(function () use ($payment, $amount, $date, $notes) {
@@ -303,7 +305,7 @@ class PaymentRecordingService
      * @param  Carbon|null  $new_payment_date  Nouvelle date (null = maintenant)
      * @return Payment Le nouveau paiement créé
      */
-    public function duplicatePayment(Payment $payment, ?Carbon $new_payment_date = null): Payment
+    public function duplicatePayment(Payment $payment, ?CarbonInterface $new_payment_date = null): Payment
     {
         return $this->recordPayment(
             $payment->thirdParty,
@@ -327,7 +329,7 @@ class PaymentRecordingService
         PaymentType $type,
         PaymentMethod $method,
         float $amount,
-        Carbon $payment_date,
+        Carbon|CarbonInterface|CarbonImmutable $payment_date,
     ): void {
         // Montant positif
         if ($amount <= 0) {
