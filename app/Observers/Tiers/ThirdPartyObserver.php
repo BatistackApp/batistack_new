@@ -14,12 +14,14 @@ class ThirdPartyObserver
         // Normalisation automatique avant enregistrement
         $thirdParty->name = Str::upper($thirdParty->name);
         $thirdParty->legal_name = $thirdParty->legal_name ? Str::upper($thirdParty->legal_name) : null;
-        $thirdParty->compliant_status = ['compliant' => true, 'issues' => []];
+        if (empty($thirdParty->compliant_status)) {
+            $thirdParty->compliant_status = ['compliant' => true, 'issues' => []];
+        }
     }
 
     public function created(ThirdParty $thirdParty): void
     {
-        VerifyGloabVigilanceJob::dispatch($thirdParty);
+        VerifyGloabVigilanceJob::dispatch();
     }
 
     public function updated(ThirdParty $thirdParty): void

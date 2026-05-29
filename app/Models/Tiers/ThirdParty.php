@@ -7,11 +7,14 @@ use App\Models\Chantiers\Chantier;
 use App\Models\Commerce\CustomerQuote;
 use App\Observers\Tiers\ThirdPartyObserver;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use LaravelIdea\Helper\App\Models\Tiers\_IH_Address_C;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 
@@ -87,5 +90,197 @@ class ThirdParty extends Model implements HasMedia
         } else {
             return 'Alerte';
         }
+    }
+
+    // ============================================
+    // SCOPES
+    // ============================================
+
+    /**
+     * Scope: Récupérer seulement les tiers actifs
+     */
+    public function scopeActive(Builder $query): Builder
+    {
+        return $query->where('is_active', true);
+    }
+
+    /**
+     * Scope: Récupérer seulement les tiers inactifs
+     */
+    public function scopeInactive(Builder $query): Builder
+    {
+        return $query->where('is_active', false);
+    }
+
+    /**
+     * Scope: Récupérer les clients
+     */
+    public function scopeClients(Builder $query): Builder
+    {
+        return $query->where('type', ThirdPartyType::CLIENT);
+    }
+
+    /**
+     * Scope: Récupérer les fournisseurs
+     */
+    public function scopeSuppliers(Builder $query): Builder
+    {
+        return $query->where('type', ThirdPartyType::SUPPLIER);
+    }
+
+    /**
+     * Scope: Récupérer les sous-traitants
+     */
+    public function scopeSubcontractors(Builder $query): Builder
+    {
+        return $query->where('type', ThirdPartyType::SUBCONTRACTOR);
+    }
+
+    /**
+     * Scope: Récupérer par catégorie
+     */
+    public function scopeByCategory(Builder $query, Category $category): Builder
+    {
+        return $query->whereHas('categories', function ($q) use ($category) {
+            $q->where('category_id', $category->id);
+        });
+    }
+
+    /**
+     * Scope: Récupérer les conformes
+     */
+    public function scopeCompliant(Builder $query): Builder
+    {
+        return $query->where('compliant_status->compliant', true);
+    }
+
+    /**
+     * Scope: Récupérer les non-conformes
+     */
+    public function scopeNonCompliant(Builder $query): Builder
+    {
+        return $query->where('compliant_status->compliant', false);
+    }
+
+    /**
+     * Scope: Rechercher par nom ou email
+     */
+    public function scopeSearch(Builder $query, string $term): Builder
+    {
+        return $query->where('name', 'like', "%{$term}%")
+            ->orWhere('email', 'like', "%{$term}%")
+            ->orWhere('legal_name', 'like', "%{$term}%")
+            ->orWhere('siret', 'like', "%{$term}%")
+            ->orWhere('siren', 'like', "%{$term}%");
+    }
+
+    /**
+     * Scope: Trier par nom
+     */
+    public function scopeOrderByName(Builder $query, string $direction = 'asc'): Builder
+    {
+        return $query->orderBy('name', $direction);
+    }
+
+    // ============================================
+    // METHODS MÉTIER
+    // ============================================
+
+    /**
+     * Récupérer l'adresse principale
+     */
+    public function getMainAddress(): ?Address
+    {
+        return $this->addresses()
+            ->where('is_primary', true)
+            ->first() ?? $this->addresses()->first();
+    }
+
+    /**
+     * Récupérer le contact principal
+     */
+    public function getPrimaryContact(): ?Contact
+    {
+        return $this->primaryContact ?? $this->contacts()->first();
+    }
+
+    /**
+     * Récupérer les adresses actives
+     */
+    public function getActiveAddresses(): Collection|array|_IH_Address_C
+    {
+        return $this->addresses()->where('is_active', true)->get();
+    }
+
+    /**
+     * Vérifier si c'est un client
+     */
+    public function isClient(): bool
+    {
+        return $this->type === ThirdPartyType::CLIENT;
+    }
+
+    /**
+     * Vérifier si c'est un fournisseur
+     */
+    public function isSupplier(): bool
+    {
+        return $this->type === ThirdPartyType::SUPPLIER;
+    }
+
+    /**
+     * Vérifier si c'est un sous-traitant
+     */
+    public function isSubcontractor(): bool
+    {
+        return $this->type === ThirdPartyType::SUBCONTRACTOR;
+    }
+
+    /**
+     * Vérifier si conforme
+     */
+    public function isCompliant(): bool
+    {
+        return $this->compliant_status['compliant'] ?? false;
+    }
+
+    /**
+     * Vérifier si a de la conformité
+     */
+    public function hasCompliance(): bool
+    {
+        return $this->compliant_status && ! empty($this->compliant_status);
+    }
+
+    /**
+     * Récupérer le nombre d'adresses
+     */
+    public function getAddressCount(): int
+    {
+        return $this->addresses()->count();
+    }
+
+    /**
+     * Récupérer le nombre de contacts
+     */
+    public function getContactCount(): int
+    {
+        return $this->contacts()->count();
+    }
+
+    /**
+     * Statique: Récupérer par SIRET
+     */
+    public static function bySiret(string $siret): ?self
+    {
+        return static::where('siret', $siret)->first();
+    }
+
+    /**
+     * Statique: Récupérer par SIREN
+     */
+    public static function bySiren(string $siren): ?self
+    {
+        return static::where('siren', $siren)->first();
     }
 }

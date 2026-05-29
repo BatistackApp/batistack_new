@@ -14,16 +14,36 @@ class AddressObserver
     public function saving(Address $address): void
     {
         if ($address->is_default) {
-            $address->thirdParty->addresses()
+            $others = $address->thirdParty->addresses()
                 ->where('id', '!=', $address->id)
-                ->update(['is_default' => false]);
+                ->where(['is_default' => true])
+                ->get();
+
+            // On désactive les événements pour chaque modèle trouvé
+            foreach ($others as $other) {
+                $other->withoutEvents(function () use ($other) {
+                    $other->update(['is_default' => false]);
+                });
+            }
         }
     }
 
     public function saved(Address $address): void
     {
-        // On ne déclenche le job que si l'adresse a été modifiée
-        if ($address->wasRecentlyCreated || $address->wasChanged(['street', 'zip_code', 'city'])) {
+        // Vérifier si c'est une création
+        if ($address->wasRecentlyCreated) {
+            GeocodeAddressJob::dispatch($address, auth()->user());
+            return;
+        }
+
+        // Vérifier si les champs géographiques ont changé en comparant avec l'état original
+        $original = $address->getOriginal();
+
+        $streetChanged = $original['street'] !== $address->street;
+        $zipChanged = $original['zip_code'] !== $address->zip_code;
+        $cityChanged = $original['city'] !== $address->city;
+
+        if ($streetChanged || $zipChanged || $cityChanged) {
             GeocodeAddressJob::dispatch($address, auth()->user());
         }
     }

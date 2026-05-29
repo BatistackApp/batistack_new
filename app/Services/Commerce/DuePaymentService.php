@@ -82,6 +82,7 @@ class DuePaymentService
     public function getCustomerAgingReport(): array
     {
         $overdueInvoices = $this->getOverdueCustomerInvoices(1);
+        $now = Carbon::now();
 
         $aging = [
             '0-30_days' => [],
@@ -90,14 +91,19 @@ class DuePaymentService
             'over_90_days' => [],
         ];
 
-        foreach ($overdueInvoices as $invoice) {
-            $daysLate = Carbon::now()->diffInDays($invoice->due_date);
+        // Définir les bornes pour chaque tranche de retard
+        $boundary_30_days = $now->copy()->subDays(30);
+        $boundary_60_days = $now->copy()->subDays(60);
+        $boundary_90_days = $now->copy()->subDays(90);
 
-            if ($daysLate <= 30) {
+        foreach ($overdueInvoices as $invoice) {
+            $dueDate = $invoice->due_date;
+            // Comparer la date d'échéance avec les bornes
+            if ($dueDate->isAfter($boundary_30_days)) {
                 $aging['0-30_days'][] = $invoice;
-            } elseif ($daysLate <= 60) {
+            } elseif ($dueDate->isAfter($boundary_60_days)) {
                 $aging['31-60_days'][] = $invoice;
-            } elseif ($daysLate <= 90) {
+            } elseif ($dueDate->isAfter($boundary_90_days)) {
                 $aging['61-90_days'][] = $invoice;
             } else {
                 $aging['over_90_days'][] = $invoice;

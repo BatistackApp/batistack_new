@@ -22,7 +22,7 @@ class ContactObserver
 
             $contact->updateQuietly(['user_id' => $user->id]);
 
-            $user->notify(new WelcomeCustomerNotification);
+            $user->notify(new WelcomeCustomerNotification($contact));
         }
     }
 

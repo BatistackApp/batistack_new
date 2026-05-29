@@ -41,6 +41,11 @@ class Company extends Model implements HasMedia
         'share_capital' => 'decimal:2',
     ];
 
+    public function signatures(): MorphMany
+    {
+        return $this->morphMany(Signature::class, 'signable');
+    }
+
     public function registerMediaCollections(): void
     {
         $this->addMediaCollection('core')

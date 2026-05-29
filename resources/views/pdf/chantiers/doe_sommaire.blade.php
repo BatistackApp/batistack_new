@@ -38,7 +38,6 @@
                 <th class="py-2 px-3 text-left w-12">N°</th>
                 <th class="text-left">Catégorie / Classement</th>
                 <th class="text-left">Intitulé du Document</th>
-                <th class="text-center">Fichier</th>
             </tr>
             </thead>
             <tbody>
@@ -47,9 +46,6 @@
                     <td class="py-2 px-3 font-mono">{{ str_pad($index + 1, 2, '0', STR_PAD_LEFT) }}</td>
                     <td class="font-bold text-blue-900 uppercase text-[9px]">{{ $doc->category }}</td>
                     <td>{{ $doc->name }}</td>
-                    <td class="text-center font-mono text-[9px] text-slate-500">
-                        {{ $doc->getFirstMedia('attachment')?->file_name ?? '-' }}
-                    </td>
                 </tr>
             @endforeach
             </tbody>
@@ -62,7 +58,7 @@
     </div>
 
     <footer class="fixed bottom-0 left-0 w-full p-8 text-[7px] text-slate-400 border-t border-slate-100 flex justify-between">
-        <div>Dossier Certifié Conforme - {{ $company->legal_name }}</div>
+        <div> Dossier Certifié Conforme - {{ $company->legal_name }} </div>
         <div class="font-bold uppercase">Batistack DOE Summary v1.0</div>
     </footer>
 @endsection

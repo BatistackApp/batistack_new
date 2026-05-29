@@ -2,6 +2,7 @@
 
 namespace Database\Factories\Commerce;
 
+use App\Enums\Commerce\DeliveryStatus;
 use App\Models\Chantiers\Chantier;
 use App\Models\Commerce\CustomerDeliveryNote;
 use App\Models\Commerce\CustomerOrder;
@@ -17,8 +18,8 @@ class CustomerDeliveryNoteFactory extends Factory
     public function definition(): array
     {
         return [
-            'reference' => $this->faker->word(),
-            'status' => $this->faker->word(),
+            'reference' => $this->faker->unique()->randomNumber(),
+            'status' => $this->faker->randomElement(DeliveryStatus::class),
             'delivery_date' => Carbon::now(),
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),

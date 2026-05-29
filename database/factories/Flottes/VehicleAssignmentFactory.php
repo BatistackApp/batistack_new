@@ -2,6 +2,7 @@
 
 namespace Database\Factories\Flottes;
 
+use App\Enums\Flottes\AssignmentStatus;
 use App\Models\Chantiers\Chantier;
 use App\Models\Flottes\Vehicle;
 use App\Models\Flottes\VehicleAssignment;
@@ -20,7 +21,7 @@ class VehicleAssignmentFactory extends Factory
             'ended_at' => Carbon::now(),
             'start_odometer' => $this->faker->randomFloat(),
             'end_odometer' => $this->faker->randomFloat(),
-            'status' => $this->faker->word(),
+            'status' => $this->faker->randomElement(AssignmentStatus::class),
             'purpose' => $this->faker->word(),
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),

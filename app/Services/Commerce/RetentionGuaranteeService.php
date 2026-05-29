@@ -40,6 +40,7 @@ class RetentionGuaranteeService
                 'chantier_id' => $order->chantier_id,
                 'customer_order_id' => $order->id,
                 'reference' => 'RG-BROUILLON-'.uniqid(),
+                'responsable_id' => $order->responsable_id,
                 'type' => InvoiceType::SIMPLE,
                 'status' => InvoiceStatus::DRAFT,
                 'total_ht' => $totalRetention,
