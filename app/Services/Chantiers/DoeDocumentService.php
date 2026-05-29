@@ -5,6 +5,8 @@ namespace App\Services\Chantiers;
 use App\Models\Chantiers\Chantier;
 use App\Models\Core\Company;
 use App\Services\Core\DocumentService;
+use Carbon\Carbon;
+use DB;
 use Exception;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -25,9 +27,7 @@ class DoeDocumentService extends DocumentService
         $chantier->load(['client', 'manager']);
 
         // 1. Récupération des documents validés par l'encadrement
-        $documents = $chantier->logs() // Supposons une relation directe ou récupération
-            ->newQuery()
-            ->from('doe_documents')
+        $documents = DB::table('doe_documents') // Directly query the doe_documents table
             ->where('chantier_id', $chantier->id)
             ->where('is_validated', true)
             ->get();
@@ -42,7 +42,7 @@ class DoeDocumentService extends DocumentService
         // 3. Initialisation de l'archive ZIP
         $zipFilename = 'DOE_'.Str::slug($chantier->reference).'_'.now()->format('Ymd_His').'.zip';
         $zipRelativePath = 'chantiers/doe/'.$zipFilename;
-        $zipFullPath = storage_path('app/public/'.$zipRelativePath);
+        $zipFullPath = Storage::disk('public')->path($zipRelativePath);
 
         // S'assurer que le dossier de destination existe
         Storage::disk('public')->makeDirectory('chantiers/doe');
