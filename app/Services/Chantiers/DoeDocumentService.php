@@ -3,10 +3,10 @@
 namespace App\Services\Chantiers;
 
 use App\Models\Chantiers\Chantier;
+use App\Models\Chantiers\DoeDocument;
 use App\Models\Core\Company;
 use App\Services\Core\DocumentService;
 use Carbon\Carbon;
-use DB;
 use Exception;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -20,6 +20,7 @@ class DoeDocumentService extends DocumentService
      * 2. Compresse l'ensemble des fichiers validés + le sommaire dans un fichier ZIP.
      *
      * * @return string Chemin d'accès au fichier ZIP final généré.
+     *
      * @throws Exception
      */
     public function compileDoe(Chantier $chantier): string
@@ -27,7 +28,7 @@ class DoeDocumentService extends DocumentService
         $chantier->load(['client', 'manager']);
 
         // 1. Récupération des documents validés par l'encadrement
-        $documents = DB::table('doe_documents') // Directly query the doe_documents table
+        $documents = DoeDocument::query()
             ->where('chantier_id', $chantier->id)
             ->where('is_validated', true)
             ->get();

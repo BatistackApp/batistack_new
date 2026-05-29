@@ -2,11 +2,14 @@
 
 namespace Tests\Feature\Modules\Chantiers;
 
+use App\Enums\Chantiers\DoeDocumentCategory;
 use App\Enums\Tiers\ThirdPartyType;
 use App\Models\Chantiers\Chantier;
+use App\Models\Chantiers\DoeDocument;
 use App\Models\Core\Company;
 use App\Models\Tiers\ThirdParty;
 use App\Services\Chantiers\DoeDocumentService;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Storage;
 
 beforeEach(function () {
@@ -23,13 +26,11 @@ beforeEach(function () {
 describe('DoeDocumentService - compileDoe', function () {
     test('compile le DOE d\'un chantier', function () {
         // Créer un document validé via une requête directe
-        \DB::table('doe_documents')->insert([
+        DoeDocument::create([
             'chantier_id' => $this->chantier->id,
             'name' => 'Document Test',
-            'category' => 'technique',
+            'category' => DoeDocumentCategory::AUTRE,
             'is_validated' => true,
-            'created_at' => now(),
-            'updated_at' => now(),
         ]);
 
         $path = $this->service->compileDoe($this->chantier);
@@ -39,13 +40,11 @@ describe('DoeDocumentService - compileDoe', function () {
     });
 
     test('crée un fichier ZIP', function () {
-        \DB::table('doe_documents')->insert([
+        DoeDocument::create([
             'chantier_id' => $this->chantier->id,
             'name' => 'Document Test',
-            'category' => 'technique',
+            'category' => DoeDocumentCategory::FICHE_TECHNIQUE,
             'is_validated' => true,
-            'created_at' => now(),
-            'updated_at' => now(),
         ]);
 
         $path = $this->service->compileDoe($this->chantier);
@@ -54,13 +53,11 @@ describe('DoeDocumentService - compileDoe', function () {
     });
 
     test('organise les fichiers dans chantiers/doe', function () {
-        \DB::table('doe_documents')->insert([
+        DoeDocument::create([
             'chantier_id' => $this->chantier->id,
             'name' => 'Document Test',
-            'category' => 'technique',
+            'category' => DoeDocumentCategory::FICHE_TECHNIQUE,
             'is_validated' => true,
-            'created_at' => now(),
-            'updated_at' => now(),
         ]);
 
         $path = $this->service->compileDoe($this->chantier);
@@ -71,13 +68,11 @@ describe('DoeDocumentService - compileDoe', function () {
     test('inclut la référence du chantier dans le nom du ZIP', function () {
         $this->chantier->update(['reference' => 'CH-2026-001']);
 
-        \DB::table('doe_documents')->insert([
+        DoeDocument::create([
             'chantier_id' => $this->chantier->id,
             'name' => 'Document Test',
-            'category' => 'technique',
+            'category' => DoeDocumentCategory::FICHE_TECHNIQUE,
             'is_validated' => true,
-            'created_at' => now(),
-            'updated_at' => now(),
         ]);
 
         $path = $this->service->compileDoe($this->chantier);
@@ -92,13 +87,11 @@ describe('DoeDocumentService - compileDoe', function () {
     });
 
     test('ignore les documents non validés', function () {
-        \DB::table('doe_documents')->insert([
+        DoeDocument::create([
             'chantier_id' => $this->chantier->id,
-            'name' => 'Document Non Validé',
-            'category' => 'technique',
+            'name' => 'Document Test',
+            'category' => DoeDocumentCategory::FICHE_TECHNIQUE,
             'is_validated' => false,
-            'created_at' => now(),
-            'updated_at' => now(),
         ]);
 
         expect(function () {
@@ -111,7 +104,7 @@ describe('DoeDocumentService - compileDoe', function () {
             [
                 'chantier_id' => $this->chantier->id,
                 'name' => 'Document 1',
-                'category' => 'technique',
+                'category' => DoeDocumentCategory::FICHE_TECHNIQUE,
                 'is_validated' => true,
                 'created_at' => now(),
                 'updated_at' => now(),
@@ -119,7 +112,7 @@ describe('DoeDocumentService - compileDoe', function () {
             [
                 'chantier_id' => $this->chantier->id,
                 'name' => 'Document 2',
-                'category' => 'administratif',
+                'category' => DoeDocumentCategory::CONFORMITE,
                 'is_validated' => true,
                 'created_at' => now(),
                 'updated_at' => now(),
@@ -134,13 +127,11 @@ describe('DoeDocumentService - compileDoe', function () {
     test('charge les relations du chantier', function () {
         $this->chantier->load(['client', 'manager']);
 
-        \DB::table('doe_documents')->insert([
+        DoeDocument::create([
             'chantier_id' => $this->chantier->id,
             'name' => 'Document Test',
-            'category' => 'technique',
+            'category' => DoeDocumentCategory::FICHE_TECHNIQUE,
             'is_validated' => true,
-            'created_at' => now(),
-            'updated_at' => now(),
         ]);
 
         $path = $this->service->compileDoe($this->chantier);
@@ -149,21 +140,19 @@ describe('DoeDocumentService - compileDoe', function () {
     });
 
     test('inclut un sommaire dans le ZIP', function () {
-        \DB::table('doe_documents')->insert([
+        DoeDocument::create([
             'chantier_id' => $this->chantier->id,
             'name' => 'Document Test',
-            'category' => 'technique',
+            'category' => DoeDocumentCategory::FICHE_TECHNIQUE,
             'is_validated' => true,
-            'created_at' => now(),
-            'updated_at' => now(),
         ]);
 
         $path = $this->service->compileDoe($this->chantier);
 
-        $zip = new \ZipArchive();
+        $zip = new \ZipArchive;
         $zip->open($path);
 
-        expect($zip->nameExists('00_SOMMAIRE_OFFICIEL.pdf'))->toBeTrue();
+        expect($zip->locateName('00_SOMMAIRE_OFFICIEL.pdf'))->not->toBeFalse();
 
         $zip->close();
     });
@@ -173,7 +162,7 @@ describe('DoeDocumentService - compileDoe', function () {
             [
                 'chantier_id' => $this->chantier->id,
                 'name' => 'Doc Technique',
-                'category' => 'technique',
+                'category' => DoeDocumentCategory::FICHE_TECHNIQUE,
                 'is_validated' => true,
                 'created_at' => now(),
                 'updated_at' => now(),
@@ -181,7 +170,7 @@ describe('DoeDocumentService - compileDoe', function () {
             [
                 'chantier_id' => $this->chantier->id,
                 'name' => 'Doc Admin',
-                'category' => 'administratif',
+                'category' => DoeDocumentCategory::CONFORMITE,
                 'is_validated' => true,
                 'created_at' => now(),
                 'updated_at' => now(),
@@ -194,19 +183,20 @@ describe('DoeDocumentService - compileDoe', function () {
     });
 
     test('inclut la timestamp dans le nom du ZIP', function () {
-        $timestamp = now()->format('Ymd_His');
+        $now = Carbon::now();
+        Carbon::setTestNow($now);
 
-        \DB::table('doe_documents')->insert([
+        DoeDocument::create([
             'chantier_id' => $this->chantier->id,
             'name' => 'Document Test',
-            'category' => 'technique',
+            'category' => DoeDocumentCategory::FICHE_TECHNIQUE,
             'is_validated' => true,
-            'created_at' => now(),
-            'updated_at' => now(),
         ]);
 
         $path = $this->service->compileDoe($this->chantier);
 
-        expect($path)->toContain($timestamp);
+        expect($path)->toContain($now->format('Ymd_His'));
+
+        Carbon::setTestNow();
     });
 });
