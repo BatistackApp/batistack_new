@@ -17,7 +17,7 @@ class ContactFactory extends Factory
             'first_name' => $this->faker->firstName(),
             'last_name' => $this->faker->lastName(),
             'job_title' => $this->faker->jobTitle(),
-            'email' => $this->faker->safeEmail(),
+            'email' => $this->faker->unique()->safeEmail(),
             'phone' => $this->faker->phoneNumber(),
             'mobile' => $this->faker->phoneNumber(),
             'is_primary' => false,
