@@ -38,6 +38,11 @@ class DeliveryNoteService
             ->with('items.item') // Eager loading
             ->get();
 
+        // Ajouter le bon actuel s'il n'est pas déjà dans la collection des livrés
+        if ($deliveryNote->status !== DeliveryStatus::DELIVERED) {
+            $deliveryNotes->push($deliveryNote);
+        }
+
         $deliveryNotes->each(function (CustomerDeliveryNote $note) use (&$deliveredQuantities, $articleTypes) {
             foreach ($note->items as $item) { // $item est un CustomerDeliveryNoteItem
                 // On ne prend en compte que les types "article"
@@ -52,16 +57,19 @@ class DeliveryNoteService
         $isFullyDelivered = true;
 
         foreach ($orderedQuantities as $itemId => $quantity) {
-            if ($deliveredQuantities->get($itemId, 0) < (float) $quantity) {
-                $isFullyDelivered = false;
-                break;
+            // Utilisation de abs() avec un epsilon très faible pour comparer des flottants
+            if (abs($deliveredQuantities->get($itemId, 0) - (float) $quantity) > 0.0001) {
+                if ($deliveredQuantities->get($itemId, 0) < (float) $quantity) {
+                    $isFullyDelivered = false;
+                    break;
+                }
             }
         }
 
         // Mettre à jour le statut de la commande
         if ($isFullyDelivered) {
             $order->status = OrderStatus::DELIVERED;
-        } else {
+        } elseif ($order->status !== OrderStatus::DELIVERED) {
             $order->status = OrderStatus::PARTIALLY_DELIVERED;
         }
 
