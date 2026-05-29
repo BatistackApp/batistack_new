@@ -3,6 +3,7 @@
 namespace App\Notifications\Tiers;
 
 use App\Models\Core\Company;
+use App\Models\Tiers\Contact;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -11,6 +12,10 @@ use Illuminate\Notifications\Notification;
 class WelcomeCustomerNotification extends Notification implements ShouldQueue
 {
     use Queueable;
+
+    public function __construct(public Contact  $contact)
+    {
+    }
 
     public function via($notifiable): array
     {

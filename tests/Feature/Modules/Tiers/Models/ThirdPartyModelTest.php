@@ -310,14 +310,16 @@ describe('ThirdParty - Intégration Scopes', function () {
     });
 
     test('search() + compliant()', function () {
-        ThirdParty::factory()->create([
-            'name' => 'ACME',
-            'compliant_status' => ['compliant' => true, 'issues' => []],
-        ]);
-        ThirdParty::factory()->create([
-            'name' => 'ACME OTHER',
-            'compliant_status' => ['compliant' => false, 'issues' => ['issue']],
-        ]);
+        ThirdParty::withoutEvents(function () {
+            ThirdParty::factory()->create([
+                'name' => 'ACME',
+                'compliant_status' => ['compliant' => true, 'issues' => []],
+            ]);
+            ThirdParty::factory()->create([
+                'name' => 'ACME OTHER',
+                'compliant_status' => ['compliant' => false, 'issues' => ['issue']],
+            ]);
+        });
 
         $result = ThirdParty::search('ACME')->compliant()->get();
 
