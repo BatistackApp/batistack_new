@@ -175,6 +175,7 @@ describe('PaymentService - Polymorphisme', function () {
             'customer_order_id' => CustomerOrder::factory()->create()->id, // Correction de 'order_id' en 'customer_order_id'
             'status' => InvoiceStatus::VALIDATED, // Ajout d'un statut valide pour l'enum
             'total_ht' => 5000.00,
+            'total_ttc' => 5000.00,
             'periode_start' => now()->subDays(30),
             'periode_end' => now()->subDays(20),
         ]);

@@ -77,6 +77,7 @@ describe('PaymentRecordingService - recordPayment', function () {
     });
 
     test('dispache l\'événement PaymentRecordedEvent', function () {
+        Event::fake([PaymentRecordedEvent::class]);
         $this->service->recordPayment(
             third_party: $this->customer,
             type: PaymentType::IN,
@@ -86,7 +87,7 @@ describe('PaymentRecordingService - recordPayment', function () {
         );
 
         Event::assertDispatched(PaymentRecordedEvent::class, function ($event) {
-            return $event->payment->amount === 3000.00;
+            return $event->payment->amount == 3000.00;
         });
     });
 

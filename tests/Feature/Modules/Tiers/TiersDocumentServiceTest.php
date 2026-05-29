@@ -109,7 +109,9 @@ describe('TiersDocumentService - generateDetails', function () {
         $thirdParty->load(['addresses', 'contacts']);
 
         $this->vigilanceService->shouldReceive('scanCompliance')
-            ->andReturn([]);
+            ->andReturn([
+                'compliant' => true
+            ]);
 
         $path = $this->service->generateDetails($thirdParty);
 

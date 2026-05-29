@@ -16,39 +16,8 @@ class UnitObserver
      */
     public function creating(Unit $unit): void
     {
-        if (empty($unit->code)) {
-            throw new Exception('Le code de l\'unité est obligatoire');
-        }
-
-        if (empty($unit->label)) {
+        if (empty($unit->name)) {
             throw new Exception('Le libellé de l\'unité est obligatoire');
-        }
-
-        // Vérifier l'unicité du code
-        $exists = Unit::where('code', $unit->code)->exists();
-        if ($exists) {
-            throw new Exception("Une unité avec le code '{$unit->code}' existe déjà");
-        }
-    }
-
-    /**
-     * Valider l'unité avant mise à jour
-     *
-     * @throws Exception
-     */
-    public function updating(Unit $unit): void
-    {
-        if (empty($unit->code)) {
-            throw new Exception('Le code de l\'unité est obligatoire');
-        }
-
-        // Vérifier l'unicité du code (sauf lui-même)
-        $exists = Unit::where('code', $unit->code)
-            ->where('id', '!=', $unit->id)
-            ->exists();
-
-        if ($exists) {
-            throw new Exception("Une unité avec le code '{$unit->code}' existe déjà");
         }
     }
 
@@ -60,8 +29,7 @@ class UnitObserver
         Cache::forget('units_all');
         Log::info('Unit created', [
             'id' => $unit->id,
-            'code' => $unit->code,
-            'label' => $unit->label,
+            'name' => $unit->name,
         ]);
     }
 
@@ -71,10 +39,10 @@ class UnitObserver
     public function updated(Unit $unit): void
     {
         Cache::forget('units_all');
-        Cache::forget("unit_{$unit->code}");
+        Cache::forget("unit_{$unit->symbol}");
         Log::info('Unit updated', [
             'id' => $unit->id,
-            'code' => $unit->code,
+            'symbol' => $unit->symbol,
         ]);
     }
 
@@ -125,10 +93,10 @@ class UnitObserver
     public function deleted(Unit $unit): void
     {
         Cache::forget('units_all');
-        Cache::forget("unit_{$unit->code}");
+        Cache::forget("unit_{$unit->symbol}");
         Log::info('Unit deleted', [
             'id' => $unit->id,
-            'code' => $unit->code,
+            'symbol' => $unit->symbol,
         ]);
     }
 }
