@@ -115,7 +115,7 @@ class Item extends Model implements HasMedia
      */
     public function scopeMaterials(Builder $query): Builder
     {
-        return $query->where('type', ItemType::STOCKABLE)->where('type', ItemType::CONSUMABLE);
+        return $query->where('type', ItemType::STOCKABLE)->orWhere('type', ItemType::CONSUMABLE);
     }
 
     /**
