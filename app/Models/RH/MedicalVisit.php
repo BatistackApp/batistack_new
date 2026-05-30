@@ -4,6 +4,8 @@ namespace App\Models\RH;
 
 use App\Enums\RH\MedicalAptitude;
 use App\Enums\RH\MedicalVisiteType;
+use App\Observers\RH\MedicalVisitObserver;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -11,6 +13,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 
+#[ObservedBy([MedicalVisitObserver::class])]
 class MedicalVisit extends Model implements HasMedia
 {
     use HasFactory, InteractsWithMedia;

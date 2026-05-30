@@ -3,11 +3,14 @@
 namespace App\Models\RH;
 
 use App\Enums\RH\EquipementType;
+use App\Observers\RH\EquipementObserver;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+#[ObservedBy([EquipementObserver::class])]
 class Equipement extends Model
 {
     use HasFactory;
