@@ -8,6 +8,7 @@ use App\Models\Core\VatRate;
 use App\Observers\Articles\BarcodeObserver;
 use App\Observers\Articles\ItemObserver;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -66,6 +67,11 @@ class Item extends Model implements HasMedia
         return $this->belongsTo(Item::class, 'parent_id');
     }
 
+    public function children(): HasMany
+    {
+        return $this->hasMany(Item::class, 'parent_id');
+    }
+
     protected function casts(): array
     {
         return [
@@ -74,5 +80,244 @@ class Item extends Model implements HasMedia
             'selling_price' => 'decimal:4',
             'is_active' => 'boolean',
         ];
+    }
+
+    // ============================================
+    // SCOPES
+    // ============================================
+
+    /**
+     * Scope: Récupérer articles actifs
+     */
+    public function scopeActive(Builder $query): Builder
+    {
+        return $query->where('is_active', true);
+    }
+
+    /**
+     * Scope: Récupérer articles inactifs
+     */
+    public function scopeInactive(Builder $query): Builder
+    {
+        return $query->where('is_active', false);
+    }
+
+    /**
+     * Scope: Récupérer par type
+     */
+    public function scopeByType(Builder $query, ItemType $type): Builder
+    {
+        return $query->where('type', $type);
+    }
+
+    /**
+     * Scope: Récupérer articles matériels
+     */
+    public function scopeMaterials(Builder $query): Builder
+    {
+        return $query->where('type', ItemType::STOCKABLE)->orWhere('type', ItemType::CONSUMABLE);
+    }
+
+    /**
+     * Scope: Récupérer services
+     */
+    public function scopeServices(Builder $query): Builder
+    {
+        return $query->where('type', ItemType::LABOR);
+    }
+
+    /**
+     * Scope: Récupérer ouvrages
+     */
+    public function scopeWorks(Builder $query): Builder
+    {
+        return $query->where('type', ItemType::WORK);
+    }
+
+    /**
+     * Scope: Rechercher par référence ou nom
+     */
+    public function scopeSearch(Builder $query, string $term): Builder
+    {
+        return $query->where('reference', 'like', "%{$term}%")
+            ->orWhere('name', 'like', "%{$term}%");
+    }
+
+    /**
+     * Scope: Récupérer par unité
+     */
+    public function scopeByUnit(Builder $query, Unit $unit): Builder
+    {
+        return $query->where('unit_id', $unit->id);
+    }
+
+    /**
+     * Scope: Récupérer par TVA
+     */
+    public function scopeByVatRate(Builder $query, VatRate $vatRate): Builder
+    {
+        return $query->where('vat_rate_id', $vatRate->id);
+    }
+
+    /**
+     * Scope: Articles chers (> seuil)
+     */
+    public function scopeExpensive(Builder $query, float $threshold = 1000.00): Builder
+    {
+        return $query->where('selling_price', '>', $threshold);
+    }
+
+    /**
+     * Scope: Articles pas chers
+     */
+    public function scopeCheap(Builder $query, float $threshold = 100.00): Builder
+    {
+        return $query->where('selling_price', '<', $threshold);
+    }
+
+    /**
+     * Scope: Articles composés (ouvrages/kits)
+     */
+    public function scopeComposed(Builder $query): Builder
+    {
+        return $query->whereHas('components');
+    }
+
+    /**
+     * Scope: Articles simples (sans composants)
+     */
+    public function scopeSimple(Builder $query): Builder
+    {
+        return $query->doesntHave('components');
+    }
+
+    /**
+     * Scope: Trier par nom
+     */
+    public function scopeOrderByName(Builder $query, string $direction = 'asc'): Builder
+    {
+        return $query->orderBy('name', $direction);
+    }
+
+    /**
+     * Scope: Trier par prix
+     */
+    public function scopeOrderByPrice(Builder $query, string $direction = 'asc'): Builder
+    {
+        return $query->orderBy('selling_price', $direction);
+    }
+
+    // ============================================
+    // METHODS MÉTIER
+    // ============================================
+
+    /**
+     * Vérifier si l'article est composé
+     */
+    public function isComposed(): bool
+    {
+        return $this->components()->exists();
+    }
+
+    /**
+     * Vérifier si c'est une variante
+     */
+    public function isVariant(): bool
+    {
+        return $this->parent_id !== null;
+    }
+
+    /**
+     * Vérifier si c'est un ouvrage
+     */
+    public function isWork(): bool
+    {
+        return $this->type === ItemType::WORK;
+    }
+
+    /**
+     * Vérifier si c'est un service
+     */
+    public function isService(): bool
+    {
+        return $this->type === ItemType::LABOR;
+    }
+
+    /**
+     * Vérifier si c'est un matériel
+     */
+    public function isConsommable(): bool
+    {
+        return $this->type === ItemType::CONSUMABLE;
+    }
+
+    /**
+     * Vérifier si c'est un matériel
+     */
+    public function isStockable(): bool
+    {
+        return $this->type === ItemType::STOCKABLE;
+    }
+
+    /**
+     * Récupérer le stock total disponible
+     */
+    public function getTotalStock(): float
+    {
+        return $this->stocks()->sum('quantity');
+    }
+
+    /**
+     * Récupérer le stock disponible dans un entrepôt
+     */
+    public function getStockInWarehouse(Warehouse $warehouse): float
+    {
+        return $this->stocks()
+            ->where('warehouse_id', $warehouse->id)
+            ->first()?->quantity ?? 0;
+    }
+
+    /**
+     * Vérifier si le stock est bas
+     */
+    public function isLowStock(): bool
+    {
+        return $this->stocks()->get()->sum('quantity') <= $this->min_stock;
+    }
+
+    /**
+     * Récupérer la marge bénéficiaire
+     */
+    public function getMargin(): float
+    {
+        if ($this->purchase_price == 0) {
+            return 0;
+        }
+        return (($this->selling_price - $this->purchase_price) / $this->purchase_price) * 100;
+    }
+
+    /**
+     * Récupérer le coût TTC
+     */
+    public function getPriceTTC(): float
+    {
+        $vatRate = $this->vatRate ? $this->vatRate->rate / 100 : 0;
+        return $this->selling_price * (1 + $vatRate);
+    }
+
+    /**
+     * Statique: Récupérer par référence
+     */
+    public static function byReference(string $reference): ?self
+    {
+        return static::where('reference', $reference)->first();
+    }
+
+    /**
+     * Statique: Vérifier si référence existe
+     */
+    public static function referenceExists(string $reference): bool
+    {
+        return static::where('reference', $reference)->exists();
     }
 }

@@ -2,6 +2,8 @@
 
 namespace Database\Factories\Articles;
 
+use App\Enums\Articles\StockMouvementSource;
+use App\Enums\Articles\StockMouvementType;
 use App\Models\Articles\Stock;
 use App\Models\Articles\StockMouvement;
 use App\Models\User;
@@ -15,12 +17,12 @@ class StockMouvementFactory extends Factory
     public function definition(): array
     {
         return [
-            'type' => $this->faker->word(),
+            'type' => $this->faker->randomElement(StockMouvementType::class),
             'quantity_before' => $this->faker->randomFloat(),
             'quantity_delta' => $this->faker->randomFloat(),
             'quantity_after' => $this->faker->randomFloat(),
             'description' => $this->faker->text(),
-            'reference_type' => $this->faker->word(),
+            'reference_type' => $this->faker->randomElement(StockMouvementSource::class),
             'reference_id' => $this->faker->randomNumber(),
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
