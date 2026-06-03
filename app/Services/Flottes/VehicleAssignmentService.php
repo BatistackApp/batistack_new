@@ -16,14 +16,16 @@ use Carbon\CarbonInterface;
 use DB;
 use Exception;
 use Illuminate\Database\Eloquent\Collection;
-use Throwable;
 
 class VehicleAssignmentService
 {
+    public function __construct(
+        protected FleetCostService $costService
+    ) {}
+
     /**
-     * Crée une nouvelle affectation de véhicule après contrôles stricts de sécurité.
-     *
-     * @throws Exception
+     * Crée une nouvelle affectation avec contrôles stricts.
+     * @throws Exception|\Throwable
      */
     public function createAssignment(
         Vehicle $vehicle,
@@ -34,19 +36,15 @@ class VehicleAssignmentService
         ?string $purpose = null
     ): VehicleAssignment {
 
-        // 1. Contrôle réglementaire et sécuritaire du conducteur (Sécurité BTP)
         $this->validateDriverCompliance($employee, $vehicle);
-
         $this->validateZfeCompliance($vehicle, $chantier);
 
-        // 2. Vérification d'absence de conflit d'agenda
         if ($this->hasConflict($vehicle->id, $employee->id, $startedAt, $endedAt)) {
-            throw new Exception("Conflit d'affectation détecté : le véhicule ou le salarié est déjà mobilisé sur cette période.");
+            throw new Exception("Conflit d'affectation détecté : véhicule ou salarié déjà mobilisé.");
         }
 
-        // 3. Vérification de la disponibilité mécanique du véhicule
         if ($vehicle->status === VehicleStatus::BROKEN) {
-            throw new Exception('Le véhicule sélectionné est actuellement en panne ou accidenté.');
+            throw new Exception('Le véhicule est actuellement en panne.');
         }
 
         return DB::transaction(function () use ($vehicle, $employee, $chantier, $startedAt, $endedAt, $purpose) {
@@ -68,9 +66,8 @@ class VehicleAssignmentService
     }
 
     /**
-     * Clôture une affectation et déclenche l'imputation de coût d'usure complet.
-     *
-     * @throws Exception|Throwable
+     * Clôture une affectation.
+     * @throws Exception
      */
     public function endAssignment(
         VehicleAssignment $assignment,
@@ -82,10 +79,9 @@ class VehicleAssignmentService
         }
 
         if ($endOdometer < $assignment->start_odometer) {
-            throw new Exception("Le kilométrage de retour ({$endOdometer} km) ne peut pas être inférieur au kilométrage de départ ({$assignment->start_odometer} km).");
+            throw new Exception('Le kilométrage de retour ne peut pas être inférieur au kilométrage de départ.');
         }
 
-        // Suppression du bloc DB::transaction interne
         $assignment->update([
             'ended_at' => $endedAt,
             'end_odometer' => $endOdometer,
@@ -103,54 +99,39 @@ class VehicleAssignmentService
     }
 
     /**
-     * Valide l'aptitude médicale et légale de l'employé pour conduire l'actif sélectionné.
-     *
+     * Valide l'aptitude du conducteur.
      * @throws Exception
      */
     protected function validateDriverCompliance(Employee $employee, Vehicle $vehicle): void
     {
-        // A. Vérification de l'Aptitude Médicale (VIP / SIR)
         $lastVisit = $employee->medicalVisits()->latest('visit_date')->first();
         if (! $lastVisit || $lastVisit->isExpired() || $lastVisit->aptitude === MedicalAptitude::UNFIT) {
-            throw new Exception("Aptitude médicale invalide ou expirée pour le collaborateur : {$employee->full_name}. Affectation impossible.");
+            throw new Exception("Aptitude médicale invalide pour {$employee->getFullName()}.");
         }
 
-        // B. Vérification des Habilitations Techniques (CACES ou Permis B)
         if ($vehicle->type === VehicleType::SPECIAL) {
-            // Les engins spéciaux nécessitent une attestation CACES valide
             $hasCaces = $employee->qualifications()
-                ->where('expires_at', '>', now())
+                ->where('expiration_date', '>', now())
                 ->where('type', QualificationType::CACES)
                 ->exists();
 
             if (! $hasCaces) {
-                throw new Exception("Le collaborateur {$employee->full_name} ne possède pas de certificat CACES valide pour conduire cet engin spécial.");
+                throw new Exception("{$employee->getFullName()} ne possède pas de CACES valide.");
             }
         } else {
-            // Les véhicules routiers standards (VUL, commerciaux) exigent un permis de conduire valide
             $hasLicense = $employee->qualifications()
-                ->where('expires_at', '>', now())
+                ->where('expiration_date', '>', now())
                 ->where('type', QualificationType::PERMIS)
                 ->exists();
 
             if (! $hasLicense) {
-                throw new Exception("Aucun permis de conduire valide enregistré dans le dossier RH de {$employee->full_name}. Affectation impossible.");
+                throw new Exception("Aucun permis de conduire valide pour {$employee->getFullName()}.");
             }
         }
     }
 
     /**
-     * Récupère l'inventaire complet de l'outillage embarqué dans le véhicule.
-     */
-    public function getOnboardInventory(Vehicle $vehicle): Collection
-    {
-        return $vehicle->inventories()->with('item')->get();
-    }
-
-    /**
-     * Contrôle environnemental : Valide que la vignette Crit'Air du véhicule est autorisée
-     * dans la commune de destination du chantier (ZFE).
-     *
+     * Valide la conformité ZFE.
      * @throws Exception
      */
     protected function validateZfeCompliance(Vehicle $vehicle, ?Chantier $chantier): void
@@ -162,39 +143,39 @@ class VehicleAssignmentService
         $city = strtolower(trim($chantier->city));
         $vehicleCritAir = strtoupper($vehicle->crit_air_level ?? '2');
 
-        // Seuils de restrictions réglementaires des ZFE (Maximum Crit'Air autorisé pour circuler)
         $zfeRegulations = [
-            'paris' => '2',         // Crit'Air E, 1, 2 autorisés (Bannissement Crit'Air 3+)
-            'lyon' => '2',          // Crit'Air E, 1, 2 autorisés
-            'marseille' => '2',     // Crit'Air E, 1, 2 autorisés
-            'strasbourg' => '3',    // Crit'Air E, 1, 2, 3 autorisés (Bannissement Crit'Air 4+)
-            'toulouse' => '3',      // Crit'Air E, 1, 2, 3 autorisés
+            'paris' => '2',
+            'lyon' => '2',
+            'marseille' => '2',
+            'strasbourg' => '3',
+            'toulouse' => '3',
             'nice' => '3',
             'grenoble' => '3',
-            'montpellier' => '3',
-            'rouen' => '3',
-            'reims' => '3',
-            'saint-etienne' => '3',
-            'saint etienne' => '3',
         ];
 
         if (array_key_exists($city, $zfeRegulations)) {
             $maxAllowed = $zfeRegulations[$city];
-
-            // Rangs de comparaison (E < 1 < 2 < 3 < 4 < 5)
             $ranks = ['E' => 0, '1' => 1, '2' => 2, '3' => 3, '4' => 4, '5' => 5];
 
             $vehicleRank = $ranks[$vehicleCritAir] ?? 5;
             $maxRank = $ranks[$maxAllowed] ?? 5;
 
             if ($vehicleRank > $maxRank) {
-                throw new Exception("Conformité ZFE violée : Le véhicule {$vehicle->reference} (Crit'Air {$vehicleCritAir}) n'est pas autorisé à circuler dans la ZFE de ".ucfirst($city)." (Crit'Air {$maxAllowed} max autorisé).");
+                throw new Exception("ZFE non conforme : {$vehicle->reference} (Crit'Air {$vehicleCritAir}) non autorisé à {$city}.");
             }
         }
     }
 
     /**
-     * Calcule et impute le coût réel (Usure marginale + Quote-part d'amortissement TCO) au chantier.
+     * Obtient l'inventaire du véhicule.
+     */
+    public function getOnboardInventory(Vehicle $vehicle): Collection
+    {
+        return $vehicle->inventories()->with('item')->get();
+    }
+
+    /**
+     * Impute le coût au chantier.
      */
     protected function imputeAnalyticCostToChantier(VehicleAssignment $assignment): void
     {
@@ -208,18 +189,14 @@ class VehicleAssignmentService
         $totalOdometer = (float) $vehicle->odometer;
         $tco = (float) ($vehicle->tco_cache ?? 0);
 
-        // Amortissement de base : TCO divisé par le kilométrage parcouru globalement par l'actif
         $amortizationRate = $totalOdometer > 0 ? ($tco / $totalOdometer) : 0;
-
-        // Formule : Coût complet = Distance * (km_rate + (TCO / Odomètre total))
         $totalImputedCost = $distance * ($kmRate + $amortizationRate);
 
-        // Traçabilité analytique dans les logs Batistack
-        logger()->info("Imputation analytique : Le véhicule {$vehicle->reference} a généré un coût de ".round($totalImputedCost, 2)." € HT pour le chantier #{$assignment->chantier_id} (Kilomètres parcourus : {$distance} km, dont quote-part d'amortissement : ".round($distance * $amortizationRate, 2).' € HT).');
+        logger()->info("Imputation : {$vehicle->reference} coût {$totalImputedCost}€ HT pour chantier #{$assignment->chantier_id}.");
     }
 
     /**
-     * Détecte les chevauchements temporels.
+     * Détecte les chevauchements.
      */
     public function hasConflict(int $vehicleId, int $employeeId, Carbon|CarbonInterface $startAt, Carbon|CarbonInterface|null $endAt, ?int $ignoreAssignmentId = null): bool
     {
@@ -251,5 +228,57 @@ class VehicleAssignmentService
         }
 
         return $query->exists();
+    }
+
+    /**
+     * Obtient les affectations actives.
+     */
+    public function getActiveAssignments(): Collection
+    {
+        return VehicleAssignment::active()
+            ->with('vehicle', 'employee', 'chantier')
+            ->get();
+    }
+
+    /**
+     * Obtient l'affectation active d'un véhicule.
+     */
+    public function getActiveAssignmentForVehicle(Vehicle $vehicle): ?VehicleAssignment
+    {
+        return $vehicle->currentAssignment;
+    }
+
+    /**
+     * Obtient les affectations complétées avec coûts.
+     */
+    public function getCompletedAssignmentsWithCosts(Carbon $from, Carbon $to): Collection
+    {
+        return VehicleAssignment::completed()
+            ->whereBetween('ended_at', [$from, $to])
+            ->with('vehicle', 'employee', 'chantier')
+            ->get();
+    }
+
+    /**
+     * Calcule les statistiques d'utilisation.
+     */
+    public function getUtilizationStatistics(Vehicle $vehicle): array
+    {
+        $assignments = $vehicle->assignments()->get();
+
+        return [
+            'total_assignments' => $assignments->count(),
+            'active_assignments' => $assignments->where('status', AssignmentStatus::ACTIVE)->count(),
+            'completed_assignments' => $assignments->where('status', AssignmentStatus::COMPLETED)->count(),
+            'total_distance' => (float) $assignments->sum(function ($a) {
+                return $a->getDistance();
+            }),
+            'total_hours' => (float) $assignments->sum(function ($a) {
+                return $a->getDurationInHours() ?? 0;
+            }),
+            'total_cost' => (float) $assignments->sum(function ($a) {
+                return $a->getCost();
+            }),
+        ];
     }
 }
