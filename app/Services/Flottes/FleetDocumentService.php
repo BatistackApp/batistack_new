@@ -7,6 +7,7 @@ use App\Models\Flottes\Vehicle;
 use App\Models\Flottes\VehicleAssignment;
 use App\Services\Core\DocumentService;
 use Carbon\Carbon;
+use Carbon\CarbonInterface;
 
 class FleetDocumentService extends DocumentService
 {
@@ -52,7 +53,7 @@ class FleetDocumentService extends DocumentService
     /**
      * Génère un rapport de maintenance.
      */
-    public function generateMaintenanceReport(Vehicle $vehicle, Carbon $from, Carbon $to): array
+    public function generateMaintenanceReport(Vehicle $vehicle, CarbonInterface $from, CarbonInterface $to): array
     {
         $maintenances = $vehicle->maintenances()
             ->whereBetween('performed_at', [$from, $to])
@@ -78,7 +79,7 @@ class FleetDocumentService extends DocumentService
     /**
      * Génère un rapport de consommation.
      */
-    public function generateConsumptionReport(Vehicle $vehicle, Carbon $from, Carbon $to): array
+    public function generateConsumptionReport(Vehicle $vehicle, CarbonInterface $from, CarbonInterface $to): array
     {
         $fuelService = app(VehicleFuelService::class);
         $fuelTransactions = $vehicle->fuelTransactions()
@@ -104,7 +105,7 @@ class FleetDocumentService extends DocumentService
     /**
      * Génère un rapport d'utilisation.
      */
-    public function generateUsageReport(Vehicle $vehicle, Carbon $from, Carbon $to): array
+    public function generateUsageReport(Vehicle $vehicle, CarbonInterface $from, CarbonInterface $to): array
     {
         $assignments = $vehicle->assignments()
             ->whereBetween('started_at', [$from, $to])
