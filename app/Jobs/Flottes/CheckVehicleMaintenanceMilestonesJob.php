@@ -21,20 +21,28 @@ class CheckVehicleMaintenanceMilestonesJob implements ShouldQueue
 
     public function handle(VehicleAlertService $alertService): void
     {
-        // On récupère les véhicules actifs
         $vehicles = Vehicle::where('status', '!=', VehicleStatus::BROKEN)->get();
         $alertCount = 0;
+        $managers = User::where('is_admin', true)->get();
 
         foreach ($vehicles as $vehicle) {
-            // Seuil de révision constructeur standard fixé à 20 000 km
+            // Révision tous les 20 000 km
             if ($alertService->needsMaintenance($vehicle, 20000.00)) {
                 $alertCount++;
+                $kmLeft = $alertService->getKilometersUntilMaintenance($vehicle, 20000.00);
 
-                $managers = User::admin();
-                Notification::send($managers, new MilestoneMaintenanceNotification($vehicle));
+                Notification::send($managers, new MilestoneMaintenanceNotification($vehicle, $kmLeft));
+
+                Log::info("Maintenance due : {$vehicle->reference} - {$kmLeft} km avant révision");
+            }
+
+            // Alerte si dans les 2000 km de la révision
+            $kmLeft = $alertService->getKilometersUntilMaintenance($vehicle, 20000.00);
+            if ($kmLeft > 0 && $kmLeft <= 2000) {
+                Log::warning("Maintenance imminente : {$vehicle->reference} - {$kmLeft} km");
             }
         }
 
-        Log::info("Scan kilométrique Flotte : {$alertCount} véhicule(s) nécessitent une révision préventive.");
+        Log::info("Scan kilométrique : {$alertCount} véhicule(s) nécessitent révision");
     }
 }
