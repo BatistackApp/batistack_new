@@ -111,6 +111,10 @@ class TrafficFineObserver
             throw new \Exception('Impossible de supprimer une amende payée. Archivez-la plutôt.');
         }
 
+        if ($fine->isTransmitted()) {
+            throw new \Exception('Impossible de supprimer une amende transmise.');
+        }
+
         Log::warning('Amende supprimée', [
             'fine_id' => $fine->id,
             'reference' => $fine->reference,

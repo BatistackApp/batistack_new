@@ -22,6 +22,10 @@ class VehicleObserver
             $vehicle->license_plate = Str::upper(str_replace([' ', '-'], '', $vehicle->license_plate));
         }
 
+        if ($vehicle->purchase_price < 0) {
+            throw new \Exception('Le prix d\'achat doit être positif !');
+        }
+
         Log::info('Véhicule créé', [
             'reference' => $vehicle->reference,
             'license_plate' => $vehicle->license_plate,

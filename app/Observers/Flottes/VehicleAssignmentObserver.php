@@ -73,7 +73,7 @@ class VehicleAssignmentObserver
     public function updated(VehicleAssignment $assignment): void
     {
         // Si l'affectation vient d'être clôturée
-        if ($assignment->wasChanged('status') && $assignment->status === AssignmentStatus::COMPLETED) {
+        if ($assignment->wasChanged('status') && in_array($assignment->status, [AssignmentStatus::COMPLETED, AssignmentStatus::CANCELLED])) {
             $vehicle = $assignment->vehicle;
 
             // Mise à jour de l'odomètre et libération du véhicule
