@@ -166,7 +166,7 @@ class VehicleFuelService
     /**
      * Obtient le prix moyen au litre sur une période.
      */
-    public function getAveragePricePerLiter(Vehicle $vehicle, Carbon $from, Carbon $to): float
+    public function getAveragePricePerLiter(Vehicle $vehicle, CarbonInterface $from, CarbonInterface $to): float
     {
         $transactions = $vehicle->fuelTransactions()
             ->whereBetween('purchased_at', [$from, $to])

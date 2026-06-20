@@ -4,6 +4,7 @@ namespace App\Observers\RH;
 
 use App\Models\RH\Equipement;
 use App\Models\User;
+use App\Notifications\RH\EquipementExpiringNotification;
 use Illuminate\Support\Facades\Notification;
 use Log;
 
