@@ -82,6 +82,11 @@ class TrafficFine extends Model
         return $query->where('status', FineStatus::TRANSMITTED);
     }
 
+    public function scopeUnpaid(Builder $query): Builder
+    {
+        return $query->where('status', '!=', FineStatus::PAID);
+    }
+
     public function scopePending(Builder $query): Builder
     {
         return $query->whereIn('status', [FineStatus::RECEIVED, FineStatus::DISPUTED]);
@@ -143,6 +148,12 @@ class TrafficFine extends Model
     {
         // 45 jours pour payer après réception
         return now()->diffInDays($this->infraction_at->addDays(45));
+    }
+
+    public function getDaysOverdue(): int
+    {
+        // Retourne le nombre de jours de retard (positif si en retard)
+        return (int) -($this->getDaysUntilDue());
     }
 
     public function isOverdue(): bool

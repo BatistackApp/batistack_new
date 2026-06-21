@@ -18,7 +18,7 @@ class VehicleContractFactory extends Factory
             'type' => $this->faker->word(),
             'policy_number' => $this->faker->word(),
             'start_date' => Carbon::now(),
-            'end_date' => Carbon::now(),
+            'end_date' => Carbon::now()->addDay(),
             'annual_cost_ht' => $this->faker->randomFloat(),
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),

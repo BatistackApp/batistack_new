@@ -203,4 +203,12 @@ class VehicleConditionReport extends Model implements HasMedia
             'signature_checksum' => hash('sha256', $signature),
         ]);
     }
+
+    /**
+     * Vérifie si le checksum fourni correspond à celui stocké.
+     */
+    public function validateChecksum(string $checksum): bool
+    {
+        return hash_equals($this->signature_checksum, $checksum);
+    }
 }

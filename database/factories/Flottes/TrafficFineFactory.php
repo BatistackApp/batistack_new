@@ -2,6 +2,7 @@
 
 namespace Database\Factories\Flottes;
 
+use App\Enums\Flottes\FineStatus;
 use App\Models\Flottes\TrafficFine;
 use App\Models\Flottes\Vehicle;
 use App\Models\RH\Employee;
@@ -19,7 +20,7 @@ class TrafficFineFactory extends Factory
             'infraction_at' => Carbon::now(),
             'amount' => $this->faker->randomFloat(),
             'points_deducted' => $this->faker->randomNumber(),
-            'status' => $this->faker->word(),
+            'status' => $this->faker->randomElement(FineStatus::class),
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
 

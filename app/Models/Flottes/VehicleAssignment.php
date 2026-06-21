@@ -136,11 +136,11 @@ class VehicleAssignment extends Model
 
     public function getDurationInHours(): ?float
     {
-        if (! $this->ended_at) {
+        if (! $this->ended_at || ! $this->started_at) {
             return null;
         }
 
-        return $this->ended_at->diffInMinutes($this->started_at) / 60;
+        return (float) $this->started_at->diffInHours($this->ended_at);
     }
 
     public function getCost(): float
@@ -165,6 +165,15 @@ class VehicleAssignment extends Model
     public function isCancelled(): bool
     {
         return $this->status === AssignmentStatus::CANCELLED;
+    }
+
+    public function isOverdue(): bool
+    {
+        if (! $this->ended_at || $this->status !== AssignmentStatus::ACTIVE) {
+            return false;
+        }
+
+        return now()->gt($this->ended_at->addHours(2));
     }
 
     public function getPassengerCount(): int

@@ -7,6 +7,7 @@ use App\Models\Flottes\TrafficFine;
 use App\Models\Flottes\Vehicle;
 use App\Models\Flottes\VehicleAssignment;
 use Carbon\Carbon;
+use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Collection;
 
 class TrafficFineService
@@ -17,7 +18,7 @@ class TrafficFineService
     public function registerFine(
         Vehicle $vehicle,
         string $reference,
-        Carbon $infractionAt,
+        CarbonInterface $infractionAt,
         float $amount,
         int $pointsDeducted = 0
     ): TrafficFine {

@@ -18,7 +18,7 @@ class VehicleAssignmentFactory extends Factory
     {
         return [
             'started_at' => Carbon::now(),
-            'ended_at' => Carbon::now(),
+            'ended_at' => Carbon::now()->addHour(),
             'start_odometer' => $this->faker->randomFloat(),
             'end_odometer' => $this->faker->randomFloat(),
             'status' => $this->faker->randomElement(AssignmentStatus::class),

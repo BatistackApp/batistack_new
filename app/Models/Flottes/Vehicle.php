@@ -122,6 +122,11 @@ class Vehicle extends Model implements HasMedia
         return $query->where('type', $type);
     }
 
+    public function scopeByStatus(Builder $query, VehicleStatus $status): Builder
+    {
+        return $query->where('status', $status);
+    }
+
     public function scopeByReference(Builder $query, string $reference): Builder
     {
         return $query->where('reference', 'ilike', "%{$reference}%");
@@ -162,6 +167,11 @@ class Vehicle extends Model implements HasMedia
     }
 
     // ============ METHODS ============
+
+    public function getActiveAssignment(): ?VehicleAssignment
+    {
+        return $this->currentAssignment;
+    }
 
     public function isAvailable(): bool
     {
