@@ -133,7 +133,7 @@ test('workflow affectation avec condition reports', function () {
         $vehicle,
         $employee,
         $chantier,
-        now(),
+        now()->startOfDay(),
         now()->addMonth()
     );
 

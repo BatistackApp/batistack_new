@@ -47,7 +47,7 @@ test('relation maintenances charge correctement', function () {
 
 test('relation fines charge correctement', function () {
     $vehicle = Vehicle::factory()->create();
-    TrafficFine::factory()->count(2)->create(['vehicle_id' => $vehicle->id]);
+    TrafficFine::factory()->count(2)->create(['vehicle_id' => $vehicle->id, 'amount' => 100]);
 
     $vehicle->load('fines');
 
