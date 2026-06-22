@@ -16,7 +16,7 @@ class TrafficFineFactory extends Factory
     public function definition(): array
     {
         return [
-            'reference' => $this->faker->word(),
+            'reference' => $this->faker->unique()->numerify('##########'),
             'infraction_at' => Carbon::now(),
             'amount' => $this->faker->randomFloat(),
             'points_deducted' => $this->faker->randomNumber(),
