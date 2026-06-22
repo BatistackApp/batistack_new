@@ -34,7 +34,7 @@ test('scope expiring filtre contrats -30j', function () {
 
 test('relation vehicle charge véhicule', function () {
     $vehicle = \App\Models\Flottes\Vehicle::factory()->create();
-    $contract = VehicleContract::factory()->create(['vehicle_id' => $vehicle->id]);
+    $contract = VehicleContract::factory()->create(['vehicle_id' => $vehicle->id, 'annual_cost_ht' => 1250]);
 
     $contract->load('vehicle');
 

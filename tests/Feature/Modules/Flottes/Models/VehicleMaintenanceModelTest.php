@@ -6,8 +6,8 @@ use App\Models\Flottes\VehicleMaintenance;
 use App\Models\Tiers\ThirdParty;
 
 test('scope critical filtre maintenances graves', function () {
-    VehicleMaintenance::factory()->count(2)->create(['type' => 'panne']);
-    VehicleMaintenance::factory()->count(1)->create(['type' => 'vidange']);
+    VehicleMaintenance::factory()->count(2)->create(['type' => 'panne', 'cost_ht' => 125.00]);
+    VehicleMaintenance::factory()->count(1)->create(['type' => 'vidange', 'cost_ht' => 125.00]);
 
     $critical = VehicleMaintenance::critical()->get();
 
