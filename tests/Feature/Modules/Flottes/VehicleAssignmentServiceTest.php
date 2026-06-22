@@ -5,7 +5,9 @@ use App\Enums\Core\UnitType;
 use App\Enums\Flottes\AssignmentStatus;
 use App\Enums\Flottes\VehicleStatus;
 use App\Enums\Flottes\VehicleType;
+use App\Enums\RH\CertificationSymbol;
 use App\Enums\RH\MedicalAptitude;
+use App\Enums\RH\QualificationType;
 use App\Models\Articles\Item;
 use App\Models\Chantiers\Chantier;
 use App\Models\Core\Unit;
@@ -35,6 +37,13 @@ beforeEach(function () {
         'employee_id' => $this->employee->id,
         'type' => 'permis',
         'label' => 'permis',
+        'expires_at' => now()->addYears(5),
+    ]);
+
+    Qualification::create([
+        'employee_id' => $this->employee->id,
+        'type' => QualificationType::CACES,
+        'label' => CertificationSymbol::R482,
         'expires_at' => now()->addYears(5),
     ]);
 

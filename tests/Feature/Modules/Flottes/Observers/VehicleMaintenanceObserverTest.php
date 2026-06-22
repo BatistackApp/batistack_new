@@ -63,6 +63,7 @@ test('dispatchera Job TCO', function () {
 test('refuse suppression maintenance récente', function () {
     $maintenance = VehicleMaintenance::factory()->create([
         'performed_at' => now()->subDays(5),
+        'cost_ht' => 150,
     ]);
 
     expect(fn () => $maintenance->delete())->toThrow(Exception::class);

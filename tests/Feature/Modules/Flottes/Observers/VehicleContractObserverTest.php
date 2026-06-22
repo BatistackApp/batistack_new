@@ -27,6 +27,7 @@ test('dispatchera Job TCO à la création', function () {
 test('refuse suppression contrat actif', function () {
     $contract = VehicleContract::factory()->create([
         'end_date' => now()->addMonths(6),
+        'annual_cost_ht' => 1250,
     ]);
 
     expect(fn () => $contract->delete())->toThrow(Exception::class);
@@ -36,6 +37,7 @@ test('permet suppression contrat expiré', function () {
     $contract = VehicleContract::factory()->create([
         'end_date' => now()->subDays(1),
         'start_date' => now()->subMonths(2),
+        'annual_cost_ht' => 1250,
     ]);
 
     expect($contract->delete())->toEqual(1);
