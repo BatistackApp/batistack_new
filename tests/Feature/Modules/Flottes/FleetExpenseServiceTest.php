@@ -4,6 +4,7 @@ use App\Enums\Flottes\VehicleStatus;
 use App\Enums\RH\MedicalAptitude;
 use App\Enums\RH\QualificationType;
 use App\Enums\RH\TimeEntryStatus;
+use App\Enums\Tiers\ThirdPartyType;
 use App\Models\Chantiers\Chantier;
 use App\Models\Core\VatRate;
 use App\Models\Flottes\FleetExpense;
@@ -12,6 +13,7 @@ use App\Models\RH\Employee;
 use App\Models\RH\MedicalVisit;
 use App\Models\RH\Qualification;
 use App\Models\RH\TimeEntry;
+use App\Models\Tiers\ThirdParty;
 use App\Models\User;
 use App\Notifications\Flottes\FleetExpenseAnomalyNotification;
 use App\Services\Flottes\FleetCostService;
@@ -57,7 +59,8 @@ beforeEach(function () {
         'purchase_price' => 30000.00,
     ]);
 
-    $this->chantier = Chantier::factory()->create();
+    $this->third = ThirdParty::factory()->create(['type' => ThirdPartyType::CLIENT]);
+    $this->chantier = Chantier::factory()->create(['client_id' => $this->third->id]);
 });
 
 test('péage semaine avec pointage RH valide sans suspicion', function () {
