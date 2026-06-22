@@ -146,6 +146,7 @@ test('détecte conducteur récidiviste', function () {
         'employee_id' => $this->employee->id,
         'status' => FineStatus::PAID,
         'vehicle_id' => $this->vehicle->id,
+        'amount' => 34,
     ]);
 
     $isRecidivist = $this->fineService->isRecidivistDriver($this->vehicle);
