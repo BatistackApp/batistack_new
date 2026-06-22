@@ -13,7 +13,7 @@ class EmployeeFactory extends Factory
     public function definition(): array
     {
         return [
-            'registration_number' => 'MAT-'.now()->year.'-'.$this->faker->numberBetween(1000, 9999),
+            'registration_number' => 'MAT-'.now()->year.'-'.$this->faker->unique()->numberBetween(1000, 9999),
             'first_name' => $this->faker->firstName(),
             'last_name' => $this->faker->lastName(),
             'email' => $this->faker->unique()->safeEmail(),
