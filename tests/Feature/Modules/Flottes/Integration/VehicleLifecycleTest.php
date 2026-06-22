@@ -4,7 +4,9 @@ use App\Enums\Flottes\AssignmentStatus;
 use App\Enums\Flottes\ConditionReportType;
 use App\Enums\Flottes\FineStatus;
 use App\Enums\Flottes\VehicleStatus;
+use App\Enums\RH\CertificationSymbol;
 use App\Enums\RH\MedicalAptitude;
+use App\Enums\RH\QualificationType;
 use App\Models\Chantiers\Chantier;
 use App\Models\Core\VatRate;
 use App\Models\Flottes\Vehicle;
@@ -58,6 +60,13 @@ test('workflow complet: création -> affectation -> clôture -> calcul TCO', fun
         'employee_id' => $employee->id,
         'type' => 'permis',
         'label' => 'permis',
+        'expires_at' => now()->addYears(5),
+    ]);
+
+    Qualification::create([
+        'employee_id' => $employee->id,
+        'type' => QualificationType::CACES,
+        'label' => CertificationSymbol::R482,
         'expires_at' => now()->addYears(5),
     ]);
 
