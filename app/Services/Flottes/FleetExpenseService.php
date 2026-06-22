@@ -11,6 +11,7 @@ use App\Models\RH\TimeEntry;
 use App\Models\User;
 use App\Notifications\Flottes\FleetExpenseAnomalyNotification;
 use Carbon\Carbon;
+use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
@@ -26,7 +27,7 @@ class FleetExpenseService
         string $type,
         float $amountHt,
         VatRate $vatRate,
-        Carbon $spentAt,
+        CarbonInterface $spentAt,
         ?string $merchantName = null,
         ?string $reference = null,
         ?string $description = null
@@ -100,7 +101,7 @@ class FleetExpenseService
     /**
      * Obtient les dépenses par type sur une période.
      */
-    public function getExpensesByType(Vehicle $vehicle, Carbon $from, Carbon $to): array
+    public function getExpensesByType(Vehicle $vehicle, CarbonInterface $from, CarbonInterface $to): array
     {
         $expenses = $vehicle->expenses()
             ->whereBetween('spent_at', [$from, $to])

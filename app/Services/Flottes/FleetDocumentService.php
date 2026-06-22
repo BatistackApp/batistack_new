@@ -18,11 +18,11 @@ class FleetDocumentService extends DocumentService
     /**
      * Génère la fiche d'état des lieux et de mise à disposition.
      */
-    public function generateAssignmentForm(VehicleAssignment $assignment): array
+    public function generateAssignmentForm(VehicleAssignment $assignment): string
     {
         $assignment->load(['vehicle.inventories.item', 'employee', 'chantier']);
 
-        return [
+        $data = [
             'company' => Company::first(),
             'assignment' => $assignment,
             'onboard_inventory' => $assignment->vehicle->inventories,
@@ -30,17 +30,24 @@ class FleetDocumentService extends DocumentService
             'generated_at' => Carbon::now()->format('d/m/Y H:i'),
             'signature_required' => true,
         ];
+
+        return $this->generate(
+            view: 'pdf.flotte.assignment_form',
+            data: $data,
+            filename: 'mise_a_disposition_'.$assignment->vehicle->reference,
+            type: 'flotte/assignments',
+        );
     }
 
     /**
      * Génère la fiche d'identité technique et financière d'un véhicule.
      */
-    public function generateVehicleFiche(Vehicle $vehicle): array
+    public function generateVehicleFiche(Vehicle $vehicle): string
     {
         $vehicle->load(['maintenances.supplier', 'contracts.supplier', 'fines']);
         $tco = $this->costService->calculateTco($vehicle);
 
-        return [
+        $data = [
             'company' => Company::first(),
             'vehicle' => $vehicle,
             'tco' => $tco,
@@ -48,6 +55,13 @@ class FleetDocumentService extends DocumentService
             'title' => 'FICHE VÉHICULE : '.$vehicle->reference,
             'generated_at' => Carbon::now()->format('d/m/Y H:i'),
         ];
+
+        return $this->generate(
+            view: 'pdf.flotte.vehicle_fiche',
+            data: $data,
+            filename: 'fiche_vehicule_'.$vehicle->reference,
+            type: 'flotte/vehicles',
+        );
     }
 
     /**
@@ -134,7 +148,7 @@ class FleetDocumentService extends DocumentService
     /**
      * Génère un rapport d'amendes.
      */
-    public function generateFinesReport(Vehicle $vehicle, Carbon $from, Carbon $to): array
+    public function generateFinesReport(Vehicle $vehicle, CarbonInterface $from, CarbonInterface $to): array
     {
         $fineService = app(TrafficFineService::class);
         $fines = $vehicle->fines()

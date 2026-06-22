@@ -2,6 +2,7 @@
 
 namespace Database\Factories\Flottes;
 
+use App\Enums\Flottes\ConditionReportType;
 use App\Models\Flottes\VehicleAssignment;
 use App\Models\Flottes\VehicleConditionReport;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -14,7 +15,7 @@ class VehicleConditionReportFactory extends Factory
     public function definition(): array
     {
         return [
-            'type' => $this->faker->word(),
+            'type' => $this->faker->randomElement(ConditionReportType::class),
             'odometer' => $this->faker->randomFloat(),
             'fuel_level' => $this->faker->randomNumber(),
             'signature_checksum' => $this->faker->word(),

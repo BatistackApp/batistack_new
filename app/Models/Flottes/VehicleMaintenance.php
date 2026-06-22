@@ -68,9 +68,10 @@ class VehicleMaintenance extends Model
         return $query->where('type', 'ilike', "%{$type}%");
     }
 
-    public function scopeRecent(Builder $query): Builder
+    public function scopeRecent(Builder $query, int $days = 30): Builder
     {
-        return $query->orderByDesc('performed_at');
+        return $query->where('performed_at', '>=', now()->subDays($days))
+            ->orderByDesc('performed_at');
     }
 
     public function scopeExpensive(Builder $query, float $minAmount = 1000): Builder
@@ -97,6 +98,11 @@ class VehicleMaintenance extends Model
     public function scopeWithSupplier(Builder $query): Builder
     {
         return $query->with('supplier');
+    }
+
+    public function scopeCritical(Builder $query): Builder
+    {
+        return $query->whereIn('type', ['panne', 'accident', 'grosse réparation', 'carrosserie', 'moteur']);
     }
 
     // ============ METHODS ============

@@ -78,6 +78,12 @@ class VehicleMaintenanceObserver
             ]);
         }
 
+        if ($maintenance->odometer_at_maintenance && $maintenance->odometer_at_maintenance > $vehicle->odometer) {
+            $vehicle->updateQuietly([
+                'odometer' => $maintenance->odometer_at_maintenance,
+            ]);
+        }
+
         // Recalcul TCO asynchrone
         RecalculateVehicleTcoJob::dispatch($vehicle);
     }
@@ -137,16 +143,20 @@ class VehicleMaintenanceObserver
 
     /**
      * Validation avant suppression.
+     * @throws \Exception
      */
     public function deleting(VehicleMaintenance $maintenance): void
     {
-        // Les vieilles maintenances peuvent être supprimées
+        // Les vieilles maintenances peuvent être supprimées (il y a un mois)
         if ($maintenance->performed_at->isAfter(now()->subMonths(1))) {
-            Log::warning('Maintenance récente supprimée', [
-                'maintenance_id' => $maintenance->id,
-                'cost_ht' => $maintenance->cost_ht,
-            ]);
+            // C'est ici qu'il faut lancer l'exception pour bloquer la suppression
+            throw new \Exception('Impossible de supprimer une maintenance récente.');
         }
+
+        Log::warning('Maintenance supprimée', [
+            'maintenance_id' => $maintenance->id,
+            'cost_ht' => $maintenance->cost_ht,
+        ]);
     }
 
     /**

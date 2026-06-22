@@ -18,8 +18,42 @@ Schedule::command('articles:check-stocks')
     ->dailyAt('07:00');
 
 // RH
-Schedule::command('rh:check-qualifications')
-    ->dailyAt('05:00');
+// Vérifier les habilitations expirant dans 30 jours (quotidien à 5h)
+Schedule::command('rh:check-qualifications --days=30 --send')
+    ->dailyAt('05:00')
+    ->timezone('Europe/Paris')
+    ->onFailure(fn () => logger()->error('Échec du scan des habilitations RH.'));
+
+// Vérifier les visites médicales expirant dans 30 jours (quotidien à 6h)
+Schedule::command('rh:check-medical-visits --days=30 --send')
+    ->dailyAt('06:00')
+    ->timezone('Europe/Paris')
+    ->onFailure(fn () => logger()->error('Échec du scan des visites médicales.'));
+
+// Vérifier les périodes d'essai se terminant dans 15 jours (quotidien à 7h)
+Schedule::command('rh:check-trial-periods --days=15 --send')
+    ->dailyAt('07:00')
+    ->timezone('Europe/Paris')
+    ->onFailure(fn () => logger()->error('Échec du scan des périodes d\'essai.'));
+
+// Vérifier les équipements (EPI) expirés ou en maintenance (quotidien à 8h)
+Schedule::command('rh:check-equipement --send')
+    ->dailyAt('08:00')
+    ->timezone('Europe/Paris')
+    ->onFailure(fn () => logger()->error('Échec du scan des équipements RH.'));
+
+// Synchroniser les heures travaillées (quotidien à 23h - fin de journée)
+Schedule::command('rh:sync-employee-hours')
+    ->dailyAt('23:00')
+    ->timezone('Europe/Paris')
+    ->withoutOverlapping()
+    ->onFailure(fn () => logger()->error('Échec de la synchronisation des heures.'));
+
+// Nettoyer les données obsolètes (1er du mois à 3h du matin)
+Schedule::command('rh:cleanup --months=12 --force')
+    ->monthlyOn(1, '03:00')
+    ->timezone('Europe/Paris')
+    ->onFailure(fn () => logger()->error('Échec du nettoyage des données RH.'));
 
 // CHANTIER
 Schedule::command('chantier:check-compliance')

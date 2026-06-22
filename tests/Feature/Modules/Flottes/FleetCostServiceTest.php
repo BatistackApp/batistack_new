@@ -58,6 +58,7 @@ describe('FleetCostService - Analyse Financière & Maintenance', function () {
             'type' => 'leasing',
             'policy_number' => 'LEASE-BOXER',
             'start_date' => now()->startOfYear(),
+            'end_date' => now()->endOfYear(),
             'annual_cost_ht' => 2400.00,
         ]);
 

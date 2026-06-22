@@ -67,9 +67,10 @@ class FuelTransaction extends Model
         return $query->where('is_suspicious', false);
     }
 
-    public function scopeRecent(Builder $query): Builder
+    public function scopeRecent(Builder $query, int $days = 30): Builder
     {
-        return $query->orderByDesc('purchased_at');
+        return $query->where('purchased_at', '>=', now()->subDays($days))
+            ->orderByDesc('purchased_at');
     }
 
     public function scopeBetweenDates(Builder $query, \DateTime $from, \DateTime $to): Builder

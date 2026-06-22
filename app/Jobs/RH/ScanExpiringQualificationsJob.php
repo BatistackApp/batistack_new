@@ -11,6 +11,7 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Notification;
+use Log;
 
 class ScanExpiringQualificationsJob implements ShouldQueue
 {
@@ -19,19 +20,28 @@ class ScanExpiringQualificationsJob implements ShouldQueue
     public function handle(): void
     {
         // Récupère les habilitations expirant dans exactement 30 jours
-        $expiringIn30Days = Qualification::whereDate('expires_at', now()->addDays(30)->toDateString())
+        $expiringIn30Days = Qualification::where('expiration_date', '>=', now()->addDays(30))
+            ->where('expiration_date', '<', now()->addDays(31))
             ->with('employee')
             ->get();
 
-        $managers = User::admin()->get(); // À filtrer par rôle RH
+        if ($expiringIn30Days->isEmpty()) {
+            Log::info('ScanExpiringQualificationsJob: No qualifications expiring in 30 days');
+            return;
+        }
+
+        $managers = User::where('is_admin', true)->get();
 
         foreach ($expiringIn30Days as $qualification) {
+            // Notifier les managers RH
             Notification::send($managers, new QualificationExpiringNotification($qualification, false));
 
-            // On peut aussi notifier l'employé directement s'il a un accès
-            if ($qualification->employee->email) {
+            // Notifier l'employé
+            if ($qualification->employee && $qualification->employee->email) {
                 $qualification->employee->notify(new QualificationExpiringNotification($qualification, false));
             }
+
+            Log::info('Qualification expiration notification sent', ['qualification_id' => $qualification->id, 'employee_id' => $qualification->employee_id]);
         }
     }
 }
