@@ -111,7 +111,10 @@ class VehicleAssignmentService
 
         if ($vehicle->type === VehicleType::SPECIAL) {
             $hasCaces = $employee->qualifications()
-                ->where('expiration_date', '>', now())
+                ->where(function ($q) {
+                    $q->whereNull('expires_at')
+                        ->orWhere('expires_at', '>', Carbon::now());
+                })
                 ->where('type', QualificationType::CACES)
                 ->exists();
 
@@ -120,7 +123,10 @@ class VehicleAssignmentService
             }
         } else {
             $hasLicense = $employee->qualifications()
-                ->where('expiration_date', '>', now())
+                ->where(function ($q) {
+                    $q->whereNull('expires_at')
+                        ->orWhere('expires_at', '>', Carbon::now());
+                })
                 ->where('type', QualificationType::PERMIS)
                 ->exists();
 

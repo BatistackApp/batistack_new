@@ -273,14 +273,14 @@ class Vehicle extends Model implements HasMedia
     {
         return $this->maintenances()
             ->latest('performed_at')
-            ->value('performed_at');
+            ->first()?->performed_at;
     }
 
     public function getDaysSinceLastMaintenance(): ?int
     {
         $lastDate = $this->getLastMaintenanceDate();
 
-        return $lastDate ? $lastDate->diffInDays(now()) : null;
+        return $lastDate?->diffInDays(now());
     }
 
     public function needsPollutionControl(): bool

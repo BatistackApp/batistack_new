@@ -4,6 +4,7 @@ namespace App\Jobs\Flottes;
 
 use App\Models\Flottes\TrafficFine;
 use App\Models\User;
+use App\Notifications\Flottes\TrafficFineReminderNotification;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;

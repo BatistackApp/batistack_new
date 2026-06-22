@@ -31,7 +31,7 @@ class CheckVehicleMaintenanceMilestonesJob implements ShouldQueue
                 $alertCount++;
                 $kmLeft = $alertService->getKilometersUntilMaintenance($vehicle, 20000.00);
 
-                Notification::send($managers, new MilestoneMaintenanceNotification($vehicle, $kmLeft));
+                Notification::send($managers, new MilestoneMaintenanceNotification($vehicle));
 
                 Log::info("Maintenance due : {$vehicle->reference} - {$kmLeft} km avant révision");
             }

@@ -128,11 +128,11 @@ class VehicleAlertService
         }
 
         if ($this->needsPollutionControl($vehicle)) {
-            $daysLeft = $this->getDaysUntilPollutionControl($vehicle);
+            $overdueDays = $this->getDaysUntilPollutionControl($vehicle) ?? 0;
             $alerts['pollution_control'] = [
                 'type' => 'pollution_control',
-                'message' => "Contrôle pollution dû - {$daysLeft} jours",
-                'severity' => $daysLeft <= 7 ? 'critical' : 'high',
+                'message' => "Contrôle pollution en retard de {$overdueDays} jours",
+                'severity' => 'critical',
             ];
         }
 

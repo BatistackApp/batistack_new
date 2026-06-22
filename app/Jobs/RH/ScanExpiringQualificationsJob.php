@@ -20,8 +20,8 @@ class ScanExpiringQualificationsJob implements ShouldQueue
     public function handle(): void
     {
         // Récupère les habilitations expirant dans exactement 30 jours
-        $expiringIn30Days = Qualification::where('expiration_date', '>=', now()->addDays(30))
-            ->where('expiration_date', '<', now()->addDays(31))
+        $expiringIn30Days = Qualification::where('expires_at', '>=', now()->addDays(30))
+            ->where('expires_at', '<', now()->addDays(31))
             ->with('employee')
             ->get();
 
