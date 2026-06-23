@@ -2,8 +2,9 @@
 
 namespace App\Console\Commands\Flottes;
 
+use App\Models\Flottes\Vehicle;
 use Illuminate\Console\Command;
-use Storage;
+use Illuminate\Support\Facades\Storage;
 
 class ExportFleetDataCommand extends Command
 {
@@ -19,6 +20,12 @@ class ExportFleetDataCommand extends Command
 
         $format = $this->option('format');
         $type = $this->option('type');
+
+        if ($format === 'csv' && ! in_array($type, ['vehicles'], true)) {
+            $this->error("Le type '{$type}' n'est pas encore supporté en CSV.");
+
+            return self::FAILURE;
+        }
 
         $filename = $this->getFilename($type, $format);
         $path = "exports/{$filename}";

@@ -20,11 +20,16 @@ class CleanupOldDataCommand extends Command
     {
         $this->info('=== Nettoyage Données Anciennes Flottes ===');
 
-        $months = (int) $this->option('months');
+        $monthsOption = $this->option('months');
+        if (! is_numeric($monthsOption) || (int) $monthsOption < 1) {
+            $this->error("Option --months invalide: '{$monthsOption}'. Valeur attendue: entier >= 1.");
+            return self::FAILURE;
+        }
+
+        $months = (int) $monthsOption;
+        $cutoffDate = now()->subMonths($months);
         $dryRun = $this->option('dry-run');
         $force = $this->option('force');
-
-        $cutoffDate = now()->subMonths($months);
         $this->line("📅 Date limite : {$cutoffDate->format('d/m/Y')}");
         $this->line('   Données antérieures seront supprimées');
         $this->newLine();
