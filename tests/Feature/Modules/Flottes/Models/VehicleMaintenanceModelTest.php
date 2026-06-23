@@ -15,8 +15,8 @@ test('scope critical filtre maintenances graves', function () {
 });
 
 test('scope recent filtre 30 derniers jours', function () {
-    VehicleMaintenance::factory()->create(['performed_at' => now()->subDays(10)]);
-    VehicleMaintenance::factory()->create(['performed_at' => now()->subDays(60)]);
+    VehicleMaintenance::factory()->create(['performed_at' => now()->subDays(10), 'cost_ht' => 125.00]);
+    VehicleMaintenance::factory()->create(['performed_at' => now()->subDays(60), 'cost_ht' => 125.00]);
 
     $recent = VehicleMaintenance::recent(30)->get();
 
@@ -25,7 +25,7 @@ test('scope recent filtre 30 derniers jours', function () {
 
 test('relation vehicle charge véhicule', function () {
     $vehicle = Vehicle::factory()->create();
-    $maintenance = VehicleMaintenance::factory()->create(['vehicle_id' => $vehicle->id]);
+    $maintenance = VehicleMaintenance::factory()->create(['vehicle_id' => $vehicle->id, 'cost_ht' => 125.00]);
 
     $maintenance->load('vehicle');
 
@@ -34,7 +34,7 @@ test('relation vehicle charge véhicule', function () {
 
 test('relation supplier charge fournisseur', function () {
     $supplier = ThirdParty::factory()->create();
-    $maintenance = VehicleMaintenance::factory()->create(['supplier_id' => $supplier->id]);
+    $maintenance = VehicleMaintenance::factory()->create(['supplier_id' => $supplier->id, 'cost_ht' => 125.00]);
 
     $maintenance->load('supplier');
 

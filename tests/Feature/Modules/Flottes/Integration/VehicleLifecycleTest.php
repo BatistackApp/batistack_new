@@ -134,6 +134,12 @@ test('workflow affectation avec condition reports', function () {
         'label' => 'permis',
         'expires_at' => now()->addYears(5),
     ]);
+    Qualification::create([
+        'employee_id' => $employee->id,
+        'type' => QualificationType::CACES,
+        'label' => CertificationSymbol::R482,
+        'expires_at' => now()->addYears(5),
+    ]);
     $employee->updateQuietly(['pin_hash' => Hash::make('1234')]);
 
     // Affectation
@@ -193,6 +199,25 @@ test('workflow affectation avec condition reports', function () {
 test('workflow fines avec résolution conducteur', function () {
     $vehicle = Vehicle::factory()->create();
     $employee = Employee::factory()->create();
+    MedicalVisit::create([
+        'employee_id' => $employee->id,
+        'type' => 'vip',
+        'visit_date' => now()->subMonths(1),
+        'next_due_date' => now()->addMonths(11),
+        'aptitude' => MedicalAptitude::FIT,
+    ]);
+    Qualification::create([
+        'employee_id' => $employee->id,
+        'type' => 'permis',
+        'label' => 'permis',
+        'expires_at' => now()->addYears(5),
+    ]);
+    Qualification::create([
+        'employee_id' => $employee->id,
+        'type' => QualificationType::CACES,
+        'label' => CertificationSymbol::R482,
+        'expires_at' => now()->addYears(5),
+    ]);
 
     // Affectation au moment de l'infraction
     $infrationTime = now();
