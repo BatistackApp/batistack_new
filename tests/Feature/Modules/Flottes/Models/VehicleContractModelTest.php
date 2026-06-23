@@ -6,10 +6,12 @@ test('scope active filtre contrats en cours', function () {
     VehicleContract::factory()->count(2)->create([
         'end_date' => now()->addMonths(6),
         'start_date' => now()->startOfYear(),
+        'annual_cost_ht' => 150,
     ]);
     VehicleContract::factory()->count(1)->create([
         'end_date' => now()->subDays(10),
         'start_date' => now()->startOfYear(),
+        'annual_cost_ht' => 150,
     ]);
 
     $active = VehicleContract::active()->get();
@@ -21,10 +23,12 @@ test('scope expiring filtre contrats -30j', function () {
     VehicleContract::factory()->create([
         'end_date' => now()->addDays(15),
         'start_date' => now()->startOfYear(),
+        'annual_cost_ht' => 150,
     ]);
     VehicleContract::factory()->create([
         'end_date' => now()->addDays(45),
         'start_date' => now()->startOfYear(),
+        'annual_cost_ht' => 150,
     ]);
 
     $expiring = VehicleContract::expiringsSoon(30)->get();
@@ -44,6 +48,7 @@ test('relation vehicle charge véhicule', function () {
 test('méthode getDaysUntilExpiry retourne jours restants', function () {
     $contract = VehicleContract::factory()->create([
         'end_date' => now()->addDays(16),
+        'annual_cost_ht' => 150,
     ]);
 
     $days = $contract->getDaysUntilExpiration();
