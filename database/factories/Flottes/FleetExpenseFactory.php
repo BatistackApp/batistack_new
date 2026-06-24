@@ -2,6 +2,7 @@
 
 namespace Database\Factories\Flottes;
 
+use App\Enums\Flottes\FleetExpenseType;
 use App\Models\Chantiers\Chantier;
 use App\Models\Core\VatRate;
 use App\Models\Flottes\FleetExpense;
@@ -17,7 +18,7 @@ class FleetExpenseFactory extends Factory
     public function definition(): array
     {
         return [
-            'type' => $this->faker->word(),
+            'type' => $this->faker->randomElement(FleetExpenseType::class),
             'reference' => $this->faker->word(),
             'amount_ht' => $this->faker->randomFloat(),
             'amount_ttc' => $this->faker->randomFloat(),

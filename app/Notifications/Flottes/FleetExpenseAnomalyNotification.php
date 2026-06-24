@@ -8,7 +8,6 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
-use ToneGabes\Filament\Icons\Enums\Phosphor;
 
 class FleetExpenseAnomalyNotification extends Notification implements ShouldQueue
 {
@@ -24,21 +23,21 @@ class FleetExpenseAnomalyNotification extends Notification implements ShouldQueu
     public function toMail($notifiable): MailMessage
     {
         $vehicle = $this->expense->vehicle;
-        $typeLabel = $this->expense->type->getLabel();
 
         return (new MailMessage)
             ->error()
-            ->subject("🚨 ALERTE FRAIS DE ROUTE : Usage suspect pour le véhicule {$vehicle->reference}")
+            ->subject("🚨 ALERTE FRAUDE : Frais de route suspect - {$vehicle->reference}")
             ->greeting('Bonjour,')
-            ->line("Une transaction suspecte de type **{$typeLabel}** a été enregistrée pour le véhicule **{$vehicle->brand} {$vehicle->model}** ({$vehicle->license_plate}).")
-            ->line('Détails financiers :')
-            ->line('- **Montant :** '.number_format($this->expense->amount_ttc, 2, ',', ' ').' € TTC')
-            ->line("- **Marchand / Lieu :** {$this->expense->merchant_name} (".($this->expense->description ?? 'Non précisé').')')
-            ->line("- **Date de transaction :** {$this->expense->spent_at->format('d/m/Y à H:i')}")
-            ->line("Motif de l'alerte :")
-            ->line("**{$this->expense->suspicion_reason}**")
-            ->action("Mener l'enquête", url("/chantiers/vehicles/{$vehicle->id}"))
-            ->line("Nous vous invitons à vérifier la cohérence de cette transaction avec l'activité réelle du collaborateur.");
+            ->line("Transaction suspecte détectée pour le véhicule **{$vehicle->brand} {$vehicle->model}** ({$vehicle->license_plate}).")
+            ->line('Détails :')
+            ->line('- **Montant :** '.number_format($this->expense->amount_ttc, 2, ',', ' ').'€ TTC')
+            ->line("- **Type :** {$this->expense->getTypeLabel()}")
+            ->line("- **Lieu :** {$this->expense->merchant_name}")
+            ->line("- **Date :** {$this->expense->spent_at->format('d/m/Y H:i')}")
+            ->line("**Motif de l'alerte :**")
+            ->line($this->expense->suspicion_reason)
+            ->action('Enquêter', url("/flottes/vehicles/{$vehicle->id}"))
+            ->line('Veuillez vérifier la cohérence avec l\'activité réelle.');
     }
 
     public function toDatabase($notifiable): array
@@ -60,10 +59,10 @@ class FleetExpenseAnomalyNotification extends Notification implements ShouldQueu
     {
         return [
             'title' => 'Alerte frais de route suspect',
-            'body' => 'Usage anormal détecté le '.$this->expense->spent_at->format('d/m/Y')." pour le véhicule {$this->expense->vehicle->license_plate}.",
-            'icon' => Phosphor::WarningOctagon,
+            'body' => 'Usage anormal détecté le '.$this->expense->spent_at->format('d/m/Y')." pour {$this->expense->vehicle->license_plate}.",
+            'icon' => 'heroicon-o-exclamation-triangle',
             'color' => 'danger',
-            'action_url' => "/chantiers/vehicles/{$this->expense->vehicle_id}",
+            'action_url' => "/flottes/vehicles/{$this->expense->vehicle_id}",
         ];
     }
 }

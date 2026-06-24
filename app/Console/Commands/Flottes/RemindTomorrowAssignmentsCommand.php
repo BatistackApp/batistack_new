@@ -10,48 +10,82 @@ use Illuminate\Console\Command;
 
 class RemindTomorrowAssignmentsCommand extends Command
 {
-    protected $signature = 'flottes:fleet-remind-assignments';
+    protected $signature = 'flottes:remind-assignments
+                            {--dry-run : Affiche affectations sans envoyer notifications}
+                            {--force : Force envoi sans confirmation}';
 
-    protected $description = 'Scanne et rappelle par notification les affectations de véhicules prévues pour le lendemain.';
+    protected $description = 'Rappelle par notification les affectations de demain aux conducteurs';
 
     public function handle(): int
     {
-        $this->info('Scan des affectations de demain...');
+        $this->info('=== Rappel Affectations Demain ===');
 
-        // Récupération des affectations débutant demain entre 00:00:00 et 23:59:59
         $tomorrow = Carbon::tomorrow();
         $assignments = VehicleAssignment::query()
-            ->where('status', AssignmentStatus::ACTIVE) // Ou PLANNED selon vos états
+            ->where('status', AssignmentStatus::ACTIVE)
             ->whereBetween('started_at', [
-                $tomorrow->startOfDay()->toDateTimeString(),
-                $tomorrow->endOfDay()->toDateTimeString(),
+                $tomorrow->startOfDay(),
+                $tomorrow->endOfDay(),
             ])
             ->with(['employee', 'vehicle', 'chantier'])
             ->get();
 
         if ($assignments->isEmpty()) {
-            $this->info('Aucune affectation de véhicule planifiée pour demain.');
+            $this->info('✓ Aucune affectation prévue pour demain');
 
-            return Command::SUCCESS;
+            return self::SUCCESS;
         }
 
+        $this->line("📅 Affectations trouvées : <fg=cyan>{$assignments->count()}</fg=cyan>");
+        $this->newLine();
+
+        // Affichage preview
+        foreach ($assignments as $assignment) {
+            $this->line("  • {$assignment->vehicle->license_plate} → {$assignment->employee->getFullName()}");
+            $this->line("    Début : {$assignment->started_at->format('d/m/Y H:i')}");
+            if ($assignment->chantier) {
+                $this->line("    Chantier : {$assignment->chantier->reference}");
+            }
+            $this->newLine();
+        }
+
+        // Mode dry-run
+        if ($this->option('dry-run')) {
+            $this->info('✓ Mode dry-run : aucune notification envoyée');
+
+            return self::SUCCESS;
+        }
+
+        // Confirmation
+        if (! $this->option('force')) {
+            if (! $this->confirm("Envoyer {$assignments->count()} rappels?", true)) {
+                $this->line('Annulé');
+
+                return self::SUCCESS;
+            }
+        }
+
+        // Envoi notifications
         $bar = $this->output->createProgressBar($assignments->count());
         $bar->start();
 
+        $sentCount = 0;
         foreach ($assignments as $assignment) {
-            $employee = $assignment->employee;
-
-            if ($employee) {
-                // Envoi de la notification asynchrone (implémente ShouldQueue)
-                $employee->notify(new VehicleAssignmentStartingNotification($assignment));
+            try {
+                if ($assignment->employee) {
+                    $assignment->employee->notify(new VehicleAssignmentStartingNotification($assignment));
+                    $sentCount++;
+                }
+            } catch (\Exception $e) {
+                $this->error("  ✗ Erreur {$assignment->employee->getFullName()}: {$e->getMessage()}");
             }
             $bar->advance();
         }
 
         $bar->finish();
         $this->newLine();
-        $this->info("Rappels d'affectation envoyés avec succès.");
+        $this->info("✅ {$sentCount} rappels envoyés avec succès");
 
-        return Command::SUCCESS;
+        return self::SUCCESS;
     }
 }

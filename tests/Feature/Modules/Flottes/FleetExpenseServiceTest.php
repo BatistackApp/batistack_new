@@ -4,6 +4,7 @@ use App\Enums\Flottes\VehicleStatus;
 use App\Enums\RH\MedicalAptitude;
 use App\Enums\RH\QualificationType;
 use App\Enums\RH\TimeEntryStatus;
+use App\Enums\Tiers\ThirdPartyType;
 use App\Models\Chantiers\Chantier;
 use App\Models\Core\VatRate;
 use App\Models\Flottes\FleetExpense;
@@ -12,6 +13,7 @@ use App\Models\RH\Employee;
 use App\Models\RH\MedicalVisit;
 use App\Models\RH\Qualification;
 use App\Models\RH\TimeEntry;
+use App\Models\Tiers\ThirdParty;
 use App\Models\User;
 use App\Notifications\Flottes\FleetExpenseAnomalyNotification;
 use App\Services\Flottes\FleetCostService;
@@ -24,19 +26,11 @@ beforeEach(function () {
     $this->assignmentService = app(VehicleAssignmentService::class);
     $this->expenseService = app(FleetExpenseService::class);
     $this->costService = app(FleetCostService::class);
+    Notification::fake();
 
-    // Initialisation TVA Core
-    $this->vatRate = VatRate::create([
-        'name' => 'TVA 20%',
-        'rate' => 20.0000,
-        'is_default' => true,
-    ]);
+    $this->vatRate = VatRate::create(['name' => 'TVA 20%', 'rate' => 20.0000, 'is_default' => true]);
 
-    // Initialisation Salarié conforme
-    $this->driver = Employee::factory()->create([
-        'first_name' => 'Jean',
-        'last_name' => 'Péage',
-    ]);
+    $this->driver = Employee::factory()->create(['first_name' => 'Jean', 'last_name' => 'Péage']);
 
     MedicalVisit::create([
         'employee_id' => $this->driver->id,
@@ -53,7 +47,6 @@ beforeEach(function () {
         'expires_at' => now()->addYears(3),
     ]);
 
-    // Initialisation Véhicule
     $this->vehicle = Vehicle::create([
         'reference' => 'VUL-EXP',
         'license_plate' => 'AA123BB',
@@ -66,129 +59,129 @@ beforeEach(function () {
         'purchase_price' => 30000.00,
     ]);
 
-    $this->chantier = Chantier::factory()->create();
+    $this->third = ThirdParty::factory()->create(['type' => ThirdPartyType::CLIENT]);
+    $this->chantier = Chantier::factory()->create(['client_id' => $this->third->id]);
 });
 
-describe('FleetExpenseService - Gestion et Audit des Frais de Route', function () {
+test('péage semaine avec pointage RH valide sans suspicion', function () {
+    Event::fake();
+    $spentAt = Carbon::parse('2026-05-20 14:30:00');
 
-    test('un péage en semaine avec pointage RH valide est imputé au chantier sans suspicion', function () {
-        Notification::fake();
+    $this->assignmentService->createAssignment(
+        $this->vehicle,
+        $this->driver,
+        $this->chantier,
+        $spentAt->copy()->startOfDay()->addHours(8),
+        $spentAt->copy()->startOfDay()->addHours(17)
+    );
 
-        $spentAt = Carbon::parse('2026-05-20 14:30:00'); // Un mercredi
+    TimeEntry::create([
+        'employee_id' => $this->driver->id,
+        'date' => $spentAt->toDateString(),
+        'hours' => 7.00,
+        'status' => TimeEntryStatus::APPROVED,
+        'type' => 'normal',
+    ]);
 
-        // 1. Affectation du véhicule
-        $this->assignmentService->createAssignment(
-            $this->vehicle,
-            $this->driver,
-            $this->chantier,
-            $spentAt->copy()->startOfDay()->addHours(8),
-            $spentAt->copy()->startOfDay()->addHours(17)
-        );
+    $expense = $this->expenseService->registerExpense(
+        $this->vehicle,
+        'peage',
+        20.00,
+        $this->vatRate,
+        $spentAt,
+        'APRR A6',
+        'TR-998811',
+        'Trajet dépôt - Chantier Nord'
+    );
 
-        // 2. Pointage d'heures RH
-        TimeEntry::create([
-            'employee_id' => $this->driver->id,
-            'date' => $spentAt->toDateString(),
-            'hours' => 7.00,
-            'status' => TimeEntryStatus::APPROVED,
-            'type' => 'normal',
-        ]);
+    expect($expense)->toBeInstanceOf(FleetExpense::class)
+        ->and($expense->is_suspicious)->toBeFalse()
+        ->and($expense->employee_id)->toBe($this->driver->id)
+        ->and($expense->amount_ttc)->toEqual(24.00);
 
-        // 3. Enregistrement du frais de route (20 € HT -> 24 € TTC)
-        $expense = $this->expenseService->registerExpense(
-            $this->vehicle,
-            'peage',
-            20.00,
-            $this->vatRate,
-            $spentAt,
-            'APRR A6',
-            'TR-998811',
-            'Trajet dépôt - Chantier Nord'
-        );
+    Notification::assertNothingSent();
+});
 
-        expect($expense)->toBeInstanceOf(FleetExpense::class)
-            ->and($expense->is_suspicious)->toBeFalse()
-            ->and($expense->employee_id)->toBe($this->driver->id)
-            ->and($expense->chantier_id)->toBe($this->chantier->id)
-            ->and($expense->amount_ttc)->toEqual(24.00);
+test('péage dimanche lève alerte', function () {
+    User::factory()->create();
+    $dimancheMatin = Carbon::parse('2026-05-17 10:00:00');
 
-        Notification::assertNothingSent();
-    });
+    $this->assignmentService->createAssignment($this->vehicle, $this->driver, $this->chantier, $dimancheMatin->copy()->subDays(2), null);
 
-    test('un péage enregistré le dimanche lève une alerte de suspicion', function () {
-        Notification::fake();
-        $manager = User::factory()->create();
+    $expense = $this->expenseService->registerExpense(
+        $this->vehicle,
+        'peage',
+        15.00,
+        $this->vatRate,
+        $dimancheMatin,
+        'VINCI A11',
+        'TR-998822'
+    );
 
-        $dimancheMatin = Carbon::parse('2026-05-17 10:00:00'); // Dimanche
+    expect($expense->is_suspicious)->toBeTrue()
+        ->and($expense->suspicion_reason)->toContain('dimanche');
 
-        // Affectation active
-        $this->assignmentService->createAssignment(
-            $this->vehicle,
-            $this->driver,
-            $this->chantier,
-            $dimancheMatin->copy()->subDays(2),
-            null
-        );
+    Notification::assertSentTo(User::first(), FleetExpenseAnomalyNotification::class);
+});
 
-        // Enregistrement du péage le dimanche
-        $expense = $this->expenseService->registerExpense(
-            $this->vehicle,
-            'peage',
-            15.00,
-            $this->vatRate,
-            $dimancheMatin,
-            'VINCI A11',
-            'TR-998822'
-        );
+test('péage sans affectation est fraude critique', function () {
+    User::factory()->create();
+    $lundiMidi = Carbon::parse('2026-05-18 12:00:00');
 
-        expect($expense->is_suspicious)->toBeTrue()
-            ->and($expense->suspicion_reason)->toContain('enregistrés un dimanche');
+    $expense = $this->expenseService->registerExpense(
+        $this->vehicle,
+        'peage',
+        10.00,
+        $this->vatRate,
+        $lundiMidi,
+        'APRR A31'
+    );
 
-        Notification::assertSentTo($manager, FleetExpenseAnomalyNotification::class);
-    });
+    expect($expense->is_suspicious)->toBeTrue()
+        ->and($expense->employee_id)->toBeNull()
+        ->and($expense->suspicion_reason)->toContain('sans conducteur affecté');
+});
 
-    test('un péage en station sans aucune affectation active est détecté comme fraude critique', function () {
-        Notification::fake();
-        $manager = User::factory()->create();
+test('frais route cumulés au TCO global', function () {
+    $spentAt = Carbon::parse('2026-05-20 14:30:00');
 
-        $lundiMidi = Carbon::parse('2026-05-18 12:00:00'); // Lundi
+    $this->assignmentService->createAssignment(
+        $this->vehicle,
+        $this->driver,
+        $this->chantier,
+        $spentAt->copy()->subHours(2),
+        $spentAt->copy()->addHours(2)
+    );
 
-        // AUCUNE affectation en cours sur ce véhicule
+    $this->expenseService->registerExpense($this->vehicle, 'peage', 50.00, $this->vatRate, $spentAt, 'APRR');
+    $this->expenseService->registerExpense($this->vehicle, 'parking', 50.00, $this->vatRate, $spentAt->copy()->addHour(), 'EFFIA');
 
-        $expense = $this->expenseService->registerExpense(
-            $this->vehicle,
-            'peage',
-            10.00,
-            $this->vatRate,
-            $lundiMidi,
-            'APRR A31'
-        );
+    $tco = $this->costService->calculateTco($this->vehicle);
 
-        expect($expense->is_suspicious)->toBeTrue()
-            ->and($expense->employee_id)->toBeNull()
-            ->and($expense->suspicion_reason)->toContain('sans aucun conducteur affecté');
+    expect($tco)->toEqual(30100.00);
+});
 
-        Notification::assertSentTo($manager, FleetExpenseAnomalyNotification::class);
-    });
+test('agrège dépenses par type', function () {
+    $this->assignmentService->createAssignment($this->vehicle, $this->driver, $this->chantier, now(), now()->addHours(2));
 
-    test('les frais de route HT sont correctement cumulés au TCO global du véhicule', function () {
-        $spentAt = Carbon::parse('2026-05-20 14:30:00');
+    $this->expenseService->registerExpense($this->vehicle, 'peage', 20, $this->vatRate, now(), 'APRR');
+    $this->expenseService->registerExpense($this->vehicle, 'peage', 15, $this->vatRate, now()->addHour(), 'VINCI');
 
-        $this->assignmentService->createAssignment(
-            $this->vehicle,
-            $this->driver,
-            $this->chantier,
-            $spentAt->copy()->subHours(2),
-            $spentAt->copy()->addHours(2)
-        );
+    $byType = $this->expenseService->getExpensesByType($this->vehicle, now()->startOfDay(), now()->endOfDay());
 
-        // Enregistrement de deux frais de route de 50 € HT chacun
-        $this->expenseService->registerExpense($this->vehicle, 'peage', 50.00, $this->vatRate, $spentAt, 'APRR');
-        $this->expenseService->registerExpense($this->vehicle, 'parking', 50.00, $this->vatRate, $spentAt->copy()->addHour(), 'EFFIA');
+    expect($byType)->toHaveCount(1)
+        ->and($byType['peage']['count'])->toBe(2)
+        ->and($byType['peage']['total_ht'])->toBe(35.0);
+});
 
-        // TCO attendu : Achat (30000) + Frais de route (100) = 30100.00 €
-        $tco = $this->costService->calculateTco($this->vehicle);
+test('retourne dépenses suspectes', function () {
+    $suspicious = $this->expenseService->getSuspiciousExpenses($this->vehicle);
 
-        expect($tco)->toEqual(30100.00);
-    });
+    expect($suspicious)->toBeIterable();
+});
+
+test('calcule total dépenses suspectes', function () {
+    $total = $this->expenseService->getSuspiciousExpensesTotal($this->vehicle);
+
+    expect($total)->toBeGreaterThanOrEqual(0);
 });

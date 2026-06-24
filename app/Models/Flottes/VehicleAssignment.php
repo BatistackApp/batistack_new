@@ -7,6 +7,7 @@ use App\Models\Chantiers\Chantier;
 use App\Models\RH\Employee;
 use App\Observers\Flottes\VehicleAssignmentObserver;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -63,5 +64,147 @@ class VehicleAssignment extends Model
             'end_odometer' => 'decimal:2',
             'status' => AssignmentStatus::class,
         ];
+    }
+
+    // ============ SCOPES ============
+
+    public function scopeActive(Builder $query): Builder
+    {
+        return $query->where('status', AssignmentStatus::ACTIVE);
+    }
+
+    public function scopeCompleted(Builder $query): Builder
+    {
+        return $query->where('status', AssignmentStatus::COMPLETED);
+    }
+
+    public function scopeCancelled(Builder $query): Builder
+    {
+        return $query->where('status', AssignmentStatus::CANCELLED);
+    }
+
+    public function scopeByStatus(Builder $query, AssignmentStatus $status): Builder
+    {
+        return $query->where('status', $status);
+    }
+
+    public function scopeByVehicle(Builder $query, int $vehicleId): Builder
+    {
+        return $query->where('vehicle_id', $vehicleId);
+    }
+
+    public function scopeByEmployee(Builder $query, int $employeeId): Builder
+    {
+        return $query->where('employee_id', $employeeId);
+    }
+
+    public function scopeByChantier(Builder $query, int $chantierId): Builder
+    {
+        return $query->where('chantier_id', $chantierId);
+    }
+
+    public function scopeRecent(Builder $query): Builder
+    {
+        return $query->orderByDesc('started_at');
+    }
+
+    public function scopeBetweenDates(Builder $query, \DateTime $from, \DateTime $to): Builder
+    {
+        return $query->whereBetween('started_at', [$from, $to]);
+    }
+
+    public function scopeWithPassengers(Builder $query): Builder
+    {
+        return $query->with('passengers');
+    }
+
+    public function scopeThisMonth(Builder $query): Builder
+    {
+        return $query->whereBetween('started_at', [now()->startOfMonth(), now()->endOfMonth()]);
+    }
+
+    // ============ METHODS ============
+
+    public function getDistance(): float
+    {
+        if (! $this->end_odometer) {
+            return 0;
+        }
+
+        return (float) $this->end_odometer - (float) $this->start_odometer;
+    }
+
+    public function getDurationInHours(): ?float
+    {
+        if (! $this->ended_at || ! $this->started_at) {
+            return null;
+        }
+
+        return (float) $this->started_at->diffInHours($this->ended_at);
+    }
+
+    public function getCost(): float
+    {
+        $distance = $this->getDistance();
+        $duration = $this->getDurationInHours() ?? 0;
+
+        return ($this->vehicle->daily_rate * ceil($duration / 24)) +
+            ($distance * $this->vehicle->km_rate);
+    }
+
+    public function isActive(): bool
+    {
+        return $this->status === AssignmentStatus::ACTIVE;
+    }
+
+    public function isCompleted(): bool
+    {
+        return $this->status === AssignmentStatus::COMPLETED;
+    }
+
+    public function isCancelled(): bool
+    {
+        return $this->status === AssignmentStatus::CANCELLED;
+    }
+
+    public function isOverdue(): bool
+    {
+        if (! $this->ended_at || $this->status !== AssignmentStatus::ACTIVE) {
+            return false;
+        }
+
+        return now()->gt($this->ended_at->addHours(2));
+    }
+
+    public function getPassengerCount(): int
+    {
+        return $this->passengers()->count();
+    }
+
+    public function getDisplayName(): string
+    {
+        return "{$this->vehicle->getDisplayName()} - {$this->employee->getFullName()}";
+    }
+
+    public function calculateEstimatedCost(): float
+    {
+        return $this->getCost();
+    }
+
+    public function addPassenger(Employee $employee): void
+    {
+        if (! $this->passengers()->where('employee_id', $employee->id)->exists()) {
+            $this->passengers()->attach($employee->id);
+        }
+    }
+
+    public function removePassenger(Employee $employee): void
+    {
+        $this->passengers()->detach($employee->id);
+    }
+
+    public function hasPassenger(Employee $employee): bool
+    {
+        return $this->passengers()->where('employee_id', $employee->id)->exists();
     }
 }

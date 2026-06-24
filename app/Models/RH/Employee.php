@@ -6,6 +6,7 @@ use App\Models\Chantiers\Chantier;
 use App\Models\User;
 use App\Observers\RH\EmployeeObserver;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -90,13 +91,168 @@ class Employee extends Model implements HasMedia
         return $this->belongsToMany(Chantier::class, 'chantier_members');
     }
 
-    public function getFullNameAttribute(): string
+    // ============================================
+    // SCOPES
+    // ============================================
+
+    public function scopeActive(Builder $query): Builder
+    {
+        return $query->where('is_active', true);
+    }
+
+    public function scopeInactive(Builder $query): Builder
+    {
+        return $query->where('is_active', false);
+    }
+
+    public function scopeSearch(Builder $query, string $term): Builder
+    {
+        return $query->where('first_name', 'like', "%{$term}%")
+            ->orWhere('last_name', 'like', "%{$term}%")
+            ->orWhere('email', 'like', "%{$term}%")
+            ->orWhere('registration_number', 'like', "%{$term}%");
+    }
+
+    public function scopeByRegistrationNumber(Builder $query, string $number): Builder
+    {
+        return $query->where('registration_number', $number);
+    }
+
+    public function scopeByEmail(Builder $query, string $email): Builder
+    {
+        return $query->where('email', $email);
+    }
+
+    public function scopeRecent(Builder $query, int $days = 30): Builder
+    {
+        return $query->where('created_at', '>=', now()->subDays($days));
+    }
+
+    public function scopeOrderByName(Builder $query, string $direction = 'asc'): Builder
+    {
+        return $query->orderBy('last_name', $direction)
+            ->orderBy('first_name', $direction);
+    }
+
+    public function scopeWithContract(Builder $query): Builder
+    {
+        return $query->whereHas('currentContract');
+    }
+
+    public function scopeWithoutContract(Builder $query): Builder
+    {
+        return $query->whereDoesntHave('currentContract');
+    }
+
+    // ============================================
+    // METHODS MÉTIER
+    // ============================================
+
+    public function isActive(): bool
+    {
+        return $this->is_active;
+    }
+
+    public function isInactive(): bool
+    {
+        return !$this->is_active;
+    }
+
+    public function getFullName(): string
     {
         return "{$this->first_name} {$this->last_name}";
     }
 
-    public function getFullAddressAttribute(): string
+    public function getFullAddress(): string
     {
         return "{$this->address} {$this->postal_code} {$this->city}";
+    }
+
+    public function getAge(): ?int
+    {
+        if (!$this->birth_date) {
+            return null;
+        }
+
+        return $this->birth_date->age;
+    }
+
+    public function hasCurrentContract(): bool
+    {
+        return $this->currentContract()->exists();
+    }
+
+    public function getCurrentContractType(): ?string
+    {
+        return $this->currentContract?->contract_type;
+    }
+
+    public function getHoursWorkedToday(): float
+    {
+        return $this->timeEntries()
+            ->whereDate('date', today())
+            ->sum('hours') ?? 0;
+    }
+
+    public function getHoursWorkedThisMonth(): float
+    {
+        return $this->timeEntries()
+            ->whereYear('date', now()->year)
+            ->whereMonth('date', now()->month)
+            ->sum('hours') ?? 0;
+    }
+
+    public function getAbsencesThisMonth(): int
+    {
+        return $this->absences()
+            ->whereYear('start_date', now()->year)
+            ->whereMonth('start_date', now()->month)
+            ->count();
+    }
+
+    public function hasQualifications(): bool
+    {
+        return $this->qualifications()->exists();
+    }
+
+    public function getQualificationCount(): int
+    {
+        return $this->qualifications()->count();
+    }
+
+    public function needsMedicalVisit(): bool
+    {
+        // Check if last medical visit is older than 1 year
+        $lastVisit = $this->medicalVisits()->latest()->first();
+        return !$lastVisit || $lastVisit->created_at < now()->subYear();
+    }
+
+    public function getEquipementCount(): int
+    {
+        return $this->equipements()->count();
+    }
+
+    public static function byRegistration(string $number): ?self
+    {
+        return static::where('registration_number', $number)->first();
+    }
+
+    public static function byEmail(string $email): ?self
+    {
+        return static::where('email', $email)->first();
+    }
+
+    // ============================================
+    // ATTRIBUTES
+    // ============================================
+
+    public function getFullNameAttribute(): string
+    {
+        return $this->getFullName();
+    }
+
+    public function getFullAddressAttribute(): string
+    {
+        return $this->getFullAddress();
     }
 }

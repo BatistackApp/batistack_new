@@ -13,81 +13,86 @@ use Illuminate\Support\Facades\Storage;
 class FleetSupervisorCommand extends Command
 {
     protected $signature = 'flottes:fleet-supervisor
-                            {--alerts : Exécute uniquement les scans d\'échéances de contrats et de révisions}
-                            {--overdue : Détecte uniquement les retards de restitution de véhicules}
-                            {--import-fuel= : Chemin d\'accès relatif au disque local vers le fichier CSV de transactions carburant}';
+                            {--alerts : Scans conformité + contrats + révisions}
+                            {--overdue : Détecte retards restitution}
+                            {--import-fuel= : CSV carburant (chemin relatif)}
+                            {--all : Force exécution complète}';
 
-    protected $description = 'Orchestrateur de conformité réglementaire, de suivi de maintenance et d\'import d\'énergies pour le parc de véhicules.';
+    protected $description = 'Orchestrateur compliance flotte : contrats, maintenance, retards, imports carburant';
 
     public function handle(): int
     {
-        $this->info('--- Tour de contrôle de la Flotte Batistack ---');
+        $this->info('=== Supervision Flotte Batistack ===');
+        $this->newLine();
 
         $alertsOnly = $this->option('alerts');
         $overdueOnly = $this->option('overdue');
         $fuelPath = $this->option('import-fuel');
+        $all = $this->option('all');
 
-        // Cas 1 : Importation de carte carburant
+        // Priorité: import carburant
         if ($fuelPath) {
             return $this->handleFuelImport($fuelPath);
         }
 
-        // Cas 2 : Filtres ciblés ou exécution complète
-        if ($alertsOnly) {
+        // Filtres ou exécution complète
+        if ($all || (! $alertsOnly && ! $overdueOnly)) {
             $this->scanAlerts();
-
-            return self::SUCCESS;
-        }
-
-        if ($overdueOnly) {
+            $this->newLine();
             $this->scanOverdue();
-
-            return self::SUCCESS;
+            $this->newLine();
+        } elseif ($alertsOnly) {
+            $this->scanAlerts();
+        } elseif ($overdueOnly) {
+            $this->scanOverdue();
         }
 
-        // Exécution globale par défaut
-        $this->scanAlerts();
-        $this->newLine();
-        $this->scanOverdue();
+        $this->info('✅ Supervision complétée avec succès.');
 
-        $this->info('Supervision de la flotte terminée avec succès.');
-
-        return self::SUCCESS;
+        return Command::SUCCESS;
     }
 
     /**
-     * Déclenche les scans de vigilance et de maintenance.
+     * Scans conformité et maintenance.
      */
     protected function scanAlerts(): void
     {
-        $this->line('1. Lancement du scan de conformité et des échéances de contrats...');
+        $this->line('📋 <fg=cyan>Scan Conformité & Contrats</fg=cyan>');
+        $this->line('  → Vérification contrats expiration -30j');
+        $this->line('  → Polices assurance/leasing/autres');
         CheckExpiringContractsJob::dispatch();
-        $this->info('   -> Job de vérification des contrats (Assurances/Leasing) envoyé en file d\'attente.');
+        $this->info('  ✓ Job envoyé en queue');
 
-        $this->line('2. Vérification des jalons de révision kilométrique (milestones)...');
+        $this->newLine();
+        $this->line('🔧 <fg=cyan>Scan Maintenance Préventive</fg=cyan>');
+        $this->line('  → Véhicules dépassant seuil KM (20 000km)');
+        $this->line('  → Alertes révision imminente');
         CheckVehicleMaintenanceMilestonesJob::dispatch();
-        $this->info('   -> Job d\'analyse préventive des odomètres envoyé en file d\'attente.');
+        $this->info('  ✓ Job envoyé en queue');
     }
 
     /**
-     * Détecte les anomalies de restitution terrain.
+     * Détecte retards restitution.
      */
     protected function scanOverdue(): void
     {
-        $this->line('3. Analyse des affectations actives et détection des dépassements d\'horaires...');
+        $this->line('🕒 <fg=cyan>Scan Retards Restitution</fg=cyan>');
+        $this->line('  → Affectations dépassant délai +2h');
+        $this->line('  → Véhicules bloqués > 24h sans clôture');
         DetectOverdueAssignmentsJob::dispatch();
-        $this->info('   -> Job de contrôle de restitution de véhicules envoyé en file d\'attente.');
+        $this->info('  ✓ Job envoyé en queue');
     }
 
     /**
-     * Parse un fichier CSV externe et déclenche l'importation asynchrone sécurisée.
+     * Import CSV carburant externe.
      */
     protected function handleFuelImport(string $relativePath): int
     {
-        $this->line("Préparation de l'importation du fichier carburant : {$relativePath}...");
+        $this->line('⛽ <fg=cyan>Import Carburant</fg=cyan>');
+        $this->line("   Chemin : storage/app/{$relativePath}");
 
         if (! Storage::disk('local')->exists($relativePath)) {
-            $this->error("Fichier introuvable sur le disque local : storage/app/{$relativePath}");
+            $this->error("❌ Fichier introuvable : storage/app/{$relativePath}");
 
             return self::FAILURE;
         }
@@ -96,41 +101,57 @@ class FleetSupervisorCommand extends Command
             $filePath = Storage::disk('local')->path($relativePath);
             $file = fopen($filePath, 'r');
 
-            $headers = fgetcsv($file, 1000, ';'); // Séparateur point-virgule standard d'export comptable
+            if (! $file) {
+                throw new Exception("Impossible d'ouvrir le fichier");
+            }
+
+            $headers = fgetcsv($file, 1000, ';');
+            if (! $headers) {
+                throw new Exception('Fichier vide ou en-têtes manquants');
+            }
+
             $transactions = [];
+            $rowCount = 0;
 
             while (($row = fgetcsv($file, 1000, ';')) !== false) {
-                // Mapping dynamique simple (license_plate;liters;cost_ht;odometer;date)
                 $data = array_combine($headers, $row);
 
+                if (! $data || empty($data['license_plate'])) {
+                    continue;
+                }
+
                 $transactions[] = [
-                    'license_plate' => $data['license_plate'] ?? null,
+                    'license_plate' => trim($data['license_plate'] ?? ''),
                     'liters' => (float) ($data['liters'] ?? 0),
                     'cost_ht' => (float) ($data['cost_ht'] ?? 0),
                     'odometer' => (float) ($data['odometer'] ?? 0),
                     'date' => $data['date'] ?? now()->toDateTimeString(),
+                    'station_name' => $data['station_name'] ?? 'Import CSV',
                 ];
+
+                $rowCount++;
             }
 
             fclose($file);
 
             if (empty($transactions)) {
-                $this->warn('Le fichier importé ne contient aucune transaction valide.');
+                $this->warn('⚠️ Aucune transaction valide trouvée');
 
                 return self::SUCCESS;
             }
 
-            $this->line('Envoi du lot de '.count($transactions).' transactions au validateur asynchrone...');
+            $this->line("📊 Transactions à traiter : <fg=green>{$rowCount}</fg=green>");
 
-            // Dispatch du Job asynchrone que vous aviez sélectionné dans le Canvas
+            // Dispatch asynchrone
             ProcessExternalFuelCardImportJob::dispatch($transactions);
 
-            $this->info('Importation initiée ! Le moteur de détection des fraudes analyse actuellement le lot en tâche de fond.');
+            $this->info('✅ Importation initiée - Analyse fraude en cours');
+            $this->line('   Moteur détection: Consommation aberrante / Odomètre incohérent / Prix suspect');
 
             return self::SUCCESS;
 
         } catch (Exception $e) {
-            $this->error('Erreur critique lors de la lecture du fichier : '.$e->getMessage());
+            $this->error("❌ Erreur import : {$e->getMessage()}");
 
             return self::FAILURE;
         }

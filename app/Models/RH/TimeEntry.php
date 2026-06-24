@@ -8,6 +8,7 @@ use App\Models\Chantiers\Chantier;
 use App\Models\User;
 use App\Observers\RH\TimeEntryObserver;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -51,5 +52,51 @@ class TimeEntry extends Model
             'approved_at' => 'datetime',
             'travel_hours' => 'decimal:2',
         ];
+    }
+
+    // SCOPES
+    public function scopeByEmployee(Builder $query, Employee $employee): Builder
+    {
+        return $query->where('employee_id', $employee->id);
+    }
+
+    public function scopeByDate(Builder $query, $date): Builder
+    {
+        return $query->whereDate('date', $date);
+    }
+
+    public function scopeBetweenDates(Builder $query, $from, $to): Builder
+    {
+        return $query->whereDate('date', '>=', $from)
+            ->whereDate('date', '<=', $to);
+    }
+
+    public function scopeThisMonth(Builder $query): Builder
+    {
+        return $query->whereYear('date', now()->year)
+            ->whereMonth('date', now()->month);
+    }
+
+    public function scopeThisYear(Builder $query): Builder
+    {
+        return $query->whereYear('date', now()->year);
+    }
+
+    public function scopeOrderByDate(Builder $query, string $direction = 'desc'): Builder
+    {
+        return $query->orderBy('date', $direction);
+    }
+
+    // METHODS
+    public function getHours(): float
+    {
+        return (float) $this->hours;
+    }
+
+    public static function totalForEmployee(Employee $employee, $from, $to): float
+    {
+        return static::byEmployee($employee)
+            ->betweenDates($from, $to)
+            ->sum('hours') ?? 0;
     }
 }

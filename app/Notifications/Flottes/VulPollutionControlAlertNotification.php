@@ -26,7 +26,6 @@ class VulPollutionControlAlertNotification extends Notification implements Shoul
         $dueDate = $this->vehicle->pollution_control_due_at->format('d/m/Y');
 
         return (new MailMessage)
-            ->warning()
             ->subject("🔧 CONFORMITÉ VUL : Contrôle pollution requis - {$this->vehicle->reference}")
             ->greeting('Bonjour,')
             ->line("Le véhicule utilitaire léger **{$this->vehicle->brand} {$this->vehicle->model}** immatriculé **{$this->vehicle->license_plate}** est soumis au contrôle pollution annuel obligatoire.")

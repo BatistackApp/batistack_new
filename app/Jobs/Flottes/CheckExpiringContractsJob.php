@@ -22,15 +22,15 @@ class CheckExpiringContractsJob implements ShouldQueue
 
     public function handle(VehicleAlertService $alertService): void
     {
-        $managers = User::all(); // À filtrer par rôle 'fleet_manager'
+        $managers = User::where('is_admin', true)->get();
 
-        // 1. Scan des contrats arrivant à échéance sous 30 jours
+        // Scan contrats expirant dans 30 jours
         $expiringContracts = $alertService->getExpiringContracts(30);
         foreach ($expiringContracts as $contract) {
             Notification::send($managers, new ContractExpiringNotification($contract));
         }
 
-        // 2. Scan réglementaire des Utilitaires (VUL) - Contrôle pollution annuel à J-30
+        // Scan VUL - Contrôle pollution
         $vulAlerts = Vehicle::query()
             ->where('type', VehicleType::UTILITY)
             ->where('pollution_control_due_at', '<=', now()->addDays(30))
@@ -39,9 +39,16 @@ class CheckExpiringContractsJob implements ShouldQueue
 
         foreach ($vulAlerts as $vehicle) {
             Notification::send($managers, new VulPollutionControlAlertNotification($vehicle));
-            Log::info("Alerte VUL Pollution : Le véhicule utilitaire {$vehicle->license_plate} a une visite pollution planifiée sous 30 jours.");
+            Log::info("Alerte VUL : {$vehicle->reference} contrôle pollution dans 30 jours");
         }
 
-        Log::info('Scan de conformité administrative Flotte terminé : '.($expiringContracts->count() + $vulAlerts->count()).' alertes générées.');
+        // Scan contrats déjà expirés
+        $expiredContracts = $alertService->getExpiredContracts();
+        foreach ($expiredContracts as $contract) {
+            Notification::send($managers, new ContractExpiringNotification($contract));
+            Log::warning("Contrat EXPIRÉ : {$contract->vehicle->reference} - {$contract->type}");
+        }
+
+        Log::info('Scan conformité : '.($expiringContracts->count() + $vulAlerts->count() + $expiredContracts->count()).' alertes');
     }
 }

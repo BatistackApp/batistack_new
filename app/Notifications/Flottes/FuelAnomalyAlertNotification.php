@@ -25,13 +25,13 @@ class FuelAnomalyAlertNotification extends Notification implements ShouldQueue
     {
         return (new MailMessage)
             ->error()
-            ->subject("🚨 ALERTE CARBURANT : Anomalie sur le véhicule {$this->vehicle->reference}")
-            ->greeting("Détection d'Anomalie Énergétique")
-            ->line("Le moteur d'analyse des cartes carburant a détecté une anomalie de consommation pour le véhicule **{$this->vehicle->brand} {$this->vehicle->model}** ({$this->vehicle->license_plate}).")
-            ->line("Message d'alerte du système :")
-            ->line("**{$this->anomalyMessage}**")
-            ->action("Analyser l'actif", url("/chantiers/vehicles/{$this->vehicle->id}"))
-            ->line("Cette alerte automatique peut être due à un siphonnage de réservoir sur chantier, un usage personnel non autorisé ou une erreur de saisie d'odomètre par le conducteur en station. Veuillez mener une investigation.");
+            ->subject("🚨 ALERTE CARBURANT : Anomalie - {$this->vehicle->reference}")
+            ->greeting('Détection Anomalie Énergétique')
+            ->line("Anomalie de consommation pour **{$this->vehicle->brand} {$this->vehicle->model}** ({$this->vehicle->license_plate}).")
+            ->line('**Message système :**')
+            ->line($this->anomalyMessage)
+            ->action('Analyser', url("/flottes/vehicles/{$this->vehicle->id}"))
+            ->line('Possible siphonnage, usage personnel non autorisé ou erreur de saisie odomètre.');
     }
 
     public function toDatabase($notifiable): array
