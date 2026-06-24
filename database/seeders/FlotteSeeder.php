@@ -21,7 +21,7 @@ class FlotteSeeder extends Seeder
         $vat20 = VatRate::where('rate', 20)->first();
 
         // 2. Création de véhicules types
-        $util1 = Vehicle::create([
+        $util1 = Vehicle::factory()->create([
             'reference' => 'V-001',
             'license_plate' => 'EF-456-GH',
             'brand' => 'Renault',
@@ -36,7 +36,7 @@ class FlotteSeeder extends Seeder
             'purchase_price' => 32000.00,
         ]);
 
-        $util2 = Vehicle::create([
+        $util2 = Vehicle::factory()->create([
             'reference' => 'V-002',
             'license_plate' => 'JK-789-LM',
             'brand' => 'Peugeot',
@@ -52,7 +52,7 @@ class FlotteSeeder extends Seeder
         ]);
 
         // Voiture de Direction
-        $dir = Vehicle::create([
+        $dir = Vehicle::factory()->create([
             'reference' => 'V-DIR-01',
             'license_plate' => 'AB-123-CD',
             'brand' => 'Tesla',
@@ -68,7 +68,7 @@ class FlotteSeeder extends Seeder
         ]);
 
         // 3. Ajout de contrats d'assurances
-        VehicleContract::create([
+        VehicleContract::factory()->create([
             'vehicle_id' => $util1->id,
             'supplier_id' => $insurer->id,
             'type' => 'insurance',
@@ -77,7 +77,7 @@ class FlotteSeeder extends Seeder
             'annual_cost_ht' => 850.00,
         ]);
 
-        VehicleContract::create([
+        VehicleContract::factory()->create([
             'vehicle_id' => $dir->id,
             'supplier_id' => $insurer->id,
             'type' => 'insurance',

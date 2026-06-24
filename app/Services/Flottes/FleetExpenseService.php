@@ -163,7 +163,7 @@ class FleetExpenseService
     /**
      * Calcule les dépenses moyennes par jour d'utilisation.
      */
-    public function getAverageDailyExpense(Vehicle $vehicle, Carbon $from, Carbon $to): float
+    public function getAverageDailyExpense(Vehicle $vehicle, CarbonInterface $from, CarbonInterface $to): float
     {
         $totalExpenses = (float) $vehicle->expenses()
             ->whereBetween('spent_at', [$from, $to])
