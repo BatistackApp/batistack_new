@@ -60,3 +60,30 @@ test('refuse suppression amende transmise', function () {
 
     expect(fn () => $fine->delete())->toThrow(Exception::class);
 });
+
+test('refuse création amende avec montant nul ou négatif', function () {
+    expect(fn () => TrafficFine::create([
+        'vehicle_id' => $this->vehicle->id,
+        'reference' => 'PV-ERR',
+        'infraction_at' => now(),
+        'amount' => 0,
+    ]))->toThrow(Exception::class);
+});
+
+test('refuse création amende avec date future', function () {
+    expect(fn () => TrafficFine::create([
+        'vehicle_id' => $this->vehicle->id,
+        'reference' => 'PV-FUTURE',
+        'infraction_at' => now()->addDay(),
+        'amount' => 50,
+    ]))->toThrow(Exception::class);
+});
+
+test('refuse suppression amende payée', function () {
+    $fine = TrafficFine::factory()->create([
+        'status' => FineStatus::PAID,
+        'amount' => 50,
+    ]);
+
+    expect(fn () => $fine->delete())->toThrow(Exception::class);
+});

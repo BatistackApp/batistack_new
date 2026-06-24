@@ -42,3 +42,64 @@ test('permet suppression contrat expiré', function () {
 
     expect($contract->delete())->toEqual(1);
 });
+
+test('refuse création contrat avec date fin avant début', function () {
+    $vehicle = Vehicle::factory()->create();
+    $supplier = ThirdParty::factory()->create();
+
+    expect(fn () => VehicleContract::create([
+        'vehicle_id' => $vehicle->id,
+        'supplier_id' => $supplier->id,
+        'type' => 'leasing',
+        'policy_number' => 'ERR-DATE',
+        'start_date' => now()->addMonth(),
+        'end_date' => now(),
+        'annual_cost_ht' => 1000,
+    ]))->toThrow(Exception::class);
+});
+
+test('refuse création contrat avec coût annuel négatif', function () {
+    $vehicle = Vehicle::factory()->create();
+    $supplier = ThirdParty::factory()->create();
+
+    expect(fn () => VehicleContract::create([
+        'vehicle_id' => $vehicle->id,
+        'supplier_id' => $supplier->id,
+        'type' => 'insurance',
+        'policy_number' => 'ERR-COST',
+        'start_date' => now(),
+        'end_date' => now()->addYear(),
+        'annual_cost_ht' => -500,
+    ]))->toThrow(Exception::class);
+});
+
+test('refuse création contrat sans fournisseur', function () {
+    $vehicle = Vehicle::factory()->create();
+
+    expect(fn () => VehicleContract::create([
+        'vehicle_id' => $vehicle->id,
+        'type' => 'insurance',
+        'policy_number' => 'ERR-SUPP',
+        'start_date' => now(),
+        'end_date' => now()->addYear(),
+        'annual_cost_ht' => 500,
+    ]))->toThrow(Exception::class);
+});
+
+test('dispatchera Job TCO lors de modification ou suppression', function () {
+    Bus::fake();
+
+    $contract = VehicleContract::factory()->create([
+        'annual_cost_ht' => 500,
+        'start_date' => now()->subYear(),
+        'end_date' => now()->subDay(),
+    ]);
+
+    // Test update
+    $contract->update(['annual_cost_ht' => 600]);
+    Bus::assertDispatched(RecalculateVehicleTcoJob::class);
+
+    // Test delete
+    $contract->delete();
+    Bus::assertDispatched(RecalculateVehicleTcoJob::class);
+});

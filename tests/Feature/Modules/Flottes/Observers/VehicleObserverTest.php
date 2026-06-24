@@ -94,3 +94,26 @@ test('refuse suppression avec affectations actives', function () {
 
     expect(fn () => $vehicle->delete())->toThrow(Exception::class);
 });
+
+test('enregistre changement odomètre en log', function () {
+    $vehicle = Vehicle::factory()->create(['odometer' => 10000]);
+    $vehicle->update(['odometer' => 12000]);
+
+    Log::shouldHaveReceived('info')->with('Odomètre mis à jour', Mockery::any());
+});
+
+test('enregistre log lors de suppression', function () {
+    $vehicle = Vehicle::factory()->create();
+    $vehicle->delete();
+
+    Log::shouldHaveReceived('warning')->with('Véhicule supprimé', Mockery::any());
+    Log::shouldHaveReceived('info')->with('Véhicule archivé', Mockery::any());
+});
+
+test('vérifie la normalisation de la plaque à la mise à jour', function () {
+    $vehicle = Vehicle::factory()->create(['license_plate' => 'aa-123-bb']);
+
+    $vehicle->update(['license_plate' => 'xx-456-yy']);
+
+    expect($vehicle->fresh()->license_plate)->toBe('XX456YY');
+});
