@@ -184,3 +184,41 @@ test('récupère inventaire à bord', function () {
     expect($inventory)->toHaveCount(1)
         ->and($inventory->first()->item->name)->toBe('Perforateur Burineur Hilti TE 70');
 });
+
+test('récupère les affectations actives', function () {
+    $this->assignmentService->createAssignment($this->vehicle, $this->employee, $this->chantier, now(), null);
+
+    $active = $this->assignmentService->getActiveAssignments();
+
+    expect($active)->toHaveCount(1);
+});
+
+test('récupère affectation active pour un véhicule', function () {
+    $this->assignmentService->createAssignment($this->vehicle, $this->employee, $this->chantier, now(), null);
+
+    $assignment = $this->assignmentService->getActiveAssignmentForVehicle($this->vehicle);
+
+    expect($assignment)->not()->toBeNull()
+        ->and($assignment->vehicle_id)->toBe($this->vehicle->id);
+});
+
+test('récupère les affectations complétées avec coûts', function () {
+    $assignment = $this->assignmentService->createAssignment($this->vehicle, $this->employee, $this->chantier, now()->subHours(2), null);
+    $this->assignmentService->endAssignment($assignment, now(), 12500.00);
+
+    $completed = $this->assignmentService->getCompletedAssignmentsWithCosts(now()->subDay(), now()->addDay());
+
+    expect($completed)->toHaveCount(1);
+});
+
+test('calcule les statistiques d\'utilisation', function () {
+    $assignment = $this->assignmentService->createAssignment($this->vehicle, $this->employee, $this->chantier, now()->subHours(5), null);
+    $this->assignmentService->endAssignment($assignment, now(), 13000.00);
+
+    $stats = $this->assignmentService->getUtilizationStatistics($this->vehicle);
+
+    expect($stats)->toBeArray()
+        ->and($stats['total_assignments'])->toBe(1)
+        ->and($stats['completed_assignments'])->toBe(1)
+        ->and($stats['total_distance'])->toBe(1000.0);
+});

@@ -68,3 +68,53 @@ test('refuse suppression maintenance récente', function () {
 
     expect(fn () => $maintenance->delete())->toThrow(Exception::class);
 });
+
+test('refuse création maintenance avec coût nul ou négatif', function () {
+    $vehicle = Vehicle::factory()->create();
+
+    expect(fn () => VehicleMaintenance::create([
+        'vehicle_id' => $vehicle->id,
+        'supplier_id' => ThirdParty::factory()->create()->id,
+        'vat_rate_id' => VatRate::factory()->create()->id,
+        'type' => 'Réparation',
+        'cost_ht' => 0,
+        'performed_at' => now(),
+    ]))->toThrow(Exception::class);
+});
+
+test('refuse création maintenance avec date future', function () {
+    $vehicle = Vehicle::factory()->create();
+
+    expect(fn () => VehicleMaintenance::create([
+        'vehicle_id' => $vehicle->id,
+        'supplier_id' => ThirdParty::factory()->create()->id,
+        'vat_rate_id' => VatRate::factory()->create()->id,
+        'type' => 'Révision',
+        'cost_ht' => 100,
+        'performed_at' => now()->addDay(),
+    ]))->toThrow(Exception::class);
+});
+
+test('notifie le conducteur actif de la maintenance', function () {
+    Notification::fake();
+    $vehicle = Vehicle::factory()->create();
+    $employee = \App\Models\RH\Employee::factory()->create();
+
+    \App\Models\Flottes\VehicleAssignment::create([
+        'vehicle_id' => $vehicle->id,
+        'employee_id' => $employee->id,
+        'started_at' => now()->subHour(),
+        'status' => \App\Enums\Flottes\AssignmentStatus::ACTIVE,
+    ]);
+
+    VehicleMaintenance::create([
+        'vehicle_id' => $vehicle->id,
+        'supplier_id' => ThirdParty::factory()->create()->id,
+        'vat_rate_id' => VatRate::factory()->create()->id,
+        'type' => 'Révision',
+        'cost_ht' => 100,
+        'performed_at' => now(),
+    ]);
+
+    Notification::assertSentTo($employee, \App\Notifications\Flottes\MaintenanceScheduledNotification::class);
+});

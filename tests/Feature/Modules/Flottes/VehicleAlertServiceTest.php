@@ -165,3 +165,31 @@ test('retourne tous les alertes véhicule', function () {
 
     expect($allAlerts)->toBeArray();
 });
+
+test('détecte si le contrôle pollution est dû', function () {
+    $this->vehicle->update([
+        'type' => 'utility', // VUL
+        'pollution_control_due_at' => now()->subDays(1),
+    ]);
+
+    expect($this->alertService->needsPollutionControl($this->vehicle))->toBeTrue();
+});
+
+test('calcule les jours restants avant contrôle pollution', function () {
+    $date = now()->addDays(6);
+    $this->vehicle->update(['pollution_control_due_at' => $date]);
+
+    expect($this->alertService->getDaysUntilPollutionControl($this->vehicle))->toBe(5);
+});
+
+test('détecte les amendes impayées et calcule le total', function () {
+    $this->vehicle->fines()->create([
+        'reference' => 'PV-001',
+        'amount' => 50.00,
+        'status' => 'received',
+        'infraction_at' => now(),
+    ]);
+
+    expect($this->alertService->hasUnpaidFines($this->vehicle))->toBeTrue()
+        ->and($this->alertService->getUnpaidFinesTotal($this->vehicle))->toBe(50.0);
+});

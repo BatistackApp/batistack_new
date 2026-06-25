@@ -155,3 +155,5 @@ test('détecte anomalie consommation', function () {
 
     expect($isAnomalous)->toBeTrue();
 });
+
+

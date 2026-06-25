@@ -257,7 +257,7 @@ class VehicleAssignmentService
     /**
      * Obtient les affectations complétées avec coûts.
      */
-    public function getCompletedAssignmentsWithCosts(Carbon $from, Carbon $to): Collection
+    public function getCompletedAssignmentsWithCosts(CarbonInterface $from, CarbonInterface $to): Collection
     {
         return VehicleAssignment::completed()
             ->whereBetween('ended_at', [$from, $to])

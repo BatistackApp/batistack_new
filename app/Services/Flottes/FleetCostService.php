@@ -103,7 +103,7 @@ class FleetCostService
     /**
      * Calcule les coûts de maintenance sur une période.
      */
-    public function getMaintenanceCostsByPeriod(Vehicle $vehicle, Carbon $from, Carbon $to): float
+    public function getMaintenanceCostsByPeriod(Vehicle $vehicle, CarbonInterface $from, CarbonInterface $to): float
     {
         return (float) $vehicle->maintenances()
             ->whereBetween('performed_at', [$from, $to])

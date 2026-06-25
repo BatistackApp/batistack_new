@@ -185,3 +185,29 @@ test('calcule total dépenses suspectes', function () {
 
     expect($total)->toBeGreaterThanOrEqual(0);
 });
+
+test('agrège les dépenses par chantier', function () {
+    $this->assignmentService->createAssignment($this->vehicle, $this->driver, $this->chantier, now(), now()->addHours(2));
+
+    // Enregistrement d'un frais avec le chantier
+    $this->expenseService->registerExpense($this->vehicle, 'peage', 20, $this->vatRate, now(), 'APRR');
+
+    $byChantier = $this->expenseService->getExpensesByChantier($this->vehicle);
+
+    expect($byChantier)->toBeArray()
+        ->and($byChantier[0])->toHaveKeys(['chantier_id', 'chantier_name', 'count', 'total_ttc'])
+        ->and($byChantier[0]['total_ttc'])->toBe(24.0); // 20 HT + 20% TVA
+});
+
+test('calcule la dépense moyenne par jour', function () {
+    $from = now()->subDays(10);
+    $to = now();
+
+    // 100 HT + 20% TVA = 120 TTC
+    $this->expenseService->registerExpense($this->vehicle, 'peage', 100, $this->vatRate, now()->subDays(5), 'APRR');
+
+    $average = $this->expenseService->getAverageDailyExpense($this->vehicle, $from, $to);
+
+    // 120 / 10 jours = 12
+    expect($average)->toBe(12.0);
+});

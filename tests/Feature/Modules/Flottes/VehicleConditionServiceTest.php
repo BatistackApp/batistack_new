@@ -144,3 +144,46 @@ test('check-out clôture affectation et libère véhicule', function () {
         ->and($assignment->status)->toBe(AssignmentStatus::COMPLETED)
         ->and($this->vehicle->status)->toBe(VehicleStatus::AVAILABLE);
 });
+
+test('récupère l\'historique des états des lieux pour une affectation', function () {
+    Storage::fake(); // Ajoutez cette ligne au début du test pour simuler le stockage
+
+    $assignment = $this->assignmentService->createAssignment($this->vehicle, $this->driver, $this->chantier, now(), null);
+
+    $fakePhotos = [];
+    $requiredKeys = ['front', 'back', 'left', 'right', 'dashboard'];
+    foreach ($requiredKeys as $key) {
+        // Crée un faux fichier image dans le stockage simulé et assure qu'il existe
+        $filePath = 'temp/'.$key.'.jpg';
+        Storage::put($filePath, 'dummy content for '.$key); // Met un contenu factice
+        // Crée une instance UploadedFile qui pointe vers ce fichier factice dans le stockage simulé
+        $fakePhotos[$key] = new UploadedFile(Storage::path($filePath), $key.'.jpg', 'image/jpeg', null, true);
+    }
+
+    $this->conditionService->submitReport($assignment, ConditionReportType::CHECK_IN, 10000.00, 100, '1234', $fakePhotos);
+
+    $reports = $this->conditionService->getReportsForAssignment($assignment);
+
+    expect($reports)->toHaveCount(1)
+        ->and($this->conditionService->getLastReport($assignment))->not()->toBeNull();
+});
+
+test('détecte si l\'affectation est complète (Check-in et Check-out faits)', function () {
+    Storage::fake(); // Ajoutez cette ligne au début du test pour simuler le stockage
+
+    $assignment = $this->assignmentService->createAssignment($this->vehicle, $this->driver, $this->chantier, now()->subDay(), null);
+
+    $fakePhotos = [];
+    $requiredKeys = ['front', 'back', 'left', 'right', 'dashboard'];
+    foreach ($requiredKeys as $key) {
+        // Crée un faux fichier image dans le stockage simulé et assure qu'il existe
+        $filePath = 'temp/'.$key.'.jpg';
+        Storage::put($filePath, 'dummy content for '.$key); // Met un contenu factice
+        // Crée une instance UploadedFile qui pointe vers ce fichier factice dans le stockage simulé
+        $fakePhotos[$key] = new UploadedFile(Storage::path($filePath), $key.'.jpg', 'image/jpeg', null, true);
+    }
+
+    // Check-in
+    $this->conditionService->submitReport($assignment, ConditionReportType::CHECK_IN, 10000.00, 100, '1234', $fakePhotos);
+    expect($this->conditionService->isAssignmentComplete($assignment))->toBeFalse();
+});

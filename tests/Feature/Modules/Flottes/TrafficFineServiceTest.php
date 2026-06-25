@@ -153,3 +153,28 @@ test('détecte conducteur récidiviste', function () {
 
     expect($isRecidivist)->toBeTrue();
 });
+
+test('calcule le total des points déduits sur une période', function () {
+    TrafficFine::factory()->create(['vehicle_id' => $this->vehicle->id, 'points_deducted' => 2, 'infraction_at' => now()->subDays(2)]);
+    TrafficFine::factory()->create(['vehicle_id' => $this->vehicle->id, 'points_deducted' => 3, 'infraction_at' => now()->subDays(5)]);
+
+    $points = $this->fineService->getTotalPointsDeducted($this->vehicle, now()->subWeek(), now());
+
+    expect($points)->toBe(5);
+});
+
+test('obtient les statistiques des amendes', function () {
+    TrafficFine::factory()->create(['vehicle_id' => $this->vehicle->id, 'amount' => 100, 'status' => FineStatus::PAID, 'points_deducted' => 1]);
+    TrafficFine::factory()->create(['vehicle_id' => $this->vehicle->id, 'amount' => 200, 'status' => FineStatus::RECEIVED, 'points_deducted' => 2]);
+
+    $stats = $this->fineService->getFineStatistics($this->vehicle);
+
+    expect($stats)->toBeArray()
+        ->and($stats['total_fines'])->toBe(2)
+        ->and($stats['pending_fines'])->toBe(1)
+        ->and($stats['pending_amount'])->toBe(200.0)
+        ->and($stats['paid_fines'])->toBe(1)
+        ->and($stats['paid_amount'])->toBe(100.0)
+        ->and($stats['total_points_deducted'])->toBe(3)
+        ->and($stats['average_fine_amount'])->toBe(150.0);
+});

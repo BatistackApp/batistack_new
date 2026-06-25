@@ -38,7 +38,7 @@ test('relation assignments charge correctement', function () {
 
 test('relation maintenances charge correctement', function () {
     $vehicle = Vehicle::factory()->create();
-    VehicleMaintenance::factory()->count(2)->create(['vehicle_id' => $vehicle->id]);
+    VehicleMaintenance::factory()->count(2)->create(['vehicle_id' => $vehicle->id, 'cost_ht' => 120]);
 
     $vehicle->load('maintenances');
 

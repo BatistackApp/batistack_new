@@ -118,7 +118,7 @@ class TrafficFineService
     /**
      * Calcule les points de permis à risque.
      */
-    public function getTotalPointsDeducted(Vehicle $vehicle, Carbon $from, Carbon $to): int
+    public function getTotalPointsDeducted(Vehicle $vehicle, CarbonInterface $from, CarbonInterface $to): int
     {
         return (int) $vehicle->fines()
             ->whereBetween('infraction_at', [$from, $to])
