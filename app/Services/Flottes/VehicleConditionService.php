@@ -8,6 +8,7 @@ use App\Models\Flottes\VehicleAssignment;
 use App\Models\Flottes\VehicleConditionReport;
 use Exception;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 
@@ -80,11 +81,11 @@ class VehicleConditionService
                 'comment' => $comments,
             ]);
 
-            $report->addMedia($photos['front'])->toMediaCollection('photo_front');
-            $report->addMedia($photos['back'])->toMediaCollection('photo_back');
-            $report->addMedia($photos['left'])->toMediaCollection('photo_left');
-            $report->addMedia($photos['right'])->toMediaCollection('photo_right');
-            $report->addMedia($photos['dashboard'])->toMediaCollection('photo_dashboard');
+            foreach ($photos as $key => $file) {
+                if ($file instanceof UploadedFile) {
+                    $report->addMedia($file)->toMediaCollection('photo_'.$key);
+                }
+            }
 
             if ($type === ConditionReportType::CHECK_OUT) {
                 $this->assignmentService->endAssignment($assignment, now(), $odometer);
