@@ -2,6 +2,7 @@
 
 namespace App\Observers\Flottes;
 
+use App\Jobs\Flottes\RecalculateVehicleTcoJob;
 use App\Models\Flottes\Vehicle;
 use Illuminate\Support\Str;
 use Log;
@@ -70,6 +71,8 @@ class VehicleObserver
                 'reference' => $vehicle->reference,
                 'changes' => $vehicle->getChanges(),
             ]);
+
+            RecalculateVehicleTcoJob::dispatch($vehicle);
         }
     }
 
