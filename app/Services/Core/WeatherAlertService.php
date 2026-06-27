@@ -58,7 +58,7 @@ class WeatherAlertService
         return null;
     }
 
-    public function fetchWeatherData(float $lat, float $lon): ?array
+    protected function fetchWeatherData(float $lat, float $lon): ?array
     {
         $apiKey = config('services.openweathermap.api_key');
 
