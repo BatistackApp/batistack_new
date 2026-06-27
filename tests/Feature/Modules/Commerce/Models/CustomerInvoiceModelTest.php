@@ -1,12 +1,17 @@
 <?php
 
+use App\Enums\Commerce\InvoiceStatus;
 use App\Models\Commerce\CustomerInvoice;
 use App\Models\Commerce\CustomerInvoiceItem;
+use App\Models\Core\Company;
 use App\Models\Tiers\ThirdParty;
-use App\Enums\Commerce\InvoiceStatus;
 
 beforeEach(function () {
+    Company::factory()->create();
+    $customer = ThirdParty::factory()->create();
     $this->invoice = CustomerInvoice::factory()->create();
+    $this->invoice->client()->associate($customer);
+    $this->invoice->save();
 });
 
 test('customer invoice can be created', function () {
@@ -16,7 +21,7 @@ test('customer invoice can be created', function () {
 });
 
 test('customer invoice has customer', function () {
-    expect($this->invoice->customer)
+    expect($this->invoice->client)
         ->toBeInstanceOf(ThirdParty::class);
 });
 
@@ -28,7 +33,8 @@ test('customer invoice has items relationship', function () {
 });
 
 test('customer invoice generates invoice number', function () {
-    expect($this->invoice->invoice_number)
+    $this->invoice->refresh();
+    expect($this->invoice->reference)
         ->not->toBeNull()
         ->not->toBeEmpty();
 });
