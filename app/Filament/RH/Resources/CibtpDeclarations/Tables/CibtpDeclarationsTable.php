@@ -53,6 +53,13 @@ class CibtpDeclarationsTable
                         'validated' => 'Validée',
                         default => $state,
                     }),
+
+                TextColumn::make('is_urgent')
+                    ->label('Urgence')
+                    ->getStateUsing(fn ($record) => $record->status === 'draft' && $record->date <= now()->subDays(15) ? 'Urgent' : null)
+                    ->badge()
+                    ->color('danger')
+                    ->icon('heroicon-o-exclamation-triangle'),
             ])
             ->filters([
                 SelectFilter::make('status')

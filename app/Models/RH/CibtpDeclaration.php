@@ -4,10 +4,13 @@ namespace App\Models\RH;
 
 use App\Models\Chantiers\Chantier;
 use App\Models\Chantiers\WeatherAlert;
+use App\Observers\RH\CibtpDeclarationObserver;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+#[ObservedBy([CibtpDeclarationObserver::class])]
 class CibtpDeclaration extends Model
 {
     use HasFactory;

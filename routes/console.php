@@ -17,6 +17,15 @@ Schedule::command('tiers:verify-vigilance')
 Schedule::command('articles:check-stocks')
     ->dailyAt('07:00');
 
+// Météo & CIBTP
+Schedule::command('weather:check-alerts')
+    ->dailyAt('06:30')
+    ->timezone('Europe/Paris');
+
+Schedule::command('cibtp:notify-deadlines')
+    ->weeklyOn(1, '08:00')
+    ->timezone('Europe/Paris');
+
 // RH
 // Vérifier les habilitations expirant dans 30 jours (quotidien à 5h)
 Schedule::command('rh:check-qualifications --days=30 --send')
