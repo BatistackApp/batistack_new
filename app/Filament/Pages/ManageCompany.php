@@ -46,7 +46,8 @@ class ManageCompany extends Page
                             ->required(),
                         TextInput::make('siret')
                             ->label('SIRET')
-                            ->length(14),
+                            ->length(14)
+                            ->rule(new \App\Rules\ValidSiret()),
                         TextInput::make('vat_number')
                             ->label('N° TVA Intracommunautaire'),
                         TextInput::make('share_capital')

@@ -30,11 +30,50 @@ class SettingForm
                                         ->required(),
                                     TextInput::make('group')
                                         ->label('Groupe de paramètres')
-                                        ->disabled(),
+                                        ->datalist(['Général', 'Facturation', 'Interface', 'API']),
                                 ]),
-                                Textarea::make('value')
-                                    ->label('Valeur enregistrée')
+
+                                \Filament\Forms\Components\Select::make('type')
+                                    ->label('Format de la donnée')
+                                    ->options([
+                                        'string' => 'Texte',
+                                        'integer' => 'Nombre entier',
+                                        'boolean' => 'Booléen (Oui / Non)',
+                                        'color' => 'Couleur',
+                                        'json' => 'Données structurées (JSON)',
+                                    ])
+                                    ->live()
+                                    ->required(),
+
+                                TextInput::make('value_string')
+                                    ->label('Valeur')
+                                    ->statePath('value')
+                                    ->visible(fn ($get) => $get('type') === 'string' || !$get('type'))
+                                    ->required(),
+
+                                TextInput::make('value_integer')
+                                    ->label('Valeur Numérique')
+                                    ->statePath('value')
+                                    ->numeric()
+                                    ->visible(fn ($get) => $get('type') === 'integer')
+                                    ->required(),
+
+                                \Filament\Forms\Components\Toggle::make('value_boolean')
+                                    ->label('Activer / Désactiver')
+                                    ->statePath('value')
+                                    ->visible(fn ($get) => $get('type') === 'boolean'),
+
+                                \Filament\Forms\Components\ColorPicker::make('value_color')
+                                    ->label('Couleur')
+                                    ->statePath('value')
+                                    ->visible(fn ($get) => $get('type') === 'color')
+                                    ->required(),
+
+                                Textarea::make('value_json')
+                                    ->label('Valeur JSON')
+                                    ->statePath('value')
                                     ->rows(5)
+                                    ->visible(fn ($get) => $get('type') === 'json')
                                     ->required(),
                             ]),
                         Tabs\Tab::make('Méta-données')
