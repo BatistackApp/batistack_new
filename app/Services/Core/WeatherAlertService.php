@@ -60,26 +60,34 @@ class WeatherAlertService
 
     protected function fetchWeatherData(float $lat, float $lon): ?array
     {
-        $apiKey = config('services.meteo_france.api_key');
+        $apiKey = config('services.openweathermap.api_key');
 
         if (empty($apiKey)) {
-            Log::info("WeatherAlertService: METEO_FRANCE_API_KEY is not set. Flow is disabled.");
+            Log::info("WeatherAlertService: OPENWEATHERMAP_API_KEY is not set. Flow is disabled.");
             return null; // Fail closed
         }
 
         try {
-            $response = Http::withToken($apiKey)
-                ->get('https://portail-api.meteofrance.fr/web/fr/api/DonneesPubliquesVigilance', [
-                    'lat' => $lat,
-                    'lon' => $lon,
-                ]);
+            $response = Http::get('https://api.openweathermap.org/data/2.5/weather', [
+                'lat' => $lat,
+                'lon' => $lon,
+                'appid' => $apiKey,
+                'units' => 'metric',
+            ]);
 
             if ($response->failed()) {
                 Log::error("WeatherAlertService API error: {$response->status()}");
                 return null;
             }
 
-            return $response->json();
+            $data = $response->json();
+            
+            // Map OpenWeatherMap structure to our expected generic structure
+            return [
+                'wind_speed' => isset($data['wind']['speed']) ? $data['wind']['speed'] * 3.6 : 0, // Convert m/s to km/h
+                'rain_volume' => $data['rain']['1h'] ?? ($data['rain']['3h'] ?? 0), // mm
+                'temp' => $data['main']['temp'] ?? 20, // Celsius
+            ];
         } catch (\Exception $e) {
             Log::error("WeatherAlertService exception: {$e->getMessage()}");
             return null;

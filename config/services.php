@@ -40,7 +40,7 @@ return [
         'api_key' => env('DOCUSEAL_API_KEY'),
     ],
 
-    'meteo_france' => [
-        'api_key' => env('METEO_FRANCE_API_KEY'),
+    'openweathermap' => [
+        'api_key' => env('OPENWEATHERMAP_API_KEY'),
     ],
 ];
