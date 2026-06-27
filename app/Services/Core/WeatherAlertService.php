@@ -58,7 +58,7 @@ class WeatherAlertService
         return null;
     }
 
-    protected function fetchWeatherData(float $lat, float $lon): ?array
+    public function fetchWeatherData(float $lat, float $lon): ?array
     {
         $apiKey = config('services.openweathermap.api_key');
 
@@ -81,7 +81,7 @@ class WeatherAlertService
             }
 
             $data = $response->json();
-            
+
             // Map OpenWeatherMap structure to our expected generic structure
             return [
                 'wind_speed' => isset($data['wind']['speed']) ? $data['wind']['speed'] * 3.6 : 0, // Convert m/s to km/h
