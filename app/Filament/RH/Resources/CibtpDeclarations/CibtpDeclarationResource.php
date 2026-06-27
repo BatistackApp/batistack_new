@@ -7,7 +7,7 @@ use App\Filament\RH\Resources\CibtpDeclarations\Pages\EditCibtpDeclaration;
 use App\Filament\RH\Resources\CibtpDeclarations\Pages\ListCibtpDeclarations;
 use App\Filament\RH\Resources\CibtpDeclarations\Schemas\CibtpDeclarationForm;
 use App\Filament\RH\Resources\CibtpDeclarations\Tables\CibtpDeclarationsTable;
-use App\Models\CibtpDeclaration;
+use App\Models\RH\CibtpDeclaration;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;

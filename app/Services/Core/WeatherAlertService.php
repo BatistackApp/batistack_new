@@ -19,49 +19,71 @@ class WeatherAlertService
         $lat = $chantier->latitude;
         $lon = $chantier->longitude;
 
-        if (!$lat || !$lon) {
+        if ($lat === null || $lon === null) {
             Log::warning("Cannot check weather for Chantier {$chantier->id} - missing coordinates.");
             return null;
         }
 
-        // In a real scenario, this would call OpenWeatherMap API or Météo France.
-        // Mocking the API response for the purpose of the feature.
+        // Fetch from provider (e.g. Météo France API)
         $weatherData = $this->fetchWeatherData($lat, $lon);
+
+        if ($weatherData === null) {
+            return null;
+        }
 
         if ($this->isSevereWeather($weatherData)) {
             $type = $this->determineWeatherType($weatherData);
             $severity = 'orange'; // Can be determined by wind speed or rain volume
 
-            // Check if there's already an active alert of this type today
-            $existingAlert = WeatherAlert::where('chantier_id', $chantier->id)
-                ->whereDate('started_at', Carbon::today())
-                ->where('type', $type)
-                ->first();
-
-            if (!$existingAlert) {
-                return WeatherAlert::create([
+            // Atomic insert with firstOrCreate using the new alert_date unique constraint
+            $alert = WeatherAlert::firstOrCreate(
+                [
                     'chantier_id' => $chantier->id,
                     'type' => $type,
+                    'alert_date' => Carbon::today(),
+                ],
+                [
                     'severity' => $severity,
                     'started_at' => now(),
                     'ended_at' => now()->endOfDay(),
                     'description' => "Alerte météo générée automatiquement: {$type} fort attendu.",
-                ]);
+                ]
+            );
+
+            if ($alert->wasRecentlyCreated) {
+                return $alert;
             }
         }
 
         return null;
     }
 
-    protected function fetchWeatherData(float $lat, float $lon): array
+    protected function fetchWeatherData(float $lat, float $lon): ?array
     {
-        // Mock implementation.
-        // In a real application: Http::get("https://api.openweathermap.org/data/2.5/weather", [...])
-        return [
-            'wind_speed' => rand(20, 120), // km/h
-            'rain_volume' => rand(0, 50), // mm
-            'temp' => rand(-5, 40), // Celsius
-        ];
+        $apiKey = config('services.meteo_france.api_key');
+
+        if (empty($apiKey)) {
+            Log::info("WeatherAlertService: METEO_FRANCE_API_KEY is not set. Flow is disabled.");
+            return null; // Fail closed
+        }
+
+        try {
+            $response = Http::withToken($apiKey)
+                ->get('https://portail-api.meteofrance.fr/web/fr/api/DonneesPubliquesVigilance', [
+                    'lat' => $lat,
+                    'lon' => $lon,
+                ]);
+
+            if ($response->failed()) {
+                Log::error("WeatherAlertService API error: {$response->status()}");
+                return null;
+            }
+
+            return $response->json();
+        } catch (\Exception $e) {
+            Log::error("WeatherAlertService exception: {$e->getMessage()}");
+            return null;
+        }
     }
 
     protected function isSevereWeather(array $data): bool
@@ -75,7 +97,7 @@ class WeatherAlertService
         if ($data['rain_volume'] > 30) return 'pluie';
         if ($data['temp'] < -2) return 'neige_verglas';
         if ($data['temp'] > 35) return 'canicule';
-        
+
         return 'inconnu';
     }
 }

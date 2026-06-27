@@ -17,6 +17,7 @@ class WeatherAlert extends Model
         'started_at',
         'ended_at',
         'description',
+        'alert_date',
     ];
 
     protected function casts(): array
@@ -24,6 +25,7 @@ class WeatherAlert extends Model
         return [
             'started_at' => 'datetime',
             'ended_at' => 'datetime',
+            'alert_date' => 'date',
         ];
     }
 

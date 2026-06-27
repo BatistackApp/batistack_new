@@ -15,7 +15,7 @@ test('it creates alert on severe weather', function () {
 
     // Mock the service to return severe weather
     $service = new class extends WeatherAlertService {
-        protected function fetchWeatherData(float $lat, float $lon): array {
+        protected function fetchWeatherData(float $lat, float $lon): ?array {
             return ['wind_speed' => 90, 'rain_volume' => 10, 'temp' => 15];
         }
     };
