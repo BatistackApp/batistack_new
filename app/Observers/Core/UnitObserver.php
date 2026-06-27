@@ -84,6 +84,15 @@ class UnitObserver
             throw new Exception("Impossible de supprimer cette unité ({$quoteItemCount} lignes de devis l'utilisent)");
         }
 
+        // Vérifier utilisation dans lignes de facture
+        $invoiceItemCount = \DB::table('customer_invoice_items')
+            ->where('unit_id', $unit->id)
+            ->count();
+
+        if ($invoiceItemCount > 0) {
+            throw new Exception("Impossible de supprimer cette unité ({$invoiceItemCount} lignes de facture l'utilisent)");
+        }
+
         return true;
     }
 

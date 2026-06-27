@@ -38,6 +38,7 @@ class ThirdPartyForm
                                             ->label('Numéro SIRET')
                                             ->length(14)
                                             ->required()
+                                            ->rule(new \App\Rules\ValidSiret())
                                             ->suffixAction(
                                                 Action::make('importSiren')
                                                     ->icon(Phosphor::MagnifyingGlass)
