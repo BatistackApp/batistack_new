@@ -38,5 +38,9 @@ return [
     'docuseal' => [
         'endpoint' => env('DOCUSEAL_ENDPOINT'),
         'api_key' => env('DOCUSEAL_API_KEY'),
-    ]
+    ],
+
+    'openweathermap' => [
+        'api_key' => env('OPENWEATHERMAP_API_KEY'),
+    ],
 ];

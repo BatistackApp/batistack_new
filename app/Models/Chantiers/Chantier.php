@@ -88,6 +88,16 @@ class Chantier extends Model implements HasMedia
         return $this->hasMany(DoeDocument::class);
     }
 
+    public function weatherAlerts(): HasMany
+    {
+        return $this->hasMany(WeatherAlert::class);
+    }
+
+    public function cibtpDeclarations(): HasMany
+    {
+        return $this->hasMany(\App\Models\RH\CibtpDeclaration::class);
+    }
+
     protected function casts(): array
     {
         return [
