@@ -112,18 +112,7 @@ jobs:
             ./vendor/bin/pest tests/Feature/Modules/${{ matrix.module }} --coverage --coverage-clover storage/coverage/coverage-${{ matrix.module }}.xml --log-junit junit-${{ matrix.module }}.xml
           fi
 
-      - name: Upload test results to Codecov
-        if: ${{ !cancelled() }}
-        uses: codecov/test-results-action@v1
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
 
-      - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@v5
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          slug: BatistackApp/batistack_new
-          files: ./storage/coverage/coverage-${{ matrix.module }}.xml
 
   test-global:
     runs-on: ubuntu-latest

@@ -19,22 +19,22 @@ use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 
-class EmployeePanelProvider extends PanelProvider
+class SalariePanelProvider extends PanelProvider
 {
     public function panel(Panel $panel): Panel
     {
         return $panel
-            ->id('employee')
-            ->path('employee')
+            ->id('salarie')
+            ->path('salarie')
             ->colors([
                 'primary' => Color::Amber,
             ])
-            ->discoverResources(in: app_path('Filament/Employee/Resources'), for: 'App\Filament\Employee\Resources')
-            ->discoverPages(in: app_path('Filament/Employee/Pages'), for: 'App\Filament\Employee\Pages')
+            ->discoverResources(in: app_path('Filament/Salarie/Resources'), for: 'App\Filament\Salarie\Resources')
+            ->discoverPages(in: app_path('Filament/Salarie/Pages'), for: 'App\Filament\Salarie\Pages')
             ->pages([
                 Dashboard::class,
             ])
-            ->discoverWidgets(in: app_path('Filament/Employee/Widgets'), for: 'App\Filament\Employee\Widgets')
+            ->discoverWidgets(in: app_path('Filament/Salarie/Widgets'), for: 'App\Filament\Salarie\Widgets')
             ->widgets([
                 AccountWidget::class,
                 FilamentInfoWidget::class,

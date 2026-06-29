@@ -13,6 +13,7 @@ class ListVehicles extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
+            \App\Filament\Flottes\Actions\ImportFuelCsvAction::make(),
             CreateAction::make(),
         ];
     }
