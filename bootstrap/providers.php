@@ -12,5 +12,6 @@ return [
     App\Providers\Filament\RHPanelProvider::class,
     App\Providers\Filament\TerrainPanelProvider::class,
     App\Providers\Filament\TiersPanelProvider::class,
+    App\Providers\Filament\SubcontractorPanelProvider::class,
     App\Providers\FortifyServiceProvider::class,
 ];

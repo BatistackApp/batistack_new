@@ -17,7 +17,7 @@ class CustomerQuotesTable
     {
         return $table
             ->query(
-                CustomerQuote::where('client_id', auth()->user()->customer->third_party_id)
+                CustomerQuote::where('client_id', auth()->user()->contact->third_party_id)
                     ->where('status', '!=', QuoteStatus::DRAFT)
                     ->newQuery()
             )

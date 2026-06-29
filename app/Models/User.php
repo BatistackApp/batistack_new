@@ -59,7 +59,7 @@ class User extends Authenticatable
         return $this->hasOne(Employee::class);
     }
 
-    public function customer(): HasOne
+    public function contact(): HasOne
     {
         return $this->hasOne(Contact::class);
     }
