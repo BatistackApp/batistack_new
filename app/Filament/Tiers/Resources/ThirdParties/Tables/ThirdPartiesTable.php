@@ -46,6 +46,14 @@ class ThirdPartiesTable
                     ->label('Actif')
                     ->boolean(),
 
+                TextColumn::make('supplier_score')
+                    ->label('Score Fournisseur')
+                    ->badge()
+                    ->color(fn ($state) => $state === null ? 'gray' : ($state >= 80 ? 'success' : ($state >= 50 ? 'warning' : 'danger')))
+                    ->formatStateUsing(fn ($state) => $state !== null ? $state . '/100' : 'N/A')
+                    ->sortable()
+                    ->visible(fn () => true),
+
                 TextColumn::make('compliant_status_label')
                     ->label('Vigilance')
                     ->getStateUsing(fn (ThirdParty $record) => $record->compliant_status['compliant'] ? 'Conforme' : 'Alerte')

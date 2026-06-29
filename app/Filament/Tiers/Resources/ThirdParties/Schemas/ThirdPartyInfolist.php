@@ -61,6 +61,12 @@ class ThirdPartyInfolist
                                             ->badge()
                                             ->color(fn ($state) => $state === 'CONFORME' ? 'success' : 'danger')
                                             ->icon(fn ($state) => $state === 'CONFORME' ? Phosphor::CheckCircle : Phosphor::Warning),
+                                            
+                                        TextEntry::make('supplier_score')
+                                            ->label('Score de Fiabilité')
+                                            ->badge()
+                                            ->color(fn ($state) => $state === null ? 'gray' : ($state >= 80 ? 'success' : ($state >= 50 ? 'warning' : 'danger')))
+                                            ->formatStateUsing(fn ($state) => $state !== null ? $state . '/100' : 'Non évalué'),
 
                                         TextEntry::make('last_siren_sync_at')
                                             ->label('Dernière synchro SIREN')
