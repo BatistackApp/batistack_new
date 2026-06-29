@@ -73,6 +73,65 @@ class ThirdPartyInfolist
                                             ->since(),
                                     ]),
                             ]),
+                        Tabs\Tab::make('Vue 360 - Financier & Opérationnel')
+                            ->icon(Phosphor::ChartPie)
+                            ->schema([
+                                Section::make('En-cours Financier (Ventes & Achats)')
+                                    ->columns(2)
+                                    ->schema([
+                                        TextEntry::make('sales_outstanding')
+                                            ->label('Factures Ventes Impayées (Client)')
+                                            ->state(function (ThirdParty $record) {
+                                                if (!class_exists(\App\Models\Commerce\CustomerInvoice::class)) return 'N/A';
+                                                
+                                                $invoices = \App\Models\Commerce\CustomerInvoice::forClient($record)->unpaid()->get();
+                                                $count = $invoices->count();
+                                                $amount = $invoices->sum('amount_remaining');
+                                                
+                                                return "{$count} facture(s) - " . number_format($amount, 2, ',', ' ') . " €";
+                                            })
+                                            ->badge()
+                                            ->color(fn ($state) => str_starts_with($state, '0') ? 'success' : 'warning'),
+                                            
+                                        TextEntry::make('purchases_outstanding')
+                                            ->label('Factures Achats Impayées (Fournisseur)')
+                                            ->state(function (ThirdParty $record) {
+                                                if (!class_exists(\App\Models\Commerce\SupplierInvoice::class)) return 'N/A';
+                                                
+                                                $invoices = \App\Models\Commerce\SupplierInvoice::where('supplier_id', $record->id)
+                                                    ->whereNotIn('status', ['draft', 'paid', 'canceled'])
+                                                    ->get();
+                                                $count = $invoices->count();
+                                                // Assuming SupplierInvoice has amount_ttc, if it has partial payments, it might be different, but let's sum amount_ttc for now.
+                                                $amount = $invoices->sum('amount_ttc');
+                                                
+                                                return "{$count} facture(s) - " . number_format($amount, 2, ',', ' ') . " €";
+                                            })
+                                            ->badge()
+                                            ->color(fn ($state) => str_starts_with($state, '0') ? 'success' : 'danger'),
+                                    ]),
+                                Section::make('Activité Opérationnelle')
+                                    ->schema([
+                                        TextEntry::make('active_chantiers')
+                                            ->label('Chantiers Actifs associés')
+                                            ->state(function (ThirdParty $record) {
+                                                if (!class_exists(\App\Models\Chantiers\Chantier::class)) return 'N/A';
+                                                
+                                                $clientCount = \App\Models\Chantiers\Chantier::where('client_id', $record->id)
+                                                    ->whereNotIn('status', ['completed', 'canceled'])
+                                                    ->count();
+                                                    
+                                                $subcontractorCount = $record->chantiers()
+                                                    ->whereNotIn('status', ['completed', 'canceled'])
+                                                    ->count();
+                                                    
+                                                $total = $clientCount + $subcontractorCount;
+                                                return "{$total} chantier(s)";
+                                            })
+                                            ->badge()
+                                            ->color('info'),
+                                    ]),
+                            ]),
                     ])->columnSpanFull(),
             ]);
     }

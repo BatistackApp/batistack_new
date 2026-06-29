@@ -35,6 +35,13 @@ class VerifyGloabVigilanceJob implements ShouldQueue
                 foreach ($managers as $manager) {
                     $manager->notify(new VigilanceExpirationNotification($subcontractor, array_merge($compliance['issues'])));
                 }
+
+                // Notifier le sous-traitant (ou son contact principal)
+                $targetEmail = $subcontractor->email ?? $subcontractor->getPrimaryContact()?->email;
+                if ($targetEmail) {
+                    \Illuminate\Support\Facades\Notification::route('mail', $targetEmail)
+                        ->notify(new \App\Notifications\Tiers\SubcontractorVigilanceReminderNotification($subcontractor, $compliance['issues']));
+                }
             }
         }
     }
