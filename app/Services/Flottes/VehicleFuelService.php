@@ -84,17 +84,32 @@ class VehicleFuelService
                     ->whereIn('status', [TimeEntryStatus::SUBMITTED, TimeEntryStatus::APPROVED])
                     ->exists();
 
-                if ($purchasedAt->isSunday()) {
-                    $isSuspicious = true;
-                    $suspicionReason = "Plein d'essence effectué un dimanche pour {$vehicle->reference}.";
-                } elseif (! $hasWorkEntry) {
+                if (! $hasWorkEntry) {
                     $driver = $assignment->employee;
-                    $suspicionReason = 'Plein enregistré le '.$purchasedAt->format('d/m/Y')." mais aucun pointage RH pour {$driver->getFullName()}.";
+                    if ($purchasedAt->isSunday()) {
+                        $suspicionReason = "Plein effectué un dimanche sans pointage RH pour {$driver->getFullName()}.";
+                    } else {
+                        $suspicionReason = 'Plein enregistré le '.$purchasedAt->format('d/m/Y')." mais aucun pointage RH pour {$driver->getFullName()}.";
+                    }
                     $isSuspicious = true;
                 }
             } else {
                 $isSuspicious = true;
                 $suspicionReason = 'Transaction carburant sans affectation de conducteur active (Siphonnage suspectée).';
+            }
+
+            // Détection de siphonnage par surconsommation anormale
+            if (! $isSuspicious && $odometer > $vehicle->odometer) {
+                $distance = $odometer - $vehicle->odometer;
+                if ($distance > 0) {
+                    $currentConsumption = ($liters / $distance) * 100;
+                    $threshold = (float) \App\Models\Core\Setting::getValue('fuel_anomaly_threshold', 20);
+                    
+                    if ($this->detectConsumptionAnomaly($vehicle, $currentConsumption, $threshold)) {
+                        $isSuspicious = true;
+                        $suspicionReason = "Surconsommation anormale détectée (" . round($currentConsumption, 1) . "L/100km). Siphonnage potentiel.";
+                    }
+                }
             }
 
             $transaction = FuelTransaction::create([

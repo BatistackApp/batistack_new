@@ -7,7 +7,7 @@ return [
     App\Providers\Filament\CommercePanelProvider::class,
     App\Providers\Filament\CorePanelProvider::class,
     App\Providers\Filament\CustomerPanelProvider::class,
-    App\Providers\Filament\EmployeePanelProvider::class,
+    App\Providers\Filament\SalariePanelProvider::class,
     App\Providers\Filament\FlottesPanelProvider::class,
     App\Providers\Filament\RHPanelProvider::class,
     App\Providers\Filament\TerrainPanelProvider::class,

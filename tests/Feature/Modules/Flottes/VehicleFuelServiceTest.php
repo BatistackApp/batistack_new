@@ -140,20 +140,44 @@ test('calcule consommation moyenne', function () {
     expect($avg)->toBeGreaterThan(0);
 });
 
-test('détecte anomalie consommation', function () {
-    // 1. Créer des transactions réelles pour que getAverageConsumption fonctionne
-    $this->fuelService->processAndAuditFuelTransaction($this->vehicle, 50, 70, 50100, now()->subDays(10), 'Station A');
-    $this->fuelService->processAndAuditFuelTransaction($this->vehicle, 50, 70, 50200, now()->subDays(5), 'Station B');
+test('détecte anomalie consommation et signale le siphonnage', function () {
+    User::factory()->create(['is_admin' => true]);
+    \App\Models\Core\Setting::setValue('fuel_anomaly_threshold', 20);
 
-    // Moyenne calculée par le service : 50L pour 100km = 50.0
+    // 1. Transaction 1: 50L pour 500km (10L/100km)
+    $this->fuelService->processAndAuditFuelTransaction($this->vehicle, 50, 70, 50500, now()->subDays(10), 'Station A');
+    
+    // 2. Transaction 2: 50L pour 500km (10L/100km)
+    $this->fuelService->processAndAuditFuelTransaction($this->vehicle, 50, 70, 51000, now()->subDays(5), 'Station B');
 
-    // 2. Simuler une consommation actuelle de 80.0
-    // Ecart : abs(80 - 50) / 50 * 100 = 60%. 60 > 20 (seuil), donc true.
-    $currentConsumption = 80.0;
+    // 3. Affectation valide pour aujourd'hui
+    $aujourdhui = now();
+    VehicleAssignment::create([
+        'vehicle_id' => $this->vehicle->id,
+        'employee_id' => $this->employee->id,
+        'started_at' => $aujourdhui->copy()->startOfDay(),
+        'status' => 'active',
+    ]);
+    TimeEntry::create([
+        'employee_id' => $this->employee->id,
+        'date' => $aujourdhui->toDateString(),
+        'hours' => 7.00,
+        'status' => TimeEntryStatus::APPROVED,
+        'type' => 'normal',
+    ]);
 
-    $isAnomalous = $this->fuelService->detectConsumptionAnomaly($this->vehicle, $currentConsumption);
+    // 4. Transaction anormale : 80L pour 100km (80L/100km) -> écart bien supérieur à 20%
+    $transaction = $this->fuelService->processAndAuditFuelTransaction(
+        $this->vehicle, 
+        80, 
+        120, 
+        51100, 
+        $aujourdhui, 
+        'Station C'
+    );
 
-    expect($isAnomalous)->toBeTrue();
+    expect($transaction->is_suspicious)->toBeTrue()
+        ->and($transaction->suspicion_reason)->toContain('Surconsommation');
 });
 
 
