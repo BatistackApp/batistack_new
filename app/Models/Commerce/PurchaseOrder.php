@@ -23,6 +23,7 @@ class PurchaseOrder extends Model
         'total_ht',
         'total_ttc',
         'ordered_at',
+        'expected_delivery_date',
     ];
 
     public function supplier(): BelongsTo
@@ -54,6 +55,7 @@ class PurchaseOrder extends Model
     {
         return [
             'ordered_at' => 'timestamp',
+            'expected_delivery_date' => 'date',
             'status' => OrderStatus::class,
             'total_ht' => 'decimal:2',
             'total_ttc' => 'decimal:2',

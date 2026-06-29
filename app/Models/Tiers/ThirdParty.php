@@ -40,6 +40,7 @@ class ThirdParty extends Model implements HasMedia
         'compliant_status',
         'iban',
         'bic',
+        'supplier_score',
     ];
 
     protected function casts(): array
@@ -50,6 +51,7 @@ class ThirdParty extends Model implements HasMedia
             'last_siren_sync_at' => 'datetime',
             'credit_limit' => 'decimal:2',
             'compliant_status' => 'array',
+            'supplier_score' => 'integer',
         ];
     }
 

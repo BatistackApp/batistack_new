@@ -8,7 +8,10 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Observers\Commerce\ReceiptNoteObserver;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 
+#[ObservedBy([ReceiptNoteObserver::class])]
 class ReceiptNote extends Model
 {
     use HasFactory;
@@ -19,6 +22,8 @@ class ReceiptNote extends Model
         'reference',
         'status',
         'received_at',
+        'quality_rating',
+        'has_litigation',
     ];
 
     public function order(): BelongsTo
@@ -41,6 +46,8 @@ class ReceiptNote extends Model
         return [
             'status' => DeliveryStatus::class,
             'received_at' => 'datetime',
+            'quality_rating' => 'integer',
+            'has_litigation' => 'boolean',
         ];
     }
 }
