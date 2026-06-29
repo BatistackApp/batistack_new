@@ -41,6 +41,10 @@ test('it sends filament notification when geocoding fails', function () {
     $googleMapsMock->shouldReceive('geocodeAddress')->andReturn(null);
 
     $job = new GeocodeAddressJob($address, $user);
+    
+    // Nettoyer les notifications potentiellement générées par les Observers lors des factory()
+    \Illuminate\Notifications\DatabaseNotification::query()->delete();
+    
     $job->handle($googleMapsMock);
 
     // 1. Vérifiez que la notification existe bien pour cet utilisateur
