@@ -39,6 +39,10 @@ class ChantierAnalyticService
         // 3. Avancement Technique Pondéré
         $progress = $this->calculateWeightedProgress($chantier);
 
+        $totalCost = $laborCost + $materialCost + $subcontractingCost;
+        $budget = (float) $chantier->budget_total_ht;
+        $marginReal = $budget - $totalCost;
+
         return [
             'hours' => [
                 'budget' => (float) $chantier->budget_hours,
@@ -49,8 +53,10 @@ class ChantierAnalyticService
                 'labor_cost_real' => $laborCost,
                 'material_cost_real' => $materialCost,
                 'subcontracting_cost_real' => $subcontractingCost,
-                'total_cost_real' => $laborCost + $materialCost + $subcontractingCost,
-                'budget_ht' => (float) $chantier->budget_total_ht,
+                'total_cost_real' => $totalCost,
+                'budget_ht' => $budget,
+                'margin_real' => $marginReal,
+                'margin_percent' => $budget > 0 ? ($marginReal / $budget) * 100 : 0,
             ],
             'progress' => $progress,
         ];

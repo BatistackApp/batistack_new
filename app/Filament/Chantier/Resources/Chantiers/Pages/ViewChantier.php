@@ -21,6 +21,7 @@ class ViewChantier extends ViewRecord
     protected function getHeaderWidgets(): array
     {
         return [
+            \App\Filament\Chantier\Resources\Chantiers\Widgets\ChantierFinancialOverview::class,
             LaborDistributionChart::class,
         ];
     }
