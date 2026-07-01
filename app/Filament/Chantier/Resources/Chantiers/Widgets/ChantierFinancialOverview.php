@@ -37,6 +37,14 @@ class ChantierFinancialOverview extends StatsOverviewWidget
             $marginColor = 'danger';
         }
 
+        $descriptionCosts = 'Main d\'œuvre';
+        if ($financials['material_cost_real'] > 0) {
+            $descriptionCosts .= ' + Matériaux';
+        }
+        if ($financials['fleet_cost_real'] > 0) {
+            $descriptionCosts .= ' + Flotte';
+        }
+
         return [
             Stat::make('Budget Vendu (HT)', number_format($budget, 2, ',', ' ') . ' €')
                 ->description('Enveloppe globale du projet')
@@ -44,7 +52,7 @@ class ChantierFinancialOverview extends StatsOverviewWidget
                 ->color('primary'),
 
             Stat::make('Coûts Engagés (HT)', number_format($totalCost, 2, ',', ' ') . ' €')
-                ->description('Main d\'œuvre' . ($financials['material_cost_real'] > 0 ? ' + Matériaux' : ''))
+                ->description($descriptionCosts)
                 ->descriptionIcon(Phosphor::Wrench)
                 ->color('warning'),
 
