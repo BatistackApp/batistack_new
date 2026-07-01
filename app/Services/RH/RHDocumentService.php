@@ -152,4 +152,27 @@ class RHDocumentService extends DocumentService
             'rh/records'
         );
     }
+
+    /**
+     * Génère un avertissement RH suite à une amende routière.
+     */
+    public function generateTrafficFineWarning(Employee $employee, \App\Models\Flottes\TrafficFine $fine): string
+    {
+        $fine->load(['vehicle']);
+
+        $data = [
+            'company' => Company::first(),
+            'employee' => $employee,
+            'fine' => $fine,
+            'title' => 'AVERTISSEMENT INFRACTION - ' . $employee->full_name,
+            'generated_at' => Carbon::now()->format('d/m/Y H:i'),
+        ];
+
+        return $this->generate(
+            'pdf.rh.traffic_fine_warning',
+            $data,
+            'avertissement_amende_'.$fine->reference.'_'.$employee->id,
+            'rh/warnings'
+        );
+    }
 }
