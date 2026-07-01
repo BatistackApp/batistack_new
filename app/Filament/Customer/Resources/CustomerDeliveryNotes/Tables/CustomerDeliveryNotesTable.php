@@ -20,7 +20,7 @@ class CustomerDeliveryNotesTable
         return $table
             ->defaultSort('reference', 'desc')
             ->query(
-                CustomerDeliveryNote::where('client_id', auth()->user()->customer->third_party_id)
+                CustomerDeliveryNote::where('client_id', auth()->user()->contact->third_party_id)
                     ->newQuery()
             )
             ->columns([

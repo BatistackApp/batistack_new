@@ -21,7 +21,7 @@ class EnsureUserIsCustomer
             return redirect()->route('filament.customer.auth.login');
         }
 
-        $client = $user->customer;
+        $client = $user->contact;
 
         if (! $client || ! $client->is_active) {
             auth()->logout();

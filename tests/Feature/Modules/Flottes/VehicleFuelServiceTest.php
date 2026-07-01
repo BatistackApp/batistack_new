@@ -131,11 +131,12 @@ test('plein sans affectation signalé comme siphonnage', function () {
 });
 
 test('calcule consommation moyenne', function () {
+    $startDate = now()->startOfMonth();
     // Utiliser processAndAuditFuelTransaction pour créer des transactions en base
-    $this->fuelService->processAndAuditFuelTransaction($this->vehicle, 40, 70, 50500, now()->subDays(3), 'Station A');
-    $this->fuelService->processAndAuditFuelTransaction($this->vehicle, 50, 85, 51000, now()->subDays(2), 'Station B');
+    $this->fuelService->processAndAuditFuelTransaction($this->vehicle, 40, 70, 50500, $startDate->copy()->addDays(1), 'Station A');
+    $this->fuelService->processAndAuditFuelTransaction($this->vehicle, 50, 85, 51000, $startDate->copy()->addDays(2), 'Station B');
 
-    $avg = $this->fuelService->getAverageConsumption($this->vehicle, now()->startOfMonth(), now());
+    $avg = $this->fuelService->getAverageConsumption($this->vehicle, $startDate, now()->endOfMonth());
 
     expect($avg)->toBeGreaterThan(0);
 });
@@ -146,7 +147,7 @@ test('détecte anomalie consommation et signale le siphonnage', function () {
 
     // 1. Transaction 1: 50L pour 500km (10L/100km)
     $this->fuelService->processAndAuditFuelTransaction($this->vehicle, 50, 70, 50500, now()->subDays(10), 'Station A');
-    
+
     // 2. Transaction 2: 50L pour 500km (10L/100km)
     $this->fuelService->processAndAuditFuelTransaction($this->vehicle, 50, 70, 51000, now()->subDays(5), 'Station B');
 
@@ -168,11 +169,11 @@ test('détecte anomalie consommation et signale le siphonnage', function () {
 
     // 4. Transaction anormale : 80L pour 100km (80L/100km) -> écart bien supérieur à 20%
     $transaction = $this->fuelService->processAndAuditFuelTransaction(
-        $this->vehicle, 
-        80, 
-        120, 
-        51100, 
-        $aujourdhui, 
+        $this->vehicle,
+        80,
+        120,
+        51100,
+        $aujourdhui,
         'Station C'
     );
 

@@ -19,7 +19,7 @@ class CustomerOrdersTable
         return $table
             ->defaultSort('reference', 'desc')
             ->query(
-                CustomerOrder::where('client_id', auth()->user()->customer->third_party_id)
+                CustomerOrder::where('client_id', auth()->user()->contact->third_party_id)
                     ->where('status', '!=', OrderStatus::DRAFT)
                     ->newQuery()
             )
