@@ -64,6 +64,50 @@ class ChantiersTable
                         ->icon(Phosphor::ChartPie)
                         ->color('success')
                         ->action(fn (Chantier $record, ChantierDocumentService $service) => response()->download($service->generateRentabilityReport($record))),
+                    
+                    \Filament\Tables\Actions\Action::make('affect_material')
+                        ->label('Affecter Matériel')
+                        ->icon(Phosphor::Package)
+                        ->color('warning')
+                        ->form([
+                            \Filament\Forms\Components\Select::make('warehouse_id')
+                                ->label('Dépôt Source')
+                                ->options(\App\Models\Articles\Warehouse::pluck('name', 'id'))
+                                ->required()
+                                ->reactive(),
+                            \Filament\Forms\Components\Select::make('item_id')
+                                ->label('Article')
+                                ->options(function (callable $get) {
+                                    $warehouseId = $get('warehouse_id');
+                                    if (!$warehouseId) return [];
+                                    return \App\Models\Articles\Item::whereHas('stocks', function ($q) use ($warehouseId) {
+                                        $q->where('warehouse_id', $warehouseId)->where('quantity', '>', 0);
+                                    })->pluck('name', 'id');
+                                })
+                                ->required(),
+                            \Filament\Forms\Components\TextInput::make('quantity')
+                                ->label('Quantité')
+                                ->numeric()
+                                ->required()
+                                ->minValue(0.01),
+                        ])
+                        ->action(function (Chantier $record, array $data) {
+                            $stock = \App\Models\Articles\Stock::where('warehouse_id', $data['warehouse_id'])
+                                ->where('item_id', $data['item_id'])
+                                ->firstOrFail();
+                            
+                            $stock->decrease(
+                                $data['quantity'],
+                                "Affectation au chantier {$record->reference}",
+                                \App\Enums\Articles\StockMouvementSource::SITE,
+                                $record->id
+                            );
+                            
+                            \Filament\Notifications\Notification::make()
+                                ->title('Matériel affecté')
+                                ->success()
+                                ->send();
+                        }),
                 ]),
             ])
             ->toolbarActions([

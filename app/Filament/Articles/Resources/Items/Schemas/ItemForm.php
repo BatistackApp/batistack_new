@@ -51,6 +51,12 @@ class ItemForm
                                             ->options(Unit::pluck('name', 'id'))
                                             ->required()
                                             ->native(false),
+                                        Select::make('supplier_id')
+                                            ->label('Fournisseur principal')
+                                            ->relationship('supplier', 'name', fn ($query) => $query->where('is_supplier', true))
+                                            ->searchable()
+                                            ->preload()
+                                            ->nullable(),
                                         Textarea::make('description')
                                             ->label('Description technique')
                                             ->columnSpanFull(),

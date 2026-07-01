@@ -35,6 +35,25 @@ class VehicleObserver
     }
 
     /**
+     * Après création, générer le Dépôt si VUL.
+     */
+    public function created(Vehicle $vehicle): void
+    {
+        if ($vehicle->isVUL()) {
+            \App\Models\Articles\Warehouse::create([
+                'name' => 'Camionnette ' . $vehicle->license_plate,
+                'location' => 'Mobile',
+                'is_active' => true,
+                'vehicle_id' => $vehicle->id,
+            ]);
+            
+            Log::info('Dépôt virtuel créé pour le véhicule', [
+                'vehicle_id' => $vehicle->id,
+            ]);
+        }
+    }
+
+    /**
      * Normalise la plaque lors de mise à jour.
      */
     public function updating(Vehicle $vehicle): void

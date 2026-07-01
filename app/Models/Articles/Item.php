@@ -72,6 +72,11 @@ class Item extends Model implements HasMedia
         return $this->hasMany(Item::class, 'parent_id');
     }
 
+    public function supplier(): BelongsTo
+    {
+        return $this->belongsTo(\App\Models\Tiers\ThirdParty::class, 'supplier_id');
+    }
+
     protected function casts(): array
     {
         return [

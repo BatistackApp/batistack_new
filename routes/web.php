@@ -32,5 +32,27 @@ Route::get('/health', function () {
 
 Route::get('/public/rh/check-safety/{uuid}', PublicSafetyPassportController::class)->name('public.safety-check');
 
+Route::middleware(['auth'])->group(function () {
+    Route::get('/admin/articles/{item}/request-quote', function (\App\Models\Articles\Item $item) {
+        if (!$item->supplier_id) {
+            return back()->with('error', 'Aucun fournisseur associé à cet article.');
+        }
+
+        $supplier = $item->supplier;
+        if (!$supplier->email) {
+            return back()->with('error', 'Le fournisseur n\'a pas d\'adresse email.');
+        }
+
+        \Illuminate\Support\Facades\Mail::to($supplier->email)->send(new \App\Mail\Articles\SupplierQuoteRequestMail($item));
+
+        \Filament\Notifications\Notification::make()
+            ->title('Demande envoyée')
+            ->body("L'email de demande de prix a été envoyé à {$supplier->name}.")
+            ->success()
+            ->send();
+
+        return back();
+    })->name('articles.request-quote');
+});
 require __DIR__.'/settings.php';
 // require __DIR__.'/test.php';

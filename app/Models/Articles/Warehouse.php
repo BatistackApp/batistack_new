@@ -29,6 +29,11 @@ class Warehouse extends Model
         return $this->hasMany(Stock::class);
     }
 
+    public function vehicle(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(\App\Models\Flottes\Vehicle::class);
+    }
+
     // ============================================
     // SCOPES
     // ============================================
