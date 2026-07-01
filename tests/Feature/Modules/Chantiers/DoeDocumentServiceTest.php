@@ -83,7 +83,7 @@ describe('DoeDocumentService - compileDoe', function () {
     test('lève une exception si aucun document validé', function () {
         expect(function () {
             $this->service->compileDoe($this->chantier);
-        })->toThrow(\Exception::class, 'Aucun document validé');
+        })->toThrow(\Exception::class, "Aucun document ou fiche technique");
     });
 
     test('ignore les documents non validés', function () {

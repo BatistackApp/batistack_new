@@ -33,12 +33,24 @@ class DoeDocumentService extends DocumentService
             ->where('is_validated', true)
             ->get();
 
-        if ($documents->isEmpty()) {
-            throw new Exception("Aucun document validé n'est disponible pour constituer le DOE de ce chantier.");
+        // 1.b Récupération des fiches techniques des articles utilisés sur le chantier
+        $itemIds = \App\Models\Commerce\CustomerOrderItem::query()
+            ->whereHas('order', function ($query) use ($chantier) {
+                $query->where('chantier_id', $chantier->id);
+            })
+            ->pluck('item_id')
+            ->unique();
+
+        $itemsWithSheets = \App\Models\Articles\Item::whereIn('id', $itemIds)->with('media')->get()
+            ->filter(fn ($item) => $item->hasMedia('technical_sheet'))
+            ->values();
+
+        if ($documents->isEmpty() && $itemsWithSheets->isEmpty()) {
+            throw new Exception("Aucun document ou fiche technique n'est disponible pour constituer le DOE de ce chantier.");
         }
 
         // 2. Génération du Sommaire PDF officiel (Table des matières)
-        $sommairePath = $this->generateSommairePdf($chantier, $documents);
+        $sommairePath = $this->generateSommairePdf($chantier, $documents, $itemsWithSheets);
 
         // 3. Initialisation de l'archive ZIP
         $zipFilename = 'DOE_'.Str::slug($chantier->reference).'_'.now()->format('Ymd_His').'.zip';
@@ -71,6 +83,18 @@ class DoeDocumentService extends DocumentService
             }
         }
 
+        // 5. Parcourir et ajouter chaque fiche technique
+        foreach ($itemsWithSheets as $index => $item) {
+            $media = $item->getFirstMedia('technical_sheet');
+            if ($media && Storage::disk($media->disk)->exists($media->getPathRelativeToDisk())) {
+                $fileExtension = pathinfo($media->file_name, PATHINFO_EXTENSION);
+                $cleanName = Str::slug($item->name);
+                $zipPath = 'FICHES_TECHNIQUES/FT_'.str_pad($index + 1, 2, '0', STR_PAD_LEFT).'_'.$cleanName.'.'.$fileExtension;
+
+                $zip->addFile($media->getPath(), $zipPath);
+            }
+        }
+
         $zip->close();
 
         // Retourne le chemin du fichier ZIP prêt à être téléchargé ou archivé
@@ -80,12 +104,13 @@ class DoeDocumentService extends DocumentService
     /**
      * Génère la table des matières officielle du DOE en PDF.
      */
-    protected function generateSommairePdf(Chantier $chantier, $documents): string
+    protected function generateSommairePdf(Chantier $chantier, $documents, $itemsWithSheets): string
     {
         $data = [
             'company' => Company::first(),
             'chantier' => $chantier,
             'documents' => $documents,
+            'itemsWithSheets' => $itemsWithSheets,
             'title' => 'SOMMAIRE OFFICIEL DU DOE - '.$chantier->name,
             'generated_at' => Carbon::now()->format('d/m/Y H:i'),
         ];

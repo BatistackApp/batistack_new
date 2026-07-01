@@ -48,6 +48,13 @@
                     <td>{{ $doc->name }}</td>
                 </tr>
             @endforeach
+            @foreach($itemsWithSheets as $index => $item)
+                <tr>
+                    <td class="py-2 px-3 font-mono">{{ str_pad(count($documents) + $index + 1, 2, '0', STR_PAD_LEFT) }}</td>
+                    <td class="font-bold text-indigo-900 uppercase text-[9px]">FICHE_TECHNIQUE</td>
+                    <td>Fiche technique : {{ $item->name }} (Réf: {{ $item->reference }})</td>
+                </tr>
+            @endforeach
             </tbody>
         </table>
     </div>
