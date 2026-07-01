@@ -36,8 +36,22 @@ class ChantierAnalyticService
         $materialCost = 0; // Sera lié au module Stocks/Achats
         $subcontractingCost = 0; // Sera lié au module Facturation Fournisseur
 
-        // 3. Avancement Technique Pondéré
+        // 3. Analyse des Véhicules (Module Flottes)
+        $fleetCost = \App\Models\Flottes\VehicleAssignment::query()
+            ->where('chantier_id', $chantier->id)
+            ->whereIn('status', [
+                \App\Enums\Flottes\AssignmentStatus::ACTIVE,
+                \App\Enums\Flottes\AssignmentStatus::COMPLETED,
+            ])
+            ->get()
+            ->sum(fn ($assignment) => $assignment->getCost());
+
+        // 4. Avancement Technique Pondéré
         $progress = $this->calculateWeightedProgress($chantier);
+
+        $totalCost = $laborCost + $materialCost + $subcontractingCost + $fleetCost;
+        $budget = (float) $chantier->budget_total_ht;
+        $marginReal = $budget - $totalCost;
 
         return [
             'hours' => [
@@ -49,8 +63,11 @@ class ChantierAnalyticService
                 'labor_cost_real' => $laborCost,
                 'material_cost_real' => $materialCost,
                 'subcontracting_cost_real' => $subcontractingCost,
-                'total_cost_real' => $laborCost + $materialCost + $subcontractingCost,
-                'budget_ht' => (float) $chantier->budget_total_ht,
+                'fleet_cost_real' => $fleetCost,
+                'total_cost_real' => $totalCost,
+                'budget_ht' => $budget,
+                'margin_real' => $marginReal,
+                'margin_percent' => $budget > 0 ? ($marginReal / $budget) * 100 : 0,
             ],
             'progress' => $progress,
         ];
