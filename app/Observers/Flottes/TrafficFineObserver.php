@@ -53,6 +53,22 @@ class TrafficFineObserver
         if ($fine->employee) {
             $fine->employee->notify(new TrafficFineReceivedNotification($fine));
 
+            // [Nouveau] Synergie RH : Génération de l'avertissement RH
+            try {
+                $rhDocumentService = app(\App\Services\RH\RHDocumentService::class);
+                $rhDocumentService->generateTrafficFineWarning($fine->employee, $fine);
+                
+                Log::info('Avertissement RH généré suite à une amende', [
+                    'fine_id' => $fine->id,
+                    'employee_id' => $fine->employee_id,
+                ]);
+            } catch (\Exception $e) {
+                Log::error('Erreur lors de la génération de l\'avertissement RH', [
+                    'fine_id' => $fine->id,
+                    'error' => $e->getMessage()
+                ]);
+            }
+
             Log::info('Notification amende envoyée', [
                 'fine_id' => $fine->id,
                 'employee_id' => $fine->employee_id,
