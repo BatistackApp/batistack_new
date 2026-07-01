@@ -27,13 +27,14 @@ class EnsureUserIsSubcontractor
         }
 
         $contact = $user->contact;
+        $thirdParty = $contact?->thirdParty;
 
-        if (! $contact || ! $contact->is_active) {
+        if (! $contact || ! $contact->is_active || ! $thirdParty) {
             abort(403, 'Accès non autorisé : Compte inactif ou non lié à une entreprise.');
         }
 
         // Vérifier si l'entreprise parente est bien un sous-traitant
-        if ($contact->thirdParty->type !== ThirdPartyType::SUBCONTRACTOR) {
+        if ($thirdParty->type !== ThirdPartyType::SUBCONTRACTOR) {
             abort(403, 'Accès non autorisé : Cette section est réservée aux Sous-Traitants.');
         }
 

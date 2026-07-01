@@ -27,6 +27,10 @@ class SubcontractorPanelProvider extends PanelProvider
         return $panel
             ->id('sous-traitant')
             ->path('sous-traitant')
+            ->login()
+            ->sidebarCollapsibleOnDesktop()
+            ->databaseNotifications()
+            ->brandName('Batistack - Espace Sous Traitant')
             ->colors([
                 'primary' => Color::Purple,
             ])
