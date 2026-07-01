@@ -46,6 +46,7 @@ jobs:
               - 'tests/Feature/Settings/**'
               - 'tests/Feature/*.php'
               - 'tests/Unit/**'
+              - 'tests/*.php'
             Flottes:
               - 'app/Filament/Flottes/**'
               - 'tests/Feature/Modules/Flottes/**'
