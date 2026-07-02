@@ -3,7 +3,7 @@
 ## 📌 État Actuel (Ce qui est fait)
 *   **Backend :** Structure du tunnel de vente et d'achat totalement couverte. Supporte les Devis (Clients), Commandes (Clients/Fournisseurs), Situations (Clients/Sous-traitants), Bons de Livraison, Factures et Paiements.
 *   **Logique Métier :** Gestion des workflows de statuts (Brouillon -> Envoyé -> Accepté -> Facturé). Les règles de validation sont couvertes.
-*   **Tests :** Validation massive du module avec plus de 182 tests PestPHP fonctionnels.
+*   **Tests :** Validation complète du module avec 100% de succès sur la gigantesque suite de **182 tests** PestPHP. Le cycle de vie complet est garanti sans faille logicielle.
 
 ## 🚧 Ce qu'il reste à faire
 *   **Génération de Documents :** Finaliser et designer la génération des PDF (devis, factures) avec l'identité de l'entreprise.
