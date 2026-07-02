@@ -15,6 +15,7 @@ class Warehouse extends Model
         'name',
         'location',
         'is_active',
+        'vehicle_id',
     ];
 
     protected function casts(): array

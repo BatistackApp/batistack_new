@@ -57,3 +57,38 @@ it('calculates penalized score for late delivery and litigation', function () {
     
     expect($supplier->refresh()->supplier_score)->toBe(68);
 });
+
+it('averages scores across multiple receipts', function () {
+    $supplier = ThirdParty::factory()->create(['type' => ThirdPartyType::SUPPLIER]);
+    
+    $order1 = PurchaseOrder::factory()->create(['supplier_id' => $supplier->id, 'expected_delivery_date' => now()->addDays(2)]);
+    $order2 = PurchaseOrder::factory()->create(['supplier_id' => $supplier->id, 'expected_delivery_date' => now()->addDays(2)]);
+    
+    // Receipt 1: Perfect (50 + 30 + 20 = 100)
+    ReceiptNote::factory()->create([
+        'purchase_order_id' => $order1->id,
+        'status' => DeliveryStatus::DELIVERED,
+        'received_at' => now(), 
+        'quality_rating' => 5, 
+        'has_litigation' => false, 
+    ]);
+
+    // Receipt 2: Terrible (Late by 10 days = 0, Quality 1/5 = 6, Litigation = 10 pt penalty)
+    ReceiptNote::factory()->create([
+        'purchase_order_id' => $order2->id,
+        'status' => DeliveryStatus::DELIVERED,
+        'received_at' => now()->addDays(12), 
+        'quality_rating' => 1, 
+        'has_litigation' => true, 
+    ]);
+    
+    // Delays average: (50 + 0) / 2 = 25
+    // Quality average: (30 + 6) / 2 = 18
+    // Litigation: 1 penalty -> 20 - 10 = 10
+    // Total = 25 + 18 + 10 = 53
+    
+    $service = new SupplierScoringService();
+    $service->calculateScore($supplier);
+    
+    expect($supplier->refresh()->supplier_score)->toBe(53);
+});

@@ -55,6 +55,11 @@ class VehicleAssignment extends Model
         )->withTimestamps();
     }
 
+    public function conditionReports(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(VehicleConditionReport::class, 'vehicle_assignment_id');
+    }
+
     protected function casts(): array
     {
         return [
@@ -206,5 +211,30 @@ class VehicleAssignment extends Model
     public function hasPassenger(Employee $employee): bool
     {
         return $this->passengers()->where('employee_id', $employee->id)->exists();
+    }
+
+    /**
+     * Récupère les alertes météo du chantier qui chevauchent la durée de l'affectation.
+     */
+    public function getOverlappingWeatherAlerts()
+    {
+        if (! $this->chantier_id || ! $this->started_at) {
+            return collect();
+        }
+
+        $endDate = $this->ended_at ?? now();
+
+        return \App\Models\Chantiers\WeatherAlert::where('chantier_id', $this->chantier_id)
+            ->where(function ($query) use ($endDate) {
+                $query->whereBetween('alert_date', [$this->started_at->startOfDay(), $endDate->endOfDay()])
+                    ->orWhere(function ($q) use ($endDate) {
+                        $q->where('started_at', '<=', $endDate)
+                          ->where(function ($q2) {
+                              $q2->where('ended_at', '>=', $this->started_at)
+                                 ->orWhereNull('ended_at');
+                          });
+                    });
+            })
+            ->get();
     }
 }

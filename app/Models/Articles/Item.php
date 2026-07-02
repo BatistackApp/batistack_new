@@ -34,6 +34,7 @@ class Item extends Model implements HasMedia
         'vat_rate_id',
         'min_stock',
         'parent_id',
+        'supplier_id',
     ];
 
     public function unit(): BelongsTo
