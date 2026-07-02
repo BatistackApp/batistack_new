@@ -32,8 +32,20 @@ class ChantierAnalyticService
             ->get()
             ->sum(fn ($entry) => $entry->hours * ($entry->employee->currentContract?->hourly_rate ?? 0));
 
-        // 2. Analyse Matériaux et Sous-traitance (Simulée en attendant les modules Achats)
-        $materialCost = 0; // Sera lié au module Stocks/Achats
+        // 2. Analyse Matériaux (via module Stocks)
+        // On récupère les mouvements de sortie (OUT) affectés au chantier (SITE)
+        $materialCost = \App\Models\Articles\StockMouvement::query()
+            ->outgoing()
+            ->bySource(\App\Enums\Articles\StockMouvementSource::SITE)
+            ->where('reference_id', $chantier->id)
+            ->with('stock.item')
+            ->get()
+            ->sum(function ($mouvement) {
+                $unitPrice = $mouvement->stock->item->purchase_price ?? 0;
+                // quantity_delta est négatif pour une sortie (OUT), on inverse le signe pour le coût
+                return abs($mouvement->quantity_delta) * $unitPrice;
+            });
+
         $subcontractingCost = 0; // Sera lié au module Facturation Fournisseur
 
         // 3. Analyse des Véhicules (Module Flottes)

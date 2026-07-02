@@ -132,7 +132,7 @@ class Stock extends Model
     /**
      * Augmenter le stock
      */
-    public function increase(float $quantity, string $description = ''): StockMouvement
+    public function increase(float $quantity, string $description = '', ?\App\Enums\Articles\StockMouvementSource $source = null, ?int $referenceId = null): StockMouvement
     {
         $before = $this->quantity;
         $this->quantity += $quantity;
@@ -146,13 +146,15 @@ class Stock extends Model
             'quantity_delta' => $quantity,
             'quantity_after' => $this->quantity,
             'description' => $description ?: 'Augmentation manuelle du stock',
+            'reference_type' => $source,
+            'reference_id' => $referenceId,
         ]);
     }
 
     /**
      * Diminuer le stock
      */
-    public function decrease(float $quantity, string $description = ''): StockMouvement
+    public function decrease(float $quantity, string $description = '', ?\App\Enums\Articles\StockMouvementSource $source = null, ?int $referenceId = null): StockMouvement
     {
         $before = $this->quantity;
         $this->quantity -= $quantity;
@@ -166,6 +168,8 @@ class Stock extends Model
             'quantity_delta' => -$quantity,
             'quantity_after' => $this->quantity,
             'description' => $description ?: 'Diminution manuelle du stock',
+            'reference_type' => $source,
+            'reference_id' => $referenceId,
         ]);
     }
 

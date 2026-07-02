@@ -2,7 +2,7 @@
 
 namespace App\Services\Core;
 
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\View;
 use Spatie\Browsershot\Browsershot;
 
@@ -17,7 +17,7 @@ class DocumentService
      * @param  string  $type  Le sous-répertoire dans lequel stocker le document.
      * @return string Le chemin absolu vers le fichier PDF généré.
      */
-    protected function generate(string $view, array $data, string $filename, string $type, string $position = 'portait', bool $pdfView = false): string
+    public function generate(string $view, array $data, string $filename, string $type, string $position = 'portait', bool $pdfView = false): string
     {
         $html = View::make($view, $data)->render();
 
@@ -44,19 +44,14 @@ class DocumentService
                 ->pdf();
         }
 
-        $basePath = storage_path('app/public/documents/'.$type.'/');
+        $relativePath = 'documents/'.$type.'/'.$filename.'.pdf';
 
-        if (! file_exists($basePath)) {
-            mkdir($basePath, 0755, true);
-        }
-
-        $path = "{$basePath}{$filename}.pdf";
-        file_put_contents($path, $pdfContent);
+        Storage::disk('public')->put($relativePath, $pdfContent);
 
         if ($pdfView) {
             return $pdfContent;
         }
 
-        return $path;
+        return $relativePath;
     }
 }

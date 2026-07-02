@@ -40,4 +40,69 @@ class InventoryService
             // Logique d'audit à implémenter pour tracer l'ajustement analytique
         });
     }
+
+    /**
+     * Génère un export CSV de la valorisation de l'inventaire.
+     */
+    public function generateValuationCsv(): string
+    {
+        $stocks = Stock::with(['item', 'warehouse'])->where('quantity', '>', 0)->get();
+
+        $csv = "Reference;Designation;Depot;Quantite;Prix Unitaire (HT);Valeur Totale (HT)\n";
+
+        foreach ($stocks as $stock) {
+            $unitPrice = $stock->item->purchase_price ?? 0;
+            $totalValue = $stock->quantity * $unitPrice;
+
+            $csv .= sprintf(
+                "%s;%s;%s;%s;%s;%s\n",
+                $this->escapeCsv($stock->item->reference),
+                $this->escapeCsv($stock->item->name),
+                $this->escapeCsv($stock->warehouse->name),
+                number_format($stock->quantity, 2, '.', ''),
+                number_format($unitPrice, 2, '.', ''),
+                number_format($totalValue, 2, '.', '')
+            );
+        }
+
+        return $csv;
+    }
+
+    /**
+     * Génère un export PDF officiel de la valorisation de l'inventaire.
+     */
+    public function generateValuationPdf(): string
+    {
+        $stocks = Stock::with(['item', 'warehouse'])->where('quantity', '>', 0)->get();
+        
+        $totalValue = $stocks->sum(function ($stock) {
+            return $stock->quantity * ($stock->item->purchase_price ?? 0);
+        });
+
+        $documentService = app(\App\Services\Core\DocumentService::class);
+
+        $data = [
+            'company' => \App\Models\Core\Company::first(),
+            'stocks' => $stocks,
+            'totalValue' => $totalValue,
+            'title' => 'RAPPORT DE VALORISATION D\'INVENTAIRE',
+            'generated_at' => \Carbon\Carbon::now()->format('d/m/Y H:i'),
+        ];
+
+        return $documentService->generate(
+            'pdf.articles.inventory_valuation',
+            $data,
+            'valorisation_inventaire_' . now()->format('YmdHis'),
+            'articles/inventory'
+        );
+    }
+
+    private function escapeCsv(?string $value): string
+    {
+        if ($value === null) {
+            return '';
+        }
+        $value = str_replace('"', '""', $value);
+        return '"' . $value . '"';
+    }
 }

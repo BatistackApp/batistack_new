@@ -31,12 +31,23 @@ class LowStockNotification extends Notification
 
     public function toDatabase($notifiable): array
     {
-        return \Filament\Notifications\Notification::make()
+        $notification = \Filament\Notifications\Notification::make()
             ->danger()
             ->title('Stock critique : '.$this->stock->item->name)
             ->body("Quantité restante : {$this->stock->quantity} dans {$this->stock->warehouse->name}.")
-            ->icon(Phosphor::Warning)
-            ->getDatabaseMessage();
+            ->icon(Phosphor::Warning);
+
+        if ($this->stock->item->supplier_id) {
+            $notification->actions([
+                \Filament\Notifications\Actions\Action::make('request_quote')
+                    ->label('Demander prix')
+                    ->button()
+                    ->url(route('articles.request-quote', ['item' => $this->stock->item_id]))
+                    ->markAsRead(),
+            ]);
+        }
+
+        return $notification->getDatabaseMessage();
     }
 
     public function toArray($notifiable): array
