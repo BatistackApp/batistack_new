@@ -30,7 +30,7 @@ test('quote has correct relationships', function () {
 
 test('quote calculates total tva correctly', function () {
     $vatRate = VatRate::factory()->create(['rate' => 20]);
-    
+
     // total_ht = 100 * 2 = 200 => TVA = 40
     CustomerQuoteItem::factory()->create([
         'customer_quote_id' => $this->quote->id,
@@ -39,7 +39,7 @@ test('quote calculates total tva correctly', function () {
         'total_ht' => 200,
         'vat_rate_id' => $vatRate->id,
     ]);
-    
+
     // total_ht = 50 * 3 = 150 => TVA = 30
     CustomerQuoteItem::factory()->create([
         'customer_quote_id' => $this->quote->id,
@@ -48,23 +48,26 @@ test('quote calculates total tva correctly', function () {
         'total_ht' => 150,
         'vat_rate_id' => $vatRate->id,
     ]);
-    
+
     $this->quote->refresh();
-    
+
     expect($this->quote->total_tva)->toBeFloat()->toEqual(70.0);
 });
 
 test('quote calculates is expired correctly', function () {
     $this->quote->update(['expires_at' => now()->subDay()]);
     expect($this->quote->is_expired)->toBeTrue();
-    
+
     $this->quote->update(['expires_at' => now()->addDay()]);
     expect($this->quote->is_expired)->toBeFalse();
 });
 
 test('quote casts attributes correctly', function () {
+    $user = User::factory()->create();
+    $this->actingAs($user);
+
     $this->quote->update(['status' => QuoteStatus::SENT]);
-    
+
     expect($this->quote->status)->toBeInstanceOf(QuoteStatus::class)
         ->and($this->quote->status)->toBe(QuoteStatus::SENT);
 });
