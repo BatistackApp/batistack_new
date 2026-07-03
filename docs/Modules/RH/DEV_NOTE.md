@@ -13,9 +13,10 @@
 *   **Matrice de Polyvalence :** Tableau de bord dynamique permettant de consulter d'un seul coup d'œil la validité des habilitations (Q) et des équipements (E) de chaque employé avec un code couleur (Valide, Expirant, Expiré).
 *   **Fiches de Paie Pro Forma :** Génération automatique d'un PDF estimatif du bulletin de salaire (Heures normales, majorations 25/50%, primes de grand déplacement).
 *   **Pointeuse Biométrique (Kiosque) :** Implémentation d'un kiosque de pointage avec reconnaissance faciale (`face-api.js`) traitant l'image côté client, gestion du consentement RGPD, et création automatique des brouillons de saisie d'heures.
+*   **Onboarding Digitalisé :** Espace candidat autonome permettant aux nouveaux arrivants de remplir leurs informations (pièce d'identité, RIB, attestation sécurité sociale) avant de générer le contrat.
 
 ## 🚧 Ce qu'il reste à faire
 *(Le module est fonctionnellement très abouti et couvre tous les besoins RH classiques et avancés. Il est en phase de maintenance/amélioration continue).*
 
 ## 💡 Idées d'amélioration et Nouvelles Fonctionnalités
-1.  **Onboarding Digitalisé :** Mettre en place un espace candidat permettant aux nouveaux arrivants de remplir leurs informations (pièce d'identité, RIB, attestation sécurité sociale) avant de générer le contrat DocuSeal.
+- Intégration avancée avec les organismes de prévoyance (BTP Prévoyance).

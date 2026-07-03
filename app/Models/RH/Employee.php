@@ -38,6 +38,7 @@ class Employee extends Model implements HasMedia
         'pin_hash',
         'biometric_consent',
         'face_descriptor',
+        'onboarding_completed',
     ];
 
     protected function casts(): array
@@ -47,6 +48,7 @@ class Employee extends Model implements HasMedia
             'is_active' => 'boolean',
             'biometric_consent' => 'boolean',
             'face_descriptor' => 'array',
+            'onboarding_completed' => 'boolean',
         ];
     }
 

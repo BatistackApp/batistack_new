@@ -51,6 +51,15 @@ class EmployeesTable
                     ->label('Actif')
                     ->onColor('success')
                     ->offColor('danger'),
+
+                \Filament\Tables\Columns\IconColumn::make('onboarding_completed')
+                    ->label('Onboarding')
+                    ->boolean()
+                    ->trueIcon('heroicon-o-check-circle')
+                    ->falseIcon('heroicon-o-clock')
+                    ->trueColor('success')
+                    ->falseColor('warning')
+                    ->tooltip(fn ($state) => $state ? 'Dossier complet' : 'En attente'),
             ])
             ->filters([
                 TernaryFilter::make('is_active')
@@ -63,6 +72,18 @@ class EmployeesTable
                 ActionGroup::make([
                     ViewAction::make(),
                     EditAction::make(),
+                    Action::make('onboarding_link')
+                        ->label('Lien Onboarding')
+                        ->icon('heroicon-o-link')
+                        ->color('gray')
+                        ->action(function (Employee $record) {
+                            // URL generation using a simple route copy
+                        })
+                        ->extraAttributes(function (Employee $record) {
+                            return [
+                                'x-on:click' => "window.navigator.clipboard.writeText('".route('public.onboarding', $record->uuid)."'); \$tooltip('Lien copié !')",
+                            ];
+                        }),
                     Action::make('proforma')
                         ->label('Paie Pro Forma')
                         ->icon('heroicon-o-document-currency-euro')
