@@ -11,4 +11,7 @@
 *(La base du module est terminée, voir les améliorations)*
 
 ## 💡 Idées d'amélioration et Nouvelles Fonctionnalités
-1.  **Intégration CRM Avancée :** Relier les clients à des campagnes d'e-mailing ou de relance.
+1.  **Vérification de la conformité documentaire (OCR) :** Automatiser la vérification de la validité des documents légaux déposés par les sous-traitants (Kbis, attestations URSSAF, assurances décennales) et paramétrer des alertes avant expiration.
+2.  **Cartographie Interactive :** Visualiser la répartition géographique des fournisseurs, sous-traitants et clients par rapport aux chantiers en cours sur une carte (via Filament Map).
+3.  **Portail d'appels d'offres Privé :** Permettre de diffuser des consultations et demandes de prix directement aux sous-traitants et fournisseurs via leur accès portail dédié.
+4.  **Évaluation Financière & Solvabilité :** Intégration d'une API (ex: Creditsafe, Infogreffe) pour récupérer automatiquement les scores de solvabilité des tiers et définir des limites de crédit ou d'encours automatisées.
