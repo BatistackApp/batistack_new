@@ -9,11 +9,13 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
 
 #[ObservedBy([ContractObserver::class])]
-class Contract extends Model
+class Contract extends Model implements HasMedia
 {
-    use HasFactory;
+    use HasFactory, InteractsWithMedia;
 
     protected $fillable = [
         'employee_id',
@@ -24,6 +26,9 @@ class Contract extends Model
         'hourly_rate',
         'weekly_hours',
         'trial_end_date',
+        'docuseal_template_id',
+        'docuseal_submission_id',
+        'signature_status',
     ];
 
     public function employee(): BelongsTo

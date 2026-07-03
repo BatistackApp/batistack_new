@@ -92,14 +92,21 @@ class EmployeeForm
                                     ]),
                             ]),
 
-                        // --- MÉDIAS ---
-                        Tabs\Tab::make('Documents & Photo')
-                            ->icon(Phosphor::Files)
+                        // --- MÉDIAS & BIOMÉTRIE ---
+                        Tabs\Tab::make('Documents, Photo & Biométrie')
+                            ->icon(Phosphor::Fingerprint)
                             ->schema([
+                                Section::make('Biométrie & RGPD')
+                                    ->schema([
+                                        Toggle::make('biometric_consent')
+                                            ->label('Consentement Biométrique RGPD')
+                                            ->helperText('L\'employé a signé l\'accord autorisant l\'utilisation de son image pour la pointeuse kiosque.')
+                                            ->onColor('success'),
+                                    ]),
                                 Grid::make(2)
                                     ->schema([
                                         SpatieMediaLibraryFileUpload::make('avatar')
-                                            ->label('Photo de profil')
+                                            ->label('Photo de profil (Sert de base pour la reconnaissance faciale)')
                                             ->collection('avatar')
                                             ->image()
                                             ->avatar()

@@ -42,6 +42,9 @@ class RHPanelProvider extends PanelProvider
                 Dashboard::class,
             ])
             ->discoverWidgets(in: app_path('Filament/RH/Widgets'), for: 'App\Filament\RH\Widgets')
+            ->plugins([
+                \Guava\Calendar\CalendarPlugin::make(),
+            ])
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,

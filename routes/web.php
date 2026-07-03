@@ -30,7 +30,12 @@ Route::get('/health', function () {
     }
 })->name('health');
 
-Route::get('/public/rh/check-safety/{uuid}', PublicSafetyPassportController::class)->name('public.safety-check');
+Route::get('/pass-securite/{uuid}', [\App\Http\Controllers\RH\PublicSafetyCheckController::class, 'show'])->name('public.safety-check');
+
+Route::get('/kiosk', \App\Livewire\Kiosk\BiometricClock::class)->name('kiosk.clock');
+Route::get('/kiosk/enroll', \App\Livewire\Kiosk\BiometricEnrollment::class)->name('kiosk.enroll');
+
+Route::get('/onboarding/{uuid}', \App\Livewire\Onboarding\CandidateForm::class)->name('public.onboarding');
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/admin/articles/{item}/request-quote', function (\App\Models\Articles\Item $item) {
