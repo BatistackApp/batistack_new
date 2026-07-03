@@ -35,6 +35,6 @@ test('notification content is correct', function () {
     
     expect($mailData->subject)->toContain('Facture n°FAC-TEST-01')
         ->and($mailData->introLines[0])->toContain('Nous vous adressons la facture relative à vos derniers achats')
-        ->and($mailData->actionText)->toBe('Consulter la facture')
+        ->and($mailData->actionText)->toBe('Télécharger la facture')
         ->and($mailData->actionUrl)->not->toBeNull();
 });
