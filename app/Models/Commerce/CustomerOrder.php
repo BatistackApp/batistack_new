@@ -84,7 +84,7 @@ class CustomerOrder extends Model
         $totalTva = 0;
 
         foreach ($items as $item) {
-            $totalTva += $item->selling_price * $item->vatRate->rate;
+            $totalTva += $item->total_ht * ($item->vatRate->rate / 100);
         }
 
         return $totalTva;
