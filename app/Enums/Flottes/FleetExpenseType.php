@@ -10,6 +10,8 @@ enum FleetExpenseType: string implements HasLabel
 {
     case PEAGE = 'peage';
     case PARKING = 'parking';
+    case WASH = 'lavage';
+    case OTHER = 'autre';
 
     public function getLabel(): string|Htmlable|null
     {
