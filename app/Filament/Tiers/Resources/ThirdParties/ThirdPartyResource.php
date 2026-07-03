@@ -8,6 +8,7 @@ use App\Filament\Tiers\Resources\ThirdParties\Pages\ListThirdParties;
 use App\Filament\Tiers\Resources\ThirdParties\Pages\ViewThirdParty;
 use App\Filament\Tiers\Resources\ThirdParties\RelationManagers\AddressesRelationManager;
 use App\Filament\Tiers\Resources\ThirdParties\RelationManagers\ContactsRelationManager;
+use App\Filament\Tiers\Resources\ThirdParties\RelationManagers\DocumentsRelationManager;
 use App\Filament\Tiers\Resources\ThirdParties\Schemas\ThirdPartyForm;
 use App\Filament\Tiers\Resources\ThirdParties\Schemas\ThirdPartyInfolist;
 use App\Filament\Tiers\Resources\ThirdParties\Tables\ThirdPartiesTable;
@@ -50,6 +51,7 @@ class ThirdPartyResource extends Resource
         return [
             AddressesRelationManager::class,
             ContactsRelationManager::class,
+            DocumentsRelationManager::class,
         ];
     }
 

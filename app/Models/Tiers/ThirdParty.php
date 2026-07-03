@@ -41,6 +41,9 @@ class ThirdParty extends Model implements HasMedia
         'iban',
         'bic',
         'supplier_score',
+        'financial_status',
+        'financial_data',
+        'last_financial_sync_at',
     ];
 
     protected function casts(): array
@@ -49,8 +52,10 @@ class ThirdParty extends Model implements HasMedia
             'type' => ThirdPartyType::class,
             'is_active' => 'boolean',
             'last_siren_sync_at' => 'datetime',
+            'last_financial_sync_at' => 'datetime',
             'credit_limit' => 'decimal:2',
             'compliant_status' => 'array',
+            'financial_data' => 'array',
             'supplier_score' => 'integer',
         ];
     }
@@ -58,6 +63,11 @@ class ThirdParty extends Model implements HasMedia
     public function addresses(): HasMany
     {
         return $this->hasMany(Address::class);
+    }
+
+    public function documents(): HasMany
+    {
+        return $this->hasMany(ThirdPartyDocument::class);
     }
 
     public function contacts(): HasMany
