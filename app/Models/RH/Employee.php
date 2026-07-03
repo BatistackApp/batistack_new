@@ -36,6 +36,8 @@ class Employee extends Model implements HasMedia
         'postal_code',
         'city',
         'pin_hash',
+        'biometric_consent',
+        'face_descriptor',
     ];
 
     protected function casts(): array
@@ -43,6 +45,8 @@ class Employee extends Model implements HasMedia
         return [
             'birth_date' => 'date',
             'is_active' => 'boolean',
+            'biometric_consent' => 'boolean',
+            'face_descriptor' => 'array',
         ];
     }
 

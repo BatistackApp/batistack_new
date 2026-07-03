@@ -11,11 +11,11 @@
 *   **Export Paie Automatisé :** Génération d'un export mensuel CSV des heures pointées (normales, trajet, GD) et absences validées depuis le panel Filament.
 *   **Signature Électronique (DocuSeal) :** Intégration de l'API DocuSeal pour envoyer et suivre la signature électronique des contrats directement depuis l'historique Filament.
 *   **Matrice de Polyvalence :** Tableau de bord dynamique permettant de consulter d'un seul coup d'œil la validité des habilitations (Q) et des équipements (E) de chaque employé avec un code couleur (Valide, Expirant, Expiré).
+*   **Fiches de Paie Pro Forma :** Génération automatique d'un PDF estimatif du bulletin de salaire (Heures normales, majorations 25/50%, primes de grand déplacement).
+*   **Pointeuse Biométrique (Kiosque) :** Implémentation d'un kiosque de pointage avec reconnaissance faciale (`face-api.js`) traitant l'image côté client, gestion du consentement RGPD, et création automatique des brouillons de saisie d'heures.
 
 ## 🚧 Ce qu'il reste à faire
 *(Le module est fonctionnellement très abouti et couvre tous les besoins RH classiques et avancés. Il est en phase de maintenance/amélioration continue).*
 
 ## 💡 Idées d'amélioration et Nouvelles Fonctionnalités
-1.  **Génération des fiches de paie pro forma :** Exploiter le `PayrollExportService` pour générer automatiquement un PDF estimatif des fiches de paie pour les collaborateurs, avec détail des primes paniers et grands déplacements.
-2.  **Onboarding Digitalisé :** Mettre en place un espace candidat permettant aux nouveaux arrivants de remplir leurs informations (pièce d'identité, RIB, attestation sécurité sociale) avant de générer le contrat DocuSeal.
-3.  **Connexion Biométrique Pointeuse :** Étudier la possibilité d'ajouter la reconnaissance faciale ou digitale pour sécuriser les pointages sur le mode "Kiosque" de la Pointeuse Collective.
+1.  **Onboarding Digitalisé :** Mettre en place un espace candidat permettant aux nouveaux arrivants de remplir leurs informations (pièce d'identité, RIB, attestation sécurité sociale) avant de générer le contrat DocuSeal.

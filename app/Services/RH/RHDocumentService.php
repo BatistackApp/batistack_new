@@ -175,4 +175,65 @@ class RHDocumentService extends DocumentService
             'rh/warnings'
         );
     }
+
+    /**
+     * Génère une fiche de paie pro forma (estimative).
+     */
+    public function generateProFormaPayslip(Employee $employee, int $month, int $year): string
+    {
+        $entries = $employee->timeEntries()
+            ->whereYear('date', $year)
+            ->whereMonth('date', $month)
+            ->where('status', TimeEntryStatus::APPROVED)
+            ->orderBy('date')
+            ->get();
+
+        $totalHours = $entries->sum('hours');
+        $gdDays = $entries->where('is_grand_deplacement', true)->unique('date')->count();
+        $contract = $employee->currentContract;
+        $hourlyRate = $contract ? $contract->getHourlyRate() : 0;
+
+        $contractHours = $contract ? $contract->weekly_hours : 35;
+        $monthlyContractHours = round($contractHours * 4.33);
+
+        $overtime25 = 0;
+        $overtime50 = 0;
+        if ($totalHours > $monthlyContractHours) {
+            $diff = $totalHours - $monthlyContractHours;
+            $overtime25 = min($diff, 34.6); // 8h par semaine * 4.33
+            if ($diff > 34.6) {
+                $overtime50 = $diff - 34.6;
+            }
+        }
+
+        $gdAllowance = $gdDays * 96.00;
+
+        $summary = [
+            'total_hours' => $totalHours,
+            'overtime_25' => $overtime25,
+            'overtime_50' => $overtime50,
+            'gd_days' => $gdDays,
+            'gd_allowance' => $gdAllowance,
+            'hourly_rate' => $hourlyRate,
+            'gross_salary_estimate' => ($totalHours * $hourlyRate) + ($overtime25 * $hourlyRate * 0.25) + ($overtime50 * $hourlyRate * 0.5) + $gdAllowance,
+        ];
+
+        $data = [
+            'company' => Company::first(),
+            'employee' => $employee,
+            'contract' => $contract,
+            'summary' => $summary,
+            'month' => str_pad((string) $month, 2, '0', STR_PAD_LEFT),
+            'year' => $year,
+            'title' => "FICHE DE PAIE PRO FORMA - {$employee->full_name}",
+            'generated_at' => Carbon::now()->format('d/m/Y H:i'),
+        ];
+
+        return $this->generate(
+            'pdf.rh.payslip_proforma',
+            $data,
+            "paie_proforma_{$employee->id}_{$year}_{$month}",
+            'rh/payslips'
+        );
+    }
 }
