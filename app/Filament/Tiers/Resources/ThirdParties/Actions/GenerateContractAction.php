@@ -20,9 +20,26 @@ class GenerateContractAction
             ->icon(Phosphor::FileText)
             ->visible(fn (ThirdParty $record) => $record->type === ThirdPartyType::SUBCONTRACTOR)
             ->action(function (ThirdParty $record, TiersDocumentService $service) {
-                $path = $service->generateContract($record);
+                $relativePath = $service->generateContract($record);
+                $absolutePath = \Illuminate\Support\Facades\Storage::disk('public')->path($relativePath);
 
-                return \response()->download($path);
+                // Sauvegarde du document
+                $document = \App\Models\Tiers\ThirdPartyDocument::create([
+                    'third_party_id' => $record->id,
+                    'type' => 'contrat_sous_traitance',
+                    'expiration_date' => now()->addYear(),
+                    'status' => 'valid',
+                ]);
+
+                $media = $document->addMedia($absolutePath)->toMediaCollection('third_party_documents');
+
+                \Filament\Notifications\Notification::make()
+                    ->title('Contrat généré et sauvegardé dans les documents du sous-traitant')
+                    ->success()
+                    ->send();
+
+                // On télécharge le fichier depuis son nouvel emplacement (Spatie a déplacé le fichier original)
+                return \response()->download($media->getPath());
             });
     }
 }

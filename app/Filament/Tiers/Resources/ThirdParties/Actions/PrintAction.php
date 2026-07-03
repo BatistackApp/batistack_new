@@ -18,8 +18,9 @@ class PrintAction
                 ->color('info')
                 ->action(function (TiersDocumentService $service) {
                     $path = $service->generateList(ThirdParty::all());
+                    $absolutePath = \Illuminate\Support\Facades\Storage::disk('public')->path($path);
 
-                    return response()->download($path);
+                    return response()->download($absolutePath);
                 }),
 
             'details' => Action::make('print_details')
@@ -28,8 +29,9 @@ class PrintAction
                 ->color('info')
                 ->action(function (TiersDocumentService $service, ThirdParty $record) {
                     $path = $service->generateDetails($record);
+                    $absolutePath = \Illuminate\Support\Facades\Storage::disk('public')->path($path);
 
-                    return response()->download($path);
+                    return response()->download($absolutePath);
                 }),
         };
 

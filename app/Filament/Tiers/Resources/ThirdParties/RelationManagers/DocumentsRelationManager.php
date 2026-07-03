@@ -2,6 +2,11 @@
 
 namespace App\Filament\Tiers\Resources\ThirdParties\RelationManagers;
 
+use App\Enums\Core\SignatureStatus;
+use App\Enums\Core\SignatureType;
+use App\Models\Tiers\ThirdPartyDocument;
+use App\Services\Core\SignatureService;
+use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\CreateAction;
 use Filament\Actions\DeleteAction;
@@ -10,11 +15,12 @@ use Filament\Actions\EditAction;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
+use Filament\Notifications\Notification;
 use Filament\Resources\RelationManagers\RelationManager;
-use Filament\Schemas\Components;
 use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Table;
+use ToneGabes\Filament\Icons\Enums\Phosphor;
 
 class DocumentsRelationManager extends RelationManager
 {
@@ -88,6 +94,55 @@ class DocumentsRelationManager extends RelationManager
                 CreateAction::make(),
             ])
             ->recordActions([
+                Action::make('request_signature')
+                    ->label('Demander Signature')
+                    ->icon(Phosphor::PenNib)
+                    ->color('info')
+                    ->visible(fn (ThirdPartyDocument $record) => $record->type === 'contrat_sous_traitance' &&
+                        $record->signatures()->where('status', SignatureStatus::PENDING)->doesntExist() &&
+                        $record->signatures()->where('status', SignatureStatus::SIGNED)->doesntExist()
+                    )
+                    ->action(function (ThirdPartyDocument $record, \App\Services\Core\SignatureService $service) {
+                        $email = $record->thirdParty->email;
+                        $name = $record->thirdParty->name;
+                        $path = $record->getFirstMedia('third_party_documents')?->getPath();
+
+                        if (!$email) {
+                            Notification::make()->title('Erreur : Le tiers n\'a pas d\'adresse email')->danger()->send();
+                            return;
+                        }
+
+                        $service->requestSignature(
+                            model: $record, 
+                            type: \App\Enums\Core\SignatureType::AUTOGRAPH, 
+                            email: $email, 
+                            name: $name, 
+                            documentPath: $path
+                        );
+                        Notification::make()->title('Demande de signature envoyée par email')->success()->send();
+                    }),
+                Action::make('view_signature')
+                    ->label('Voir Signature')
+                    ->icon(Phosphor::CheckCircle)
+                    ->color('success')
+                    ->visible(fn (ThirdPartyDocument $record) => $record->signatures()->where('status', SignatureStatus::SIGNED)->exists())
+                    ->modalContent(function (ThirdPartyDocument $record) {
+                        $signature = $record->signatures()->where('status', SignatureStatus::SIGNED)->first();
+                        return view('filament.tiers.signature-modal', ['signature' => $signature]);
+                    })
+                    ->modalSubmitAction(false)
+                    ->modalCancelActionLabel('Fermer'),
+                Action::make('download')
+                    ->label('Télécharger / Imprimer')
+                    ->icon(Phosphor::DownloadSimple)
+                    ->color('gray')
+                    ->visible(fn (ThirdPartyDocument $record) => $record->hasMedia('third_party_documents'))
+                    ->action(function (ThirdPartyDocument $record) {
+                        $media = $record->getFirstMedia('third_party_documents');
+                        if ($media) {
+                            return response()->download($media->getPath(), $media->file_name);
+                        }
+                    }),
                 EditAction::make(),
                 DeleteAction::make(),
             ])

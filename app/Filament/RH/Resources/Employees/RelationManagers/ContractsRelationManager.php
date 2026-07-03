@@ -116,25 +116,26 @@ class ContractsRelationManager extends RelationManager
                     ->icon(Phosphor::Printer)
                     ->action(fn (Contract $record, RHDocumentService $service) => \Illuminate\Support\Facades\Storage::disk('public')->download($service->generateContract($record))),
                 Action::make('send_docuseal')
-                    ->label('Envoyer pour signature')
+                    ->label('Envoyer pour Signature')
                     ->icon(Phosphor::PaperPlaneRight)
                     ->color('info')
-                    ->visible(fn (Contract $record): bool => $record->signature_status !== 'signed')
-                    ->action(function (Contract $record, \App\Services\RH\DocuSealService $service) {
+                    ->visible(fn (Contract $record) => $record->signature_status === 'pending')
+                    ->action(function (Contract $record, \App\Services\Core\DocuSealService $service) {
                         // Assuming template ID 1 is the generic contract template in DocuSeal
                         $success = $service->sendContractForSignature($record, 1);
+                        
                         if ($success) {
-                            \Filament\Notifications\Notification::make()->title('Contrat envoyé avec succès')->success()->send();
+                            \Filament\Notifications\Notification::make()->title('Contrat envoyé sur DocuSeal')->success()->send();
                         } else {
                             \Filament\Notifications\Notification::make()->title('Erreur lors de l\'envoi')->danger()->send();
                         }
                     }),
                 Action::make('check_docuseal')
-                    ->label('Vérifier statut')
+                    ->label('Vérifier Signature')
                     ->icon(Phosphor::ArrowsClockwise)
                     ->color('warning')
-                    ->visible(fn (Contract $record): bool => $record->signature_status === 'sent')
-                    ->action(function (Contract $record, \App\Services\RH\DocuSealService $service) {
+                    ->visible(fn (Contract $record) => $record->signature_status === 'sent')
+                    ->action(function (Contract $record, \App\Services\Core\DocuSealService $service) {
                         $success = $service->checkAndDownloadSignedContract($record);
                         if ($success) {
                             \Filament\Notifications\Notification::make()->title('Contrat signé récupéré !')->success()->send();

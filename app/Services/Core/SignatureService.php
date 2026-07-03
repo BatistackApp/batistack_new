@@ -7,6 +7,9 @@ use App\Enums\Core\SignatureType;
 use App\Models\Core\Signature;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\Core\SignatureRequestedMail;
 
 /**
  * Service de gestion de la signature numérique "maison".
@@ -48,9 +51,15 @@ class SignatureService
     /**
      * Crée une demande de signature en attente.
      */
-    public function requestSignature(Model $model, SignatureType $type = SignatureType::AUTOGRAPH): Signature
-    {
-        return Signature::create([
+    public function requestSignature(
+        Model $model, 
+        SignatureType $type = SignatureType::AUTOGRAPH,
+        ?string $email = null,
+        ?string $name = null,
+        ?string $documentPath = null
+    ): Signature {
+        $signature = Signature::create([
+            'token' => Str::uuid()->toString(),
             'signable_type' => $model->getMorphClass(),
             'signable_id' => $model->id,
             'user_id' => Auth::id(),
@@ -61,6 +70,12 @@ class SignatureService
                 'requested_at' => now()->toDateTimeString(),
             ],
         ]);
+
+        if ($email && $name) {
+            Mail::to($email)->send(new SignatureRequestedMail($signature, $name, $documentPath));
+        }
+
+        return $signature;
     }
 
     /**

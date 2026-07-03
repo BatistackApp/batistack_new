@@ -17,17 +17,25 @@ class ThirdPartyDocument extends Model implements HasMedia
         'type',
         'expiration_date',
         'status',
+        'docuseal_submission_id',
+        'signed_at',
     ];
 
     protected function casts(): array
     {
         return [
             'expiration_date' => 'date',
+            'signed_at' => 'datetime',
         ];
     }
 
     public function thirdParty(): BelongsTo
     {
         return $this->belongsTo(ThirdParty::class);
+    }
+
+    public function signatures()
+    {
+        return $this->morphMany(\App\Models\Core\Signature::class, 'signable');
     }
 }
