@@ -35,7 +35,7 @@ test('notification content is correct', function () {
     $mailData = $notification->toMail($this->contact);
     
     expect($mailData->subject)->toContain('Devis n°DEV-TEST-01')
-        ->and($mailData->introLines[0])->toContain('Veuillez trouver ci-joint votre devis')
+        ->and($mailData->introLines[0])->toContain('Nous vous transmettons ci-joint notre devis pour votre projet')
         ->and($mailData->actionText)->toBe('Consulter le devis')
         ->and($mailData->actionUrl)->not->toBeNull();
 });

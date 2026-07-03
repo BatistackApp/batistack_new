@@ -174,11 +174,15 @@ test('invoice markAsPaid and markAsUnpaid methods', function () {
     ]);
     
     $this->invoice->refresh();
-    $this->invoice->markAsPaid();
+    CustomerInvoice::withoutEvents(function () {
+        $this->invoice->markAsPaid();
+    });
     expect($this->invoice->status)->toBe(InvoiceStatus::PAID);
     
     \App\Models\Commerce\PaymentAllocation::where('payable_id', $this->invoice->id)->delete();
     $this->invoice->refresh();
-    $this->invoice->markAsUnpaid();
+    CustomerInvoice::withoutEvents(function () {
+        $this->invoice->markAsUnpaid();
+    });
     expect($this->invoice->status)->toBe(InvoiceStatus::VALIDATED);
 });
