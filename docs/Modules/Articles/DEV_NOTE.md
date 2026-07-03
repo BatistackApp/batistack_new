@@ -12,6 +12,7 @@
 *   **Interaction Manuelle :** Liaison du frontend avec la logique de mouvements de stock (entrées/sorties) pour la gestion courante.
 
 ## 💡 Idées d'amélioration et Nouvelles Fonctionnalités
-1.  **Génération de Bons de Réapprovisionnement :** Créer un process ou Job nocturne qui analyse les seuils d'alerte de "stock minimum" et prépare automatiquement des brouillons de Commandes d'Achat (Brouillon).
-2.  **Lecteur de Code-barres Intégré :** Utiliser le plugin `filament-barcode-scanner-field` pour que les magasiniers puissent scanner le matériel directement depuis leur téléphone lors d'un retrait ou retour de chantier, mettant à jour le stock en direct.
-3.  **Valorisation Financière en Temps Réel :** Calcul et affichage sur le dashboard de la valeur monétaire totale immobilisée en stock.
+1.  **Génération de Bons de Réapprovisionnement Automatisée :** Créer un process ou Job nocturne qui analyse les seuils d'alerte de "stock minimum" et prépare automatiquement des brouillons de Commandes d'Achat ciblées par fournisseur.
+2.  **Lecteur de Code-barres Intégré (Mobile) :** Utiliser le plugin `filament-barcode-scanner-field` pour que les magasiniers puissent scanner le matériel directement depuis leur téléphone ou douchette lors d'un retrait/retour de chantier, mettant à jour le stock en direct.
+3.  **Gestion des "Kits" de Chantier :** Permettre de préparer à l'avance des "Kits" ou "Palettes" avec une nomenclature précise (ex: Kit Pose Menuiserie) pour les déstocker en un seul clic vers une camionnette.
+4.  **Traçabilité Outillage (NFC/RFID) :** Intégration avancée avec des étiquettes NFC pour le suivi unitaire du petit outillage électroportatif coûteux (afin de savoir exactement quel employé l'a emprunté et sur quel chantier).

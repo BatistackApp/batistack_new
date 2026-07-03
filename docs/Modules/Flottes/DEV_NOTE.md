@@ -10,4 +10,7 @@
 *(L'essentiel du module et les interfaces d'administration sont terminés)*
 
 ## 💡 Idées d'amélioration et Nouvelles Fonctionnalités
-1.  **Import Automatique des Cartes Carburant (Plus tard) :** Écrire un connecteur API ou un importateur CSV (ex: cartes TotalEnergies, DKV) pour remonter automatiquement les dépenses de carburant, réconcilier les factures avec les chantiers et réduire la saisie manuelle.
+1.  **Import Automatique des Cartes Carburant :** Écrire un connecteur API ou un importateur CSV (ex: cartes TotalEnergies, DKV) pour remonter automatiquement les dépenses de carburant et réconcilier les factures avec les chantiers.
+2.  **Géolocalisation (GPS Tracking) :** Intégration avec des boîtiers télématiques GPS (ex: Webfleet, Geotab) pour localiser les véhicules en temps réel et remonter les anomalies de conduite (freinages brusques, survitesse).
+3.  **App Conducteur (État des Lieux Mobile) :** Une interface PWA dédiée aux chauffeurs permettant de faire leur Check-in / Check-out directement sur le parking avec prise de photo des éventuels dommages (rayures, chocs).
+4.  **Optimisation des Trajets (Routing IA) :** Utiliser une API de routing pour suggérer la répartition la plus logique des véhicules le matin en fonction des chantiers prévus, afin de minimiser le kilométrage total de la flotte.

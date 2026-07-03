@@ -11,6 +11,7 @@
 *   **Dashboards dédiés :** Création de tableaux de bords analytiques de rentabilité par chantier.
 
 ## 💡 Idées d'amélioration et Nouvelles Fonctionnalités
-1.  **Suivi de Chantier Mobile (Photo + Audio) :** Via la PWA, permettre aux conducteurs de travaux de prendre des photos de l'avancement ou de malfaçons, et d'utiliser une fonction Speech-to-Text (reconnaissance vocale) pour générer leur rapport de visite automatiquement dans le `ChantierLog`.
-2.  **Planification Gantt :** Intégrer un widget diagramme de Gantt cliquable permettant de déplacer visuellement (Drag & Drop) les phases du chantier et les équipes, tout en gérant les dépendances.
-3.  **Météo Automatisée :** Rattacher un flux API météo externe au journal de bord pour justifier légalement des intempéries.
+1.  **Planification Gantt (Interactive) :** Intégrer un widget diagramme de Gantt interactif permettant de déplacer visuellement (Drag & Drop) les phases du chantier et l'affectation des équipes, avec recalcul automatique des dépendances.
+2.  **Suivi de Chantier Mobile (Speech-to-Text) :** Via une PWA, permettre aux conducteurs de travaux d'utiliser la reconnaissance vocale pour dicter leur rapport de visite et le retranscrire automatiquement dans le journal de bord.
+3.  **Module de Pointage Matériel (IoT) :** Intégrer des capteurs IoT ou des QR Codes pour tracker l'entrée/sortie du gros matériel sur le chantier et imputer le coût d'immobilisation de manière automatisée.
+4.  **BIM (Building Information Modeling) :** Intégrer une visionneuse 3D de maquettes BIM (ex: Forge viewer) pour lier visuellement les tâches aux éléments de la maquette (cliquer sur un mur pour voir les tâches associées).
