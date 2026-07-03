@@ -14,9 +14,12 @@
 *   **Fiches de Paie Pro Forma :** Génération automatique d'un PDF estimatif du bulletin de salaire (Heures normales, majorations 25/50%, primes de grand déplacement).
 *   **Pointeuse Biométrique (Kiosque) :** Implémentation d'un kiosque de pointage avec reconnaissance faciale (`face-api.js`) traitant l'image côté client, gestion du consentement RGPD, et création automatique des brouillons de saisie d'heures.
 *   **Onboarding Digitalisé :** Espace candidat autonome permettant aux nouveaux arrivants de remplir leurs informations (pièce d'identité, RIB, attestation sécurité sociale) avant de générer le contrat.
+*   **Affiliation Mutuelle Automatique :** Génération du bulletin d'affiliation PRO BTP au format PDF automatiquement à la fin de l'onboarding, classé dans le dossier numérique du salarié.
+*   **CIBTP (Congés Payés) :** Automatisation de l'export DNA (Déclaration Nominative Annuelle) avec calcul précis de la période de référence et module d'exportation structurée des Demandes De Congés (DDC).
+*   **Subrogation (Prévoyance) :** Calcul automatique des Indemnités Journalières (IJ) lors d'un arrêt maladie/AT, génération de l'attestation de salaire PDF, et tableau de bord de suivi financier pour la comptabilité.
 
 ## 🚧 Ce qu'il reste à faire
 *(Le module est fonctionnellement très abouti et couvre tous les besoins RH classiques et avancés. Il est en phase de maintenance/amélioration continue).*
 
 ## 💡 Idées d'amélioration et Nouvelles Fonctionnalités
-- Intégration avancée avec les organismes de prévoyance (BTP Prévoyance).
+- Intégration DSN complète (Déclaration Sociale Nominative) via API net-entreprises.

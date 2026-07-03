@@ -236,4 +236,67 @@ class RHDocumentService extends DocumentService
             'rh/payslips'
         );
     }
+
+    /**
+     * Génère l'Attestation de Salaire (Arrêt Maladie / AT)
+     */
+    public function generateAttestationSalaire(\App\Models\RH\Abscence $absence): string
+    {
+        $absence->load(['employee.currentContract']);
+        $employee = $absence->employee;
+        
+        // Simuler les 3 derniers salaires (en conditions réelles on lirait les tables de paie)
+        $contract = $employee->currentContract;
+        $monthlyGross = $contract ? $contract->getSalary() : 0;
+        $hours = $contract ? $contract->getWeeklyHours() * 4.33 : 151.67;
+
+        $referenceSalaries = [];
+        for ($i = 3; $i >= 1; $i--) {
+            $monthDate = $absence->start_date->copy()->subMonthsNoOverflow($i);
+            $referenceSalaries[] = [
+                'period' => $monthDate->translatedFormat('F Y'),
+                'hours' => round($hours),
+                'amount' => $monthlyGross,
+            ];
+        }
+
+        $data = [
+            'company' => Company::first(),
+            'employee' => $employee,
+            'absence' => $absence,
+            'reference_salaries' => $referenceSalaries,
+            'title' => "ATTESTATION DE SALAIRE - {$employee->full_name}",
+            'generated_at' => Carbon::now()->format('d/m/Y H:i'),
+        ];
+
+        return $this->generate(
+            'pdf.rh.attestation_salaire',
+            $data,
+            "attestation_salaire_{$employee->id}_{$absence->start_date->format('Ymd')}",
+            'rh/attestations'
+        );
+    }
+
+    /**
+     * Génère le bulletin d'affiliation (PRO BTP) pour l'Onboarding.
+     */
+    public function generateAffiliationMutuelle(\App\Models\RH\Employee $employee): string
+    {
+        $employee->load(['currentContract']);
+
+        $data = [
+            'company' => Company::first(),
+            'employee' => $employee,
+            'contract' => $employee->currentContract,
+            'title' => "BULLETIN AFFILIATION - {$employee->full_name}",
+            'generated_at' => Carbon::now()->format('d/m/Y H:i'),
+        ];
+
+        return $this->generate(
+            'pdf.rh.affiliation_mutuelle',
+            $data,
+            "affiliation_probtp_{$employee->id}_{$employee->registration_number}",
+            'rh/onboarding'
+        );
+    }
 }
