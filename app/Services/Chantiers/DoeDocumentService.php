@@ -66,7 +66,7 @@ class DoeDocumentService extends DocumentService
         }
 
         // Ajouter le sommaire PDF à la racine du ZIP
-        $zip->addFile($sommairePath, '00_SOMMAIRE_OFFICIEL.pdf');
+        $zip->addFile(Storage::disk('public')->path($sommairePath), '00_SOMMAIRE_OFFICIEL.pdf');
 
         // 4. Parcourir et ajouter chaque document média au ZIP organisé par dossier (catégorie)
         foreach ($documents as $index => $doc) {

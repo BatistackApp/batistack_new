@@ -38,18 +38,25 @@ class StockService
                 'warehouse_id' => $warehouse->id,
             ]);
 
+            $quantityBefore = $stock->quantity ?? 0.0;
             $stock->quantity += $quantity;
             $stock->save();
 
-            // Ici, nous devrions enregistrer un mouvement de stock (Audit Log)
+            \App\Models\Articles\StockMouvement::create([
+                'stock_id' => $stock->id,
+                'user_id' => auth()->id(),
+                'type' => \App\Enums\Articles\StockMouvementType::IN,
+                'reference_type' => \App\Enums\Articles\StockMouvementSource::INTERNAL,
+                'reference_id' => null,
+                'quantity_before' => $quantityBefore,
+                'quantity_delta' => $quantity,
+                'quantity_after' => $stock->quantity,
+                'reason' => 'Entrée de stock',
+            ]);
         });
     }
 
-    /**
-     * Sortie de stock (consommation chantier ou vente).
-     * @throws ArticlesModuleException
-     */
-    public function exit(Item $item, Warehouse $warehouse, float $quantity, string $reason): void
+    public function exit(Item $item, Warehouse $warehouse, float $quantity, string $reason, ?\App\Enums\Articles\StockMouvementSource $source = null, ?int $referenceId = null): void
     {
         $stock = Stock::where('item_id', $item->id)
             ->where('warehouse_id', $warehouse->id)
@@ -67,8 +74,21 @@ class StockService
             throw $exception;
         }
 
+        $quantityBefore = $stock->quantity;
         $stock->quantity -= $quantity;
         $stock->save();
+
+        \App\Models\Articles\StockMouvement::create([
+            'stock_id' => $stock->id,
+            'user_id' => auth()->id(),
+            'type' => \App\Enums\Articles\StockMouvementType::OUT,
+            'reference_type' => $source ?? \App\Enums\Articles\StockMouvementSource::INTERNAL,
+            'reference_id' => $referenceId,
+            'quantity_before' => $quantityBefore,
+            'quantity_delta' => -$quantity,
+            'quantity_after' => $stock->quantity,
+            'reason' => $reason,
+        ]);
 
         // Logique d'alerte si stock < seuil
         if ($stock->quantity <= $stock->min_threshold) {

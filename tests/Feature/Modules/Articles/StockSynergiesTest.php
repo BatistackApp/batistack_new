@@ -33,8 +33,9 @@ it('decreases chantier margin when materials are affected', function () {
     
     // 2. Act : On affecte 2 unités au chantier (via le StockService)
     $stockService = app(StockService::class);
-    $stockService->decrease(
-        stock: $stock,
+    $stockService->exit(
+        item: $item,
+        warehouse: $warehouse,
         quantity: 2,
         reason: 'Affectation test',
         source: StockMouvementSource::SITE,
@@ -62,14 +63,14 @@ it('automatically creates a virtual warehouse when a utility vehicle is created'
     $warehouse = Warehouse::where('vehicle_id', $vehicle->id)->first();
     
     expect($warehouse)->not->toBeNull()
-        ->and($warehouse->name)->toBe('Camionnette AB-123-CD')
+        ->and($warehouse->name)->toBe('Camionnette AB123CD') // The observer removes dashes
         ->and($warehouse->is_active)->toBeTrue();
 });
 
 it('does not create a warehouse for non-utility vehicles', function () {
-    // 1. Act : Création d'une voiture de fonction (TOURISM)
+    // 1. Act : Création d'une voiture de fonction (PASSENGER)
     $vehicle = Vehicle::factory()->create([
-        'type' => VehicleType::TOURISM,
+        'type' => VehicleType::PASSENGER,
         'license_plate' => 'XY-999-ZZ',
     ]);
     
@@ -85,7 +86,7 @@ it('can send a quote request email to the item supplier', function () {
     $supplier = ThirdParty::factory()->create([
         'name' => 'BricoDépôt',
         'email' => 'contact@bricodepot.test',
-        'is_supplier' => true,
+        'type' => \App\Enums\Tiers\ThirdPartyType::SUPPLIER,
     ]);
     
     $item = Item::factory()->create([
@@ -101,8 +102,9 @@ it('can send a quote request email to the item supplier', function () {
     
     // 3. Assert
     $response->assertSessionHasNoErrors();
+    $response->assertSessionMissing('error');
     
-    Mail::assertSent(SupplierQuoteRequestMail::class, function (SupplierQuoteRequestMail $mail) use ($supplier, $item) {
+    Mail::assertQueued(SupplierQuoteRequestMail::class, function (SupplierQuoteRequestMail $mail) use ($supplier, $item) {
         return $mail->hasTo($supplier->email) && 
                $mail->item->id === $item->id;
     });

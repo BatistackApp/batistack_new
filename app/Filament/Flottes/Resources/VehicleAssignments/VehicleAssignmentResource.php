@@ -31,6 +31,11 @@ class VehicleAssignmentResource extends Resource
         return VehicleAssignmentForm::configure($schema);
     }
 
+    public static function infolist(Schema $schema): Schema
+    {
+        return \App\Filament\Flottes\Resources\VehicleAssignments\Schemas\VehicleAssignmentInfolist::configure($schema);
+    }
+
     public static function table(Table $table): Table
     {
         return VehicleAssignmentsTable::configure($table);
@@ -39,7 +44,7 @@ class VehicleAssignmentResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            \App\Filament\Flottes\Resources\VehicleAssignments\RelationManagers\ConditionReportsRelationManager::class,
         ];
     }
 
@@ -48,6 +53,7 @@ class VehicleAssignmentResource extends Resource
         return [
             'index' => ListVehicleAssignments::route('/'),
             'create' => CreateVehicleAssignment::route('/create'),
+            'view' => \App\Filament\Flottes\Resources\VehicleAssignments\Pages\ViewVehicleAssignment::route('/{record}'),
             'edit' => EditVehicleAssignment::route('/{record}/edit'),
         ];
     }

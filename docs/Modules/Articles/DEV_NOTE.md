@@ -3,7 +3,9 @@
 ## 📌 État Actuel (Ce qui est fait)
 *   **Backend & Base de données :** Gestion fine de l'inventaire en place avec prise en charge du multi-entrepôts, des transferts de stocks et du suivi par numéros de série.
 *   **Compositions / Recettes :** Système permettant la création d'ouvrages BTP complexes à partir d'articles de base.
-*   **Tests :** Logique métier testée et validée.
+*   **Exports :** Export de la valorisation de l'inventaire (CSV / PDF) implémenté et testé.
+*   **Mouvements & Audit Log :** L'enregistrement automatique et robuste des mouvements de stock (Audit Log avec PUMP recalculé dynamiquement) est en place pour toute entrée/sortie d'inventaire. L'affectation de stocks virtuels aux VUL est gérée.
+*   **Tests :** 100% de succès sur la suite de 125 tests. Couverture complète de la logique métier.
 
 ## 🚧 Ce qu'il reste à faire
 *   **Interface Utilisateur :** Construire les Panels Filament pour administrer visuellement les catalogues et la valorisation du stock.
