@@ -92,6 +92,15 @@ class ContractsRelationManager extends RelationManager
                     ->label('Taux H.')
                     ->money('EUR')
                     ->color('gray'),
+                TextColumn::make('signature_status')
+                    ->label('Signature')
+                    ->badge()
+                    ->color(fn (string $state): string => match ($state) {
+                        'pending' => 'gray',
+                        'sent' => 'warning',
+                        'signed' => 'success',
+                        default => 'gray',
+                    }),
             ])
             ->filters([
                 //
@@ -105,7 +114,34 @@ class ContractsRelationManager extends RelationManager
                 Action::make('print_contract')
                     ->label('Imprimer')
                     ->icon(Phosphor::Printer)
-                    ->action(fn (Contract $record, RHDocumentService $service) => response()->download($service->generateContract($record))),
+                    ->action(fn (Contract $record, RHDocumentService $service) => \Illuminate\Support\Facades\Storage::disk('public')->download($service->generateContract($record))),
+                Action::make('send_docuseal')
+                    ->label('Envoyer pour signature')
+                    ->icon(Phosphor::PaperPlaneRight)
+                    ->color('info')
+                    ->visible(fn (Contract $record): bool => $record->signature_status !== 'signed')
+                    ->action(function (Contract $record, \App\Services\RH\DocuSealService $service) {
+                        // Assuming template ID 1 is the generic contract template in DocuSeal
+                        $success = $service->sendContractForSignature($record, 1);
+                        if ($success) {
+                            \Filament\Notifications\Notification::make()->title('Contrat envoyé avec succès')->success()->send();
+                        } else {
+                            \Filament\Notifications\Notification::make()->title('Erreur lors de l\'envoi')->danger()->send();
+                        }
+                    }),
+                Action::make('check_docuseal')
+                    ->label('Vérifier statut')
+                    ->icon(Phosphor::ArrowsClockwise)
+                    ->color('warning')
+                    ->visible(fn (Contract $record): bool => $record->signature_status === 'sent')
+                    ->action(function (Contract $record, \App\Services\RH\DocuSealService $service) {
+                        $success = $service->checkAndDownloadSignedContract($record);
+                        if ($success) {
+                            \Filament\Notifications\Notification::make()->title('Contrat signé récupéré !')->success()->send();
+                        } else {
+                            \Filament\Notifications\Notification::make()->title('Contrat toujours en attente')->info()->send();
+                        }
+                    }),
             ]);
     }
 
