@@ -25,6 +25,10 @@ class Abscence extends Model implements HasMedia
         'reason',
         'is_paid',
         'cibtp_declared_at',
+        'requires_subrogation',
+        'ij_expected',
+        'ij_received',
+        'ij_payment_date',
     ];
 
     public function employee(): BelongsTo
@@ -40,6 +44,10 @@ class Abscence extends Model implements HasMedia
             'is_paid' => 'boolean',
             'type' => AbsenceType::class,
             'cibtp_declared_at' => 'datetime',
+            'requires_subrogation' => 'boolean',
+            'ij_expected' => 'decimal:2',
+            'ij_received' => 'decimal:2',
+            'ij_payment_date' => 'date',
         ];
     }
 
@@ -65,9 +73,26 @@ class Abscence extends Model implements HasMedia
         return $query->orderBy('start_date', $direction);
     }
 
+    public function scopePendingSubrogation(Builder $query): Builder
+    {
+        return $query->where('requires_subrogation', true)
+            ->where(function ($q) {
+                $q->whereNull('ij_received')
+                  ->orWhereColumn('ij_received', '<', 'ij_expected');
+            });
+    }
+
     // METHODS
     public function getType(): AbsenceType
     {
         return $this->type;
+    }
+
+    public function getIJBalance(): float
+    {
+        if (!$this->requires_subrogation || !$this->ij_expected) {
+            return 0.0;
+        }
+        return max(0, (float) $this->ij_expected - (float) $this->ij_received);
     }
 }

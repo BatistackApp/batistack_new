@@ -3,6 +3,7 @@
 namespace App\Filament\RH\Resources\Employees\Tables;
 
 use App\Models\RH\Employee;
+use App\Services\RH\RHDocumentService;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
@@ -10,11 +11,16 @@ use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
+use Filament\Forms\Components\Select;
+use Filament\Notifications\Notification;
+use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\SpatieMediaLibraryImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ToggleColumn;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
+use Illuminate\Support\Facades\Storage;
+use ToneGabes\Filament\Icons\Enums\Phosphor;
 
 class EmployeesTable
 {
@@ -52,7 +58,7 @@ class EmployeesTable
                     ->onColor('success')
                     ->offColor('danger'),
 
-                \Filament\Tables\Columns\IconColumn::make('onboarding_completed')
+                IconColumn::make('onboarding_completed')
                     ->label('Onboarding')
                     ->boolean()
                     ->trueIcon('heroicon-o-check-circle')
@@ -87,25 +93,54 @@ class EmployeesTable
                     Action::make('proforma')
                         ->label('Paie Pro Forma')
                         ->icon('heroicon-o-document-currency-euro')
-                        ->form([
-                            \Filament\Forms\Components\Select::make('month')
+                        ->schema([
+                            Select::make('month')
                                 ->label('Mois')
                                 ->options([
                                     1 => 'Janvier', 2 => 'Février', 3 => 'Mars', 4 => 'Avril',
                                     5 => 'Mai', 6 => 'Juin', 7 => 'Juillet', 8 => 'Août',
-                                    9 => 'Septembre', 10 => 'Octobre', 11 => 'Novembre', 12 => 'Décembre'
+                                    9 => 'Septembre', 10 => 'Octobre', 11 => 'Novembre', 12 => 'Décembre',
                                 ])
                                 ->default(now()->subMonth()->month)
                                 ->required(),
-                            \Filament\Forms\Components\Select::make('year')
+                            Select::make('year')
                                 ->label('Année')
                                 ->options(array_combine(range(now()->year - 2, now()->year), range(now()->year - 2, now()->year)))
                                 ->default(now()->year)
                                 ->required(),
                         ])
-                        ->action(function (Employee $record, array $data, \App\Services\RH\RHDocumentService $service) {
+                        ->action(function (Employee $record, array $data, RHDocumentService $service) {
                             $path = $service->generateProFormaPayslip($record, $data['month'], $data['year']);
-                            return \Illuminate\Support\Facades\Storage::disk('public')->download($path);
+
+                            return Storage::disk('public')->download($path);
+                        }),
+                    Action::make('download_affiliation')
+                        ->label('Bulletin Affiliation PRO BTP')
+                        ->icon(Phosphor::FilePdf)
+                        ->color('info')
+                        ->action(function (Employee $record) {
+                            // Cherche le document généré lors de l'onboarding
+                            $media = $record->getMedia('rh_documents')->filter(function ($item) {
+                                return str_contains($item->file_name, 'affiliation_probtp');
+                            })->last();
+
+                            if ($media) {
+                                return response()->download($media->getPath(), $media->file_name);
+                            }
+
+                            // S'il n'existe pas, on le génère à la volée (ex: salariés importés ou ancien onboarding)
+                            try {
+                                $pdfRelativePath = app(RHDocumentService::class)->generateAffiliationMutuelle($record);
+                                $pdfAbsolutePath = Storage::disk('public')->path($pdfRelativePath);
+                                $media = $record->addMedia($pdfAbsolutePath)->toMediaCollection('rh_documents');
+
+                                return response()->download($media->getPath(), $media->file_name);
+                            } catch (\Exception $e) {
+                                Notification::make()
+                                    ->title('Erreur lors de la génération')
+                                    ->danger()
+                                    ->send();
+                            }
                         }),
                     DeleteAction::make(),
                 ]),

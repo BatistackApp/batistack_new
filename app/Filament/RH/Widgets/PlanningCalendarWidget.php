@@ -5,6 +5,7 @@ namespace App\Filament\RH\Widgets;
 use App\Models\RH\Abscence;
 use App\Models\RH\TimeEntry;
 use Guava\Calendar\Filament\CalendarWidget;
+use Guava\Calendar\ValueObjects\CalendarEvent;
 use Guava\Calendar\ValueObjects\Event;
 use Guava\Calendar\ValueObjects\FetchInfo;
 use Illuminate\Support\Collection;
@@ -15,12 +16,12 @@ class PlanningCalendarWidget extends CalendarWidget
 
     protected bool $isHeaderCalendar = true; // Use simple true/false if valid, or just let it be
 
-    public function getEvents(array|FetchInfo $fetchInfo): Collection|array
+    public function getEvents(array|FetchInfo $info): Collection|array
     {
         $events = collect();
 
-        $start = is_array($fetchInfo) ? $fetchInfo['start'] : $fetchInfo->start;
-        $end = is_array($fetchInfo) ? $fetchInfo['end'] : $fetchInfo->end;
+        $start = is_array($info) ? $info['start'] : $info->start;
+        $end = is_array($info) ? $info['end'] : $info->end;
 
         // 1. Fetch Absences
         $absences = Abscence::with('employee')
@@ -32,8 +33,7 @@ class PlanningCalendarWidget extends CalendarWidget
 
         foreach ($absences as $absence) {
             $events->push(
-                Event::make()
-                    ->id('abs_'.$absence->id)
+                CalendarEvent::make()
                     ->title($absence->employee->full_name.' - '.$absence->type->getLabel())
                     ->start($absence->start_date)
                     ->end($absence->end_date)
@@ -54,8 +54,7 @@ class PlanningCalendarWidget extends CalendarWidget
             }
 
             $events->push(
-                Event::make()
-                    ->id('time_'.$entry->id)
+                CalendarEvent::make()
                     ->title($title)
                     ->start($entry->date)
                     ->end($entry->date)
