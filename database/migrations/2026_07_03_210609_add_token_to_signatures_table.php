@@ -22,7 +22,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('signatures', function (Blueprint $table) {
-            //
+            $table->removeColumn('token');
         });
     }
 };
