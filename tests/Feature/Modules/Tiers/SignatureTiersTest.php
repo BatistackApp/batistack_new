@@ -18,7 +18,7 @@ it('requests a signature for a third party document', function () {
     $thirdParty = ThirdParty::factory()->create();
     $document = ThirdPartyDocument::create([
         'third_party_id' => $thirdParty->id,
-        'type' => 'contrat_sous_traitance',
+        'type' => \App\Enums\Tiers\ThirdPartyDocumentType::CONTRAT_SOUS_TRAITANCE,
     ]);
 
     $service = app(SignatureService::class);
@@ -33,7 +33,7 @@ it('signs a third party document', function () {
     $thirdParty = ThirdParty::factory()->create();
     $document = ThirdPartyDocument::create([
         'third_party_id' => $thirdParty->id,
-        'type' => 'contrat_sous_traitance',
+        'type' => \App\Enums\Tiers\ThirdPartyDocumentType::CONTRAT_SOUS_TRAITANCE,
     ]);
 
     $service = app(SignatureService::class);

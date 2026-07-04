@@ -24,6 +24,8 @@ class ThirdPartyDocument extends Model implements HasMedia
     protected function casts(): array
     {
         return [
+            'type' => \App\Enums\Tiers\ThirdPartyDocumentType::class,
+            'status' => \App\Enums\Tiers\ThirdPartyDocumentStatus::class,
             'expiration_date' => 'date',
             'signed_at' => 'datetime',
         ];
