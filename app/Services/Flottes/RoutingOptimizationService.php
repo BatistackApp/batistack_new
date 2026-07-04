@@ -89,6 +89,7 @@ class RoutingOptimizationService
     {
         $assignments = [];
         $unassignedVehicles = $vehicles->keyBy('id')->toArray();
+        $availableChantiers = array_fill_keys(range(0, $chantiers->count() - 1), true);
 
         foreach ($data['rows'] as $originIndex => $row) {
             $vehicle = $vehicles->values()->get($originIndex);
@@ -103,6 +104,10 @@ class RoutingOptimizationService
             $bestDuration = 0;
 
             foreach ($row['elements'] as $destIndex => $element) {
+                if (! isset($availableChantiers[$destIndex])) {
+                    continue;
+                }
+
                 if (($element['status'] ?? '') === 'OK') {
                     $distanceValue = $element['distance']['value']; // mètres
                     
@@ -126,8 +131,9 @@ class RoutingOptimizationService
                     'duration_mins' => round($bestDuration / 60),
                 ];
 
-                // On retire le véhicule des véhicules disponibles (1 véhicule = 1 chantier dans cet algorithme simple)
+                // On retire le véhicule des véhicules disponibles (1 véhicule = 1 chantier)
                 unset($unassignedVehicles[$vehicle->id]);
+                unset($availableChantiers[$bestChantierIndex]);
             }
         }
 

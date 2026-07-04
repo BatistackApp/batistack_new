@@ -41,12 +41,11 @@ class ExpenseImportService
             try {
                 while (($data = fgetcsv($handle, 1000, $delimiter)) !== false) {
                     $rowIndex++;
-                    $row = array_combine($headers, $data);
-
-                    if ($row === false) {
+                    if (count($headers) !== count($data)) {
                         $results['errors'][] = "Ligne {$rowIndex} : Mauvais nombre de colonnes.";
                         continue;
                     }
+                    $row = array_combine($headers, $data);
 
                     try {
                         $this->processRow($row, $columnMapping);
