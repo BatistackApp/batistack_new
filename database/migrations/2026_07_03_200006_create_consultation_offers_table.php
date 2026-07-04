@@ -19,6 +19,8 @@ return new class extends Migration
             $table->string('status')->default('submitted'); // submitted, accepted, rejected
             $table->text('message')->nullable();
             $table->timestamps();
+
+            $table->unique(['consultation_id', 'third_party_id']);
         });
     }
 
