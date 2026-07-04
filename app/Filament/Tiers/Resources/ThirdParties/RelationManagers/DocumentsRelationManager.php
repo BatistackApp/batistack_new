@@ -37,22 +37,14 @@ class DocumentsRelationManager extends RelationManager
         return $schema
             ->components([
                 Select::make('type')
-                    ->options([
-                        'kbis' => 'Kbis',
-                        'urssaf' => 'Attestation URSSAF',
-                        'decennale' => 'Assurance Décennale',
-                        'autre' => 'Autre',
-                    ])
+                    ->options(\App\Enums\Tiers\ThirdPartyDocumentType::class)
                     ->required(),
                 DatePicker::make('expiration_date')
                     ->label('Date d\'expiration')
                     ->required(),
                 Select::make('status')
-                    ->options([
-                        'valid' => 'Valide',
-                        'expired' => 'Expiré',
-                    ])
-                    ->default('valid')
+                    ->options(\App\Enums\Tiers\ThirdPartyDocumentStatus::class)
+                    ->default(\App\Enums\Tiers\ThirdPartyDocumentStatus::VALID)
                     ->required(),
                 SpatieMediaLibraryFileUpload::make('document')
                     ->label('Fichier PDF/Image')
@@ -68,25 +60,14 @@ class DocumentsRelationManager extends RelationManager
             ->recordTitleAttribute('type')
             ->columns([
                 Tables\Columns\TextColumn::make('type')
-                    ->label('Type')
-                    ->formatStateUsing(fn ($state) => match ($state) {
-                        'kbis' => 'Kbis',
-                        'urssaf' => 'Attestation URSSAF',
-                        'decennale' => 'Assurance Décennale',
-                        default => ucfirst($state),
-                    }),
+                    ->label('Type'),
                 Tables\Columns\TextColumn::make('expiration_date')
                     ->label('Date d\'expiration')
                     ->date('d/m/Y')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('status')
                     ->label('Statut')
-                    ->badge()
-                    ->color(fn (string $state): string => match ($state) {
-                        'valid' => 'success',
-                        'expired' => 'danger',
-                        default => 'gray',
-                    }),
+                    ->badge(),
             ])
             ->filters([
                 //
@@ -99,7 +80,7 @@ class DocumentsRelationManager extends RelationManager
                     ->label('Demander Signature')
                     ->icon(Phosphor::PenNib)
                     ->color('info')
-                    ->visible(fn (ThirdPartyDocument $record) => $record->type === 'contrat_sous_traitance' &&
+                    ->visible(fn (ThirdPartyDocument $record) => $record->type === \App\Enums\Tiers\ThirdPartyDocumentType::CONTRAT_SOUS_TRAITANCE &&
                         $record->signatures()->where('status', SignatureStatus::PENDING)->doesntExist() &&
                         $record->signatures()->where('status', SignatureStatus::SIGNED)->doesntExist()
                     )

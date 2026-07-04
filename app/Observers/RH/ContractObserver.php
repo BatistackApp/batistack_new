@@ -3,10 +3,15 @@
 namespace App\Observers\RH;
 
 use App\Models\RH\Contract;
+use App\Services\RH\RHDocumentService;
 use Log;
 
 class ContractObserver
 {
+    public function __construct(public RHDocumentService $documentService)
+    {
+    }
+
     /**
      * @throws \Exception
      */
@@ -25,6 +30,7 @@ class ContractObserver
 
     public function created(Contract $contract): void
     {
+        $this->documentService->generateContract($contract);
         Log::info('Contract created', ['id' => $contract->id, 'type' => $contract->type->getLabel(), 'employee_id' => $contract->employee_id]);
     }
 

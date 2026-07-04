@@ -26,8 +26,8 @@ class GenerateContractAction
 
                 // Sauvegarde du document
                 $document = ThirdPartyDocument::updateOrCreate(
-                    ['third_party_id' => $record->id, 'type' => 'contrat_sous_traitance'],
-                    ['expiration_date' => now()->addYear(), 'status' => 'valid']
+                    ['third_party_id' => $record->id, 'type' => \App\Enums\Tiers\ThirdPartyDocumentType::CONTRAT_SOUS_TRAITANCE],
+                    ['expiration_date' => now()->addYear(), 'status' => \App\Enums\Tiers\ThirdPartyDocumentStatus::VALID]
                 );
 
                 $document->clearMediaCollection('third_party_documents');

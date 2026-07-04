@@ -52,6 +52,6 @@ class DocumentService
             return $pdfContent;
         }
 
-        return $relativePath;
+        return Storage::disk('public')->path($relativePath);
     }
 }

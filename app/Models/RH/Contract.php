@@ -2,6 +2,7 @@
 
 namespace App\Models\RH;
 
+use App\Enums\Core\SignatureStatus;
 use App\Enums\RH\ContractType;
 use App\Observers\RH\ContractObserver;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
@@ -44,6 +45,7 @@ class Contract extends Model implements HasMedia
             'end_date' => 'date',
             'hourly_rate' => 'decimal:4',
             'trial_end_date' => 'date',
+            'signature_status' => SignatureStatus::class,
         ];
     }
 
