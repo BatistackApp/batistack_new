@@ -57,6 +57,7 @@ class DocumentsRelationManager extends RelationManager
                 SpatieMediaLibraryFileUpload::make('document')
                     ->label('Fichier PDF/Image')
                     ->collection('third_party_documents')
+                    ->acceptedFileTypes(['application/pdf'])
                     ->required(),
             ]);
     }
@@ -113,10 +114,10 @@ class DocumentsRelationManager extends RelationManager
                         }
 
                         $service->requestSignature(
-                            model: $record, 
-                            type: \App\Enums\Core\SignatureType::AUTOGRAPH, 
-                            email: $email, 
-                            name: $name, 
+                            model: $record,
+                            type: \App\Enums\Core\SignatureType::AUTOGRAPH,
+                            email: $email,
+                            name: $name,
                             documentPath: $path
                         );
                         Notification::make()->title('Demande de signature envoyée par email')->success()->send();
