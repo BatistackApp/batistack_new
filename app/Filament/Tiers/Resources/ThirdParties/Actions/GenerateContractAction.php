@@ -4,6 +4,7 @@ namespace App\Filament\Tiers\Resources\ThirdParties\Actions;
 
 use App\Enums\Tiers\ThirdPartyType;
 use App\Models\Tiers\ThirdParty;
+use App\Models\Tiers\ThirdPartyDocument;
 use App\Services\Tiers\TiersDocumentService;
 use Filament\Actions\Action;
 use Filament\Schemas\Schema;
@@ -24,13 +25,12 @@ class GenerateContractAction
                 $absolutePath = \Illuminate\Support\Facades\Storage::disk('public')->path($relativePath);
 
                 // Sauvegarde du document
-                $document = \App\Models\Tiers\ThirdPartyDocument::create([
-                    'third_party_id' => $record->id,
-                    'type' => 'contrat_sous_traitance',
-                    'expiration_date' => now()->addYear(),
-                    'status' => 'valid',
-                ]);
+                $document = ThirdPartyDocument::updateOrCreate(
+                    ['third_party_id' => $record->id, 'type' => 'contrat_sous_traitance'],
+                    ['expiration_date' => now()->addYear(), 'status' => 'valid']
+                );
 
+                $document->clearMediaCollection('third_party_documents');
                 $media = $document->addMedia($absolutePath)->toMediaCollection('third_party_documents');
 
                 \Filament\Notifications\Notification::make()
