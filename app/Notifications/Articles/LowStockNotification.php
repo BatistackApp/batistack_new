@@ -9,7 +9,7 @@ use ToneGabes\Filament\Icons\Enums\Phosphor;
 
 class LowStockNotification extends Notification
 {
-    public function __construct(protected Stock $stock) {}
+    public function __construct(public Stock $stock) {}
 
     public function via($notifiable): array
     {

@@ -80,8 +80,7 @@ test('génère correctement la valorisation en PDF', function () {
     ]);
 
     // Générer le PDF
-    $pdfPath = $this->service->generateValuationPdf();
-    $fullPath = storage_path('app/public/'.$pdfPath);
+    $fullPath = $this->service->generateValuationPdf();
 
     // Vérifier que le fichier a été généré
     expect($fullPath)->toBeFile();
