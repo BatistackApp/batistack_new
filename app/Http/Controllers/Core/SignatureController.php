@@ -46,7 +46,7 @@ class SignatureController extends Controller
         }
 
         $request->validate([
-            'signature_data' => 'required|string',
+            'signature_data' => ['required', 'string', 'max:2000000', 'regex:/^data:image\/(png|jpe?g);base64,[A-Za-z0-9+\/=]+$/'],
         ]);
 
         // Mise à jour de la signature existante
