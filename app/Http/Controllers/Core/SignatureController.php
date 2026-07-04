@@ -74,12 +74,18 @@ class SignatureController extends Controller
 
                 $stampedPdfPath = $stamper->stamp($media->getPath(), $signature, $signatoryName);
 
-                // On supprime l'ancien document non signé
-                $signature->signable->clearMediaCollection('third_party_documents');
+                try {
+                    // On supprime l'ancien document non signé
+                    $signature->signable->clearMediaCollection('third_party_documents');
 
-                // On remplace le document original par le document certifié (stamped)
-                $signature->signable->addMedia($stampedPdfPath)
-                    ->toMediaCollection('third_party_documents');
+                    // On remplace le document original par le document certifié (stamped)
+                    $signature->signable->addMedia($stampedPdfPath)
+                        ->toMediaCollection('third_party_documents');
+                } finally {
+                    if (file_exists($stampedPdfPath)) {
+                        @unlink($stampedPdfPath);
+                    }
+                }
             }
         }
 
