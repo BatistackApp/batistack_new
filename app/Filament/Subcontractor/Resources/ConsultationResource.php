@@ -5,8 +5,12 @@ namespace App\Filament\Subcontractor\Resources;
 use App\Filament\Subcontractor\Resources\ConsultationResource\Pages;
 use App\Models\Tiers\Consultation;
 use App\Models\Tiers\ConsultationOffer;
-use Filament\Schemas\Components;
-use Filament\Schemas\Schema;
+use App\Models\Tiers\ThirdParty;
+use Filament\Actions\Action;
+use Filament\Actions\ViewAction;
+use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -17,8 +21,10 @@ class ConsultationResource extends Resource
 {
     protected static ?string $model = Consultation::class;
 
-    protected static string | \BackedEnum | null $navigationIcon = Phosphor::Handshake;
+    protected static string|\BackedEnum|null $navigationIcon = Phosphor::Handshake;
+
     protected static ?string $modelLabel = 'Appel d\'Offre / Consultation';
+
     protected static ?string $pluralModelLabel = 'Appels d\'Offres (Bourse)';
 
     public static function getEloquentQuery(): Builder
@@ -53,33 +59,33 @@ class ConsultationResource extends Resource
                         default => 'gray',
                     }),
             ])
-            ->actions([
-                Tables\Actions\ViewAction::make(),
-                Tables\Actions\Action::make('respond')
+            ->recordActions([
+                ViewAction::make(),
+                Action::make('respond')
                     ->label('Répondre (Soumettre Offre)')
                     ->icon(Phosphor::PaperPlaneTilt)
                     ->color('primary')
                     ->visible(fn (Consultation $record) => $record->status === 'published')
-                    ->components([
-                        Components\TextInput::make('amount')
+                    ->schema([
+                        TextInput::make('amount')
                             ->label('Montant de votre offre (€ HT)')
                             ->numeric()
                             ->required()
                             ->minValue(1),
-                        Components\Textarea::make('message')
+                        Textarea::make('message')
                             ->label('Message / Note')
                             ->maxLength(1000),
                     ])
                     ->action(function (Consultation $record, array $data) {
                         // Normally, the user has a linked ThirdParty ID. We assume auth()->user()->third_party_id exists or we take the first Subcontractor for demo.
-                        $thirdPartyId = auth()->user()->third_party_id ?? \App\Models\Tiers\ThirdParty::subcontractors()->first()->id;
+                        $thirdPartyId = auth()->user()->contact->third_party_id ?? ThirdParty::subcontractors()->first()->id;
 
                         ConsultationOffer::updateOrCreate(
                             ['consultation_id' => $record->id, 'third_party_id' => $thirdPartyId],
                             ['amount' => $data['amount'], 'message' => $data['message'], 'status' => 'submitted']
                         );
 
-                        \Filament\Notifications\Notification::make()
+                        Notification::make()
                             ->title('Offre soumise avec succès !')
                             ->success()
                             ->send();
