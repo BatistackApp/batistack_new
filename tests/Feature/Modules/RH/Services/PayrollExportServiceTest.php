@@ -69,3 +69,14 @@ test('it exports correct hours and absences', function () {
         ->toContain('1')    // GD
         ->toContain('2');   // Absences
 });
+
+test('it downloads the generated CSV with correct headers', function () {
+    $month = 1;
+    $year = 2026;
+    
+    $response = $this->service->downloadCsv($month, $year);
+
+    expect($response->getStatusCode())->toBe(200)
+        ->and($response->headers->get('Content-Type'))->toContain('text/csv')
+        ->and($response->headers->get('Content-Disposition'))->toContain('attachment; filename="export_paie_2026_1.csv"');
+});

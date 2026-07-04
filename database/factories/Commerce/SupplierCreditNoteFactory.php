@@ -16,7 +16,7 @@ class SupplierCreditNoteFactory extends Factory
     {
         return [
             'reference' => $this->faker->word(),
-            'status' => $this->faker->word(),
+            'status' => \App\Enums\Commerce\InvoiceStatus::DRAFT,
             'total_ht' => $this->faker->randomFloat(),
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),

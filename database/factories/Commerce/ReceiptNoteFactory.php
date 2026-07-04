@@ -16,7 +16,7 @@ class ReceiptNoteFactory extends Factory
     {
         return [
             'reference' => $this->faker->word(),
-            'status' => $this->faker->word(),
+            'status' => \App\Enums\Commerce\DeliveryStatus::PREPARATION,
             'received_at' => Carbon::now(),
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),

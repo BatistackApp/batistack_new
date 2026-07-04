@@ -12,7 +12,8 @@ use App\Models\RH\TimeEntry;
 use App\Services\Chantiers\ChantierAnalyticService;
 
 beforeEach(function () {
-    $this->service = new ChantierAnalyticService;
+    \App\Models\Core\Company::factory()->create();
+    $this->service = app(ChantierAnalyticService::class);
 });
 
 test('il calcule correctement les métriques de performance et le coût de main d’œuvre', function () {

@@ -17,7 +17,7 @@ class CustomerCreditNoteFactory extends Factory
     {
         return [
             'reference' => $this->faker->word(),
-            'status' => $this->faker->word(),
+            'status' => \App\Enums\Commerce\InvoiceStatus::DRAFT,
             'total_ht' => $this->faker->randomFloat(),
             'total_ttc' => $this->faker->randomFloat(),
             'created_at' => Carbon::now(),

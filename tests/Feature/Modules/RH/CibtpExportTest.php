@@ -17,12 +17,14 @@ it('calculates DNA totals correctly for the reference period', function () {
         'first_name' => 'Jean',
     ]);
     
-    // Contrat avec 20€/h
-    Contract::factory()->create([
-        'employee_id' => $employee->id,
-        'hourly_rate' => 20,
-        'start_date' => Carbon::now()->subYears(2),
-    ]);
+    // Contrat avec 20€/h sans déclencher l'observer (génération PDF)
+    Contract::withoutEvents(function () use ($employee) {
+        Contract::factory()->create([
+            'employee_id' => $employee->id,
+            'hourly_rate' => 20,
+            'start_date' => Carbon::now()->subYears(2),
+        ]);
+    });
 
     // Heure DANS la période de référence (Ex: Mai 2025 pour la DNA 2026)
     TimeEntry::create([

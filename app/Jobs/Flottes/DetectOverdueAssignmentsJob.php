@@ -35,6 +35,7 @@ class DetectOverdueAssignmentsJob implements ShouldQueue
         $managers = User::where('is_admin', true)->get();
 
         foreach ($overdueAssignments as $assignment) {
+            $hoursOverdue = now()->diffInHours($assignment->ended_at);
             Notification::send($managers, new OverdueAssignmentNotification($assignment));
 
             Log::warning("Restitution tardive : {$assignment->vehicle->reference} - {$hoursOverdue}h de retard");

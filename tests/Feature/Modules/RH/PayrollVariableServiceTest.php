@@ -60,4 +60,43 @@ describe('Calculs de Paie et Indemnités', function () {
         expect($res['is_gd'])->toBeTrue()
             ->and($res['allowance'])->toEqual(96.00);
     });
+
+    test('il retourne null et 0 si l\'api google maps echoue', function () {
+        $this->mock(GoogleMapsService::class, function ($mock) {
+            $mock->shouldReceive('getDistanceMatrix')->andReturnNull();
+        });
+
+        $service = app(PayrollVariableService::class);
+        $res = $service->calculateTravelAllowance('Adresse Invalide');
+
+        expect($res['zone'])->toBeNull()
+            ->and($res['is_gd'])->toBeFalse()
+            ->and($res['allowance'])->toEqual(0);
+    });
+
+    test('il determine la bonne zone pour des distances inferieures a 50km', function () {
+        $this->mock(GoogleMapsService::class, function ($mock) {
+            // Test pour 15km -> Zone 2 (15/10 ceil = 2)
+            $mock->shouldReceive('getDistanceMatrix')
+                ->once()
+                ->with(Mockery::any(), 'Chantier 15km')
+                ->andReturn(['distance_value' => 15000]);
+
+            // Test pour 45km -> Zone 5 (45/10 ceil = 5)
+            $mock->shouldReceive('getDistanceMatrix')
+                ->once()
+                ->with(Mockery::any(), 'Chantier 45km')
+                ->andReturn(['distance_value' => 45000]);
+        });
+
+        $service = app(PayrollVariableService::class);
+        
+        $res1 = $service->calculateTravelAllowance('Chantier 15km');
+        expect($res1['zone'])->toEqual(2)
+            ->and($res1['is_gd'])->toBeFalse();
+
+        $res2 = $service->calculateTravelAllowance('Chantier 45km');
+        expect($res2['zone'])->toEqual(5)
+            ->and($res2['is_gd'])->toBeFalse();
+    });
 });

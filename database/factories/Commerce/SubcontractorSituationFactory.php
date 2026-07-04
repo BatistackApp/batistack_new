@@ -20,7 +20,7 @@ class SubcontractorSituationFactory extends Factory
             'progress_percentage' => $this->faker->randomNumber(),
             'total_ht' => $this->faker->randomFloat(),
             'retenue_garantie_amount' => $this->faker->randomFloat(),
-            'status' => $this->faker->word(),
+            'status' => \App\Enums\Commerce\InvoiceStatus::DRAFT,
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
 
