@@ -77,7 +77,9 @@ class ThirdPartyService
             return $address;
         } catch (\Throwable $e) {
             Log::critical('Création de l\'adresse impossible: '.$e->getMessage(), (array) $e);
-            throw (new TiersModuleException('Création de l\'adresse impossible', 500))->notify();
+            $exception = new TiersModuleException('Création de l\'adresse impossible', 500, $e);
+            $exception->notify();
+            throw $exception;
         }
     }
 

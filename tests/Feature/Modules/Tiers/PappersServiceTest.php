@@ -59,3 +59,61 @@ it('detects cessation or liquidation', function () {
     $thirdParty->refresh();
     expect($thirdParty->financial_status)->toBe('Procédure Collective'); // Because 'procedures_collectives' is set
 });
+
+it('returns false if siren is missing', function () {
+    $thirdParty = ThirdParty::factory()->create([
+        'siren' => null,
+        'siret' => null, // ensure both are null so it fails
+    ]);
+
+    Log::shouldReceive('warning')->once()->withArgs(function ($message) {
+        return str_contains($message, 'Impossible de synchroniser: SIREN/SIRET manquant');
+    });
+
+    $service = app(PappersService::class);
+    $result = $service->syncFinancialData($thirdParty);
+
+    expect($result)->toBeFalse();
+});
+
+it('returns false if api finds no results', function () {
+    $thirdParty = ThirdParty::factory()->create([
+        'siren' => '000000000',
+    ]);
+
+    Http::fake([
+        'recherche-entreprises.api.gouv.fr/*' => Http::response([
+            'results' => []
+        ], 200)
+    ]);
+
+    Log::shouldReceive('warning')->once()->withArgs(function ($message) {
+        return str_contains($message, "API recherche-entreprises n'a trouvé aucun résultat");
+    });
+
+    $service = app(PappersService::class);
+    $result = $service->syncFinancialData($thirdParty);
+
+    expect($result)->toBeFalse();
+});
+
+it('catches exception and returns false', function () {
+    $thirdParty = ThirdParty::factory()->create([
+        'siren' => '123456789',
+    ]);
+
+    Http::fake([
+        'recherche-entreprises.api.gouv.fr/*' => function () {
+            throw new \Exception('Connection timeout');
+        }
+    ]);
+
+    Log::shouldReceive('error')->once()->withArgs(function ($message) {
+        return str_contains($message, 'Erreur lors de la synchro financière pour le tiers');
+    });
+
+    $service = app(PappersService::class);
+    $result = $service->syncFinancialData($thirdParty);
+
+    expect($result)->toBeFalse();
+});
