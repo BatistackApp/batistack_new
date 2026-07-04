@@ -16,6 +16,10 @@ class SignatureController extends Controller
     {
         $signature = Signature::where('token', $token)->firstOrFail();
 
+        if (! $signature->signable) {
+            abort(404, 'Le document associé est introuvable ou a été supprimé.');
+        }
+
         if ($signature->status !== SignatureStatus::PENDING) {
             return view('signature.completed');
         }
@@ -32,6 +36,10 @@ class SignatureController extends Controller
     public function sign(Request $request, string $token, SignatureService $service)
     {
         $signature = Signature::where('token', $token)->firstOrFail();
+
+        if (! $signature->signable) {
+            abort(404, 'Le document associé est introuvable ou a été supprimé.');
+        }
 
         if ($signature->status !== SignatureStatus::PENDING) {
             return redirect()->route('signature.show', $token)->with('error', 'Ce document a déjà été signé.');

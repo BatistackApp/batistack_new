@@ -34,6 +34,9 @@ describe('WelcomeCustomerNotification', function () {
     test('notification n\'est pas envoyée sans email', function () {
         $thirdParty = ThirdParty::factory()->create();
 
+        // Réinitialiser les fakes pour ignorer les notifications déclenchées par la création du Tiers
+        NotificationFacade::fake();
+
         Contact::create([
             'third_party_id' => $thirdParty->id,
             'first_name' => 'Jean',

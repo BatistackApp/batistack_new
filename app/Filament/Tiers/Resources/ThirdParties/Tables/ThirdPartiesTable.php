@@ -96,7 +96,10 @@ class ThirdPartiesTable
                         ->label('Actualiser Solvabilité')
                         ->icon(Phosphor::Bank)
                         ->color('info')
+                        ->visible(fn (ThirdParty $record) => auth()->user()->can('update', $record))
                         ->action(function (ThirdParty $record) {
+                            abort_unless(auth()->user()->can('update', $record), 403, 'Non autorisé.');
+
                             $success = app(PappersService::class)->syncFinancialData($record);
 
                             if ($success) {
