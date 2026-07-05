@@ -13,6 +13,45 @@ beforeEach(function () {
     Company::factory()->create();
 });
 
+describe('Item - Relations', function () {
+    test('unit relation', function () {
+        $unit = Unit::factory()->create();
+        $item = Item::factory()->create(['unit_id' => $unit->id]);
+        expect($item->unit)->toBeInstanceOf(Unit::class)->and($item->unit->id)->toBe($unit->id);
+    });
+
+    test('vatRate relation', function () {
+        $vat = VatRate::factory()->create();
+        $item = Item::factory()->create(['vat_rate_id' => $vat->id]);
+        expect($item->vatRate)->toBeInstanceOf(VatRate::class)->and($item->vatRate->id)->toBe($vat->id);
+    });
+
+    test('components relation', function () {
+        $parent = Item::factory()->create();
+        $parent->components()->create(['child_item_id' => Item::factory()->create()->id, 'quantity' => 1]);
+        expect($parent->components)->toHaveCount(1);
+    });
+
+    test('stocks relation', function () {
+        $item = Item::factory()->create();
+        Stock::factory()->create(['item_id' => $item->id]);
+        expect($item->stocks)->toHaveCount(1);
+    });
+
+    test('parent and children relation', function () {
+        $parent = Item::factory()->create();
+        $child = Item::factory()->create(['parent_id' => $parent->id]);
+        expect($child->parent)->toBeInstanceOf(Item::class)->and($child->parent->id)->toBe($parent->id);
+        expect($parent->children)->toHaveCount(1)->and($parent->children->first()->id)->toBe($child->id);
+    });
+
+    test('supplier relation', function () {
+        $supplier = \App\Models\Tiers\ThirdParty::factory()->create();
+        $item = Item::factory()->create(['supplier_id' => $supplier->id]);
+        expect($item->supplier)->toBeInstanceOf(\App\Models\Tiers\ThirdParty::class)->and($item->supplier->id)->toBe($supplier->id);
+    });
+});
+
 describe('Item - Scopes', function () {
     test('scope active() filtre articles actifs', function () {
         Item::factory(2)->create(['is_active' => true]);
@@ -132,6 +171,37 @@ describe('Item - Scopes', function () {
         $prices = $ordered->pluck('selling_price')->map(fn ($price) => (float) $price)->toArray();
         expect($prices)->toBe([100.0, 200.0, 300.0]);
     });
+    test('scope byType() filtre par type', function () {
+        Item::factory(2)->create(['type' => ItemType::STOCKABLE]);
+        Item::factory(1)->create(['type' => ItemType::WORK]);
+        expect(Item::byType(ItemType::STOCKABLE)->count())->toBe(2);
+    });
+
+    test('scope byUnit() filtre par unite', function () {
+        $unit = Unit::factory()->create();
+        Item::factory(2)->create(['unit_id' => $unit->id]);
+        expect(Item::byUnit($unit)->count())->toBe(2);
+    });
+
+    test('scope byVatRate() filtre par tva', function () {
+        $vat = VatRate::factory()->create();
+        Item::factory(2)->create(['vat_rate_id' => $vat->id]);
+        expect(Item::byVatRate($vat)->count())->toBe(2);
+    });
+
+    test('scope simple() filtre articles sans composants', function () {
+        $parent = Item::factory()->create();
+        $simple = Item::factory()->create();
+
+        $parent->components()->create([
+            'child_item_id' => Item::factory()->create()->id,
+            'quantity' => 1,
+        ]);
+
+        $simples = Item::simple()->get();
+        expect($simples->contains($simple))->toBeTrue()
+            ->and($simples->contains($parent))->toBeFalse();
+    });
 });
 
 describe('Item - Methods Métier', function () {
@@ -226,6 +296,18 @@ describe('Item - Methods Métier', function () {
         expect($item->getPriceTTC())->toBe(120.0);
     });
 });
+
+    test('getStockInWarehouse() recupere stock dun depot', function () {
+        $item = Item::factory()->create();
+        $warehouse = \App\Models\Articles\Warehouse::factory()->create();
+        Stock::factory()->create([
+            'item_id' => $item->id,
+            'warehouse_id' => $warehouse->id,
+            'quantity' => 30,
+        ]);
+
+        expect($item->getStockInWarehouse($warehouse))->toBe(30.0);
+    });
 
 describe('Item - Static Methods', function () {
     test('byReference() récupère par référence', function () {

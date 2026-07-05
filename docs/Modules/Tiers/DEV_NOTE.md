@@ -6,12 +6,12 @@
 *   **Tests :** Validé à 100% (plus de 172 tests PestPHP exécutés et validés avec succès).
 *   **Frontend :** Les fondations du Panel Filament sont initiées. L'interface principale est fonctionnelle.
 *   **Portails Externes B2B :** L'accès pour les Sous-traitants (SubcontractorPanel) et pour les Clients (CustomerPanel) a été configuré et sécurisé.
+*   **Évaluation Financière & Solvabilité :** Intégration de l'API publique ouverte (`recherche-entreprises.api.gouv.fr`) pour récupérer en temps réel le statut juridique (liquidation, redressement) des tiers et affichage via des alertes visuelles.
+*   **Portail d'Appels d'Offres Privé :** Module de "Consultations" permettant de publier des appels d'offres ciblés pour les chantiers. Les sous-traitants peuvent soumettre leurs offres chiffrées directement depuis leur portail sécurisé.
+*   **Conformité Documentaire :** Gestion centralisée des documents obligatoires (Kbis, URSSAF, Décennale) avec système d'upload, suivi des dates d'expiration et notifications automatisées envoyées 30 jours et 7 jours avant échéance.
 
 ## 🚧 Ce qu'il reste à faire
-*(La base du module est terminée, voir les améliorations)*
+*(La base du module est terminée et extrêmement complète. Aucune amélioration prioritaire n'est requise dans l'immédiat).*
 
 ## 💡 Idées d'amélioration et Nouvelles Fonctionnalités
-1.  **Vérification de la conformité documentaire (OCR) :** Automatiser la vérification de la validité des documents légaux déposés par les sous-traitants (Kbis, attestations URSSAF, assurances décennales) et paramétrer des alertes avant expiration.
-2.  **Cartographie Interactive :** Visualiser la répartition géographique des fournisseurs, sous-traitants et clients par rapport aux chantiers en cours sur une carte (via Filament Map).
-3.  **Portail d'appels d'offres Privé :** Permettre de diffuser des consultations et demandes de prix directement aux sous-traitants et fournisseurs via leur accès portail dédié.
-4.  **Évaluation Financière & Solvabilité :** Intégration d'une API (ex: Creditsafe, Infogreffe) pour récupérer automatiquement les scores de solvabilité des tiers et définir des limites de crédit ou d'encours automatisées.
+- Intégration avancée de la signature électronique pour les devis et marchés de sous-traitance (ex: DocuSeal).

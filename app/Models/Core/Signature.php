@@ -15,6 +15,7 @@ class Signature extends Model
     use HasFactory;
 
     protected $fillable = [
+        'token',
         'signable_type',
         'signable_id',
         'user_id',

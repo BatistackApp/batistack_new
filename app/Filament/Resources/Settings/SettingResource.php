@@ -22,6 +22,7 @@ class SettingResource extends Resource
     protected static string|BackedEnum|null $navigationIcon = Phosphor::GearSix;
 
     protected static string|UnitEnum|null $navigationGroup = 'Configuration Système';
+    protected static ?string $navigationLabel = 'Configurations';
 
     public static function form(Schema $schema): Schema
     {

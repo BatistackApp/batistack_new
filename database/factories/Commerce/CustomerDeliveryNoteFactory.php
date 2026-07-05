@@ -19,7 +19,7 @@ class CustomerDeliveryNoteFactory extends Factory
     {
         return [
             'reference' => $this->faker->unique()->randomNumber(),
-            'status' => $this->faker->randomElement(DeliveryStatus::class),
+            'status' => $this->faker->randomElement(DeliveryStatus::cases()),
             'delivery_date' => Carbon::now(),
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),

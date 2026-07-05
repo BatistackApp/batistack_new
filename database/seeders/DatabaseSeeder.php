@@ -25,6 +25,8 @@ class DatabaseSeeder extends Seeder
             '--panel' => 'core',
         ]);
 
+        $this->call(CoreSeeder::class);
+
         Employee::factory()->create([
             'user_id' => 1,
             'first_name' => 'John',

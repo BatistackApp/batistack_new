@@ -2,34 +2,36 @@
 
 namespace App\Filament\RH\Resources\Employees\RelationManagers;
 
+use App\Enums\Core\SignatureStatus;
+use App\Enums\Core\SignatureType;
 use App\Enums\RH\ContractType;
 use App\Models\RH\Contract;
+use App\Services\Core\SignatureService;
 use App\Services\RH\RHDocumentService;
 use BackedEnum;
 use Filament\Actions\Action;
-use Filament\Actions\AssociateAction;
-use Filament\Actions\BulkActionGroup;
 use Filament\Actions\CreateAction;
 use Filament\Actions\DeleteAction;
-use Filament\Actions\DeleteBulkAction;
-use Filament\Actions\DissociateAction;
-use Filament\Actions\DissociateBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
+use Filament\Notifications\Notification;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Support\Facades\Storage;
 use ToneGabes\Filament\Icons\Enums\Phosphor;
 
 class ContractsRelationManager extends RelationManager
 {
     protected static string $relationship = 'contracts';
+
     protected static ?string $title = 'Historique des contrats';
-    protected static string | BackedEnum | null $icon = Phosphor::FileText;
+
+    protected static string|BackedEnum|null $icon = Phosphor::FileText;
 
     public function form(Schema $schema): Schema
     {
@@ -94,13 +96,7 @@ class ContractsRelationManager extends RelationManager
                     ->color('gray'),
                 TextColumn::make('signature_status')
                     ->label('Signature')
-                    ->badge()
-                    ->color(fn (string $state): string => match ($state) {
-                        'pending' => 'gray',
-                        'sent' => 'warning',
-                        'signed' => 'success',
-                        default => 'gray',
-                    }),
+                    ->badge(),
             ])
             ->filters([
                 //
@@ -114,34 +110,33 @@ class ContractsRelationManager extends RelationManager
                 Action::make('print_contract')
                     ->label('Imprimer')
                     ->icon(Phosphor::Printer)
-                    ->action(fn (Contract $record, RHDocumentService $service) => \Illuminate\Support\Facades\Storage::disk('public')->download($service->generateContract($record))),
-                Action::make('send_docuseal')
-                    ->label('Envoyer pour signature')
-                    ->icon(Phosphor::PaperPlaneRight)
+                    ->action(fn (Contract $record, RHDocumentService $service) => Storage::disk('public')->download($service->generateContract($record))),
+                Action::make('request_signature')
+                    ->icon(Phosphor::PenNib)
                     ->color('info')
-                    ->visible(fn (Contract $record): bool => $record->signature_status !== 'signed')
-                    ->action(function (Contract $record, \App\Services\RH\DocuSealService $service) {
-                        // Assuming template ID 1 is the generic contract template in DocuSeal
-                        $success = $service->sendContractForSignature($record, 1);
-                        if ($success) {
-                            \Filament\Notifications\Notification::make()->title('Contrat envoyé avec succès')->success()->send();
-                        } else {
-                            \Filament\Notifications\Notification::make()->title('Erreur lors de l\'envoi')->danger()->send();
+                    ->visible(fn (Contract $record) => $record->signature_status === SignatureStatus::PENDING)
+                    ->action(function (Contract $record, SignatureService $service) {
+                        $email = $record->employee->email;
+                        $name = $record->employee->full_name;
+                        $pathFile = Storage::disk('public')->path('documents/rh/contrat_'.$record->employee->registration_number.'.pdf');
+
+                        if (! $email) {
+                            Notification::make()->title('Erreur : Le salarié n\'a pas d\'adresse email')->danger()->send();
+
+                            return;
                         }
-                    }),
-                Action::make('check_docuseal')
-                    ->label('Vérifier statut')
-                    ->icon(Phosphor::ArrowsClockwise)
-                    ->color('warning')
-                    ->visible(fn (Contract $record): bool => $record->signature_status === 'sent')
-                    ->action(function (Contract $record, \App\Services\RH\DocuSealService $service) {
-                        $success = $service->checkAndDownloadSignedContract($record);
-                        if ($success) {
-                            \Filament\Notifications\Notification::make()->title('Contrat signé récupéré !')->success()->send();
-                        } else {
-                            \Filament\Notifications\Notification::make()->title('Contrat toujours en attente')->info()->send();
-                        }
-                    }),
+
+                        $service->requestSignature(
+                            model: $record,
+                            type: SignatureType::AUTOGRAPH,
+                            email: $email,
+                            name: $name,
+                            documentPath: $pathFile,
+                        );
+
+                        Notification::make()->title('Demande de signature envoyée par email')->success()->send();
+                    })
+                    ->label('Demander Signature'),
             ]);
     }
 

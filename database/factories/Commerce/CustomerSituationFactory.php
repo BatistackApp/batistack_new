@@ -17,10 +17,12 @@ class CustomerSituationFactory extends Factory
     {
         return [
             'number' => $this->faker->randomNumber(),
-            'status' => $this->faker->word(),
-            'total_ht' => $this->faker->word(),
-            'retenue_garantie_amount' => $this->faker->word(),
-            'prorata_amount' => $this->faker->word(),
+            'status' => \App\Enums\Commerce\InvoiceStatus::DRAFT,
+            'total_ht' => $this->faker->randomFloat(2, 100, 10000),
+            'retenue_garantie_amount' => $this->faker->randomFloat(2, 0, 500),
+            'prorata_amount' => $this->faker->randomFloat(2, 0, 500),
+            'periode_start' => Carbon::now()->subDays(30),
+            'periode_end' => Carbon::now(),
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
 

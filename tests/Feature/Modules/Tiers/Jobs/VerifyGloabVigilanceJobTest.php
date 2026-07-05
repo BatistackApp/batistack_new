@@ -7,10 +7,16 @@ use App\Models\User;
 use App\Notifications\Tiers\SubcontractorVigilanceReminderNotification;
 use App\Notifications\Tiers\VigilanceExpirationNotification;
 use App\Services\Tiers\VigilanceService;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
+
+uses(RefreshDatabase::class);
+
+use Illuminate\Support\Facades\Queue;
 
 it('dispatches vigilance expiration notifications to admins and subcontractors via primary contact', function () {
     Notification::fake();
+    Queue::fake([VerifyGloabVigilanceJob::class]);
 
     // Create admin user
     $admin = User::factory()->create(['is_admin' => true]);
@@ -55,3 +61,33 @@ it('dispatches vigilance expiration notifications to admins and subcontractors v
         }
     );
 });
+
+it('updates compliant status and sends no notifications when subcontractor is compliant', function () {
+    Notification::fake();
+    Queue::fake([VerifyGloabVigilanceJob::class]);
+
+    $subcontractor = ThirdParty::factory()->create([
+        'type' => \App\Enums\Tiers\ThirdPartyType::SUBCONTRACTOR,
+        'is_active' => true,
+    ]);
+
+    $mockService = Mockery::mock(VigilanceService::class);
+    $mockService->shouldReceive('scanCompliance')
+        ->once()
+        ->andReturn([
+            'compliant' => true,
+            'issues' => [],
+        ]);
+
+    $job = new VerifyGloabVigilanceJob();
+    $job->handle($mockService);
+
+    Notification::assertNothingSent();
+
+    $subcontractor->refresh();
+    expect($subcontractor->compliant_status)->toBe([
+        'compliant' => true,
+        'issues' => [],
+    ]);
+});
+

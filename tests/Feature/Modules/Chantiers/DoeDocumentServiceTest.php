@@ -11,12 +11,21 @@ use App\Models\Tiers\ThirdParty;
 use App\Services\Chantiers\DoeDocumentService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Storage;
+use Mockery;
 
 beforeEach(function () {
     Company::factory()->create();
     Storage::fake('public');
 
-    $this->service = app(DoeDocumentService::class);
+    $this->service = Mockery::mock(DoeDocumentService::class)
+        ->makePartial()
+        ->shouldAllowMockingProtectedMethods();
+    $this->service->shouldReceive('generateSommairePdf')->andReturnUsing(function () {
+        $path = 'chantiers/doe_temp/dummy_sommaire.pdf';
+        Storage::disk('public')->put($path, 'dummy content');
+        return $path;
+    });
+
     $this->chantier = Chantier::factory()->create();
     $this->chantier->client()->associate(ThirdParty::factory()->create(['type' => ThirdPartyType::CLIENT]));
     $this->chantier->save();

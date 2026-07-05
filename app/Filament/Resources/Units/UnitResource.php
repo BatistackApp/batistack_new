@@ -11,7 +11,6 @@ use App\Models\Core\Unit;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
-use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use ToneGabes\Filament\Icons\Enums\Phosphor;
 use UnitEnum;
@@ -21,7 +20,9 @@ class UnitResource extends Resource
     protected static ?string $model = Unit::class;
 
     protected static string|BackedEnum|null $navigationIcon = Phosphor::Scales;
-    protected static string | UnitEnum | null $navigationGroup = 'Référentiels';
+
+    protected static string|UnitEnum|null $navigationGroup = 'Référentiels';
+
     protected static ?string $modelLabel = 'Unité';
 
     protected static ?string $recordTitleAttribute = 'name';

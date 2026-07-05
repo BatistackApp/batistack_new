@@ -4,10 +4,12 @@ namespace App\Filament\RH\Resources\Employees\RelationManagers;
 
 use App\Enums\RH\AbsenceType;
 use App\Models\RH\Abscence;
+use App\Services\RH\CibtpService;
 use App\Services\RH\LeaveBalanceService;
 use App\Services\RH\RHDocumentService;
 use BackedEnum;
 use Filament\Actions\Action;
+use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\CreateAction;
 use Filament\Actions\DeleteAction;
@@ -28,6 +30,7 @@ use Filament\Schemas\Schema;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Collection;
 use ToneGabes\Filament\Icons\Enums\Phosphor;
 
 class AbsencesRelationManager extends RelationManager
@@ -173,22 +176,23 @@ class AbsencesRelationManager extends RelationManager
             ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
-                    \Filament\Tables\Actions\BulkAction::make('exporter_ddc')
+                    BulkAction::make('exporter_ddc')
                         ->label('Exporter DDC (CIBTP)')
                         ->icon(Phosphor::FileCsv)
                         ->color('primary')
                         ->requiresConfirmation()
                         ->modalHeading('Exporter les demandes de congés')
                         ->modalDescription('Cela va générer un fichier CSV contenant les demandes de congés sélectionnées et marquera ces absences comme "Déclarées". Êtes-vous sûr ?')
-                        ->action(function (\Illuminate\Database\Eloquent\Collection $records) {
+                        ->action(function (Collection $records) {
                             // Ne traiter que les congés payés
-                            $paidLeaves = $records->where('type', \App\Enums\RH\AbsenceType::PAID_LEAVE);
-                            
+                            $paidLeaves = $records->where('type', AbsenceType::PAID_LEAVE);
+
                             if ($paidLeaves->isEmpty()) {
-                                \Filament\Notifications\Notification::make()
+                                Notification::make()
                                     ->title('Aucun congé payé sélectionné')
                                     ->warning()
                                     ->send();
+
                                 return;
                             }
 
@@ -197,11 +201,11 @@ class AbsencesRelationManager extends RelationManager
                                 $absence->update(['cibtp_declared_at' => now()]);
                             });
 
-                            $csvContent = app(\App\Services\RH\CibtpService::class)->generateDDC($paidLeaves);
+                            $csvContent = app(CibtpService::class)->generateDDC($paidLeaves);
 
                             return response()->streamDownload(function () use ($csvContent) {
                                 echo $csvContent;
-                            }, 'DDC_CIBTP_' . now()->format('Ymd_His') . '.csv', [
+                            }, 'DDC_CIBTP_'.now()->format('Ymd_His').'.csv', [
                                 'Content-Type' => 'text/csv; charset=UTF-8',
                             ]);
                         }),

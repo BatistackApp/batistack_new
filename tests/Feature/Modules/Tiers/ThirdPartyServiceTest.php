@@ -165,3 +165,39 @@ it('throws exception when creating address from siren fails', function () {
 
     $this->thirdPartyService->createAddressFromSiren($thirdParty, $sirenAddressData);
 });
+
+it('throws exception if third party creation transaction fails', function () {
+    $siret = '12345678900014';
+    $type = 'client';
+
+    $sirenData = [
+        'etablissement' => [
+            'uniteLegal' => [
+                'denominationUniteLegale' => null,
+                'nomUniteLegale' => null, // This will cause ThirdParty::create to fail (name is required)
+            ],
+            'adresseEtablissement' => [],
+        ],
+    ];
+
+    $this->sirenService->shouldReceive('getInformation')
+        ->once()
+        ->with($siret)
+        ->andReturn($sirenData);
+
+    $this->expectException(TiersModuleException::class);
+    $this->expectExceptionMessage('Création du tiers par siret impossible');
+
+    $this->thirdPartyService->createFromSiret($siret, $type);
+});
+
+it('throws exception if addAddress fails', function () {
+    $thirdParty = ThirdParty::factory()->create();
+    // Providing invalid data to trigger SQL exception (e.g. missing street, which is required)
+    $addressData = [];
+
+    $this->expectException(TiersModuleException::class);
+    $this->expectExceptionMessage('Création de l\'adresse impossible');
+
+    $this->thirdPartyService->addAddress($thirdParty, $addressData);
+});

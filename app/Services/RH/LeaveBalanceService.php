@@ -36,7 +36,7 @@ class LeaveBalanceService
 
         // On calcule le nombre de mois travaillés depuis le début de l'année de référence (souvent Juin en France)
         // Pour simplifier ici, on calcule depuis le début d'année civile
-        $referenceDate = $startDate->isAfter($now->startOfYear()) ? $startDate : $now->startOfYear();
+        $referenceDate = $startDate->isAfter($now->copy()->startOfYear()) ? $startDate : $now->copy()->startOfYear();
         $monthsWorked = $referenceDate->diffInMonths($now);
 
         $ratePerMonth = match ($type) {

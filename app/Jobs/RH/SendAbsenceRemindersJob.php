@@ -18,8 +18,8 @@ class SendAbsenceRemindersJob implements ShouldQueue
 
     public function handle(): void
     {
-        // Absences en attente d'approbation depuis plus de 3 jours
-        $pendingAbsences = Abscence::where('status', 'pending')
+        // Absences non encore déclarées à la CIBTP (assimilé 'pending') depuis plus de 3 jours
+        $pendingAbsences = Abscence::whereNull('cibtp_declared_at')
             ->where('created_at', '<', now()->subDays(3))
             ->with('employee')
             ->get();

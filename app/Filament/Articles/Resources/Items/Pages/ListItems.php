@@ -30,7 +30,7 @@ class ListItems extends ListRecords
                 ->color('danger')
                 ->action(function (\App\Services\Articles\InventoryService $service) {
                     $path = $service->generateValuationPdf();
-                    return response()->download(storage_path('app/public/' . $path));
+                    return response()->download($path);
                 }),
 
             CreateAction::make(),

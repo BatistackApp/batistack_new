@@ -12,7 +12,7 @@ on:
 jobs:
   changes:
     runs-on: ubuntu-latest
-    if: github.event_name == 'push'
+    if: github.event_name == 'push' && github.ref != 'refs/heads/develop' && github.ref != 'refs/heads/master'
     outputs:
       modules: ${{ steps.filter.outputs.changes }}
     steps:
@@ -61,7 +61,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: changes
     environment: Testing
-    if: github.event_name == 'push' && needs.changes.outputs.modules != '[]' && needs.changes.outputs.modules != ''
+    if: github.event_name == 'push' && github.ref != 'refs/heads/develop' && github.ref != 'refs/heads/master' && needs.changes.outputs.modules != '[]' && needs.changes.outputs.modules != ''
     strategy:
       fail-fast: false
       matrix:
@@ -113,12 +113,25 @@ jobs:
             ./vendor/bin/pest tests/Feature/Modules/${{ matrix.module }} --coverage --coverage-clover storage/coverage/coverage-${{ matrix.module }}.xml --log-junit junit-${{ matrix.module }}.xml
           fi
 
+      - name: Upload test results to Codecov
+        if: ${{ !cancelled() }}
+        uses: codecov/test-results-action@v1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          flags: ${{ matrix.module }}
 
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          slug: BatistackApp/batistack_new
+          files: ./storage/coverage/coverage-${{ matrix.module }}.xml
+          flags: ${{ matrix.module }}
 
   test-global:
     runs-on: ubuntu-latest
     environment: Testing
-    if: github.event_name == 'pull_request' && github.event.action != 'closed'
+    if: (github.event_name == 'pull_request' && github.event.action != 'closed') || (github.event_name == 'push' && (github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/master'))
     strategy:
       matrix:
         php-version: ['8.4']
