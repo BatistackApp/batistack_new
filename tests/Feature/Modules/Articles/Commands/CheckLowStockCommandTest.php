@@ -19,12 +19,6 @@ it('checks low stocks and sends notification to admins', function () {
     // Assuming there's a scopeAdmin() or a way to distinguish admins.
     // The command uses `User::admin()->get()`. Let's mock or rely on the factory creating an admin if no roles.
     // We can just use the created user for notification assertions if `admin()` works.
-    
-    // We need to bypass the Spatie permission if it requires roles, or just assign it.
-    if (method_exists($admin, 'assignRole')) {
-        \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'Admin']);
-        $admin->assignRole('Admin');
-    }
 
     $warehouse = Warehouse::factory()->create();
     $item = Item::factory()->create();

@@ -38,11 +38,13 @@ class SystemHealthWidget extends Widget
                 'label' => 'Service SIREN',
                 'status' => ! empty($settingService->get('siren_api_key')),
                 'description' => 'Requis pour l\'importation automatique des tiers.',
+                'color' => ! empty($settingService->get('siren_api_key')) ? 'green' : 'red',
             ],
             [
                 'label' => 'Service OCR',
                 'status' => $settingService->get('ocr_enabled') === 'true' && ! empty($settingService->get('ocr_google_key')),
                 'description' => 'Requis pour la lecture des factures et notes de frais.',
+                'color' => ! empty($settingService->get('ocr_enabled')) ? 'green' : 'red',
             ],
         ];
     }

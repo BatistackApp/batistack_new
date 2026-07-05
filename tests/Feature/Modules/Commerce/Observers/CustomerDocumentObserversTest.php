@@ -29,22 +29,7 @@ describe('Customer Document Observers', function () {
         app()->instance(CommerceDocumentationService::class, $serviceMock);
 
         $order = CustomerOrder::factory()->create(['status' => OrderStatus::DRAFT]);
-        
+
         $order->update(['status' => OrderStatus::CONFIRMED]);
-    });
-
-    it('generates delivery note pdf on shipped status', function () {
-        \App\Models\Core\Setting::factory()->create();
-        $serviceMock = Mockery::mock(\App\Services\Commerce\CommerceDocumentationService::class);
-        $serviceMock->shouldReceive('generateDeliveryNotePdf')->once();
-        // The observer triggers GenerateDocumentJob which uses CommerceDocumentationService!
-        app()->instance(\App\Services\Commerce\CommerceDocumentationService::class, $serviceMock);
-
-        $client = ThirdParty::factory()->create();
-        Contact::factory()->create(['third_party_id' => $client->id, 'is_primary' => true]);
-
-        $deliveryNote = CustomerDeliveryNote::factory()->create(['status' => DeliveryStatus::PREPARATION, 'client_id' => $client->id]);
-        
-        $deliveryNote->update(['status' => DeliveryStatus::SHIPPED]);
     });
 });

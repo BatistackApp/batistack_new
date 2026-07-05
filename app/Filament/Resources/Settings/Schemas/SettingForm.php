@@ -2,9 +2,11 @@
 
 namespace App\Filament\Resources\Settings\Schemas;
 
-use Filament\Forms\Components\Placeholder;
+use Filament\Forms\Components\ColorPicker;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Tabs;
@@ -33,7 +35,7 @@ class SettingForm
                                         ->datalist(['Général', 'Facturation', 'Interface', 'API']),
                                 ]),
 
-                                \Filament\Forms\Components\Select::make('type')
+                                Select::make('type')
                                     ->label('Format de la donnée')
                                     ->options([
                                         'string' => 'Texte',
@@ -48,7 +50,7 @@ class SettingForm
                                 TextInput::make('value_string')
                                     ->label('Valeur')
                                     ->statePath('value')
-                                    ->visible(fn ($get) => $get('type') === 'string' || !$get('type'))
+                                    ->visible(fn ($get) => $get('type') === 'string' || ! $get('type'))
                                     ->required(),
 
                                 TextInput::make('value_integer')
@@ -58,12 +60,12 @@ class SettingForm
                                     ->visible(fn ($get) => $get('type') === 'integer')
                                     ->required(),
 
-                                \Filament\Forms\Components\Toggle::make('value_boolean')
+                                Toggle::make('value_boolean')
                                     ->label('Activer / Désactiver')
                                     ->statePath('value')
                                     ->visible(fn ($get) => $get('type') === 'boolean'),
 
-                                \Filament\Forms\Components\ColorPicker::make('value_color')
+                                ColorPicker::make('value_color')
                                     ->label('Couleur')
                                     ->statePath('value')
                                     ->visible(fn ($get) => $get('type') === 'color')

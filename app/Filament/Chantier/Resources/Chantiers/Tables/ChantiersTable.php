@@ -2,7 +2,11 @@
 
 namespace App\Filament\Chantier\Resources\Chantiers\Tables;
 
+use App\Enums\Articles\StockMouvementSource;
 use App\Enums\Chantiers\ChantierStatus;
+use App\Models\Articles\Item;
+use App\Models\Articles\Stock;
+use App\Models\Articles\Warehouse;
 use App\Models\Chantiers\Chantier;
 use App\Services\Chantiers\ChantierAnalyticService;
 use App\Services\Chantiers\ChantierDocumentService;
@@ -12,6 +16,9 @@ use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
+use Filament\Notifications\Notification;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
@@ -64,46 +71,49 @@ class ChantiersTable
                         ->icon(Phosphor::ChartPie)
                         ->color('success')
                         ->action(fn (Chantier $record, ChantierDocumentService $service) => response()->download($service->generateRentabilityReport($record))),
-                    
-                    \Filament\Tables\Actions\Action::make('affect_material')
+
+                    Action::make('affect_material')
                         ->label('Affecter Matériel')
                         ->icon(Phosphor::Package)
                         ->color('warning')
-                        ->form([
-                            \Filament\Forms\Components\Select::make('warehouse_id')
+                        ->schema([
+                            Select::make('warehouse_id')
                                 ->label('Dépôt Source')
-                                ->options(\App\Models\Articles\Warehouse::pluck('name', 'id'))
+                                ->options(Warehouse::pluck('name', 'id'))
                                 ->required()
                                 ->reactive(),
-                            \Filament\Forms\Components\Select::make('item_id')
+                            Select::make('item_id')
                                 ->label('Article')
                                 ->options(function (callable $get) {
                                     $warehouseId = $get('warehouse_id');
-                                    if (!$warehouseId) return [];
-                                    return \App\Models\Articles\Item::whereHas('stocks', function ($q) use ($warehouseId) {
+                                    if (! $warehouseId) {
+                                        return [];
+                                    }
+
+                                    return Item::whereHas('stocks', function ($q) use ($warehouseId) {
                                         $q->where('warehouse_id', $warehouseId)->where('quantity', '>', 0);
                                     })->pluck('name', 'id');
                                 })
                                 ->required(),
-                            \Filament\Forms\Components\TextInput::make('quantity')
+                            TextInput::make('quantity')
                                 ->label('Quantité')
                                 ->numeric()
                                 ->required()
                                 ->minValue(0.01),
                         ])
                         ->action(function (Chantier $record, array $data) {
-                            $stock = \App\Models\Articles\Stock::where('warehouse_id', $data['warehouse_id'])
+                            $stock = Stock::where('warehouse_id', $data['warehouse_id'])
                                 ->where('item_id', $data['item_id'])
                                 ->firstOrFail();
-                            
+
                             $stock->decrease(
                                 $data['quantity'],
                                 "Affectation au chantier {$record->reference}",
-                                \App\Enums\Articles\StockMouvementSource::SITE,
+                                StockMouvementSource::SITE,
                                 $record->id
                             );
-                            
-                            \Filament\Notifications\Notification::make()
+
+                            Notification::make()
                                 ->title('Matériel affecté')
                                 ->success()
                                 ->send();

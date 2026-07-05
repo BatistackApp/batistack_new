@@ -15,7 +15,6 @@ use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
 use FilamentInbox\FilamentInboxPlugin;
-use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
@@ -31,6 +30,7 @@ class CorePanelProvider extends PanelProvider
             ->default()
             ->id('core')
             ->path('core')
+            ->viteTheme('resources/css/filament/core/theme.css')
             ->login()
             ->colors([
                 'primary' => Color::Amber,
@@ -60,7 +60,6 @@ class CorePanelProvider extends PanelProvider
                 AuthDesignerPlugin::make()
                     ->login(),
                 FilamentJobsMonitorPlugin::make(),
-                FilamentShieldPlugin::make(),
             ])
             ->databaseNotifications()
             ->authMiddleware([

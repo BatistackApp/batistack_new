@@ -12,7 +12,7 @@
                     ])>
                         <x-filament::icon
                             icon="{{ $service['status'] ? \ToneGabes\Filament\Icons\Enums\Phosphor::CheckCircle->getLabel() : \ToneGabes\Filament\Icons\Enums\Phosphor::WarningCircle->getLabel() }}"
-                            class="h-6 w-6"
+                            class="h-6 w-6 text-{{ $service['color'] }}"
                         />
                     </div>
                     <div>
