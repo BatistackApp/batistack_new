@@ -16,6 +16,9 @@ class EmployeeObserver
      */
     public function creating(Employee $employee): void
     {
+        if (empty($employee->uuid)) {
+            $employee->uuid = Str::uuid();
+        }
         if (empty($employee->registration_number)) {
             throw new \Exception('Registration number required');
         }
@@ -56,7 +59,7 @@ class EmployeeObserver
             try {
                 $pdfRelativePath = app(\App\Services\RH\RHDocumentService::class)->generateAffiliationMutuelle($employee);
                 $pdfAbsolutePath = \Illuminate\Support\Facades\Storage::disk('public')->path($pdfRelativePath);
-                
+
                 $employee->addMedia($pdfAbsolutePath)
                     ->toMediaCollection('rh_documents');
             } catch (\Exception $e) {
