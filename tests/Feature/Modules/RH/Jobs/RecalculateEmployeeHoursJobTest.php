@@ -52,7 +52,7 @@ describe('RecalculateEmployeeHoursJob', function () {
             ->with('Employee hours recalculated', \Mockery::on(function ($data) use ($employee) {
                 return $data['employee_id'] === $employee->id
                     && $data['hours_month'] == 15.5
-                    && $data['hours_year'] == 24.5;
+                    && $data['hours_year'] == 19.5;
             }))
             ->once();
 
@@ -64,7 +64,7 @@ describe('RecalculateEmployeeHoursJob', function () {
         $job->handle();
 
         expect(Cache::get("employee_hours_month_{$employee->id}"))->toEqual(15.5)
-            ->and(Cache::get("employee_hours_year_{$employee->id}"))->toEqual(24.5)
+            ->and(Cache::get("employee_hours_year_{$employee->id}"))->toEqual(19.5)
             ->and(Cache::has("employee_hours_month_{$inactiveEmployee->id}"))->toBeFalse();
     });
 });

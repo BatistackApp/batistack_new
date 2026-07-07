@@ -2,6 +2,7 @@
 
 namespace App\Jobs\RH;
 
+use App\Enums\RH\TimeEntryStatus;
 use App\Models\RH\Employee;
 use App\Models\RH\TimeEntry;
 use Illuminate\Bus\Queueable;
@@ -26,6 +27,7 @@ class RecalculateEmployeeHoursJob implements ShouldQueue
 
             // Calcul heures de l'année
             $hoursThisYear = TimeEntry::byEmployee($employee)
+                ->where('status', TimeEntryStatus::APPROVED)
                 ->whereYear('date', now()->year)
                 ->sum('hours') ?? 0;
 
