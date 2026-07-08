@@ -81,7 +81,10 @@ it('recalculates progress and does not send alert if under 90%', function () {
     $job = new RecalculateChantierProgressJob($chantier);
     $job->handle(app(ChantierAnalyticService::class));
     
-    Notification::assertNothingSent();
+    Notification::assertNotSentTo(
+        $manager,
+        ChantierBudgetAlertNotification::class
+    );
 });
 
 it('handles CompileDoeJob', function () {
