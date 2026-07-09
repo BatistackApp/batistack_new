@@ -2,6 +2,7 @@
 
 namespace App\Providers\Filament;
 
+use App\Http\Middleware\EnsureUserIsEmployee;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -26,6 +27,10 @@ class SalariePanelProvider extends PanelProvider
         return $panel
             ->id('salarie')
             ->path('salarie')
+            ->login()
+            ->sidebarCollapsibleOnDesktop()
+            ->databaseNotifications()
+            ->brandName('Batistack - Espace Employée')
             ->colors([
                 'primary' => Color::Amber,
             ])
@@ -52,6 +57,7 @@ class SalariePanelProvider extends PanelProvider
             ])
             ->authMiddleware([
                 Authenticate::class,
+                EnsureUserIsEmployee::class,
             ]);
     }
 }

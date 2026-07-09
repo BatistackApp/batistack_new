@@ -1,17 +1,31 @@
 <?php
 
+use App\Providers\AppServiceProvider;
+use App\Providers\Filament\ArticlesPanelProvider;
+use App\Providers\Filament\ChantierPanelProvider;
+use App\Providers\Filament\CommercePanelProvider;
+use App\Providers\Filament\CorePanelProvider;
+use App\Providers\Filament\CustomerPanelProvider;
+use App\Providers\Filament\FlottesPanelProvider;
+use App\Providers\Filament\RHPanelProvider;
+use App\Providers\Filament\SalariePanelProvider;
+use App\Providers\Filament\SubcontractorPanelProvider;
+use App\Providers\Filament\TerrainPanelProvider;
+use App\Providers\Filament\TiersPanelProvider;
+use App\Providers\FortifyServiceProvider;
+
 return [
-    App\Providers\AppServiceProvider::class,
-    App\Providers\Filament\ArticlesPanelProvider::class,
-    App\Providers\Filament\ChantierPanelProvider::class,
-    App\Providers\Filament\CommercePanelProvider::class,
-    App\Providers\Filament\CorePanelProvider::class,
-    App\Providers\Filament\CustomerPanelProvider::class,
-    App\Providers\Filament\SalariePanelProvider::class,
-    App\Providers\Filament\FlottesPanelProvider::class,
-    App\Providers\Filament\RHPanelProvider::class,
-    App\Providers\Filament\TerrainPanelProvider::class,
-    App\Providers\Filament\TiersPanelProvider::class,
-    App\Providers\Filament\SubcontractorPanelProvider::class,
-    App\Providers\FortifyServiceProvider::class,
+    AppServiceProvider::class,
+    ArticlesPanelProvider::class,
+    ChantierPanelProvider::class,
+    CommercePanelProvider::class,
+    CorePanelProvider::class,
+    CustomerPanelProvider::class,
+    SalariePanelProvider::class,
+    FlottesPanelProvider::class,
+    RHPanelProvider::class,
+    TerrainPanelProvider::class,
+    TiersPanelProvider::class,
+    SubcontractorPanelProvider::class,
+    FortifyServiceProvider::class,
 ];

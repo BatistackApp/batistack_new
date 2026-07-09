@@ -32,6 +32,7 @@ class AppServiceProvider extends ServiceProvider
         
         if (app()->isProduction() || env('FORCE_HTTPS', false)) {
             \Illuminate\Support\Facades\URL::forceScheme('https');
+            request()->server->set('HTTPS', 'on');
         }
 
         PanelSwitch::configureUsing(function (PanelSwitch $panelSwitch) {
