@@ -6,9 +6,16 @@ use App\Enums\RH\TimeEntryStatus;
 use App\Enums\RH\TimeEntryType;
 use App\Filament\Salarie\Resources\TimeEntryResource\Pages;
 use App\Models\RH\TimeEntry;
-use Filament\Forms;
-use Filament\Forms\Form;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\EditAction;
+use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Hidden;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Resources\Resource;
+use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
@@ -18,7 +25,7 @@ class TimeEntryResource extends Resource
 {
     protected static ?string $model = TimeEntry::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-clock';
+    protected static string|null|\BackedEnum $navigationIcon = 'heroicon-o-clock';
     protected static ?string $navigationLabel = 'Mes Pointages';
     protected static ?string $modelLabel = 'Pointage';
     protected static ?string $pluralModelLabel = 'Pointages';
@@ -31,45 +38,45 @@ class TimeEntryResource extends Resource
             ->orderBy('date', 'desc');
     }
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form
+        return $schema
             ->schema([
-                Forms\Components\Select::make('chantier_id')
+                Select::make('chantier_id')
                     ->label('Chantier')
                     ->relationship('chantier', 'name')
                     ->searchable()
                     ->required(),
-                Forms\Components\DatePicker::make('date')
+                DatePicker::make('date')
                     ->label('Date')
                     ->required()
                     ->default(now())
                     ->native(false),
-                Forms\Components\Select::make('type')
+                Select::make('type')
                     ->label('Type de pointage')
                     ->options(TimeEntryType::class)
-                    ->default(TimeEntryType::CHANTIER->value)
+                    ->default(TimeEntryType::NORMAL->value)
                     ->required(),
-                Forms\Components\TextInput::make('hours')
+                TextInput::make('hours')
                     ->label('Heures travaillées')
                     ->numeric()
                     ->step(0.5)
                     ->required(),
-                Forms\Components\TextInput::make('travel_hours')
+                TextInput::make('travel_hours')
                     ->label('Heures de trajet')
                     ->numeric()
                     ->step(0.5)
                     ->default(0),
-                Forms\Components\Toggle::make('is_grand_deplacement')
+                Toggle::make('is_grand_deplacement')
                     ->label('Grand déplacement ?')
                     ->default(false),
-                Forms\Components\Textarea::make('description')
+                Textarea::make('description')
                     ->label('Commentaire')
                     ->maxLength(65535)
                     ->columnSpanFull(),
-                Forms\Components\Hidden::make('status')
-                    ->default(TimeEntryStatus::PENDING->value),
-                Forms\Components\Hidden::make('employee_id')
+                Hidden::make('status')
+                    ->default(TimeEntryStatus::DRAFT->value),
+                Hidden::make('employee_id')
                     ->default(fn () => Auth::user()?->salarie?->id),
             ]);
     }
@@ -108,14 +115,11 @@ class TimeEntryResource extends Resource
                     ->query(fn (Builder $query): Builder => $query->thisMonth())
                     ->default(),
             ])
-            ->actions([
-                Tables\Actions\EditAction::make()
-                    ->visible(fn (TimeEntry $record) => $record->status === TimeEntryStatus::PENDING),
-                Tables\Actions\DeleteAction::make()
-                    ->visible(fn (TimeEntry $record) => $record->status === TimeEntryStatus::PENDING),
-            ])
-            ->bulkActions([
-                //
+            ->recordActions([
+                EditAction::make()
+                    ->visible(fn (TimeEntry $record) => $record->status === TimeEntryStatus::DRAFT),
+                DeleteAction::make()
+                    ->visible(fn (TimeEntry $record) => $record->status === TimeEntryStatus::DRAFT),
             ])
             ->emptyStateHeading('Aucun pointage trouvé');
     }

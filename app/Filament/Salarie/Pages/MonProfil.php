@@ -2,28 +2,32 @@
 
 namespace App\Filament\Salarie\Pages;
 
-use Filament\Forms\Components\Section;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Concerns\InteractsWithForms;
-use Filament\Forms\Contracts\HasForms;
-use Filament\Forms\Form;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Concerns\InteractsWithSchemas;
+use Filament\Schemas\Contracts\HasSchemas;
+use Filament\Schemas\Schema;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
 
-class MonProfil extends Page implements HasForms
+class MonProfil extends Page implements HasSchemas
 {
-    use InteractsWithForms;
+    use InteractsWithSchemas;
 
-    protected static ?string $navigationIcon = 'heroicon-o-user';
+    protected static string|null|\BackedEnum $navigationIcon = 'heroicon-o-user';
+
     protected static ?string $navigationLabel = 'Mon Profil';
+
     protected static ?string $title = 'Mon Profil';
+
     protected static ?int $navigationSort = 100;
 
-    protected static string $view = 'filament.salarie.pages.mon-profil';
+    protected string $view = 'filament.salarie.pages.mon-profil';
 
     public ?array $employeeData = [];
+
     public ?array $passwordData = [];
 
     public function mount(): void
@@ -37,6 +41,7 @@ class MonProfil extends Page implements HasForms
                 'address' => $employee->address,
                 'postal_code' => $employee->postal_code,
                 'city' => $employee->city,
+                'email' => $employee->email,
             ]);
         }
     }
@@ -49,9 +54,9 @@ class MonProfil extends Page implements HasForms
         ];
     }
 
-    public function employeeForm(Form $form): Form
+    public function employeeForm(Schema $schema): Schema
     {
-        return $form
+        return $schema
             ->schema([
                 Section::make('Informations de contact')
                     ->description('Mettez à jour vos informations personnelles.')
@@ -59,6 +64,10 @@ class MonProfil extends Page implements HasForms
                         TextInput::make('phone')
                             ->label('Téléphone')
                             ->tel()
+                            ->maxLength(255),
+                        TextInput::make('email')
+                            ->label('Adresse email')
+                            ->email()
                             ->maxLength(255),
                         TextInput::make('address')
                             ->label('Adresse postale')
@@ -76,9 +85,9 @@ class MonProfil extends Page implements HasForms
             ->statePath('employeeData');
     }
 
-    public function passwordForm(Form $form): Form
+    public function passwordForm(Schema $schema): Schema
     {
-        return $form
+        return $schema
             ->schema([
                 Section::make('Mot de passe')
                     ->description('Assurez-vous que votre compte utilise un mot de passe long et aléatoire.')
@@ -87,16 +96,19 @@ class MonProfil extends Page implements HasForms
                             ->label('Mot de passe actuel')
                             ->password()
                             ->required()
+                            ->revealable()
                             ->currentPassword(),
                         TextInput::make('password')
                             ->label('Nouveau mot de passe')
                             ->password()
                             ->required()
                             ->rule(Password::default())
+                            ->revealable()
                             ->confirmed(),
                         TextInput::make('password_confirmation')
                             ->label('Confirmer le mot de passe')
                             ->password()
+                            ->revealable()
                             ->required(),
                     ])
                     ->columns(1),
@@ -111,7 +123,8 @@ class MonProfil extends Page implements HasForms
 
         if ($employee) {
             $employee->update($data);
-            
+            auth()->user()->email = $data['email'];
+
             Notification::make()
                 ->title('Profil mis à jour avec succès.')
                 ->success()

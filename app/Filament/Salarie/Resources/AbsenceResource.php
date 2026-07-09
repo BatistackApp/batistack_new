@@ -4,9 +4,13 @@ namespace App\Filament\Salarie\Resources;
 
 use App\Filament\Salarie\Resources\AbsenceResource\Pages;
 use App\Models\RH\Abscence;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
 use Filament\Forms;
-use Filament\Forms\Form;
 use Filament\Resources\Resource;
+use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
@@ -16,7 +20,7 @@ class AbsenceResource extends Resource
 {
     protected static ?string $model = Abscence::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-calendar-days';
+    protected static string|null|\BackedEnum $navigationIcon = 'heroicon-o-calendar-days';
     protected static ?string $navigationLabel = 'Mes Absences';
     protected static ?string $modelLabel = 'Absence';
     protected static ?string $pluralModelLabel = 'Absences';
@@ -28,9 +32,9 @@ class AbsenceResource extends Resource
         return parent::getEloquentQuery()->where('employee_id', Auth::user()?->salarie?->id);
     }
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form
+        return $schema
             ->schema([
                 Forms\Components\Select::make('type')
                     ->options([
@@ -94,16 +98,16 @@ class AbsenceResource extends Resource
             ->filters([
                 //
             ])
-            ->actions([
+            ->recordActions([
                 // Un employé ne peut modifier ou supprimer sa demande que si elle est 'En attente'
-                Tables\Actions\EditAction::make()
+                EditAction::make()
                     ->visible(fn (Abscence $record) => $record->status === 'En attente'),
-                Tables\Actions\DeleteAction::make()
+                DeleteAction::make()
                     ->visible(fn (Abscence $record) => $record->status === 'En attente'),
             ])
-            ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make()
+            ->groupedBulkActions([
+                BulkActionGroup::make([
+                    DeleteBulkAction::make()
                         ->visible(fn () => false), // Interdit en masse par précaution
                 ]),
             ])

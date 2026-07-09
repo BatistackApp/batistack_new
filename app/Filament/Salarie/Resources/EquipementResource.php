@@ -4,8 +4,8 @@ namespace App\Filament\Salarie\Resources;
 
 use App\Filament\Salarie\Resources\EquipementResource\Pages;
 use App\Models\RH\Equipement;
-use Filament\Forms\Form;
 use Filament\Resources\Resource;
+use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
@@ -15,7 +15,7 @@ class EquipementResource extends Resource
 {
     protected static ?string $model = Equipement::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-wrench-screwdriver';
+    protected static string|null|\BackedEnum $navigationIcon = 'heroicon-o-wrench-screwdriver';
     protected static ?string $navigationLabel = 'Mes Équipements';
     protected static ?string $modelLabel = 'Équipement';
     protected static ?string $pluralModelLabel = 'Équipements';
@@ -26,9 +26,9 @@ class EquipementResource extends Resource
         return parent::getEloquentQuery()->where('employee_id', Auth::user()?->salarie?->id);
     }
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form->schema([]); // Lecture seule
+        return $schema->schema([]); // Lecture seule
     }
 
     public static function table(Table $table): Table
@@ -56,12 +56,6 @@ class EquipementResource extends Resource
                     ->sortable(),
             ])
             ->filters([
-                //
-            ])
-            ->actions([
-                // Pas d'actions, lecture seule pour le salarié
-            ])
-            ->bulkActions([
                 //
             ])
             ->emptyStateHeading('Aucun équipement assigné');
