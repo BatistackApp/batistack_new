@@ -1,6 +1,6 @@
 # BATISTACK ERP - AVANCEMENT PAR MODULE
 
-**Date:** June 21, 2026  
+**Date:** Juillet 09, 2026  
 **Analysé par:** Full Repository Scan
 
 ---
@@ -10,19 +10,20 @@
 | Status | Count | Modules |
 |--------|-------|---------|
 | ✅ 100% Complete | 4 | Core, RH, Articles, Flottes (95%+) |
+| 🟢 100% Frontend | 1 | Espace Salarié (Panel UI Complet) |
 | 🟡 50-75% Partial | 2 | Chantiers, Commerce |
 | ⏳ 0% Not Started | 8 | Paie, Banque, Notes Frais, Locations, Immobilisations, GPAO, Interventions, 3D Visions |
 
 **Backend Progress:** 85% overall  
-**Frontend Progress:** 0% (not started)  
-**Test Coverage:** 75% (strong on Flottes, weak elsewhere)
+**Frontend Progress:** 15% (Architecture multi-panels configurée, PWA active, Accueil moderne, Espace Salarié terminé)  
+**Test Coverage:** 75% (Base de test optimisée en SQLite in-memory)
 
 ---
 
 ## ✅ MODULE CORE - 100% COMPLETE
 
-**Status:** 🟢 Production Ready  
-**Last Updated:** Days 1-2 (Framework baseline)
+**Status:** 🟢 Production Ready + Frontend Base  
+**Last Updated:** Juillet 2026 (Architecture multi-panels)
 
 ### What's Done
 - ✅ Database schema (40+ tables)
@@ -30,19 +31,25 @@
 - ✅ Enums (status, types)
 - ✅ Seeding infrastructure
 - ✅ Configuration management
+- ✅ **Architecture Multi-Panels Filament (7 Espaces distincts : Core, Tiers, Chantier, Articles, Commerce, RH, Flottes, Salarié)**
+- ✅ **Sécurité Production (`FilamentUser` implémenté sur `User`)**
+- ✅ **Fix Proxy Nginx (Forçage HTTPS en production via AppServiceProvider)**
+- ✅ **Page d'accueil (Portail public moderne avec boutons d'accès)**
+- ✅ **PWA (Manifest + Service Worker intégrés)**
 
 ### What's Missing
-- ⏳ Frontend (Filament UI)
+- ⏳ Tableaux de bord avancés pour l'Admin Panel (Core)
 
 ### Dependencies Provided
 - ✓ For all other modules
 - ✓ Company scope system
 - ✓ VAT + Unit management
+- ✓ **Routing & PWA foundation for all UI panels**
 
 ### Complexity
 ⭐⭐ (Foundation layer)
 
-**ETA to 100%:** Frontend only (1-2 weeks)
+**ETA to 100%:** Architecture de base terminée. Reste l'UI Admin (1 semaine).
 
 ---
 
@@ -103,7 +110,7 @@
 - Commands tests (4)
 
 ### What's Missing
-- ⏳ Frontend (Filament panels)
+- ⏳ Frontend RH Admin (Filament panel RH)
 - ⏳ Payroll calculation details (Phase 2)
 
 ### Dependencies Provided
@@ -111,10 +118,18 @@
 - ✓ TimeEntry model for audit trails
 - ✓ Qualification validation for security
 
+### UI Components Finished
+- ✅ **Panel Salarié complet (Autonomie de l'employé) :**
+  - **Dashboard:** Widget avec total des heures, absences du mois, alerte visite médicale.
+  - **Absences:** Formulaire de demande et historique du statut (En attente, Validé, Refusé).
+  - **Pointages:** Saisie autonome des heures liées aux chantiers, trajets et grands déplacements.
+  - **Profil:** Modification autonome du téléphone, adresse et mot de passe de l'employé.
+  - **Équipements:** Vue (lecture seule) des EPI et matériels confiés avec date limite de retour.
+
 ### Complexity
 ⭐⭐⭐⭐ (Complex business logic)
 
-**ETA to 100%:** Frontend (2-3 weeks) + Paie completion
+**ETA to 100%:** Frontend RH Admin (2-3 weeks) + Paie completion
 
 ---
 
@@ -537,8 +552,9 @@
 
 | Module | Complete | Services | Observers | Jobs | Tests | Frontend | ETA (days) |
 |--------|----------|----------|-----------|------|-------|----------|-----------|
-| Core | ✅ | ✅ | ✅ | ✅ | ✅ | ⏳ | 5 |
-| RH | ✅ | ✅ | ✅ | ✅ | ✅ | ⏳ | 7 |
+| Core | ✅ | ✅ | ✅ | ✅ | ✅ | 🟡30% | 5 |
+| RH | ✅ | ✅ | ✅ | ✅ | ✅ | 🟡30% | 7 |
+| **Salarié** | 🟢100% | ✅ | ✅ | ✅ | ✅ | ✅ | 0 |
 | Articles | ✅ | ✅ | ✅ | - | ✅ | ⏳ | 5 |
 | **Flottes** | 🟢95% | ✅ | ✅ | ✅ | ✅ | ⏳ | 7 |
 | Tiers | 🟡95% | ✅ | ⏳ | ⏳ | 🟡 | ⏳ | 3 |
