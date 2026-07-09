@@ -27,6 +27,7 @@ class ChantierPanelProvider extends PanelProvider
         return $panel
             ->id('chantier')
             ->path('chantier')
+            ->viteTheme('resources/css/filament/chantier/theme.css')
             ->login()
             ->sidebarCollapsibleOnDesktop()
             ->databaseNotifications()

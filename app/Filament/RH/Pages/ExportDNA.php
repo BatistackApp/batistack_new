@@ -4,20 +4,24 @@ namespace App\Filament\RH\Pages;
 
 use App\Services\RH\CibtpService;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Concerns\InteractsWithForms;
-use Filament\Forms\Contracts\HasForms;
-use Filament\Forms\Form;
 use Filament\Pages\Page;
+use Filament\Schemas\Concerns\InteractsWithSchemas;
+use Filament\Schemas\Contracts\HasSchemas;
+use Filament\Schemas\Schema;
 use ToneGabes\Filament\Icons\Enums\Phosphor;
 
-class ExportDNA extends Page implements HasForms
+class ExportDNA extends Page implements HasSchemas
 {
-    use InteractsWithForms;
+    use InteractsWithSchemas;
 
-    protected static string | \BackedEnum | null $navigationIcon = Phosphor::Files;
-    protected static string | \UnitEnum | null $navigationGroup = 'Exports & Rapports';
-    protected static string | null $navigationLabel = 'Export DNA (CIBTP)';
-    protected static string | null $title = 'Déclaration Nominative Annuelle (CIBTP)';
+    protected static string|\BackedEnum|null $navigationIcon = Phosphor::Files;
+
+    protected static string|\UnitEnum|null $navigationGroup = 'Exports & Rapports';
+
+    protected static ?string $navigationLabel = 'Export DNA (CIBTP)';
+
+    protected static ?string $title = 'Déclaration Nominative Annuelle (CIBTP)';
+
     protected static ?int $navigationSort = 10;
 
     protected string $view = 'filament.rh.pages.export-dna';
@@ -31,16 +35,16 @@ class ExportDNA extends Page implements HasForms
         ]);
     }
 
-    public function form(Form $form): Form
+    public function form(Schema $schema): Schema
     {
         $years = [];
         $currentYear = now()->year;
         for ($i = $currentYear - 5; $i <= $currentYear + 1; $i++) {
-            $years[$i] = "Période Avril " . ($i - 1) . " - Mars $i";
+            $years[$i] = 'Période Avril '.($i - 1)." - Mars $i";
         }
 
-        return $form
-            ->schema([
+        return $schema
+            ->components([
                 Select::make('reference_year')
                     ->label('Année de Référence de la Déclaration')
                     ->options($years)
