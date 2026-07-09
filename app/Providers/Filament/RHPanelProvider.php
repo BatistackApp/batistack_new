@@ -27,6 +27,7 @@ class RHPanelProvider extends PanelProvider
         return $panel
             ->id('rh')
             ->path('rh')
+            ->viteTheme('resources/css/filament/rh/theme.css')
             ->colors([
                 'primary' => Color::Indigo, // Couleur distinctive pour le module RH
                 'gray' => Color::Slate,
