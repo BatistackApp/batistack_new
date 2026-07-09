@@ -8,7 +8,7 @@ import tailwindcss from "@tailwindcss/vite";
 export default defineConfig({
     plugins: [
         laravel({
-            input: ['resources/css/app.css', 'resources/js/app.js', 'resources/css/filament/commerce/theme.css', 'resources/css/filament/customer/theme.css', 'resources/css/filament/core/theme.css'],
+            input: ['resources/css/app.css', 'resources/js/app.js', 'resources/css/filament/commerce/theme.css', 'resources/css/filament/customer/theme.css', 'resources/css/filament/core/theme.css', 'resources/css/filament/rh/theme.css', 'resources/css/filament/chantier/theme.css'],
             refresh: true,
             fonts: [
                 bunny('Instrument Sans', {
