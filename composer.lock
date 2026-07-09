@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "3386a3066e4272791fd9b26cdef8c8c1",
+    "content-hash": "c087a18dfa6d4774cd6c01cd9e5955a1",
     "packages": [
         {
             "name": "achyutn/filament-log-viewer",
@@ -1941,16 +1941,16 @@
         },
         {
             "name": "eduardoribeirodev/filament-leaflet",
-            "version": "v5.2.0",
+            "version": "v5.2.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/eduardoribeirodev/filament-leaflet.git",
-                "reference": "5173cfc1c8226b5ea173140197bbfffac7c90fc6"
+                "reference": "3e4c74fbe2a40a4eef62c5ecf3b8609fbc588ad5"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/eduardoribeirodev/filament-leaflet/zipball/5173cfc1c8226b5ea173140197bbfffac7c90fc6",
-                "reference": "5173cfc1c8226b5ea173140197bbfffac7c90fc6",
+                "url": "https://api.github.com/repos/eduardoribeirodev/filament-leaflet/zipball/3e4c74fbe2a40a4eef62c5ecf3b8609fbc588ad5",
+                "reference": "3e4c74fbe2a40a4eef62c5ecf3b8609fbc588ad5",
                 "shasum": ""
             },
             "require": {
@@ -1977,9 +1977,9 @@
             "description": "Um widget de mapa para FilamentPHP.",
             "support": {
                 "issues": "https://github.com/eduardoribeirodev/filament-leaflet/issues",
-                "source": "https://github.com/eduardoribeirodev/filament-leaflet/tree/v5.2.0"
+                "source": "https://github.com/eduardoribeirodev/filament-leaflet/tree/v5.2.1"
             },
-            "time": "2026-06-15T21:22:24+00:00"
+            "time": "2026-07-06T23:46:19+00:00"
         },
         {
             "name": "egulias/email-validator",
@@ -16744,5 +16744,5 @@
         "ext-zip": "*"
     },
     "platform-dev": {},
-    "plugin-api-version": "2.9.0"
+    "plugin-api-version": "2.6.0"
 }

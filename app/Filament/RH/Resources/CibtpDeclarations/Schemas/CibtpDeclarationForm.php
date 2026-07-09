@@ -15,6 +15,7 @@ class CibtpDeclarationForm
         return $schema
             ->components([
                 Section::make('Informations de la déclaration')
+                    ->columnSpanFull()
                     ->schema([
                         Select::make('chantier_id')
                             ->label('Chantier')
