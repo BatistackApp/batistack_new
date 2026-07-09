@@ -18,10 +18,32 @@ use Illuminate\Support\Str;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 use Illuminate\Database\Eloquent\Attributes\Scope;
 
+use Filament\Models\Contracts\FilamentUser;
+use Filament\Panel;
+
 #[Fillable(['name', 'email', 'password', 'is_admin', 'is_employee', 'is_tiers', 'email_verified_at'])]
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
-class User extends Authenticatable
+class User extends Authenticatable implements FilamentUser
 {
+    public function canAccessPanel(Panel $panel): bool
+    {
+        // Les administrateurs ont accès à tout
+        if ($this->is_admin) {
+            return true;
+        }
+
+        // Les salariés ont accès à leurs espaces
+        if ($this->is_employee) {
+            return in_array($panel->getId(), ['salarie', 'terrain', 'chantier']);
+        }
+
+        // Les tiers ont accès à leurs espaces
+        if ($this->is_tiers) {
+            return in_array($panel->getId(), ['customer', 'sous-traitant', 'tiers']);
+        }
+
+        return false;
+    }
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable, TwoFactorAuthenticatable;
 
