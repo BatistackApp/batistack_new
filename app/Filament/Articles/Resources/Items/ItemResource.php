@@ -13,6 +13,7 @@ use App\Filament\Articles\Resources\Items\Schemas\ItemInfolist;
 use App\Filament\Articles\Resources\Items\Tables\ItemsTable;
 use App\Models\Articles\Item;
 use BackedEnum;
+use Illuminate\Database\Eloquent\Model;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Tables\Table;
@@ -26,6 +27,8 @@ class ItemResource extends Resource
     protected static string|BackedEnum|null $navigationIcon = Phosphor::Package;
 
     protected static ?string $recordTitleAttribute = 'name';
+
+    protected static ?array $globallySearchableAttributes = ['name', 'reference', 'barcode'];
 
     protected static string|UnitEnum|null $navigationGroup = 'Catalogue';
 
@@ -63,6 +66,14 @@ class ItemResource extends Resource
             'create' => CreateItem::route('/create'),
             'view' => ViewItem::route('/{record}'),
             'edit' => EditItem::route('/{record}/edit'),
+        ];
+    }
+
+    public static function getGlobalSearchResultDetails(Model $record): array
+    {
+        return [
+            'Réf' => $record->reference,
+            'Code-barres' => $record->barcode ?? 'N/A',
         ];
     }
 }

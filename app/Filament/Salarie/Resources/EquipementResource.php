@@ -35,7 +35,7 @@ class EquipementResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('name')
+                Tables\Columns\TextColumn::make('label')
                     ->label('Désignation')
                     ->searchable()
                     ->sortable(),
@@ -43,14 +43,18 @@ class EquipementResource extends Resource
                     ->label('Type')
                     ->searchable()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('reference')
-                    ->label('Référence / N° de série')
+                Tables\Columns\TextColumn::make('serial_number')
+                    ->label('N° de série')
                     ->searchable(),
-                Tables\Columns\TextColumn::make('assigned_date')
+                Tables\Columns\TextColumn::make('barcode')
+                    ->label('Code-barres / Tag')
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+                Tables\Columns\TextColumn::make('assigned_at')
                     ->label('Assigné le')
                     ->date()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('return_date')
+                Tables\Columns\TextColumn::make('expires_at')
                     ->label('Date limite retour')
                     ->date()
                     ->sortable(),

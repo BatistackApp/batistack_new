@@ -62,8 +62,47 @@ class SupplierInvoiceForm
                             ->relationship()
                             ->columns(4)
                             ->schema([
+                                \Marcelorodrigo\FilamentBarcodeScannerField\Forms\Components\BarcodeInput::make('barcode')
+                                    ->label('Scanner')
+                                    ->columnSpan(4)
+                                    ->live()
+                                    ->afterStateUpdated(function (\Filament\Schemas\Components\Utilities\Get $get, \Filament\Schemas\Components\Utilities\Set $set, $state) {
+                                        if ($state) {
+                                            $item = \App\Models\Articles\Item::where('barcode', $state)->first();
+                                            if ($item) {
+                                                $set('item_id', $item->id);
+                                                $set('name', $item->name);
+                                                $set('price_unit', $item->purchase_price ?? 0);
+                                                $quantity = (float) ($get('quantity') ?? 1);
+                                                $set('quantity', $quantity);
+                                                $set('subtotal_ht', number_format($quantity * (float) $item->purchase_price, 2, '.', ''));
+                                            } else {
+                                                \Filament\Notifications\Notification::make()->danger()->title('Article introuvable')->send();
+                                            }
+                                        }
+                                    }),
+
+                                Select::make('item_id')
+                                    ->label('Article')
+                                    ->options(\App\Models\Articles\Item::all()->pluck('name', 'id'))
+                                    ->searchable()
+                                    ->preload()
+                                    ->live()
+                                    ->columnSpan(2)
+                                    ->afterStateUpdated(function (\Filament\Schemas\Components\Utilities\Get $get, \Filament\Schemas\Components\Utilities\Set $set, $state) {
+                                        $item = \App\Models\Articles\Item::find($state);
+                                        if ($item) {
+                                            $set('name', $item->name);
+                                            $set('price_unit', $item->purchase_price ?? 0);
+                                            $quantity = (float) ($get('quantity') ?? 1);
+                                            $set('quantity', $quantity);
+                                            $set('subtotal_ht', number_format($quantity * (float) $item->purchase_price, 2, '.', ''));
+                                        }
+                                    }),
+
                                 TextInput::make('name')
                                     ->label('Description')
+                                    ->columnSpan(2)
                                     ->required(),
 
                                 TextInput::make('quantity')
