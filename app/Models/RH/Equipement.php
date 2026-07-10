@@ -22,6 +22,7 @@ class Equipement extends Model
         'brand',
         'model_name',
         'serial_number',
+        'barcode',
         'assigned_at',
         'expires_at',
         'last_check_at',
@@ -85,6 +86,7 @@ class Equipement extends Model
     {
         return $query->where('label', 'like', "%{$term}%")
             ->orWhere('serial_number', 'like', "%{$term}%")
+            ->orWhere('barcode', 'like', "%{$term}%")
             ->orWhere('brand', 'like', "%{$term}%");
     }
 

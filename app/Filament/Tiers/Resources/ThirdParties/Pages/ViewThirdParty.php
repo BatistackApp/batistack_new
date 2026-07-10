@@ -5,6 +5,7 @@ namespace App\Filament\Tiers\Resources\ThirdParties\Pages;
 use App\Enums\Tiers\ThirdPartyType;
 use App\Filament\Tiers\Resources\ThirdParties\Actions\GenerateContractAction;
 use App\Filament\Tiers\Resources\ThirdParties\Actions\PrintAction;
+use App\Filament\Tiers\Resources\ThirdParties\Actions\SyncFinancialAction;
 use App\Filament\Tiers\Resources\ThirdParties\Actions\SynchronizeSirenAction;
 use App\Filament\Tiers\Resources\ThirdParties\Actions\VigilanceTransfertAction;
 use App\Filament\Tiers\Resources\ThirdParties\ThirdPartyResource;
@@ -45,6 +46,10 @@ class ViewThirdParty extends ViewRecord
                     }),
                 GenerateContractAction::make(),
                 VigilanceTransfertAction::make(),
+                SyncFinancialAction::make()
+                    ->label('Actualiser Solvabilité')
+                    ->icon(Phosphor::Bank)
+                    ->color('info'),
             ]),
         ];
     }

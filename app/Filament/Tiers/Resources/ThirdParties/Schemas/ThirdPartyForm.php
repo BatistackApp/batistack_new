@@ -3,12 +3,11 @@
 namespace App\Filament\Tiers\Resources\ThirdParties\Schemas;
 
 use App\Enums\Tiers\ThirdPartyType;
+use App\Rules\ValidSiret;
 use App\Services\Core\SirenService;
 use App\Services\Tiers\ThirdPartyService;
 use Filament\Actions\Action;
-use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Notifications\Notification;
@@ -38,7 +37,7 @@ class ThirdPartyForm
                                             ->label('Numéro SIRET')
                                             ->length(14)
                                             ->required()
-                                            ->rule(new \App\Rules\ValidSiret())
+                                            ->rule(new ValidSiret)
                                             ->suffixAction(
                                                 Action::make('importSiren')
                                                     ->icon(Phosphor::MagnifyingGlass)
@@ -69,7 +68,7 @@ class ThirdPartyForm
                                             ->label('Raison sociale'),
                                         Select::make('type')
                                             ->label('Type de partenaire')
-                                            ->enum(ThirdPartyType::class)
+                                            ->options(ThirdPartyType::class)
                                             ->required()
                                             ->live()
                                             ->native(false),

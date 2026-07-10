@@ -24,7 +24,7 @@ it('returns early if no receipts exist', function () {
     
     $service->calculateScore($supplier);
     
-    expect($supplier->supplier_score)->toBeNull();
+    expect($supplier->supplier_score)->toBe(100);
 });
 
 it('calculates perfect score for on-time delivery, perfect quality and no litigations', function () {

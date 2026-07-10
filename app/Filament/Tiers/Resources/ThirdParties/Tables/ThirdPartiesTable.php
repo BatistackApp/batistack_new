@@ -5,6 +5,7 @@ namespace App\Filament\Tiers\Resources\ThirdParties\Tables;
 use App\Enums\Tiers\ThirdPartyType;
 use App\Filament\Tiers\Resources\ThirdParties\Actions\GenerateContractAction;
 use App\Filament\Tiers\Resources\ThirdParties\Actions\PrintAction;
+use App\Filament\Tiers\Resources\ThirdParties\Actions\SyncFinancialAction;
 use App\Filament\Tiers\Resources\ThirdParties\Actions\SynchronizeSirenAction;
 use App\Models\Tiers\ThirdParty;
 use App\Services\Tiers\PappersService;
@@ -48,12 +49,11 @@ class ThirdPartiesTable
                     ->boolean(),
 
                 TextColumn::make('supplier_score')
-                    ->label('Score Fournisseur')
+                    ->label('Fiabilité')
                     ->badge()
                     ->color(fn ($state) => $state === null ? 'gray' : ($state >= 80 ? 'success' : ($state >= 50 ? 'warning' : 'danger')))
                     ->formatStateUsing(fn ($state) => $state !== null ? $state.'/100' : 'N/A')
-                    ->sortable()
-                    ->visible(fn () => true),
+                    ->sortable(),
 
                 TextColumn::make('financial_status')
                     ->label('Santé Financière')
@@ -92,28 +92,10 @@ class ThirdPartiesTable
                     DeleteAction::make(),
                     PrintAction::make('details'),
                     SynchronizeSirenAction::make(),
-                    Action::make('sync_financial')
+                    SyncFinancialAction::make()
                         ->label('Actualiser Solvabilité')
                         ->icon(Phosphor::Bank)
-                        ->color('info')
-                        ->visible(fn (ThirdParty $record) => auth()->user()->can('update', $record))
-                        ->action(function (ThirdParty $record) {
-                            abort_unless(auth()->user()->can('update', $record), 403, 'Non autorisé.');
-
-                            $success = app(PappersService::class)->syncFinancialData($record);
-
-                            if ($success) {
-                                Notification::make()
-                                    ->title('Données financières actualisées')
-                                    ->success()
-                                    ->send();
-                            } else {
-                                Notification::make()
-                                    ->title('Échec de la synchronisation')
-                                    ->danger()
-                                    ->send();
-                            }
-                        }),
+                        ->color('info'),
                     GenerateContractAction::make(),
                 ])->color('gray'),
             ])

@@ -53,6 +53,11 @@ class EquipementsRelationManager extends RelationManager
                         TextInput::make('serial_number')
                             ->label('Numéro de série / Immatriculation')
                             ->unique(ignoreRecord: true),
+                        \Marcelorodrigo\FilamentBarcodeScannerField\Forms\Components\BarcodeInput::make('barcode')
+                            ->label('Code-barres / Tag')
+                            ->nullable()
+                            ->unique(ignoreRecord: true)
+                            ->placeholder('Scanner le code...'),
                         DatePicker::make('assigned_at')
                             ->label('Date de remise')
                             ->default(now())
