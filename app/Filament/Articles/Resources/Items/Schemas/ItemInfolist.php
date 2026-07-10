@@ -22,6 +22,7 @@ class ItemInfolist
             ->components([
                 // --- HEADER : IDENTITÉ VISUELLE ---
                 Section::make()
+                    ->columnSpanFull()
                     ->schema([
                         Grid::make(4)
                             ->schema([

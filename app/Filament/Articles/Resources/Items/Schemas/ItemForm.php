@@ -3,6 +3,7 @@
 namespace App\Filament\Articles\Resources\Items\Schemas;
 
 use App\Enums\Articles\ItemType;
+use App\Enums\Tiers\ThirdPartyType;
 use App\Models\Core\Unit;
 use App\Models\Core\VatRate;
 use Filament\Forms\Components\Select;
@@ -14,6 +15,7 @@ use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Tabs;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
+use Marcelorodrigo\FilamentBarcodeScannerField\Forms\Components\BarcodeInput;
 use ToneGabes\Filament\Icons\Enums\Phosphor;
 
 class ItemForm
@@ -36,6 +38,11 @@ class ItemForm
                                             ->required()
                                             ->unique(ignoreRecord: true)
                                             ->placeholder('ex: TOLEP_R7016'),
+                                        BarcodeInput::make('barcode')
+                                            ->label('Code-barres / EAN')
+                                            ->nullable()
+                                            ->unique(ignoreRecord: true)
+                                            ->placeholder('Scanner ou taper le code...'),
                                         TextInput::make('name')
                                             ->label('Désignation')
                                             ->required()
@@ -53,7 +60,7 @@ class ItemForm
                                             ->native(false),
                                         Select::make('supplier_id')
                                             ->label('Fournisseur principal')
-                                            ->relationship('supplier', 'name', fn ($query) => $query->where('is_supplier', true))
+                                            ->relationship('supplier', 'name', fn ($query) => $query->where('type', ThirdPartyType::SUPPLIER))
                                             ->searchable()
                                             ->preload()
                                             ->nullable(),

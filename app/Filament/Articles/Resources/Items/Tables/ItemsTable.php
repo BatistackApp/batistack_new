@@ -31,6 +31,13 @@ class ItemsTable
                     ->sortable()
                     ->fontFamily('mono'),
 
+                TextColumn::make('barcode')
+                    ->label('Code-barres')
+                    ->searchable()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->fontFamily('mono'),
+
                 TextColumn::make('name')
                     ->label('Désignation')
                     ->searchable()

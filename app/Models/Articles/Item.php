@@ -24,6 +24,7 @@ class Item extends Model implements HasMedia
 
     protected $fillable = [
         'reference',
+        'barcode',
         'name',
         'description',
         'type',
@@ -146,6 +147,7 @@ class Item extends Model implements HasMedia
     public function scopeSearch(Builder $query, string $term): Builder
     {
         return $query->where('reference', 'like', "%{$term}%")
+            ->orWhere('barcode', 'like', "%{$term}%")
             ->orWhere('name', 'like', "%{$term}%");
     }
 

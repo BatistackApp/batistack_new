@@ -74,6 +74,32 @@ class ItemsRelationManager extends RelationManager
                     ->label('Ajouter une ligne')
                     ->modalHeading('Ajouter une ligne')
                     ->schema([
+                        \Marcelorodrigo\FilamentBarcodeScannerField\Forms\Components\BarcodeInput::make('barcode')
+                            ->label('Scanner un code-barres')
+                            ->columnSpanFull()
+                            ->live()
+                            ->afterStateUpdated(function (Get $get, Set $set, $state) {
+                                if ($state) {
+                                    $item = Item::where('barcode', $state)->first();
+                                    if ($item) {
+                                        $set('item_id', $item->id);
+                                        // Trigger the same logic as item_id update
+                                        $set('name', $item->name);
+                                        $set('selling_price', $item->selling_price);
+                                        $set('purchase_price', $item->purchase_price);
+
+                                        $quantity = (float) ($get('quantity') ?? 1); // Set default quantity to 1 if not set
+                                        $set('quantity', $quantity);
+
+                                        $sellingPrice = (float) ($get('selling_price') ?? 0);
+                                        $subtotalHt = $quantity * $sellingPrice;
+                                        $set('subtotal_ht', number_format($subtotalHt, 2, '.', ''));
+                                    } else {
+                                        \Filament\Notifications\Notification::make()->danger()->title('Article introuvable')->send();
+                                    }
+                                }
+                            }),
+
                         Select::make('item_id')
                             ->label('Article/Service')
                             ->columnSpanFull()
