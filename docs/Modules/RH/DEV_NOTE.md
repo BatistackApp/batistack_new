@@ -17,6 +17,7 @@
 *   **Affiliation Mutuelle Automatique :** Génération du bulletin d'affiliation PRO BTP au format PDF automatiquement à la fin de l'onboarding, classé dans le dossier numérique du salarié.
 *   **CIBTP (Congés Payés) :** Automatisation de l'export DNA (Déclaration Nominative Annuelle) avec calcul précis de la période de référence et module d'exportation structurée des Demandes De Congés (DDC).
 *   **Subrogation (Prévoyance) :** Calcul automatique des Indemnités Journalières (IJ) lors d'un arrêt maladie/AT, génération de l'attestation de salaire PDF, et tableau de bord de suivi financier pour la comptabilité.
+*   **Lecteur de Code-barres (Équipements) :** Intégration de `filament-barcode-scanner-field` pour assigner et identifier le matériel/EPI confié aux employés, avec recherche globale supportée via code-barres.
 
 ## 🚧 Ce qu'il reste à faire
 *(Le module est fonctionnellement très abouti et couvre tous les besoins RH classiques et avancés. Il est en phase de maintenance/amélioration continue).*
