@@ -8,6 +8,11 @@ use App\Models\Chantiers\ChantierTask;
 use App\Models\RH\Contract;
 use App\Models\RH\Employee;
 use App\Models\RH\MedicalVisit;
+use App\Models\Articles\Item;
+use App\Models\Articles\Stock;
+use App\Models\Articles\StockMouvement;
+use App\Enums\Articles\StockMouvementSource;
+use App\Enums\Articles\StockMouvementType;
 use App\Models\RH\TimeEntry;
 use App\Services\Chantiers\ChantierAnalyticService;
 
@@ -36,12 +41,26 @@ test('il calcule correctement les métriques de performance et le coût de main 
         'status' => TimeEntryStatus::APPROVED,
     ]);
 
+    // On simule une sortie de stock pour le chantier
+    $item = Item::factory()->create(['purchase_price' => 50.00]);
+    $stock = Stock::factory()->create(['item_id' => $item->id]);
+    StockMouvement::factory()->create([
+        'stock_id' => $stock->id,
+        'quantity_before' => 10,
+        'quantity_delta' => -2, // Sortie de 2 unités
+        'quantity_after' => 8,
+        'type' => StockMouvementType::OUT,
+        'reference_type' => StockMouvementSource::SITE,
+        'reference_id' => $chantier->id,
+    ]);
+
     $metrics = $this->service->getPerformanceMetrics($chantier);
 
     // Vérifications
     expect($metrics['hours']['real'])->toEqual(10)
         ->and($metrics['hours']['percent'])->toEqual(10)
-        ->and($metrics['financials']['labor_cost_real'])->toEqual(200); // 10h * 20€
+        ->and($metrics['financials']['labor_cost_real'])->toEqual(200) // 10h * 20€
+        ->and($metrics['financials']['material_cost_real'])->toEqual(100); // 2 unités * 50€
 });
 
 test('il calcule l’avancement pondéré basé sur les heures estimées des tâches', function () {

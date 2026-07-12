@@ -11,6 +11,8 @@ use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Tabs;
 use Filament\Schemas\Schema;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Str;
+use App\Models\Chantiers\Chantier;
 use ToneGabes\Filament\Icons\Enums\Phosphor;
 
 class ChantierForm
@@ -31,6 +33,14 @@ class ChantierForm
                                             ->label('Référence Chantier')
                                             ->required()
                                             ->unique(ignoreRecord: true)
+                                            ->default(function () {
+                                                $lastChantier = Chantier::whereYear('created_at', now()->year)->latest('id')->first();
+                                                if ($lastChantier && preg_match('/CH-\d{4}-(\d+)/', $lastChantier->reference, $matches)) {
+                                                    $lastNumber = (int) $matches[1];
+                                                    return 'CH-' . now()->year . '-' . str_pad($lastNumber + 1, 3, '0', STR_PAD_LEFT);
+                                                }
+                                                return 'CH-' . now()->year . '-001';
+                                            })
                                             ->placeholder('ex: CH-2026-001'),
                                         Select::make('status')
                                             ->label('Statut Opérationnel')
@@ -50,7 +60,7 @@ class ChantierForm
                                         Select::make('manager_id')
                                             ->label('Conducteur de travaux')
                                             ->relationship('manager', 'last_name')
-                                            ->getOptionLabelFromRecordUsing(fn ($record) => $record->full_name.' - '.$record->currentContract->job_title)
+                                            ->getOptionLabelFromRecordUsing(fn ($record) => $record->full_name . ($record->currentContract ? ' - ' . $record->currentContract->job_title : ''))
                                             ->searchable()
                                             ->preload(),
                                     ]),

@@ -50,7 +50,7 @@
         </div>
         <div class="bg-gray-header p-4 border rounded-xl shadow-sm text-center">
             <span class="text-[9px] uppercase font-bold text-slate-500">Marge Brute Estimée</span><br>
-            @php $margin = $metrics['financials']['total_budget_ht'] - $metrics['financials']['total_cost_real']; @endphp
+            @php $margin = $metrics['financials']['budget_ht'] - $metrics['financials']['total_cost_real']; @endphp
             <span @class(['text-2xl font-bold', 'text-green-600' => $margin > 0, 'text-red-600' => $margin <= 0])>
                 {{ number_format($margin, 2) }} €
             </span>
@@ -78,7 +78,7 @@
                 <tr>
                     <td class="py-2 font-bold">Matériaux (Bons de sortie)</td>
                     <td class="text-right">{{ number_format($metrics['financials']['material_cost_real'] ?? 0, 2) }} €</td>
-                    <td class="text-right text-slate-500">{{ $metrics['financials']['material_budget'] > 0 ? round(($metrics['financials']['material_cost_real'] / $metrics['financials']['material_budget']) * 100) : 0 }} %</td>
+                    <td class="text-right text-slate-500">{{ $chantier->budget_material > 0 ? round(($metrics['financials']['material_cost_real'] / $chantier->budget_material) * 100) : 0 }} %</td>
                 </tr>
                 <tr>
                     <td class="py-2 font-bold">Sous-traitance</td>
@@ -101,7 +101,7 @@
             <div class="p-4 border border-slate-200 rounded-lg space-y-4">
                 <div>
                     <p class="text-[10px] text-slate-500 uppercase">Indicateur de Rentabilité :</p>
-                    @if($margin > ($metrics['financials']['total_budget_ht'] * 0.2))
+                    @if($margin > ($metrics['financials']['budget_ht'] * 0.2))
                         <p class="text-green-600 font-bold">EXCELLENT (Marge > 20%)</p>
                     @elseif($margin > 0)
                         <p class="text-orange-500 font-bold">CONFORME (Marge positive)</p>

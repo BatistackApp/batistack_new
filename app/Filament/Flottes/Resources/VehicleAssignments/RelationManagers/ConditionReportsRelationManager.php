@@ -2,15 +2,17 @@
 
 namespace App\Filament\Flottes\Resources\VehicleAssignments\RelationManagers;
 
-use App\Models\Flottes\VehicleConditionReport;
-use Filament\Forms;
+use App\Enums\Flottes\ConditionReportType;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\CreateAction;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
 use Filament\Forms\Components;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class ConditionReportsRelationManager extends RelationManager
 {
@@ -24,24 +26,24 @@ class ConditionReportsRelationManager extends RelationManager
     {
         return $schema
             ->components([
-                Forms\Components\Select::make('type')
+                Components\Select::make('type')
                     ->label('Type')
-                    ->options(\App\Enums\Flottes\ConditionReportType::class)
+                    ->options(ConditionReportType::class)
                     ->required(),
-                Forms\Components\TextInput::make('odometer')
+                Components\TextInput::make('odometer')
                     ->label('Relevé Kilométrique')
                     ->numeric()
                     ->required(),
-                Forms\Components\TextInput::make('fuel_level')
+                Components\TextInput::make('fuel_level')
                     ->label('Niveau de Carburant (%)')
                     ->numeric()
                     ->minValue(0)
                     ->maxValue(100)
                     ->required(),
-                Forms\Components\Textarea::make('comment')
+                Components\Textarea::make('comment')
                     ->label('Commentaires (Sinistres / Dégâts)')
                     ->columnSpanFull(),
-                Forms\Components\SpatieMediaLibraryFileUpload::make('photos')
+                Components\SpatieMediaLibraryFileUpload::make('photos')
                     ->label('Photos des dégâts')
                     ->collection('condition_reports') // default fallback, though model uses specific collections
                     ->multiple()
@@ -75,15 +77,15 @@ class ConditionReportsRelationManager extends RelationManager
                 //
             ])
             ->headerActions([
-                Tables\Actions\CreateAction::make(),
+                CreateAction::make(),
             ])
-            ->actions([
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
+            ->recordActions([
+                EditAction::make(),
+                DeleteAction::make(),
             ])
-            ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+            ->toolbarActions([
+                BulkActionGroup::make([
+                    DeleteBulkAction::make(),
                 ]),
             ]);
     }
