@@ -2,11 +2,12 @@
 
 namespace App\Filament\Flottes\Resources\VehicleAssignments\Schemas;
 
+use App\Filament\Flottes\Resources\Vehicles\VehicleResource;
 use App\Models\Flottes\VehicleAssignment;
-use Filament\Infolists\Components\Section;
-use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Components\RepeatableEntry;
-use Filament\Infolists\Components\Grid;
+use Filament\Infolists\Components\TextEntry;
+use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 
 class VehicleAssignmentInfolist
@@ -22,12 +23,12 @@ class VehicleAssignmentInfolist
                                 TextEntry::make('vehicle.reference')
                                     ->label('Véhicule')
                                     ->weight('bold')
-                                    ->url(fn (VehicleAssignment $record) => \App\Filament\Flottes\Resources\Vehicles\VehicleResource::getUrl('view', ['record' => $record->vehicle_id])),
-                                
+                                    ->url(fn (VehicleAssignment $record) => VehicleResource::getUrl('view', ['record' => $record->vehicle_id])),
+
                                 TextEntry::make('employee.full_name')
                                     ->label('Conducteur Responsable')
                                     ->weight('bold'),
-                                
+
                                 TextEntry::make('chantier.name')
                                     ->label('Chantier Associé')
                                     ->placeholder('Aucun chantier'),
@@ -37,11 +38,11 @@ class VehicleAssignmentInfolist
                                 TextEntry::make('status')
                                     ->label('Statut')
                                     ->badge(),
-                                
+
                                 TextEntry::make('started_at')
                                     ->label('Date de Début')
                                     ->dateTime('d/m/Y H:i'),
-                                
+
                                 TextEntry::make('ended_at')
                                     ->label('Date de Fin (Réelle ou Prévue)')
                                     ->dateTime('d/m/Y H:i')

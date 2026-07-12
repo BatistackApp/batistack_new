@@ -16,6 +16,10 @@
         <include>
             <directory>app</directory>
         </include>
+        <exclude>
+            <directory>app/Filament</directory>
+            <directory>app/Livewire</directory>
+        </exclude>
     </source>
     <coverage>
         <report>
