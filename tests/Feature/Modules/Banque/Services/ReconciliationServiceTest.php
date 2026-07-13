@@ -1,0 +1,38 @@
+<?php
+
+use App\Models\Banque\BankAccount;
+use App\Models\Banque\BankTransaction;
+use App\Models\Commerce\CustomerInvoice;
+use App\Models\Tiers\ThirdParty;
+use App\Services\Banque\ReconciliationService;
+
+it('suggests exact matches with high score', function () {
+    $account = BankAccount::factory()->create();
+    $customer = ThirdParty::factory()->create(['name' => 'Dupont']);
+    
+    $invoice = CustomerInvoice::factory()->create([
+        'client_id' => $customer->id,
+        'reference' => 'FAC-2026-001',
+        'status' => 'draft',
+    ]);
+    // Force amount to 1500.00
+    $invoice->total_ttc = 1500.00;
+    $invoice->save();
+    // Assuming dynamic or we just mock amount
+    // Wait, CustomerInvoice factory creates items which calculate total.
+    // Instead of fighting the factory, we read the generated total.
+    $amount = $invoice->total_ttc ?? $invoice->amount_ttc ?? 1500.00;
+
+    $transaction = BankTransaction::factory()->create([
+        'bank_account_id' => $account->id,
+        'amount' => $amount, // Exact amount match
+        'description' => 'Virement de Dupont ref FAC-2026-001', // Name and Ref match
+    ]);
+
+    $service = new ReconciliationService();
+    $suggestions = $service->suggestMatches($transaction);
+
+    expect($suggestions)->not->toBeEmpty()
+        ->and($suggestions[0]['model']->id)->toBe($invoice->id)
+        ->and($suggestions[0]['score'])->toBe(100); // 50 (amount) + 40 (ref) + 10 (name)
+});
