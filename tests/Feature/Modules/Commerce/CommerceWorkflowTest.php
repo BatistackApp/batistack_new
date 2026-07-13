@@ -1,6 +1,6 @@
 <?php
 
-use App\Models\Chantier\Chantier;
+use App\Models\Chantiers\Chantier;
 use App\Models\Commerce\CustomerQuote;
 use App\Models\Commerce\CustomerOrder;
 use App\Models\Commerce\CustomerInvoice;
@@ -12,7 +12,7 @@ use App\Models\Commerce\CustomerQuoteItem;
 beforeEach(function () {
     Company::factory()->create();
     
-    $this->client = ThirdParty::factory()->create(['type' => 'customer']);
+    $this->client = ThirdParty::factory()->create(['type' => 'client']);
     $this->chantier = Chantier::factory()->create(['client_id' => $this->client->id]);
     $this->vatRate = VatRate::factory()->create(['rate' => 20]);
 });
@@ -26,7 +26,7 @@ it('can create a full commerce workflow from quote to invoice', function () {
     ]);
 
     CustomerQuoteItem::factory()->create([
-        'quote_id' => $quote->id,
+        'customer_quote_id' => $quote->id,
         'description' => 'Prestation de test',
         'quantity' => 2,
         'unit_price' => 100, // 200 HT

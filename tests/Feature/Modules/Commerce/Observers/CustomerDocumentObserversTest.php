@@ -24,12 +24,12 @@ describe('Customer Document Observers', function () {
     });
 
     it('generates order pdf on confirmed status', function () {
-        $serviceMock = Mockery::mock(CommerceDocumentationService::class);
-        $serviceMock->shouldReceive('generateOrderPdf')->once();
-        app()->instance(CommerceDocumentationService::class, $serviceMock);
-
         $order = CustomerOrder::factory()->create(['status' => OrderStatus::DRAFT]);
 
         $order->update(['status' => OrderStatus::CONFIRMED]);
+
+        Queue::assertPushed(\App\Jobs\Commerce\GenerateDocumentJob::class, function ($job) use ($order) {
+            return $job->namespace === 'order' && $job->model->id === $order->id;
+        });
     });
 });

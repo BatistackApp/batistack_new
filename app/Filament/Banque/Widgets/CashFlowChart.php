@@ -19,17 +19,27 @@ class CashFlowChart extends ChartWidget
             $days->push(now()->subDays($i)->format('Y-m-d'));
         }
 
-        $transactions = BankTransaction::where('date', '>=', now()->subDays(30))
+        $startDate = now()->subDays(29)->startOfDay();
+        $endDate = now()->endOfDay();
+
+        $transactions = BankTransaction::selectRaw('
+                DATE(date) as day,
+                SUM(CASE WHEN amount > 0 THEN amount ELSE 0 END) as credits,
+                SUM(CASE WHEN amount < 0 THEN ABS(amount) ELSE 0 END) as debits
+            ')
+            ->where('date', '>=', $startDate)
+            ->where('date', '<=', $endDate)
+            ->groupByRaw('DATE(date)')
             ->get()
-            ->groupBy(fn ($t) => Carbon::parse($t->date)->format('Y-m-d'));
+            ->keyBy('day');
 
         $credits = [];
         $debits = [];
 
         foreach ($days as $day) {
-            $dailyTransactions = $transactions->get($day, collect());
-            $credits[] = $dailyTransactions->where('amount', '>', 0)->sum('amount');
-            $debits[] = abs($dailyTransactions->where('amount', '<', 0)->sum('amount'));
+            $data = $transactions->get($day);
+            $credits[] = $data ? (float) $data->credits : 0.0;
+            $debits[] = $data ? (float) $data->debits : 0.0;
         }
 
         return [

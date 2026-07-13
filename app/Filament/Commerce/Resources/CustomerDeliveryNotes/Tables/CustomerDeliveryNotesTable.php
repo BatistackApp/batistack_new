@@ -13,13 +13,18 @@ class CustomerDeliveryNotesTable
     {
         return $table
             ->columns([
-                //
+                \Filament\Tables\Columns\TextColumn::make('reference')->searchable(),
+                \Filament\Tables\Columns\TextColumn::make('client.name')->label('Client')->searchable(),
+                \Filament\Tables\Columns\TextColumn::make('chantier.reference')->label('Chantier')->searchable(),
+                \Filament\Tables\Columns\TextColumn::make('delivery_date')->date('d/m/Y')->sortable(),
+                \Filament\Tables\Columns\TextColumn::make('status')->badge()->sortable(),
             ])
             ->filters([
                 //
             ])
             ->recordActions([
-                EditAction::make(),
+                \Filament\Tables\Actions\ViewAction::make(),
+                \Filament\Tables\Actions\EditAction::make(),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([

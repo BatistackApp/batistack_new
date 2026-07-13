@@ -6,6 +6,8 @@ use App\Enums\Banque\TransactionStatus;
 use App\Models\Banque\BankAccount;
 use App\Models\Banque\BankReconciliation;
 use App\Models\Banque\BankTransaction;
+use App\Models\Commerce\CustomerInvoice;
+use App\Models\Commerce\SupplierInvoice;
 use App\Services\Banque\ReconciliationService;
 use App\Services\Banque\StatementImportService;
 use Filament\Actions\Action;
@@ -90,9 +92,27 @@ class BankTransactionsTable
                     })
                     ->action(function (array $data, BankTransaction $record) {
                         [$type, $id] = explode(':', $data['invoice_id']);
+
+                        $allowedTypes = [
+                            CustomerInvoice::class,
+                            SupplierInvoice::class,
+                        ];
+
+                        if (!in_array($type, $allowedTypes)) {
+                            Notification::make()->title('Type de document invalide !')->danger()->send();
+                            return;
+                        }
+
                         $invoice = $type::find($id);
 
                         if ($invoice) {
+                            $invoiceRemaining = $invoice->total_amount - $invoice->paid_amount;
+                            if (abs($record->amount) > $invoiceRemaining) {
+                                Notification::make()
+                                    ->title('Le montant de la transaction dépasse le solde restant de la facture')
+                                    ->danger()
+                                    ->send();
+                            }
                             BankReconciliation::create([
                                 'bank_transaction_id' => $record->id,
                                 'reconcilable_type' => $type,
@@ -148,12 +168,11 @@ class BankTransactionsTable
                             ->required(),
                     ])
                     ->action(function (array $data) {
-                        $path = storage_path('app/public/'.$data['file']);
+                        $path = \Illuminate\Support\Facades\Storage::disk('public')->path($data['file']);
                         if (file_exists($path)) {
-                            $content = file_get_contents($path);
                             $service = new StatementImportService;
                             $account = BankAccount::find($data['bank_account_id']);
-                            $imported = $service->importCsv($content, $account);
+                            $imported = $service->importCsv($account, $path);
 
                             Notification::make()
                                 ->title('Import réussi')

@@ -86,7 +86,16 @@ class CustomerQuotesTable
                         ->media(function (Model $record) {
                             $path = 'commerce/quotes/devis_'.$record->reference.'.pdf';
                             if (! Storage::disk('public')->exists('documents/'.$path)) {
-                                app(CommerceDocumentationService::class)->generateQuotePdf($record);
+                                try {
+                                    app(CommerceDocumentationService::class)->generateQuotePdf($record);
+                                } catch (\Exception $e) {
+                                    \Filament\Notifications\Notification::make()
+                                        ->danger()
+                                        ->title('Erreur de génération PDF')
+                                        ->body($e->getMessage())
+                                        ->send();
+                                    return '';
+                                }
                             }
                             return Storage::url('documents/'.$path);
                         }),

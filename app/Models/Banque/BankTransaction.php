@@ -15,7 +15,6 @@ class BankTransaction extends Model
 
     protected $fillable = [
         'bank_account_id',
-        'external_id',
         'date',
         'description',
         'amount',

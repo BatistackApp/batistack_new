@@ -15,7 +15,7 @@ class BankAccountForm
             ->components([
                 Select::make('company_id')
                     ->label('Société')
-                    ->relationship('company', 'id')
+                    ->relationship('company', 'legal_name')
                     ->required(),
                 TextInput::make('name')
                     ->label('Nom du compte')

@@ -20,7 +20,9 @@ class BankTransactionForm
                     ->relationship('bankAccount', 'name')
                     ->required(),
                 TextInput::make('external_id')
-                    ->label('ID Externe'),
+                    ->label('ID Externe')
+                    ->disabled()
+                    ->dehydrated(false),
                 DatePicker::make('date')
                     ->label('Date')
                     ->required(),

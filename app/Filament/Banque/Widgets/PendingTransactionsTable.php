@@ -28,11 +28,11 @@ class PendingTransactionsTable extends TableWidget
                 TextColumn::make('amount')->numeric()->sortable()->badge()->color(fn ($state) => $state > 0 ? 'success' : 'danger'),
             ])
             ->recordActions([
-                Action::make('lettrer')
+                \Filament\Tables\Actions\Action::make('lettrer')
                     ->label('Lettrer')
                     ->icon('heroicon-o-link')
                     ->color('success')
-                    ->url(fn (BankTransaction $record) => BankTransactionResource::getUrl('index')),
+                    ->url(fn (BankTransaction $record) => BankTransactionResource::getUrl('edit', ['record' => $record])),
             ])
             ->paginated(false);
     }

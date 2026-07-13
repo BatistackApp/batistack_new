@@ -203,6 +203,7 @@ class Employee extends Model implements HasMedia
     public function getHoursWorkedThisMonth(): float
     {
         return $this->timeEntries()
+            ->where('status', \App\Enums\RH\TimeEntryStatus::APPROVED)
             ->whereYear('date', now()->year)
             ->whereMonth('date', now()->month)
             ->sum('hours') ?? 0;
