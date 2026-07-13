@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Filament\Commerce\Resources\CustomerDeliveryNotes\Schemas;
+namespace App\Filament\Commerce\Resources\CustomerSituations\Schemas;
 
 use Filament\Schemas\Schema;
 
-class CustomerDeliveryNoteForm
+class CustomerSituationForm
 {
     public static function configure(Schema $schema): Schema
     {

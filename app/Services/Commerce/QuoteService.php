@@ -86,7 +86,8 @@ class QuoteService
     {
         $year = date('Y');
         $latestQuote = CustomerQuote::where('reference', 'like', "DEV-{$year}-%")
-            ->orderByDesc('reference')
+            ->orderByRaw('LENGTH(reference) DESC')
+            ->orderBy('reference', 'desc')
             ->first();
 
         $sequenceNumber = 1;

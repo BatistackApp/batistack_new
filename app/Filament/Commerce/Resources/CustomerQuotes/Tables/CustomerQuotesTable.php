@@ -83,7 +83,13 @@ class CustomerQuotesTable
                         ->icon(Phosphor::Printer)
                         ->mediaType(MediaAction::TYPE_PDF)
                         ->modalWidth(Width::Container)
-                        ->media(fn (Model $record) => Storage::url('documents/commerce/quotes/devis_'.$record->reference.'.pdf')),
+                        ->media(function (Model $record) {
+                            $path = 'commerce/quotes/devis_'.$record->reference.'.pdf';
+                            if (! Storage::disk('public')->exists('documents/'.$path)) {
+                                app(CommerceDocumentationService::class)->generateQuotePdf($record);
+                            }
+                            return Storage::url('documents/'.$path);
+                        }),
                 ]),
             ])
             ->toolbarActions([

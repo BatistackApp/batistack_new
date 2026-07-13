@@ -1,13 +1,13 @@
 <?php
 
-namespace App\Filament\Commerce\Resources\CustomerDeliveryNotes\Tables;
+namespace App\Filament\Commerce\Resources\CustomerSituations\Tables;
 
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Tables\Table;
 
-class CustomerDeliveryNotesTable
+class CustomerSituationsTable
 {
     public static function configure(Table $table): Table
     {

@@ -40,7 +40,7 @@ class CustomerInvoiceForm
                                 $clientId = $get('client_id');
 
                                 if (! $clientId) {
-                                    return $query->raw('1 = 0');
+                                    return $query->whereRaw('1 = 0');
                                 }
 
                                 return $query->where('client_id', $clientId);

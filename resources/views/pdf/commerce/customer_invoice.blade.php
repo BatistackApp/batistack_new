@@ -62,12 +62,14 @@
         }
 
         .payment-terms {
+            float: left;
+            width: 55%;
             background-color: #eff6ff;
             border: 1px solid #bfdbfe;
             padding: 8px;
             border-radius: 4px;
             font-size: 10px;
-            margin-top: 10px;
+            margin-top: 20px;
         }
     </style>
 @endsection
@@ -185,6 +187,7 @@
         <strong>Modalités de paiement :</strong><br>
         Virement bancaire sur le compte de l'entreprise. Les chèques sans provision seront frappés de pénalités conformément à la loi.
     </div>
+    <div style="clear: both;"></div>
 
     <!-- Pied de page -->
     <div class="footer">
