@@ -38,6 +38,7 @@ class BanquePanelProvider extends PanelProvider
             ->widgets([
                 \App\Filament\Banque\Widgets\BanqueStatsOverview::class,
                 \App\Filament\Banque\Widgets\CashFlowChart::class,
+                \App\Filament\Banque\Widgets\CashFlowForecastChart::class,
                 \App\Filament\Banque\Widgets\PendingTransactionsTable::class,
                 \App\Filament\Banque\Widgets\BankAccountsStatusList::class,
             ])
