@@ -26,17 +26,23 @@ class BankinApiService
             $isCredit = rand(0, 1) === 1;
             $amount = rand(1000, 500000) / 100;
             
-            BankTransaction::firstOrCreate([
-                'bank_account_id' => $account->id,
-                'external_id' => 'sim_bankin_' . Str::random(10),
-            ], [
-                'date' => Carbon::now()->subDays(rand(0, 10))->format('Y-m-d'),
-                'description' => 'Virement ' . ($isCredit ? 'Client' : 'Fournisseur') . ' ' . Str::random(5),
-                'amount' => $isCredit ? $amount : -$amount,
-                'type' => $isCredit ? TransactionType::CREDIT : TransactionType::DEBIT,
-                'status' => TransactionStatus::PENDING,
-            ]);
-            $imported++;
+            try {
+                $tx = new BankTransaction([
+                    'bank_account_id' => $account->id,
+                    'date' => Carbon::now()->subDays(rand(0, 10))->format('Y-m-d'),
+                    'description' => 'Virement ' . ($isCredit ? 'Client' : 'Fournisseur') . ' ' . Str::random(5),
+                    'amount' => $isCredit ? $amount : -$amount,
+                    'type' => $isCredit ? TransactionType::CREDIT : TransactionType::DEBIT,
+                    'status' => TransactionStatus::PENDING,
+                ]);
+                $tx->forceFill(['external_id' => 'sim_bankin_' . Str::random(10)])->save();
+                $imported++;
+            } catch (\Illuminate\Database\QueryException $e) {
+                // 23000 is the SQLSTATE code for integrity constraint violation
+                if ($e->getCode() !== '23000') {
+                    throw $e;
+                }
+            }
         }
 
         return $imported;

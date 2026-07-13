@@ -28,20 +28,22 @@ class StatementImportService
                     $amount = (float) $data[2];
                     $hashId = 'csv_' . md5($date . $description . $amount);
 
-                    $created = BankTransaction::firstOrCreate(
-                        ['external_id' => $hashId],
-                        [
+                    try {
+                        $tx = new BankTransaction([
                             'bank_account_id' => $account->id,
                             'date' => $date,
                             'description' => $description,
                             'amount' => $amount,
                             'type' => $amount >= 0 ? TransactionType::CREDIT : TransactionType::DEBIT,
                             'status' => TransactionStatus::PENDING,
-                        ]
-                    );
-
-                    if ($created->wasRecentlyCreated) {
+                        ]);
+                        $tx->forceFill(['external_id' => $hashId])->save();
                         $imported++;
+                    } catch (\Illuminate\Database\QueryException $e) {
+                        // 23000 is the SQLSTATE code for integrity constraint violation (e.g. duplicate key)
+                        if ($e->getCode() !== '23000') {
+                            throw $e;
+                        }
                     }
                 }
             }

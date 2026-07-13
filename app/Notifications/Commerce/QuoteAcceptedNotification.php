@@ -28,7 +28,7 @@ class QuoteAcceptedNotification extends Notification implements ShouldQueue
             ->line("Le devis n°{$this->quote->reference} a été accepté par {$this->quote->client->name}.")
             ->line('**Montant du marché** : '.number_format($this->quote->total_ttc, 2, ',', ' ').' € TTC')
             ->line("**Date d'acceptation** : {$this->quote->signed_at->format('d/m/Y H:i')}")
-            ->action('Voir la commande créée', url('/commerce/orders/'.$this->quote->order->id ?? '#'))
+            ->action('Voir la commande créée', url('/commerce/orders/'.($this->quote->order?->id ?? '')))
             ->line('Une commande client a été générée automatiquement. Vous pouvez maintenant lancer la préparation de la livraison.');
     }
 
