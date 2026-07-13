@@ -11,6 +11,7 @@ use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\DissociateAction;
 use Filament\Actions\DissociateBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
@@ -37,15 +38,22 @@ class PhasesRelationManager extends RelationManager
                 Section::make('Détail du Lot / Phase')
                     ->columnSpanFull()
                     ->schema([
-                        Grid::make(2)->schema([
+                        Grid::make(4)->schema([
                             TextInput::make('label')
                                 ->label('Libellé de la phase')
                                 ->required()
-                                ->placeholder('ex: Gros Œuvre, Fondations...'),
+                                ->placeholder('ex: Gros Œuvre, Fondations...')
+                                ->columnSpan(2),
                             TextInput::make('order')
                                 ->label('Ordre d\'affichage')
                                 ->numeric()
                                 ->default(0),
+                        ]),
+                        Grid::make(2)->schema([
+                            DatePicker::make('start_date')
+                                ->label('Date de début (Lot)'),
+                            DatePicker::make('end_date')
+                                ->label('Date de fin (Lot)'),
                         ]),
 
                         // Gestion imbriquée des tâches via un Repeater
@@ -64,6 +72,10 @@ class PhasesRelationManager extends RelationManager
                                     ->label('Budget Heures')
                                     ->numeric()
                                     ->suffix('h'),
+                                DatePicker::make('start_date')
+                                    ->label('Début'),
+                                DatePicker::make('end_date')
+                                    ->label('Fin'),
                                 TextInput::make('progress_percentage')
                                     ->label('% Avancement')
                                     ->numeric()
@@ -74,7 +86,7 @@ class PhasesRelationManager extends RelationManager
                                 Toggle::make('is_completed')
                                     ->label('Terminée')
                                     ->onColor('success'),
-                            ])->columnSpanFull(),
+                            ])->columns(4)->columnSpanFull(),
                     ]),
             ]);
     }

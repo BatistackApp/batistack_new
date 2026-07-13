@@ -1,9 +1,10 @@
 # 🏗️ Module Chantiers (Gestion de Projets BTP)
 
 ## 📌 État Actuel (Ce qui est fait)
-*   **Backend :** Architecture solide couvrant les chantiers, les phases de construction, les tâches, les budgets, l'affectation des équipes, le journal de bord (log) et les documents DOE.
-*   **Logique d'analyse :** La gestion des imputations de coûts et du suivi financier par chantier est en place, incluant désormais l'intégration des **coûts de flotte**. Un widget d'aperçu financier en temps réel a été ajouté.
-*   **DOE :** Les fiches techniques des articles sont automatiquement incluses dans la génération du DOE (avec patch de la gestion des chemins absolus via Storage).
+*   **Backend :** Architecture solide couvrant les chantiers, les phases de construction, les tâches, les budgets, l'affectation des équipes, le journal de bord (log) et les documents DOE. Génération automatique des références (ex: CH-YYYY-001).
+*   **Logique d'analyse :** La gestion des imputations de coûts et du suivi financier par chantier est en place, incluant l'intégration des **coûts de flotte** et des **coûts matériaux réels**. Précision accrue du calcul de la marge dans le PDF de rentabilité.
+*   **DOE :** Les fiches techniques des articles sont automatiquement incluses dans la génération du DOE (avec patch de la gestion des chemins absolus via Storage). Tests renforcés pour la compilation des DOE (médias et fiches).
+*   **Frontend :** Affichage sécurisé du poste du conducteur de travaux.
 *   **Tests :** Testé à 100% avec PestPHP (les 38 tests métier passent avec succès, y compris les tests d'évaluation financière et analytique).
 
 ## 🚧 Ce qu'il reste à faire
