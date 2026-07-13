@@ -2,6 +2,10 @@
 
 namespace App\Filament\Commerce\Resources\CustomerSituations\Schemas;
 
+use App\Enums\Commerce\InvoiceStatus;
+use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Schema;
 
 class CustomerSituationForm
@@ -10,27 +14,27 @@ class CustomerSituationForm
     {
         return $schema
             ->components([
-                \Filament\Forms\Components\Select::make('customer_order_id')
+                Select::make('customer_order_id')
                     ->relationship('order', 'reference')
                     ->required()
                     ->searchable(),
-                \Filament\Forms\Components\Select::make('chantier_id')
+                Select::make('chantier_id')
                     ->relationship('chantier', 'reference')
                     ->searchable(),
-                \Filament\Forms\Components\TextInput::make('number')
+                TextInput::make('number')
                     ->required()
                     ->numeric(),
-                \Filament\Forms\Components\Select::make('status')
-                    ->options(\App\Enums\Commerce\InvoiceStatus::class)
+                Select::make('status')
+                    ->options(InvoiceStatus::class)
                     ->required()
-                    ->default(\App\Enums\Commerce\InvoiceStatus::DRAFT),
-                \Filament\Forms\Components\TextInput::make('retenue_garantie_amount')
+                    ->default(InvoiceStatus::DRAFT),
+                TextInput::make('retenue_garantie_amount')
                     ->numeric(),
-                \Filament\Forms\Components\TextInput::make('prorata_amount')
+                TextInput::make('prorata_amount')
                     ->numeric(),
-                \Filament\Forms\Components\DatePicker::make('periode_start'),
-                \Filament\Forms\Components\DatePicker::make('periode_end'),
-                \Filament\Forms\Components\Select::make('responsable_id')
+                DatePicker::make('periode_start'),
+                DatePicker::make('periode_end'),
+                Select::make('responsable_id')
                     ->relationship('user', 'name')
                     ->required(),
             ]);

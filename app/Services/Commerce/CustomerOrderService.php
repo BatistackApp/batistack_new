@@ -194,7 +194,6 @@ class CustomerOrderService
     {
         $year = date('Y');
         $latestInvoice = CustomerInvoice::where('reference', 'like', "FACT-{$year}-%")
-            ->where('status', '!=', InvoiceStatus::DRAFT)
             ->orderByRaw('LENGTH(reference) DESC')
             ->orderBy('reference', 'desc')
             ->first();

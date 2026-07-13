@@ -28,21 +28,21 @@ class StatementImportService
                     $amount = (float) $data[2];
                     $hashId = 'csv_' . md5($date . $description . $amount);
 
-                    // Skip if exactly the same transaction exists
-                    if (BankTransaction::where('external_id', $hashId)->exists()) {
-                        continue;
-                    }
+                    $created = BankTransaction::firstOrCreate(
+                        ['external_id' => $hashId],
+                        [
+                            'bank_account_id' => $account->id,
+                            'date' => $date,
+                            'description' => $description,
+                            'amount' => $amount,
+                            'type' => $amount >= 0 ? TransactionType::CREDIT : TransactionType::DEBIT,
+                            'status' => TransactionStatus::PENDING,
+                        ]
+                    );
 
-                    BankTransaction::create([
-                        'bank_account_id' => $account->id,
-                        'external_id' => $hashId,
-                        'date' => $date,
-                        'description' => $description,
-                        'amount' => $amount,
-                        'type' => $amount >= 0 ? TransactionType::CREDIT : TransactionType::DEBIT,
-                        'status' => TransactionStatus::PENDING,
-                    ]);
-                    $imported++;
+                    if ($created->wasRecentlyCreated) {
+                        $imported++;
+                    }
                 }
             }
             fclose($handle);

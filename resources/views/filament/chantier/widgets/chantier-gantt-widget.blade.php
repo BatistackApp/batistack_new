@@ -17,20 +17,15 @@
             <div x-data="{
                 tasks: @js($this->getTasks()),
                 init() {
-                    if (typeof Gantt === 'undefined') {
-                        let link = document.createElement('link');
-                        link.rel = 'stylesheet';
-                        link.href = 'https://cdnjs.cloudflare.com/ajax/libs/frappe-gantt/0.6.1/frappe-gantt.css';
-                        document.head.appendChild(link);
-                        
-                        let script = document.createElement('script');
-                        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/frappe-gantt/0.6.1/frappe-gantt.min.js';
-                        script.onload = () => {
-                            this.renderGantt();
-                        };
-                        document.head.appendChild(script);
-                    } else {
+                    if (typeof Gantt !== 'undefined') {
                         this.renderGantt();
+                    } else {
+                        // Retry after a small delay in case the bundle is loading
+                        setTimeout(() => {
+                            if (typeof Gantt !== 'undefined') {
+                                this.renderGantt();
+                            }
+                        }, 500);
                     }
                 },
                 renderGantt() {

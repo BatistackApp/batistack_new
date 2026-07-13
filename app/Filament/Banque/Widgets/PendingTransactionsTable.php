@@ -28,7 +28,7 @@ class PendingTransactionsTable extends TableWidget
                 TextColumn::make('amount')->numeric()->sortable()->badge()->color(fn ($state) => $state > 0 ? 'success' : 'danger'),
             ])
             ->recordActions([
-                \Filament\Tables\Actions\Action::make('lettrer')
+                Action::make('lettrer')
                     ->label('Lettrer')
                     ->icon('heroicon-o-link')
                     ->color('success')
