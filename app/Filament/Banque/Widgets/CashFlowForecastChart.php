@@ -1,0 +1,35 @@
+<?php
+
+namespace App\Filament\Banque\Widgets;
+
+use Filament\Widgets\ChartWidget;
+
+class CashFlowForecastChart extends ChartWidget
+{
+    protected ?string $heading = 'Prévisionnel de Trésorerie (30 prochains jours)';
+    protected int | string | array $columnSpan = 'full';
+
+    protected function getData(): array
+    {
+        $service = new \App\Services\Banque\CashFlowForecastService();
+        $forecast = $service->getForecast(30);
+
+        return [
+            'datasets' => [
+                [
+                    'label' => 'Solde Prévisionnel',
+                    'data' => $forecast['balances'],
+                    'borderColor' => '#8b5cf6',
+                    'backgroundColor' => 'rgba(139, 92, 246, 0.2)',
+                    'fill' => true,
+                ],
+            ],
+            'labels' => $forecast['labels'],
+        ];
+    }
+
+    protected function getType(): string
+    {
+        return 'line';
+    }
+}

@@ -21,6 +21,8 @@ class ChantierTask extends Model
         'estimated_hours',
         'progress_percentage',
         'is_completed',
+        'start_date',
+        'end_date',
     ];
 
     public function phase(): BelongsTo
@@ -34,6 +36,8 @@ class ChantierTask extends Model
             'is_completed' => 'boolean',
             'progress_percentage' => 'integer',
             'estimated_hours' => 'decimal:2',
+            'start_date' => 'date',
+            'end_date' => 'date',
         ];
     }
 }

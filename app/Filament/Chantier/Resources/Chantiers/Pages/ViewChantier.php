@@ -25,4 +25,11 @@ class ViewChantier extends ViewRecord
             LaborDistributionChart::class,
         ];
     }
+
+    protected function getFooterWidgets(): array
+    {
+        return [
+            \App\Filament\Chantier\Resources\Chantiers\Widgets\ChantierGanttWidget::class,
+        ];
+    }
 }

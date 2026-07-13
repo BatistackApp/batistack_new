@@ -11,7 +11,7 @@ class CustomerOrderObserver
     public function saved(CustomerOrder $customerOrder): void
     {
         if ($customerOrder->isDirty('status') && $customerOrder->status === OrderStatus::CONFIRMED) {
-            app(CommerceDocumentationService::class)->generateOrderPdf($customerOrder);
+            \App\Jobs\Commerce\GenerateDocumentJob::dispatch('order', $customerOrder)->afterCommit();
         }
     }
 }

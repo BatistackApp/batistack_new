@@ -173,7 +173,8 @@ class CustomerOrderService
     {
         $year = date('Y');
         $latestOrder = CustomerOrder::where('reference', 'like', "CMD-{$year}-%")
-            ->orderByDesc('reference')
+            ->orderByRaw('LENGTH(reference) DESC')
+            ->orderBy('reference', 'desc')
             ->first();
 
         $sequenceNumber = 1;
@@ -193,7 +194,8 @@ class CustomerOrderService
     {
         $year = date('Y');
         $latestInvoice = CustomerInvoice::where('reference', 'like', "FACT-{$year}-%")
-            ->orderByDesc('reference')
+            ->orderByRaw('LENGTH(reference) DESC')
+            ->orderBy('reference', 'desc')
             ->first();
 
         $sequenceNumber = 1;

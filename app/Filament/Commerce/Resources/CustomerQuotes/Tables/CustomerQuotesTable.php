@@ -83,7 +83,22 @@ class CustomerQuotesTable
                         ->icon(Phosphor::Printer)
                         ->mediaType(MediaAction::TYPE_PDF)
                         ->modalWidth(Width::Container)
-                        ->media(fn (Model $record) => Storage::url('documents/commerce/quotes/devis_'.$record->reference.'.pdf')),
+                        ->media(function (Model $record) {
+                            $path = 'commerce/quotes/devis_'.$record->reference.'.pdf';
+                            if (! Storage::disk('public')->exists('documents/'.$path)) {
+                                try {
+                                    app(CommerceDocumentationService::class)->generateQuotePdf($record);
+                                } catch (\Exception $e) {
+                                    \Filament\Notifications\Notification::make()
+                                        ->danger()
+                                        ->title('Erreur de génération PDF')
+                                        ->body($e->getMessage())
+                                        ->send();
+                                    return '';
+                                }
+                            }
+                            return Storage::url('documents/'.$path);
+                        }),
                 ]),
             ])
             ->toolbarActions([

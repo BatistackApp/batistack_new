@@ -38,7 +38,7 @@ class ChantierPanelProvider extends PanelProvider
                 'gray' => Color::Slate,
             ])
             ->pages([
-                Dashboard::class,
+                \App\Filament\Chantier\Pages\Dashboard::class,
             ])
             ->discoverResources(in: app_path('Filament/Chantier/Resources'), for: 'App\Filament\Chantier\Resources')
             ->discoverPages(in: app_path('Filament/Chantier/Pages'), for: 'App\Filament\Chantier\Pages')

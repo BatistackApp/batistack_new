@@ -48,7 +48,7 @@ class CustomerInvoiceObserver
     public function updated(CustomerInvoice $invoice): void
     {
         // Validation : Légalisation (attribution du numéro final) et expédition
-        if ($invoice->isDirty('status') && $invoice->status === InvoiceStatus::VALIDATED) {
+        if ($invoice->isDirty('status') && $invoice->status === InvoiceStatus::VALIDATED && $invoice->getOriginal('status') === InvoiceStatus::DRAFT) {
             $this->handleInvoiceValidated($invoice);
         }
 
