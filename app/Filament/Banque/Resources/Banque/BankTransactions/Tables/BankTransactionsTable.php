@@ -9,14 +9,17 @@ use App\Models\Banque\BankTransaction;
 use App\Services\Banque\ReconciliationService;
 use App\Services\Banque\StatementImportService;
 use Filament\Actions\Action;
+use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Collection;
 
 class BankTransactionsTable
 {
@@ -104,6 +107,28 @@ class BankTransactionsTable
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
+                    BulkAction::make('auto_reconcile')
+                        ->label('Lettrage Automatique')
+                        ->icon('heroicon-o-sparkles')
+                        ->color('success')
+                        ->schema([
+                            TextInput::make('threshold')
+                                ->label('Seuil de confiance minimum (%)')
+                                ->numeric()
+                                ->default(80)
+                                ->required()
+                                ->minValue(1)
+                                ->maxValue(100),
+                        ])
+                        ->action(function (Collection $records, array $data) {
+                            $service = new ReconciliationService;
+                            $successCount = $service->bulkReconcile($records, (int) $data['threshold']);
+                            Notification::make()
+                                ->success()
+                                ->title("{$successCount} transactions lettrées avec succès.")
+                                ->send();
+                        })
+                        ->deselectRecordsAfterCompletion(),
                     DeleteBulkAction::make(),
                 ]),
             ])

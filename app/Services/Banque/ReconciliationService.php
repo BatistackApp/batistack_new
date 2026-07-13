@@ -55,6 +55,41 @@ class ReconciliationService
     }
 
     /**
+     * Attempts to automatically reconcile a collection of transactions.
+     * Returns the number of successfully reconciled transactions.
+     */
+    public function bulkReconcile(Collection $transactions, int $threshold = 80): int
+    {
+        $successCount = 0;
+
+        foreach ($transactions as $transaction) {
+            if ($transaction->status !== \App\Enums\Banque\TransactionStatus::PENDING) {
+                continue;
+            }
+
+            $suggestions = $this->suggestMatches($transaction);
+
+            if (count($suggestions) > 0) {
+                $bestMatch = $suggestions[0];
+                
+                if ($bestMatch['score'] >= $threshold) {
+                    \App\Models\Banque\BankReconciliation::create([
+                        'bank_transaction_id' => $transaction->id,
+                        'reconcilable_type' => $bestMatch['type'],
+                        'reconcilable_id' => $bestMatch['model']->id,
+                        'amount_applied' => abs($transaction->amount),
+                    ]);
+                    
+                    $transaction->update(['status' => \App\Enums\Banque\TransactionStatus::RECONCILED]);
+                    $successCount++;
+                }
+            }
+        }
+
+        return $successCount;
+    }
+
+    /**
      * Calculates a matching score between a transaction and an invoice.
      * Higher score = better match. Max score is roughly 100.
      */
