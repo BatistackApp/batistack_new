@@ -61,6 +61,7 @@ Route::middleware(['auth'])->group(function () {
 
         return back();
     })->name('articles.request-quote');
+    Route::get('/bridge/callback', \App\Http\Controllers\Banque\BridgeCallbackController::class)->name('bridge.callback');
 });
 require __DIR__.'/settings.php';
 // require __DIR__.'/test.php';
