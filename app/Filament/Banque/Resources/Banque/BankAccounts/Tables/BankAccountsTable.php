@@ -3,7 +3,7 @@
 namespace App\Filament\Banque\Resources\Banque\BankAccounts\Tables;
 
 use App\Models\Banque\BankAccount;
-use App\Services\Banque\BankinApiService;
+use App\Services\Banque\BridgeApiService;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
@@ -41,7 +41,7 @@ class BankAccountsTable
                     ->label('Solde')
                     ->numeric()
                     ->sortable(),
-                TextColumn::make('bankin_item_id')
+                TextColumn::make('bridge_account_id')
                     ->searchable(),
                 TextColumn::make('created_at')
                     ->dateTime()
@@ -61,7 +61,7 @@ class BankAccountsTable
                     ->icon('heroicon-o-arrow-path')
                     ->color('success')
                     ->action(function (BankAccount $record) {
-                        $service = new BankinApiService;
+                        $service = new BridgeApiService;
                         $imported = $service->syncTransactions($record);
 
                         Notification::make()

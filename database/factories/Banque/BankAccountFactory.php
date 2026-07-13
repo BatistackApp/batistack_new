@@ -18,7 +18,7 @@ class BankAccountFactory extends Factory
             'bic' => $this->faker->swiftBicNumber(),
             'currency' => 'EUR',
             'balance' => $this->faker->randomFloat(2, 1000, 50000),
-            'bankin_item_id' => $this->faker->uuid(),
+            'bridge_account_id' => $this->faker->uuid(),
         ];
     }
 }

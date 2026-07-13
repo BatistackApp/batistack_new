@@ -43,4 +43,11 @@ return [
     'openweathermap' => [
         'api_key' => env('OPENWEATHERMAP_API_KEY'),
     ],
+
+    'bridge' => [
+        'base_url' => env('BRIDGE_BASE_URL', 'https://api.bridgeapi.io/v3'),
+        'client_id' => env('BRIDGE_CLIENT_ID'),
+        'client_secret' => env('BRIDGE_CLIENT_SECRET'),
+        'version' => '2025-01-15',
+    ],
 ];
