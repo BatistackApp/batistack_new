@@ -45,7 +45,7 @@ class BankTransactionsTable
                     ->searchable(),
                 TextColumn::make('amount')
                     ->label('Montant')
-                    ->numeric()
+                    ->money('eur')
                     ->sortable()
                     ->color(fn ($state) => $state > 0 ? 'success' : 'danger'),
                 TextColumn::make('type')
@@ -66,7 +66,31 @@ class BankTransactionsTable
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                //
+                \Filament\Tables\Filters\SelectFilter::make('bank_account_id')
+                    ->label('Compte bancaire')
+                    ->relationship('bankAccount', 'name')
+                    ->searchable()
+                    ->preload(),
+                \Filament\Tables\Filters\SelectFilter::make('status')
+                    ->label('Statut')
+                    ->options(\App\Enums\Banque\TransactionStatus::class),
+                \Filament\Tables\Filters\Filter::make('date')
+                    ->label('Plage de date')
+                    ->form([
+                        \Filament\Forms\Components\DatePicker::make('created_from')->label('Du'),
+                        \Filament\Forms\Components\DatePicker::make('created_until')->label('Au'),
+                    ])
+                    ->query(function (\Illuminate\Database\Eloquent\Builder $query, array $data): \Illuminate\Database\Eloquent\Builder {
+                        return $query
+                            ->when(
+                                $data['created_from'],
+                                fn (\Illuminate\Database\Eloquent\Builder $query, $date): \Illuminate\Database\Eloquent\Builder => $query->whereDate('date', '>=', $date),
+                            )
+                            ->when(
+                                $data['created_until'],
+                                fn (\Illuminate\Database\Eloquent\Builder $query, $date): \Illuminate\Database\Eloquent\Builder => $query->whereDate('date', '<=', $date),
+                            );
+                    }),
             ])
             ->recordActions([
                 Action::make('lettrer')

@@ -18,9 +18,9 @@ class BridgeCallbackController extends Controller
         set_time_limit(120); // Give the callback enough time to fetch historical transactions for all linked accounts
 
         // Bridge will redirect here. Let's sync transactions for all banks linked to the company
-        // For security, the external user ID is tied to the company. Let's assume we can get the company 
+        // For security, the external user ID is tied to the company. Let's assume we can get the company
         // from the current logged-in user or session in a real scenario.
-        
+
         $user = $request->user();
         if (!$user) {
             return redirect('/login')->with('error', 'Authentication required.');
@@ -30,22 +30,22 @@ class BridgeCallbackController extends Controller
         if (!$company) {
             return redirect('/')->with('error', 'Aucune entreprise trouvée.');
         }
-        
+
         // Let's trigger a sync for all bank accounts of this company
         try {
             $accounts = $bridgeService->syncAccounts($company->id);
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error('Bridge accounts sync failed: ' . $e->getMessage());
-            return redirect('/banque/bank-accounts')->with('error', 'Erreur lors de la synchronisation des comptes: ' . $e->getMessage());
+            return redirect('/banque/banque/bank-accounts')->with('error', 'Erreur lors de la synchronisation des comptes: ' . $e->getMessage());
         }
 
         $dispatchedCount = 0;
 
         foreach ($accounts as $account) {
-            \App\Jobs\Banque\SyncBridgeTransactionsJob::dispatch($account);
+            \App\Jobs\Banque\SyncBridgeTransactionsJob::dispatch($account, auth()->id());
             $dispatchedCount++;
         }
 
-        return redirect('/banque/bank-accounts')->with('success', "Connexion terminée. L'importation de l'historique de vos transactions ({$dispatchedCount} comptes) est en cours en arrière-plan.");
+        return redirect('/banque/banque/bank-accounts')->with('success', "Connexion terminée. L'importation de l'historique de vos transactions ({$dispatchedCount} comptes) est en cours en arrière-plan.");
     }
 }
