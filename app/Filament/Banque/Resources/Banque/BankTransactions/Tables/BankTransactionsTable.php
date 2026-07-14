@@ -52,6 +52,12 @@ class BankTransactionsTable
                     ->label('Type')
                     ->badge()
                     ->searchable(),
+                TextColumn::make('category.name')
+                    ->label('Catégorie')
+                    ->badge()
+                    ->color(fn ($record) => $record->category?->color ?? 'gray')
+                    ->searchable()
+                    ->toggleable(),
                 TextColumn::make('status')
                     ->label('Statut')
                     ->badge()
@@ -130,12 +136,18 @@ class BankTransactionsTable
                         $invoice = $type::find($id);
 
                         if ($invoice) {
-                            $invoiceRemaining = $invoice->total_amount - $invoice->paid_amount;
-                            if (abs($record->amount) > $invoiceRemaining) {
+                            $totalTtc = $invoice->total_ttc ?? $invoice->amount_ttc ?? 0;
+                            $paidAmount = $invoice->morphMany(\App\Models\Banque\BankReconciliation::class, 'reconcilable')->sum('amount_applied');
+                            $invoiceRemaining = $totalTtc - $paidAmount;
+                            
+                            if (abs($record->amount) > $invoiceRemaining + 0.05) {
                                 Notification::make()
-                                    ->title('Le montant de la transaction dépasse le solde restant de la facture')
+                                    ->title('Opération refusée')
+                                    ->body('Le montant de la transaction (' . number_format(abs($record->amount), 2) . ' €) dépasse le solde restant de la facture (' . number_format($invoiceRemaining, 2) . ' €). Veuillez scinder la transaction ou corriger le montant.')
                                     ->danger()
                                     ->send();
+                                
+                                return; // Block the action
                             }
                             BankReconciliation::create([
                                 'bank_transaction_id' => $record->id,
@@ -143,6 +155,33 @@ class BankTransactionsTable
                                 'reconcilable_id' => $id,
                                 'amount_applied' => abs($record->amount),
                             ]);
+
+                            // Générer également le paiement et son allocation
+                            $paymentType = $invoice instanceof \App\Models\Commerce\CustomerInvoice 
+                                ? \App\Enums\Commerce\PaymentType::IN 
+                                : \App\Enums\Commerce\PaymentType::OUT;
+                                
+                            $thirdPartyId = $invoice instanceof \App\Models\Commerce\CustomerInvoice 
+                                ? $invoice->client_id 
+                                : $invoice->supplier_id;
+
+                            $payment = \App\Models\Commerce\Payment::create([
+                                'third_party_id' => $thirdPartyId,
+                                'reference' => 'PAY-' . uniqid(),
+                                'type' => $paymentType,
+                                'method' => \App\Enums\Commerce\PaymentMethod::BANK_TRANSFER,
+                                'status' => \App\Enums\Commerce\PaymentStatus::COMPLETED,
+                                'amount' => abs($record->amount),
+                                'payment_date' => $record->date,
+                                'notes' => 'Lettrage bancaire ' . $record->external_id,
+                            ]);
+
+                            $payment->allocations()->create([
+                                'allocated_amount' => abs($record->amount),
+                                'payable_id' => $invoice->id,
+                                'payable_type' => get_class($invoice),
+                            ]);
+
                             $record->update(['status' => TransactionStatus::RECONCILED]);
                             Notification::make()->title('Lettrage effectué avec succès')->success()->send();
                         }

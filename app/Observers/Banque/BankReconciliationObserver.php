@@ -37,9 +37,14 @@ class BankReconciliationObserver
                     $invoice->status = InvoiceStatus::PAID;
                     $invoice->save();
                 }
+            } elseif ($totalReconciled > 0.05) {
+                if ($invoice->status !== InvoiceStatus::PARTIALLY_PAID) {
+                    $invoice->status = InvoiceStatus::PARTIALLY_PAID;
+                    $invoice->save();
+                }
             } else {
-                if ($invoice->status === InvoiceStatus::PAID) {
-                    // Revert to validated if it's no longer fully paid
+                if (in_array($invoice->status, [InvoiceStatus::PAID, InvoiceStatus::PARTIALLY_PAID])) {
+                    // Revert to validated if it's no longer paid or partially paid (e.g., all reconciliations deleted)
                     $invoice->status = InvoiceStatus::VALIDATED;
                     $invoice->save();
                 }

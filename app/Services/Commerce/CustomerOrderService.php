@@ -173,6 +173,7 @@ class CustomerOrderService
     {
         $year = date('Y');
         $latestOrder = CustomerOrder::where('reference', 'like', "CMD-{$year}-%")
+            ->whereRaw('LENGTH(reference) < 20')
             ->orderByRaw('LENGTH(reference) DESC')
             ->orderBy('reference', 'desc')
             ->first();
@@ -180,7 +181,6 @@ class CustomerOrderService
         $sequenceNumber = 1;
 
         if ($latestOrder) {
-            // Extract the numeric part after 'CMD-YYYY-'
             $parts = explode('-', $latestOrder->reference);
             if (count($parts) === 3 && is_numeric($parts[2])) {
                 $sequenceNumber = (int) $parts[2] + 1;
@@ -194,6 +194,7 @@ class CustomerOrderService
     {
         $year = date('Y');
         $latestInvoice = CustomerInvoice::where('reference', 'like', "FACT-{$year}-%")
+            ->whereRaw('LENGTH(reference) < 20')
             ->orderByRaw('LENGTH(reference) DESC')
             ->orderBy('reference', 'desc')
             ->first();
@@ -201,7 +202,6 @@ class CustomerOrderService
         $sequenceNumber = 1;
 
         if ($latestInvoice) {
-            // Extract the numeric part after 'CMD-YYYY-'
             $parts = explode('-', $latestInvoice->reference);
             if (count($parts) === 3 && is_numeric($parts[2])) {
                 $sequenceNumber = (int) $parts[2] + 1;
