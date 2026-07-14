@@ -22,7 +22,7 @@
             </div>
 
             <div class="flex justify-start md:justify-end">
-                {{ $this->viewReleaseNotesAction }}
+                {{ $this->getAction('viewReleaseNotes') }}
             </div>
         </div>
     </x-filament::section>

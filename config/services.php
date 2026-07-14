@@ -50,4 +50,8 @@ return [
         'client_secret' => env('BRIDGE_CLIENT_SECRET'),
         'version' => '2025-01-15',
     ],
+
+    'github' => [
+        'repo' => env('GITHUB_REPO', null),
+    ],
 ];
