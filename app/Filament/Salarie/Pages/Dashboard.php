@@ -35,7 +35,7 @@ class Dashboard extends BaseDashboard
                     $extractedData = $ocrService->extractData($path);
                     
                     // Get current employee
-                    $employee = auth()->user()->employee;
+                    $employee = auth()->user()->salarie;
                     if (!$employee) {
                         \Filament\Notifications\Notification::make()->danger()->title('Employé non trouvé')->send();
                         return;
