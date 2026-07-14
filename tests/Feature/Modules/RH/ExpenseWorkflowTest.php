@@ -42,14 +42,22 @@ it('can validate a report and calculate total amount of approved items only', fu
     
     ExpenseItem::factory()->create([
         'expense_report_id' => $report->id,
+        'category' => 'Autre',
         'status' => ExpenseItemStatus::APPROVED,
         'amount_ttc' => 50,
+        'amount_ht' => 40,
+        'vat_amount' => 10,
+        'date' => now()->subDay(),
     ]);
 
     ExpenseItem::factory()->create([
         'expense_report_id' => $report->id,
+        'category' => 'Autre',
         'status' => ExpenseItemStatus::REJECTED,
         'amount_ttc' => 100, // Should be ignored in total
+        'amount_ht' => 80,
+        'vat_amount' => 20,
+        'date' => now()->subDay(),
     ]);
     
     $service = new ExpenseWorkflowService();
@@ -57,5 +65,5 @@ it('can validate a report and calculate total amount of approved items only', fu
 
     $report->refresh();
     expect($report->status)->toBe(ExpenseReportStatus::VALIDATED)
-        ->and($report->total_amount)->toBe(50.0);
+        ->and($report->total_amount)->toEqual(50);
 });
