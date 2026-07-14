@@ -83,6 +83,11 @@ class Chantier extends Model implements HasMedia
         return $this->hasMany(TimeEntry::class);
     }
 
+    public function expenseItems(): HasMany
+    {
+        return $this->hasMany(\App\Models\RH\ExpenseItem::class);
+    }
+
     public function doeDocuments(): HasMany
     {
         return $this->hasMany(DoeDocument::class);

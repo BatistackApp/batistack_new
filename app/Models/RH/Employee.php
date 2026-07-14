@@ -77,6 +77,11 @@ class Employee extends Model implements HasMedia
         return $this->hasMany(TimeEntry::class);
     }
 
+    public function expenseReports(): HasMany
+    {
+        return $this->hasMany(ExpenseReport::class);
+    }
+
     public function absences(): HasMany
     {
         return $this->hasMany(Abscence::class);
