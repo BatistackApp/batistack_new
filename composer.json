@@ -30,6 +30,7 @@
         "filament/spatie-laravel-media-library-plugin": "^5.6",
         "flowframe/laravel-trend": "^0.5.0",
         "gheith3/filament-relation-pages": "^1.0",
+        "google/cloud-vision": "^2.2",
         "guava/calendar": "^3.1",
         "harvirsidhu/filament-cards": "^1.0",
         "hugomyb/filament-media-action": "^5.0",
