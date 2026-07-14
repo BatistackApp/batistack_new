@@ -172,7 +172,8 @@ class CustomerOrderService
     public function generateReferenceOrder(): string
     {
         $year = date('Y');
-        $latestOrder = CustomerOrder::where('reference', 'REGEXP', "^CMD-{$year}-[0-9]+$")
+        $latestOrder = CustomerOrder::where('reference', 'like', "CMD-{$year}-%")
+            ->whereRaw('LENGTH(reference) < 20')
             ->orderByRaw('LENGTH(reference) DESC')
             ->orderBy('reference', 'desc')
             ->first();
@@ -192,7 +193,8 @@ class CustomerOrderService
     public function generateReferenceInvoice(): string
     {
         $year = date('Y');
-        $latestInvoice = CustomerInvoice::where('reference', 'REGEXP', "^FACT-{$year}-[0-9]+$")
+        $latestInvoice = CustomerInvoice::where('reference', 'like', "FACT-{$year}-%")
+            ->whereRaw('LENGTH(reference) < 20')
             ->orderByRaw('LENGTH(reference) DESC')
             ->orderBy('reference', 'desc')
             ->first();
