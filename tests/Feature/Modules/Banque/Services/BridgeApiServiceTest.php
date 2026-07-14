@@ -4,7 +4,13 @@ use App\Models\Banque\BankAccount;
 use App\Models\Core\Company;
 use App\Services\Banque\BridgeApiService;
 
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Http;
+
+beforeEach(function () {
+    Config::set('services.bridge.client_id', 'fake_client_id');
+    Config::set('services.bridge.client_secret', 'fake_client_secret');
+});
 
 it('fetches transactions using Bridge API correctly', function () {
     $company = Company::factory()->create();
