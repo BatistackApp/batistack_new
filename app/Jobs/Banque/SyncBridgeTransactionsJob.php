@@ -47,6 +47,17 @@ class SyncBridgeTransactionsJob implements ShouldQueue
             $imported = $bridgeService->syncTransactions($this->account);
             Log::info("Bridge Sync Job: Successfully imported {$imported} transactions for account {$this->account->id}.");
 
+            // Catégoriser les transactions non catégorisées (on pourrait restreindre à celles importées aujourd'hui pour optimiser)
+            $uncategorized = \App\Models\Banque\BankTransaction::where('bank_account_id', $this->account->id)
+                ->whereNull('transaction_category_id')
+                ->get();
+            $categorizationService = new \App\Services\Banque\TransactionCategorizationService();
+            $categorized = $categorizationService->categorizeMultiple($uncategorized);
+            
+            if ($categorized > 0) {
+                Log::info("Categorization: {$categorized} transactions automatically categorized for account {$this->account->id}.");
+            }
+
             if ($this->userId) {
                 $user = \App\Models\User::find($this->userId);
                 if ($user) {

@@ -13,6 +13,15 @@ class BankTransaction extends Model
 {
     use HasFactory;
 
+    protected static function booted()
+    {
+        static::creating(function ($transaction) {
+            if (empty($transaction->external_id)) {
+                $transaction->external_id = 'MANUAL-' . uniqid();
+            }
+        });
+    }
+
     protected $fillable = [
         'bank_account_id',
         'date',
@@ -20,6 +29,8 @@ class BankTransaction extends Model
         'amount',
         'type',
         'status',
+        'external_id',
+        'transaction_category_id',
     ];
 
     protected $casts = [
@@ -28,6 +39,11 @@ class BankTransaction extends Model
         'type' => TransactionType::class,
         'status' => TransactionStatus::class,
     ];
+
+    public function category(): BelongsTo
+    {
+        return $this->belongsTo(TransactionCategory::class, 'transaction_category_id');
+    }
 
     public function bankAccount(): BelongsTo
     {

@@ -21,3 +21,4 @@
 ## 💡 Idées d'amélioration et Nouvelles Fonctionnalités
 1.  **Prévisionnel de Trésorerie (Forecast) :** Un widget superposant la trésorerie actuelle avec le "Cash Flow projeté" (en incluant les devis validés et les factures fournisseurs à payer dans les 30 prochains jours) pour anticiper un besoin de découvert.
 2.  **Appariement des Paies :** Permettre le lettrage automatique des lignes de virement "Salaires" avec les fiches de paie générées par le module RH.
+3.  **Module "Comptabilité" complet :** (Mis en attente) Prévoir à terme la création d'un module dédié pour générer les écritures comptables et les exports standards (FEC, Sage, Cegid, etc.) destinés à l'expert-comptable.
