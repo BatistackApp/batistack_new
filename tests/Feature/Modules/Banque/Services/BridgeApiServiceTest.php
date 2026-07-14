@@ -54,7 +54,7 @@ it('creates a user management session correctly', function () {
     ]);
 
     $service = new BridgeApiService();
-    $url = $service->createManagementSessionUrl('company_' . $company->id, 'https://callback.com');
+    $url = $service->createManagementSessionUrl('company_' . $company->id, 'test@example.com', 'https://callback.com');
 
     expect($url)->toBe('https://connect.bridgeapi.io/user/session_123');
 });

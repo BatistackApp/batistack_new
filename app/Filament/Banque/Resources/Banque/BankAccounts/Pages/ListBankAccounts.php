@@ -22,20 +22,22 @@ class ListBankAccounts extends ListRecords
                 ->color('primary')
                 ->action(function (BridgeApiService $bridgeService) {
                     $user = auth()->user();
-                    if (! $user || ! $user->id) {
+                    if (! $user) {
                         Notification::make()
                             ->title('Erreur')
-                            ->body('Authentification requise pour cette entreprise.')
+                            ->body('Authentification requise.')
                             ->danger()
                             ->send();
 
                         return;
                     }
-                    $externalUserId = 'company_'.$user->id;
+                    $company = \App\Models\Core\Company::first();
+                    $externalUserId = 'company_'.$company->id;
+                    $userEmail = $user->email;
                     $callbackUrl = route('bridge.callback');
 
                     try {
-                        $url = $bridgeService->createManagementSessionUrl($externalUserId, $callbackUrl);
+                        $url = $bridgeService->createManagementSessionUrl($externalUserId, $userEmail, $callbackUrl);
 
                         return redirect($url);
                     } catch (\Exception $e) {

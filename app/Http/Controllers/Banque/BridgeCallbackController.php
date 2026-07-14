@@ -15,30 +15,37 @@ class BridgeCallbackController extends Controller
      */
     public function __invoke(Request $request, BridgeApiService $bridgeService)
     {
+        set_time_limit(120); // Give the callback enough time to fetch historical transactions for all linked accounts
+
         // Bridge will redirect here. Let's sync transactions for all banks linked to the company
         // For security, the external user ID is tied to the company. Let's assume we can get the company 
         // from the current logged-in user or session in a real scenario.
         
         $user = $request->user();
-        if (!$user || !$user->company_id) {
-            return redirect('/')->with('error', 'Authentication required.');
+        if (!$user) {
+            return redirect('/login')->with('error', 'Authentication required.');
         }
 
-        $company = Company::find($user->company_id);
+        $company = Company::first();
+        if (!$company) {
+            return redirect('/')->with('error', 'Aucune entreprise trouvée.');
+        }
         
         // Let's trigger a sync for all bank accounts of this company
-        $accounts = BankAccount::where('company_id', $company->id)->whereNotNull('bridge_account_id')->get();
-        $importedTotal = 0;
-
-        foreach ($accounts as $account) {
-            try {
-                $importedTotal += $bridgeService->syncTransactions($account);
-            } catch (\Exception $e) {
-                // Log and continue
-                \Illuminate\Support\Facades\Log::error('Bridge sync failed for account ' . $account->id . ': ' . $e->getMessage());
-            }
+        try {
+            $accounts = $bridgeService->syncAccounts($company->id);
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Bridge accounts sync failed: ' . $e->getMessage());
+            return redirect('/banque/bank-accounts')->with('error', 'Erreur lors de la synchronisation des comptes: ' . $e->getMessage());
         }
 
-        return redirect('/banque/bank-accounts')->with('success', "Connexion terminée. {$importedTotal} transactions importées.");
+        $dispatchedCount = 0;
+
+        foreach ($accounts as $account) {
+            \App\Jobs\Banque\SyncBridgeTransactionsJob::dispatch($account);
+            $dispatchedCount++;
+        }
+
+        return redirect('/banque/bank-accounts')->with('success', "Connexion terminée. L'importation de l'historique de vos transactions ({$dispatchedCount} comptes) est en cours en arrière-plan.");
     }
 }
