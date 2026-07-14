@@ -33,39 +33,52 @@ class BridgeApiService
             throw new \Exception('Les identifiants Bridge API (BRIDGE_CLIENT_ID et BRIDGE_CLIENT_SECRET) ne sont pas configurés dans le fichier .env.');
         }
 
-        // In a real scenario, we might want to cache this token since it's valid for 2 hours.
-        $response = \Illuminate\Support\Facades\Http::withHeaders([
-            'Bridge-Version' => $this->version,
-            'Client-Id' => $this->clientId,
-            'Client-Secret' => $this->clientSecret,
-        ])->post("{$this->baseUrl}/aggregation/authorization/token", [
-            'external_user_id' => $externalUserId,
-        ]);
-
-        $status = $response->status();
-        $isUnauthorizedUser = $status === 401 && collect($response->json('errors'))->contains('code', 'user.authentication.unauthorized');
-
-        if ($status === 404 || $status === 400 || $isUnauthorizedUser) {
-            // User might not exist yet, create them
-            $createResponse = \Illuminate\Support\Facades\Http::withHeaders([
+        // Cache the token to prevent invalidation by concurrent jobs
+        return \Illuminate\Support\Facades\Cache::remember("bridge_token_{$externalUserId}", 7000, function () use ($externalUserId) {
+            $response = \Illuminate\Support\Facades\Http::withHeaders([
                 'Bridge-Version' => $this->version,
                 'Client-Id' => $this->clientId,
                 'Client-Secret' => $this->clientSecret,
-            ])->post("{$this->baseUrl}/aggregation/users", [
+            ])->post("{$this->baseUrl}/aggregation/authorization/token", [
                 'external_user_id' => $externalUserId,
             ]);
-            
-            if ($createResponse->successful()) {
-                return $this->getAccessToken($externalUserId); // Retry fetching token
+
+            $status = $response->status();
+            $isUnauthorizedUser = $status === 401 && collect($response->json('errors'))->contains('code', 'user.authentication.unauthorized');
+
+            if ($status === 404 || $status === 400 || $isUnauthorizedUser) {
+                // User might not exist yet, create them
+                $createResponse = \Illuminate\Support\Facades\Http::withHeaders([
+                    'Bridge-Version' => $this->version,
+                    'Client-Id' => $this->clientId,
+                    'Client-Secret' => $this->clientSecret,
+                ])->post("{$this->baseUrl}/aggregation/users", [
+                    'external_user_id' => $externalUserId,
+                ]);
+                
+                if ($createResponse->successful()) {
+                    // Retry fetching token immediately (without cache)
+                    $retryResponse = \Illuminate\Support\Facades\Http::withHeaders([
+                        'Bridge-Version' => $this->version,
+                        'Client-Id' => $this->clientId,
+                        'Client-Secret' => $this->clientSecret,
+                    ])->post("{$this->baseUrl}/aggregation/authorization/token", [
+                        'external_user_id' => $externalUserId,
+                    ]);
+                    if ($retryResponse->successful()) {
+                        return $retryResponse->json('access_token');
+                    }
+                    throw new \Exception('Bridge API Authentication Retry Failed: ' . $retryResponse->body());
+                }
+                throw new \Exception('Bridge API User Creation Failed: ' . $createResponse->body());
             }
-            throw new \Exception('Bridge API User Creation Failed: ' . $createResponse->body());
-        }
 
-        if (!$response->successful()) {
-            throw new \Exception('Bridge API Authentication Failed: ' . $response->body());
-        }
+            if (!$response->successful()) {
+                throw new \Exception('Bridge API Authentication Failed: ' . $response->body());
+            }
 
-        return $response->json('access_token');
+            return $response->json('access_token');
+        });
     }
 
     /**
