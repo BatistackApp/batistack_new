@@ -2,6 +2,11 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Banque\Widgets\BankAccountsStatusList;
+use App\Filament\Banque\Widgets\BanqueStatsOverview;
+use App\Filament\Banque\Widgets\CashFlowChart;
+use App\Filament\Banque\Widgets\CashFlowForecastChart;
+use App\Filament\Banque\Widgets\PendingTransactionsTable;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -10,8 +15,6 @@ use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
-use Filament\Widgets\AccountWidget;
-use Filament\Widgets\FilamentInfoWidget;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
@@ -26,6 +29,10 @@ class BanquePanelProvider extends PanelProvider
         return $panel
             ->id('banque')
             ->path('banque')
+            ->login()
+            ->databaseNotifications()
+            ->sidebarCollapsibleOnDesktop()
+            ->brandName('Batistack - Banque')
             ->colors([
                 'primary' => Color::Amber,
             ])
@@ -36,11 +43,11 @@ class BanquePanelProvider extends PanelProvider
             ])
             ->discoverWidgets(in: app_path('Filament/Banque/Widgets'), for: 'App\Filament\Banque\Widgets')
             ->widgets([
-                \App\Filament\Banque\Widgets\BanqueStatsOverview::class,
-                \App\Filament\Banque\Widgets\CashFlowChart::class,
-                \App\Filament\Banque\Widgets\CashFlowForecastChart::class,
-                \App\Filament\Banque\Widgets\PendingTransactionsTable::class,
-                \App\Filament\Banque\Widgets\BankAccountsStatusList::class,
+                BanqueStatsOverview::class,
+                CashFlowChart::class,
+                CashFlowForecastChart::class,
+                PendingTransactionsTable::class,
+                BankAccountsStatusList::class,
             ])
             ->middleware([
                 EncryptCookies::class,

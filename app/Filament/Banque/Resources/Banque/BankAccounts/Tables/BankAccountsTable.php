@@ -2,8 +2,8 @@
 
 namespace App\Filament\Banque\Resources\Banque\BankAccounts\Tables;
 
+use App\Jobs\Banque\SyncBridgeTransactionsJob;
 use App\Models\Banque\BankAccount;
-use App\Services\Banque\BridgeApiService;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
@@ -18,9 +18,6 @@ class BankAccountsTable
     {
         return $table
             ->columns([
-                TextColumn::make('company.id')
-                    ->label('Société')
-                    ->searchable(),
                 TextColumn::make('name')
                     ->label('Nom du compte')
                     ->searchable(),
@@ -39,10 +36,12 @@ class BankAccountsTable
                     ->searchable(),
                 TextColumn::make('balance')
                     ->label('Solde')
-                    ->numeric()
+                    ->money(
+                        currency:'eur',
+                        locale: 'fr',
+                    )
                     ->sortable(),
-                TextColumn::make('bridge_account_id')
-                    ->searchable(),
+
                 TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
@@ -57,16 +56,15 @@ class BankAccountsTable
             ])
             ->recordActions([
                 Action::make('sync')
-                    ->label('Synchroniser Bankin')
+                    ->label('Synchroniser Bridge')
                     ->icon('heroicon-o-arrow-path')
                     ->color('success')
                     ->action(function (BankAccount $record) {
-                        $service = new BridgeApiService;
-                        $imported = $service->syncTransactions($record);
+                        SyncBridgeTransactionsJob::dispatch($record, auth()->id());
 
                         Notification::make()
-                            ->title('Synchronisation réussie')
-                            ->body("{$imported} transactions importées.")
+                            ->title('Synchronisation lancée')
+                            ->body("Le téléchargement de l'historique des transactions est en cours en arrière-plan. Vous serez notifié une fois terminé.")
                             ->success()
                             ->send();
                     }),

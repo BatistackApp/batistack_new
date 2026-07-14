@@ -29,6 +29,10 @@ class BridgeApiService
      */
     public function getAccessToken(string $externalUserId): string
     {
+        if (empty($this->clientId) || empty($this->clientSecret)) {
+            throw new \Exception('Les identifiants Bridge API (BRIDGE_CLIENT_ID et BRIDGE_CLIENT_SECRET) ne sont pas configurés dans le fichier .env.');
+        }
+
         // In a real scenario, we might want to cache this token since it's valid for 2 hours.
         $response = \Illuminate\Support\Facades\Http::withHeaders([
             'Bridge-Version' => $this->version,
@@ -38,7 +42,10 @@ class BridgeApiService
             'external_user_id' => $externalUserId,
         ]);
 
-        if ($response->status() === 404 || $response->status() === 400) {
+        $status = $response->status();
+        $isUnauthorizedUser = $status === 401 && collect($response->json('errors'))->contains('code', 'user.authentication.unauthorized');
+
+        if ($status === 404 || $status === 400 || $isUnauthorizedUser) {
             // User might not exist yet, create them
             $createResponse = \Illuminate\Support\Facades\Http::withHeaders([
                 'Bridge-Version' => $this->version,
@@ -64,11 +71,13 @@ class BridgeApiService
     /**
      * Generate a User Management Session URL.
      */
-    public function createManagementSessionUrl(string $externalUserId, string $callbackUrl = null): string
+    public function createManagementSessionUrl(string $externalUserId, string $userEmail, string $callbackUrl = null): string
     {
         $token = $this->getAccessToken($externalUserId);
 
-        $payload = [];
+        $payload = [
+            'user_email' => $userEmail,
+        ];
         if ($callbackUrl) {
             $payload['callback_url'] = $callbackUrl;
         }
@@ -85,6 +94,68 @@ class BridgeApiService
         }
 
         return $response->json('url');
+    }
+
+    /**
+     * Fetch all connected accounts from Bridge and sync them to our database.
+     */
+    public function syncAccounts(int $companyId): array
+    {
+        $externalUserId = 'company_' . $companyId;
+        $token = $this->getAccessToken($externalUserId);
+
+        $endpoint = "{$this->baseUrl}/aggregation/accounts";
+        $hasMore = true;
+        $params = ['limit' => 100];
+        $syncedAccounts = [];
+
+        while ($hasMore && $endpoint) {
+            $response = \Illuminate\Support\Facades\Http::withToken($token)
+                ->withHeaders([
+                    'Bridge-Version' => $this->version,
+                    'Client-Id' => $this->clientId,
+                    'Client-Secret' => $this->clientSecret,
+                ])->get($endpoint, $params);
+
+            if (!$response->successful()) {
+                throw new \Exception('Bridge API Accounts Fetch Failed: ' . $response->body());
+            }
+
+            $accounts = $response->json('resources');
+
+            foreach ($accounts as $accData) {
+                // Skip accounts that the user explicitly disabled during the Bridge Connect flow
+                if (isset($accData['data_access']) && $accData['data_access'] === 'disabled') {
+                    continue;
+                }
+
+                $bankAccount = BankAccount::updateOrCreate(
+                    [
+                        'company_id' => $companyId,
+                        'bridge_account_id' => $accData['id']
+                    ],
+                    [
+                        'name' => $accData['name'],
+                        // We default to checking, but we could parse $accData['type'] if Bridge provides it
+                        'type' => \App\Enums\Banque\BankAccountType::CHECKING,
+                        'iban' => $accData['iban'] ?? null,
+                        'currency' => $accData['currency_code'] ?? 'EUR',
+                        'balance' => $accData['balance'] ?? 0,
+                    ]
+                );
+                $syncedAccounts[] = $bankAccount;
+            }
+
+            $nextUri = $response->json('pagination.next_uri');
+            if ($nextUri) {
+                $endpoint = $this->baseUrl . str_replace('/v3', '', $nextUri);
+                $params = [];
+            } else {
+                $hasMore = false;
+            }
+        }
+
+        return $syncedAccounts;
     }
 
     /**
@@ -129,25 +200,25 @@ class BridgeApiService
 
             $transactions = $response->json('resources');
 
+            $insertData = [];
             foreach ($transactions as $tx) {
                 $isCredit = $tx['amount'] >= 0;
+                $insertData[] = [
+                    'bank_account_id' => $account->id,
+                    'date' => Carbon::parse($tx['date'])->format('Y-m-d'),
+                    'description' => $tx['clean_description'] ?? $tx['provider_description'],
+                    'amount' => $tx['amount'],
+                    'type' => $isCredit ? TransactionType::CREDIT->value : TransactionType::DEBIT->value,
+                    'status' => TransactionStatus::PENDING->value,
+                    'external_id' => 'bridge_' . $tx['id'],
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ];
+            }
 
-                try {
-                    $newTx = new BankTransaction([
-                        'bank_account_id' => $account->id,
-                        'date' => Carbon::parse($tx['date'])->format('Y-m-d'),
-                        'description' => $tx['clean_description'] ?? $tx['provider_description'],
-                        'amount' => $tx['amount'],
-                        'type' => $isCredit ? TransactionType::CREDIT : TransactionType::DEBIT,
-                        'status' => TransactionStatus::PENDING, // Will be reconciled later
-                    ]);
-                    $newTx->forceFill(['external_id' => 'bridge_' . $tx['id']])->save();
-                    $imported++;
-                } catch (\Illuminate\Database\QueryException $e) {
-                    if ($e->getCode() !== '23000') {
-                        throw $e;
-                    }
-                }
+            if (!empty($insertData)) {
+                $affected = BankTransaction::insertOrIgnore($insertData);
+                $imported += $affected;
             }
 
             $nextUri = $response->json('pagination.next_uri');

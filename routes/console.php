@@ -91,3 +91,9 @@ Schedule::command('flottes:fleet-remind-assignments')
     ->dailyAt('18:00')
     ->timezone('Europe/Paris')
     ->onFailure(fn () => logger()->error("Échec de la commande de rappel d'affectation Flotte."));
+
+// Banque
+Schedule::command('banque:sync-bridge')
+    ->dailyAt('04:00')
+    ->timezone('Europe/Paris')
+    ->onFailure(fn () => logger()->error("Échec de la synchronisation des comptes bancaires Bridge."));
