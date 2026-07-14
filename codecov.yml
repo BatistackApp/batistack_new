@@ -4,3 +4,40 @@ codecov:
 flag_management:
   default_rules:
     carryforward: true
+
+flags:
+  Articles:
+    paths:
+      - 'app/Filament/Articles/**'
+      - 'tests/Feature/Modules/Articles/**'
+    carryforward: true
+  Chantiers:
+    paths:
+      - 'app/Filament/Chantier/**'
+      - 'tests/Feature/Modules/Chantiers/**'
+    carryforward: true
+  Commerce:
+    paths:
+      - 'app/Filament/Commerce/**'
+      - 'tests/Feature/Modules/Commerce/**'
+    carryforward: true
+  Core:
+    paths:
+      - 'app/**'
+      - 'tests/**'
+    carryforward: true
+  Flottes:
+    paths:
+      - 'app/Filament/Flottes/**'
+      - 'tests/Feature/Modules/Flottes/**'
+    carryforward: true
+  RH:
+    paths:
+      - 'app/Filament/RH/**'
+      - 'tests/Feature/Modules/RH/**'
+    carryforward: true
+  Tiers:
+    paths:
+      - 'app/Filament/Tiers/**'
+      - 'tests/Feature/Modules/Tiers/**'
+    carryforward: true

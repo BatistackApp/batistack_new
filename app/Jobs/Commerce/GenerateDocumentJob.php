@@ -23,11 +23,12 @@ class GenerateDocumentJob implements ShouldQueue
     {
         $pdf_path = match ($this->namespace) {
             'quote' => app(CommerceDocumentationService::class)->generateQuotePdf($this->model),
+            'order' => app(CommerceDocumentationService::class)->generateOrderPdf($this->model),
+            'delivery_note' => app(CommerceDocumentationService::class)->generateDeliveryNotePdf($this->model),
             'invoice' => app(CommerceDocumentationService::class)->generateInvoicePdf($this->model),
+            'situation' => app(CommerceDocumentationService::class)->generateSituationPdf($this->model),
+            'purchase_order' => app(CommerceDocumentationService::class)->generatePurchaseOrderPdf($this->model),
+            default => throw new \InvalidArgumentException("Invalid namespace: {$this->namespace}"),
         };
-
-        $this->model->updateQuietly([
-            'pdf_path' => $pdf_path,
-        ]);
     }
 }

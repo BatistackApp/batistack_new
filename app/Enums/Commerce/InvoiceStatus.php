@@ -10,6 +10,7 @@ enum InvoiceStatus: string implements HasColor, HasLabel
     case DRAFT = 'draft';
     case VALIDATED = 'validated';
     case LITIGE = 'litige';
+    case PARTIALLY_PAID = 'partially_paid';
     case PAID = 'paid';
 
     case AUDIT = 'audit';
@@ -22,6 +23,7 @@ enum InvoiceStatus: string implements HasColor, HasLabel
             self::DRAFT => 'Brouillon',
             self::VALIDATED => 'Validée / BAP',
             self::LITIGE => 'En litige',
+            self::PARTIALLY_PAID => 'Partiellement payée',
             self::PAID => 'Payée',
             self::AUDIT => 'Controle',
             self::BON_A_PAYER => 'A Payer',
@@ -35,6 +37,7 @@ enum InvoiceStatus: string implements HasColor, HasLabel
             self::DRAFT => 'gray',
             self::VALIDATED => 'primary',
             self::LITIGE => 'danger',
+            self::PARTIALLY_PAID => 'warning',
             self::PAID => 'success',
             self::AUDIT, self::BON_A_PAYER => 'warning',
             self::CANCELED => 'danger',

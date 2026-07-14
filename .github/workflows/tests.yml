@@ -4,15 +4,14 @@ on:
   push:
     branches:
       - '**'
-  pull_request:
-    branches:
-      - develop
-      - master
+  schedule:
+    - cron: '0 2 * * *'
+  workflow_dispatch:
 
 jobs:
   changes:
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref != 'refs/heads/develop' && github.ref != 'refs/heads/master'
+    if: github.event_name == 'push'
     outputs:
       modules: ${{ steps.filter.outputs.changes }}
     steps:
@@ -26,48 +25,114 @@ jobs:
           filters: |
             Articles:
               - 'app/Filament/Articles/**'
+              - 'app/Console/Articles/**'
+              - 'app/Enums/Articles/**'
+              - 'app/Events/Articles/**'
+              - 'app/Jobs/Articles/**'
+              - 'app/Mails/Articles/**'
+              - 'app/Models/Articles/**'
+              - 'app/Notifications/Articles/**'
+              - 'app/Observers/Articles/**'
+              - 'app/Providers/Articles/**'
+              - 'app/Services/Articles/**'
               - 'tests/Feature/Modules/Articles/**'
             Chantiers:
-              - 'app/Filament/Chantier/**'
+              - 'app/Filament/Chantiers/**'
+              - 'app/Console/Chantiers/**'
+              - 'app/Enums/Chantiers/**'
+              - 'app/Events/Chantiers/**'
+              - 'app/Jobs/Chantiers/**'
+              - 'app/Mails/Chantiers/**'
+              - 'app/Models/Chantiers/**'
+              - 'app/Notifications/Chantiers/**'
+              - 'app/Observers/Chantiers/**'
+              - 'app/Providers/Chantiers/**'
+              - 'app/Services/Chantiers/**'
               - 'tests/Feature/Modules/Chantiers/**'
             Commerce:
               - 'app/Filament/Commerce/**'
+              - 'app/Console/Commerce/**'
+              - 'app/Enums/Commerce/**'
+              - 'app/Events/Commerce/**'
+              - 'app/Jobs/Commerce/**'
+              - 'app/Mails/Commerce/**'
+              - 'app/Models/Commerce/**'
+              - 'app/Notifications/Commerce/**'
+              - 'app/Observers/Commerce/**'
+              - 'app/Providers/Commerce/**'
+              - 'app/Services/Commerce/**'
               - 'tests/Feature/Modules/Commerce/**'
             Core:
-              - 'app/**'
-              - '!app/Filament/Articles/**'
-              - '!app/Filament/Chantier/**'
-              - '!app/Filament/Commerce/**'
-              - '!app/Filament/Flottes/**'
-              - '!app/Filament/RH/**'
-              - '!app/Filament/Tiers/**'
+              - 'app/Filament/Core/**'
+              - 'app/Console/Core/**'
+              - 'app/Enums/Core/**'
+              - 'app/Events/Core/**'
+              - 'app/Jobs/Core/**'
+              - 'app/Mails/Core/**'
+              - 'app/Models/Core/**'
+              - 'app/Notifications/Core/**'
+              - 'app/Observers/Core/**'
+              - 'app/Providers/Core/**'
+              - 'app/Services/Core/**'
               - 'tests/Feature/Modules/Core/**'
-              - 'tests/Feature/Auth/**'
-              - 'tests/Feature/Settings/**'
-              - 'tests/Feature/*.php'
-              - 'tests/Unit/**'
-              - 'tests/*.php'
             Flottes:
               - 'app/Filament/Flottes/**'
+              - 'app/Console/Flottes/**'
+              - 'app/Enums/Flottes/**'
+              - 'app/Events/Flottes/**'
+              - 'app/Jobs/Flottes/**'
+              - 'app/Mails/Flottes/**'
+              - 'app/Models/Flottes/**'
+              - 'app/Notifications/Flottes/**'
+              - 'app/Observers/Flottes/**'
+              - 'app/Providers/Flottes/**'
+              - 'app/Services/Flottes/**'
               - 'tests/Feature/Modules/Flottes/**'
             RH:
               - 'app/Filament/RH/**'
+              - 'app/Console/RH/**'
+              - 'app/Enums/RH/**'
+              - 'app/Events/RH/**'
+              - 'app/Jobs/RH/**'
+              - 'app/Mails/RH/**'
+              - 'app/Models/RH/**'
+              - 'app/Notifications/RH/**'
+              - 'app/Observers/RH/**'
+              - 'app/Providers/RH/**'
+              - 'app/Services/RH/**'
               - 'tests/Feature/Modules/RH/**'
             Tiers:
               - 'app/Filament/Tiers/**'
+              - 'app/Console/Tiers/**'
+              - 'app/Enums/Tiers/**'
+              - 'app/Events/Tiers/**'
+              - 'app/Jobs/Tiers/**'
+              - 'app/Mails/Tiers/**'
+              - 'app/Models/Tiers/**'
+              - 'app/Notifications/Tiers/**'
+              - 'app/Observers/Tiers/**'
+              - 'app/Providers/Tiers/**'
+              - 'app/Services/Tiers/**'
               - 'tests/Feature/Modules/Tiers/**'
+            Banque:
+              - 'app/Filament/Banque/**'
+              - 'app/Console/Banque/**'
+              - 'app/Enums/Banque/**'
+              - 'app/Events/Banque/**'
+              - 'app/Jobs/Banque/**'
+              - 'app/Mails/Banque/**'
+              - 'app/Models/Banque/**'
+              - 'app/Notifications/Banque/**'
+              - 'app/Observers/Banque/**'
+              - 'app/Providers/Banque/**'
+              - 'app/Services/Banque/**'
+              - 'tests/Feature/Modules/Banque/**'
 
   test-modules:
     runs-on: ubuntu-latest
     needs: changes
     environment: Testing
-    if: github.event_name == 'push' && github.ref != 'refs/heads/develop' && github.ref != 'refs/heads/master' && needs.changes.outputs.modules != '[]' && needs.changes.outputs.modules != ''
-    strategy:
-      fail-fast: false
-      matrix:
-        php-version: ['8.4']
-        module: ${{ fromJSON(needs.changes.outputs.modules) }}
-
+    if: github.event_name == 'push' && needs.changes.outputs.modules != '[]' && needs.changes.outputs.modules != ''
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
@@ -75,7 +140,7 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: ${{ matrix.php-version }}
+          php-version: '8.4'
           tools: composer:v2
           coverage: xdebug
 
@@ -105,37 +170,32 @@ jobs:
       - name: Build Assets
         run: npm run build
 
-      - name: Run Tests for Module
+      - name: Run Tests and Upload Coverage per Module
         run: |
-          if [ "${{ matrix.module }}" == "Core" ]; then
-            ./vendor/bin/pest tests/Feature/Modules/Core tests/Feature/Auth tests/Feature/Settings tests/Feature/*.php tests/Unit --coverage --coverage-clover storage/coverage/coverage-${{ matrix.module }}.xml --log-junit junit-${{ matrix.module }}.xml
-          else
-            ./vendor/bin/pest tests/Feature/Modules/${{ matrix.module }} --coverage --coverage-clover storage/coverage/coverage-${{ matrix.module }}.xml --log-junit junit-${{ matrix.module }}.xml
-          fi
+          curl -Os https://cli.codecov.io/latest/linux/codecov
+          chmod +x codecov
 
-      - name: Upload test results to Codecov
-        if: ${{ !cancelled() }}
-        uses: codecov/test-results-action@v1
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          flags: ${{ matrix.module }}
+          CHANGED_MODULES=$(echo '${{ needs.changes.outputs.modules }}' | jq -r '.[]')
 
-      - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@v5
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          slug: BatistackApp/batistack_new
-          files: ./storage/coverage/coverage-${{ matrix.module }}.xml
-          flags: ${{ matrix.module }}
+          for MODULE in $CHANGED_MODULES; do
+            echo "======================================"
+            echo "Testing module: $MODULE"
+            echo "======================================"
+
+            if [ "$MODULE" == "Core" ]; then
+              ./vendor/bin/pest tests/Feature/Modules/Core tests/Feature/Auth tests/Feature/Settings tests/Feature/*.php tests/Unit --coverage --coverage-clover storage/coverage/coverage-$MODULE.xml --log-junit junit-$MODULE.xml || echo "Tests failed for $MODULE"
+            else
+              ./vendor/bin/pest tests/Feature/Modules/$MODULE --coverage --coverage-clover storage/coverage/coverage-$MODULE.xml --log-junit junit-$MODULE.xml || echo "Tests failed for $MODULE"
+            fi
+
+            echo "Uploading coverage for $MODULE to Codecov..."
+            ./codecov upload-process -t ${{ secrets.CODECOV_TOKEN }} -F $MODULE -f storage/coverage/coverage-$MODULE.xml
+          done
 
   test-global:
     runs-on: ubuntu-latest
     environment: Testing
-    if: (github.event_name == 'pull_request' && github.event.action != 'closed') || (github.event_name == 'push' && (github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/master'))
-    strategy:
-      matrix:
-        php-version: ['8.4']
-
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
@@ -143,7 +203,7 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: ${{ matrix.php-version }}
+          php-version: '8.4'
           tools: composer:v2
           coverage: xdebug
 

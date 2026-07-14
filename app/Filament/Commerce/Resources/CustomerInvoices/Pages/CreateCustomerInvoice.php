@@ -29,6 +29,6 @@ class CreateCustomerInvoice extends CreateRecord
 
     protected function getRedirectUrl(): string
     {
-        return route('filament.commerce.resources.customer-invoices.pages.index');
+        return route('filament.commerce.resources.customer-invoices.index');
     }
 }

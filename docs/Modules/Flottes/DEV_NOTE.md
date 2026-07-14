@@ -4,7 +4,7 @@
 *   **Backend :** Architecture extrêmement détaillée. Modèles couvrant les Véhicules, les assignations aux conducteurs, le suivi des frais d'entretien, du carburant, et des amendes.
 *   **Règles Métiers :** Contrôles de conformité croisés avec le module RH (vérification des permis de conduire), et détection d'anomalies (anti-fraude carburant).
 *   **Tests :** Plus de 155 tests PestPHP validant l'ensemble de cette logique complexe (100% de réussite).
-*   **Frontend :** Administration visuelle complète du parc automobile implémentée (`Filament/Flottes`). Création de la page de visualisation détaillée `ViewVehicleAssignment` avec l'Infolist du trajet et la table des États des Lieux (Check-in/Check-out).
+*   **Frontend :** Administration visuelle complète du parc automobile implémentée (`Filament/Flottes`). Création de la page de visualisation détaillée `ViewVehicleAssignment` avec l'Infolist du trajet et la table des États des Lieux (Check-in/Check-out). Mise à jour des composants Filament (relation managers, infolists) pour s'aligner avec l'API `Filament\Schemas` et l'utilisation des nouvelles Actions.
 
 ## 🚧 Ce qu'il reste à faire
 *(L'essentiel du module et les interfaces d'administration sont terminés)*

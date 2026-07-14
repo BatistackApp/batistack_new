@@ -29,6 +29,8 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->configureDefaults();
+        
+        \App\Models\Banque\BankReconciliation::observe(\App\Observers\Banque\BankReconciliationObserver::class);
 
         if (app()->isProduction() || env('FORCE_HTTPS', false)) {
             \Illuminate\Support\Facades\URL::forceScheme('https');
@@ -43,6 +45,7 @@ class AppServiceProvider extends ServiceProvider
                     'chantier',
                     'articles',
                     'commerce',
+                    'banque',
                     'rh',
                     'flottes',
                 ])
@@ -54,6 +57,7 @@ class AppServiceProvider extends ServiceProvider
                     'chantier' => Phosphor::HardHat,
                     'articles' => Phosphor::BoxArrowUp,
                     'commerce' => Phosphor::ShoppingBag,
+                    'banque' => Phosphor::Bank,
                     'rh' => Phosphor::UsersThree,
                     'flottes' => Phosphor::Truck,
                 ])
@@ -63,6 +67,7 @@ class AppServiceProvider extends ServiceProvider
                     'chantier' => 'Chantiers',
                     'articles' => 'Articles & Stocks',
                     'commerce' => 'Commerces & Facturations',
+                    'banque' => 'Banque & Rapprochement',
                     'rh' => 'Ressources Humaines',
                     'flottes' => 'Flottes',
                 ]);

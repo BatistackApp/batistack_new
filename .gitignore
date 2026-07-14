@@ -25,3 +25,5 @@ yarn-error.log
 junit.xml
 /build/
 /packages.txt
+/GEMINI.md
+test_*.php

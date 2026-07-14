@@ -15,7 +15,17 @@ class ChantierPhase extends Model
         'chantier_id',
         'label',
         'order',
+        'start_date',
+        'end_date',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'start_date' => 'date',
+            'end_date' => 'date',
+        ];
+    }
 
     public function chantier(): BelongsTo
     {

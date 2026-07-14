@@ -2,13 +2,16 @@
 
 namespace App\Filament\Chantier\Resources\ChantierLogs\Schemas;
 
+use Filament\Actions\Action;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
+use Filament\Forms\Components\ViewField;
 use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Components\Group;
 use Filament\Schemas\Schema;
 
 class ChantierLogForm
@@ -31,10 +34,24 @@ class ChantierLogForm
                 TextInput::make('weather_condition')
                     ->label('Météo')
                     ->placeholder('ex: Ensoleillé, 22°C'),
-                RichEditor::make('content')
-                    ->label('Événements du jour')
-                    ->required()
-                    ->columnSpanFull(),
+                Group::make([
+                    ViewField::make('speech_script')
+                        ->view('filament.chantier.scripts.speech-recognition')
+                        ->hiddenLabel(),
+                    RichEditor::make('content')
+                        ->label('Événements du jour')
+                        ->required()
+                        ->hintAction(
+                            Action::make('dictate')
+                                ->icon('heroicon-m-microphone')
+                                ->label('Dicter le rapport')
+                                ->color(fn ($livewire) => 'primary')
+                                ->extraAttributes([
+                                    'x-on:click' => 'toggleRecording()',
+                                    'x-bind:class' => "isRecording ? 'text-danger-600 animate-pulse' : ''",
+                                ])
+                        ),
+                ])->columnSpanFull()->extraAttributes(['x-data' => 'speechRecognition']),
                 Toggle::make('incident_reported')
                     ->label('Signaler un incident critique')
                     ->onColor('danger')

@@ -144,8 +144,8 @@ describe('Employee - Methods', function () {
     test('getHoursWorkedToday() compte heures du jour', function () {
         $emp = Employee::factory()->create();
 
-        TimeEntry::factory()->create(['employee_id' => $emp->id, 'date' => today(), 'hours' => 8]);
-        TimeEntry::factory()->create(['employee_id' => $emp->id, 'date' => today()->subDay(), 'hours' => 8]);
+        TimeEntry::factory()->create(['employee_id' => $emp->id, 'date' => today(), 'hours' => 8, 'status' => \App\Enums\RH\TimeEntryStatus::APPROVED]);
+        TimeEntry::factory()->create(['employee_id' => $emp->id, 'date' => today()->subDay(), 'hours' => 8, 'status' => \App\Enums\RH\TimeEntryStatus::APPROVED]);
 
         expect($emp->getHoursWorkedToday())->toBe(8.00);
     });
@@ -153,8 +153,8 @@ describe('Employee - Methods', function () {
     test('getHoursWorkedThisMonth() compte heures du mois', function () {
         $emp = Employee::factory()->create();
 
-        TimeEntry::factory()->create(['employee_id' => $emp->id, 'date' => now(), 'hours' => 8]);
-        TimeEntry::factory()->create(['employee_id' => $emp->id, 'date' => now()->subMonths(2), 'hours' => 8]);
+        TimeEntry::factory()->create(['employee_id' => $emp->id, 'date' => now(), 'hours' => 8, 'status' => \App\Enums\RH\TimeEntryStatus::APPROVED]);
+        TimeEntry::factory()->create(['employee_id' => $emp->id, 'date' => now()->subMonths(2), 'hours' => 8, 'status' => \App\Enums\RH\TimeEntryStatus::APPROVED]);
 
         expect($emp->getHoursWorkedThisMonth())->toBe(8.00);
     });

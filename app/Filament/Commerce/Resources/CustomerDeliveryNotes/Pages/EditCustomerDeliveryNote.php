@@ -4,7 +4,6 @@ namespace App\Filament\Commerce\Resources\CustomerDeliveryNotes\Pages;
 
 use App\Filament\Commerce\Resources\CustomerDeliveryNotes\CustomerDeliveryNoteResource;
 use Filament\Actions\DeleteAction;
-use Filament\Actions\ViewAction;
 use Filament\Resources\Pages\EditRecord;
 
 class EditCustomerDeliveryNote extends EditRecord
@@ -14,7 +13,6 @@ class EditCustomerDeliveryNote extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
-            ViewAction::make(),
             DeleteAction::make(),
         ];
     }
