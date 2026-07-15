@@ -34,10 +34,10 @@ class SalariePanelProvider extends PanelProvider
             ->colors([
                 'primary' => Color::Amber,
             ])
-            ->discoverResources(in: app_path('Filament/Salarie/Resources'), for: 'App\Filament\Salarie\Resources')
-            ->discoverPages(in: app_path('Filament/Salarie/Pages'), for: 'App\Filament\Salarie\Pages')
+            ->discoverResources(in: app_path('Filament/Salarie/Resources'), for: 'App\\Filament\\Salarie\\Resources')
+            ->discoverPages(in: app_path('Filament/Salarie/Pages'), for: 'App\\Filament\\Salarie\\Pages')
             ->pages([
-                Dashboard::class,
+                \App\Filament\Salarie\Pages\Dashboard::class,
             ])
             ->discoverWidgets(in: app_path('Filament/Salarie/Widgets'), for: 'App\Filament\Salarie\Widgets')
             ->widgets([
