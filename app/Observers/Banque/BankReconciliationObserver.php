@@ -49,6 +49,21 @@ class BankReconciliationObserver
                     $invoice->save();
                 }
             }
+        } elseif ($invoice instanceof \App\Models\RH\ExpenseReport) {
+            $totalReconciled = $invoice->morphMany(BankReconciliation::class, 'reconcilable')->sum('amount_applied');
+            $totalAmount = $invoice->total_amount ?? 0;
+
+            if ($totalAmount > 0 && $totalReconciled >= $totalAmount - 0.05) { // 5 cents tolerance
+                if ($invoice->status !== \App\Enums\RH\ExpenseReportStatus::PAID) {
+                    $invoice->status = \App\Enums\RH\ExpenseReportStatus::PAID;
+                    $invoice->save();
+                }
+            } else {
+                if ($invoice->status === \App\Enums\RH\ExpenseReportStatus::PAID) {
+                    $invoice->status = \App\Enums\RH\ExpenseReportStatus::VALIDATED;
+                    $invoice->save();
+                }
+            }
         }
     }
 }

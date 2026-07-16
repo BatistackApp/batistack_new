@@ -17,7 +17,7 @@ class ReconciliationService
     {
         $suggestions = [];
 
-        // Determine if we look for Customer Invoices (Credit) or Supplier Invoices (Debit)
+        // Determine if we look for Customer Invoices (Credit) or Supplier Invoices/ExpenseReports (Debit)
         if ($transaction->amount > 0) {
             $candidates = CustomerInvoice::where('status', '!=', 'paid')->get();
             
@@ -42,6 +42,21 @@ class ReconciliationService
                     $suggestions[] = [
                         'model' => $invoice,
                         'type' => SupplierInvoice::class,
+                        'score' => $score,
+                    ];
+                }
+            }
+
+            // Also check for ExpenseReports
+            $expenseReports = \App\Models\RH\ExpenseReport::where('status', \App\Enums\RH\ExpenseReportStatus::VALIDATED)->get();
+            
+            foreach ($expenseReports as $report) {
+                $score = $this->calculateScore($transaction, $report, $report->employee->first_name . ' ' . $report->employee->last_name);
+                
+                if ($score > 0) {
+                    $suggestions[] = [
+                        'model' => $report,
+                        'type' => \App\Models\RH\ExpenseReport::class,
                         'score' => $score,
                     ];
                 }
@@ -97,7 +112,7 @@ class ReconciliationService
     {
         $score = 0;
         $absTransactionAmount = abs($transaction->amount);
-        $invoiceAmountTtc = $invoice->total_ttc ?? $invoice->amount_ttc ?? 0;
+        $invoiceAmountTtc = $invoice->total_ttc ?? $invoice->amount_ttc ?? $invoice->total_amount ?? 0;
 
         // 1. Exact amount match (+50 points)
         if (round($absTransactionAmount, 2) === round((float) $invoiceAmountTtc, 2)) {
