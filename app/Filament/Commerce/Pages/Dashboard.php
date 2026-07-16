@@ -9,13 +9,10 @@ class Dashboard extends BaseDashboard
 {
     public function getColumns(): int | array
     {
-        return 2;
-    }
-
-    public function getWidgets(): array
-    {
         return [
-            RevenueStatsWidget::class,
+            'default' => 1,
+            'md' => 2,
+            'xl' => 2,
         ];
     }
 }

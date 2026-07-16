@@ -7,7 +7,7 @@ use App\Filament\Commerce\Resources\CustomerDeliveryNotes\Pages\EditCustomerDeli
 use App\Filament\Commerce\Resources\CustomerDeliveryNotes\Pages\ListCustomerDeliveryNotes;
 use App\Filament\Commerce\Resources\CustomerDeliveryNotes\Schemas\CustomerDeliveryNoteForm;
 use App\Filament\Commerce\Resources\CustomerDeliveryNotes\Tables\CustomerDeliveryNotesTable;
-use App\Models\CustomerDeliveryNote;
+use App\Models\Commerce\CustomerDeliveryNote;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
@@ -18,7 +18,12 @@ class CustomerDeliveryNoteResource extends Resource
 {
     protected static ?string $model = CustomerDeliveryNote::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = \ToneGabes\Filament\Icons\Enums\Phosphor::Truck;
+    protected static ?string $navigationLabel = 'Bons de livraison';
+    protected static string | \UnitEnum | null $navigationGroup = 'Ventes';
+    protected static ?string $modelLabel = 'Bon de livraison';
+    protected static ?string $pluralModelLabel = 'Bons de livraison';
+    protected static ?int $navigationSort = 3;
 
     public static function form(Schema $schema): Schema
     {
