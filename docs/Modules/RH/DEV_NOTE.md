@@ -19,6 +19,7 @@
 *   **Subrogation (Prévoyance) :** Calcul automatique des Indemnités Journalières (IJ) lors d'un arrêt maladie/AT, génération de l'attestation de salaire PDF, et tableau de bord de suivi financier pour la comptabilité.
 *   **Lecteur de Code-barres (Équipements) :** Intégration de `filament-barcode-scanner-field` pour assigner et identifier le matériel/EPI confié aux employés, avec recherche globale supportée via code-barres.
 *   **Notes de Frais & OCR :** Workflow complet de soumission et validation des notes de frais. Moteur OCR (Google Cloud Vision) intégré pour l'extraction automatique des montants (TTC, HT, TVA), de la date et du marchand, avec catégorisation intelligente (Carburant, Péage, etc.). Option "Scan Rapide" intégrée au portail Salarié, et liaison automatique des frais kilométriques/péages au module Flottes (`vehicle_id`).
+*   **Variables de Paie Mensuelles :** Moteur complet `PayrollGenerationService` qui consolide à chaque fin de mois les variables pour le comptable. Regroupe automatiquement les heures de bases (contrat), heures travaillées, heures supplémentaires, jours d'absences, primes de grands déplacements et total des notes de frais à rembourser, avec interface d'export CSV pour la comptabilité.
 
 ## 🚧 Ce qu'il reste à faire
 *(Le module est fonctionnellement très abouti et couvre tous les besoins RH classiques et avancés. Il est en phase de maintenance/amélioration continue).*

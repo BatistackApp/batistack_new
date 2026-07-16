@@ -21,7 +21,7 @@ class ExpenseReportsTable
             ->columns([
                 TextColumn::make('month')
                     ->label('Mois')
-                    ->formatStateUsing(fn ($state) => Carbon::create()->month($state)->translatedFormat('F'))
+                    ->formatStateUsing(fn ($state) => Carbon::create()->day(1)->month($state)->translatedFormat('F'))
                     ->sortable(),
                 TextColumn::make('year')
                     ->label('Année')
@@ -48,6 +48,15 @@ class ExpenseReportsTable
                     ->modalSubmitActionLabel('Oui, transférer')
                     ->visible(fn (ExpenseReport $record) => $record->status === ExpenseReportStatus::DRAFT)
                     ->action(function (ExpenseReport $record) {
+                        if ($record->items()->count() === 0) {
+                            Notification::make()
+                                ->warning()
+                                ->title('Action impossible')
+                                ->body('Vous ne pouvez pas transférer une note de frais vide. Veuillez ajouter au moins un justificatif.')
+                                ->send();
+                            return;
+                        }
+
                         try {
                             app(ExpenseWorkflowService::class)->submit($record);
                             Notification::make()

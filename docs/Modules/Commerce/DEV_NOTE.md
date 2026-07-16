@@ -4,11 +4,13 @@
 *   **Backend :** Structure du tunnel de vente et d'achat totalement couverte. Supporte les Devis (Clients), Commandes (Clients/Fournisseurs), Situations (Clients/Sous-traitants), Bons de Livraison, Factures et Paiements.
 *   **Logique Métier :** Gestion des workflows de statuts (Brouillon -> Envoyé -> Accepté -> Facturé). Les règles de validation sont couvertes.
 *   **Lecteur de Code-barres :** Intégration du scan de code-barres dans les formulaires des Commandes Clients et Factures Fournisseurs pour identifier et insérer rapidement des lignes d'articles.
+*   **Interfaces Filament :** Création des vues permettant aux commerciaux de manipuler facilement les devis, commandes, factures, etc.
+*   **Génération de Documents :** Génération des PDF avec l'identité de l'entreprise fonctionnelle et configurée avec Browsershot. Les problèmes de race conditions sur la génération des bons de commande ont été fixés (utilisation des jobs en `afterCommit()`). L'affichage PDF à la volée est implémenté pour les Devis. Mise en page CSS corrigée pour l'impression des factures (alignement des conditions de paiement et des totaux).
+*   **Numérotation & Légalisation :** Résolution des erreurs de séquençage et des contraintes d'unicité lors de la validation des factures (exclusion stricte des identifiants temporaires et tri correct sur la longueur des références).
 *   **Tests :** Validation complète du module avec 100% de succès sur la gigantesque suite de **182 tests** PestPHP. Le cycle de vie complet est garanti sans faille logicielle.
 
 ## 🚧 Ce qu'il reste à faire
-*   **Génération de Documents :** Finaliser et designer la génération des PDF (devis, factures) avec l'identité de l'entreprise.
-*   **Interfaces Filament :** Créer les vues permettant aux commerciaux de manipuler facilement de gros devis multi-lignes.
+*   Peaufiner potentiellement certains détails cosmétiques des exports PDF selon les retours des utilisateurs.
 
 ## 💡 Idées d'amélioration et Nouvelles Fonctionnalités
 1.  **Signature Électronique (DocuSeal) :** Déployer l'outil `docuseal` (présent dans composer) pour que les clients signent électroniquement et légalement les devis directement en ligne. L'acceptation du devis sera ainsi automatisée.
