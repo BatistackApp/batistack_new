@@ -76,13 +76,13 @@
                         const popupContent = `
                             <div class='p-2 min-w-[200px] text-gray-900 dark:text-gray-100'>
                                 <div class='flex justify-between items-center mb-1'>
-                                    <span class='font-mono text-[10px] bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded font-bold'>\${chantier.reference}</span>
-                                    <span class='text-[9px] uppercase font-bold text-orange-600'>\${chantier.status_label}</span>
+                                    <span class='font-mono text-[10px] bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded font-bold'>${chantier.reference}</span>
+                                    <span class='text-[9px] uppercase font-bold text-orange-600'>${chantier.status_label}</span>
                                 </div>
-                                <h3 class='font-bold text-sm mb-2 text-[#002157]'>\${chantier.name}</h3>
-                                <p class='text-xs mb-1'><strong>Conducteur :</strong> \${chantier.manager}</p>
-                                <p class='text-[10px] text-gray-500 mb-3'>\${chantier.address}</p>
-                                <a href='\${chantier.url}' class='block text-center text-xs bg-orange-500 hover:bg-orange-600 text-white font-bold py-1.5 px-3 rounded transition-colors' style='color: white !important;'>
+                                <h3 class='font-bold text-sm mb-2 text-[#002157]'>${chantier.name}</h3>
+                                <p class='text-xs mb-1'><strong>Conducteur :</strong> ${chantier.manager}</p>
+                                <p class='text-[10px] text-gray-500 mb-3'>${chantier.address}</p>
+                                <a href='${chantier.url}' class='block text-center text-xs bg-orange-500 hover:bg-orange-600 text-white font-bold py-1.5 px-3 rounded transition-colors' style='color: white !important;'>
                                     Ouvrir le chantier
                                 </a>
                             </div>

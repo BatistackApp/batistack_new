@@ -12,6 +12,10 @@
 ## 🚧 Ce qu'il reste à faire
 *   Peaufiner potentiellement certains détails cosmétiques des exports PDF selon les retours des utilisateurs.
 
+## 🚀 Dernières mises à jour (Juillet 2026)
+*   **Complétude des interfaces :** Toutes les ressources (Demandes d'achat, Bons de Réception, Situations Sous-traitants, Avoirs Clients et Fournisseurs) possèdent maintenant leur interface Filament complète, traduite et avec les gestionnaires de relations (lignes de documents).
+*   **Workflows automatisés :** Ajout de boutons d'action rapide dans les tableaux pour transformer les documents sans friction (ex: Demande d'achat -> Commande, Commande -> Bon de Réception, Bon de Réception -> Facture Fournisseur).
+
 ## 💡 Idées d'amélioration et Nouvelles Fonctionnalités
 1.  **Signature Électronique (DocuSeal) :** Déployer l'outil `docuseal` (présent dans composer) pour que les clients signent électroniquement et légalement les devis directement en ligne. L'acceptation du devis sera ainsi automatisée.
 2.  **Paiement en ligne & Relances automatiques :** Intégrer un lien de paiement Stripe ou prélèvement SEPA (GoCardless) en bas de la facture électronique, couplé à un robot qui relance par email les impayés à J+3, J+15.

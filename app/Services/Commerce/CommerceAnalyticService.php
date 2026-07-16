@@ -148,6 +148,7 @@ class CommerceAnalyticService
             return [
                 'average_delay_days' => 0,
                 'sample_size' => 0,
+                'interpretation' => 'Aucune donnée',
             ];
         }
 
@@ -208,6 +209,28 @@ class CommerceAnalyticService
                 ->whereNotNull('due_date')
                 ->where('due_date', '<', Carbon::now())
                 ->count(),
+        ];
+    }
+
+    public function getPurchasesMetrics(?CarbonInterface $startDate = null, ?CarbonInterface $endDate = null): array
+    {
+        $start = $startDate ?? Carbon::now()->startOfMonth();
+        $end = $endDate ?? Carbon::now();
+
+        // Total facturé par les fournisseurs
+        $invoicedCosts = SupplierInvoice::whereIn('status', [InvoiceStatus::VALIDATED, InvoiceStatus::PAID])
+            ->whereBetween('created_at', [$start, $end])
+            ->sum('amount_ht');
+
+        // Total déjà payé aux fournisseurs
+        $paidCosts = SupplierInvoice::where('status', InvoiceStatus::PAID)
+            ->whereBetween('created_at', [$start, $end])
+            ->sum('amount_ht');
+
+        return [
+            'invoiced_ht' => (float) $invoicedCosts,
+            'paid_ht' => (float) $paidCosts,
+            'pending_ht' => (float) ($invoicedCosts - $paidCosts),
         ];
     }
 }

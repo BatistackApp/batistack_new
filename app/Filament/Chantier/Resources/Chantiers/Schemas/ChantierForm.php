@@ -57,6 +57,11 @@ class ChantierForm
                                             ->searchable()
                                             ->preload()
                                             ->required(),
+                                        Select::make('quote_id')
+                                            ->label('Devis d\'origine')
+                                            ->relationship('quote', 'reference')
+                                            ->searchable()
+                                            ->preload(),
                                         Select::make('manager_id')
                                             ->label('Conducteur de travaux')
                                             ->relationship('manager', 'last_name')
