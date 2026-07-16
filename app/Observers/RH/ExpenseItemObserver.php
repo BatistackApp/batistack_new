@@ -41,4 +41,25 @@ class ExpenseItemObserver
             }
         }
     }
+
+    public function saved(ExpenseItem $item): void
+    {
+        $this->updateReportTotal($item->expense_report_id);
+    }
+
+    public function deleted(ExpenseItem $item): void
+    {
+        $this->updateReportTotal($item->expense_report_id);
+    }
+
+    protected function updateReportTotal($reportId): void
+    {
+        if ($reportId) {
+            $report = \App\Models\RH\ExpenseReport::find($reportId);
+            if ($report) {
+                $report->total_amount = $report->items()->sum('amount_ttc');
+                $report->save();
+            }
+        }
+    }
 }

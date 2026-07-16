@@ -23,7 +23,7 @@ class ExpenseReportResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
-    protected static ?string $recordTitleAttribute = 'monthmonth';
+    protected static ?string $recordTitleAttribute = 'month';
 
     protected static ?string $modelLabel = 'Note de frais';
 
