@@ -8,6 +8,9 @@ use Filament\Widgets\StatsOverviewWidget\Stat;
 
 class RevenueStatsWidget extends StatsOverviewWidget
 {
+    protected static ?int $sort = 1;
+    protected int | string | array $columnSpan = 'full';
+
     protected function getStats(): array
     {
         $analyticService = app(CommerceAnalyticService::class);

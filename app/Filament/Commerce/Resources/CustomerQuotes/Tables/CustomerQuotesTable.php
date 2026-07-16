@@ -78,6 +78,33 @@ class CustomerQuotesTable
                         ->action(fn (CustomerQuote $record) => $record->update(['status' => QuoteStatus::SENT]))
                         ->requiresConfirmation(),
 
+                    Action::make('acceptQuote')
+                        ->label('Accepter')
+                        ->icon('heroicon-o-check-circle')
+                        ->color('success')
+                        ->visible(fn (CustomerQuote $record) => in_array($record->status, [QuoteStatus::DRAFT, QuoteStatus::SENT]))
+                        ->requiresConfirmation()
+                        ->modalHeading('Accepter le devis')
+                        ->modalDescription('Êtes-vous sûr de vouloir accepter ce devis ? Cela générera automatiquement la commande client.')
+                        ->modalSubmitActionLabel('Oui, accepter')
+                        ->action(function (CustomerQuote $record) {
+                            try {
+                                $order = app(\App\Services\Commerce\QuoteService::class)->acceptQuote($record, auth()->user());
+                                \Filament\Notifications\Notification::make()
+                                    ->success()
+                                    ->title('Devis accepté et commande générée')
+                                    ->send();
+                                
+                                return redirect(\App\Filament\Commerce\Resources\CustomerOrders\CustomerOrderResource::getUrl('view', ['record' => $order]));
+                            } catch (\Exception $e) {
+                                \Filament\Notifications\Notification::make()
+                                    ->danger()
+                                    ->title('Erreur')
+                                    ->body($e->getMessage())
+                                    ->send();
+                            }
+                        }),
+
                     MediaAction::make()
                         ->label('Imprimer PDF')
                         ->icon(Phosphor::Printer)

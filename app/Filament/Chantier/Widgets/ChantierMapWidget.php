@@ -33,7 +33,7 @@ class ChantierMapWidget extends Widget
                 'status_label' => $chantier->status->getLabel(),
                 'status_color' => $chantier->status->getColor(),
                 'manager' => $chantier->manager?->full_name ?? 'Aucun responsable',
-                'url' => "/chantiers/chantiers/{$chantier->id}",
+                'url' => "/chantier/chantiers/{$chantier->id}",
             ])
             ->toArray();
     }

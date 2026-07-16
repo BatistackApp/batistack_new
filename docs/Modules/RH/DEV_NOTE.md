@@ -18,9 +18,15 @@
 *   **CIBTP (Congés Payés) :** Automatisation de l'export DNA (Déclaration Nominative Annuelle) avec calcul précis de la période de référence et module d'exportation structurée des Demandes De Congés (DDC).
 *   **Subrogation (Prévoyance) :** Calcul automatique des Indemnités Journalières (IJ) lors d'un arrêt maladie/AT, génération de l'attestation de salaire PDF, et tableau de bord de suivi financier pour la comptabilité.
 *   **Lecteur de Code-barres (Équipements) :** Intégration de `filament-barcode-scanner-field` pour assigner et identifier le matériel/EPI confié aux employés, avec recherche globale supportée via code-barres.
+*   **Notes de Frais & OCR :** Workflow complet de soumission et validation des notes de frais. Moteur OCR (Google Cloud Vision) intégré pour l'extraction automatique des montants (TTC, HT, TVA), de la date et du marchand, avec catégorisation intelligente (Carburant, Péage, etc.). Option "Scan Rapide" intégrée au portail Salarié, et liaison automatique des frais kilométriques/péages au module Flottes (`vehicle_id`).
+*   **Variables de Paie Mensuelles :** Moteur complet `PayrollGenerationService` qui consolide à chaque fin de mois les variables pour le comptable. Regroupe automatiquement les heures de bases (contrat), heures travaillées, heures supplémentaires, jours d'absences, primes de grands déplacements et total des notes de frais à rembourser, avec interface d'export CSV pour la comptabilité.
 
 ## 🚧 Ce qu'il reste à faire
 *(Le module est fonctionnellement très abouti et couvre tous les besoins RH classiques et avancés. Il est en phase de maintenance/amélioration continue).*
 
 ## 💡 Idées d'amélioration et Nouvelles Fonctionnalités
 - Intégration DSN complète (Déclaration Sociale Nominative) via API net-entreprises.
+- **Export Comptable & SEPA** : Générer automatiquement un fichier de virement SEPA pour le remboursement groupé des notes de frais validées.
+- **Rapprochement Bancaire (Cartes Corpo)** : Intégrer une API (Bridge/Plaid) pour réconcilier automatiquement les dépenses des cartes "Corporate" de l'entreprise avec les tickets scannés par les salariés.
+- **OCR Multi-Pages & PDF** : Étendre le support OCR pour traiter les factures PDF multi-pages, et pas uniquement les photos JPEG de tickets.
+- **Avances sur Frais** : Permettre aux salariés de demander une avance budgétaire pour un grand déplacement à venir, avec suivi et déduction automatique lors de la saisie de la note de frais finale.

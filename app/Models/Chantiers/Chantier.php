@@ -44,12 +44,23 @@ class Chantier extends Model implements HasMedia
         'end_date_preview',
         'start_date',
         'end_date',
+        'quote_id',
     ];
 
     public function client(): BelongsTo
     {
         return $this->belongsTo(ThirdParty::class, 'client_id')
             ->where('type', ThirdPartyType::CLIENT);
+    }
+
+    public function quote(): BelongsTo
+    {
+        return $this->belongsTo(\App\Models\Commerce\CustomerQuote::class, 'quote_id');
+    }
+
+    public function invoices(): HasMany
+    {
+        return $this->hasMany(\App\Models\Commerce\CustomerInvoice::class, 'chantier_id');
     }
 
     public function manager(): BelongsTo
@@ -81,6 +92,11 @@ class Chantier extends Model implements HasMedia
     public function timeEntries(): HasMany
     {
         return $this->hasMany(TimeEntry::class);
+    }
+
+    public function expenseItems(): HasMany
+    {
+        return $this->hasMany(\App\Models\RH\ExpenseItem::class);
     }
 
     public function doeDocuments(): HasMany

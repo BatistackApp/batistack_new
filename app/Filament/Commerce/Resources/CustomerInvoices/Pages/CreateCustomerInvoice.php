@@ -22,7 +22,7 @@ class CreateCustomerInvoice extends CreateRecord
             order: CustomerOrder::query()->findOrFail($data['order_id']),
             type: $data['type'],
             responsable: auth()->user(),
-            situation: null,
+            situation: isset($data['customer_situation_id']) ? \App\Models\Commerce\CustomerSituation::find($data['customer_situation_id']) : null,
             acompteAmount: $data['amountAcompte'] ?? null,
         );
     }

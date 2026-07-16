@@ -118,6 +118,87 @@ class ChantiersTable
                                 ->success()
                                 ->send();
                         }),
+
+                    Action::make('generate_invoice')
+                        ->label('Facturer Situation')
+                        ->icon(Phosphor::Receipt)
+                        ->color('success')
+                        ->visible(fn (Chantier $record) => $record->quote_id !== null)
+                        ->schema([
+                            TextInput::make('percentage')
+                                ->label('Pourcentage d\'avancement à facturer')
+                                ->numeric()
+                                ->default(fn (Chantier $record, ChantierAnalyticService $service) => $service->getPerformanceMetrics($record)['progress'])
+                                ->minValue(1)
+                                ->maxValue(100)
+                                ->required()
+                                ->suffix('%'),
+                        ])
+                        ->action(function (Chantier $record, array $data) {
+                            $quote = $record->quote;
+                            if (!$quote) return;
+
+                            $percentage = $data['percentage'] / 100;
+                            $amountHt = $quote->total_ht * $percentage;
+                            $amountTva = $quote->total_tva * $percentage;
+
+                            $invoice = \App\Models\Commerce\CustomerInvoice::create([
+                                'client_id' => $record->client_id,
+                                'chantier_id' => $record->id,
+                                'reference' => 'FACT-SIT-' . uniqid(),
+                                'type' => \App\Enums\Commerce\InvoiceType::STANDARD,
+                                'status' => \App\Enums\Commerce\InvoiceStatus::DRAFT,
+                                'total_ht' => $amountHt,
+                                'total_tva' => $amountTva,
+                                'total_ttc' => $amountHt + $amountTva,
+                                'due_date' => now()->addDays(30),
+                                'responsable_id' => auth()->id(),
+                            ]);
+
+                            Notification::make()
+                                ->title('Facture de situation créée (Brouillon)')
+                                ->success()
+                                ->send();
+                        }),
+
+                    Action::make('affect_vehicle')
+                        ->label('Assigner Véhicule')
+                        ->icon(Phosphor::Truck)
+                        ->color('info')
+                        ->schema([
+                            Select::make('vehicle_id')
+                                ->label('Véhicule / Engin')
+                                ->options(\App\Models\Flottes\Vehicle::all()->mapWithKeys(fn($v) => [$v->id => "{$v->brand} {$v->model} ({$v->license_plate})"]))
+                                ->required()
+                                ->searchable(),
+                            Select::make('employee_id')
+                                ->label('Conducteur (Optionnel)')
+                                ->options(\App\Models\RH\Employee::all()->mapWithKeys(fn($e) => [$e->id => "{$e->first_name} {$e->last_name}"]))
+                                ->searchable(),
+                            \Filament\Forms\Components\DatePicker::make('started_at')
+                                ->label('Date de début')
+                                ->default(now())
+                                ->required(),
+                            \Filament\Forms\Components\DatePicker::make('ended_at')
+                                ->label('Date de fin (Prévue)'),
+                        ])
+                        ->action(function (Chantier $record, array $data) {
+                            \App\Models\Flottes\VehicleAssignment::create([
+                                'vehicle_id' => $data['vehicle_id'],
+                                'chantier_id' => $record->id,
+                                'employee_id' => $data['employee_id'] ?? null,
+                                'started_at' => $data['started_at'],
+                                'ended_at' => $data['ended_at'] ?? null,
+                                'status' => \App\Enums\Flottes\AssignmentStatus::ACTIVE,
+                                'purpose' => 'Affectation Chantier ' . $record->reference,
+                                'start_odometer' => \App\Models\Flottes\Vehicle::find($data['vehicle_id'])->odometer ?? 0,
+                            ]);
+
+                            Notification::make()
+                                ->title('Véhicule assigné au chantier')
+                                ->success()
+                                ->send();
+                        }),
                 ]),
             ])
             ->toolbarActions([

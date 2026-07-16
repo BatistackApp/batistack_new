@@ -55,6 +55,19 @@ class CustomerInvoiceForm
                             ->live()
                             ->native(false),
 
+                        Select::make('customer_situation_id')
+                            ->label('Situation de travaux')
+                            ->relationship('situation', 'number', function (Builder $query, Get $get) {
+                                $orderId = $get('order_id');
+                                if (! $orderId) {
+                                    return $query->whereRaw('1 = 0');
+                                }
+                                return $query->where('customer_order_id', $orderId);
+                            })
+                            ->visible(fn (Get $get) => $get('type') === InvoiceType::SITUATION->value)
+                            ->required(fn (Get $get) => $get('type') === InvoiceType::SITUATION->value)
+                            ->searchable()
+                            ->preload(),
 
                         DatePicker::make('due_date')
                             ->label('Échéance')

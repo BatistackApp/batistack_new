@@ -50,6 +50,7 @@ class ChantierResource extends Resource
             MembersRelationManager::class,
             SubcontractorsRelationManager::class,
             LogsRelationManager::class,
+            \App\Filament\Chantier\Resources\Chantiers\RelationManagers\InvoicesRelationManager::class,
             \App\Filament\Chantier\Resources\Chantiers\RelationManagers\WeatherAlertsRelationManager::class,
         ];
     }
