@@ -39,7 +39,7 @@
         }
     </script>
 </head>
-<body class="bg-slate-900 text-white min-h-screen flex flex-col items-center justify-center relative overflow-hidden">
+<body class="bg-slate-900 text-white min-h-screen flex flex-col items-center justify-center relative overflow-x-hidden">
 
     <!-- Background Decoration -->
     <div class="absolute inset-0 overflow-hidden pointer-events-none">

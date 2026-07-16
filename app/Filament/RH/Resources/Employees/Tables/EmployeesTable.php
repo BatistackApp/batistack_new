@@ -82,13 +82,12 @@ class EmployeesTable
                         ->label('Lien Onboarding')
                         ->icon('heroicon-o-link')
                         ->color('gray')
-                        ->action(function (Employee $record) {
-                            // URL generation using a simple route copy
-                        })
-                        ->extraAttributes(function (Employee $record) {
-                            return [
-                                'x-on:click' => "window.navigator.clipboard.writeText('".route('public.onboarding', $record->uuid)."'); \$tooltip('Lien copié !')",
-                            ];
+                        ->action(function (Employee $record, \Livewire\Component $livewire) {
+                            $livewire->js("window.navigator.clipboard.writeText('".route('public.onboarding', $record->uuid)."');");
+                            \Filament\Notifications\Notification::make()
+                                ->title('Lien copié !')
+                                ->success()
+                                ->send();
                         }),
                     Action::make('proforma')
                         ->label('Paie Pro Forma')
