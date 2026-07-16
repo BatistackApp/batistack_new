@@ -69,6 +69,60 @@ class CustomerOrdersTable
                     ConfirmedAction::make(),
                     CancelAction::make(),
                     PrinterAction::make(),
+                    \Filament\Actions\Action::make('generateInvoice')
+                        ->label('Générer Facture')
+                        ->icon('heroicon-o-document-currency-euro')
+                        ->color('success')
+                        ->visible(fn (Model $record) => in_array($record->status, [OrderStatus::CONFIRMED, OrderStatus::PARTIALLY_DELIVERED, OrderStatus::DELIVERED]))
+                        ->form([
+                            \Filament\Forms\Components\Select::make('type')
+                                ->label('Type de facture')
+                                ->options([
+                                    \App\Enums\Commerce\InvoiceType::SIMPLE->value => 'Facture Globale (Solde)',
+                                    \App\Enums\Commerce\InvoiceType::ACOMPTE->value => "Facture d'Acompte",
+                                ])
+                                ->required()
+                                ->reactive(),
+                            \Filament\Forms\Components\TextInput::make('acompte_amount')
+                                ->label('Montant de l\'acompte (HT)')
+                                ->numeric()
+                                ->required(fn (\Filament\Forms\Get $get) => $get('type') === \App\Enums\Commerce\InvoiceType::ACOMPTE->value)
+                                ->visible(fn (\Filament\Forms\Get $get) => $get('type') === \App\Enums\Commerce\InvoiceType::ACOMPTE->value),
+                        ])
+                        ->action(function (array $data, \App\Models\Commerce\CustomerOrder $record) {
+                            try {
+                                $type = \App\Enums\Commerce\InvoiceType::from($data['type']);
+                                $acompte = $data['acompte_amount'] ?? null;
+                                
+                                $invoice = app(\App\Services\Commerce\CustomerOrderService::class)->createInvoice($record, $type, auth()->user(), null, $acompte);
+                                \Filament\Notifications\Notification::make()->success()->title('Facture générée')->send();
+                                
+                                return redirect(\App\Filament\Commerce\Resources\CustomerInvoices\CustomerInvoiceResource::getUrl('view', ['record' => $invoice]));
+                            } catch (\Exception $e) {
+                                \Filament\Notifications\Notification::make()->danger()->title('Erreur')->body($e->getMessage())->send();
+                            }
+                        }),
+                    \Filament\Actions\Action::make('generateDeliveryNote')
+                        ->label('Générer BL')
+                        ->icon('heroicon-o-truck')
+                        ->color('info')
+                        ->visible(fn (Model $record) => in_array($record->status, [OrderStatus::CONFIRMED, OrderStatus::PARTIALLY_DELIVERED]))
+                        ->requiresConfirmation()
+                        ->action(function (\App\Models\Commerce\CustomerOrder $record) {
+                            try {
+                                $itemsData = $record->items->map(function ($item) {
+                                    return [
+                                        'item_id' => $item->item_id,
+                                        'quantity_delivered' => $item->quantity,
+                                    ];
+                                })->toArray();
+                                
+                                $bl = app(\App\Services\Commerce\CustomerOrderService::class)->createDeliveryNote($record, $itemsData, auth()->user());
+                                \Filament\Notifications\Notification::make()->success()->title('BL généré')->send();
+                            } catch (\Exception $e) {
+                                \Filament\Notifications\Notification::make()->danger()->title('Erreur')->body($e->getMessage())->send();
+                            }
+                        }),
                 ]),
             ]);
     }

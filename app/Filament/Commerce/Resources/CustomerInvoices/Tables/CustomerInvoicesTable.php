@@ -97,6 +97,52 @@ class CustomerInvoicesTable
                             ->title('Relance envoyée')
                             ->success()
                             ->send()),
+
+                    Action::make('legalize')
+                        ->label('Valider définitivement')
+                        ->icon('heroicon-o-check-badge')
+                        ->color('warning')
+                        ->visible(fn (CustomerInvoice $record) => $record->status === InvoiceStatus::DRAFT)
+                        ->requiresConfirmation()
+                        ->modalHeading('Valider définitivement cette facture')
+                        ->modalDescription('Attention, cette action est irréversible ! La facture va recevoir un numéro définitif et sera scellée. Toute modification ultérieure nécessitera la création d\'un Avoir.')
+                        ->modalSubmitActionLabel('Oui, sceller la facture')
+                        ->action(function (CustomerInvoice $record) {
+                            try {
+                                app(\App\Services\Commerce\InvoiceLegalizationService::class)->legalizeCustomerInvoice($record);
+                                Notification::make()->success()->title('Facture scellée avec succès !')->send();
+                            } catch (\Exception $e) {
+                                Notification::make()->danger()->title('Erreur de validation')->body($e->getMessage())->send();
+                            }
+                        }),
+
+                    Action::make('generateCreditNote')
+                        ->label('Créer un Avoir')
+                        ->icon('heroicon-o-arrow-uturn-left')
+                        ->color('danger')
+                        ->visible(fn (CustomerInvoice $record) => in_array($record->status, [InvoiceStatus::VALIDATED, InvoiceStatus::PAID]))
+                        ->form([
+                            \Filament\Forms\Components\TextInput::make('amount_ht')
+                                ->label('Montant HT de l\'Avoir')
+                                ->numeric()
+                                ->required(),
+                            \Filament\Forms\Components\Textarea::make('reason')
+                                ->label('Motif')
+                                ->required(),
+                        ])
+                        ->action(function (array $data, CustomerInvoice $record) {
+                            try {
+                                $creditNote = app(\App\Services\Commerce\CustomerOrderService::class)->createCreditNote(
+                                    $record, 
+                                    $data['amount_ht'], 
+                                    $data['reason'], 
+                                    auth()->user()
+                                );
+                                Notification::make()->success()->title('Avoir généré')->send();
+                            } catch (\Exception $e) {
+                                Notification::make()->danger()->title('Erreur')->body($e->getMessage())->send();
+                            }
+                        }),
                 ]),
             ]);
     }
