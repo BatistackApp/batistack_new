@@ -8,6 +8,7 @@ use Filament\Support\Contracts\HasLabel;
 enum AssetStatus: string implements HasLabel, HasColor
 {
     case ACTIVE = 'active';
+    case IN_MAINTENANCE = 'in_maintenance';
     case DEPRECIATED = 'depreciated';
     case DISPOSED = 'disposed';
 
@@ -15,6 +16,7 @@ enum AssetStatus: string implements HasLabel, HasColor
     {
         return match ($this) {
             self::ACTIVE => 'En cours d\'amortissement',
+            self::IN_MAINTENANCE => 'En réparation',
             self::DEPRECIATED => 'Totalement amorti',
             self::DISPOSED => 'Cédé / Rebut',
         };
@@ -24,6 +26,7 @@ enum AssetStatus: string implements HasLabel, HasColor
     {
         return match ($this) {
             self::ACTIVE => 'success',
+            self::IN_MAINTENANCE => 'warning',
             self::DEPRECIATED => 'info',
             self::DISPOSED => 'gray',
         };

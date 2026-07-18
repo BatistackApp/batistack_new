@@ -22,12 +22,14 @@ class FixedAsset extends Model
         'supplier_invoice_id',
         'vehicle_id',
         'chantier_id',
+        'last_inventoried_at',
     ];
 
     protected function casts(): array
     {
         return [
             'purchase_date' => 'date',
+            'last_inventoried_at' => 'datetime',
             'purchase_price' => 'decimal:2',
             'salvage_value' => 'decimal:2',
             'depreciation_method' => \App\Enums\Immobilisation\DepreciationMethod::class,
@@ -63,5 +65,10 @@ class FixedAsset extends Model
     public function chantier(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(\App\Models\Chantiers\Chantier::class);
+    }
+
+    public function maintenances(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(AssetMaintenance::class);
     }
 }

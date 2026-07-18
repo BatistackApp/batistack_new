@@ -48,7 +48,7 @@ class FixedAssetResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            \App\Filament\Immobilisation\Resources\Immobilisation\FixedAssets\RelationManagers\MaintenancesRelationManager::class,
         ];
     }
 

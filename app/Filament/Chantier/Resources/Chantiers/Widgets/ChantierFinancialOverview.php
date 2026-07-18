@@ -44,6 +44,12 @@ class ChantierFinancialOverview extends StatsOverviewWidget
         if ($financials['fleet_cost_real'] > 0) {
             $descriptionCosts .= ' + Flotte';
         }
+        if (($financials['asset_depreciation_cost_real'] ?? 0) > 0) {
+            $descriptionCosts .= ' + Amortissements';
+        }
+        if (($financials['asset_maintenance_cost_real'] ?? 0) > 0) {
+            $descriptionCosts .= ' + Réparations';
+        }
 
         return [
             Stat::make('Budget Vendu (HT)', number_format($budget, 2, ',', ' ') . ' €')

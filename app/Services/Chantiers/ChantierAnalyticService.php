@@ -67,7 +67,12 @@ class ChantierAnalyticService
             ->where('is_passed', true)
             ->sum('amount');
 
-        $totalCost = $laborCost + $materialCost + $subcontractingCost + $fleetCost + $assetDepreciationCost;
+        // 6. Réparations et Entretien des Immobilisations sur le chantier
+        $assetMaintenanceCost = \App\Models\Immobilisation\AssetMaintenance::query()
+            ->where('chantier_id', $chantier->id)
+            ->sum('cost_ht');
+
+        $totalCost = $laborCost + $materialCost + $subcontractingCost + $fleetCost + $assetDepreciationCost + $assetMaintenanceCost;
         $budget = (float) $chantier->budget_total_ht;
         $marginReal = $budget - $totalCost;
 
@@ -83,6 +88,7 @@ class ChantierAnalyticService
                 'subcontracting_cost_real' => $subcontractingCost,
                 'fleet_cost_real' => $fleetCost,
                 'asset_depreciation_cost_real' => (float) $assetDepreciationCost,
+                'asset_maintenance_cost_real' => (float) $assetMaintenanceCost,
                 'total_cost_real' => $totalCost,
                 'budget_ht' => $budget,
                 'margin_real' => $marginReal,

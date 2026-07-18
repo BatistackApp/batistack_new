@@ -76,3 +76,33 @@ it('includes asset depreciation cost in chantier performance metrics', function 
         ->and($metrics['financials']['total_cost_real'])->toBeGreaterThanOrEqual(2000)
         ->and($metrics['financials']['margin_real'])->toEqual(50000 - $metrics['financials']['total_cost_real']);
 });
+
+it('includes asset maintenance cost in chantier performance metrics', function () {
+    $chantier = Chantier::factory()->create([
+        'budget_total_ht' => 50000,
+    ]);
+
+    $category = AssetCategory::factory()->create();
+    $asset = FixedAsset::factory()->create([
+        'asset_category_id' => $category->id,
+        'chantier_id' => $chantier->id,
+        'purchase_price' => 10000,
+        'useful_life_years' => 5,
+    ]);
+
+    \App\Models\Immobilisation\AssetMaintenance::create([
+        'fixed_asset_id' => $asset->id,
+        'chantier_id' => $chantier->id,
+        'maintenance_date' => now(),
+        'type' => 'curative',
+        'description' => 'Réparation Pneus',
+        'cost_ht' => 500.00,
+    ]);
+
+    $service = new ChantierAnalyticService();
+    $metrics = $service->getPerformanceMetrics($chantier);
+
+    expect($metrics['financials'])->toHaveKey('asset_maintenance_cost_real')
+        ->and($metrics['financials']['asset_maintenance_cost_real'])->toEqual(500.00)
+        ->and($metrics['financials']['total_cost_real'])->toBeGreaterThanOrEqual(500.00);
+});

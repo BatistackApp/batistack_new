@@ -28,7 +28,7 @@ class ImmobilisationDocumentService extends DocumentService
         ]);
 
         // On encode l'URL pour la fiche via le Resource
-        $qrCodeData = \App\Filament\Immobilisation\Resources\Immobilisation\FixedAssets\FixedAssetResource::getUrl('view', ['record' => $asset]);
+        $qrCodeData = \App\Filament\Immobilisation\Resources\Immobilisation\FixedAssets\FixedAssetResource::getUrl('view', ['record' => $asset], panel: 'immobilisation');
         $qrCodeSvg = (new QRCode($options))->render($qrCodeData);
 
         return $this->generate(
@@ -102,6 +102,37 @@ class ImmobilisationDocumentService extends DocumentService
                 'assets' => $assets,
             ],
             filename: 'fiche_inventaire_chantier_' . $chantier->id,
+            type: 'immobilisations',
+            position: 'portrait'
+        );
+    }
+
+    /**
+     * Génère une plaquette PDF contenant les QR Codes des actifs donnés.
+     */
+    public function generateQrCodeSheet(\Illuminate\Support\Collection $assets): string
+    {
+        $options = new QROptions([
+            'version'      => 5,
+            'outputType'   => QRCode::OUTPUT_IMAGE_PNG,
+            'eccLevel'     => QRCode::ECC_L,
+            'scale'        => 3,
+            'imageBase64'  => true,
+        ]);
+
+        $qrCodes = [];
+        foreach ($assets as $asset) {
+            $url = \App\Filament\Immobilisation\Resources\Immobilisation\FixedAssets\FixedAssetResource::getUrl('view', ['record' => $asset], panel: 'immobilisation');
+            $qrCodes[$asset->id] = (new QRCode($options))->render($url);
+        }
+
+        return $this->generate(
+            view: 'documents.immobilisations.qr_codes_sheet',
+            data: [
+                'assets' => $assets,
+                'qrCodes' => $qrCodes,
+            ],
+            filename: 'plaquette_qr_codes_' . now()->format('Ymd_His'),
             type: 'immobilisations',
             position: 'portrait'
         );

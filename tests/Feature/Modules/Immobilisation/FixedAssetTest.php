@@ -27,3 +27,16 @@ it('does not generate depreciations for non depreciable assets', function () {
 
     expect($asset->depreciations)->toHaveCount(0);
 });
+
+it('can be inventoried to track presence', function () {
+    $asset = FixedAsset::factory()->create([
+        'depreciation_method' => DepreciationMethod::NONE,
+        'last_inventoried_at' => null,
+    ]);
+
+    expect($asset->last_inventoried_at)->toBeNull();
+
+    $asset->update(['last_inventoried_at' => now()]);
+
+    expect($asset->fresh()->last_inventoried_at)->not->toBeNull();
+});

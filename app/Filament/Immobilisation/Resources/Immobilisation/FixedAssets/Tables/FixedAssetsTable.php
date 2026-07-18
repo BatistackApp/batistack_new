@@ -5,9 +5,12 @@ namespace App\Filament\Immobilisation\Resources\Immobilisation\FixedAssets\Table
 use App\Enums\Immobilisation\AssetStatus;
 use App\Models\Chantiers\Chantier;
 use App\Models\Immobilisation\FixedAsset;
+use App\Services\Accounting\FecExportService;
 use App\Services\Immobilisation\AssetDisposalService;
 use App\Services\Immobilisation\ImmobilisationDocumentService;
 use Filament\Actions\Action;
+use Filament\Actions\ActionGroup;
+use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -18,8 +21,10 @@ use Filament\Forms\Components\TextInput;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 
 class FixedAssetsTable
 {
@@ -45,6 +50,11 @@ class FixedAssetsTable
                     ->label('Statut')
                     ->badge()
                     ->searchable(),
+                TextColumn::make('last_inventoried_at')
+                    ->label('Dernier inventaire')
+                    ->date('d/m/Y')
+                    ->sortable()
+                    ->toggleable(),
             ])
             ->filters([
                 SelectFilter::make('asset_category_id')
@@ -60,6 +70,16 @@ class FixedAssetsTable
                     ->relationship('chantier', 'name')
                     ->searchable()
                     ->preload(),
+                TernaryFilter::make('is_inventoried_recently')
+                    ->label('Inventorié cette année ?')
+                    ->placeholder('Tous les actifs')
+                    ->trueLabel('Oui (scanné)')
+                    ->falseLabel('Non (à vérifier)')
+                    ->queries(
+                        true: fn (Builder $query) => $query->where('last_inventoried_at', '>=', now()->subYear()),
+                        false: fn (Builder $query) => $query->where('last_inventoried_at', '<', now()->subYear())->orWhereNull('last_inventoried_at'),
+                        blank: fn (Builder $query) => $query,
+                    ),
                 Filter::make('purchase_date')
                     ->schema([
                         DatePicker::make('purchased_from')->label('Acquis après le'),
@@ -115,9 +135,10 @@ class FixedAssetsTable
                             ->required(),
                     ])
                     ->action(function (array $data) {
-                        $chantier = \App\Models\Chantiers\Chantier::findOrFail($data['chantier_id']);
-                        $service = new \App\Services\Immobilisation\ImmobilisationDocumentService();
+                        $chantier = Chantier::findOrFail($data['chantier_id']);
+                        $service = new ImmobilisationDocumentService;
                         $path = $service->generateInventoryChecklist($chantier);
+
                         return response()->download($path);
                     }),
                 Action::make('export_fec')
@@ -125,7 +146,7 @@ class FixedAssetsTable
                     ->icon('heroicon-o-arrow-down-tray')
                     ->color('warning')
                     ->schema([
-                        \Filament\Forms\Components\Select::make('year')
+                        Select::make('year')
                             ->label('Exercice à exporter')
                             ->options(function () {
                                 $years = [];
@@ -133,54 +154,68 @@ class FixedAssetsTable
                                 for ($i = $current - 2; $i <= $current + 2; $i++) {
                                     $years[$i] = $i;
                                 }
+
                                 return $years;
                             })
                             ->default(now()->year)
                             ->required(),
                     ])
                     ->action(function (array $data) {
-                        $service = new \App\Services\Accounting\FecExportService();
+                        $service = new FecExportService;
                         $path = $service->exportDepreciationsFec($data['year']);
+
                         return response()->download($path);
                     }),
             ])
             ->recordActions([
-                ViewAction::make(),
-                EditAction::make(),
-                Action::make('print_sheet')
-                    ->label('Imprimer Fiche')
-                    ->icon('heroicon-o-printer')
-                    ->color('gray')
-                    ->action(function (FixedAsset $record) {
-                        $service = new ImmobilisationDocumentService;
-                        $path = $service->generateAssetSheet($record);
+                ActionGroup::make([
+                    ViewAction::make(),
+                    EditAction::make(),
+                    Action::make('print_sheet')
+                        ->label('Imprimer Fiche')
+                        ->icon('heroicon-o-printer')
+                        ->color('gray')
+                        ->action(function (FixedAsset $record) {
+                            $service = new ImmobilisationDocumentService;
+                            $path = $service->generateAssetSheet($record);
 
-                        return response()->download($path);
-                    }),
-                Action::make('dispose')
-                    ->label('Céder / Rebut')
-                    ->icon('heroicon-o-archive-box-x-mark')
-                    ->color('danger')
-                    ->requiresConfirmation()
-                    ->schema([
-                        DatePicker::make('disposal_date')->label('Date de sortie')->required()->default(now()),
-                        TextInput::make('sale_price')->label('Prix de cession')->numeric()->default(0)->required()->prefix('€'),
-                        TextInput::make('reason')->label('Raison (Revente, Vol, Rebut)')->required(),
-                    ])
-                    ->action(function (FixedAsset $record, array $data) {
-                        $service = new AssetDisposalService;
-                        $service->dispose($record, $data['disposal_date'], $data['sale_price'], $data['reason']);
+                            return response()->download($path);
+                        }),
+                    Action::make('dispose')
+                        ->label('Céder / Rebut')
+                        ->icon('heroicon-o-archive-box-x-mark')
+                        ->color('danger')
+                        ->requiresConfirmation()
+                        ->schema([
+                            DatePicker::make('disposal_date')->label('Date de sortie')->required()->default(now()),
+                            TextInput::make('sale_price')->label('Prix de cession')->numeric()->default(0)->required()->prefix('€'),
+                            TextInput::make('reason')->label('Raison (Revente, Vol, Rebut)')->required(),
+                        ])
+                        ->action(function (FixedAsset $record, array $data) {
+                            $service = new AssetDisposalService;
+                            $service->dispose($record, $data['disposal_date'], $data['sale_price'], $data['reason']);
 
-                        // Génération du PV
-                        $docService = new ImmobilisationDocumentService;
-                        $path = $docService->generateDisposalCertificate($record);
+                            // Génération du PV
+                            $docService = new ImmobilisationDocumentService;
+                            $path = $docService->generateDisposalCertificate($record);
 
-                        return response()->download($path);
-                    })
-                    ->visible(fn (FixedAsset $record) => $record->status !== AssetStatus::DISPOSED),
+                            return response()->download($path);
+                        })
+                        ->visible(fn (FixedAsset $record) => $record->status !== AssetStatus::DISPOSED),
+                ]),
             ])
-            ->groupedBulkActions([
+            ->toolbarActions([
                 BulkActionGroup::make([
+                    BulkAction::make('print_qrcodes')
+                        ->label('Imprimer QR Codes')
+                        ->icon('heroicon-o-qr-code')
+                        ->color('success')
+                        ->action(function (Collection $records) {
+                            $service = new ImmobilisationDocumentService;
+                            $path = $service->generateQrCodeSheet($records);
+
+                            return response()->download($path);
+                        }),
                     DeleteBulkAction::make(),
                 ]),
             ]);
