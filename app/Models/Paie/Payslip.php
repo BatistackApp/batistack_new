@@ -23,6 +23,11 @@ class Payslip extends Model
         'status',
         'pdf_path',
         'payment_date',
+        'overtime_amount',
+        'gd_allowance_amount',
+        'expense_reports_amount',
+        'custom_bonuses',
+        'meal_allowance_amount',
     ];
 
     protected $casts = [
@@ -38,6 +43,11 @@ class Payslip extends Model
         'net_paid' => 'decimal:2',
         'employer_cost' => 'decimal:2',
         'payment_date' => 'date',
+        'overtime_amount' => 'decimal:2',
+        'gd_allowance_amount' => 'decimal:2',
+        'expense_reports_amount' => 'decimal:2',
+        'meal_allowance_amount' => 'decimal:2',
+        'custom_bonuses' => 'array',
         'status' => \App\Enums\Paie\PayslipStatus::class,
     ];
 

@@ -19,7 +19,8 @@ class PayrollContributionProfileSeeder extends Seeder
             ['code' => 'BTP_ETAM'],
             [
                 'name' => 'Bâtiment (ETAM)',
-                'description' => 'Profil de cotisations pour les employés ETAM du Bâtiment'
+                'description' => 'Profil de cotisations pour les employés ETAM du Bâtiment',
+                'meal_allowance_amount' => 11.20,
             ]
         );
 
@@ -40,6 +41,7 @@ class PayrollContributionProfileSeeder extends Seeder
                 'employer_rate' => 1.2500,
                 'base_formula' => ContributionBaseFormula::GROSS_SALARY,
                 'is_deductible' => true,
+                'is_fiscally_reintegrated' => true,
             ],
             [
                 'category' => 'Santé',
@@ -49,6 +51,7 @@ class PayrollContributionProfileSeeder extends Seeder
                 'employer_rate' => 0.5354,
                 'base_formula' => ContributionBaseFormula::GROSS_SALARY,
                 'is_deductible' => true,
+                'is_fiscally_reintegrated' => true,
             ],
 
             // --- Accidents du travail ---

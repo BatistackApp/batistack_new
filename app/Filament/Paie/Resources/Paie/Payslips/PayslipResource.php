@@ -183,6 +183,15 @@ class PayslipResource extends Resource
                         TextEntry::make('net_paid')->label('Net Payé')->money('EUR')->size('lg')->weight(FontWeight::Bold)->color('success'),
                     ]),
 
+                Section::make('Données RH (Variables du mois)')
+                    ->columns(4)
+                    ->schema([
+                        TextEntry::make('base_hours')->label('Heures de base')->suffix(' h'),
+                        TextEntry::make('overtime_hours')->label('Heures Supplémentaires')->suffix(' h'),
+                        TextEntry::make('gd_allowance_amount')->label('Indemnités Gd Déplacement')->money('EUR'),
+                        TextEntry::make('expense_reports_amount')->label('Remboursement Frais')->money('EUR'),
+                    ]),
+
                 Section::make('Détail des cotisations')
                     ->columnSpanFull()
                     ->schema([

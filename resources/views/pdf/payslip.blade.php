@@ -245,9 +245,33 @@
                     <td class="col-base">{{ number_format($payslip->base_hours, 2, '.', ' ') }}</td>
                     <td class="col-taux">{{ number_format($payslip->hourly_rate, 4, '.', ' ') }}</td>
                     <td class="col-deduire"></td>
-                    <td class="col-payer">{{ number_format($payslip->gross_salary, 2, '.', ' ') }}</td>
+                    <td class="col-payer">{{ number_format($payslip->base_hours * $payslip->hourly_rate, 2, '.', ' ') }}</td>
                     <td class="col-patronal"></td>
                 </tr>
+                @if($payslip->overtime_hours > 0)
+                <tr>
+                    <td class="col-elements">Heures supplémentaires (majoration 25%)</td>
+                    <td class="col-base">{{ number_format($payslip->overtime_hours, 2, '.', ' ') }}</td>
+                    <td class="col-taux">{{ number_format($payslip->hourly_rate * 1.25, 4, '.', ' ') }}</td>
+                    <td class="col-deduire"></td>
+                    <td class="col-payer">{{ number_format($payslip->overtime_amount, 2, '.', ' ') }}</td>
+                    <td class="col-patronal"></td>
+                </tr>
+                @endif
+                @if(is_array($payslip->custom_bonuses))
+                    @foreach($payslip->custom_bonuses as $bonus)
+                        @if(!empty($bonus['is_taxable']) && $bonus['is_taxable'])
+                        <tr>
+                            <td class="col-elements">{{ $bonus['label'] }}</td>
+                            <td class="col-base"></td>
+                            <td class="col-taux"></td>
+                            <td class="col-deduire"></td>
+                            <td class="col-payer">{{ number_format((float)$bonus['amount'], 2, '.', ' ') }}</td>
+                            <td class="col-patronal"></td>
+                        </tr>
+                        @endif
+                    @endforeach
+                @endif
                 <tr>
                     <td class="col-elements" style="font-weight: bold; padding-bottom: 10px;">Salaire brut</td>
                     <td class="col-base"></td>
@@ -358,6 +382,46 @@
                 </tr>
                 @endforeach
             @endif
+            
+            @if($payslip->gd_allowance_amount > 0)
+            <tr>
+                <td>Indemnités de Grand Déplacement (non soumises)</td>
+                <td></td>
+                <td></td>
+                <td style="text-align: right;">+ {{ number_format($payslip->gd_allowance_amount, 2, '.', ' ') }}</td>
+            </tr>
+            @endif
+            
+            @if($payslip->expense_reports_amount > 0)
+            <tr>
+                <td>Remboursements Frais professionnels</td>
+                <td></td>
+                <td></td>
+                <td style="text-align: right;">+ {{ number_format($payslip->expense_reports_amount, 2, '.', ' ') }}</td>
+            </tr>
+            @endif
+            
+            @if($payslip->meal_allowance_amount > 0)
+            <tr>
+                <td>Indemnités de Repas (Paniers non soumis)</td>
+                <td></td>
+                <td></td>
+                <td style="text-align: right;">+ {{ number_format($payslip->meal_allowance_amount, 2, '.', ' ') }}</td>
+            </tr>
+            @endif
+
+            @if(is_array($payslip->custom_bonuses))
+                @foreach($payslip->custom_bonuses as $bonus)
+                    @if(empty($bonus['is_taxable']) || !$bonus['is_taxable'])
+                    <tr>
+                        <td>{{ $bonus['label'] }} (Non soumis)</td>
+                        <td></td>
+                        <td></td>
+                        <td style="text-align: right;">+ {{ number_format((float)$bonus['amount'], 2, '.', ' ') }}</td>
+                    </tr>
+                    @endif
+                @endforeach
+            @endif
         </table>
 
         <!-- SUMMARY TABLES -->
@@ -379,7 +443,7 @@
             <tbody>
                 <tr>
                     <td>{{ number_format($payslip->base_hours, 2, '.', ' ') }}</td>
-                    <td></td>
+                    <td>{{ $payslip->overtime_hours > 0 ? number_format($payslip->overtime_hours, 2, '.', ' ') : '' }}</td>
                     <td>{{ number_format($payslip->gross_salary, 2, '.', ' ') }}</td>
                     <td>4005.00</td>
                     <td>{{ number_format($payslip->taxable_net, 2, '.', ' ') }}</td>

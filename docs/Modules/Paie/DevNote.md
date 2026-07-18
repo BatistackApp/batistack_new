@@ -78,16 +78,25 @@
   - Autres contributions employeur
   - CSG déductible (6.80%) et CSG/CRDS non déductible (2.90%)
 
+### 🔗 Liaison automatisée avec le module RH
+- **Heures Supplémentaires** : Le moteur de paie lit automatiquement les pointages approuvés (`TimeEntry`) du mois. Si la somme des heures dépasse la `base_hours` du bulletin, la différence est traitée en heures supplémentaires avec majoration de 25% et s'ajoute au salaire brut.
+- **Primes de Panier (Automatique)** : Le profil de cotisations (`PayrollContributionProfile`) définit le montant du panier (ex: 11.20€). Le moteur compte les jours travaillés du mois (via `TimeEntry`), retire les jours `is_grand_deplacement` et multiplie par ce montant forfaitaire. Le résultat est ajouté en "Net" non soumis.
+- **Grands Déplacements** : Les indemnités de grand déplacement (`gd_allowance_amount`) pointées sont récupérées et ajoutées automatiquement au **Net à payer** (non soumis à cotisations). (Remplace les paniers pour les jours concernés).
+- **Primes Ponctuelles (Manuel)** : Un tableau ("Repeater") est présent dans le formulaire de création/modification du bulletin pour saisir des primes exceptionnelles (ex: Prime de bilan). L'utilisateur peut choisir si la prime est soumise à cotisations (Brut) ou non (Net).
+- **Pointage au dépôt (Atelier)** : Ajout d'une case `is_workshop` sur les pointages RH. Les heures d'atelier donnent droit au panier, contrairement aux grands déplacements.
+
+### 💰 Réintégration Fiscale Dynamique
+- Ajout du booléen `is_fiscally_reintegrated` sur les taux de cotisation (`PayrollContributionRate`).
+- Les parts patronales de la Mutuelle et de la Prévoyance (Incapacité/Décès) sont configurées à `true`.
+- Lors du calcul, le `PayrollCalculationService` additionne automatiquement la part patronale de ces lignes pour l'intégrer à la base de calcul de la **CSG/CRDS** et l'ajouter au **Net Imposable**. (Fini les valeurs hardcodées !).
+
 ---
 
 ## 🔲 Ce qu'il reste à faire
 
-- **Gestion des heures supplémentaires** : Permettre la saisie d'heures supplémentaires avec majorations dans le formulaire du bulletin.
-- **Gestion des primes** : Permettre l'ajout de lignes de primes ponctuelles sur un bulletin.
 - **Export Comptable (OD de paie)** : Générer le fichier d'écritures comptables mensuel.
 - **DADS / DSN** : Préparer la structure des données pour l'export DSN.
 - **Envoi des fiches de paie** : Envoi par email aux salariés ou dépôt dans un coffre-fort numérique.
-- **Réintégration fiscale dynamique** : La valeur `57.59` est actuellement hardcodée dans la vue PDF.
 - **Cumuls annuels réels** : Actuellement une simple multiplication ×N mois, à remplacer par un calcul sur les vrais bulletins de l'année.
 
 ---
