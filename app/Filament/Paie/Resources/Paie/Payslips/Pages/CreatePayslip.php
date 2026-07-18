@@ -18,11 +18,12 @@ class CreatePayslip extends CreateRecord
             $employee,
             $data['period'],
             $data['base_hours'],
-            $data['hourly_rate']
+            $data['hourly_rate'],
+            $data['custom_bonuses'] ?? []
         );
         
         // Mettre à jour le statut s'il a été spécifié dans le formulaire
-        $payslip->update(['status' => $data['status']]);
+        $payslip->update(['status' => $data['status'] ?? \App\Enums\Paie\PayslipStatus::DRAFT]);
         
         return $payslip;
     }

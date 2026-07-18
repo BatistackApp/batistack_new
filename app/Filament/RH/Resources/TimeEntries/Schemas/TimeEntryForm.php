@@ -36,8 +36,12 @@ class TimeEntryForm
                                     ->label('Chantier / Projet')
                                     ->relationship('chantier', 'name')
                                     ->placeholder('Rechercher un chantier...')
-                                    ->required()
                                     ->searchable(),
+                                    
+                                \Filament\Forms\Components\Toggle::make('is_workshop')
+                                    ->label('Au dépôt / Atelier')
+                                    ->inline(false)
+                                    ->default(false),
                             ]),
 
                         Grid::make(3)

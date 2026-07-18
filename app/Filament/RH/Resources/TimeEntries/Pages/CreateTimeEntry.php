@@ -46,6 +46,7 @@ class CreateTimeEntry extends CreateRecord
                         'hours' => $workHours,
                         'travel_hours' => $travelHours,
                         'type' => $data['type'],
+                        'is_workshop' => $data['is_workshop'] ?? false,
                         'description' => $data['description'] ?? null,
                         'status' => TimeEntryStatus::DRAFT, // Par défaut en brouillon
                     ]);

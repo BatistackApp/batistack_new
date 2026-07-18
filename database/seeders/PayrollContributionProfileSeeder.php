@@ -15,6 +15,12 @@ class PayrollContributionProfileSeeder extends Seeder
      */
     public function run(): void
     {
+        $this->seedEtamProfile();
+        $this->seedOuvrierProfile();
+    }
+
+    private function seedEtamProfile(): void
+    {
         $profile = PayrollContributionProfile::updateOrCreate(
             ['code' => 'BTP_ETAM'],
             [
@@ -46,7 +52,6 @@ class PayrollContributionProfileSeeder extends Seeder
             [
                 'category' => 'Santé',
                 'label' => 'Complémentaire - Santé',
-                // Le montant est fixe (17.50€) sur le bulletin, on simule un taux à 0.5354% sur la base de 3268.49€ pour le moment
                 'employee_rate' => 0.5354,
                 'employer_rate' => 0.5354,
                 'base_formula' => ContributionBaseFormula::GROSS_SALARY,
@@ -165,7 +170,180 @@ class PayrollContributionProfileSeeder extends Seeder
             ],
         ];
 
-        // On supprime les anciens taux pour éviter les doublons au relancement
+        $profile->rates()->delete();
+
+        foreach ($rates as $rateData) {
+            $profile->rates()->create($rateData);
+        }
+    }
+
+    private function seedOuvrierProfile(): void
+    {
+        $profile = PayrollContributionProfile::updateOrCreate(
+            ['code' => 'BTP_OUVRIER'],
+            [
+                'name' => 'Bâtiment (Ouvriers)',
+                'description' => 'Profil de cotisations pour les employés Ouvriers du Bâtiment (Nationale - 10 salariés)',
+                'meal_allowance_amount' => 11.20,
+            ]
+        );
+
+        $rates = [
+            // --- Santé ---
+            [
+                'category' => 'Santé',
+                'label' => 'Sécurité Sociale - Mal. Mat. Inval. Décès',
+                'employee_rate' => 0.0000,
+                'employer_rate' => 13.0000,
+                'base_formula' => ContributionBaseFormula::GROSS_SALARY,
+                'is_deductible' => true,
+            ],
+            [
+                'category' => 'Santé',
+                'label' => 'Complémentaire - Incap. Inval. Décès',
+                'employee_rate' => 0.8700,
+                'employer_rate' => 1.7200,
+                'base_formula' => ContributionBaseFormula::GROSS_SALARY,
+                'is_deductible' => true,
+                'is_fiscally_reintegrated' => true,
+            ],
+            [
+                'category' => 'Santé',
+                'label' => 'Complémentaire - Santé',
+                'employee_rate' => 0.5700, // Estimation (17.50 / 3072.25)
+                'employer_rate' => 0.5700,
+                'base_formula' => ContributionBaseFormula::GROSS_SALARY,
+                'is_deductible' => true,
+                'is_fiscally_reintegrated' => true,
+            ],
+
+            // --- Accidents du travail ---
+            [
+                'category' => 'Accidents du travail & mal. professionnelles',
+                'label' => 'Accidents du travail & mal. professionnelles',
+                'employee_rate' => 0.0000,
+                'employer_rate' => 7.3900,
+                'base_formula' => ContributionBaseFormula::GROSS_SALARY,
+                'is_deductible' => true,
+            ],
+
+            // --- Retraite ---
+            [
+                'category' => 'Retraite',
+                'label' => 'Sécurité Sociale plafonnée',
+                'employee_rate' => 6.9000,
+                'employer_rate' => 8.5500,
+                'base_formula' => ContributionBaseFormula::GROSS_SALARY,
+                'is_deductible' => true,
+            ],
+            [
+                'category' => 'Retraite',
+                'label' => 'Sécurité Sociale déplafonnée',
+                'employee_rate' => 0.4000,
+                'employer_rate' => 2.1100,
+                'base_formula' => ContributionBaseFormula::GROSS_SALARY,
+                'is_deductible' => true,
+            ],
+            [
+                'category' => 'Retraite',
+                'label' => 'Complémentaire Tranche 1',
+                'employee_rate' => 4.0100,
+                'employer_rate' => 6.0100,
+                'base_formula' => ContributionBaseFormula::GROSS_SALARY,
+                'is_deductible' => true,
+            ],
+
+            // --- Famille ---
+            [
+                'category' => 'Famille',
+                'label' => 'Famille',
+                'employee_rate' => 0.0000,
+                'employer_rate' => 5.2500,
+                'base_formula' => ContributionBaseFormula::GROSS_SALARY,
+                'is_deductible' => true,
+            ],
+
+            // --- Assurance chômage ---
+            [
+                'category' => 'Assurance chômage',
+                'label' => 'Assurance chômage',
+                'employee_rate' => 0.0000,
+                'employer_rate' => 4.2500,
+                'base_formula' => ContributionBaseFormula::GROSS_SALARY,
+                'is_deductible' => true,
+            ],
+
+            // --- Cot. statutaires ou prévues par la conv. coll. ---
+            [
+                'category' => 'Cot. statutaires ou prévues par la conv. coll.',
+                'label' => 'Congés payés',
+                'employee_rate' => 0.0000,
+                'employer_rate' => 21.5000,
+                'base_formula' => ContributionBaseFormula::GROSS_SALARY,
+                'is_deductible' => true,
+            ],
+            [
+                'category' => 'Cot. statutaires ou prévues par la conv. coll.',
+                'label' => 'Intempéries Gros Oeuvre',
+                'employee_rate' => 0.0000,
+                'employer_rate' => 0.6800,
+                'base_formula' => ContributionBaseFormula::GROSS_SALARY,
+                'is_deductible' => true,
+            ],
+            [
+                'category' => 'Cot. statutaires ou prévues par la conv. coll.',
+                'label' => 'OPP BTP',
+                'employee_rate' => 0.0000,
+                'employer_rate' => 0.1100,
+                'base_formula' => ContributionBaseFormula::OPPBTP_BASE,
+                'is_deductible' => true,
+            ],
+            [
+                'category' => 'Cot. statutaires ou prévues par la conv. coll.',
+                'label' => 'Cotisation syndicale CAPEB',
+                'employee_rate' => 0.0000,
+                'employer_rate' => 0.8000,
+                'base_formula' => ContributionBaseFormula::GROSS_SALARY,
+                'is_deductible' => true,
+            ],
+
+            // --- Autres contributions dues par l'employeur ---
+            [
+                'category' => 'Autres contributions dues par l\'employeur',
+                'label' => 'Autres contributions dues par l\'employeur (Brut)',
+                'employee_rate' => 0.0000,
+                'employer_rate' => 0.8860,
+                'base_formula' => ContributionBaseFormula::GROSS_SALARY,
+                'is_deductible' => true,
+            ],
+            [
+                'category' => 'Autres contributions dues par l\'employeur',
+                'label' => 'Autres contributions dues par l\'employeur (Base Congés)',
+                'employee_rate' => 0.0000,
+                'employer_rate' => 1.6300,
+                'base_formula' => ContributionBaseFormula::OPPBTP_BASE,
+                'is_deductible' => true,
+            ],
+
+            // --- CSG / CRDS ---
+            [
+                'category' => 'CSG / CRDS',
+                'label' => 'CSG déduct. de l\'impôt sur le revenu',
+                'employee_rate' => 6.8000,
+                'employer_rate' => 0.0000,
+                'base_formula' => ContributionBaseFormula::CSG_BASE,
+                'is_deductible' => true,
+            ],
+            [
+                'category' => 'CSG / CRDS',
+                'label' => 'CSG/CRDS non déduct. de l\'impôt sur le revenu',
+                'employee_rate' => 2.9000,
+                'employer_rate' => 0.0000,
+                'base_formula' => ContributionBaseFormula::CSG_BASE,
+                'is_deductible' => false,
+            ],
+        ];
+
         $profile->rates()->delete();
 
         foreach ($rates as $rateData) {

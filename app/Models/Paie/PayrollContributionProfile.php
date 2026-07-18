@@ -10,6 +10,7 @@ class PayrollContributionProfile extends Model
         'code',
         'name',
         'description',
+        'meal_allowance_amount',
     ];
 
     public function rates()

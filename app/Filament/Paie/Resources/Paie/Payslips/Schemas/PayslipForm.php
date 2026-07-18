@@ -12,53 +12,49 @@ class PayslipForm
     {
         return $schema
             ->components([
-                TextInput::make('employee_id')
-                    ->required()
-                    ->numeric(),
-                TextInput::make('period')
+                \Filament\Forms\Components\Select::make('employee_id')
+                    ->label('Salarié')
+                    ->relationship('employee', 'last_name')
+                    ->getOptionLabelFromRecordUsing(fn ($record) => $record->full_name)
+                    ->searchable()
+                    ->preload()
                     ->required(),
+                TextInput::make('period')
+                    ->label('Période (YYYY-MM)')
+                    ->required()
+                    ->default(now()->format('Y-m')),
                 TextInput::make('base_hours')
-                    ->required()
-                    ->numeric(),
-                TextInput::make('overtime_hours')
+                    ->label('Heures de base')
                     ->required()
                     ->numeric()
-                    ->default(0.0),
+                    ->default(151.67),
                 TextInput::make('hourly_rate')
+                    ->label('Taux horaire')
                     ->required()
                     ->numeric(),
-                TextInput::make('gross_salary')
+                \Filament\Forms\Components\Select::make('status')
+                    ->label('Statut')
+                    ->options(\App\Enums\Paie\PayslipStatus::class)
                     ->required()
-                    ->numeric(),
-                TextInput::make('net_social')
-                    ->required()
-                    ->numeric(),
-                TextInput::make('taxable_net')
-                    ->required()
-                    ->numeric(),
-                TextInput::make('pas_rate')
-                    ->required()
-                    ->numeric()
-                    ->default(0.0),
-                TextInput::make('pas_amount')
-                    ->required()
-                    ->numeric()
-                    ->default(0.0),
-                TextInput::make('net_payable')
-                    ->required()
-                    ->numeric(),
-                TextInput::make('net_paid')
-                    ->required()
-                    ->numeric(),
-                TextInput::make('employer_cost')
-                    ->required()
-                    ->numeric()
-                    ->prefix('$'),
-                TextInput::make('status')
-                    ->required()
-                    ->default('draft'),
-                TextInput::make('pdf_path'),
-                DatePicker::make('payment_date'),
+                    ->default(\App\Enums\Paie\PayslipStatus::DRAFT),
+                    
+                \Filament\Forms\Components\Repeater::make('custom_bonuses')
+                    ->label('Primes et éléments variables exceptionnels')
+                    ->columnSpanFull()
+                    ->columns(3)
+                    ->schema([
+                        TextInput::make('label')
+                            ->label('Libellé de la prime')
+                            ->required(),
+                        TextInput::make('amount')
+                            ->label('Montant (€)')
+                            ->numeric()
+                            ->required(),
+                        \Filament\Forms\Components\Toggle::make('is_taxable')
+                            ->label('Soumis à cotisations (Brut)')
+                            ->inline(false)
+                            ->default(true),
+                    ]),
             ]);
     }
 }

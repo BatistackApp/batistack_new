@@ -23,6 +23,12 @@ class PayrollContributionProfileForm
                 Textarea::make('description')
                     ->label('Description')
                     ->columnSpanFull(),
+                TextInput::make('meal_allowance_amount')
+                    ->label('Montant de la prime de panier')
+                    ->numeric()
+                    ->prefix('€')
+                    ->default(11.20)
+                    ->helperText('Montant forfaitaire journalier pour les repas (dépend de la convention).'),
             ]);
     }
 }

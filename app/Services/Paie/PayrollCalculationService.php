@@ -57,6 +57,17 @@ class PayrollCalculationService
         })->count();
         $mealAllowanceTotal = round($mealAllowanceDays * ($profile->meal_allowance_amount ?? 0), 2);
 
+        // Temps de trajet
+        $travelHours = $timeEntries->sum('travel_hours');
+        if ($travelHours > 0) {
+            $travelAmount = round($travelHours * $hourlyRate, 2);
+            $customBonuses[] = [
+                'label' => 'Temps de trajet (' . number_format($travelHours, 2) . 'h)',
+                'amount' => $travelAmount,
+                'is_taxable' => true,
+            ];
+        }
+
         // 2. Notes de Frais
         $expenseReportsAmount = \App\Models\RH\ExpenseReport::where('employee_id', $employee->id)
             ->where('year', $year)
@@ -173,7 +184,7 @@ class PayrollCalculationService
 
         // 4. Acomptes
         $advances = AdvancePayment::where('employee_id', $employee->id)
-            ->where('status', AdvancePaymentStatus::PAID)
+            ->whereIn('status', [AdvancePaymentStatus::APPROVED, AdvancePaymentStatus::PAID])
             ->whereNull('payslip_id')
             ->get();
 

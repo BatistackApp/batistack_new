@@ -92,6 +92,24 @@ class PayslipResource extends Resource
                     ->options(PayslipStatus::class)
                     ->required()
                     ->default(PayslipStatus::DRAFT),
+                    
+                Forms\Components\Repeater::make('custom_bonuses')
+                    ->label('Primes et éléments variables exceptionnels')
+                    ->columnSpanFull()
+                    ->columns(3)
+                    ->schema([
+                        Forms\Components\TextInput::make('label')
+                            ->label('Libellé de la prime')
+                            ->required(),
+                        Forms\Components\TextInput::make('amount')
+                            ->label('Montant (€)')
+                            ->numeric()
+                            ->required(),
+                        Forms\Components\Toggle::make('is_taxable')
+                            ->label('Soumis à cotisations (Brut)')
+                            ->inline(false)
+                            ->default(true),
+                    ]),
             ]);
     }
 
