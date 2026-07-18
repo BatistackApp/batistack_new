@@ -13,6 +13,21 @@ class ViewFixedAsset extends ViewRecord
     protected function getHeaderActions(): array
     {
         return [
+            \Filament\Actions\Action::make('inventory')
+                ->label('✅ Valider la présence')
+                ->color('success')
+                ->requiresConfirmation()
+                ->modalHeading('Inventaire Physique')
+                ->modalDescription('Confirmez-vous que ce matériel est bien présent et en bon état ?')
+                ->action(function () {
+                    $record = $this->getRecord();
+                    $record->update(['last_inventoried_at' => now()]);
+                    
+                    \Filament\Notifications\Notification::make()
+                        ->title('Inventaire mis à jour')
+                        ->success()
+                        ->send();
+                }),
             \Filament\Actions\Action::make('print_sheet')
                 ->label('Imprimer Fiche')
                 ->icon('heroicon-o-printer')
