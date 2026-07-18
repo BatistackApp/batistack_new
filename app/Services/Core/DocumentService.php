@@ -21,28 +21,28 @@ class DocumentService
     {
         $html = View::make($view, $data)->render();
 
-        if ($position == 'portait') {
-            $pdfContent = Browsershot::html($html)
-                ->setNodeBinary(config('browsershot.node_binary_path'))
-                ->setNpmBinary(config('browsershot.npm_binary_path'))
-                ->format('A4')
-                ->margins(10, 10, 10, 10)
-                ->showBackground()
-                ->waitUntilNetworkIdle()
-                ->noSandbox()
-                ->pdf();
-        } else {
-            $pdfContent = Browsershot::html($html)
-                ->setNodeBinary(config('browsershot.node_binary_path'))
-                ->setNpmBinary(config('browsershot.npm_binary_path'))
-                ->format('A4')
-                ->margins(10, 10, 10, 10)
-                ->showBackground()
-                ->landscape()
-                ->waitUntilNetworkIdle()
-                ->noSandbox()
-                ->pdf();
+        $browsershot = Browsershot::html($html)
+            ->setNodeBinary(config('browsershot.node_binary_path'))
+            ->setNpmBinary(config('browsershot.npm_binary_path'))
+            ->format('A4')
+            ->margins(10, 10, 10, 10)
+            ->showBackground()
+            ->waitUntilNetworkIdle()
+            ->noSandbox();
+            
+        if ($position !== 'portait') {
+            $browsershot->landscape();
         }
+
+        if (config('browsershot.chrome_path') || env('BROWSERSHOT_CHROME_PATH')) {
+            $chromePath = config('browsershot.chrome_path') ?: env('BROWSERSHOT_CHROME_PATH');
+            $browsershot->setChromePath($chromePath);
+        }
+
+        // Set a writable cache directory for Puppeteer in case it needs to download Chrome
+        $browsershot->setEnvironmentVariable('PUPPETEER_CACHE_DIR', storage_path('puppeteer'));
+
+        $pdfContent = $browsershot->pdf();
 
         $relativePath = 'documents/'.$type.'/'.$filename.'.pdf';
 

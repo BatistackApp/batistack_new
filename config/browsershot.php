@@ -3,4 +3,5 @@
 return [
     'node_binary_path' => env('BROWSERSHOT_NODE_BINARY_PATH'),
     'npm_binary_path' => env('BROWSERSHOT_NPM_BINARY_PATH'),
+    'chrome_path' => env('BROWSERSHOT_CHROME_PATH'),
 ];
