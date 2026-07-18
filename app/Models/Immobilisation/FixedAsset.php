@@ -66,4 +66,9 @@ class FixedAsset extends Model
     {
         return $this->belongsTo(\App\Models\Chantiers\Chantier::class);
     }
+
+    public function maintenances(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(AssetMaintenance::class);
+    }
 }

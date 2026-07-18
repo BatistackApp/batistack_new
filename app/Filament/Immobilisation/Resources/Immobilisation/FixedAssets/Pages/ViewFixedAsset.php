@@ -28,6 +28,33 @@ class ViewFixedAsset extends ViewRecord
                         ->success()
                         ->send();
                 }),
+            \Filament\Actions\Action::make('report_breakdown')
+                ->label('Signaler en panne')
+                ->icon('heroicon-o-exclamation-triangle')
+                ->color('danger')
+                ->requiresConfirmation()
+                ->action(function () {
+                    $record = $this->getRecord();
+                    $record->update(['status' => \App\Enums\Immobilisation\AssetStatus::IN_MAINTENANCE]);
+                    \Filament\Notifications\Notification::make()->title('Machine déclarée en panne')->danger()->send();
+                })
+                ->visible(fn () => $this->getRecord()->status !== \App\Enums\Immobilisation\AssetStatus::IN_MAINTENANCE),
+            \Filament\Actions\Action::make('log_repair')
+                ->label('Saisir Facture Réparation')
+                ->icon('heroicon-o-wrench')
+                ->color('warning')
+                ->form(fn (\Filament\Forms\Form $form) => \App\Filament\Immobilisation\Resources\Immobilisation\AssetMaintenances\Schemas\AssetMaintenanceForm::configure($form))
+                ->action(function (array $data) {
+                    $record = $this->getRecord();
+                    $record->maintenances()->create($data);
+                    
+                    if ($record->status === \App\Enums\Immobilisation\AssetStatus::IN_MAINTENANCE) {
+                        $record->update(['status' => \App\Enums\Immobilisation\AssetStatus::ACTIVE]);
+                        \Filament\Notifications\Notification::make()->title('Réparation enregistrée, machine à nouveau active')->success()->send();
+                    } else {
+                        \Filament\Notifications\Notification::make()->title('Intervention enregistrée')->success()->send();
+                    }
+                }),
             \Filament\Actions\Action::make('print_sheet')
                 ->label('Imprimer Fiche')
                 ->icon('heroicon-o-printer')
