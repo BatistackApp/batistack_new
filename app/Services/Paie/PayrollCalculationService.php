@@ -38,9 +38,13 @@ class PayrollCalculationService
         // Sauvegarder pour attacher les lignes
         $payslip->save();
 
-        // 2. Récupérer le profil de cotisation de l'employé
-        // Pour l'instant on prend le premier profil BTP ETAM créé.
-        $profile = PayrollContributionProfile::first();
+        // 2. Récupérer le profil de cotisation de l'employé depuis son contrat en cours
+        $contract = $employee->currentContract;
+        $profile = $contract ? $contract->payrollContributionProfile : null;
+
+        if (!$profile) {
+            throw new \Exception("Aucun profil de cotisations défini pour le contrat en cours de l'employé {$employee->last_name}.");
+        }
 
         $totalEmployeeContributions = 0;
         $totalEmployerContributions = 0;

@@ -9,13 +9,13 @@
 - Création des tables et modèles pour les profils de cotisation (`PayrollContributionProfile`) et les taux de cotisations associés (`PayrollContributionRate`).
 - Création des tables et modèles pour les acomptes (`AdvancePayment`).
 - Création des tables et modèles pour les fiches de paies (`Payslip`) et leurs lignes détaillées (`PayslipLine`).
-- **[NOUVEAU]** Ajout de la colonne `pas_rate` sur la table `employees` (Migration `2026_07_18_171851_add_pas_rate_to_employees_table`).
+- Ajout de la colonne `pas_rate` sur la table `employees` (Migration `2026_07_18_171851_add_pas_rate_to_employees_table`).
 
 ### Enums (`app/Enums/Paie/`)
-- **[NOUVEAU]** `PayslipStatus` : `draft` / `validated` / `paid`
-- **[NOUVEAU]** `AdvancePaymentStatus` : `pending` / `approved` / `paid` / `deducted`
-- **[NOUVEAU]** `AdvancePaymentType` : `classic` / `grand_deplacement`
-- **[NOUVEAU]** `ContributionBaseFormula` : `gross_salary` / `csg_base` / `oppbtp_base`
+- `PayslipStatus` : `draft` / `validated` / `paid`
+- `AdvancePaymentStatus` : `pending` / `approved` / `paid` / `deducted`
+- `AdvancePaymentType` : `classic` / `grand_deplacement`
+- `ContributionBaseFormula` : `gross_salary` / `csg_base` / `oppbtp_base`
 - Tous les Enums implémentent `\Filament\Support\Contracts\HasLabel` pour une intégration native dans les composants Filament (Select, Badge).
 - Tous les modèles (`Payslip`, `AdvancePayment`, `PayrollContributionRate`) castent leurs colonnes statut/type vers les Enums correspondants.
 
@@ -24,8 +24,8 @@
 - Calcul exact de la base CSG (avec réintégration de la prévoyance et mutuelle) et gestion de la CSG déductible vs non-déductible.
 - Calcul du Prélèvement à la Source (PAS) depuis le champ `pas_rate` de la fiche employé.
 - Déduction et rattachement automatiques des acomptes validés (`paid`).
-- **[NOUVEAU]** Utilisation des Enums dans toutes les comparaisons de statuts (fini les strings hardcodées).
-- **[FIXÉ]** Initialisation des champs `net_social`, `taxable_net`, `net_payable`, `net_paid`, `employer_cost` à 0 lors du premier `save()` pour éviter l'erreur SQL `NOT NULL`.
+- Utilisation des Enums dans toutes les comparaisons de statuts (fini les strings hardcodées).
+- Initialisation des champs `net_social`, `taxable_net`, `net_payable`, `net_paid`, `employer_cost` à 0 lors du premier `save()` pour éviter l'erreur SQL `NOT NULL`.
 
 ### Génération PDF (`PayslipPdfService`)
 - Intégration de la vue `pdf.payslip` pour la modélisation visuelle du bulletin.
@@ -64,6 +64,9 @@
 ### Module RH (Modifications liées)
 - **[NOUVEAU]** Onglet **"Paie"** ajouté au formulaire employé (`EmployeeForm.php`) avec le champ `Taux PAS (%)` et un texte d'aide explicatif.
 - Champ `pas_rate` ajouté au `$fillable` et `$casts` du modèle `Employee`.
+- **[NOUVEAU]** Formulaire de Contrat (`ContractsRelationManager`) mis à jour avec le champ `payroll_contribution_profile_id` obligatoire (Select).
+- Modèle `Contract` : Ajout du champ `payroll_contribution_profile_id` et de la relation `payrollContributionProfile()`.
+- Migration effectuée pour lier la table `contracts` à `payroll_contribution_profiles`.
 
 ### Seeder (`PayrollContributionProfileSeeder`)
 - **[NOUVEAU]** Seeder complet pour le profil **"Bâtiment (ETAM)"** avec 15 lignes de cotisations issues d'un vrai bulletin BTP :
@@ -86,7 +89,6 @@
 - **Envoi des fiches de paie** : Envoi par email aux salariés ou dépôt dans un coffre-fort numérique.
 - **Réintégration fiscale dynamique** : La valeur `57.59` est actuellement hardcodée dans la vue PDF.
 - **Cumuls annuels réels** : Actuellement une simple multiplication ×N mois, à remplacer par un calcul sur les vrais bulletins de l'année.
-- **Association salarié ↔ profil de cotisation** : Permettre de choisir explicitement le profil à appliquer plutôt que de prendre le premier disponible.
 
 ---
 
