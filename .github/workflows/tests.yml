@@ -127,6 +127,19 @@ jobs:
               - 'app/Providers/Banque/**'
               - 'app/Services/Banque/**'
               - 'tests/Feature/Modules/Banque/**'
+            Immobilisations:
+              - 'app/Filament/Immobilisations/**'
+              - 'app/Console/Immobilisations/**'
+              - 'app/Enums/Immobilisations/**'
+              - 'app/Events/Immobilisations/**'
+              - 'app/Jobs/Immobilisations/**'
+              - 'app/Mails/Immobilisations/**'
+              - 'app/Models/Immobilisations/**'
+              - 'app/Notifications/Immobilisations/**'
+              - 'app/Observers/Immobilisations/**'
+              - 'app/Providers/Immobilisations/**'
+              - 'app/Services/Immobilisations/**'
+              - 'tests/Feature/Modules/Immobilisations/**'
 
   test-modules:
     runs-on: ubuntu-latest

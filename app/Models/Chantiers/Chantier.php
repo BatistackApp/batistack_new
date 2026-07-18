@@ -89,6 +89,16 @@ class Chantier extends Model implements HasMedia
         return $this->hasMany(ChantierLog::class)->latest();
     }
 
+    public function interventions(): HasMany
+    {
+        return $this->hasMany(Intervention::class);
+    }
+
+    public function fixedAssets(): HasMany
+    {
+        return $this->hasMany(\App\Models\Immobilisation\FixedAsset::class);
+    }
+
     public function timeEntries(): HasMany
     {
         return $this->hasMany(TimeEntry::class);
