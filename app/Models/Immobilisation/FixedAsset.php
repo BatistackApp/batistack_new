@@ -23,6 +23,7 @@ class FixedAsset extends Model
         'vehicle_id',
         'chantier_id',
         'last_inventoried_at',
+        'vgp_frequency_months',
     ];
 
     protected function casts(): array
@@ -75,5 +76,49 @@ class FixedAsset extends Model
     public function impairments(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(\App\Models\Immobilisation\AssetImpairment::class);
+    }
+
+    public function getNextVgpDateAttribute(): ?\Carbon\Carbon
+    {
+        if (! $this->vgp_frequency_months) {
+            return null;
+        }
+
+        // Chercher la dernière maintenance de type 'control'
+        $lastControl = $this->maintenances()->where('type', 'control')->latest('maintenance_date')->first();
+
+        if ($lastControl) {
+            return \Carbon\Carbon::parse($lastControl->maintenance_date)->addMonths($this->vgp_frequency_months);
+        }
+
+        // Si jamais fait, on se base sur la date d'achat
+        if ($this->purchase_date) {
+            return \Carbon\Carbon::parse($this->purchase_date)->addMonths($this->vgp_frequency_months);
+        }
+
+        return null;
+    }
+
+    public function getVgpStatusAttribute(): string
+    {
+        if (! $this->vgp_frequency_months) {
+            return 'none';
+        }
+
+        $nextDate = $this->next_vgp_date;
+
+        if (! $nextDate) {
+            return 'none';
+        }
+
+        if ($nextDate->isPast()) {
+            return 'danger';
+        }
+
+        if ($nextDate->copy()->subDays(30)->isPast()) {
+            return 'warning';
+        }
+
+        return 'ok';
     }
 }

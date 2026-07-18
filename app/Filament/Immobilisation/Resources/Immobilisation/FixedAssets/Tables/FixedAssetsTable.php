@@ -49,6 +49,25 @@ class FixedAssetsTable
                 TextColumn::make('status')
                     ->label('Statut')
                     ->badge()
+                    ->sortable()
+                    ->searchable(),
+                TextColumn::make('vgp_status')
+                    ->label('VGP')
+                    ->badge()
+                    ->colors([
+                        'success' => 'ok',
+                        'warning' => 'warning',
+                        'danger' => 'danger',
+                        'gray' => 'none',
+                    ])
+                    ->formatStateUsing(fn (string $state): string => match ($state) {
+                        'ok' => 'À jour',
+                        'warning' => 'Bientôt',
+                        'danger' => 'Expirée',
+                        'none' => 'N/A',
+                        default => $state,
+                    })
+                    ->sortable()
                     ->searchable(),
                 TextColumn::make('last_inventoried_at')
                     ->label('Dernier inventaire')

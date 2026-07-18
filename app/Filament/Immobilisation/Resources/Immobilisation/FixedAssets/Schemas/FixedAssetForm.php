@@ -5,8 +5,10 @@ namespace App\Filament\Immobilisation\Resources\Immobilisation\FixedAssets\Schem
 use App\Enums\Immobilisation\AssetStatus;
 use App\Enums\Immobilisation\DepreciationMethod;
 use Filament\Forms\Components\DatePicker;
+
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 
 class FixedAssetForm
@@ -15,59 +17,68 @@ class FixedAssetForm
     {
         return $schema
             ->schema([
-                \Filament\Forms\Components\Select::make('asset_category_id')
+                Select::make('asset_category_id')
                     ->label('Catégorie d\'actif')
                     ->relationship('category', 'name')
                     ->required()
                     ->searchable()
                     ->preload(),
-                \Filament\Forms\Components\TextInput::make('name')
+                TextInput::make('name')
                     ->label('Nom de l\'immobilisation')
                     ->required()
                     ->maxLength(255),
-                \Filament\Forms\Components\TextInput::make('serial_number')
+                TextInput::make('serial_number')
                     ->label('Numéro de série')
                     ->maxLength(255),
-                \Filament\Forms\Components\DatePicker::make('purchase_date')
+                DatePicker::make('purchase_date')
                     ->label('Date d\'acquisition')
                     ->required(),
-                \Filament\Forms\Components\TextInput::make('purchase_price')
+                TextInput::make('purchase_price')
                     ->label('Valeur d\'achat')
                     ->required()
                     ->numeric()
                     ->prefix('€'),
-                \Filament\Forms\Components\TextInput::make('salvage_value')
+                TextInput::make('salvage_value')
                     ->label('Valeur résiduelle')
                     ->numeric()
                     ->default(0)
                     ->prefix('€'),
-                \Filament\Forms\Components\Select::make('depreciation_method')
+                Select::make('depreciation_method')
                     ->label('Méthode d\'amortissement')
-                    ->options(\App\Enums\Immobilisation\DepreciationMethod::class)
+                    ->options(DepreciationMethod::class)
                     ->required()
-                    ->default(\App\Enums\Immobilisation\DepreciationMethod::LINEAR),
-                \Filament\Forms\Components\TextInput::make('useful_life_years')
+                    ->default(DepreciationMethod::LINEAR),
+                TextInput::make('useful_life_years')
                     ->label('Durée d\'amortissement (années)')
                     ->required()
                     ->numeric()
                     ->minValue(1)
                     ->default(5),
-                \Filament\Forms\Components\Select::make('status')
-                    ->label('Statut')
-                    ->options(\App\Enums\Immobilisation\AssetStatus::class)
-                    ->default(\App\Enums\Immobilisation\AssetStatus::ACTIVE)
-                    ->required(),
-                \Filament\Forms\Components\Select::make('supplier_invoice_id')
+                Section::make('Suivi et Réglementation')
+                    ->schema([
+                        Select::make('status')
+                            ->label('Statut')
+                            ->options(AssetStatus::class)
+                            ->default(AssetStatus::ACTIVE)
+                            ->required(),
+                        TextInput::make('vgp_frequency_months')
+                            ->label('Fréquence VGP (mois)')
+                            ->numeric()
+                            ->minValue(1)
+                            ->helperText('Laissez vide si l\'équipement n\'est pas soumis aux VGP.')
+                            ->prefixIcon('heroicon-o-shield-check'),
+                    ]),
+                Select::make('supplier_invoice_id')
                     ->label('Facture d\'achat liée')
                     ->relationship('supplierInvoice', 'reference')
                     ->searchable()
                     ->preload(),
-                \Filament\Forms\Components\Select::make('vehicle_id')
+                Select::make('vehicle_id')
                     ->label('Véhicule lié')
                     ->relationship('vehicle', 'license_plate')
                     ->searchable()
                     ->preload(),
-                \Filament\Forms\Components\Select::make('chantier_id')
+                Select::make('chantier_id')
                     ->label('Chantier d\'imputation analytique')
                     ->relationship('chantier', 'name')
                     ->searchable()

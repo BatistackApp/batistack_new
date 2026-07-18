@@ -25,7 +25,7 @@ class MaintenancesRelationManager extends RelationManager
 
     public function form(Schema $schema): Schema
     {
-        return \App\Filament\Immobilisation\Resources\Immobilisation\AssetMaintenances\Schemas\AssetMaintenanceForm::configure($schema);
+        return \App\Filament\Immobilisation\Resources\Immobilisation\AssetMaintenances\Schemas\AssetMaintenanceForm::configure($schema, true);
     }
 
     public function table(Table $table): Table
