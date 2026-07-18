@@ -49,6 +49,7 @@ class FixedAssetResource extends Resource
     {
         return [
             \App\Filament\Immobilisation\Resources\Immobilisation\FixedAssets\RelationManagers\MaintenancesRelationManager::class,
+            \App\Filament\Immobilisation\Resources\Immobilisation\FixedAssets\RelationManagers\ImpairmentsRelationManager::class,
         ];
     }
 

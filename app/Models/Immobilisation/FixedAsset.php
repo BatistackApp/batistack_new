@@ -71,4 +71,9 @@ class FixedAsset extends Model
     {
         return $this->hasMany(AssetMaintenance::class);
     }
+
+    public function impairments(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(\App\Models\Immobilisation\AssetImpairment::class);
+    }
 }

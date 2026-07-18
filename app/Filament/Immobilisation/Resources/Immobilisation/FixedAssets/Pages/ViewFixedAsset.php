@@ -55,6 +55,39 @@ class ViewFixedAsset extends ViewRecord
                         \Filament\Notifications\Notification::make()->title('Intervention enregistrée')->success()->send();
                     }
                 }),
+            \Filament\Actions\Action::make('exceptional_impairment')
+                ->label('Dépréciation Exceptionnelle')
+                ->icon('heroicon-o-arrow-trending-down')
+                ->color('danger')
+                ->requiresConfirmation()
+                ->modalHeading('Déclarer une perte de valeur')
+                ->modalDescription('Attention, cette action va réduire la Valeur Nette Comptable de l\'actif et recalculer son plan d\'amortissement de façon permanente.')
+                ->form([
+                    \Filament\Forms\Components\DatePicker::make('date')
+                        ->label('Date de constatation')
+                        ->default(now())
+                        ->required(),
+                    \Filament\Forms\Components\TextInput::make('amount')
+                        ->label('Montant de la dépréciation (HT)')
+                        ->numeric()
+                        ->prefix('€')
+                        ->required(),
+                    \Filament\Forms\Components\TextInput::make('reason')
+                        ->label('Motif (Casse, Sinistre...)')
+                        ->required()
+                        ->maxLength(255),
+                ])
+                ->action(function (array $data, \App\Services\Immobilisation\AssetImpairmentService $service) {
+                    $record = $this->getRecord();
+                    $service->recordImpairment($record, $data);
+                    
+                    \Filament\Notifications\Notification::make()
+                        ->title('Dépréciation enregistrée')
+                        ->body('Le plan d\'amortissement a été recalculé avec succès.')
+                        ->success()
+                        ->send();
+                })
+                ->visible(fn () => $this->getRecord()->status === \App\Enums\Immobilisation\AssetStatus::ACTIVE && $this->getRecord()->depreciation_method !== \App\Enums\Immobilisation\DepreciationMethod::NONE),
             \Filament\Actions\Action::make('print_sheet')
                 ->label('Imprimer Fiche')
                 ->icon('heroicon-o-printer')
