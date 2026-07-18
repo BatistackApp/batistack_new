@@ -96,6 +96,7 @@ Dans l'idéal, il doit permettre la centralisation des informations des chantier
 - [x] Workflow de validation et verrouillage (Clôture)
 - [ ] Export comptable des écritures de paie
 - [x] Génération du fichier de virement SEPA
+- [x] Espace Salarié et Envoi des fiches de paie
 **Portés:** Tous les modules ayant besoins de la base de donnée des paie de l'application
 
 ### Banque [x]

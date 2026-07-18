@@ -7,6 +7,7 @@ use App\Filament\Paie\Resources\Paie\Payslips\Pages\CreatePayslip;
 use App\Filament\Paie\Resources\Paie\Payslips\Pages\EditPayslip;
 use App\Filament\Paie\Resources\Paie\Payslips\Pages\ListPayslips;
 use App\Filament\Paie\Resources\Paie\Payslips\Pages\ViewPayslip;
+use App\Jobs\Paie\DistributePayslipJob;
 use App\Models\Paie\Payslip;
 use App\Models\RH\Employee;
 use App\Services\Paie\PayslipLockService;
@@ -210,6 +211,39 @@ class PayslipResource extends Resource
                             }
                             Notification::make()
                                 ->title("{$count} bulletin(s) clôturé(s)")
+                                ->success()
+                                ->send();
+                        }),
+                    BulkAction::make('distribute')
+                        ->label('Publier & Notifier')
+                        ->icon('heroicon-o-paper-airplane')
+                        ->color('info')
+                        ->requiresConfirmation()
+                        ->modalHeading('Distribuer les bulletins de paie')
+                        ->modalDescription('Cela publiera les bulletins sur les espaces salariés et enverra un e-mail et une notification aux employés concernés.')
+                        ->modalSubmitActionLabel('Distribuer')
+                        ->action(function (Collection $records) {
+                            $validRecords = $records->filter(fn ($r) => in_array($r->status, [PayslipStatus::VALIDATED, PayslipStatus::PAID]));
+
+                            if ($validRecords->isEmpty()) {
+                                Notification::make()
+                                    ->title('Aucun bulletin valide')
+                                    ->body('Seuls les bulletins validés ou payés peuvent être distribués.')
+                                    ->warning()
+                                    ->send();
+
+                                return;
+                            }
+
+                            $count = 0;
+                            foreach ($validRecords as $payslip) {
+                                DistributePayslipJob::dispatch($payslip);
+                                $count++;
+                            }
+
+                            Notification::make()
+                                ->title("Distribution lancée pour $count bulletin(s)")
+                                ->body('Les notifications et e-mails sont en cours d\'envoi en arrière-plan.')
                                 ->success()
                                 ->send();
                         }),

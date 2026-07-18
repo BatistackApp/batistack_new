@@ -109,13 +109,18 @@
 - Création du `SepaExportService` utilisant `digitick/sepa-xml` pour générer le fichier normé `pain.001.001.03`.
 - Ajout d'une action de masse "Générer fichier SEPA" dans `PayslipResource` (uniquement sur les bulletins clôturés avec montant > 0).
 
+### Espace Salarié & Distribution
+- Création du `PayslipResource` dédié dans le panel `/salarie` (lecture seule, réservé aux bulletins du salarié connecté).
+- Seuls les bulletins au statut `VALIDATED` ou `PAID` y sont visibles.
+- Ajout de l'action de masse "Publier & Notifier" dans le panel RH pour déclencher l'envoi.
+- Implémentation du Job asynchrone `DistributePayslipJob` qui envoie une notification interne (Push) et un email sécurisé au salarié (contenant un lien vers l'espace plutôt que le PDF en pièce jointe).
+
 ---
 
 ## 🔲 Ce qu'il reste à faire
 
 - **Export Comptable (OD de paie)** : Générer le fichier d'écritures comptables mensuel.
 - **DADS / DSN** : Préparer la structure des données pour l'export DSN.
-- **Envoi des fiches de paie** : Envoi par email aux salariés ou dépôt dans un coffre-fort numérique.
 - **Cumuls annuels réels** : Actuellement une simple multiplication ×N mois, à remplacer par un calcul sur les vrais bulletins de l'année.
 
 ---
