@@ -35,6 +35,8 @@
 ### Vue PDF (`resources/views/pdf/payslip.blade.php`)
 - **[NOUVEAU]** Vue entièrement réécrite pour respecter la **norme française** du bulletin de salaire :
   - En-tête : Entreprise à gauche, bloc salarié à droite (Matricule, N° SS, Emploi, Ancienneté, Convention collective).
+  - **[NOUVEAU]** Données de l'entreprise dynamiques, sourcées depuis le modèle `Company`.
+  - **[NOUVEAU]** Données du salarié dynamiques, basées sur son contrat actif (`$employee->currentContract`) pour l'ancienneté, la qualification et la convention collective.
   - Tableau principal à 6 colonnes : Éléments de paie | Base | Taux | À déduire | À payer | Charges patronales.
   - Lignes groupées par catégorie avec bandeau bleu foncé.
   - Bloc de synthèse : Réintégration fiscale, Montant net social, Net à payer avant IR, PAS, Net payé, Acomptes.
@@ -90,11 +92,23 @@
 - Les parts patronales de la Mutuelle et de la Prévoyance (Incapacité/Décès) sont configurées à `true`.
 - Lors du calcul, le `PayrollCalculationService` additionne automatiquement la part patronale de ces lignes pour l'intégrer à la base de calcul de la **CSG/CRDS** et l'ajouter au **Net Imposable**. (Fini les valeurs hardcodées !).
 
+### Clôture et Verrouillage de la Paie
+- Création du `PayslipLockService` pour orchestrer la validation d'un bulletin.
+- Lors de la clôture :
+  - Génération d'un **PDF définitif**.
+  - Passage du bulletin au statut `validated`.
+  - Verrouillage automatique des pointages (`TimeEntry`) associés à la période (`status` passe à `locked`).
+  - Passage des acomptes (`AdvancePayment`) associés au statut `deducted`.
+- Interface Filament :
+  - Action "Clôturer" (unitaire et en masse).
+  - Blocage de la modification et suppression des bulletins clôturés (`canEdit`, `canDelete`).
+
 ---
 
 ## 🔲 Ce qu'il reste à faire
 
 - **Export Comptable (OD de paie)** : Générer le fichier d'écritures comptables mensuel.
+- **Paiement (Virement SEPA)** : Génération du fichier XML pour les virements.
 - **DADS / DSN** : Préparer la structure des données pour l'export DSN.
 - **Envoi des fiches de paie** : Envoi par email aux salariés ou dépôt dans un coffre-fort numérique.
 - **Cumuls annuels réels** : Actuellement une simple multiplication ×N mois, à remplacer par un calcul sur les vrais bulletins de l'année.

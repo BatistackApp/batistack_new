@@ -9,9 +9,13 @@ use App\Filament\Paie\Resources\Paie\Payslips\Pages\ListPayslips;
 use App\Filament\Paie\Resources\Paie\Payslips\Pages\ViewPayslip;
 use App\Models\Paie\Payslip;
 use App\Models\RH\Employee;
+use App\Services\Paie\PayslipLockService;
 use App\Services\Paie\PayslipPdfService;
 use BackedEnum;
+use Carbon\Carbon;
 use Filament\Actions\Action;
+use Filament\Actions\ActionGroup;
+use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -25,10 +29,11 @@ use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 use Filament\Support\Enums\FontWeight;
-use Filament\Support\Enums\Size;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
 
 class PayslipResource extends Resource
@@ -92,7 +97,7 @@ class PayslipResource extends Resource
                     ->options(PayslipStatus::class)
                     ->required()
                     ->default(PayslipStatus::DRAFT),
-                    
+
                 Forms\Components\Repeater::make('custom_bonuses')
                     ->label('Primes et éléments variables exceptionnels')
                     ->columnSpanFull()
@@ -145,29 +150,68 @@ class PayslipResource extends Resource
                 //
             ])
             ->recordActions([
-                Action::make('generate_pdf')
-                    ->label('Générer PDF')
-                    ->icon('heroicon-o-document-arrow-down')
-                    ->action(function (Payslip $record) {
-                        $service = app(PayslipPdfService::class);
-                        $service->generatePdf($record);
+                ActionGroup::make([
+                    Action::make('generate_pdf')
+                        ->label('Générer PDF')
+                        ->icon('heroicon-o-document-arrow-down')
+                        ->action(function (Payslip $record) {
+                            $service = app(PayslipPdfService::class);
+                            $service->generatePdf($record);
 
-                        Notification::make()
-                            ->title('PDF généré avec succès')
-                            ->success()
-                            ->send();
-                    }),
-                Action::make('download_pdf')
-                    ->label('Télécharger PDF')
-                    ->icon('heroicon-o-arrow-down-tray')
-                    ->url(fn (Payslip $record) => $record->pdf_path ? Storage::disk('public')->url($record->pdf_path) : null)
-                    ->openUrlInNewTab()
-                    ->visible(fn (Payslip $record) => $record->pdf_path !== null),
-                ViewAction::make(),
-                EditAction::make(),
+                            Notification::make()
+                                ->title('PDF généré avec succès')
+                                ->success()
+                                ->send();
+                        }),
+                    Action::make('download_pdf')
+                        ->label('Télécharger PDF')
+                        ->icon('heroicon-o-arrow-down-tray')
+                        ->url(fn (Payslip $record) => $record->pdf_path ? Storage::disk('public')->url($record->pdf_path) : null)
+                        ->openUrlInNewTab()
+                        ->visible(fn (Payslip $record) => $record->pdf_path !== null),
+                    Action::make('lock')
+                        ->label('Clôturer')
+                        ->icon('heroicon-o-lock-closed')
+                        ->color('danger')
+                        ->requiresConfirmation()
+                        ->modalHeading('Clôturer le bulletin')
+                        ->modalDescription('Êtes-vous sûr de vouloir clôturer ce bulletin ? Cette action est irréversible et figera les éléments de paie associés (pointages, acomptes). Un PDF définitif sera généré.')
+                        ->modalSubmitActionLabel('Oui, clôturer')
+                        ->visible(fn (Payslip $record) => $record->status === PayslipStatus::DRAFT)
+                        ->action(function (Payslip $record, PayslipLockService $lockService) {
+                            $lockService->lock($record);
+                            Notification::make()
+                                ->title('Bulletin clôturé avec succès')
+                                ->success()
+                                ->send();
+                        }),
+                    ViewAction::make(),
+                    EditAction::make(),
+                ]),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
+                    BulkAction::make('lockSelection')
+                        ->label('Clôturer la sélection')
+                        ->icon('heroicon-o-lock-closed')
+                        ->color('danger')
+                        ->requiresConfirmation()
+                        ->modalHeading('Clôturer les bulletins sélectionnés')
+                        ->modalDescription('Êtes-vous sûr de vouloir clôturer ces bulletins ? Cette action est irréversible et figera les éléments de paie associés (pointages, acomptes).')
+                        ->modalSubmitActionLabel('Oui, clôturer')
+                        ->action(function (Collection $records, PayslipLockService $lockService) {
+                            $count = 0;
+                            foreach ($records as $record) {
+                                if ($record->status === PayslipStatus::DRAFT) {
+                                    $lockService->lock($record);
+                                    $count++;
+                                }
+                            }
+                            Notification::make()
+                                ->title("{$count} bulletin(s) clôturé(s)")
+                                ->success()
+                                ->send();
+                        }),
                     DeleteBulkAction::make(),
                 ]),
             ]);
@@ -177,11 +221,37 @@ class PayslipResource extends Resource
     {
         return $schema
             ->components([
-                Section::make('Informations générales')
-                    ->columns(3)
+                Section::make('Identification')
+                    ->columns(2)
                     ->schema([
-                        TextEntry::make('employee.full_name')->label('Employé'),
-                        TextEntry::make('period')->label('Période'),
+                        TextEntry::make('employee.full_name')
+                            ->label('Nom & Prénom'),
+
+                        TextEntry::make('employee.full_address')
+                            ->label('Adresse'),
+
+                        TextEntry::make('employee.registration_number')
+                            ->label('Matricule'),
+
+                        TextEntry::make('employee.social_security_number')
+                            ->label('Numéro de SS'),
+                    ]),
+
+                Section::make('Ressource Humaine')
+                    ->columns(4)
+                    ->schema([
+                        TextEntry::make('employee.currentContract.type')
+                            ->label('Contrat')
+                            ->badge(),
+
+                        TextEntry::make('employee.currentContract.job_title')
+                            ->label('Emploie'),
+
+                        TextEntry::make('employee.currentContract.start_date')
+                            ->label('Date d\'entrée')
+                            ->date('d/m/Y')
+                            ->helperText(fn (Model $record) => round($record->employee->currentContract->start_date->diffInMonth(Carbon::parse($record->period.'-01')->endOfMonth())). ' mois'),
+
                         TextEntry::make('status')
                             ->label('Statut')
                             ->badge()
@@ -234,6 +304,16 @@ class PayslipResource extends Resource
         return [
             //
         ];
+    }
+
+    public static function canEdit(Model $record): bool
+    {
+        return $record->status === PayslipStatus::DRAFT;
+    }
+
+    public static function canDelete(Model $record): bool
+    {
+        return $record->status === PayslipStatus::DRAFT;
     }
 
     public static function getPages(): array
