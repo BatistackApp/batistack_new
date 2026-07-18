@@ -2,10 +2,12 @@
 
 namespace App\Models\Paie;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class PayslipLine extends Model
 {
+    use HasFactory;
     protected $fillable = [
         'payslip_id',
         'category',
