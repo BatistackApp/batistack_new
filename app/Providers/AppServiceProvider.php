@@ -47,6 +47,7 @@ class AppServiceProvider extends ServiceProvider
                     'commerce',
                     'banque',
                     'rh',
+                    'paie',
                     'flottes',
                     'immobilisation',
                 ])
@@ -60,6 +61,7 @@ class AppServiceProvider extends ServiceProvider
                     'commerce' => Phosphor::ShoppingBag,
                     'banque' => Phosphor::Bank,
                     'rh' => Phosphor::UsersThree,
+                    'paie' => Phosphor::Certificate,
                     'flottes' => Phosphor::Truck,
                     'immobilisation' => Phosphor::BoxArrowUp,
                 ])
@@ -71,6 +73,7 @@ class AppServiceProvider extends ServiceProvider
                     'commerce' => 'Commerces & Facturations',
                     'banque' => 'Banque & Rapprochement',
                     'rh' => 'Ressources Humaines',
+                    'paie' => 'Paie',
                     'flottes' => 'Flottes',
                     'immobilisation' => 'Immobilisations',
                 ]);

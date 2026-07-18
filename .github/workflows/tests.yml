@@ -140,6 +140,19 @@ jobs:
               - 'app/Providers/Immobilisation/**'
               - 'app/Services/Immobilisation/**'
               - 'tests/Feature/Modules/Immobilisation/**'
+            Paie:
+              - 'app/Filament/Paie/**'
+              - 'app/Console/Paie/**'
+              - 'app/Enums/Paie/**'
+              - 'app/Events/Paie/**'
+              - 'app/Jobs/Paie/**'
+              - 'app/Mails/Paie/**'
+              - 'app/Models/Paie/**'
+              - 'app/Notifications/Paie/**'
+              - 'app/Observers/Paie/**'
+              - 'app/Providers/Paie/**'
+              - 'app/Services/Paie/**'
+              - 'tests/Feature/Modules/Paie/**'
 
   test-modules:
     runs-on: ubuntu-latest
