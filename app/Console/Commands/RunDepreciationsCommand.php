@@ -6,8 +6,6 @@ use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
 
-#[Signature('app:run-depreciations-command')]
-#[Description('Command description')]
 class RunDepreciationsCommand extends Command
 {
     /**
@@ -36,7 +34,10 @@ class RunDepreciationsCommand extends Command
             ->get();
 
         foreach ($depreciations as $depreciation) {
-            $depreciation->update(['is_passed' => true]);
+            $depreciation->update([
+                'is_passed' => true,
+                'chantier_id' => $depreciation->fixedAsset->chantier_id,
+            ]);
             
             // If VNC is 0, update asset status
             if ($depreciation->remaining_vnc <= 0) {

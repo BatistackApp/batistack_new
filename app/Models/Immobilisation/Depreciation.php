@@ -8,6 +8,7 @@ class Depreciation extends Model
 {
     protected $fillable = [
         'fixed_asset_id',
+        'chantier_id',
         'period_date',
         'amount',
         'remaining_vnc',
@@ -27,5 +28,10 @@ class Depreciation extends Model
     public function fixedAsset(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(FixedAsset::class);
+    }
+
+    public function chantier(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(\App\Models\Chantiers\Chantier::class);
     }
 }
