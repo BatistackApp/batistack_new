@@ -34,15 +34,17 @@
   - Génération de PDF (Plaquettes) avec QR Codes pour l'étiquetage physique du matériel.
   - Scan mobile : L'appareil photo d'un smartphone permet de valider instantanément la présence (champ `last_inventoried_at`).
 
+- **Maintenance et Réparations des Actifs** :
+  - Création du modèle `AssetMaintenance` pour logger toutes les pannes et factures de réparations des équipements.
+  - Basculement automatique du statut de la machine (En réparation <-> Actif).
+  - Liaison directe avec le `ChantierAnalyticService` : le coût des réparations ampute instantanément la marge financière du chantier en cours.
+
 ## Ce qu'il reste à faire
 - **Améliorations futures** :
   - Ajouter la numérisation des factures fournisseurs via OCR lors de l'enregistrement de l'actif.
   - Automatiser la gestion des subventions d'investissement si nécessaire.
 
 ## Proposition de nouvelles fonctionnalités ou d'amélioration
-- **Maintenance et Réparations liées aux Actifs** :
-  - Lier les factures d'entretien (Module Commerce) à une immobilisation pour avoir un coût total de possession (TCO) par équipement.
-  - Créer des alertes pour le renouvellement du matériel en fin de durée d'amortissement ou lorsque le coût d'entretien dépasse la valeur VNC.
 - **Alertes et Notifications Automatisées** :
   - Notifier l'administrateur ou l'expert-comptable lorsqu'une session d'amortissement automatique a échoué, ou à l'approche de la clôture de l'exercice pour validation.
 - **Révision d'Amortissement** :
