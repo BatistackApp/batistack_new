@@ -48,6 +48,7 @@ class TimeEntry extends Model
             'status' => TimeEntryStatus::class,
             'hours' => 'decimal:2',
             'is_grand_deplacement' => 'boolean',
+            'is_workshop' => 'boolean',
             'gd_allowance_amount' => 'decimal:2',
             'approved_at' => 'datetime',
             'travel_hours' => 'decimal:2',

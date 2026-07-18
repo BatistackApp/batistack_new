@@ -39,6 +39,9 @@ class Employee extends Model implements HasMedia
         'biometric_consent',
         'face_descriptor',
         'onboarding_completed',
+        'pas_rate',
+        'iban',
+        'bic',
     ];
 
     protected function casts(): array
@@ -49,6 +52,7 @@ class Employee extends Model implements HasMedia
             'biometric_consent' => 'boolean',
             'face_descriptor' => 'array',
             'onboarding_completed' => 'boolean',
+            'pas_rate' => 'decimal:4',
         ];
     }
 

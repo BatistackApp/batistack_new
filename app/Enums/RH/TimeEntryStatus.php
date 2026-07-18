@@ -12,6 +12,7 @@ enum TimeEntryStatus: string implements HasColor, HasIcon, HasLabel
     case DRAFT = 'draft';         // Brouillon / Refusé
     case SUBMITTED = 'submitted'; // En attente de validation
     case APPROVED = 'approved';   // Validé pour la paie
+    case LOCKED = 'locked';       // Verrouillé (Paie clôturée)
 
     public function getLabel(): ?string
     {
@@ -19,6 +20,7 @@ enum TimeEntryStatus: string implements HasColor, HasIcon, HasLabel
             self::DRAFT => 'Brouillon / À corriger',
             self::SUBMITTED => 'En attente de validation',
             self::APPROVED => 'Approuvé (Paie)',
+            self::LOCKED => 'Verrouillé (Clôturé)',
         };
     }
 
@@ -28,6 +30,7 @@ enum TimeEntryStatus: string implements HasColor, HasIcon, HasLabel
             self::DRAFT => 'gray',
             self::SUBMITTED => 'warning',
             self::APPROVED => 'success',
+            self::LOCKED => 'danger',
         };
     }
 
@@ -37,6 +40,7 @@ enum TimeEntryStatus: string implements HasColor, HasIcon, HasLabel
             self::DRAFT => Phosphor::PencilLine,
             self::SUBMITTED => Phosphor::PaperPlaneTilt,
             self::APPROVED => Phosphor::CheckCircle,
+            self::LOCKED => Phosphor::Lock,
         };
     }
 }

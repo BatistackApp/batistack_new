@@ -64,44 +64,51 @@ Logiciel développer de facon modulaire pour permettre une grande maintenabilit�
     - Interventions
     - 3D Visions
     
-### Core
+### Core [x]
 **Descriptifs:** Ce module est le centre de l'application, il doit contenir à la fois les informations de base du programme, de l'entreprise et toutes les configurations utiles au logiciel
 **Portés:** Tous les modules
 
-### Tiers
+### Tiers [x]
 **Descriptifs:** Gestion des clients, fournisseurs et sous-traitants.
 **Portés:** Tous les modules ayant besoins de la base de donnée des tiers de l'application
 
-## Chantiers
+## Chantiers [x]
 **Descriptifs:** Suivi des projets, incluant la gestion des coûts (main-d'œuvre, location, achats), le suivi budgétaire et la génération de rapports de rentabilité (PDF/CSV).
 Dans l'idéal, il doit permettre la centralisation des informations des chantiers et des resources applicable.
 **Portés:** Tous les modules ayant besoins de la base de donnée des chantiers de l'application
 
-### Articles & Stocks
+### Articles & Stocks [x]
 **Descriptifs:** Gestion du catalogue d'articles, des ouvrages (recettes) et du stock multi-dépôts.
 **Portés:** Tous les modules ayant besoins de la base de donnée des articles de l'application
 
-### Commerce / Facturation
+### Commerce / Facturation [x]
 **Descriptifs:** Création de devis, factures, acomptes, suivi des paiements. (Client/Fournisseur) NB les facturation d'avancement de chantiers
 **Portés:** Tous les modules ayant besoins de la base de donnée des factures de l'application
 
-### Resources Humaines (RH) & Service de Pointage
+### Resources Humaines (RH) & Service de Pointage [x]
 **Descriptifs:** Permettre la gestion complètes des employés de l'entreprise ainsi que du pointage horaire.
 **Portés:** Tous les modules ayant besoins de la base de donnée des ressources humaines de l'application
 
-### Paie
+### Paie [x]
 **Descriptifs:** Permet le calcul des fiches de paie des employés de l'entreprise avec gestion complète du workflow de paie, de la saisie à l'impression des fiches de paies et des paiements de celle-ci (Salaire, Acomptes, Acomptes Grand Déplacement, etc...)
+- [x] Saisie et calcul des bulletins
+- [x] Génération PDF du bulletin (Moteur Chromium/Browsershot)
+- [x] Workflow de validation et verrouillage (Clôture)
+- [x] Export comptable des écritures de paie
+- [x] Génération du fichier de virement SEPA
+- [x] Espace Salarié et Envoi des fiches de paie
+- [x] Exports DADS/DSN & Cumuls annuels réels
 **Portés:** Tous les modules ayant besoins de la base de donnée des paie de l'application
 
-### Banque
+### Banque [x]
 **Descriptifs:** Gestion des comptes, synchronisation des transactions et rapprochement bancaire automatisé. (Possibilité d'utiliser des API Tiers)
 **Portés:** Tous les modules ayant besoins de la base de donnée bancaire de l'application
 
-### Note de Frais
+### Note de Frais [x]
 **Descriptifs:**  Gestion des dépenses avec workflow de validation et comptabilisation automatique. (Possibilité OCR)
 **Portés:** Tous les modules ayant besoins de la base de donnée des frais de l'application
 
-### Flottes
+### Flottes [x]
 **Descriptifs:** Gestion complète (Véhicules, Assurances, Maintenances, Contravention, etc...). **Assignation sécurisée avec détection de conflits** et notifications. **Imputation analytique des coûts aux chantiers.**
 **Portés:** Tous les modules ayant besoins de la base de donnée des flottes de l'application
 
@@ -109,7 +116,7 @@ Dans l'idéal, il doit permettre la centralisation des informations des chantier
 **Descriptifs:** Gestion des contrats fournisseurs. **Support de la périodicité, alertes d'expiration et génération automatique des factures fournisseurs.**
 **Portés:** Tous les modules ayant besoins de la base de donnée des locations de l'application
 
-### Immobilisations
+### Immobilisations [x]
 **Descriptifs:** Permet la gestion complète des immobilisations de l'entreprise (Enregistrement comptable, VNC, Cout analytique, Dotations, etc...)
 **Portés:** Tous les modules ayant besoins de la base de donnée des immobilisations de l'application
 

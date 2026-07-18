@@ -66,6 +66,18 @@ class ManageCompany extends Page
                         TextInput::make('website')->label('Site Web')->url(),
                     ])->columns(2),
 
+                Section::make('Coordonnées Bancaires (SEPA)')
+                    ->schema([
+                        TextInput::make('iban')
+                            ->label('IBAN')
+                            ->maxLength(34)
+                            ->placeholder('FR76 1234 ...'),
+                        TextInput::make('bic')
+                            ->label('BIC')
+                            ->maxLength(11)
+                            ->placeholder('AAAA BB CC 123'),
+                    ])->columns(2),
+
                 Section::make('Identité Visuelle')
                     ->schema([
                         FileUpload::make('company_logo')
