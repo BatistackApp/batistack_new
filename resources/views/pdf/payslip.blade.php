@@ -517,39 +517,39 @@
             <tbody>
                 <tr>
                     <th style="width: 50%; text-align: left; padding-left: 10px;">Heures</th>
-                    <td style="width: 50%; text-align: right; padding-right: 10px;">{{ number_format($payslip->base_hours * 5, 2, '.', ' ') }}</td>
+                    <td style="width: 50%; text-align: right; padding-right: 10px;">{{ number_format($annualTotals['base_hours'], 2, '.', ' ') }}</td>
                 </tr>
                 <tr>
                     <th style="text-align: left; padding-left: 10px;">Heures suppl.</th>
-                    <td style="text-align: right; padding-right: 10px;"></td>
+                    <td style="text-align: right; padding-right: 10px;">{{ $annualTotals['overtime_hours'] > 0 ? number_format($annualTotals['overtime_hours'], 2, '.', ' ') : '' }}</td>
                 </tr>
                 <tr>
                     <th style="text-align: left; padding-left: 10px;">Brut</th>
-                    <td style="text-align: right; padding-right: 10px;">{{ number_format($payslip->gross_salary * 5, 2, '.', ' ') }}</td>
+                    <td style="text-align: right; padding-right: 10px;">{{ number_format($annualTotals['gross_salary'], 2, '.', ' ') }}</td>
                 </tr>
                 <tr>
                     <th style="text-align: left; padding-left: 10px;">Plafond S.S.</th>
-                    <td style="text-align: right; padding-right: 10px;">20 025.00</td>
+                    <td style="text-align: right; padding-right: 10px;">{{ number_format(4005.00 * (intval(substr($payslip->period, 5, 2))), 2, '.', ' ') }}</td>
                 </tr>
                 <tr>
                     <th style="text-align: left; padding-left: 10px;">Net imposable</th>
-                    <td style="text-align: right; padding-right: 10px;">{{ number_format($payslip->taxable_net * 5, 2, '.', ' ') }}</td>
+                    <td style="text-align: right; padding-right: 10px;">{{ number_format($annualTotals['taxable_net'], 2, '.', ' ') }}</td>
                 </tr>
                 <tr>
                     <th style="text-align: left; padding-left: 10px;">Ch. patronales</th>
-                    <td style="text-align: right; padding-right: 10px;">{{ number_format(($totalEmployer - $totalExonerations) * 5, 2, '.', ' ') }}</td>
+                    <td style="text-align: right; padding-right: 10px;">{{ number_format($annualTotals['employer_contributions'], 2, '.', ' ') }}</td>
                 </tr>
                 <tr>
                     <th style="text-align: left; padding-left: 10px;">Coût Global</th>
-                    <td style="text-align: right; padding-right: 10px;">{{ number_format($payslip->employer_cost * 5, 2, '.', ' ') }}</td>
+                    <td style="text-align: right; padding-right: 10px;">{{ number_format($annualTotals['employer_cost'], 2, '.', ' ') }}</td>
                 </tr>
                 <tr>
                     <th style="text-align: left; padding-left: 10px;">Total versé</th>
-                    <td style="text-align: right; padding-right: 10px;">{{ number_format(($payslip->employer_cost + $payslip->pas_amount) * 5, 2, '.', ' ') }}</td>
+                    <td style="text-align: right; padding-right: 10px;">{{ number_format($annualTotals['employer_cost'] + $annualTotals['pas_amount'], 2, '.', ' ') }}</td>
                 </tr>
                 <tr>
                     <th style="text-align: left; padding-left: 10px;">Allègements</th>
-                    <td style="text-align: right; padding-right: 10px;">{{ number_format($totalExonerations * 5, 2, '.', ' ') }}</td>
+                    <td style="text-align: right; padding-right: 10px;">{{ number_format($annualTotals['exonerations'], 2, '.', ' ') }}</td>
                 </tr>
             </tbody>
                     </table>

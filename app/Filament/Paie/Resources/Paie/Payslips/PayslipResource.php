@@ -247,6 +247,48 @@ class PayslipResource extends Resource
                                 ->success()
                                 ->send();
                         }),
+                    BulkAction::make('exportOd')
+                        ->label('Exporter OD Comptable (CSV)')
+                        ->icon('heroicon-o-document-text')
+                        ->color('warning')
+                        ->action(function (\Illuminate\Database\Eloquent\Collection $records) {
+                            $validRecords = $records->filter(fn ($r) => in_array($r->status, [\App\Enums\Paie\PayslipStatus::VALIDATED, \App\Enums\Paie\PayslipStatus::PAID]));
+
+                            if ($validRecords->isEmpty()) {
+                                Notification::make()
+                                    ->title('Aucun bulletin valide')
+                                    ->body('L\'export OD ne peut être généré que pour des bulletins validés ou payés.')
+                                    ->warning()
+                                    ->send();
+                                return;
+                            }
+
+                            $service = new \App\Services\Paie\AccountingExportService();
+                            $path = $service->generateCsv($validRecords);
+
+                            return response()->download(storage_path('app/public/' . $path));
+                        }),
+                    BulkAction::make('exportDsn')
+                        ->label('Exporter DADS/DSN (CSV)')
+                        ->icon('heroicon-o-table-cells')
+                        ->color('success')
+                        ->action(function (\Illuminate\Database\Eloquent\Collection $records) {
+                            $validRecords = $records->filter(fn ($r) => in_array($r->status, [\App\Enums\Paie\PayslipStatus::VALIDATED, \App\Enums\Paie\PayslipStatus::PAID]));
+
+                            if ($validRecords->isEmpty()) {
+                                Notification::make()
+                                    ->title('Aucun bulletin valide')
+                                    ->body('L\'export DSN ne peut être généré que pour des bulletins validés ou payés.')
+                                    ->warning()
+                                    ->send();
+                                return;
+                            }
+
+                            $service = new \App\Services\Paie\DsnExportService();
+                            $path = $service->generateCsv($validRecords);
+
+                            return response()->download(storage_path('app/public/' . $path));
+                        }),
                     BulkAction::make('generateSepa')
                         ->label('Générer fichier SEPA')
                         ->icon('heroicon-o-currency-euro')

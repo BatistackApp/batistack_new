@@ -115,13 +115,21 @@
 - Ajout de l'action de masse "Publier & Notifier" dans le panel RH pour déclencher l'envoi.
 - Implémentation du Job asynchrone `DistributePayslipJob` qui envoie une notification interne (Push) et un email sécurisé au salarié (contenant un lien vers l'espace plutôt que le PDF en pièce jointe).
 
+### Export DADS / DSN & Cumuls
+- Implémentation du calcul dynamique des cumuls annuels dans `PayslipPdfService`. Le service additionne les montants de tous les bulletins de l'année au statut `VALIDATED` ou `PAID`.
+- Remplacement des multiplicateurs forfaitaires dans la vue `pdf.payslip` par les vrais `$annualTotals`.
+- Création du `DsnExportService` pour générer un fichier `.csv` des données paie par employé.
+- Ajout d'une action d'en-tête "Export DADS/DSN du mois" (qui génère un export CSV global pour une période donnée) et d'une action de masse "Exporter DADS/DSN" sur les bulletins sélectionnés.
+
+### Export Comptable (OD de Paie)
+- Création du `AccountingExportService` générant le journal de paie sous format CSV.
+- Mapping comptable classique (641100, 645000, 421000, 431000, 442100, 425000) et respect du principe de la partie double (Débit = Crédit).
+- Ajout d'une action d'en-tête "Export OD Comptable du mois" et d'une action de masse "Exporter OD Comptable (CSV)".
+
 ---
 
 ## 🔲 Ce qu'il reste à faire
-
-- **Export Comptable (OD de paie)** : Générer le fichier d'écritures comptables mensuel.
-- **DADS / DSN** : Préparer la structure des données pour l'export DSN.
-- **Cumuls annuels réels** : Actuellement une simple multiplication ×N mois, à remplacer par un calcul sur les vrais bulletins de l'année.
+*(Le module paie de base est désormais entièrement opérationnel ! Les prochaines étapes dépendront des besoins RH supplémentaires ou de l'intégration avec le module Comptabilité).*
 
 ---
 
