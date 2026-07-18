@@ -37,6 +37,16 @@ class SupplierInvoice extends Model
         return $this->belongsTo(PurchaseOrder::class, 'purchase_order_id');
     }
 
+    public function payments(): HasMany
+    {
+        return $this->hasMany(SupplierPayment::class);
+    }
+
+    public function fixedAssets(): HasMany
+    {
+        return $this->hasMany(\App\Models\Immobilisation\FixedAsset::class);
+    }
+
     public function items(): HasMany
     {
         return $this->hasMany(SupplierInvoiceItem::class);

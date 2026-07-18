@@ -1,5 +1,8 @@
 @import 'tailwindcss';
 @import '../../vendor/livewire/flux/dist/flux.css';
+@import '../../vendor/filament/support/dist/index.css';
+@import '../../vendor/filament/forms/dist/index.css';
+@import '../../vendor/filament/filament/dist/theme.css';
 @import 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css';
 @import 'frappe-gantt';
 

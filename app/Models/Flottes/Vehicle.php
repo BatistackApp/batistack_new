@@ -80,6 +80,16 @@ class Vehicle extends Model implements HasMedia
         return $this->hasMany(TrafficFine::class);
     }
 
+    public function damages(): HasMany
+    {
+        return $this->hasMany(Damage::class);
+    }
+
+    public function fixedAsset(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(\App\Models\Immobilisation\FixedAsset::class);
+    }
+
     public function fuelTransactions(): HasMany
     {
         return $this->hasMany(FuelTransaction::class);

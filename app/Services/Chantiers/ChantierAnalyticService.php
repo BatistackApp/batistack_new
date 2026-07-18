@@ -61,7 +61,18 @@ class ChantierAnalyticService
         // 4. Avancement Technique Pondéré
         $progress = $this->calculateWeightedProgress($chantier);
 
-        $totalCost = $laborCost + $materialCost + $subcontractingCost + $fleetCost;
+        // 5. Amortissements des Immobilisations (Dotations imputées au chantier)
+        $assetDepreciationCost = \App\Models\Immobilisation\Depreciation::query()
+            ->where('chantier_id', $chantier->id)
+            ->where('is_passed', true)
+            ->sum('amount');
+
+        // 6. Réparations et Entretien des Immobilisations sur le chantier
+        $assetMaintenanceCost = \App\Models\Immobilisation\AssetMaintenance::query()
+            ->where('chantier_id', $chantier->id)
+            ->sum('cost_ht');
+
+        $totalCost = $laborCost + $materialCost + $subcontractingCost + $fleetCost + $assetDepreciationCost + $assetMaintenanceCost;
         $budget = (float) $chantier->budget_total_ht;
         $marginReal = $budget - $totalCost;
 
@@ -76,6 +87,8 @@ class ChantierAnalyticService
                 'material_cost_real' => $materialCost,
                 'subcontracting_cost_real' => $subcontractingCost,
                 'fleet_cost_real' => $fleetCost,
+                'asset_depreciation_cost_real' => (float) $assetDepreciationCost,
+                'asset_maintenance_cost_real' => (float) $assetMaintenanceCost,
                 'total_cost_real' => $totalCost,
                 'budget_ht' => $budget,
                 'margin_real' => $marginReal,

@@ -1,0 +1,124 @@
+<?php
+
+namespace App\Models\Immobilisation;
+
+use Illuminate\Database\Eloquent\Model;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+
+class FixedAsset extends Model
+{
+    use HasFactory;
+    protected $fillable = [
+        'asset_category_id',
+        'name',
+        'serial_number',
+        'purchase_date',
+        'purchase_price',
+        'salvage_value',
+        'depreciation_method',
+        'useful_life_years',
+        'status',
+        'supplier_invoice_id',
+        'vehicle_id',
+        'chantier_id',
+        'last_inventoried_at',
+        'vgp_frequency_months',
+    ];
+
+    protected function casts(): array
+    {
+        return [
+            'purchase_date' => 'date',
+            'last_inventoried_at' => 'datetime',
+            'purchase_price' => 'decimal:2',
+            'salvage_value' => 'decimal:2',
+            'depreciation_method' => \App\Enums\Immobilisation\DepreciationMethod::class,
+            'status' => \App\Enums\Immobilisation\AssetStatus::class,
+        ];
+    }
+
+    public function category(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(AssetCategory::class, 'asset_category_id');
+    }
+
+    public function depreciations(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Depreciation::class);
+    }
+
+    public function disposal(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(AssetDisposal::class);
+    }
+
+    public function supplierInvoice(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(\App\Models\Commerce\SupplierInvoice::class);
+    }
+
+    public function vehicle(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(\App\Models\Flottes\Vehicle::class);
+    }
+
+    public function chantier(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(\App\Models\Chantiers\Chantier::class);
+    }
+
+    public function maintenances(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(AssetMaintenance::class);
+    }
+
+    public function impairments(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(\App\Models\Immobilisation\AssetImpairment::class);
+    }
+
+    public function getNextVgpDateAttribute(): ?\Carbon\Carbon
+    {
+        if (! $this->vgp_frequency_months) {
+            return null;
+        }
+
+        // Chercher la dernière maintenance de type 'control'
+        $lastControl = $this->maintenances()->where('type', 'control')->latest('maintenance_date')->first();
+
+        if ($lastControl) {
+            return \Carbon\Carbon::parse($lastControl->maintenance_date)->addMonths($this->vgp_frequency_months);
+        }
+
+        // Si jamais fait, on se base sur la date d'achat
+        if ($this->purchase_date) {
+            return \Carbon\Carbon::parse($this->purchase_date)->addMonths($this->vgp_frequency_months);
+        }
+
+        return null;
+    }
+
+    public function getVgpStatusAttribute(): string
+    {
+        if (! $this->vgp_frequency_months) {
+            return 'none';
+        }
+
+        $nextDate = $this->next_vgp_date;
+
+        if (! $nextDate) {
+            return 'none';
+        }
+
+        if ($nextDate->isPast()) {
+            return 'danger';
+        }
+
+        if ($nextDate->copy()->subDays(30)->isPast()) {
+            return 'warning';
+        }
+
+        return 'ok';
+    }
+}
