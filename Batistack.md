@@ -93,9 +93,9 @@ Dans l'idéal, il doit permettre la centralisation des informations des chantier
 **Descriptifs:** Permet le calcul des fiches de paie des employés de l'entreprise avec gestion complète du workflow de paie, de la saisie à l'impression des fiches de paies et des paiements de celle-ci (Salaire, Acomptes, Acomptes Grand Déplacement, etc...)
 - [x] Saisie et calcul des bulletins
 - [x] Génération PDF du bulletin (Moteur Chromium/Browsershot)
-- [ ] Workflow de validation et verrouillage (Clôture)
+- [x] Workflow de validation et verrouillage (Clôture)
 - [ ] Export comptable des écritures de paie
-- [ ] Génération du fichier de virement SEPA
+- [x] Génération du fichier de virement SEPA
 **Portés:** Tous les modules ayant besoins de la base de donnée des paie de l'application
 
 ### Banque [x]

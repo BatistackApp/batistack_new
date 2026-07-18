@@ -40,6 +40,8 @@ class Employee extends Model implements HasMedia
         'face_descriptor',
         'onboarding_completed',
         'pas_rate',
+        'iban',
+        'bic',
     ];
 
     protected function casts(): array

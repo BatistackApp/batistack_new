@@ -35,6 +35,8 @@ class Company extends Model implements HasMedia
         'phone',
         'email',
         'website',
+        'iban',
+        'bic',
     ];
 
     protected $casts = [

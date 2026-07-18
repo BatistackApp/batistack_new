@@ -136,6 +136,19 @@ class EmployeeForm
                                             ->maxValue(100)
                                             ->helperText('Taux personnalisé transmis par le service des impôts (ex: 7.50).'),
                                     ]),
+                                Section::make('Coordonnées Bancaires (SEPA)')
+                                    ->description('Ces informations seront utilisées pour générer le fichier de virement bancaire des salaires.')
+                                    ->columns(2)
+                                    ->schema([
+                                        TextInput::make('iban')
+                                            ->label('IBAN')
+                                            ->maxLength(34)
+                                            ->placeholder('FR76 1234 ...'),
+                                        TextInput::make('bic')
+                                            ->label('BIC')
+                                            ->maxLength(11)
+                                            ->placeholder('AAAA BB CC 123'),
+                                    ]),
                             ]),
                     ])->columnSpanFull(),
             ]);

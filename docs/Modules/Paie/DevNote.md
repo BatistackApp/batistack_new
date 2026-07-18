@@ -103,12 +103,17 @@
   - Action "Clôturer" (unitaire et en masse).
   - Blocage de la modification et suppression des bulletins clôturés (`canEdit`, `canDelete`).
 
+### Export Virement SEPA
+- Ajout des champs `iban` et `bic` sur les modèles `Company` et `Employee` via migration.
+- Intégration des champs bancaires dans `ManageCompany` et `EmployeeForm`.
+- Création du `SepaExportService` utilisant `digitick/sepa-xml` pour générer le fichier normé `pain.001.001.03`.
+- Ajout d'une action de masse "Générer fichier SEPA" dans `PayslipResource` (uniquement sur les bulletins clôturés avec montant > 0).
+
 ---
 
 ## 🔲 Ce qu'il reste à faire
 
 - **Export Comptable (OD de paie)** : Générer le fichier d'écritures comptables mensuel.
-- **Paiement (Virement SEPA)** : Génération du fichier XML pour les virements.
 - **DADS / DSN** : Préparer la structure des données pour l'export DSN.
 - **Envoi des fiches de paie** : Envoi par email aux salariés ou dépôt dans un coffre-fort numérique.
 - **Cumuls annuels réels** : Actuellement une simple multiplication ×N mois, à remplacer par un calcul sur les vrais bulletins de l'année.

@@ -11,6 +11,7 @@ use App\Models\Paie\Payslip;
 use App\Models\RH\Employee;
 use App\Services\Paie\PayslipLockService;
 use App\Services\Paie\PayslipPdfService;
+use App\Services\Paie\SepaExportService;
 use BackedEnum;
 use Carbon\Carbon;
 use Filament\Actions\Action;
@@ -212,6 +213,42 @@ class PayslipResource extends Resource
                                 ->success()
                                 ->send();
                         }),
+                    BulkAction::make('generateSepa')
+                        ->label('Générer fichier SEPA')
+                        ->icon('heroicon-o-currency-euro')
+                        ->color('success')
+                        ->requiresConfirmation()
+                        ->modalHeading('Export Virement SEPA')
+                        ->modalDescription('Cela va générer le fichier XML SEPA pour les bulletins clôturés sélectionnés ayant un net à payer supérieur à zéro.')
+                        ->modalSubmitActionLabel('Générer et télécharger')
+                        ->action(function (Collection $records, SepaExportService $sepaService) {
+                            try {
+                                $validRecords = $records->filter(fn ($r) => $r->status === PayslipStatus::VALIDATED && $r->net_paid > 0);
+
+                                if ($validRecords->isEmpty()) {
+                                    Notification::make()
+                                        ->title('Aucun bulletin valide')
+                                        ->body('Sélectionnez des bulletins clôturés avec un net à payer supérieur à 0.')
+                                        ->warning()
+                                        ->send();
+
+                                    return;
+                                }
+
+                                $xml = $sepaService->generateXml($validRecords);
+                                $filename = 'virements_salaires_'.date('Ymd_His').'.xml';
+
+                                return response()->streamDownload(function () use ($xml) {
+                                    echo $xml;
+                                }, $filename, ['Content-Type' => 'application/xml']);
+                            } catch (\Exception $e) {
+                                Notification::make()
+                                    ->title('Erreur lors de l\'export SEPA')
+                                    ->body($e->getMessage())
+                                    ->danger()
+                                    ->send();
+                            }
+                        }),
                     DeleteBulkAction::make(),
                 ]),
             ]);
@@ -250,7 +287,7 @@ class PayslipResource extends Resource
                         TextEntry::make('employee.currentContract.start_date')
                             ->label('Date d\'entrée')
                             ->date('d/m/Y')
-                            ->helperText(fn (Model $record) => round($record->employee->currentContract->start_date->diffInMonth(Carbon::parse($record->period.'-01')->endOfMonth())). ' mois'),
+                            ->helperText(fn (Model $record) => round($record->employee->currentContract->start_date->diffInMonth(Carbon::parse($record->period.'-01')->endOfMonth())).' mois'),
 
                         TextEntry::make('status')
                             ->label('Statut')
