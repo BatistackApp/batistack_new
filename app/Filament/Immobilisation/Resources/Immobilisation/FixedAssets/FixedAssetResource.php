@@ -20,23 +20,29 @@ class FixedAssetResource extends Resource
 {
     protected static ?string $model = FixedAsset::class;
 
+    protected static ?string $modelLabel = 'Immobilisation';
+
+    protected static ?string $pluralModelLabel = 'Immobilisations';
+
+    protected static string|null|\UnitEnum $navigationGroup = 'Gestion des Actifs';
+
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
     protected static ?string $recordTitleAttribute = 'name';
 
     public static function form(Schema $schema): Schema
     {
-        return Schemas\FixedAssetForm::configure($schema);
+        return FixedAssetForm::configure($schema);
     }
 
     public static function table(Table $table): Table
     {
-        return Tables\FixedAssetsTable::configure($table);
+        return FixedAssetsTable::configure($table);
     }
 
-    public static function infolist(\Filament\Schemas\Schema $schema): \Filament\Schemas\Schema
+    public static function infolist(Schema $schema): Schema
     {
-        return Schemas\FixedAssetInfolist::configure($schema);
+        return FixedAssetInfolist::configure($schema);
     }
 
     public static function getRelations(): array

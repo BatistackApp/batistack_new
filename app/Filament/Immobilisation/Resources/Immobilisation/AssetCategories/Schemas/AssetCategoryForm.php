@@ -14,13 +14,16 @@ class AssetCategoryForm
         return $schema
             ->components([
                 TextInput::make('name')
+                    ->label('Désignation')
                     ->required(),
-                TextInput::make('account_code'),
+                TextInput::make('account_code')->label('Code Comptable'),
                 TextInput::make('default_depreciation_years')
+                    ->label('Durée d\'amortissement par défaut (années)')
                     ->required()
                     ->numeric()
                     ->default(5),
                 Select::make('default_method')
+                    ->label('Méthode par défaut')
                     ->options(DepreciationMethod::class)
                     ->default('linear')
                     ->required(),

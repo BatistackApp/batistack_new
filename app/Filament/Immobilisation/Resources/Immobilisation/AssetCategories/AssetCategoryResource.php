@@ -18,18 +18,24 @@ class AssetCategoryResource extends Resource
 {
     protected static ?string $model = AssetCategory::class;
 
+    protected static ?string $modelLabel = 'Catégorie d\'actif';
+
+    protected static ?string $pluralModelLabel = 'Catégories d\'actifs';
+
+    protected static string|null|\UnitEnum $navigationGroup = 'Référentiel';
+
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
     protected static ?string $recordTitleAttribute = 'name';
 
     public static function form(Schema $schema): Schema
     {
-        return Schemas\AssetCategoryForm::configure($schema);
+        return AssetCategoryForm::configure($schema);
     }
 
     public static function table(Table $table): Table
     {
-        return Tables\AssetCategoriesTable::configure($table);
+        return AssetCategoriesTable::configure($table);
     }
 
     public static function getRelations(): array

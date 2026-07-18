@@ -2,10 +2,16 @@
 
 namespace App\Filament\Immobilisation\Resources\Immobilisation\FixedAssets\Tables;
 
+use App\Enums\Immobilisation\AssetStatus;
+use App\Models\Immobilisation\FixedAsset;
+use App\Services\Immobilisation\AssetDisposalService;
+use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
+use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\TextInput;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
@@ -15,49 +21,50 @@ class FixedAssetsTable
     {
         return $table
             ->columns([
-                \Filament\Tables\Columns\TextColumn::make('name')
+                TextColumn::make('name')
                     ->label('Nom')
                     ->searchable(),
-                \Filament\Tables\Columns\TextColumn::make('category.name')
+                TextColumn::make('category.name')
                     ->label('Catégorie')
                     ->sortable(),
-                \Filament\Tables\Columns\TextColumn::make('purchase_date')
+                TextColumn::make('purchase_date')
                     ->label('Date achat')
                     ->date()
                     ->sortable(),
-                \Filament\Tables\Columns\TextColumn::make('purchase_price')
+                TextColumn::make('purchase_price')
                     ->label('Valeur brute')
                     ->money('EUR')
                     ->sortable(),
-                \Filament\Tables\Columns\TextColumn::make('status')
+                TextColumn::make('status')
+                    ->label('Statut')
                     ->badge()
                     ->searchable(),
             ])
             ->filters([
                 //
             ])
-            ->actions([
-                \Filament\Tables\Actions\ViewAction::make(),
-                \Filament\Tables\Actions\EditAction::make(),
-                \Filament\Tables\Actions\Action::make('dispose')
+            ->recordActions([
+                ViewAction::make(),
+                EditAction::make(),
+                Action::make('dispose')
                     ->label('Céder / Rebut')
                     ->icon('heroicon-o-archive-box-x-mark')
                     ->color('danger')
                     ->requiresConfirmation()
-                    ->form([
-                        \Filament\Forms\Components\DatePicker::make('disposal_date')->label('Date de sortie')->required()->default(now()),
-                        \Filament\Forms\Components\TextInput::make('sale_price')->label('Prix de cession')->numeric()->default(0)->required()->prefix('€'),
-                        \Filament\Forms\Components\TextInput::make('reason')->label('Raison (Revente, Vol, Rebut)')->required(),
+                    ->schema([
+                        DatePicker::make('disposal_date')->label('Date de sortie')->required()->default(now()),
+                        TextInput::make('sale_price')->label('Prix de cession')->numeric()->default(0)->required()->prefix('€'),
+                        TextInput::make('reason')->label('Raison (Revente, Vol, Rebut)')->required(),
                     ])
-                    ->action(function (\App\Models\Immobilisation\FixedAsset $record, array $data) {
-                        $service = new \App\Services\Immobilisation\AssetDisposalService();
+                    ->action(function (FixedAsset $record, array $data) {
+                        $service = new AssetDisposalService;
                         $service->dispose($record, $data['disposal_date'], $data['sale_price'], $data['reason']);
                     })
-                    ->visible(fn (\App\Models\Immobilisation\FixedAsset $record) => $record->status !== \App\Enums\Immobilisation\AssetStatus::DISPOSED),
+                    ->visible(fn (FixedAsset $record) => $record->status !== AssetStatus::DISPOSED),
             ])
-            ->bulkActions([
-                \Filament\Tables\Actions\BulkActionGroup::make([
-                    \Filament\Tables\Actions\DeleteBulkAction::make(),
+            ->groupedBulkActions([
+                BulkActionGroup::make([
+                    DeleteBulkAction::make(),
                 ]),
             ]);
     }

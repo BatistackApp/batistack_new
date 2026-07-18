@@ -16,6 +16,7 @@ class FixedAssetForm
         return $schema
             ->schema([
                 \Filament\Forms\Components\Select::make('asset_category_id')
+                    ->label('Catégorie d\'actif')
                     ->relationship('category', 'name')
                     ->required()
                     ->searchable()
