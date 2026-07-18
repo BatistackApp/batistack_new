@@ -6,17 +6,26 @@ use App\Enums\Paie\PayslipStatus;
 use App\Filament\Paie\Resources\Paie\Payslips\Pages\CreatePayslip;
 use App\Filament\Paie\Resources\Paie\Payslips\Pages\EditPayslip;
 use App\Filament\Paie\Resources\Paie\Payslips\Pages\ListPayslips;
+use App\Filament\Paie\Resources\Paie\Payslips\Pages\ViewPayslip;
 use App\Models\Paie\Payslip;
+use App\Models\RH\Employee;
 use App\Services\Paie\PayslipPdfService;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Actions\ViewAction;
 use Filament\Forms;
+use Filament\Infolists\Components\RepeatableEntry;
+use Filament\Infolists\Components\TextEntry;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
+use Filament\Support\Enums\FontWeight;
+use Filament\Support\Enums\Size;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -41,17 +50,21 @@ class PayslipResource extends Resource
                 Forms\Components\Select::make('employee_id')
                     ->label('Employé')
                     ->relationship('employee', 'last_name')
-                    ->getOptionLabelFromRecordUsing(fn ($record) => $record->last_name . ' ' . $record->first_name)
+                    ->getOptionLabelFromRecordUsing(fn ($record) => $record->last_name.' '.$record->first_name)
                     ->searchable(['last_name', 'first_name'])
                     ->preload()
                     ->required()
                     ->live()
-                    ->afterStateUpdated(function ($state, Forms\Set $set) {
-                        if (!$state) return;
-                        
-                        $employee = \App\Models\RH\Employee::with('currentContract')->find($state);
-                        if (!$employee) return;
-                        
+                    ->afterStateUpdated(function ($state, Set $set) {
+                        if (! $state) {
+                            return;
+                        }
+
+                        $employee = Employee::with('currentContract')->find($state);
+                        if (! $employee) {
+                            return;
+                        }
+
                         $contract = $employee->currentContract;
                         if ($contract) {
                             $set('hourly_rate', $contract->hourly_rate);
@@ -132,12 +145,60 @@ class PayslipResource extends Resource
                     ->url(fn (Payslip $record) => $record->pdf_path ? Storage::disk('public')->url($record->pdf_path) : null)
                     ->openUrlInNewTab()
                     ->visible(fn (Payslip $record) => $record->pdf_path !== null),
+                ViewAction::make(),
                 EditAction::make(),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
                 ]),
+            ]);
+    }
+
+    public static function infolist(Schema $schema): Schema
+    {
+        return $schema
+            ->components([
+                Section::make('Informations générales')
+                    ->columns(3)
+                    ->schema([
+                        TextEntry::make('employee.full_name')->label('Employé'),
+                        TextEntry::make('period')->label('Période'),
+                        TextEntry::make('status')
+                            ->label('Statut')
+                            ->badge()
+                            ->color(fn (PayslipStatus $state): string => match ($state) {
+                                PayslipStatus::DRAFT => 'gray',
+                                PayslipStatus::VALIDATED => 'info',
+                                PayslipStatus::PAID => 'success',
+                            }),
+                    ]),
+
+                Section::make('Synthèse')
+                    ->columns(4)
+                    ->schema([
+                        TextEntry::make('gross_salary')->label('Salaire Brut')->money('EUR')->size('lg')->weight(FontWeight::Bold),
+                        TextEntry::make('net_social')->label('Net Social')->money('EUR'),
+                        TextEntry::make('net_payable')->label('Net à Payer (avant impôt)')->money('EUR'),
+                        TextEntry::make('net_paid')->label('Net Payé')->money('EUR')->size('lg')->weight(FontWeight::Bold)->color('success'),
+                    ]),
+
+                Section::make('Détail des cotisations')
+                    ->columnSpanFull()
+                    ->schema([
+                        RepeatableEntry::make('lines')
+                            ->label('')
+                            ->schema([
+                                TextEntry::make('category')->label('Catégorie')->hiddenLabel(),
+                                TextEntry::make('label')->label('Libellé')->hiddenLabel(),
+                                TextEntry::make('base')->label('Base')->money('EUR')->hiddenLabel(),
+                                TextEntry::make('employee_rate')->label('Taux Salarial')->suffix('%')->hiddenLabel(),
+                                TextEntry::make('employee_amount')->label('Montant Sal.')->money('EUR')->hiddenLabel(),
+                                TextEntry::make('employer_rate')->label('Taux Patronal')->suffix('%')->hiddenLabel(),
+                                TextEntry::make('employer_amount')->label('Montant Pat.')->money('EUR')->hiddenLabel(),
+                            ])
+                            ->columns(7),
+                    ]),
             ]);
     }
 
@@ -153,6 +214,7 @@ class PayslipResource extends Resource
         return [
             'index' => ListPayslips::route('/'),
             'create' => CreatePayslip::route('/create'),
+            'view' => ViewPayslip::route('/{record}'),
             'edit' => EditPayslip::route('/{record}/edit'),
         ];
     }
