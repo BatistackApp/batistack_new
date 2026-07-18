@@ -117,6 +117,39 @@ class EmployeeForm
                                             ->multiple(),
                                     ]),
                             ]),
+
+                        // --- PAIE ---
+                        Tabs\Tab::make('Paie')
+                            ->icon(Phosphor::CurrencyEur)
+                            ->schema([
+                                Section::make('Prélèvement à la Source (PAS)')
+                                    ->description('Renseignez ici le taux de PAS communiqué par l\'administration fiscale. Ce taux sera automatiquement utilisé lors de la génération des bulletins de paie.')
+                                    ->columns(2)
+                                    ->schema([
+                                        TextInput::make('pas_rate')
+                                            ->label('Taux PAS (%)')
+                                            ->numeric()
+                                            ->default(0)
+                                            ->suffix('%')
+                                            ->step(0.01)
+                                            ->minValue(0)
+                                            ->maxValue(100)
+                                            ->helperText('Taux personnalisé transmis par le service des impôts (ex: 7.50).'),
+                                    ]),
+                                Section::make('Coordonnées Bancaires (SEPA)')
+                                    ->description('Ces informations seront utilisées pour générer le fichier de virement bancaire des salaires.')
+                                    ->columns(2)
+                                    ->schema([
+                                        TextInput::make('iban')
+                                            ->label('IBAN')
+                                            ->maxLength(34)
+                                            ->placeholder('FR76 1234 ...'),
+                                        TextInput::make('bic')
+                                            ->label('BIC')
+                                            ->maxLength(11)
+                                            ->placeholder('AAAA BB CC 123'),
+                                    ]),
+                            ]),
                     ])->columnSpanFull(),
             ]);
     }

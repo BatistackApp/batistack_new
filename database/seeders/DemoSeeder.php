@@ -13,5 +13,6 @@ class DemoSeeder extends Seeder
         $this->call(RHSeeder::class);
         $this->call(FlotteSeeder::class);
         $this->call(CommerceSeeder::class);
+        $this->call(PayrollContributionProfileSeeder::class);
     }
 }

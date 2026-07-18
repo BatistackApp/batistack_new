@@ -30,11 +30,17 @@ class Contract extends Model implements HasMedia
         'docuseal_template_id',
         'docuseal_submission_id',
         'signature_status',
+        'payroll_contribution_profile_id',
     ];
 
     public function employee(): BelongsTo
     {
         return $this->belongsTo(Employee::class);
+    }
+
+    public function payrollContributionProfile(): BelongsTo
+    {
+        return $this->belongsTo(\App\Models\Paie\PayrollContributionProfile::class);
     }
 
     protected function casts(): array

@@ -68,6 +68,13 @@ class ContractsRelationManager extends RelationManager
                             ->numeric()
                             ->default(35)
                             ->suffix('h'),
+                        Select::make('payroll_contribution_profile_id')
+                            ->label('Profil de cotisations')
+                            ->relationship('payrollContributionProfile', 'name')
+                            ->required()
+                            ->preload()
+                            ->searchable()
+                            ->helperText('Définit les taux de cotisations (ex: Bâtiment ETAM, Ouvrier).'),
                     ])->columns(2),
             ]);
     }
