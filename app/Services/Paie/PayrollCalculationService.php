@@ -2,10 +2,13 @@
 
 namespace App\Services\Paie;
 
-use App\Models\RH\Employee;
-use App\Models\Paie\Payslip;
+use App\Enums\Paie\AdvancePaymentStatus;
+use App\Enums\Paie\ContributionBaseFormula;
+use App\Enums\Paie\PayslipStatus;
 use App\Models\Paie\AdvancePayment;
-use Carbon\Carbon;
+use App\Models\Paie\PayrollContributionProfile;
+use App\Models\Paie\Payslip;
+use App\Models\RH\Employee;
 
 class PayrollCalculationService
 {
@@ -15,7 +18,7 @@ class PayrollCalculationService
     public function calculateForEmployee(Employee $employee, string $period, float $baseHours, float $hourlyRate): Payslip
     {
         $grossSalary = round($baseHours * $hourlyRate, 2);
-        
+
         // 1. Initialiser le Payslip
         $payslip = new Payslip([
             'employee_id' => $employee->id,
@@ -23,19 +26,25 @@ class PayrollCalculationService
             'base_hours' => $baseHours,
             'hourly_rate' => $hourlyRate,
             'gross_salary' => $grossSalary,
-            'status' => \App\Enums\Paie\PayslipStatus::DRAFT,
+            'status' => PayslipStatus::DRAFT,
+            // Valeurs temporaires pour contourner le NOT NULL de la BDD lors de la création
+            'net_social' => 0,
+            'taxable_net' => 0,
+            'net_payable' => 0,
+            'net_paid' => 0,
+            'employer_cost' => 0,
         ]);
-        
+
         // Sauvegarder pour attacher les lignes
         $payslip->save();
 
         // 2. Récupérer le profil de cotisation de l'employé
         // Pour l'instant on prend le premier profil BTP ETAM créé.
-        $profile = \App\Models\Paie\PayrollContributionProfile::first();
-        
+        $profile = PayrollContributionProfile::first();
+
         $totalEmployeeContributions = 0;
         $totalEmployerContributions = 0;
-        
+
         $csgBase = round($grossSalary * 0.9825, 2); // Base CSG standard (98.25% du brut)
         // La CSG s'applique aussi sur la part patronale de la prévoyance (40.86) et de la mutuelle (17.50) + potentiellement autres contributions
         // Pour tomber exactement sur le bulletin BTP (3279.19) : 3279.19 - 3211.29 = 67.90
@@ -43,14 +52,14 @@ class PayrollCalculationService
         $totalDeductibleContributions = 0;
         $csgNonDeductibleAmount = 0;
         $mutuelleEmployerPart = 17.50;
-        
+
         if ($profile) {
             foreach ($profile->rates as $rate) {
                 // Déterminer la base
                 $base = $grossSalary;
-                if ($rate->base_formula === \App\Enums\Paie\ContributionBaseFormula::CSG_BASE) {
+                if ($rate->base_formula === ContributionBaseFormula::CSG_BASE) {
                     $base = $csgBase;
-                } elseif ($rate->base_formula === \App\Enums\Paie\ContributionBaseFormula::OPPBTP_BASE) {
+                } elseif ($rate->base_formula === ContributionBaseFormula::OPPBTP_BASE) {
                     // Base majorée de 13.14% pour les congés payés BTP
                     $base = round($grossSalary * 1.1394, 2);
                 }
@@ -70,7 +79,7 @@ class PayrollCalculationService
 
                 $totalEmployeeContributions += $employeeAmount;
                 $totalEmployerContributions += $employerAmount;
-                
+
                 if ($rate->is_deductible) {
                     $totalDeductibleContributions += $employeeAmount;
                 } else {
@@ -86,16 +95,16 @@ class PayrollCalculationService
         $totalEmployerContributions -= $exonerationEmployer;
 
         // Réintégration fiscale de la part patronale mutuelle
-        $fiscalReintegration = $mutuelleEmployerPart; 
+        $fiscalReintegration = $mutuelleEmployerPart;
         // + part patronale prévoyance (Incapacité) 40.86€
         $fiscalReintegration += 40.86; // ~= 58.36
         // Sur le bulletin: 57.59€
 
         // 3. Calculs des Nets
         $netSocial = round($grossSalary - $totalEmployeeContributions, 2);
-        
+
         // Net imposable = Net social + CSG/CRDS non déductible + part patronale mutuelle/prévoyance (réintégration fiscale)
-        $taxableNet = round($netSocial + $csgNonDeductibleAmount + $mutuelleEmployerPart + 40.09, 2); 
+        $taxableNet = round($netSocial + $csgNonDeductibleAmount + $mutuelleEmployerPart + 40.09, 2);
 
         // PAS (Prélèvement à la source)
         $pasRate = $employee->pas_rate ?? 0;
@@ -105,19 +114,19 @@ class PayrollCalculationService
 
         // 4. Acomptes
         $advances = AdvancePayment::where('employee_id', $employee->id)
-            ->where('status', \App\Enums\Paie\AdvancePaymentStatus::PAID)
+            ->where('status', AdvancePaymentStatus::PAID)
             ->whereNull('payslip_id')
             ->get();
-            
+
         $advancesTotal = $advances->sum('amount');
-        
+
         $netPaid = $netPayable - $advancesTotal;
-        
+
         // Attacher les acomptes
         foreach ($advances as $advance) {
             $advance->update([
-                'status' => \App\Enums\Paie\AdvancePaymentStatus::DEDUCTED,
-                'payslip_id' => $payslip->id
+                'status' => AdvancePaymentStatus::DEDUCTED,
+                'payslip_id' => $payslip->id,
             ]);
         }
 

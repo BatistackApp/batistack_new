@@ -2,6 +2,7 @@
 
 namespace App\Filament\Paie\Resources\Paie\PayrollContributionProfiles\RelationManagers;
 
+use App\Enums\Paie\ContributionBaseFormula;
 use Filament\Actions\AssociateAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\CreateAction;
@@ -14,6 +15,7 @@ use Filament\Forms;
 use Filament\Forms\Components\TextInput;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Schemas\Schema;
+use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
@@ -22,36 +24,38 @@ class RatesRelationManager extends RelationManager
     protected static string $relationship = 'rates';
 
     protected static ?string $title = 'Taux de Cotisations';
+
     protected static ?string $modelLabel = 'Taux de Cotisation';
+
     protected static ?string $pluralModelLabel = 'Taux de Cotisations';
 
     public function form(Schema $schema): Schema
     {
         return $schema
             ->components([
-                Forms\Components\TextInput::make('category')
+                TextInput::make('category')
                     ->label('Catégorie (ex: Santé, Retraite)')
                     ->required()
                     ->maxLength(255),
-                Forms\Components\TextInput::make('label')
+                TextInput::make('label')
                     ->label('Libellé')
                     ->required()
                     ->maxLength(255),
-                Forms\Components\TextInput::make('employee_rate')
+                TextInput::make('employee_rate')
                     ->label('Taux Salarial (%)')
                     ->required()
                     ->numeric()
                     ->default(0),
-                Forms\Components\TextInput::make('employer_rate')
+                TextInput::make('employer_rate')
                     ->label('Taux Patronal (%)')
                     ->required()
                     ->numeric()
                     ->default(0),
                 Forms\Components\Select::make('base_formula')
                     ->label('Base de calcul')
-                    ->options(\App\Enums\Paie\ContributionBaseFormula::class)
+                    ->options(ContributionBaseFormula::class)
                     ->required()
-                    ->default(\App\Enums\Paie\ContributionBaseFormula::GROSS_SALARY),
+                    ->default(ContributionBaseFormula::GROSS_SALARY),
                 Forms\Components\Toggle::make('is_deductible')
                     ->label('Déductible ?')
                     ->default(true)
@@ -64,23 +68,23 @@ class RatesRelationManager extends RelationManager
         return $table
             ->recordTitleAttribute('category')
             ->columns([
-                Tables\Columns\TextColumn::make('category')
+                TextColumn::make('category')
                     ->label('Catégorie')
                     ->sortable()
                     ->searchable(),
-                Tables\Columns\TextColumn::make('label')
+                TextColumn::make('label')
                     ->label('Libellé')
                     ->searchable(),
-                Tables\Columns\TextColumn::make('employee_rate')
+                TextColumn::make('employee_rate')
                     ->label('Taux Salarial (%)')
                     ->sortable(),
-                Tables\Columns\TextColumn::make('employer_rate')
+                TextColumn::make('employer_rate')
                     ->label('Taux Patronal (%)')
                     ->sortable(),
-                Tables\Columns\TextColumn::make('base_formula')
+                TextColumn::make('base_formula')
                     ->label('Base')
                     ->badge(),
-                Tables\Columns\IconColumn::make('is_deductible')
+                IconColumn::make('is_deductible')
                     ->label('Déductible ?')
                     ->boolean(),
             ])

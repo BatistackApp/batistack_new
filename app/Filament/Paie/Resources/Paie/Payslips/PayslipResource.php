@@ -2,20 +2,25 @@
 
 namespace App\Filament\Paie\Resources\Paie\Payslips;
 
+use App\Enums\Paie\PayslipStatus;
 use App\Filament\Paie\Resources\Paie\Payslips\Pages\CreatePayslip;
 use App\Filament\Paie\Resources\Paie\Payslips\Pages\EditPayslip;
 use App\Filament\Paie\Resources\Paie\Payslips\Pages\ListPayslips;
-use App\Filament\Paie\Resources\Paie\Payslips\Schemas\PayslipForm;
-use App\Filament\Paie\Resources\Paie\Payslips\Tables\PayslipsTable;
 use App\Models\Paie\Payslip;
+use App\Services\Paie\PayslipPdfService;
 use BackedEnum;
+use Filament\Actions\Action;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
+use Filament\Forms;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
-use Filament\Forms;
+use Filament\Support\Icons\Heroicon;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Support\Facades\Storage;
-use Filament\Support\Icons\Heroicon;
 
 class PayslipResource extends Resource
 {
@@ -36,23 +41,44 @@ class PayslipResource extends Resource
                 Forms\Components\Select::make('employee_id')
                     ->label('Employé')
                     ->relationship('employee', 'last_name')
-                    ->required(),
+                    ->getOptionLabelFromRecordUsing(fn ($record) => $record->last_name . ' ' . $record->first_name)
+                    ->searchable(['last_name', 'first_name'])
+                    ->preload()
+                    ->required()
+                    ->live()
+                    ->afterStateUpdated(function ($state, Forms\Set $set) {
+                        if (!$state) return;
+                        
+                        $employee = \App\Models\RH\Employee::with('currentContract')->find($state);
+                        if (!$employee) return;
+                        
+                        $contract = $employee->currentContract;
+                        if ($contract) {
+                            $set('hourly_rate', $contract->hourly_rate);
+                            // weekly_hours -> base mensuelle (heures hebdo * 52 / 12)
+                            $baseHours = round(($contract->weekly_hours * 52) / 12, 2);
+                            $set('base_hours', $baseHours);
+                        }
+                    }),
                 Forms\Components\TextInput::make('period')
                     ->label('Période (YYYY-MM)')
                     ->required()
+                    ->default(now()->format('Y-m'))
                     ->maxLength(255),
                 Forms\Components\TextInput::make('base_hours')
-                    ->label('Heures de base')
+                    ->label('Heures de base (mensuel)')
                     ->required()
-                    ->numeric(),
+                    ->numeric()
+                    ->helperText('Pré-rempli depuis le contrat en cours de l\'employé.'),
                 Forms\Components\TextInput::make('hourly_rate')
-                    ->label('Taux horaire')
+                    ->label('Taux horaire (€)')
                     ->required()
-                    ->numeric(),
+                    ->numeric()
+                    ->helperText('Pré-rempli depuis le contrat en cours de l\'employé.'),
                 Forms\Components\Select::make('status')
-                    ->options(\App\Enums\Paie\PayslipStatus::class)
+                    ->options(PayslipStatus::class)
                     ->required()
-                    ->default(\App\Enums\Paie\PayslipStatus::DRAFT),
+                    ->default(PayslipStatus::DRAFT),
             ]);
     }
 
@@ -78,39 +104,39 @@ class PayslipResource extends Resource
                 Tables\Columns\TextColumn::make('status')
                     ->label('Statut')
                     ->badge()
-                    ->color(fn (\App\Enums\Paie\PayslipStatus $state): string => match ($state) {
-                        \App\Enums\Paie\PayslipStatus::DRAFT => 'gray',
-                        \App\Enums\Paie\PayslipStatus::VALIDATED => 'info',
-                        \App\Enums\Paie\PayslipStatus::PAID => 'success',
+                    ->color(fn (PayslipStatus $state): string => match ($state) {
+                        PayslipStatus::DRAFT => 'gray',
+                        PayslipStatus::VALIDATED => 'info',
+                        PayslipStatus::PAID => 'success',
                     }),
             ])
             ->filters([
                 //
             ])
-            ->actions([
-                Tables\Actions\Action::make('generate_pdf')
+            ->recordActions([
+                Action::make('generate_pdf')
                     ->label('Générer PDF')
                     ->icon('heroicon-o-document-arrow-down')
                     ->action(function (Payslip $record) {
-                        $service = app(\App\Services\Paie\PayslipPdfService::class);
+                        $service = app(PayslipPdfService::class);
                         $service->generatePdf($record);
 
-                        \Filament\Notifications\Notification::make()
+                        Notification::make()
                             ->title('PDF généré avec succès')
                             ->success()
                             ->send();
                     }),
-                Tables\Actions\Action::make('download_pdf')
+                Action::make('download_pdf')
                     ->label('Télécharger PDF')
                     ->icon('heroicon-o-arrow-down-tray')
                     ->url(fn (Payslip $record) => $record->pdf_path ? Storage::disk('public')->url($record->pdf_path) : null)
                     ->openUrlInNewTab()
                     ->visible(fn (Payslip $record) => $record->pdf_path !== null),
-                Tables\Actions\EditAction::make(),
+                EditAction::make(),
             ])
-            ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+            ->toolbarActions([
+                BulkActionGroup::make([
+                    DeleteBulkAction::make(),
                 ]),
             ]);
     }

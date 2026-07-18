@@ -30,15 +30,18 @@ class PayslipPdfService
 
         $filename = 'payslip_' . $payslip->period . '_' . $payslip->employee->last_name;
 
-        $path = $this->documentService->generate(
+        // Le chemin relatif au disque public
+        $relativePath = 'documents/payslips/' . $filename . '.pdf';
+
+        $this->documentService->generate(
             view: 'pdf.payslip',
             data: $data,
             filename: $filename,
             type: 'payslips'
         );
 
-        $payslip->update(['pdf_path' => $path]);
+        $payslip->update(['pdf_path' => $relativePath]);
 
-        return $path;
+        return $relativePath;
     }
 }
