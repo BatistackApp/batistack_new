@@ -39,13 +39,22 @@
   - Basculement automatique du statut de la machine (En réparation <-> Actif).
   - Liaison directe avec le `ChantierAnalyticService` : le coût des réparations ampute instantanément la marge financière du chantier en cours.
 
+- **Révision / Dépréciation Exceptionnelle d'un Actif** :
+  - Gestion des pertes de valeur non planifiées (sinistres, casse irréparable, obsolescence).
+  - Création du modèle `AssetImpairment` pour logger la perte de valeur à une date donnée.
+  - Recalcul dynamique du reste du plan d'amortissement (`DepreciationCalculatorService::recalculateSchedule`) par lissage de la nouvelle VNC sur le temps d'utilité restant de l'actif.
+
+- **Alertes, Rappels et VGP (Contrôles réglementaires)** :
+  - Ajout de la périodicité VGP (`vgp_frequency_months`) sur les immobilisations.
+  - Commande `immobilisations:check-alerts` pour l'envoi de notifications push.
+  - Widget `AssetAlertsWidget` sur le Dashboard listant le statut des machines (À jour, Bientôt, Expirée).
+  - Alertes automatisées : VGP Expirée/Imminente, Rentabilité critique (Coût des réparations > VNC restante), Fin d'amortissement imminente.
+
 ## Ce qu'il reste à faire
 - **Améliorations futures** :
   - Ajouter la numérisation des factures fournisseurs via OCR lors de l'enregistrement de l'actif.
   - Automatiser la gestion des subventions d'investissement si nécessaire.
 
 ## Proposition de nouvelles fonctionnalités ou d'amélioration
-- **Alertes et Notifications Automatisées** :
-  - Notifier l'administrateur ou l'expert-comptable lorsqu'une session d'amortissement automatique a échoué, ou à l'approche de la clôture de l'exercice pour validation.
-- **Révision d'Amortissement** :
-  - Permettre la réévaluation ou dépréciation anticipée d'un actif (suite à une détérioration ou une obsolescence rapide) et le recalcul automatique du tableau d'amortissement.
+- **Export Comptable Avancé** :
+  - Générer le fichier des écritures comptables (FEC) avec les dotations aux amortissements de l'année.

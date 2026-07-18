@@ -127,7 +127,7 @@ jobs:
               - 'app/Providers/Banque/**'
               - 'app/Services/Banque/**'
               - 'tests/Feature/Modules/Banque/**'
-            Immobilisations:
+            Immobilisation:
               - 'app/Filament/Immobilisation/**'
               - 'app/Console/Immobilisation/**'
               - 'app/Enums/Immobilisation/**'

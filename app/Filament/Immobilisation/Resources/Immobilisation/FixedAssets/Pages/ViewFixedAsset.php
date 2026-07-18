@@ -2,9 +2,20 @@
 
 namespace App\Filament\Immobilisation\Resources\Immobilisation\FixedAssets\Pages;
 
+use App\Enums\Immobilisation\AssetStatus;
+use App\Enums\Immobilisation\DepreciationMethod;
+use App\Filament\Immobilisation\Resources\Immobilisation\AssetMaintenances\Schemas\AssetMaintenanceForm;
 use App\Filament\Immobilisation\Resources\Immobilisation\FixedAssets\FixedAssetResource;
+use App\Services\Immobilisation\AssetImpairmentService;
+use App\Services\Immobilisation\ImmobilisationDocumentService;
+use Filament\Actions\Action;
 use Filament\Actions\EditAction;
+use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Form;
+use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
+use Filament\Schemas\Schema;
 
 class ViewFixedAsset extends ViewRecord
 {
@@ -13,7 +24,7 @@ class ViewFixedAsset extends ViewRecord
     protected function getHeaderActions(): array
     {
         return [
-            \Filament\Actions\Action::make('inventory')
+            Action::make('inventory')
                 ->label('✅ Valider la présence')
                 ->color('success')
                 ->requiresConfirmation()
@@ -22,47 +33,81 @@ class ViewFixedAsset extends ViewRecord
                 ->action(function () {
                     $record = $this->getRecord();
                     $record->update(['last_inventoried_at' => now()]);
-                    
-                    \Filament\Notifications\Notification::make()
+
+                    Notification::make()
                         ->title('Inventaire mis à jour')
                         ->success()
                         ->send();
                 }),
-            \Filament\Actions\Action::make('report_breakdown')
+            Action::make('report_breakdown')
                 ->label('Signaler en panne')
                 ->icon('heroicon-o-exclamation-triangle')
                 ->color('danger')
                 ->requiresConfirmation()
                 ->action(function () {
                     $record = $this->getRecord();
-                    $record->update(['status' => \App\Enums\Immobilisation\AssetStatus::IN_MAINTENANCE]);
-                    \Filament\Notifications\Notification::make()->title('Machine déclarée en panne')->danger()->send();
+                    $record->update(['status' => AssetStatus::IN_MAINTENANCE]);
+                    Notification::make()->title('Machine déclarée en panne')->danger()->send();
                 })
-                ->visible(fn () => $this->getRecord()->status !== \App\Enums\Immobilisation\AssetStatus::IN_MAINTENANCE),
-            \Filament\Actions\Action::make('log_repair')
+                ->visible(fn () => $this->getRecord()->status !== AssetStatus::IN_MAINTENANCE),
+            Action::make('log_repair')
                 ->label('Saisir Facture Réparation')
                 ->icon('heroicon-o-wrench')
                 ->color('warning')
-                ->form(fn (\Filament\Forms\Form $form) => \App\Filament\Immobilisation\Resources\Immobilisation\AssetMaintenances\Schemas\AssetMaintenanceForm::configure($form))
+                ->schema(fn (Schema $form) => AssetMaintenanceForm::configure($form, true))
                 ->action(function (array $data) {
                     $record = $this->getRecord();
                     $record->maintenances()->create($data);
-                    
-                    if ($record->status === \App\Enums\Immobilisation\AssetStatus::IN_MAINTENANCE) {
-                        $record->update(['status' => \App\Enums\Immobilisation\AssetStatus::ACTIVE]);
-                        \Filament\Notifications\Notification::make()->title('Réparation enregistrée, machine à nouveau active')->success()->send();
+
+                    if ($record->status === AssetStatus::IN_MAINTENANCE) {
+                        $record->update(['status' => AssetStatus::ACTIVE]);
+                        Notification::make()->title('Réparation enregistrée, machine à nouveau active')->success()->send();
                     } else {
-                        \Filament\Notifications\Notification::make()->title('Intervention enregistrée')->success()->send();
+                        Notification::make()->title('Intervention enregistrée')->success()->send();
                     }
                 }),
-            \Filament\Actions\Action::make('print_sheet')
+            Action::make('exceptional_impairment')
+                ->label('Dépréciation Exceptionnelle')
+                ->icon('heroicon-o-arrow-trending-down')
+                ->color('danger')
+                ->requiresConfirmation()
+                ->modalHeading('Déclarer une perte de valeur')
+                ->modalDescription('Attention, cette action va réduire la Valeur Nette Comptable de l\'actif et recalculer son plan d\'amortissement de façon permanente.')
+                ->schema([
+                    DatePicker::make('date')
+                        ->label('Date de constatation')
+                        ->default(now())
+                        ->required(),
+                    TextInput::make('amount')
+                        ->label('Montant de la dépréciation (HT)')
+                        ->numeric()
+                        ->prefix('€')
+                        ->required(),
+                    TextInput::make('reason')
+                        ->label('Motif (Casse, Sinistre...)')
+                        ->required()
+                        ->maxLength(255),
+                ])
+                ->action(function (array $data, AssetImpairmentService $service) {
+                    $record = $this->getRecord();
+                    $service->recordImpairment($record, $data);
+
+                    Notification::make()
+                        ->title('Dépréciation enregistrée')
+                        ->body('Le plan d\'amortissement a été recalculé avec succès.')
+                        ->success()
+                        ->send();
+                })
+                ->visible(fn () => $this->getRecord()->status === AssetStatus::ACTIVE && $this->getRecord()->depreciation_method !== DepreciationMethod::NONE),
+            Action::make('print_sheet')
                 ->label('Imprimer Fiche')
                 ->icon('heroicon-o-printer')
                 ->color('gray')
                 ->action(function () {
                     $record = $this->getRecord();
-                    $service = new \App\Services\Immobilisation\ImmobilisationDocumentService();
+                    $service = new ImmobilisationDocumentService;
                     $path = $service->generateAssetSheet($record);
+
                     return response()->download($path);
                 }),
             EditAction::make(),

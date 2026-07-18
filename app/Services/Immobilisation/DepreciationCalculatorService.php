@@ -154,4 +154,68 @@ class DepreciationCalculatorService
 
         return $schedule;
     }
+
+    /**
+     * Recalculates the remaining depreciation schedule after an impairment.
+     */
+    public function recalculateSchedule(FixedAsset $asset): array
+    {
+        $baseValue = $asset->purchase_price - $asset->salvage_value;
+        if ($baseValue <= 0) return [];
+
+        $passedAmount = $asset->depreciations()->where('is_passed', true)->sum('amount');
+        $impairmentAmount = $asset->impairments()->sum('amount');
+        
+        $newVnc = $baseValue - $passedAmount - $impairmentAmount;
+        if ($newVnc <= 0) return [];
+
+        // Find the last year an impairment or passed depreciation occurred
+        $lastImpairmentDate = $asset->impairments()->max('date');
+        $lastPassedDate = $asset->depreciations()->where('is_passed', true)->max('period_date');
+
+        $lastYear = 0;
+        if ($lastImpairmentDate) $lastYear = max($lastYear, Carbon::parse($lastImpairmentDate)->year);
+        if ($lastPassedDate) $lastYear = max($lastYear, Carbon::parse($lastPassedDate)->year);
+
+        if ($lastYear === 0) {
+            $lastYear = Carbon::parse($asset->purchase_date)->year - 1;
+        }
+
+        // Generate the original theoretical schedule to get the remaining periods
+        $originalSchedule = $this->generateSchedule($asset);
+
+        // Filter out periods that are <= the last year of event
+        $futurePeriods = array_filter($originalSchedule, function ($item) use ($lastYear) {
+            return Carbon::parse($item['period_date'])->year > $lastYear;
+        });
+
+        if (empty($futurePeriods)) return [];
+
+        // Distribute the new VNC proportionally over the remaining theoretical periods
+        $sumOriginalFuture = array_sum(array_column($futurePeriods, 'amount'));
+        if ($sumOriginalFuture <= 0) return [];
+
+        $ratio = $newVnc / $sumOriginalFuture;
+        $newSchedule = [];
+        $runningVnc = $newVnc;
+
+        foreach ($futurePeriods as $index => $period) {
+            // If it's the last period, put the rest to avoid rounding issues
+            if ($index === array_key_last($futurePeriods)) {
+                $amount = round($runningVnc, 2);
+            } else {
+                $amount = round($period['amount'] * $ratio, 2);
+            }
+            
+            $runningVnc -= $amount;
+
+            $newSchedule[] = [
+                'period_date' => $period['period_date'],
+                'amount' => max(0, $amount),
+                'remaining_vnc' => max(0, $runningVnc),
+            ];
+        }
+
+        return $newSchedule;
+    }
 }

@@ -10,17 +10,21 @@ use Filament\Schemas\Schema;
 
 class AssetMaintenanceForm
 {
-    public static function configure(Schema $schema): Schema
+    public static function configure(Schema $schema, bool $isRelationManager = false): Schema
     {
-        return $schema
-            ->components([
-                \Filament\Forms\Components\Select::make('fixed_asset_id')
-                    ->label('Actif / Machine')
-                    ->relationship('fixedAsset', 'name')
-                    ->searchable()
-                    ->preload()
-                    ->required(),
-                \Filament\Forms\Components\Select::make('chantier_id')
+        $components = [];
+
+        if (! $isRelationManager) {
+            $components[] = \Filament\Forms\Components\Select::make('fixed_asset_id')
+                ->label('Actif / Machine')
+                ->relationship('fixedAsset', 'name')
+                ->searchable()
+                ->preload()
+                ->required();
+        }
+
+        $components = array_merge($components, [
+            \Filament\Forms\Components\Select::make('chantier_id')
                     ->label('Chantier imputé (Optionnel)')
                     ->relationship('chantier', 'name')
                     ->searchable()
@@ -51,6 +55,8 @@ class AssetMaintenanceForm
                     ->label('Description de la panne / intervention')
                     ->columnSpanFull()
                     ->required(),
-            ]);
+        ]);
+
+        return $schema->components($components);
     }
 }
