@@ -17,15 +17,23 @@
   - Création du provider `ImmobilisationPanelProvider` avec un panel dédié accessible sur la route `/immobilisation`.
   - Implémentation des ressources Filament `AssetCategoryResource` et `FixedAssetResource` incluant la séparation V5 (Schemas et Tables).
   - Création de widgets pour le Dashboard (Valeur Totale des Actifs, Graphique de Prévision des Dotations).
+  - Traduction complète en français de l'interface (modèles, groupes de navigation, formulaires et tableaux).
+  - Ajout de filtres avancés (Catégorie, Statut, Chantier, Date d'acquisition) sur les tableaux de données.
+- **Imputation Analytique (V1 atteinte)** :
+  - Ajout de la clé `chantier_id` sur la table `depreciations`.
+  - Modification de la commande `immobilisations:run-depreciations` pour "photographier" et conserver l'affectation du chantier au moment du passage en comptabilité.
+  - Mise à jour du `ChantierAnalyticService` (Module Chantiers) pour consolider automatiquement ces coûts d'amortissement dans la marge brute des chantiers.
+  - Tests d'intégration complets validant le workflow analytique (`ImputationAnalytiqueTest.php`).
+
+- **Lien Comptable (FEC export)** :
+  - Création du `FecExportService` générant un fichier TXT (tabulations) respectant les 18 colonnes de la DGFiP.
+  - Déduction du compte d'amortissement (`28...`) à partir du compte de l'actif (`2...`).
+  - Action Filament pour télécharger l'export FEC des amortissements de l'année.
 
 ## Ce qu'il reste à faire
-- **Imputation Analytique** :
-  - Implémenter la répartition proportionnelle du coût d'amortissement de l'actif sur le(s) chantier(s) affecté(s) lors du passage de la dotation (Objet de la V1).
-- **Frontend / UX** :
-  - Finir de stabiliser les tests Frontend de la ressource `FixedAssetResource` (correction des middlewares et schémas Filament V5) et s'assurer que l'UI réponde aux standards premium exigés (micro-animations, design vibrant).
-  - Ajouter des filtres avancés sur les tables Filament pour rechercher par mois d'acquisition, par type ou par chantier.
-- **Lien Comptable** :
-  - Gérer l'export comptable (FEC / FEC Pro) ou l'intégration des journaux d'amortissement vers la comptabilité générale.
+- **Améliorations futures** :
+  - Ajouter la numérisation des factures fournisseurs via OCR lors de l'enregistrement de l'actif.
+  - Automatiser la gestion des subventions d'investissement si nécessaire.
 
 ## Proposition de nouvelles fonctionnalités ou d'amélioration
 - **Code-Barres / QR Codes pour le Suivi d'Inventaire** :

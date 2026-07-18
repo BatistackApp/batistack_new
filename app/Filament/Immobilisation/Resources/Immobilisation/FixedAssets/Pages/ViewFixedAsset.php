@@ -13,6 +13,16 @@ class ViewFixedAsset extends ViewRecord
     protected function getHeaderActions(): array
     {
         return [
+            \Filament\Actions\Action::make('print_sheet')
+                ->label('Imprimer Fiche')
+                ->icon('heroicon-o-printer')
+                ->color('gray')
+                ->action(function () {
+                    $record = $this->getRecord();
+                    $service = new \App\Services\Immobilisation\ImmobilisationDocumentService();
+                    $path = $service->generateAssetSheet($record);
+                    return response()->download($path);
+                }),
             EditAction::make(),
         ];
     }

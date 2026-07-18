@@ -40,7 +40,9 @@ class AssetCategoriesTable
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                //
+                \Filament\Tables\Filters\SelectFilter::make('default_method')
+                    ->label('Méthode d\'amortissement')
+                    ->options(\App\Enums\Immobilisation\DepreciationMethod::class),
             ])
             ->recordActions([
                 EditAction::make(),
