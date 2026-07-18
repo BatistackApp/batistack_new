@@ -28,7 +28,7 @@ class ImmobilisationDocumentService extends DocumentService
         ]);
 
         // On encode l'URL pour la fiche via le Resource
-        $qrCodeData = \App\Filament\Immobilisation\Resources\Immobilisation\FixedAssets\FixedAssetResource::getUrl('view', ['record' => $asset]);
+        $qrCodeData = \App\Filament\Immobilisation\Resources\Immobilisation\FixedAssets\FixedAssetResource::getUrl('view', ['record' => $asset], panel: 'immobilisation');
         $qrCodeSvg = (new QRCode($options))->render($qrCodeData);
 
         return $this->generate(
@@ -122,7 +122,7 @@ class ImmobilisationDocumentService extends DocumentService
 
         $qrCodes = [];
         foreach ($assets as $asset) {
-            $url = \App\Filament\Immobilisation\Resources\Immobilisation\FixedAssets\FixedAssetResource::getUrl('view', ['record' => $asset]);
+            $url = \App\Filament\Immobilisation\Resources\Immobilisation\FixedAssets\FixedAssetResource::getUrl('view', ['record' => $asset], panel: 'immobilisation');
             $qrCodes[$asset->id] = (new QRCode($options))->render($url);
         }
 
