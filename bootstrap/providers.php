@@ -10,6 +10,7 @@ return [
     App\Providers\Filament\CustomerPanelProvider::class,
     App\Providers\Filament\FlottesPanelProvider::class,
     App\Providers\Filament\ImmobilisationPanelProvider::class,
+    App\Providers\Filament\LocationsPanelProvider::class,
     App\Providers\Filament\PaiePanelProvider::class,
     App\Providers\Filament\RHPanelProvider::class,
     App\Providers\Filament\SalariePanelProvider::class,

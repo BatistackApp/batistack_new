@@ -117,7 +117,7 @@ class ContractsRelationManager extends RelationManager
                 Action::make('print_contract')
                     ->label('Imprimer')
                     ->icon(Phosphor::Printer)
-                    ->action(fn (Contract $record, RHDocumentService $service) => Storage::disk('public')->download($service->generateContract($record))),
+                    ->action(fn (Contract $record, RHDocumentService $service) => response()->download($service->generateContract($record))),
                 Action::make('request_signature')
                     ->icon(Phosphor::PenNib)
                     ->color('info')
