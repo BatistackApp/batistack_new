@@ -24,6 +24,14 @@ class ManufacturingOrdersTable
                     ->searchable()
                     ->sortable(),
 
+                \Filament\Tables\Columns\TextColumn::make('customerOrder.reference')
+                    ->label('Cmd. Origine')
+                    ->searchable()
+                    ->sortable()
+                    ->url(fn ($record) => $record->customer_order_id ? route('filament.commerce.resources.customer-orders.edit', $record->customer_order_id) : null)
+                    ->color('primary')
+                    ->openUrlInNewTab(),
+
                 \Filament\Tables\Columns\TextColumn::make('quantity_planned')
                     ->label('Qte. Prévue')
                     ->numeric()
@@ -37,12 +45,12 @@ class ManufacturingOrdersTable
                 \Filament\Tables\Columns\TextColumn::make('status')
                     ->label('Statut')
                     ->badge()
-                    ->color(fn (string $state): string => match ($state) {
-                        \App\Enums\Gpao\ManufacturingStatus::DRAFT->value => 'gray',
-                        \App\Enums\Gpao\ManufacturingStatus::PLANNED->value => 'info',
-                        \App\Enums\Gpao\ManufacturingStatus::IN_PROGRESS->value => 'warning',
-                        \App\Enums\Gpao\ManufacturingStatus::COMPLETED->value => 'success',
-                        \App\Enums\Gpao\ManufacturingStatus::CANCELLED->value => 'danger',
+                    ->color(fn (\App\Enums\Gpao\ManufacturingStatus $state): string => match ($state) {
+                        \App\Enums\Gpao\ManufacturingStatus::DRAFT => 'gray',
+                        \App\Enums\Gpao\ManufacturingStatus::PLANNED => 'info',
+                        \App\Enums\Gpao\ManufacturingStatus::IN_PROGRESS => 'warning',
+                        \App\Enums\Gpao\ManufacturingStatus::COMPLETED => 'success',
+                        \App\Enums\Gpao\ManufacturingStatus::CANCELLED => 'danger',
                         default => 'gray',
                     })
                     ->sortable(),

@@ -21,11 +21,19 @@ Le module **GPAO** a pour objectif de gérer les opérations de production ou d'
 - **Tableau de Nomenclature (Relation Manager)** : Intégration d'un tableau permettant d'éditer manuellement les matières requises et de visualiser les quantités consommées via le `RequirementsRelationManager`.
 - **Espace Dédié (Panel Switch)** : Création d'un panneau Filament spécifique `GpaoPanelProvider` ("Atelier & Production") et intégration au `PanelSwitch` dans `AppServiceProvider`.
 
+### 3. Intégration Commerce & GPAO (Pont des Commandes)
+- **Modèle relationnel** : Ajout d'une relation hiérarchique sur les Ordres de Fabrication (`parent_id` / `children`) et d'une liaison avec la commande d'origine (`customer_order_id`).
+- **Génération MRP et Sous-OF** : Le Job `GenerateManufacturingOrdersJob` scrute la commande client et la nomenclature des ouvrages pour générer automatiquement et récursivement des OFs et sous-OFs.
+- **Déclencheur Automatique (Observer)** : Génération des OFs déclenchée automatiquement lorsque le statut de la Commande Client passe à "Confirmé".
+- **Génération et Affichage UI** : 
+  - Ajout d'un bouton d'action manuelle "Générer les OF" sur le formulaire de la commande client.
+  - Ajout d'un `ManufacturingOrdersRelationManager` sur la page Commande Client pour centraliser la vue de la production.
+  - Affichage d'un lien direct "Commande d'origine" sur les Ordres de Fabrication pour naviguer d'un espace à l'autre.
+
 ---
 
 ## 🚧 Ce qu'il reste à faire
 
-- **Liaison avec les Bons de Commandes (Module Commerce / Chantiers)** : Automatiser la création d'un Ordre de Fabrication lorsqu'un Chantier est validé ou lorsqu'un produit spécifique est vendu via le CRM.
 - **Contrôle Qualité** : Ajouter une étape de validation qualité à la fin de la production avant l'entrée en stock définitive.
 - **Traçabilité des Numéros de Série/Lots** : Affiner le tracking des lots consommés si un article de la nomenclature nécessite une traçabilité stricte.
 - **Interface Opérateur** : Simplifier l'affichage (mode tablette) pour que l'ouvrier dans l'atelier n'ait qu'un gros bouton "Démarrer" et "Terminer" par OF, sans voir toute l'interface d'administration.

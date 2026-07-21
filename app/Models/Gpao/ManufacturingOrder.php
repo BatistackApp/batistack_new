@@ -24,6 +24,8 @@ class ManufacturingOrder extends Model
         'reference',
         'item_id',
         'chantier_id',
+        'customer_order_id',
+        'parent_id',
         'quantity_planned',
         'quantity_produced',
         'status',
@@ -60,6 +62,21 @@ class ManufacturingOrder extends Model
     public function chantier(): BelongsTo
     {
         return $this->belongsTo(Chantier::class);
+    }
+
+    public function customerOrder(): BelongsTo
+    {
+        return $this->belongsTo(\App\Models\Commerce\CustomerOrder::class);
+    }
+
+    public function parent(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'parent_id');
+    }
+
+    public function children(): HasMany
+    {
+        return $this->hasMany(self::class, 'parent_id');
     }
 
     public function requirements(): HasMany

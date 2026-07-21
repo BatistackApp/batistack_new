@@ -25,6 +25,11 @@ class ManufacturingOrderForm
                                 ->required()
                                 ->readOnly(),
 
+                            \Filament\Forms\Components\Placeholder::make('customer_order')
+                                ->label('Commande d\'origine')
+                                ->content(fn ($record) => $record && $record->customerOrder ? new \Illuminate\Support\HtmlString('<a href="'.route('filament.commerce.resources.customer-orders.edit', $record->customer_order_id).'" target="_blank" style="text-decoration:underline;color:blue;">'.$record->customerOrder->reference.'</a>') : '-')
+                                ->visible(fn ($record) => $record && $record->customer_order_id),
+
                             Select::make('item_id')
                                 ->label('Article à produire')
                                 ->relationship('item', 'name')

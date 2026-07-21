@@ -59,6 +59,11 @@ class CustomerOrder extends Model
         return $this->hasMany(CustomerDeliveryNote::class);
     }
 
+    public function manufacturingOrders(): HasMany
+    {
+        return $this->hasMany(\App\Models\Gpao\ManufacturingOrder::class);
+    }
+
     public function invoices(): HasMany
     {
         return $this->hasMany(CustomerInvoice::class);
