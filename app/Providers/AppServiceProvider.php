@@ -53,6 +53,7 @@ class AppServiceProvider extends ServiceProvider
                     'flottes',
                     'immobilisation',
                     'locations',
+                    'gpao',
                 ])
                 ->modalHeading('Espaces')
                 ->slideOver()
@@ -68,6 +69,7 @@ class AppServiceProvider extends ServiceProvider
                     'flottes' => Phosphor::Truck,
                     'immobilisation' => Phosphor::BoxArrowUp,
                     'locations' => Phosphor::KeyReturn,
+                    'gpao' => Phosphor::Factory,
                 ])
                 ->labels([
                     'core' => 'Configurations',
@@ -81,6 +83,7 @@ class AppServiceProvider extends ServiceProvider
                     'flottes' => 'Flottes',
                     'immobilisation' => 'Immobilisations',
                     'locations' => 'Locations',
+                    'gpao' => 'Atelier & Production',
                 ]);
         });
 
