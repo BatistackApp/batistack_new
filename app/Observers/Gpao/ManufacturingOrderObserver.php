@@ -38,6 +38,9 @@ class ManufacturingOrderObserver
         // Note : Si l'OF passe à QUALITY_CONTROL, on ne rentre pas encore en stock
         if ($manufacturingOrder->wasChanged('status') && $manufacturingOrder->status === ManufacturingStatus::COMPLETED) {
             (new ProductionInventoryService(new StockService()))->receiveFinishedProduct($manufacturingOrder);
+            
+            // Générer l'étiquette / PDF de l'OF de façon asynchrone
+            \App\Jobs\Gpao\GenerateManufacturingOrderPdfJob::dispatch($manufacturingOrder->id);
         }
     }
 

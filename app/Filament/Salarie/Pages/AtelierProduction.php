@@ -63,4 +63,20 @@ class AtelierProduction extends Page
             $order->update(['status' => ManufacturingStatus::QUALITY_CONTROL]);
         }
     }
+
+    public function downloadPdf($orderId)
+    {
+        $order = ManufacturingOrder::findOrFail($orderId);
+        
+        $media = $order->getFirstMedia('pdf_documents');
+        if ($media) {
+            return response()->download($media->getPath(), $media->file_name);
+        }
+
+        // Generate on the fly
+        $pdfPath = (new \App\Services\Gpao\GpaoDocumentService())->generateManufacturingOrderPdf($order);
+        $media = $order->addMedia($pdfPath)->toMediaCollection('pdf_documents');
+        
+        return response()->download($media->getPath(), $media->file_name);
+    }
 }

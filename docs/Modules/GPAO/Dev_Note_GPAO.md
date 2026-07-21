@@ -35,18 +35,25 @@ Le module **GPAO** a pour objectif de gérer les opérations de production ou d'
 - **Traçabilité** : Création d'une table dédiée `QualityCheck` pour historiser l'inspecteur, la date, la décision (Validé/Refusé) et les notes.
 - **UI Filament** : Ajout d'une modale "Contrôle Qualité" pour valider/refuser un OF, ainsi qu'un `QualityChecksRelationManager` pour voir l'historique sur chaque OF.
 
+### 5. Interface Opérateur (Tablette)
+- **Intégration RH** : Ajout d'un champ `access_atelier` géré depuis la fiche de l'employé pour autoriser l'accès à la production.
+- **Portail Salarié** : Création d'une page simplifiée optimisée pour les tablettes (`AtelierProduction`) dans l'espace Salarié existant.
+- **Fonctionnalités** :
+  - Séparation entre les tâches "À faire / En cours" et "Historique".
+  - Actions rapides avec de gros boutons pour "Démarrer" et "Terminer" la production.
+  - Affichage direct de la nomenclature (recette) et bouton pour visualiser la documentation PDF associée au produit fini.
+
+### 6. Génération de PDF et Étiquettes (QR Code)
+- **Génération asynchrone** : Le job `GenerateManufacturingOrderPdfJob` se déclenche automatiquement lorsqu'un Ordre de Fabrication est validé (statut `COMPLETED`).
+- **Media Library** : Le document PDF est rattaché à l'historique du modèle via Spatie Media Library.
+- **Intégration d'un QR Code** : Le document intègre un QR Code natif contenant la référence de l'OF via `chillerlan/php-qrcode` (idéal pour le scannage logistique / sur chantier).
+- **Interface de Téléchargement** :
+  - Ajout d'une action de téléchargement sur l'interface d'administration.
+  - Ajout d'un bouton de téléchargement "À la volée" sur l'interface tablette pour les opérateurs.
+
 ---
 
 ## 🚧 Ce qu'il reste à faire
-
-- **Interface Opérateur** : Simplifier l'affichage (mode tablette) pour que l'ouvrier dans l'atelier n'ait qu'un gros bouton "Démarrer" et "Terminer" par OF, sans voir toute l'interface d'administration. *(À décider : Créer une nouvelle interface Filament dédiée ou passer par l'interface Salarié existante ?)*
-
----
-
-## 💡 Idées d'améliorations & Nouvelles fonctionnalités utiles
-
-- 🏷️ **Génération d'un PDF de l'OF et Impression d'Étiquettes (Lien avec Module Articles)**
-  Générer dynamiquement un PDF récapitulatif général de l'OF (contenant toutes les instructions, nomenclatures, etc.) ainsi qu'un Code-barres ou un QR Code à l'achèvement. Ce QR code pourrait être collé sur le produit fini pour être ensuite scanné sur le chantier ou lors des expéditions.
 
 - ⏱️ **Pointage Temps Réel sur OF (Lien avec Module RH)**
   Permettre aux ouvriers d'utiliser la pointeuse biométrique ou mobile en spécifiant sur quel numéro d'OF ils travaillent, afin de calculer les coûts de main d'œuvre au centime près plutôt qu'au forfait.

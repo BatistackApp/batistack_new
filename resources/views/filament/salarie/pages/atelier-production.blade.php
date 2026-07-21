@@ -83,6 +83,13 @@
                                     TERMINER LA PRODUCTION
                                 </button>
                             @endif
+                            <button 
+                                wire:click="downloadPdf({{ $order->id }})" 
+                                class="w-full mt-3 py-3 bg-gray-200 hover:bg-gray-300 text-gray-800 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 rounded-xl shadow transition flex justify-center items-center gap-2 font-bold"
+                            >
+                                <x-filament::icon icon="heroicon-o-qr-code" class="h-6 w-6" />
+                                TÉLÉCHARGER L'ÉTIQUETTE / OF
+                            </button>
                         </div>
                     </div>
                 @empty

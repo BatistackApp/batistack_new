@@ -2,10 +2,19 @@
 
 namespace App\Filament\Gpao\ManufacturingOrders\Tables;
 
+use App\Enums\Gpao\ManufacturingStatus;
+use App\Models\Gpao\ManufacturingOrder;
+use App\Services\Gpao\GpaoDocumentService;
+use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
+use Filament\Forms\Components\Radio;
+use Filament\Forms\Components\Textarea;
+use Filament\Notifications\Notification;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 
 class ManufacturingOrdersTable
@@ -14,17 +23,17 @@ class ManufacturingOrdersTable
     {
         return $table
             ->columns([
-                \Filament\Tables\Columns\TextColumn::make('reference')
+                TextColumn::make('reference')
                     ->label('Référence')
                     ->searchable()
                     ->sortable(),
 
-                \Filament\Tables\Columns\TextColumn::make('item.name')
+                TextColumn::make('item.name')
                     ->label('Article')
                     ->searchable()
                     ->sortable(),
 
-                \Filament\Tables\Columns\TextColumn::make('customerOrder.reference')
+                TextColumn::make('customerOrder.reference')
                     ->label('Cmd. Origine')
                     ->searchable()
                     ->sortable()
@@ -32,67 +41,67 @@ class ManufacturingOrdersTable
                     ->color('primary')
                     ->openUrlInNewTab(),
 
-                \Filament\Tables\Columns\TextColumn::make('quantity_planned')
+                TextColumn::make('quantity_planned')
                     ->label('Qte. Prévue')
                     ->numeric()
                     ->sortable(),
 
-                \Filament\Tables\Columns\TextColumn::make('quantity_produced')
+                TextColumn::make('quantity_produced')
                     ->label('Qte. Produite')
                     ->numeric()
                     ->sortable(),
 
-                \Filament\Tables\Columns\TextColumn::make('status')
+                TextColumn::make('status')
                     ->label('Statut')
                     ->badge()
                     ->sortable(),
 
-                \Filament\Tables\Columns\TextColumn::make('planned_start_date')
+                TextColumn::make('planned_start_date')
                     ->label('Début')
                     ->date()
                     ->sortable(),
             ])
             ->filters([
-                \Filament\Tables\Filters\SelectFilter::make('status')
+                SelectFilter::make('status')
                     ->label('Statut')
-                    ->options(\App\Enums\Gpao\ManufacturingStatus::class),
+                    ->options(ManufacturingStatus::class),
             ])
             ->recordActions([
                 ViewAction::make(),
                 EditAction::make(),
-                \Filament\Actions\Action::make('start')
+                Action::make('start')
                     ->label('Démarrer')
                     ->icon('heroicon-o-play')
                     ->color('warning')
                     ->requiresConfirmation()
-                    ->visible(fn (\App\Models\Gpao\ManufacturingOrder $record) => in_array($record->status, [\App\Enums\Gpao\ManufacturingStatus::DRAFT, \App\Enums\Gpao\ManufacturingStatus::PLANNED]))
-                    ->action(fn (\App\Models\Gpao\ManufacturingOrder $record) => $record->update(['status' => \App\Enums\Gpao\ManufacturingStatus::IN_PROGRESS])),
+                    ->visible(fn (ManufacturingOrder $record) => in_array($record->status, [ManufacturingStatus::DRAFT, ManufacturingStatus::PLANNED]))
+                    ->action(fn (ManufacturingOrder $record) => $record->update(['status' => ManufacturingStatus::IN_PROGRESS])),
 
-                \Filament\Actions\Action::make('complete')
+                Action::make('complete')
                     ->label('Terminer (Au contrôle)')
                     ->icon('heroicon-o-check')
                     ->color('info')
                     ->requiresConfirmation()
-                    ->visible(fn (\App\Models\Gpao\ManufacturingOrder $record) => $record->status === \App\Enums\Gpao\ManufacturingStatus::IN_PROGRESS)
-                    ->action(fn (\App\Models\Gpao\ManufacturingOrder $record) => $record->update(['status' => \App\Enums\Gpao\ManufacturingStatus::QUALITY_CONTROL])),
+                    ->visible(fn (ManufacturingOrder $record) => $record->status === ManufacturingStatus::IN_PROGRESS)
+                    ->action(fn (ManufacturingOrder $record) => $record->update(['status' => ManufacturingStatus::QUALITY_CONTROL])),
 
-                \Filament\Actions\Action::make('quality_control')
+                Action::make('quality_control')
                     ->label('Contrôle Qualité')
                     ->icon('heroicon-o-shield-check')
                     ->color('fuchsia')
-                    ->visible(fn (\App\Models\Gpao\ManufacturingOrder $record) => $record->status === \App\Enums\Gpao\ManufacturingStatus::QUALITY_CONTROL)
+                    ->visible(fn (ManufacturingOrder $record) => $record->status === ManufacturingStatus::QUALITY_CONTROL)
                     ->form([
-                        \Filament\Forms\Components\Radio::make('status')
+                        Radio::make('status')
                             ->label('Résultat')
                             ->options([
                                 'passed' => 'Validé',
                                 'failed' => 'Refusé',
                             ])
                             ->required(),
-                        \Filament\Forms\Components\Textarea::make('notes')
+                        Textarea::make('notes')
                             ->label('Notes / Commentaires'),
                     ])
-                    ->action(function (array $data, \App\Models\Gpao\ManufacturingOrder $record) {
+                    ->action(function (array $data, ManufacturingOrder $record) {
                         $record->qualityChecks()->create([
                             'inspector_id' => auth()->id(),
                             'status' => $data['status'],
@@ -101,15 +110,33 @@ class ManufacturingOrdersTable
                         ]);
 
                         if ($data['status'] === 'passed') {
-                            $record->update(['status' => \App\Enums\Gpao\ManufacturingStatus::COMPLETED]);
-                            \Filament\Notifications\Notification::make()->title('Contrôle validé. Produit en stock.')->success()->send();
+                            $record->update(['status' => ManufacturingStatus::COMPLETED]);
+                            Notification::make()->title('Contrôle validé. Produit en stock.')->success()->send();
                         } else {
-                            $record->update(['status' => \App\Enums\Gpao\ManufacturingStatus::IN_PROGRESS]);
-                            \Filament\Notifications\Notification::make()->title('Contrôle refusé. OF renvoyé en cours.')->warning()->send();
+                            $record->update(['status' => ManufacturingStatus::IN_PROGRESS]);
+                            Notification::make()->title('Contrôle refusé. OF renvoyé en cours.')->warning()->send();
                         }
                     }),
+
+                Action::make('download_pdf')
+                    ->label('Télécharger PDF (Étiquette)')
+                    ->icon('heroicon-o-document-arrow-down')
+                    ->color('success')
+                    ->action(function (ManufacturingOrder $record) {
+                        // Check if media exists
+                        $media = $record->getFirstMedia('pdf_documents');
+                        if ($media) {
+                            return response()->download($media->getPath(), $media->file_name);
+                        }
+
+                        // Generate on the fly
+                        $pdfPath = (new GpaoDocumentService)->generateManufacturingOrderPdf($record);
+                        $media = $record->addMedia($pdfPath)->toMediaCollection('pdf_documents');
+
+                        return response()->download($media->getPath(), $media->file_name);
+                    }),
             ])
-            ->toolbarActions([
+            ->bulkActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
                 ]),
