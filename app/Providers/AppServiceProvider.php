@@ -32,6 +32,8 @@ class AppServiceProvider extends ServiceProvider
 
         \App\Models\Banque\BankReconciliation::observe(\App\Observers\Banque\BankReconciliationObserver::class);
         \App\Models\Immobilisation\FixedAsset::observe(\App\Observers\Immobilisation\FixedAssetObserver::class);
+        \App\Models\Locations\RentalContract::observe(\App\Observers\Locations\RentalContractObserver::class);
+        
         if (app()->isProduction() || env('FORCE_HTTPS', false)) {
             \Illuminate\Support\Facades\URL::forceScheme('https');
             request()->server->set('HTTPS', 'on');
@@ -50,6 +52,7 @@ class AppServiceProvider extends ServiceProvider
                     'paie',
                     'flottes',
                     'immobilisation',
+                    'locations',
                 ])
                 ->modalHeading('Espaces')
                 ->slideOver()
@@ -64,6 +67,7 @@ class AppServiceProvider extends ServiceProvider
                     'paie' => Phosphor::Certificate,
                     'flottes' => Phosphor::Truck,
                     'immobilisation' => Phosphor::BoxArrowUp,
+                    'locations' => Phosphor::KeyReturn,
                 ])
                 ->labels([
                     'core' => 'Configurations',
@@ -76,6 +80,7 @@ class AppServiceProvider extends ServiceProvider
                     'paie' => 'Paie',
                     'flottes' => 'Flottes',
                     'immobilisation' => 'Immobilisations',
+                    'locations' => 'Locations',
                 ]);
         });
 

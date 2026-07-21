@@ -72,7 +72,14 @@ class ChantierAnalyticService
             ->where('chantier_id', $chantier->id)
             ->sum('cost_ht');
 
-        $totalCost = $laborCost + $materialCost + $subcontractingCost + $fleetCost + $assetDepreciationCost + $assetMaintenanceCost;
+        // 7. Coûts de Location (Module Locations)
+        $rentalCostService = app(\App\Services\Locations\RentalCostService::class);
+        $rentalCost = \App\Models\Locations\RentalContract::query()
+            ->where('chantier_id', $chantier->id)
+            ->get()
+            ->sum(fn ($contract) => $rentalCostService->getCumulativeCost($contract));
+
+        $totalCost = $laborCost + $materialCost + $subcontractingCost + $fleetCost + $assetDepreciationCost + $assetMaintenanceCost + $rentalCost;
         $budget = (float) $chantier->budget_total_ht;
         $marginReal = $budget - $totalCost;
 
@@ -89,6 +96,7 @@ class ChantierAnalyticService
                 'fleet_cost_real' => $fleetCost,
                 'asset_depreciation_cost_real' => (float) $assetDepreciationCost,
                 'asset_maintenance_cost_real' => (float) $assetMaintenanceCost,
+                'rental_cost_real' => (float) $rentalCost,
                 'total_cost_real' => $totalCost,
                 'budget_ht' => $budget,
                 'margin_real' => $marginReal,
