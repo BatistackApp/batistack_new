@@ -40,6 +40,7 @@ class LocationsPanelProvider extends PanelProvider
             ->discoverWidgets(in: app_path('Filament/Locations/Widgets'), for: 'App\Filament\Locations\Widgets')
             ->widgets([
                 \App\Filament\Locations\Widgets\ActiveRentalsWidget::class,
+                \App\Filament\Locations\Widgets\RentalCalendarWidget::class,
                 AccountWidget::class,
                 FilamentInfoWidget::class,
             ])
