@@ -44,6 +44,7 @@ class ManufacturingOrderResource extends Resource
     {
         return [
             \App\Filament\Gpao\ManufacturingOrders\RelationManagers\RequirementsRelationManager::class,
+            \App\Filament\Gpao\ManufacturingOrders\RelationManagers\QualityChecksRelationManager::class,
         ];
     }
 

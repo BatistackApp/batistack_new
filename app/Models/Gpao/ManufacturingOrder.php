@@ -5,14 +5,15 @@ namespace App\Models\Gpao;
 use App\Enums\Gpao\ManufacturingStatus;
 use App\Models\Articles\Item;
 use App\Models\Chantiers\Chantier;
+use App\Models\Commerce\CustomerOrder;
 use App\Models\RH\TimeEntry;
+use App\Observers\Gpao\ManufacturingOrderObserver;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
-use App\Observers\Gpao\ManufacturingOrderObserver;
-use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 
 #[ObservedBy([ManufacturingOrderObserver::class])]
 class ManufacturingOrder extends Model
@@ -66,7 +67,7 @@ class ManufacturingOrder extends Model
 
     public function customerOrder(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\Commerce\CustomerOrder::class);
+        return $this->belongsTo(CustomerOrder::class);
     }
 
     public function parent(): BelongsTo
@@ -76,7 +77,12 @@ class ManufacturingOrder extends Model
 
     public function children(): HasMany
     {
-        return $this->hasMany(self::class, 'parent_id');
+        return $this->hasMany(ManufacturingOrder::class, 'parent_id');
+    }
+
+    public function qualityChecks(): HasMany
+    {
+        return $this->hasMany(QualityCheck::class);
     }
 
     public function requirements(): HasMany

@@ -10,6 +10,7 @@ enum ManufacturingStatus: string implements HasColor, HasLabel
     case DRAFT = 'draft';
     case PLANNED = 'planned';
     case IN_PROGRESS = 'in_progress';
+    case QUALITY_CONTROL = 'quality_control';
     case COMPLETED = 'completed';
     case CANCELED = 'canceled';
 
@@ -19,6 +20,7 @@ enum ManufacturingStatus: string implements HasColor, HasLabel
             self::DRAFT => 'Brouillon',
             self::PLANNED => 'Planifié',
             self::IN_PROGRESS => 'En cours',
+            self::QUALITY_CONTROL => 'Au contrôle',
             self::COMPLETED => 'Terminé',
             self::CANCELED => 'Annulé',
         };
@@ -30,6 +32,7 @@ enum ManufacturingStatus: string implements HasColor, HasLabel
             self::DRAFT => 'gray',
             self::PLANNED => 'info',
             self::IN_PROGRESS => 'warning',
+            self::QUALITY_CONTROL => 'fuchsia',
             self::COMPLETED => 'success',
             self::CANCELED => 'danger',
         };

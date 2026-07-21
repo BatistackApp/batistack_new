@@ -63,6 +63,6 @@ class ProductionInventoryService
             0 // Cost
         );
         
-        $order->update(['quantity_produced' => $quantityProduced]);
+        $order->updateQuietly(['quantity_produced' => $quantityProduced]);
     }
 }

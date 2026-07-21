@@ -34,7 +34,8 @@ class ManufacturingOrderObserver
             (new ProductionInventoryService(new StockService()))->consumeMaterials($manufacturingOrder);
         }
 
-        // Si le statut passe à TERMINÉ, on rentre le produit fini en stock
+        // Si le statut passe à COMPLETED, on rentre le produit fini en stock
+        // Note : Si l'OF passe à QUALITY_CONTROL, on ne rentre pas encore en stock
         if ($manufacturingOrder->wasChanged('status') && $manufacturingOrder->status === ManufacturingStatus::COMPLETED) {
             (new ProductionInventoryService(new StockService()))->receiveFinishedProduct($manufacturingOrder);
         }

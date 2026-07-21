@@ -45,14 +45,6 @@ class ManufacturingOrdersTable
                 \Filament\Tables\Columns\TextColumn::make('status')
                     ->label('Statut')
                     ->badge()
-                    ->color(fn (\App\Enums\Gpao\ManufacturingStatus $state): string => match ($state) {
-                        \App\Enums\Gpao\ManufacturingStatus::DRAFT => 'gray',
-                        \App\Enums\Gpao\ManufacturingStatus::PLANNED => 'info',
-                        \App\Enums\Gpao\ManufacturingStatus::IN_PROGRESS => 'warning',
-                        \App\Enums\Gpao\ManufacturingStatus::COMPLETED => 'success',
-                        \App\Enums\Gpao\ManufacturingStatus::CANCELLED => 'danger',
-                        default => 'gray',
-                    })
                     ->sortable(),
 
                 \Filament\Tables\Columns\TextColumn::make('planned_start_date')
@@ -77,12 +69,45 @@ class ManufacturingOrdersTable
                     ->action(fn (\App\Models\Gpao\ManufacturingOrder $record) => $record->update(['status' => \App\Enums\Gpao\ManufacturingStatus::IN_PROGRESS])),
 
                 \Filament\Actions\Action::make('complete')
-                    ->label('Terminer')
-                    ->icon('heroicon-o-check-circle')
-                    ->color('success')
+                    ->label('Terminer (Au contrôle)')
+                    ->icon('heroicon-o-check')
+                    ->color('info')
                     ->requiresConfirmation()
                     ->visible(fn (\App\Models\Gpao\ManufacturingOrder $record) => $record->status === \App\Enums\Gpao\ManufacturingStatus::IN_PROGRESS)
-                    ->action(fn (\App\Models\Gpao\ManufacturingOrder $record) => $record->update(['status' => \App\Enums\Gpao\ManufacturingStatus::COMPLETED])),
+                    ->action(fn (\App\Models\Gpao\ManufacturingOrder $record) => $record->update(['status' => \App\Enums\Gpao\ManufacturingStatus::QUALITY_CONTROL])),
+
+                \Filament\Actions\Action::make('quality_control')
+                    ->label('Contrôle Qualité')
+                    ->icon('heroicon-o-shield-check')
+                    ->color('fuchsia')
+                    ->visible(fn (\App\Models\Gpao\ManufacturingOrder $record) => $record->status === \App\Enums\Gpao\ManufacturingStatus::QUALITY_CONTROL)
+                    ->form([
+                        \Filament\Forms\Components\Radio::make('status')
+                            ->label('Résultat')
+                            ->options([
+                                'passed' => 'Validé',
+                                'failed' => 'Refusé',
+                            ])
+                            ->required(),
+                        \Filament\Forms\Components\Textarea::make('notes')
+                            ->label('Notes / Commentaires'),
+                    ])
+                    ->action(function (array $data, \App\Models\Gpao\ManufacturingOrder $record) {
+                        $record->qualityChecks()->create([
+                            'inspector_id' => auth()->id(),
+                            'status' => $data['status'],
+                            'notes' => $data['notes'],
+                            'checked_at' => now(),
+                        ]);
+
+                        if ($data['status'] === 'passed') {
+                            $record->update(['status' => \App\Enums\Gpao\ManufacturingStatus::COMPLETED]);
+                            \Filament\Notifications\Notification::make()->title('Contrôle validé. Produit en stock.')->success()->send();
+                        } else {
+                            $record->update(['status' => \App\Enums\Gpao\ManufacturingStatus::IN_PROGRESS]);
+                            \Filament\Notifications\Notification::make()->title('Contrôle refusé. OF renvoyé en cours.')->warning()->send();
+                        }
+                    }),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([

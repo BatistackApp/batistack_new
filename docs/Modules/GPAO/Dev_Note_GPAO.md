@@ -30,20 +30,23 @@ Le module **GPAO** a pour objectif de gérer les opérations de production ou d'
   - Ajout d'un `ManufacturingOrdersRelationManager` sur la page Commande Client pour centraliser la vue de la production.
   - Affichage d'un lien direct "Commande d'origine" sur les Ordres de Fabrication pour naviguer d'un espace à l'autre.
 
+### 4. Contrôle Qualité
+- **Workflow de validation** : Ajout d'une étape "Au contrôle" (statut `QUALITY_CONTROL`) entre la fin de production et l'entrée en stock.
+- **Traçabilité** : Création d'une table dédiée `QualityCheck` pour historiser l'inspecteur, la date, la décision (Validé/Refusé) et les notes.
+- **UI Filament** : Ajout d'une modale "Contrôle Qualité" pour valider/refuser un OF, ainsi qu'un `QualityChecksRelationManager` pour voir l'historique sur chaque OF.
+
 ---
 
 ## 🚧 Ce qu'il reste à faire
 
-- **Contrôle Qualité** : Ajouter une étape de validation qualité à la fin de la production avant l'entrée en stock définitive.
-- **Traçabilité des Numéros de Série/Lots** : Affiner le tracking des lots consommés si un article de la nomenclature nécessite une traçabilité stricte.
-- **Interface Opérateur** : Simplifier l'affichage (mode tablette) pour que l'ouvrier dans l'atelier n'ait qu'un gros bouton "Démarrer" et "Terminer" par OF, sans voir toute l'interface d'administration.
+- **Interface Opérateur** : Simplifier l'affichage (mode tablette) pour que l'ouvrier dans l'atelier n'ait qu'un gros bouton "Démarrer" et "Terminer" par OF, sans voir toute l'interface d'administration. *(À décider : Créer une nouvelle interface Filament dédiée ou passer par l'interface Salarié existante ?)*
 
 ---
 
 ## 💡 Idées d'améliorations & Nouvelles fonctionnalités utiles
 
-- 🏷️ **Impression d'Étiquettes (Lien avec Module Articles)**
-  Générer dynamiquement un PDF contenant un Code-barres ou un QR Code à l'achèvement d'un OF. Ce QR code pourrait être collé sur le produit fini pour être ensuite scanné sur le chantier ou lors des expéditions.
+- 🏷️ **Génération d'un PDF de l'OF et Impression d'Étiquettes (Lien avec Module Articles)**
+  Générer dynamiquement un PDF récapitulatif général de l'OF (contenant toutes les instructions, nomenclatures, etc.) ainsi qu'un Code-barres ou un QR Code à l'achèvement. Ce QR code pourrait être collé sur le produit fini pour être ensuite scanné sur le chantier ou lors des expéditions.
 
 - ⏱️ **Pointage Temps Réel sur OF (Lien avec Module RH)**
   Permettre aux ouvriers d'utiliser la pointeuse biométrique ou mobile en spécifiant sur quel numéro d'OF ils travaillent, afin de calculer les coûts de main d'œuvre au centime près plutôt qu'au forfait.
