@@ -20,7 +20,9 @@
 - **Interface Filament** :
   - Panel dédié `LocationsPanelProvider` mis en place pour dissocier ce référentiel.
   - Widget `ActiveRentalsWidget` offrant des KPI sur l'état des locations.
+  - Calendrier interactif `RentalCalendarWidget` (via `guava/calendar`) pour visualiser la timeline de toutes les locations actives ou programmées.
   - Ressource complète `RentalContractResource` incluant Formulaire (avec `Repeater` de lignes), Tableau de bord (avec filtres avancés) et une Infolist (vue détaillée) intégrant des actions rapides (Générer facture, Terminer location).
+  - Intégration Chantiers : Création d'un tableau de bord unifié (`DeployedResourcesWidget`) sur la vue détaillée d'un chantier, fusionnant le matériel en propre (`FixedAsset`) et les locations externes (`RentalContractLine`).
 
 - **Tests** :
   - Des tests unitaires/fonctionnels exhaustifs couvrent l'analytique et la génération de facture. Tous passent avec succès.
@@ -38,11 +40,7 @@
 
 ## Idées d'amélioration ou nouvelles fonctionnalités
 
-1. **Intégration d'un calendrier visuel** :
-   - Ajouter un composant FullCalendar dans Filament pour visualiser les dates de début et de fin de location sur l'ensemble des chantiers (idéal pour le conducteur de travaux qui doit organiser des relèves de grues, bases de vie).
-2. **Suivi géolocalisé** :
+1. **Suivi géolocalisé** :
    - Si du gros équipement (ex: pelles, grues) est loué avec des capteurs GPS, pouvoir remonter leur position via une API externe directement sur la fiche d'information du `RentalContract`.
-3. **Mise en commun des ressources matérielles** :
-   - Lier le module `Locations` au module `Immobilisation` ou `Flottes` pour que, dans la vue "Chantier", on ait un seul tableau de bord unifié "Ressources Déployées" (combinant Matériel Loué + Matériel en propre de l'entreprise).
-4. **Scoring fournisseurs** :
+2. **Scoring fournisseurs** :
    - Permettre de noter le fournisseur en fin de contrat (état du matériel, respect des délais de livraison) pour générer un "Score" fournisseur visible par les acheteurs lors de futures locations.

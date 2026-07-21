@@ -47,6 +47,11 @@ class TimeEntryObserver
             if ($timeEntry->status === TimeEntryStatus::APPROVED && $timeEntry->chantier_id) {
                 $this->checkChantierBudget($timeEntry);
             }
+
+            // [Nouveau] Synergie GPAO : Imputation du coût de main d'œuvre sur l'OF
+            if ($timeEntry->status === TimeEntryStatus::APPROVED && $timeEntry->manufacturing_order_id) {
+                $this->imputeManufacturingLaborCost($timeEntry);
+            }
         }
 
         if ($timeEntry->isDirty('hours')) {
@@ -98,5 +103,16 @@ class TimeEntryObserver
         } catch (\Exception $e) {
             Log::error('Erreur lors de la vérification budgétaire RH/Chantiers', ['error' => $e->getMessage()]);
         }
+    }
+
+    protected function imputeManufacturingLaborCost(TimeEntry $timeEntry): void
+    {
+        $order = $timeEntry->manufacturingOrder;
+        if (!$order) return;
+
+        $cost = $timeEntry->hours * $timeEntry->employee->hourly_rate;
+        
+        $order->total_labor_cost += $cost;
+        $order->save();
     }
 }

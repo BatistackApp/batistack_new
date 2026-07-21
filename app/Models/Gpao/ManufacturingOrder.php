@@ -1,0 +1,79 @@
+<?php
+
+namespace App\Models\Gpao;
+
+use App\Enums\Gpao\ManufacturingStatus;
+use App\Models\Articles\Item;
+use App\Models\Chantiers\Chantier;
+use App\Models\RH\TimeEntry;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Str;
+use App\Observers\Gpao\ManufacturingOrderObserver;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
+
+#[ObservedBy([ManufacturingOrderObserver::class])]
+class ManufacturingOrder extends Model
+{
+    use HasFactory;
+
+    protected $fillable = [
+        'uuid',
+        'reference',
+        'item_id',
+        'chantier_id',
+        'quantity_planned',
+        'quantity_produced',
+        'status',
+        'start_date',
+        'end_date',
+        'total_labor_cost',
+        'total_material_cost',
+    ];
+
+    protected function casts(): array
+    {
+        return [
+            'status' => ManufacturingStatus::class,
+            'start_date' => 'date',
+            'end_date' => 'date',
+            'quantity_planned' => 'decimal:4',
+            'quantity_produced' => 'decimal:4',
+            'total_labor_cost' => 'decimal:2',
+            'total_material_cost' => 'decimal:2',
+        ];
+    }
+
+    protected static function boot(): void
+    {
+        parent::boot();
+        static::creating(fn ($model) => $model->uuid = (string) Str::uuid());
+    }
+
+    public function item(): BelongsTo
+    {
+        return $this->belongsTo(Item::class);
+    }
+
+    public function chantier(): BelongsTo
+    {
+        return $this->belongsTo(Chantier::class);
+    }
+
+    public function requirements(): HasMany
+    {
+        return $this->hasMany(ManufacturingRequirement::class);
+    }
+
+    public function timeEntries(): HasMany
+    {
+        return $this->hasMany(TimeEntry::class);
+    }
+
+    public function getTotalCostAttribute(): float
+    {
+        return (float) ($this->total_labor_cost + $this->total_material_cost);
+    }
+}
