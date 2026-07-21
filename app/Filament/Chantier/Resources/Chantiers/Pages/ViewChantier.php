@@ -110,6 +110,7 @@ class ViewChantier extends ViewRecord
     {
         return [
             \App\Filament\Chantier\Resources\Chantiers\Widgets\ChantierGanttWidget::class,
+            \App\Filament\Chantier\Resources\Chantiers\Widgets\DeployedResourcesWidget::class,
         ];
     }
 }
