@@ -21,7 +21,7 @@ use Illuminate\Database\Eloquent\Attributes\Scope;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
 
-#[Fillable(['name', 'email', 'password', 'is_admin', 'is_employee', 'is_tiers', 'email_verified_at'])]
+#[Fillable(['name', 'email', 'password', 'is_admin', 'is_employee', 'is_tiers', 'email_verified_at', 'access_atelier'])]
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
 class User extends Authenticatable implements FilamentUser
 {
@@ -60,6 +60,7 @@ class User extends Authenticatable implements FilamentUser
             'is_admin' => 'boolean',
             'is_employee' => 'boolean',
             'is_tiers' => 'boolean',
+            'access_atelier' => 'boolean',
         ];
     }
 
