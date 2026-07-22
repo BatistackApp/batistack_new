@@ -53,8 +53,8 @@ class ManufacturingOrdersRelationManager extends RelationManager
             ->headerActions([
                 //
             ])
-            ->actions([
-                Tables\Actions\Action::make('view_of')
+            ->recordActions([
+                Action::make('view_of')
                     ->label('Voir l\'OF')
                     ->icon('phosphor-eye')
                     ->url(fn ($record): string => route('filament.gpao.resources.manufacturing-orders.edit', ['record' => $record]))
