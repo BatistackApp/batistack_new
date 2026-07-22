@@ -63,3 +63,12 @@ Le module **GPAO** a pour objectif de gérer les opérations de production ou d'
 
 - 📦 **Génération Auto de Commandes d'Achat (Lien avec Module Tiers/Commerce)**
   Si le moteur MRP détecte une rupture de stock pour fabriquer un produit, générer automatiquement un "Brouillon de Commande Fournisseur" avec les manquants.
+
+- 📱 **Notification Temps Réel (Alertes Production)**
+  Envoyer des notifications (Push/SMS/Email) aux responsables d'atelier en cas de rupture de stock détectée ou de rejets importants lors du contrôle qualité.
+
+- 📊 **Tableau de Bord KPI Production (Dashboard)**
+  Créer un tableau de bord analytique spécifique à la GPAO : Taux de rebut, Temps moyen de fabrication (Lead time), Productivité par opérateur, et Coût de revient réel vs estimé.
+
+- 🔗 **Traçabilité des Lots et Numéros de Série**
+  Associer des numéros de lot ou de série aux matières premières consommées et aux produits finis pour une traçabilité ascendante et descendante parfaite (indispensable pour certaines normes de qualité).

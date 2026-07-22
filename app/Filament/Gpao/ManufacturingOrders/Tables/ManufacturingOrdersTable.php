@@ -3,6 +3,7 @@
 namespace App\Filament\Gpao\ManufacturingOrders\Tables;
 
 use App\Enums\Gpao\ManufacturingStatus;
+use App\Jobs\Gpao\GeneratePurchaseOrdersForShortagesJob;
 use App\Models\Gpao\ManufacturingOrder;
 use App\Services\Gpao\GpaoDocumentService;
 use Filament\Actions\Action;
@@ -136,10 +137,24 @@ class ManufacturingOrdersTable
                         return response()->download($media->getPath(), $media->file_name);
                     }),
             ])
-            ->bulkActions([
+            ->groupedBulkActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
                 ]),
+            ])
+            ->headerActions([
+                Action::make('calculate_shortages')
+                    ->label('Calculer les ruptures (Achats)')
+                    ->icon('heroicon-o-shopping-cart')
+                    ->color('warning')
+                    ->action(function () {
+                        GeneratePurchaseOrdersForShortagesJob::dispatch();
+                        Notification::make()
+                            ->title('Analyse MRP lancée')
+                            ->body('La génération des brouillons de commande d\'achat est en cours.')
+                            ->success()
+                            ->send();
+                    }),
             ]);
     }
 }
