@@ -153,6 +153,19 @@ jobs:
               - 'app/Providers/Paie/**'
               - 'app/Services/Paie/**'
               - 'tests/Feature/Modules/Paie/**'
+            Gpao:
+              - 'app/Filament/Gpao/**'
+              - 'app/Console/Gpao/**'
+              - 'app/Enums/Gpao/**'
+              - 'app/Events/Gpao/**'
+              - 'app/Jobs/Gpao/**'
+              - 'app/Mails/Gpao/**'
+              - 'app/Models/Gpao/**'
+              - 'app/Notifications/Gpao/**'
+              - 'app/Observers/Gpao/**'
+              - 'app/Providers/Gpao/**'
+              - 'app/Services/Gpao/**'
+              - 'tests/Feature/Modules/Gpao/**'
 
   test-modules:
     runs-on: ubuntu-latest

@@ -31,5 +31,8 @@ class MrpService
                 'quantity_consumed' => 0,
             ]);
         }
+
+        // Déclencher le job de calcul des ruptures pour générer les PO
+        \App\Jobs\Gpao\GeneratePurchaseOrdersForShortagesJob::dispatch();
     }
 }
