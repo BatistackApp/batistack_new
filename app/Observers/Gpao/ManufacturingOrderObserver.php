@@ -39,6 +39,17 @@ class ManufacturingOrderObserver
         if ($manufacturingOrder->wasChanged('status') && $manufacturingOrder->status === ManufacturingStatus::COMPLETED) {
             (new ProductionInventoryService(new StockService()))->receiveFinishedProduct($manufacturingOrder);
             
+            // Calculer le coût réel de la main d'œuvre en fonction des pointages (TimeEntries)
+            $totalLaborCost = 0;
+            foreach ($manufacturingOrder->timeEntries()->with('employee.currentContract')->get() as $entry) {
+                if ($entry->hours > 0 && $entry->employee && $entry->employee->currentContract) {
+                    $hourlyRate = $entry->employee->currentContract->hourly_rate ?? 0;
+                    $totalLaborCost += $entry->hours * $hourlyRate;
+                }
+            }
+            // Mettre à jour sans déclencher d'événements
+            $manufacturingOrder->updateQuietly(['total_labor_cost' => $totalLaborCost]);
+
             // Générer l'étiquette / PDF de l'OF de façon asynchrone
             \App\Jobs\Gpao\GenerateManufacturingOrderPdfJob::dispatch($manufacturingOrder->id);
         }

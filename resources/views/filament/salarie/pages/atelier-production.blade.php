@@ -68,13 +68,30 @@
                         <div class="p-6 bg-white dark:bg-gray-900">
                             @if($order->status === \App\Enums\Gpao\ManufacturingStatus::PLANNED)
                                 <button 
-                                    wire:click="startOrder({{ $order->id }})" 
+                                    wire:click="startTracking({{ $order->id }})" 
                                     class="w-full py-5 bg-blue-600 hover:bg-blue-500 text-white text-xl font-black rounded-xl shadow-lg transition transform active:scale-95 flex justify-center items-center gap-2"
                                 >
                                     <x-filament::icon icon="heroicon-o-play" class="h-8 w-8" />
-                                    DÉMARRER LA PRODUCTION
+                                    DÉMARRER LE POINTAGE
                                 </button>
                             @elseif($order->status === \App\Enums\Gpao\ManufacturingStatus::IN_PROGRESS)
+                                @if($this->hasActiveTracking($order->id))
+                                    <button 
+                                        wire:click="stopTracking({{ $order->id }})" 
+                                        class="w-full mb-3 py-4 bg-orange-500 hover:bg-orange-400 text-white text-lg font-bold rounded-xl shadow transition flex justify-center items-center gap-2"
+                                    >
+                                        <x-filament::icon icon="heroicon-o-pause" class="h-6 w-6" />
+                                        METTRE EN PAUSE (Arrêter Pointage)
+                                    </button>
+                                @else
+                                    <button 
+                                        wire:click="startTracking({{ $order->id }})" 
+                                        class="w-full mb-3 py-4 bg-blue-500 hover:bg-blue-400 text-white text-lg font-bold rounded-xl shadow transition flex justify-center items-center gap-2"
+                                    >
+                                        <x-filament::icon icon="heroicon-o-play" class="h-6 w-6" />
+                                        REPRENDRE LE POINTAGE
+                                    </button>
+                                @endif
                                 <button 
                                     wire:click="finishOrder({{ $order->id }})" 
                                     class="w-full py-5 bg-green-600 hover:bg-green-500 text-white text-xl font-black rounded-xl shadow-lg transition transform active:scale-95 flex justify-center items-center gap-2"

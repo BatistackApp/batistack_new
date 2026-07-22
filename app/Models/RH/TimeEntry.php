@@ -22,7 +22,7 @@ class TimeEntry extends Model
         'employee_id', 'chantier_id', 'date', 'hours', 'type',
         'status', 'refusal_reason', 'approved_by_id', 'approved_at',
         'is_grand_deplacement', 'gd_allowance_amount', 'description',
-        'travel_hours', 'manufacturing_order_id',
+        'travel_hours', 'manufacturing_order_id', 'started_at', 'ended_at',
     ];
 
     public function employee(): BelongsTo
@@ -57,6 +57,8 @@ class TimeEntry extends Model
             'gd_allowance_amount' => 'decimal:2',
             'approved_at' => 'datetime',
             'travel_hours' => 'decimal:2',
+            'started_at' => 'datetime',
+            'ended_at' => 'datetime',
         ];
     }
 
