@@ -3,12 +3,13 @@
 namespace App\Filament\Commerce\Resources\ReceiptNotes\RelationManagers;
 
 use App\Models\Commerce\PurchaseOrderItem;
+use Filament\Actions\CreateAction;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\EditAction;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Schemas\Schema;
-use Filament\Tables\Actions\CreateAction;
-use Filament\Tables\Actions\DeleteAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
@@ -49,7 +50,7 @@ class ItemsRelationManager extends RelationManager
                 CreateAction::make(),
             ])
             ->recordActions([
-                \Filament\Tables\Actions\EditAction::make(),
+                EditAction::make(),
                 DeleteAction::make(),
             ]);
     }

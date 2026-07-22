@@ -99,6 +99,11 @@ class Chantier extends Model implements HasMedia
         return $this->hasMany(\App\Models\Immobilisation\FixedAsset::class);
     }
 
+    public function rentalContracts(): HasMany
+    {
+        return $this->hasMany(\App\Models\Locations\RentalContract::class, 'chantier_id');
+    }
+
     public function timeEntries(): HasMany
     {
         return $this->hasMany(TimeEntry::class);
