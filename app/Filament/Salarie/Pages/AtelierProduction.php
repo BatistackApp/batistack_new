@@ -83,7 +83,7 @@ class AtelierProduction extends Page
         TimeEntry::create([
             'employee_id' => $employee->id,
             'manufacturing_order_id' => $order->id,
-            'type' => TimeEntryType::WORKSHOP,
+            'type' => TimeEntryType::NORMAL,
             'status' => TimeEntryStatus::DRAFT,
             'date' => now()->toDateString(),
             'started_at' => now(),
@@ -126,7 +126,7 @@ class AtelierProduction extends Page
         if ($order->status === ManufacturingStatus::IN_PROGRESS) {
             // Arrêter le pointage en cours s'il y en a un
             $this->stopTracking($orderId);
-            
+
             $order->update(['status' => ManufacturingStatus::QUALITY_CONTROL]);
             Notification::make()->title('OF Terminé')->body('Transféré au contrôle qualité.')->success()->send();
         }
@@ -135,7 +135,7 @@ class AtelierProduction extends Page
     public function downloadPdf($orderId)
     {
         $order = ManufacturingOrder::findOrFail($orderId);
-        
+
         $media = $order->getFirstMedia('pdf_documents');
         if ($media) {
             return response()->download($media->getPath(), $media->file_name);
@@ -144,7 +144,7 @@ class AtelierProduction extends Page
         // Generate on the fly
         $pdfPath = (new \App\Services\Gpao\GpaoDocumentService())->generateManufacturingOrderPdf($order);
         $media = $order->addMedia($pdfPath)->toMediaCollection('pdf_documents');
-        
+
         return response()->download($media->getPath(), $media->file_name);
     }
 }

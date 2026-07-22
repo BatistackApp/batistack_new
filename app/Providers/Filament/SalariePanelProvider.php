@@ -27,6 +27,7 @@ class SalariePanelProvider extends PanelProvider
         return $panel
             ->id('salarie')
             ->path('salarie')
+            ->viteTheme('resources/css/filament/salarie/theme.css')
             ->login()
             ->sidebarCollapsibleOnDesktop()
             ->databaseNotifications()

@@ -29,14 +29,17 @@ class ManufacturingOrderObserver
             (new MrpService())->generateRequirementsForOrder($manufacturingOrder);
         }
 
-        // Si le statut passe à EN COURS, on déstocke la matière première
-        if ($manufacturingOrder->wasChanged('status') && $manufacturingOrder->status === ManufacturingStatus::IN_PROGRESS) {
-            (new ProductionInventoryService(new StockService()))->consumeMaterials($manufacturingOrder);
-        }
+        // Le déstockage (Backflush) se fera à la complétion de l'OF
+        // pour s'aligner sur la validation finale.
+
 
         // Si le statut passe à COMPLETED, on rentre le produit fini en stock
         // Note : Si l'OF passe à QUALITY_CONTROL, on ne rentre pas encore en stock
         if ($manufacturingOrder->wasChanged('status') && $manufacturingOrder->status === ManufacturingStatus::COMPLETED) {
+            // 1. Décrémenter les matériaux (Backflush)
+            (new ProductionInventoryService(new StockService()))->consumeMaterials($manufacturingOrder);
+
+            // 2. Entrer le produit fini
             (new ProductionInventoryService(new StockService()))->receiveFinishedProduct($manufacturingOrder);
             
             // Calculer le coût réel de la main d'œuvre en fonction des pointages (TimeEntries)
