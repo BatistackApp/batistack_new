@@ -25,6 +25,7 @@ class GpaoPanelProvider extends PanelProvider
         return $panel
             ->id('gpao')
             ->path('gpao')
+            ->viteTheme('resources/css/filament/gpao/theme.css')
             ->login()
             ->sidebarCollapsibleOnDesktop()
             ->brandName('Batistack - Atelier & Production')

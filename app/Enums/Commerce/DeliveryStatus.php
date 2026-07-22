@@ -7,6 +7,7 @@ use Filament\Support\Contracts\HasLabel;
 
 enum DeliveryStatus: string implements HasColor, HasLabel
 {
+    case DRAFT = 'brouillon';
     case PREPARATION = 'preparation';
     case SHIPPED = 'shipped';
     case DELIVERED = 'delivered';
@@ -16,7 +17,8 @@ enum DeliveryStatus: string implements HasColor, HasLabel
         return match ($this) {
             self::PREPARATION => 'En préparation',
             self::SHIPPED => 'Expédié',
-            self::DELIVERED => 'Livré/Réceptionné'
+            self::DELIVERED => 'Livré/Réceptionné',
+            self::DRAFT => 'Brouillon'
         };
     }
 
@@ -25,7 +27,8 @@ enum DeliveryStatus: string implements HasColor, HasLabel
         return match ($this) {
             self::PREPARATION => 'warning',
             self::SHIPPED => 'info',
-            self::DELIVERED => 'success'
+            self::DELIVERED => 'success',
+            self::DRAFT => 'gray'
         };
     }
 }
