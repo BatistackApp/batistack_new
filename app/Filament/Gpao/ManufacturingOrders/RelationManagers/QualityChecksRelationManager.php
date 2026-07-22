@@ -2,6 +2,7 @@
 
 namespace App\Filament\Gpao\ManufacturingOrders\RelationManagers;
 
+use Filament\Actions\ViewAction;
 use Filament\Forms;
 use Filament\Schemas\Schema;
 use Filament\Resources\RelationManagers\RelationManager;
@@ -58,8 +59,8 @@ class QualityChecksRelationManager extends RelationManager
             ->headerActions([
                 //
             ])
-            ->actions([
-                Tables\Actions\ViewAction::make(),
+            ->recordActions([
+                ViewAction::make(),
             ])
             ->bulkActions([
                 //
