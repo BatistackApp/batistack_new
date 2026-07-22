@@ -4,10 +4,14 @@ namespace App\Filament\Salarie\Pages;
 
 use App\Models\Gpao\ManufacturingOrder;
 use App\Enums\Gpao\ManufacturingStatus;
+use App\Enums\RH\TimeEntryStatus;
+use App\Enums\RH\TimeEntryType;
+use App\Models\RH\TimeEntry;
 use Filament\Pages\Page;
 use ToneGabes\Filament\Icons\Enums\Phosphor;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\On;
+use Filament\Notifications\Notification;
 
 class AtelierProduction extends Page
 {
@@ -48,11 +52,71 @@ class AtelierProduction extends Page
             ->get();
     }
 
-    public function startOrder($orderId)
+    public function hasActiveTracking($orderId)
+    {
+        $employee = auth()->user()->salarie;
+        if (!$employee) return false;
+
+        return TimeEntry::where('employee_id', $employee->id)
+            ->where('manufacturing_order_id', $orderId)
+            ->where('status', TimeEntryStatus::DRAFT)
+            ->whereNotNull('started_at')
+            ->whereNull('ended_at')
+            ->exists();
+    }
+
+    public function startTracking($orderId)
     {
         $order = ManufacturingOrder::findOrFail($orderId);
+        $employee = auth()->user()->salarie;
+
+        if (!$employee) {
+            Notification::make()->title('Erreur')->body('Vous n\'êtes pas lié à une fiche Salarié.')->danger()->send();
+            return;
+        }
+
         if ($order->status === ManufacturingStatus::PLANNED) {
             $order->update(['status' => ManufacturingStatus::IN_PROGRESS]);
+        }
+
+        // Démarrer une nouvelle session de pointage
+        TimeEntry::create([
+            'employee_id' => $employee->id,
+            'manufacturing_order_id' => $order->id,
+            'type' => TimeEntryType::WORKSHOP,
+            'status' => TimeEntryStatus::DRAFT,
+            'date' => now()->toDateString(),
+            'started_at' => now(),
+            'hours' => 0,
+        ]);
+
+        Notification::make()->title('Pointage démarré')->success()->send();
+    }
+
+    public function stopTracking($orderId)
+    {
+        $employee = auth()->user()->salarie;
+        if (!$employee) return;
+
+        $activeEntry = TimeEntry::where('employee_id', $employee->id)
+            ->where('manufacturing_order_id', $orderId)
+            ->where('status', TimeEntryStatus::DRAFT)
+            ->whereNotNull('started_at')
+            ->whereNull('ended_at')
+            ->first();
+
+        if ($activeEntry) {
+            $endedAt = now();
+            $durationInMinutes = $activeEntry->started_at->diffInMinutes($endedAt);
+            $hours = round($durationInMinutes / 60, 2);
+
+            $activeEntry->update([
+                'ended_at' => $endedAt,
+                'hours' => $hours,
+                'status' => TimeEntryStatus::SUBMITTED, // Prêt à être approuvé par RH
+            ]);
+
+            Notification::make()->title('Pointage arrêté')->body("Temps enregistré : {$hours} h")->success()->send();
         }
     }
 
@@ -60,7 +124,11 @@ class AtelierProduction extends Page
     {
         $order = ManufacturingOrder::findOrFail($orderId);
         if ($order->status === ManufacturingStatus::IN_PROGRESS) {
+            // Arrêter le pointage en cours s'il y en a un
+            $this->stopTracking($orderId);
+            
             $order->update(['status' => ManufacturingStatus::QUALITY_CONTROL]);
+            Notification::make()->title('OF Terminé')->body('Transféré au contrôle qualité.')->success()->send();
         }
     }
 
