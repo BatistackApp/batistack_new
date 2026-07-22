@@ -37,6 +37,20 @@ class EmployeeForm
                                             ->label('Salarié en poste')
                                             ->default(true)
                                             ->onColor('success'),
+                                        Toggle::make('access_atelier')
+                                            ->label('Accès Interface Atelier')
+                                            ->default(false)
+                                            ->onColor('warning')
+                                            ->formatStateUsing(fn ($record) => $record?->user?->access_atelier ?? false)
+                                            ->dehydrated(false)
+                                            ->saveRelationshipsUsing(function ($record, $state) {
+                                                if (! $record->relationLoaded('user')) {
+                                                    $record->load('user');
+                                                }
+                                                if ($record && $record->user) {
+                                                    $record->user->updateQuietly(['access_atelier' => (bool) $state]);
+                                                }
+                                            }),
                                         TextInput::make('first_name')
                                             ->label('Prénom')
                                             ->required(),

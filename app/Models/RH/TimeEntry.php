@@ -22,7 +22,7 @@ class TimeEntry extends Model
         'employee_id', 'chantier_id', 'date', 'hours', 'type',
         'status', 'refusal_reason', 'approved_by_id', 'approved_at',
         'is_grand_deplacement', 'gd_allowance_amount', 'description',
-        'travel_hours',
+        'travel_hours', 'manufacturing_order_id',
     ];
 
     public function employee(): BelongsTo
@@ -38,6 +38,11 @@ class TimeEntry extends Model
     public function approvedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'approved_by_id');
+    }
+
+    public function manufacturingOrder(): BelongsTo
+    {
+        return $this->belongsTo(\App\Models\Gpao\ManufacturingOrder::class);
     }
 
     protected function casts(): array

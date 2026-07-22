@@ -112,8 +112,8 @@ Dans l'idéal, il doit permettre la centralisation des informations des chantier
 **Descriptifs:** Gestion complète (Véhicules, Assurances, Maintenances, Contravention, etc...). **Assignation sécurisée avec détection de conflits** et notifications. **Imputation analytique des coûts aux chantiers.**
 **Portés:** Tous les modules ayant besoins de la base de donnée des flottes de l'application
 
-### Locations
-**Descriptifs:** Gestion des contrats fournisseurs. **Support de la périodicité, alertes d'expiration et génération automatique des factures fournisseurs.**
+### Locations [x]
+**Descriptifs:** Gestion des contrats fournisseurs. **Support de la périodicité, alertes d'expiration et génération automatique des factures fournisseurs.** Intégration d'un calendrier de suivi et consolidation avec les ressources déployées sur chantier.
 **Portés:** Tous les modules ayant besoins de la base de donnée des locations de l'application
 
 ### Immobilisations [x]

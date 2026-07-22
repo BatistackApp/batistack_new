@@ -56,6 +56,7 @@ class CustomerOrderResource extends Resource
             DeliveryNotesRelationManager::class,
             SituationsRelationManager::class,
             InvoicesRelationManager::class,
+            \App\Filament\Commerce\Resources\CustomerOrders\RelationManagers\ManufacturingOrdersRelationManager::class,
         ];
     }
 
