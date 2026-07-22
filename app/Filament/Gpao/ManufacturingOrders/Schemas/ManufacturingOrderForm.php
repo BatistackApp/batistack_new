@@ -58,10 +58,10 @@ class ManufacturingOrderForm
                                 ->numeric()
                                 ->default(0),
 
-                            DatePicker::make('planned_start_date')
+                            DatePicker::make('start_date')
                                 ->label('Date de début prévue'),
 
-                            DatePicker::make('planned_end_date')
+                            DatePicker::make('end_date')
                                 ->label('Date de fin prévue'),
                         ])->columns(2),
                 ])->columnSpan('full'),
