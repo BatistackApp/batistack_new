@@ -20,7 +20,18 @@ class GpaoOverview extends BaseWidget
         $totalChecks = QualityCheck::count();
         $passedChecks = QualityCheck::where('status', 'passed')->count();
 
-        $qualityRate = $totalChecks > 0 ? round(($passedChecks / $totalChecks) * 100, 2) : 100;
+        $qualityRate = $totalChecks > 0 ? round(($passedChecks / $totalChecks) * 100, 2) : null;
+
+        $qualityStat = Stat::make('Taux de Qualité', $qualityRate !== null ? $qualityRate . '%' : '—')
+            ->description('Sur l\'ensemble des contrôles');
+
+        if ($qualityRate !== null) {
+            $qualityStat->descriptionIcon($qualityRate >= 95 ? 'heroicon-m-arrow-trending-up' : 'heroicon-m-arrow-trending-down')
+                        ->color($qualityRate >= 95 ? 'success' : 'danger');
+        } else {
+            $qualityStat->descriptionIcon('heroicon-m-minus')
+                        ->color('gray');
+        }
 
         return [
             Stat::make('OF En Cours', $inProgress)
@@ -33,10 +44,7 @@ class GpaoOverview extends BaseWidget
                 ->descriptionIcon('heroicon-m-calendar-days')
                 ->color('info'),
 
-            Stat::make('Taux de Qualité', $qualityRate . '%')
-                ->description('Sur l\'ensemble des contrôles')
-                ->descriptionIcon($qualityRate >= 95 ? 'heroicon-m-arrow-trending-up' : 'heroicon-m-arrow-trending-down')
-                ->color($qualityRate >= 95 ? 'success' : 'danger'),
+            $qualityStat,
         ];
     }
 }

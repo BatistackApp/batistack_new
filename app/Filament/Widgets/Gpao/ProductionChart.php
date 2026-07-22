@@ -34,8 +34,8 @@ class ProductionChart extends ChartWidget
             $end = now()->endOfDay();
 
             $ofs = ManufacturingOrder::where('status', ManufacturingStatus::COMPLETED)
-                ->whereBetween('updated_at', [$start, $end])
-                ->selectRaw('DATE(updated_at) as date, COUNT(*) as count')
+                ->whereBetween('end_date', [$start, $end])
+                ->selectRaw('DATE(end_date) as date, COUNT(*) as count')
                 ->groupBy('date')
                 ->pluck('count', 'date');
 
@@ -51,8 +51,8 @@ class ProductionChart extends ChartWidget
             $end = now()->endOfMonth();
 
             $ofs = ManufacturingOrder::where('status', ManufacturingStatus::COMPLETED)
-                ->whereBetween('updated_at', [$start, $end])
-                ->selectRaw('DATE_FORMAT(updated_at, "%Y-%m") as month, COUNT(*) as count')
+                ->whereBetween('end_date', [$start, $end])
+                ->selectRaw('DATE_FORMAT(end_date, "%Y-%m") as month, COUNT(*) as count')
                 ->groupBy('month')
                 ->pluck('count', 'month');
 
