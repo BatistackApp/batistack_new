@@ -27,15 +27,27 @@ class DatabaseSeeder extends Seeder
 
         $this->call(CoreSeeder::class);
 
-        Employee::factory()->create([
+        Employee::create([
             'user_id' => 1,
             'first_name' => 'John',
             'last_name' => 'Doe',
             'email' => 'admin@admin.com',
+            'registration_number' => 'MAT-'.now()->year.'-1000',
+            'birth_date' => '1990-01-01',
+            'social_security_number' => '190010100000000',
+            'is_active' => true,
+            'address' => '1 Rue de la Paix',
+            'postal_code' => '75000',
+            'city' => 'Paris',
         ]);
 
-        Contract::factory()->create([
-            'employee_id' => 1
+        Contract::create([
+            'employee_id' => 1,
+            'type' => \App\Enums\RH\ContractType::CDI,
+            'start_date' => now()->subYear(),
+            'job_title' => 'Administrateur',
+            'hourly_rate' => 20.00,
+            'weekly_hours' => 35.00,
         ]);
     }
 }
