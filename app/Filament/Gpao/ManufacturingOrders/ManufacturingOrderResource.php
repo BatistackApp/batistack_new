@@ -37,7 +37,27 @@ class ManufacturingOrderResource extends Resource
 
     public static function table(Table $table): Table
     {
-        return ManufacturingOrdersTable::configure($table);
+        return ManufacturingOrdersTable::configure($table)
+            ->pushActions([
+                \Filament\Tables\Actions\Action::make('trigger_alert')
+                    ->label('Alerte Urgence')
+                    ->icon('heroicon-o-bell-alert')
+                    ->color('danger')
+                    ->requiresConfirmation()
+                    ->action(function (ManufacturingOrder $record) {
+                        $users = \App\Models\User::all(); // Dans la vraie vie, filtrer par rôle Chef d'Atelier
+                        \Illuminate\Support\Facades\Notification::send($users, new \App\Notifications\Gpao\ProductionAlertNotification(
+                            '⚠️ Panne signalée !',
+                            "Panne critique déclarée sur l'OF : {$record->reference}",
+                            ManufacturingOrderResource::getUrl('view', ['record' => $record->id])
+                        ));
+                        
+                        \Filament\Notifications\Notification::make()
+                            ->title('Alerte envoyée à toute l\'équipe')
+                            ->success()
+                            ->send();
+                    })
+            ]);
     }
 
     public static function getRelations(): array
