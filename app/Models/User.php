@@ -20,11 +20,15 @@ use Illuminate\Database\Eloquent\Attributes\Scope;
 
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
+use NotificationChannels\WebPush\HasPushSubscriptions;
 
 #[Fillable(['name', 'email', 'password', 'is_admin', 'is_employee', 'is_tiers', 'email_verified_at', 'access_atelier'])]
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
 class User extends Authenticatable implements FilamentUser
 {
+    /** @use HasFactory<UserFactory> */
+    use HasFactory, Notifiable, TwoFactorAuthenticatable, HasPushSubscriptions;
+
     public function canAccessPanel(Panel $panel): bool
     {
         // Les administrateurs ont accès à tout

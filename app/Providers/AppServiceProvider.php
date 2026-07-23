@@ -98,6 +98,11 @@ class AppServiceProvider extends ServiceProvider
             '),
         );
 
+        FilamentView::registerRenderHook(
+            PanelsRenderHook::BODY_END,
+            fn (): string => Blade::render('@include("components.webpush-script")')
+        );
+
         // Injection du script Service Worker à la fin du BODY
         FilamentView::registerRenderHook(
             PanelsRenderHook::BODY_END,

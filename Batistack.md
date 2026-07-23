@@ -60,7 +60,7 @@ Logiciel développer de facon modulaire pour permettre une grande maintenabilit�
     - Flotte
     - Locations
     - Immobilisations
-    - GPAO
+    - GPAO [x]
     - Interventions
     - 3D Visions
     
@@ -120,7 +120,7 @@ Dans l'idéal, il doit permettre la centralisation des informations des chantier
 **Descriptifs:** Permet la gestion complète des immobilisations de l'entreprise (Enregistrement comptable, VNC, Cout analytique, Dotations, etc...)
 **Portés:** Tous les modules ayant besoins de la base de donnée des immobilisations de l'application
 
-### GPAO
+### GPAO [x]
 **Descriptifs:** Gestion des Ordres de Fabrication (OF), planification, suivi de statut, mise à jour des stocks. **Inclut un système de calcul des besoins en matériaux (MRP simplifié) et la génération automatique de suggestions d'achats.**
 **Portés:** Tous les modules ayant besoins de la base de donnée des GPAO de l'application
 

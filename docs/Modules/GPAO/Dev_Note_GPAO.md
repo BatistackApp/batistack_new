@@ -51,24 +51,30 @@ Le module **GPAO** a pour objectif de gérer les opérations de production ou d'
   - Ajout d'une action de téléchargement sur l'interface d'administration.
   - Ajout d'un bouton de téléchargement "À la volée" sur l'interface tablette pour les opérateurs.
 
+### 7. Génération Auto de Commandes d'Achat
+- **Service MRP (Shortages)** : Implémentation du Job `GeneratePurchaseOrdersForShortagesJob` qui calcule les ruptures de stock générées par la production et prépare automatiquement des brouillons de Commandes d'Achat (Purchase Orders) par fournisseur.
+- **Paramétrage de l'arrière-plan** : Exécution asynchrone pour ne pas ralentir la validation des OFs.
+
+### 8. Tableau de Bord KPI Production (Dashboard)
+- **Widgets de Statistique** : Ajout de widgets calculant le taux de qualité, les coûts totaux de production, et le temps de cycle.
+- **Graphiques** : Vue mensuelle ou sur 30 jours du volume de production et du statut des OFs.
+
+### 9. Pointage Temps Réel sur OF (Lien RH)
+- **Modèle de données** : Ajout des colonnes `started_at` et `ended_at` sur `TimeEntry` pour tracer précisément la durée d'une action.
+- **Interface Opérateur** : Transformation de l'Atelier pour y inclure des boutons "Démarrer le pointage", "Pause", et "Reprendre".
+- **Coûts de Main d'Œuvre** : Le coût de l'OF (`total_labor_cost`) se calcule automatiquement à la fin de la production via le taux horaire de l'employé.
+
+### 10. Calendrier Capacitaire (Planning de Production)
+- **Intégration FullCalendar** : Création d'une vue Calendrier permettant de visualiser les OFs sur le mois, la semaine ou le jour.
+- **Interactivité** : Gestion du Drag & Drop pour décaler les dates de début et de fin d'un OF à la volée.
+
+### 11. Notifications Temps Réel (Alertes Production)
+- **WebPush & PWA** : Implémentation de `laravel-notification-channels/webpush` avec un Service Worker pour notifier nativement le client (PC/Mobile) hors-ligne ou en arrière-plan.
+- **Multi-Canaux** : Les alertes d'urgence se diffusent sur le bureau et dans le panel Filament (base de données).
+
 ---
 
 ## 🚧 Ce qu'il reste à faire
-
-- ⏱️ **Pointage Temps Réel sur OF (Lien avec Module RH)**
-  Permettre aux ouvriers d'utiliser la pointeuse biométrique ou mobile en spécifiant sur quel numéro d'OF ils travaillent, afin de calculer les coûts de main d'œuvre au centime près plutôt qu'au forfait.
-
-- 📅 **Calendrier Capacitaire (Gantt de Production)**
-  Afficher une vue "Gantt" permettant de lisser la charge de production dans le temps selon les ressources disponibles (machines ou ouvriers).
-
-- 📦 **Génération Auto de Commandes d'Achat (Lien avec Module Tiers/Commerce)**
-  Si le moteur MRP détecte une rupture de stock pour fabriquer un produit, générer automatiquement un "Brouillon de Commande Fournisseur" avec les manquants.
-
-- 📱 **Notification Temps Réel (Alertes Production)**
-  Envoyer des notifications (Push/SMS/Email) aux responsables d'atelier en cas de rupture de stock détectée ou de rejets importants lors du contrôle qualité.
-
-- 📊 **Tableau de Bord KPI Production (Dashboard)**
-  Créer un tableau de bord analytique spécifique à la GPAO : Taux de rebut, Temps moyen de fabrication (Lead time), Productivité par opérateur, et Coût de revient réel vs estimé.
 
 - 🔗 **Traçabilité des Lots et Numéros de Série**
   Associer des numéros de lot ou de série aux matières premières consommées et aux produits finis pour une traçabilité ascendante et descendante parfaite (indispensable pour certaines normes de qualité).

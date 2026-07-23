@@ -1,49 +1,34 @@
-const CACHE_NAME = 'batistack-pwa-v1';
-const urlsToCache = [
-  '/',
-  '/manifest.json',
-  '/apple-touch-icon.png'
-];
+self.addEventListener('push', function (e) {
+    if (!(self.Notification && self.Notification.permission === 'granted')) {
+        return;
+    }
 
-self.addEventListener('install', event => {
-  event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(cache => {
-        console.log('Opened cache');
-        return cache.addAll(urlsToCache);
-      })
-  );
+    if (e.data) {
+        let msg = e.data.json();
+        e.waitUntil(self.registration.showNotification(msg.title, {
+            body: msg.body,
+            icon: msg.icon || '/favicon.ico',
+            data: msg.data || {}
+        }));
+    }
 });
 
-self.addEventListener('fetch', event => {
-  event.respondWith(
-    caches.match(event.request)
-      .then(response => {
-        // Cache hit - return response
-        if (response) {
-          return response;
-        }
-        
-        // Return fetch, or a generic offline page if you had one
-        return fetch(event.request).catch(() => {
-          // You can return a custom offline page here if it's cached
-          // return caches.match('/offline.html');
-        });
-      })
-  );
-});
+self.addEventListener('notificationclick', function(event) {
+    event.notification.close();
 
-self.addEventListener('activate', event => {
-  const cacheWhitelist = [CACHE_NAME];
-  event.waitUntil(
-    caches.keys().then(cacheNames => {
-      return Promise.all(
-        cacheNames.map(cacheName => {
-          if (cacheWhitelist.indexOf(cacheName) === -1) {
-            return caches.delete(cacheName);
-          }
+    const targetUrl = event.notification.data?.url || '/';
+
+    event.waitUntil(
+        clients.matchAll({ type: 'window' }).then(windowClients => {
+            for (var i = 0; i < windowClients.length; i++) {
+                var client = windowClients[i];
+                if (client.url === targetUrl && 'focus' in client) {
+                    return client.focus();
+                }
+            }
+            if (clients.openWindow) {
+                return clients.openWindow(targetUrl);
+            }
         })
-      );
-    })
-  );
+    );
 });
