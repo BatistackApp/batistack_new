@@ -20,7 +20,6 @@ use Illuminate\Database\Eloquent\Attributes\Scope;
 
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
-use Spatie\Permission\Traits\HasRoles;
 use NotificationChannels\WebPush\HasPushSubscriptions;
 
 #[Fillable(['name', 'email', 'password', 'is_admin', 'is_employee', 'is_tiers', 'email_verified_at', 'access_atelier'])]
@@ -28,7 +27,7 @@ use NotificationChannels\WebPush\HasPushSubscriptions;
 class User extends Authenticatable implements FilamentUser
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable, TwoFactorAuthenticatable, HasRoles, HasPushSubscriptions;
+    use HasFactory, Notifiable, TwoFactorAuthenticatable, HasPushSubscriptions;
 
     public function canAccessPanel(Panel $panel): bool
     {
