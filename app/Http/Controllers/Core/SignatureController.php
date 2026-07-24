@@ -24,10 +24,15 @@ class SignatureController extends Controller
             return view('signature.completed');
         }
 
-        // Si le document est un ThirdPartyDocument, on peut récupérer le lien vers le PDF
         $documentUrl = null;
         if ($signature->signable_type === ThirdPartyDocument::class) {
             $documentUrl = $signature->signable->getFirstMediaUrl('third_party_documents');
+        } elseif ($signature->signable_type === \App\Models\RH\Contract::class) {
+            $documentUrl = \Illuminate\Support\Facades\Storage::disk('public')->url('documents/rh/contrat_'.$signature->signable->employee->registration_number.'.pdf');
+        } elseif ($signature->signable_type === \App\Models\RH\Employee::class) {
+            $documentUrl = \Illuminate\Support\Facades\Storage::disk('public')->url("documents/rh/onboarding/affiliation_probtp_{$signature->signable->id}_{$signature->signable->registration_number}.pdf");
+        } elseif ($signature->signable_type === \App\Models\Commerce\CustomerQuote::class) {
+            $documentUrl = \Illuminate\Support\Facades\Storage::disk('public')->url('documents/commerce/quotes/devis_'.$signature->signable->reference.'.pdf');
         }
 
         return view('signature.show', compact('signature', 'documentUrl'));
