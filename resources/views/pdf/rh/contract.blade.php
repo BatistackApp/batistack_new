@@ -42,7 +42,16 @@
         </div>
         <div class="text-center w-1/3">
             <p class="font-bold mb-10 text-xs uppercase">Mention "Lu et approuvé"</p>
-            <p class="underline">Signature du Salarié</p>
+            @if(isset($signature) && $signature->signature_data)
+                <div style="font-size: 10px; color: #555; text-align: center; margin-bottom: 5px;">
+                    Signé par {{ $employee->full_name }}<br>
+                    le {{ $signature->signed_at ? $signature->signed_at->format('d/m/Y à H:i:s') : now()->format('d/m/Y à H:i:s') }}<br>
+                    Réf : {{ $signature->token }}
+                </div>
+                <img src="{{ $signature->signature_data }}" style="max-height: 80px; margin: 0 auto;" alt="Signature">
+            @else
+                <p class="underline">Signature du Salarié</p>
+            @endif
         </div>
     </div>
 @endsection

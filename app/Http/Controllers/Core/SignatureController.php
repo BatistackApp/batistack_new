@@ -83,54 +83,56 @@ class SignatureController extends Controller
             }
         }
 
-        // Récupérer le chemin du document en fonction du type pour y apposer la signature
-        $documentPath = null;
-        $signatoryName = null;
-        $media = null;
+        // Pour les contrats, le processus est de regénérer le document pour inclure la signature visuelle dans le blade
+        if ($signature->signable_type === \App\Models\RH\Contract::class) {
+            app(\App\Services\RH\RHDocumentService::class)->generateContract($signature->signable);
+        } else {
+            // Récupérer le chemin du document en fonction du type pour y apposer la signature via PdfStamperService
+            $documentPath = null;
+            $signatoryName = null;
+            $media = null;
 
-        if ($signature->signable_type === ThirdPartyDocument::class) {
-            $media = $signature->signable->getFirstMedia('third_party_documents');
-            if ($media) {
-                $documentPath = $media->getPath();
-            }
-            $signatoryName = $signature->signable->thirdParty->name ?? null;
-        } elseif ($signature->signable_type === \App\Models\RH\Contract::class) {
-            $documentPath = \Illuminate\Support\Facades\Storage::disk('public')->path('documents/rh/contrat_'.$signature->signable->employee->registration_number.'.pdf');
-            $signatoryName = $signature->signable->employee->full_name;
-        } elseif ($signature->signable_type === \App\Models\RH\Employee::class) {
-            $media = $signature->signable->getMedia('rh_documents')->filter(function ($item) {
-                return str_contains($item->file_name, 'affiliation_probtp');
-            })->last();
-            if ($media) {
-                $documentPath = $media->getPath();
-            }
-            $signatoryName = $signature->signable->full_name;
-        } elseif ($signature->signable_type === \App\Models\Commerce\CustomerQuote::class) {
-            $documentPath = \Illuminate\Support\Facades\Storage::disk('public')->path('documents/commerce/quotes/devis_'.$signature->signable->reference.'.pdf');
-            $signatoryName = $signature->signable->client->name ?? null;
-        }
-
-        if ($documentPath && file_exists($documentPath)) {
-            $stamper = app(PdfStamperService::class);
-            $stampedPdfPath = $stamper->stamp($documentPath, $signature, $signatoryName);
-
-            try {
-                // Remplacer le fichier original par le fichier signé
-                if ($signature->signable_type === ThirdPartyDocument::class) {
-                    $signature->signable->clearMediaCollection('third_party_documents');
-                    $signature->signable->addMedia($stampedPdfPath)->toMediaCollection('third_party_documents');
-                } elseif ($signature->signable_type === \App\Models\RH\Employee::class) {
-                    if ($media) {
-                        $media->delete();
-                    }
-                    $signature->signable->addMedia($stampedPdfPath)->toMediaCollection('rh_documents');
-                } else {
-                    // Fichiers physiques standards (Contract, Quote)
-                    \Illuminate\Support\Facades\File::copy($stampedPdfPath, $documentPath);
+            if ($signature->signable_type === ThirdPartyDocument::class) {
+                $media = $signature->signable->getFirstMedia('third_party_documents');
+                if ($media) {
+                    $documentPath = $media->getPath();
                 }
-            } finally {
-                if (file_exists($stampedPdfPath)) {
-                    @unlink($stampedPdfPath);
+                $signatoryName = $signature->signable->thirdParty->name ?? null;
+            } elseif ($signature->signable_type === \App\Models\RH\Employee::class) {
+                $media = $signature->signable->getMedia('rh_documents')->filter(function ($item) {
+                    return str_contains($item->file_name, 'affiliation_probtp');
+                })->last();
+                if ($media) {
+                    $documentPath = $media->getPath();
+                }
+                $signatoryName = $signature->signable->full_name;
+            } elseif ($signature->signable_type === \App\Models\Commerce\CustomerQuote::class) {
+                $documentPath = \Illuminate\Support\Facades\Storage::disk('public')->path('documents/commerce/quotes/devis_'.$signature->signable->reference.'.pdf');
+                $signatoryName = $signature->signable->client->name ?? null;
+            }
+
+            if ($documentPath && file_exists($documentPath)) {
+                $stamper = app(PdfStamperService::class);
+                $stampedPdfPath = $stamper->stamp($documentPath, $signature, $signatoryName);
+
+                try {
+                    // Remplacer le fichier original par le fichier signé
+                    if ($signature->signable_type === ThirdPartyDocument::class) {
+                        $signature->signable->clearMediaCollection('third_party_documents');
+                        $signature->signable->addMedia($stampedPdfPath)->toMediaCollection('third_party_documents');
+                    } elseif ($signature->signable_type === \App\Models\RH\Employee::class) {
+                        if ($media) {
+                            $media->delete();
+                        }
+                        $signature->signable->addMedia($stampedPdfPath)->toMediaCollection('rh_documents');
+                    } else {
+                        // Fichiers physiques standards (Quote)
+                        \Illuminate\Support\Facades\File::copy($stampedPdfPath, $documentPath);
+                    }
+                } finally {
+                    if (file_exists($stampedPdfPath)) {
+                        @unlink($stampedPdfPath);
+                    }
                 }
             }
         }
