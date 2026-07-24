@@ -19,10 +19,13 @@ class RHDocumentService extends DocumentService
     {
         $contract->load(['employee']);
 
+        $signature = $contract->signatures()->where('status', \App\Enums\Core\SignatureStatus::SIGNED)->latest()->first();
+
         $data = [
             'company' => Company::first(),
             'contract' => $contract,
             'employee' => $contract->employee,
+            'signature' => $signature,
             'title' => 'CONTRAT DE TRAVAIL - '.$contract->employee->full_name,
             'generated_at' => Carbon::now()->format('d/m/Y H:i'),
         ];

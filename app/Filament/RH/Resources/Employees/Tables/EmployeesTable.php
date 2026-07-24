@@ -19,6 +19,7 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ToggleColumn;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use ToneGabes\Filament\Icons\Enums\Phosphor;
 
@@ -129,12 +130,12 @@ class EmployeesTable
 
                             // S'il n'existe pas, on le génère à la volée (ex: salariés importés ou ancien onboarding)
                             try {
-                                $pdfRelativePath = app(RHDocumentService::class)->generateAffiliationMutuelle($record);
-                                $pdfAbsolutePath = Storage::disk('public')->path($pdfRelativePath);
+                                $pdfAbsolutePath = app(RHDocumentService::class)->generateAffiliationMutuelle($record);
                                 $media = $record->addMedia($pdfAbsolutePath)->toMediaCollection('rh_documents');
 
                                 return response()->download($media->getPath(), $media->file_name);
                             } catch (\Exception $e) {
+                                Log::error($e->getMessage());
                                 Notification::make()
                                     ->title('Erreur lors de la génération')
                                     ->danger()
