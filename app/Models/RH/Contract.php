@@ -43,6 +43,11 @@ class Contract extends Model implements HasMedia
         return $this->belongsTo(\App\Models\Paie\PayrollContributionProfile::class);
     }
 
+    public function signatures()
+    {
+        return $this->morphMany(\App\Models\Core\Signature::class, 'signable');
+    }
+
     protected function casts(): array
     {
         return [

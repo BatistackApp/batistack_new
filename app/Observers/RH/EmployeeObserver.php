@@ -57,8 +57,7 @@ class EmployeeObserver
         // Si l'onboarding vient d'être complété
         if ($employee->wasChanged('onboarding_completed') && $employee->onboarding_completed) {
             try {
-                $pdfRelativePath = app(\App\Services\RH\RHDocumentService::class)->generateAffiliationMutuelle($employee);
-                $pdfAbsolutePath = \Illuminate\Support\Facades\Storage::disk('public')->path($pdfRelativePath);
+                $pdfAbsolutePath = app(\App\Services\RH\RHDocumentService::class)->generateAffiliationMutuelle($employee);
 
                 $employee->addMedia($pdfAbsolutePath)
                     ->toMediaCollection('rh_documents');

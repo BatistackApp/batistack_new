@@ -117,7 +117,13 @@ class ContractsRelationManager extends RelationManager
                 Action::make('print_contract')
                     ->label('Imprimer')
                     ->icon(Phosphor::Printer)
-                    ->action(fn (Contract $record, RHDocumentService $service) => response()->download($service->generateContract($record))),
+                    ->action(function (Contract $record, RHDocumentService $service) {
+                        $path = \Illuminate\Support\Facades\Storage::disk('public')->path('documents/rh/contrat_'.$record->employee->registration_number.'.pdf');
+                        if (!file_exists($path)) {
+                            $path = $service->generateContract($record);
+                        }
+                        return response()->download($path);
+                    }),
                 Action::make('request_signature')
                     ->icon(Phosphor::PenNib)
                     ->color('info')
