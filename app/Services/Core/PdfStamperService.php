@@ -58,7 +58,7 @@ class PdfStamperService
             $pdf->SetTextColor(50, 50, 50);
             
             $this->addMetadataRow($pdf, 'Statut du document', 'Signé électroniquement et scellé');
-            $this->addMetadataRow($pdf, 'Identifiant (Token)', $signature->token);
+            $this->addMetadataRow($pdf, 'Identifiant (Token)', $signature->token ?: 'N/A');
             
             if ($signatoryName) {
                 $this->addMetadataRow($pdf, 'Signataire', $signatoryName);

@@ -1,0 +1,64 @@
+<?php
+
+namespace App\Providers\Filament;
+
+use Filament\Http\Middleware\Authenticate;
+use Filament\Http\Middleware\AuthenticateSession;
+use Filament\Http\Middleware\DisableBladeIconComponents;
+use Filament\Http\Middleware\DispatchServingFilamentEvent;
+use Filament\Pages\Dashboard;
+use Filament\Panel;
+use Filament\PanelProvider;
+use Filament\Support\Colors\Color;
+use App\Http\Middleware\EnsureUserIsEmployee;
+use Filament\Widgets\AccountWidget;
+use Filament\Widgets\FilamentInfoWidget;
+use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
+use Illuminate\Cookie\Middleware\EncryptCookies;
+use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
+use Illuminate\Routing\Middleware\SubstituteBindings;
+use Illuminate\Session\Middleware\StartSession;
+use Illuminate\View\Middleware\ShareErrorsFromSession;
+
+class TechnicienPanelProvider extends PanelProvider
+{
+    public function panel(Panel $panel): Panel
+    {
+        return $panel
+            ->id('technicien')
+            ->path('technicien')
+            ->login()
+            ->sidebarCollapsibleOnDesktop()
+            ->databaseNotifications()
+            ->brandName('Batistack - Espace Technicien (SAV)')
+            ->colors([
+                'primary' => Color::Indigo,
+            ])
+            ->topNavigation()
+            ->discoverResources(in: app_path('Filament/Technicien/Resources'), for: 'App\Filament\Technicien\Resources')
+            ->discoverPages(in: app_path('Filament/Technicien/Pages'), for: 'App\Filament\Technicien\Pages')
+            ->pages([
+                Dashboard::class,
+            ])
+            ->discoverWidgets(in: app_path('Filament/Technicien/Widgets'), for: 'App\Filament\Technicien\Widgets')
+            ->widgets([
+                AccountWidget::class,
+                FilamentInfoWidget::class,
+            ])
+            ->middleware([
+                EncryptCookies::class,
+                AddQueuedCookiesToResponse::class,
+                StartSession::class,
+                AuthenticateSession::class,
+                ShareErrorsFromSession::class,
+                PreventRequestForgery::class,
+                SubstituteBindings::class,
+                DisableBladeIconComponents::class,
+                DispatchServingFilamentEvent::class,
+            ])
+            ->authMiddleware([
+                Authenticate::class,
+                \App\Http\Middleware\EnsureUserIsTechnician::class,
+            ]);
+    }
+}

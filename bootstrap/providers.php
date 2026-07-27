@@ -17,6 +17,7 @@ return [
     App\Providers\Filament\RHPanelProvider::class,
     App\Providers\Filament\SalariePanelProvider::class,
     App\Providers\Filament\SubcontractorPanelProvider::class,
+    App\Providers\Filament\TechnicienPanelProvider::class,
     App\Providers\Filament\TerrainPanelProvider::class,
     App\Providers\Filament\TiersPanelProvider::class,
     App\Providers\FortifyServiceProvider::class,

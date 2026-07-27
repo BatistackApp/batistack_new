@@ -55,6 +55,7 @@ class AppServiceProvider extends ServiceProvider
                     'immobilisation',
                     'locations',
                     'gpao',
+                    'technicien',
                 ])
                 ->modalHeading('Espaces')
                 ->slideOver()
@@ -72,6 +73,7 @@ class AppServiceProvider extends ServiceProvider
                     'immobilisation' => Phosphor::BoxArrowUp,
                     'locations' => Phosphor::KeyReturn,
                     'gpao' => Phosphor::Factory,
+                    'technicien' => Phosphor::Wrench,
                 ])
                 ->labels([
                     'core' => 'Configurations',
@@ -87,6 +89,7 @@ class AppServiceProvider extends ServiceProvider
                     'immobilisation' => 'Immobilisations',
                     'locations' => 'Locations',
                     'gpao' => 'Atelier & Production',
+                    'technicien' => 'Espace Technicien',
                 ]);
         });
 
