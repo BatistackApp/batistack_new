@@ -7,7 +7,8 @@
     *   **Stock :** Déstockage automatique des pièces détachées (`StockMouvementService`) relié à l'entrepôt ou au camion du technicien lorsque l'intervention bascule au statut "Terminée".
     *   **Facturation :** Génération automatique d'une facture client brouillon (`CustomerInvoice`) détaillée (TVA standard, responsable assigné) à la clôture de l'intervention.
 *   **Notifications :** Alertes programmées via `InterventionScheduledNotification` (Database + WebPush) pour avertir les techniciens et les clients.
-*   **Tests :** Couverture robuste avec PestPHP. L'intégralité de la logique métier, du déstockage automatique, de la facturation et des contraintes d'intégrité de la base de données passe avec succès (100% de réussite).
+*   **Signature Client :** Intégration du `SignatureService` avec relation polymorphique sur le modèle. Une signature scelle l'intervention (génération d'un checksum) : toute modification ultérieure invalide automatiquement la signature (approche souple validée).
+*   **Tests :** Couverture robuste avec PestPHP. L'intégralité de la logique métier, du déstockage automatique, de la facturation, des signatures, et des contraintes d'intégrité de la base de données passe avec succès (100% de réussite).
 
 ## 🚧 Ce qu'il reste à faire
 *   **Frontend (Panel Filament) :** 

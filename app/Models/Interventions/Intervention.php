@@ -65,4 +65,9 @@ class Intervention extends Model
     {
         return $this->hasMany(InterventionMaterial::class);
     }
+
+    public function signatures(): \Illuminate\Database\Eloquent\Relations\MorphMany
+    {
+        return $this->morphMany(\App\Models\Core\Signature::class, 'signable');
+    }
 }
