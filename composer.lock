@@ -8859,16 +8859,16 @@
         },
         {
             "name": "saade/filament-autograph",
-            "version": "v4.1.0",
+            "version": "v4.1.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/saade/filament-autograph.git",
-                "reference": "6da74febc3726778cf9c45afebf30abafee9d4f2"
+                "reference": "2b5a42e9dfb2aa45f5d8ae261f3954f4403b6688"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/saade/filament-autograph/zipball/6da74febc3726778cf9c45afebf30abafee9d4f2",
-                "reference": "6da74febc3726778cf9c45afebf30abafee9d4f2",
+                "url": "https://api.github.com/repos/saade/filament-autograph/zipball/2b5a42e9dfb2aa45f5d8ae261f3954f4403b6688",
+                "reference": "2b5a42e9dfb2aa45f5d8ae261f3954f4403b6688",
                 "shasum": ""
             },
             "require": {
@@ -8935,7 +8935,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2026-02-18T23:49:21+00:00"
+            "time": "2026-07-13T18:48:22+00:00"
         },
         {
             "name": "scrivo/highlight.php",
@@ -17552,5 +17552,5 @@
         "ext-zip": "*"
     },
     "platform-dev": {},
-    "plugin-api-version": "2.9.0"
+    "plugin-api-version": "2.6.0"
 }
