@@ -1,32 +1,46 @@
-# 👷 Module RH & Pointage
+# 👥 Module RH & Pointage
+
+## 📌 Vue d'ensemble du Module
+Le module **Ressources Humaines (RH)** est l'un des piliers centraux de Batistack. Il couvre de bout en bout le cycle de vie des employés : de l'onboarding digitalisé au pointage (classique ou biométrique), en passant par la gestion des absences, la conformité légale (visites médicales, CACES) et la consolidation des variables de paie et notes de frais.
 
 ## 📌 État Actuel (Ce qui est fait)
-*   **Backend :** Modèles backend ultra-complets et validés à 100%. Cela inclut la gestion des Employés, Contrats, Temps pointés, Absences, et Visites médicales.
-*   **Logique Métier :** Les "Services" et Observers calculent correctement la conformité RH et les heures.
-*   **Intégrations :** Synergies renforcées avec Flottes (avertissements RH automatiques suite aux amendes routières) et Chantiers (notifications de dépassement budgétaire lié aux heures pointées).
-*   **Tests :** **100% de succès** sur la suite de plus de 130 tests PestPHP. Toutes les fonctionnalités de base et avancées sont parfaitement fonctionnelles et sans anomalie.
-*   **Alertes Automatisées :** Notifications push et emails automatiques en place (via `MedicalVisitReminderNotification`, `QualificationExpiringNotification`, et Jobs associés) envoyés avant l'expiration d'une certification, d'un CACES, ou d'une visite médicale.
-*   **Frontend Filament & Terrain :** Interfaces de gestion des employés, formulaires de saisie, et pointeuse de SaisieHeureCollective fonctionnelles.
-*   **Vues Calendrier :** Intégration d'un widget calendrier dynamique (via le plugin Guava Calendar) sur le panneau RH fusionnant les plannings de présence et les congés avec code couleur.
-*   **Export Paie Automatisé :** Génération d'un export mensuel CSV des heures pointées (normales, trajet, GD) et absences validées depuis le panel Filament.
-*   **Signature Électronique (DocuSeal) :** Intégration de l'API DocuSeal pour envoyer et suivre la signature électronique des contrats directement depuis l'historique Filament.
-*   **Matrice de Polyvalence :** Tableau de bord dynamique permettant de consulter d'un seul coup d'œil la validité des habilitations (Q) et des équipements (E) de chaque employé avec un code couleur (Valide, Expirant, Expiré).
-*   **Fiches de Paie Pro Forma :** Génération automatique d'un PDF estimatif du bulletin de salaire (Heures normales, majorations 25/50%, primes de grand déplacement).
-*   **Pointeuse Biométrique (Kiosque) :** Implémentation d'un kiosque de pointage avec reconnaissance faciale (`face-api.js`) traitant l'image côté client, gestion du consentement RGPD, et création automatique des brouillons de saisie d'heures.
-*   **Onboarding Digitalisé :** Espace candidat autonome permettant aux nouveaux arrivants de remplir leurs informations (pièce d'identité, RIB, attestation sécurité sociale) avant de générer le contrat.
-*   **Affiliation Mutuelle Automatique :** Génération du bulletin d'affiliation PRO BTP au format PDF automatiquement à la fin de l'onboarding, classé dans le dossier numérique du salarié.
-*   **CIBTP (Congés Payés) :** Automatisation de l'export DNA (Déclaration Nominative Annuelle) avec calcul précis de la période de référence et module d'exportation structurée des Demandes De Congés (DDC).
-*   **Subrogation (Prévoyance) :** Calcul automatique des Indemnités Journalières (IJ) lors d'un arrêt maladie/AT, génération de l'attestation de salaire PDF, et tableau de bord de suivi financier pour la comptabilité.
-*   **Lecteur de Code-barres (Équipements) :** Intégration de `filament-barcode-scanner-field` pour assigner et identifier le matériel/EPI confié aux employés, avec recherche globale supportée via code-barres.
-*   **Notes de Frais & OCR :** Workflow complet de soumission et validation des notes de frais. Moteur OCR (Google Cloud Vision) intégré pour l'extraction automatique des montants (TTC, HT, TVA), de la date et du marchand, avec catégorisation intelligente (Carburant, Péage, etc.). Option "Scan Rapide" intégrée au portail Salarié, et liaison automatique des frais kilométriques/péages au module Flottes (`vehicle_id`).
-*   **Variables de Paie Mensuelles :** Moteur complet `PayrollGenerationService` qui consolide à chaque fin de mois les variables pour le comptable. Regroupe automatiquement les heures de bases (contrat), heures travaillées, heures supplémentaires, jours d'absences, primes de grands déplacements et total des notes de frais à rembourser, avec interface d'export CSV pour la comptabilité.
+
+### 1. Modèles de Données & Enums (`app/Models/RH` & `app/Enums/RH`)
+*   **Référentiel Salariés** : `Employee`, `Contract` (avec Types de contrats), `Equipement` (matériel confié).
+*   **Temps & Activité** : `TimeEntry` (Pointage), `Abscence` (Congés/Maladie).
+*   **Notes de Frais** : `ExpenseReport`, `ExpenseItem`.
+*   **Conformité & Santé** : `MedicalVisit`, `Qualification` (Habilitations, CACES).
+*   **Paie & Social** : `PayrollExport`, `PayrollVariable`, `CibtpDeclaration`.
+*   **Enums strictes** : Validation des types (`AbsenceType`, `ContractType`, `CacesSymbol`, `ExpenseItemStatus`, etc.).
+
+### 2. Logique Métier & Services (`app/Services/RH`)
+*   **Gestion Sociale Avancée** :
+    *   **CIBTP** : `CibtpService` automatise l'export DNA et les Demandes De Congés (DDC).
+    *   **Subrogation** : Calcul automatique des Indemnités Journalières lors d'un arrêt, génération de l'attestation de salaire PDF.
+    *   **Affiliation** : Génération du bulletin PRO BTP automatique post-onboarding.
+*   **Paie & Temps** : `PayrollGenerationService` consolide les variables de paie en fin de mois (heures de base, heures supplémentaires, absences, primes). Génération d'un export mensuel CSV des heures et de Fiches de Paie Pro Forma (estimatives).
+*   **Notes de Frais & OCR** : Workflow complet de soumission. Moteur OCR (`GoogleCloudVisionOcrService`) intégré pour l'extraction automatique des montants et catégorisation depuis les tickets.
+*   **Signature Électronique** : API DocuSeal intégrée pour les contrats.
+
+### 3. Observers & Événements (`app/Observers/RH`)
+*   **Conformité et Alertes** : Observers (`MedicalVisitObserver`, `QualificationObserver`) couplés à des Jobs qui envoient des notifications push et emails avant l'expiration d'une certification ou d'une visite médicale.
+*   **Synergies** : Actions croisées avec les modules Flottes (amendes) et Chantiers (dépassement budgétaire lié aux heures).
+
+### 4. Interface Utilisateur (Filament & Kiosques)
+*   **Panel RH Filament** : Interface de gestion complète des employés, formulaires de saisie, matrice de polyvalence dynamique (validité des habilitations avec code couleur). Intégration d'un Calendrier fusionnant présences et congés.
+*   **Lecteur de Code-barres** : Intégration de `filament-barcode-scanner-field` pour assigner et tracer l'équipement.
+*   **Kiosque Biométrique** : Saisie des heures via une pointeuse tablette avec reconnaissance faciale (`face-api.js`), traitement local, gestion RGPD et brouillons automatiques.
+*   **Onboarding Digitalisé** : Espace candidat autonome pour le dépôt des pièces justificatives avant édition du contrat.
+
+### 5. Tests
+*   **100% de succès** sur la suite massive de plus de 130 tests PestPHP. Toutes les fonctionnalités de base et avancées (y compris l'analytique et l'OCR) sont couvertes.
 
 ## 🚧 Ce qu'il reste à faire
-*(Le module est fonctionnellement très abouti et couvre tous les besoins RH classiques et avancés. Il est en phase de maintenance/amélioration continue).*
+*   Le module est fonctionnellement très abouti et couvre tous les besoins RH classiques et avancés. Il est en phase de maintenance/amélioration continue.
 
 ## 💡 Idées d'amélioration et Nouvelles Fonctionnalités
-- Intégration DSN complète (Déclaration Sociale Nominative) via API net-entreprises.
-- **Export Comptable & SEPA** : Générer automatiquement un fichier de virement SEPA pour le remboursement groupé des notes de frais validées.
-- **Rapprochement Bancaire (Cartes Corpo)** : Intégrer une API (Bridge/Plaid) pour réconcilier automatiquement les dépenses des cartes "Corporate" de l'entreprise avec les tickets scannés par les salariés.
-- **OCR Multi-Pages & PDF** : Étendre le support OCR pour traiter les factures PDF multi-pages, et pas uniquement les photos JPEG de tickets.
-- **Avances sur Frais** : Permettre aux salariés de demander une avance budgétaire pour un grand déplacement à venir, avec suivi et déduction automatique lors de la saisie de la note de frais finale.
+*   **Intégration DSN complète** : Déclaration Sociale Nominative via API net-entreprises.
+*   **Export Comptable & SEPA** : Générer automatiquement un fichier de virement SEPA pour le remboursement groupé des notes de frais validées.
+*   **Rapprochement Bancaire (Cartes Corpo)** : Intégrer une API (Bridge/Plaid) pour réconcilier automatiquement les dépenses des cartes "Corporate" de l'entreprise avec les tickets scannés par les salariés.
+*   **OCR Multi-Pages & PDF** : Étendre le support OCR pour traiter les factures PDF multi-pages, et pas uniquement les photos JPEG de tickets.
+*   **Avances sur Frais** : Permettre aux salariés de demander une avance budgétaire pour un grand déplacement à venir, avec suivi et déduction automatique lors de la saisie de la note de frais finale.

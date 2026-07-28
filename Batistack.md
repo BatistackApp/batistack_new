@@ -48,20 +48,20 @@ Logiciel développer de facon modulaire pour permettre une grande maintenabilit�
 ---
 ## Modules & Descriptifs
 
-    - Core           
-    - Tiers
-    - Chantiers
-    - Articles & Stocks
-    - Commerce / Facturation
-    - Resources Humaines (RH) & Service de Pointage
-    - Paie
-    - Banque
-    - Note de Frais
-    - Flotte
-    - Locations
-    - Immobilisations
+    - Core [x]
+    - Tiers [x]
+    - Chantiers [x]
+    - Articles & Stocks [x]
+    - Commerce / Facturation [x]
+    - Resources Humaines (RH) & Service de Pointage [x]
+    - Paie [x]
+    - Banque [x]
+    - Note de Frais [x]
+    - Flottes [x]
+    - Locations [x]
+    - Immobilisations [x]
     - GPAO [x]
-    - Interventions
+    - Interventions [x]
     - 3D Visions
     
 ### Core [x]
@@ -72,7 +72,7 @@ Logiciel développer de facon modulaire pour permettre une grande maintenabilit�
 **Descriptifs:** Gestion des clients, fournisseurs et sous-traitants.
 **Portés:** Tous les modules ayant besoins de la base de donnée des tiers de l'application
 
-## Chantiers [x]
+### Chantiers [x]
 **Descriptifs:** Suivi des projets, incluant la gestion des coûts (main-d'œuvre, location, achats), le suivi budgétaire et la génération de rapports de rentabilité (PDF/CSV).
 Dans l'idéal, il doit permettre la centralisation des informations des chantiers et des resources applicable.
 **Portés:** Tous les modules ayant besoins de la base de donnée des chantiers de l'application
@@ -124,7 +124,7 @@ Dans l'idéal, il doit permettre la centralisation des informations des chantier
 **Descriptifs:** Gestion des Ordres de Fabrication (OF), planification, suivi de statut, mise à jour des stocks. **Inclut un système de calcul des besoins en matériaux (MRP simplifié) et la génération automatique de suggestions d'achats.**
 **Portés:** Tous les modules ayant besoins de la base de donnée des GPAO de l'application
 
-### Interventions
+### Interventions [x]
 **Descriptifs:** Gestion des interventions (Forfait ou Régie). **Déstockage intelligent (Dépôt par défaut), facturation client avec marge configurable et suivi de rentabilité, comptabilisation analytique des coûts.**
 **Portés:** Tous les modules ayant besoins de la base de donnée des interventions de l'application
 
