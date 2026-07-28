@@ -1,8 +1,9 @@
-@props([
-    'url',
-    'format',
-    'annotations' => [],
-])
+@php
+    $record = $getRecord();
+    $url = \Illuminate\Support\Facades\Storage::disk('public')->url($record->file_path);
+    $format = $record->format;
+    $annotations = $record->annotations()->get()->toArray();
+@endphp
 
 <div
     x-data="bimViewer({
