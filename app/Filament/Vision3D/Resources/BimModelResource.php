@@ -1,23 +1,26 @@
 <?php
 
-namespace App\Filament\Resources\Vision3D;
+namespace App\Filament\Vision3D\Resources;
 
 use App\Filament\Resources\Vision3D\BimModelResource\Pages;
+use App\Filament\Vision3D\Resources;
 use App\Models\Vision3D\BimModel;
-use Filament\Resources\Resource;
-use Filament\Tables;
-use Filament\Tables\Table;
-use Filament\Schemas\Schema;
-use Filament\Schemas\Components\Section;
-use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\Select;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
+use Filament\Infolists\Components\Actions\Action;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Components\ViewEntry;
-use Filament\Infolists\Components\Actions\Action;
+use Filament\Resources\Resource;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Schema;
+use Filament\Tables;
+use Filament\Tables\Table;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
+use function App\Filament\Resources\Vision3D\now;
+use function App\Filament\Resources\Vision3D\str;
 
 class BimModelResource extends Resource
 {
@@ -46,7 +49,7 @@ class BimModelResource extends Resource
                             ->label('Nom')
                             ->required()
                             ->maxLength(255),
-                            
+
                         Select::make('format')
                             ->label('Format')
                             ->options([
@@ -58,7 +61,7 @@ class BimModelResource extends Resource
                                 'stl' => 'STL',
                             ])
                             ->required(),
-                            
+
                         FileUpload::make('file_path')
                             ->label('Fichier 3D')
                             ->disk('public')
@@ -81,7 +84,7 @@ class BimModelResource extends Resource
                     ->label('Nom')
                     ->searchable()
                     ->sortable(),
-                    
+
                 Tables\Columns\BadgeColumn::make('format')
                     ->label('Format')
                     ->colors([
@@ -90,12 +93,12 @@ class BimModelResource extends Resource
                         'success' => fn ($state) => in_array($state, ['glb', 'gltf']),
                         'secondary' => fn ($state) => in_array($state, ['obj', 'stl']),
                     ]),
-                    
+
                 Tables\Columns\TextColumn::make('file_size')
                     ->label('Taille')
                     ->formatStateUsing(fn ($state) => number_format($state / 1048576, 2) . ' Mo')
                     ->sortable(),
-                    
+
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Créé le')
                     ->dateTime('d/m/Y H:i')
@@ -150,7 +153,7 @@ class BimModelResource extends Resource
                             ])
                             ->columnSpanFull(),
                     ]),
-                    
+
                 Section::make('Informations')
                     ->components([
                         TextEntry::make('name')->label('Nom'),
@@ -165,17 +168,17 @@ class BimModelResource extends Resource
     public static function getRelations(): array
     {
         return [
-            \App\Filament\Resources\Vision3D\RelationManagers\BimAnnotationsRelationManager::class,
+            Resources\RelationManagers\BimAnnotationsRelationManager::class,
         ];
     }
 
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListBimModels::route('/'),
-            'create' => Pages\CreateBimModel::route('/create'),
-            'view' => Pages\ViewBimModel::route('/{record}'),
-            'edit' => Pages\EditBimModel::route('/{record}/edit'),
+            'index' => Resources\BimModelResource\Pages\ListBimModels::route('/'),
+            'create' => Resources\BimModelResource\Pages\CreateBimModel::route('/create'),
+            'view' => Resources\BimModelResource\Pages\ViewBimModel::route('/{record}'),
+            'edit' => Resources\BimModelResource\Pages\EditBimModel::route('/{record}/edit'),
         ];
     }
 }

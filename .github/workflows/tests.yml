@@ -166,6 +166,32 @@ jobs:
               - 'app/Providers/Gpao/**'
               - 'app/Services/Gpao/**'
               - 'tests/Feature/Modules/Gpao/**'
+            Interventions:
+              - 'app/Filament/Interventions/**'
+              - 'app/Console/Interventions/**'
+              - 'app/Enums/Interventions/**'
+              - 'app/Events/Interventions/**'
+              - 'app/Jobs/Interventions/**'
+              - 'app/Mails/Interventions/**'
+              - 'app/Models/Interventions/**'
+              - 'app/Notifications/Interventions/**'
+              - 'app/Observers/Interventions/**'
+              - 'app/Providers/Interventions/**'
+              - 'app/Services/Interventions/**'
+              - 'tests/Feature/Modules/Interventions/**'
+            Vision3D:
+              - 'app/Filament/Vision3D/**'
+              - 'app/Console/Vision3D/**'
+              - 'app/Enums/Vision3D/**'
+              - 'app/Events/Vision3D/**'
+              - 'app/Jobs/Vision3D/**'
+              - 'app/Mails/Vision3D/**'
+              - 'app/Models/Vision3D/**'
+              - 'app/Notifications/Vision3D/**'
+              - 'app/Observers/Vision3D/**'
+              - 'app/Providers/Vision3D/**'
+              - 'app/Services/Vision3D/**'
+              - 'tests/Feature/Modules/Vision3D/**'
 
   test-modules:
     runs-on: ubuntu-latest
