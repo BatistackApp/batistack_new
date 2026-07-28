@@ -40,6 +40,10 @@ class Vision3DPanelProvider extends PanelProvider
             ->discoverResources(in: app_path('Filament/Vision3D/Resources'), for: 'App\Filament\Vision3D\Resources')
             ->discoverPages(in: app_path('Filament/Vision3D/Pages'), for: 'App\Filament\Vision3D\Pages')
             ->discoverWidgets(in: app_path('Filament/Vision3D/Widgets'), for: 'App\Filament\Vision3D\Widgets')
+            ->renderHook(
+                \Filament\View\PanelsRenderHook::HEAD_END,
+                fn (): string => \Illuminate\Support\Facades\Blade::render("@vite('resources/js/app.js')")
+            )
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,

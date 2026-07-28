@@ -2,14 +2,13 @@
 
 namespace App\Filament\Vision3D\Resources;
 
-use App\Filament\Resources\Vision3D\BimModelResource\Pages;
-use App\Filament\Vision3D\Resources;
+use App\Filament\Vision3D\Resources\BimModelResource\Pages;
 use App\Models\Vision3D\BimModel;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
-use Filament\Infolists\Components\Actions\Action;
+use Filament\Actions\Action;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Components\ViewEntry;
 use Filament\Resources\Resource;
@@ -19,8 +18,6 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
-use function App\Filament\Resources\Vision3D\now;
-use function App\Filament\Resources\Vision3D\str;
 
 class BimModelResource extends Resource
 {
@@ -108,12 +105,12 @@ class BimModelResource extends Resource
                 //
             ])
             ->actions([
-                Tables\Actions\ViewAction::make(),
-                Tables\Actions\EditAction::make(),
+                \Filament\Actions\ViewAction::make(),
+                \Filament\Actions\EditAction::make(),
             ])
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+                \Filament\Actions\BulkActionGroup::make([
+                    \Filament\Actions\DeleteBulkAction::make(),
                 ]),
             ]);
     }
@@ -127,11 +124,6 @@ class BimModelResource extends Resource
                         ViewEntry::make('viewer')
                             ->view('filament.components.bim-viewer')
                             ->statePath('file_path') // Pass the file path state
-                            ->extraAttributes(fn (BimModel $record) => [
-                                'url' => Storage::disk('public')->url($record->file_path),
-                                'format' => $record->format,
-                                'annotations' => $record->annotations()->get()->toArray(),
-                            ])
                             ->registerActions([
                                 Action::make('createAnnotation')
                                     ->form([
@@ -168,17 +160,17 @@ class BimModelResource extends Resource
     public static function getRelations(): array
     {
         return [
-            Resources\RelationManagers\BimAnnotationsRelationManager::class,
+            RelationManagers\BimAnnotationsRelationManager::class,
         ];
     }
 
     public static function getPages(): array
     {
         return [
-            'index' => Resources\BimModelResource\Pages\ListBimModels::route('/'),
-            'create' => Resources\BimModelResource\Pages\CreateBimModel::route('/create'),
-            'view' => Resources\BimModelResource\Pages\ViewBimModel::route('/{record}'),
-            'edit' => Resources\BimModelResource\Pages\EditBimModel::route('/{record}/edit'),
+            'index' => Pages\ListBimModels::route('/'),
+            'create' => Pages\CreateBimModel::route('/create'),
+            'view' => Pages\ViewBimModel::route('/{record}'),
+            'edit' => Pages\EditBimModel::route('/{record}/edit'),
         ];
     }
 }
