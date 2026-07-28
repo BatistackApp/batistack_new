@@ -20,5 +20,6 @@ return [
     App\Providers\Filament\TechnicienPanelProvider::class,
     App\Providers\Filament\TerrainPanelProvider::class,
     App\Providers\Filament\TiersPanelProvider::class,
+    App\Providers\Filament\Vision3DPanelProvider::class,
     App\Providers\FortifyServiceProvider::class,
 ];
