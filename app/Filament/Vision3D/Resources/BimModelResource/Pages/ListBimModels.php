@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Filament\Resources\Vision3D\BimModelResource\Pages;
+namespace App\Filament\Vision3D\Resources\BimModelResource\Pages;
 
-use App\Filament\Resources\Vision3D\BimModelResource;
+use App\Filament\Vision3D\Resources\BimModelResource;
 use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
 

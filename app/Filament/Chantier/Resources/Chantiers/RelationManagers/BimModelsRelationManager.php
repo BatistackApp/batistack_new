@@ -11,8 +11,6 @@ use Filament\Schemas\Components\TextInput;
 use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 
 class BimModelsRelationManager extends RelationManager
@@ -31,7 +29,7 @@ class BimModelsRelationManager extends RelationManager
                     ->label('Nom')
                     ->required()
                     ->maxLength(255),
-                    
+
                 Select::make('format')
                     ->label('Format')
                     ->options([
@@ -43,7 +41,7 @@ class BimModelsRelationManager extends RelationManager
                         'stl' => 'STL',
                     ])
                     ->required(),
-                    
+
                 FileUpload::make('file_path')
                     ->label('Fichier 3D')
                     ->disk('public')
@@ -84,7 +82,7 @@ class BimModelsRelationManager extends RelationManager
                 Tables\Actions\Action::make('view')
                     ->label('Visualiser')
                     ->icon('heroicon-o-eye')
-                    ->url(fn (BimModel $record): string => \App\Filament\Resources\Vision3D\BimModelResource::getUrl('view', ['record' => $record])),
+                    ->url(fn (BimModel $record): string => \App\Filament\Vision3D\Resources\BimModelResource::getUrl('view', ['record' => $record])),
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
             ])

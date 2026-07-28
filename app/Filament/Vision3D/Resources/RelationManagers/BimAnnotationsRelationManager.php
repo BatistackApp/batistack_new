@@ -1,8 +1,7 @@
 <?php
 
-namespace App\Filament\Resources\Vision3D\RelationManagers;
+namespace App\Filament\Vision3D\Resources\RelationManagers;
 
-use App\Models\Vision3D\BimAnnotation;
 use Filament\Forms;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Schemas\Components\Textarea;
