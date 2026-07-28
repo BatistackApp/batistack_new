@@ -21,8 +21,8 @@
             <div class="section-content">
                 <strong>Référence :</strong> {{ $intervention->reference }}<br>
                 <strong>Date :</strong> {{ \Carbon\Carbon::parse($intervention->scheduled_at ?? $intervention->created_at)->format('d/m/Y') }}<br>
-                <strong>Type :</strong> {{ $intervention->type === 'forfait' ? 'Forfaitaire' : 'En Régie' }}<br>
-                <strong>Statut :</strong> {{ ucfirst(str_replace('_', ' ', $intervention->status)) }}
+                <strong>Type :</strong> {{ $intervention->type->getLabel() }}<br>
+                <strong>Statut :</strong> {{ $intervention->status->getLabel() }}
             </div>
             @if($chantier)
                 <div class="section-content mt-2">
@@ -95,7 +95,7 @@
         <p class="conditions-content">
             L'intervention détaillée ci-dessus a été réalisée selon les conditions prévues. 
             La signature de ce document par le client vaut pour recette et acceptation sans réserve des travaux effectués et du matériel fourni. 
-            @if($intervention->type === 'regie')
+            @if($intervention->type->value === 'regie')
             Ce bon d'intervention servira de base à la facturation des heures et des pièces en régie.
             @endif
         </p>

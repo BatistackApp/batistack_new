@@ -1,17 +1,36 @@
 # 🤝 Module Tiers (CRM : Clients, Fournisseurs, Sous-Traitants)
 
+## 📌 Vue d'ensemble du Module
+Le module **Tiers** est le cœur de la relation externe de Batistack. Il centralise toutes les informations relatives aux Clients, Fournisseurs, et Sous-Traitants. Il assure le suivi documentaire légal (Kbis, attestations) et l'intégration de portails B2B dédiés.
+
 ## 📌 État Actuel (Ce qui est fait)
-*   **Backend :** Modélisation de la base (Clients, Fournisseurs, Sous-traitants, Adresses multiples, Contacts, Banques). Vue 360° financière et opérationnelle implémentée, ainsi que les notifications automatiques de rappel de vigilance.
-*   **Logique :** Les relations sont fonctionnelles. L'intégration de données publiques (INSEE) est prête via `Core\SirenService`. Le système de Scoring Fournisseur (basé sur la qualité, délais, litiges) est opérationnel.
-*   **Tests :** Validé à 100% (plus de 172 tests PestPHP exécutés et validés avec succès).
-*   **Frontend :** Les fondations du Panel Filament sont initiées. L'interface principale est fonctionnelle.
-*   **Portails Externes B2B :** L'accès pour les Sous-traitants (SubcontractorPanel) et pour les Clients (CustomerPanel) a été configuré et sécurisé.
-*   **Évaluation Financière & Solvabilité :** Intégration de l'API publique ouverte (`recherche-entreprises.api.gouv.fr`) pour récupérer en temps réel le statut juridique (liquidation, redressement) des tiers et affichage via des alertes visuelles.
-*   **Portail d'Appels d'Offres Privé :** Module de "Consultations" permettant de publier des appels d'offres ciblés pour les chantiers. Les sous-traitants peuvent soumettre leurs offres chiffrées directement depuis leur portail sécurisé.
-*   **Conformité Documentaire :** Gestion centralisée des documents obligatoires (Kbis, URSSAF, Décennale) avec système d'upload, suivi des dates d'expiration et notifications automatisées envoyées 30 jours et 7 jours avant échéance.
+
+### 1. Modèles de Données & Enums (`app/Models/Tiers` & `app/Enums/Tiers`)
+*   **Référentiel Tiers** : `ThirdParty` (Tiers général), `Contact`, `Address`, `Category`.
+*   **Appels d'Offres** : `Consultation`, `ConsultationOffer`.
+*   **Documents de Conformité** : `ThirdPartyDocument` (Kbis, Attestation URSSAF, Décennale).
+*   **Enums** : `ThirdPartyType`, `ThirdPartyDocumentType`, `ThirdPartyDocumentStatus`.
+
+### 2. Logique Métier & Services (`app/Services/Tiers`)
+*   **Intégration APIs Publiques** : 
+    *   `PappersService` / `Core\SirenService` pour récupérer les données INSEE.
+    *   `VigilanceService` pour l'évaluation financière et de solvabilité en temps réel (via `recherche-entreprises.api.gouv.fr`) afin de détecter les liquidations ou redressements judiciaires et afficher des alertes visuelles.
+*   **Scoring** : `SupplierScoringService` (Scoring Fournisseur basé sur la qualité, délais, litiges).
+*   **Gestion Documentaire** : `TiersDocumentService` centralise les documents obligatoires avec suivi des expirations (notifications automatisées à J-30 et J-7).
+*   **Portail d'Appels d'Offres Privé** : Publication de consultations pour les sous-traitants qui peuvent soumettre leurs offres chiffrées via leur portail.
+
+### 3. Observers & Événements (`app/Observers/Tiers`)
+*   Multiples Observers (`ThirdPartyObserver`, `ContactObserver`, `AddressObserver`) pour synchroniser les données externes et vérifier la conformité (ex: déclencher une alerte si un Kbis expire).
+
+### 4. Interface Utilisateur (Filament & Portails)
+*   **Administration** : Les fondations du Panel Filament sont complètes (`ThirdPartyResource`, vues Infolist massives offrant une vue 360° financière et opérationnelle).
+*   **Portails B2B** : Accès dédiés et sécurisés pour les Sous-traitants (`SubcontractorPanel`) et les Clients (`CustomerPanel`).
+
+### 5. Tests
+*   Suite ultra-complète validée à 100% (plus de 172 tests PestPHP).
 
 ## 🚧 Ce qu'il reste à faire
-*(La base du module est terminée et extrêmement complète. Aucune amélioration prioritaire n'est requise dans l'immédiat).*
+*   La base du module est terminée et extrêmement complète. Aucune amélioration prioritaire n'est requise dans l'immédiat.
 
 ## 💡 Idées d'amélioration et Nouvelles Fonctionnalités
-- Intégration avancée de la signature électronique pour les devis et marchés de sous-traitance (ex: DocuSeal).
+*   **Signature Électronique (Sous-Traitants)** : Intégration avancée de la signature électronique pour les devis et les marchés de sous-traitance (ex: DocuSeal) afin de contractualiser plus rapidement avec les partenaires externes.

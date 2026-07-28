@@ -50,4 +50,12 @@ class Signature extends Model
     {
         return $this->belongsTo(User::class);
     }
+
+    /**
+     * Determine if the signature is valid.
+     */
+    public function getIsValidAttribute(): bool
+    {
+        return $this->status === \App\Enums\Core\SignatureStatus::SIGNED;
+    }
 }

@@ -51,6 +51,20 @@ class EmployeeForm
                                                     $record->user->updateQuietly(['access_atelier' => (bool) $state]);
                                                 }
                                             }),
+                                        Toggle::make('access_technique')
+                                            ->label('Accès Interface Technicien (SAV)')
+                                            ->default(false)
+                                            ->onColor('info')
+                                            ->formatStateUsing(fn ($record) => $record?->user?->access_technique ?? false)
+                                            ->dehydrated(false)
+                                            ->saveRelationshipsUsing(function ($record, $state) {
+                                                if (! $record->relationLoaded('user')) {
+                                                    $record->load('user');
+                                                }
+                                                if ($record && $record->user) {
+                                                    $record->user->updateQuietly(['access_technique' => (bool) $state]);
+                                                }
+                                            }),
                                         TextInput::make('first_name')
                                             ->label('Prénom')
                                             ->required(),

@@ -11,6 +11,12 @@ class InterventionObserver
      */
     public function creating(Intervention $intervention): void
     {
+        if (empty($intervention->company_id)) {
+            // Assign a default company if none is provided
+            $defaultCompany = \App\Models\Core\Company::first();
+            $intervention->company_id = $defaultCompany ? $defaultCompany->id : 1;
+        }
+
         if (empty($intervention->reference)) {
             // Logique de génération (ex: INT-2026-0001)
             $year = now()->format('Y');
