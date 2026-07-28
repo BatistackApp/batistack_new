@@ -183,7 +183,7 @@ class DeliveryNotesRelationManager extends RelationManager
                             Action::make('pdf')
                                 ->label('Imprimer')
                                 ->icon(Phosphor::Printer)
-                                ->action(fn (Model $record, CommerceDocumentationService $service) => response()->download($service->generateDeliveryNotePdf($record))),
+                                ->action(fn (Model $record, CommerceDocumentationService $service) => $service->download($service->generateDeliveryNotePdf($record))),
                         ])
                         ->schema([
                             Section::make()

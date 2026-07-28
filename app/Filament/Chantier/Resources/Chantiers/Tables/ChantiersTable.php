@@ -65,12 +65,12 @@ class ChantiersTable
                         ->label('Ordre de Service')
                         ->icon(Phosphor::FilePdf)
                         ->color('info')
-                        ->action(fn (Chantier $record, ChantierDocumentService $service) => response()->download($service->generateStartOrder($record))),
+                        ->action(fn (Chantier $record, ChantierDocumentService $service) => $service->download($service->generateStartOrder($record))),
                     Action::make('print_bilan')
                         ->label('Bilan Analytique')
                         ->icon(Phosphor::ChartPie)
                         ->color('success')
-                        ->action(fn (Chantier $record, ChantierDocumentService $service) => response()->download($service->generateRentabilityReport($record))),
+                        ->action(fn (Chantier $record, ChantierDocumentService $service) => $service->download($service->generateRentabilityReport($record))),
 
                     Action::make('affect_material')
                         ->label('Affecter Matériel')

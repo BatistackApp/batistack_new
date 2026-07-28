@@ -16,12 +16,20 @@ class DocumentService
      * @param  string  $filename  Le nom du fichier de sortie (sans extension).
      * @param  string  $type  Le sous-répertoire dans lequel stocker le document.
      * @return string Le chemin absolu vers le fichier PDF généré.
+     * @return string Le chemin relatif vers le fichier PDF généré.
      */
-    public function generate(string $view, array $data, string $filename, string $type, string $position = 'portait', bool $pdfView = false): string
+    public static function getDisk(): string
     {
-        $html = View::make($view, $data)->render();
+        return env('DOCUMENTS_DISK', 'public');
+    }
 
-        $browsershot = Browsershot::html($html)
+    public function download(string $relativePath, ?string $filename = null)
+    {
+        return Storage::disk(static::getDisk())->download($relativePath, $filename);
+    }
+    public function generate(string $view, array $data, string $filename, string $type = 'other', bool $pdfView = false): mixed
+    {
+        $browsershot = Browsershot::html(view($view, $data)->render())
             ->setNodeBinary(config('browsershot.node_binary_path'))
             ->setNpmBinary(config('browsershot.npm_binary_path'))
             ->format('A4')
@@ -30,7 +38,7 @@ class DocumentService
             ->waitUntilNetworkIdle()
             ->noSandbox();
             
-        if ($position !== 'portait') {
+        if (isset($data['position']) && $data['position'] !== 'portait') {
             $browsershot->landscape();
         }
 
@@ -45,13 +53,14 @@ class DocumentService
         $pdfContent = $browsershot->pdf();
 
         $relativePath = 'documents/'.$type.'/'.$filename.'.pdf';
+        $disk = static::getDisk();
 
-        Storage::disk('public')->put($relativePath, $pdfContent);
+        Storage::disk($disk)->put($relativePath, $pdfContent);
 
         if ($pdfView) {
             return $pdfContent;
         }
 
-        return Storage::disk('public')->path($relativePath);
+        return $relativePath;
     }
 }
