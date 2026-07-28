@@ -32,6 +32,7 @@ class SignatureService
         array $additionalMetadata = []
     ): Signature {
         return Signature::create([
+            'token' => Str::uuid()->toString(),
             'signable_type' => $model->getMorphClass(),
             'signable_id' => $model->id,
             'user_id' => Auth::id(),

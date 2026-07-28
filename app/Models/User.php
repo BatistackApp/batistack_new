@@ -22,7 +22,7 @@ use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
 use NotificationChannels\WebPush\HasPushSubscriptions;
 
-#[Fillable(['name', 'email', 'password', 'is_admin', 'is_employee', 'is_tiers', 'email_verified_at', 'access_atelier'])]
+#[Fillable(['name', 'email', 'password', 'is_admin', 'is_employee', 'is_tiers', 'email_verified_at', 'access_atelier', 'access_technique'])]
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
 class User extends Authenticatable implements FilamentUser
 {
@@ -33,6 +33,11 @@ class User extends Authenticatable implements FilamentUser
     {
         // Les administrateurs ont accès à tout
         if ($this->is_admin) {
+            return true;
+        }
+
+        // Le panel technique est réservé aux techniciens ayant l'accès
+        if ($panel->getId() === 'technicien' && $this->access_technique) {
             return true;
         }
 
@@ -48,8 +53,6 @@ class User extends Authenticatable implements FilamentUser
 
         return false;
     }
-    /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable, TwoFactorAuthenticatable;
 
     /**
      * Get the attributes that should be cast.
@@ -65,6 +68,7 @@ class User extends Authenticatable implements FilamentUser
             'is_employee' => 'boolean',
             'is_tiers' => 'boolean',
             'access_atelier' => 'boolean',
+            'access_technique' => 'boolean',
         ];
     }
 

@@ -109,6 +109,19 @@ class Chantier extends Model implements HasMedia
         return $this->hasMany(TimeEntry::class);
     }
 
+    public function factures(): HasMany
+    {
+        return $this->hasMany(\App\Models\Commerce\Facture::class);
+    }
+
+    /**
+     * Les maquettes 3D / plans BIM de ce chantier
+     */
+    public function bimModels(): \Illuminate\Database\Eloquent\Relations\MorphMany
+    {
+        return $this->morphMany(\App\Models\Vision3D\BimModel::class, 'modelable');
+    }
+
     public function expenseItems(): HasMany
     {
         return $this->hasMany(\App\Models\RH\ExpenseItem::class);
