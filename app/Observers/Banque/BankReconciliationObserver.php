@@ -64,6 +64,21 @@ class BankReconciliationObserver
                     $invoice->save();
                 }
             }
+        } elseif ($invoice instanceof \App\Models\Paie\Payslip) {
+            $totalReconciled = $invoice->morphMany(BankReconciliation::class, 'reconcilable')->sum('amount_applied');
+            $totalAmount = $invoice->net_payable ?? 0;
+
+            if ($totalAmount > 0 && $totalReconciled >= $totalAmount - 0.05) { // 5 cents tolerance
+                if ($invoice->status !== \App\Enums\Paie\PayslipStatus::PAID) {
+                    $invoice->status = \App\Enums\Paie\PayslipStatus::PAID;
+                    $invoice->save();
+                }
+            } else {
+                if ($invoice->status === \App\Enums\Paie\PayslipStatus::PAID) {
+                    $invoice->status = \App\Enums\Paie\PayslipStatus::VALIDATED;
+                    $invoice->save();
+                }
+            }
         }
     }
 }

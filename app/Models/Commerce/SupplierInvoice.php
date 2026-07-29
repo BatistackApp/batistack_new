@@ -37,9 +37,9 @@ class SupplierInvoice extends Model
         return $this->belongsTo(PurchaseOrder::class, 'purchase_order_id');
     }
 
-    public function payments(): HasMany
+    public function allocations(): \Illuminate\Database\Eloquent\Relations\MorphMany
     {
-        return $this->hasMany(SupplierPayment::class);
+        return $this->morphMany(PaymentAllocation::class, 'payable');
     }
 
     public function fixedAssets(): HasMany
@@ -60,5 +60,15 @@ class SupplierInvoice extends Model
             'amount_ttc' => 'decimal:2',
             'due_date' => 'datetime',
         ];
+    }
+
+    public function getAmountRemainingAttribute(): float
+    {
+        if ($this->status === InvoiceStatus::PAID) {
+            return 0.0;
+        }
+
+        $allocated = $this->allocations()->sum('allocated_amount');
+        return max(0.0, (float) $this->amount_ttc - (float) $allocated);
     }
 }
