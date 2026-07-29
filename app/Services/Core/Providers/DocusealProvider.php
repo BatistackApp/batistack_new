@@ -14,8 +14,8 @@ use Illuminate\Support\Facades\Storage;
 
 class DocusealProvider implements SignatureProviderInterface
 {
-    protected string $apiUrl;
-    protected string $apiToken;
+    protected ?string $apiUrl;
+    protected ?string $apiToken;
 
     public function __construct()
     {
@@ -41,15 +41,19 @@ class DocusealProvider implements SignatureProviderInterface
             'user_id' => auth()->id(),
             'status' => SignatureStatus::PENDING,
             'type' => $type,
+            'checksum' => hash('sha256', json_encode($model->toArray())),
             'metadata' => [
                 'provider' => 'docuseal',
                 'requested_at' => now()->toDateTimeString(),
             ],
         ]);
 
-        if (!$email || !$documentPath || !$this->apiToken) {
-            Log::warning("DocusealProvider: Missing email, documentPath or apiToken for signature request.");
-            return $signature;
+        if (!$this->apiToken) {
+            throw new \Exception("Le Token API DocuSeal n'est pas configuré dans votre fichier .env (DOCUSEAL_API_TOKEN).");
+        }
+
+        if (!$email || !$documentPath) {
+            throw new \Exception("L'adresse e-mail ou le document PDF est manquant pour l'envoi à DocuSeal.");
         }
 
         try {
@@ -65,16 +69,33 @@ class DocusealProvider implements SignatureProviderInterface
             $base64File = 'data:application/pdf;base64,' . base64_encode($fileContent);
             $documentName = basename($documentPath);
 
-            $response = Http::withHeaders([
+            $http = Http::withHeaders([
                 'X-Auth-Token' => $this->apiToken,
                 'Content-Type' => 'application/json',
-            ])->post("{$this->apiUrl}/submissions/pdf", [
+            ]);
+
+            // 1. Create a Template from the PDF
+            // This is allowed in the free Community Edition (unlike /submissions/pdf)
+            $templateResponse = $http->post("{$this->apiUrl}/templates/pdf", [
+                'name' => 'Template - ' . $documentName,
                 'documents' => [
                     [
                         'name' => $documentName,
                         'file' => $base64File
                     ]
-                ],
+                ]
+            ]);
+
+            if (!$templateResponse->successful()) {
+                throw new \Exception("Erreur DocuSeal lors de la création du template: " . $templateResponse->body());
+            }
+
+            $templateId = $templateResponse->json('id');
+
+            // 2. Create a Submission from the created Template
+            $response = $http->post("{$this->apiUrl}/submissions", [
+                'template_id' => $templateId,
+                'send_email' => true,
                 'submitters' => [
                     [
                         'role' => 'Signataire',
@@ -91,12 +112,13 @@ class DocusealProvider implements SignatureProviderInterface
                 
                 $signature->update([
                     'metadata' => array_merge($signature->metadata ?? [], [
+                        'docuseal_template_id' => $templateId,
                         'docuseal_submission_id' => $submissionId,
                         'docuseal_response' => $responseData
                     ])
                 ]);
             } else {
-                Log::error("Docuseal API Error: " . $response->body());
+                throw new \Exception("Erreur DocuSeal lors de la création de la soumission: " . $response->body());
             }
         } catch (\Exception $e) {
             Log::error("DocusealProvider exception: " . $e->getMessage());

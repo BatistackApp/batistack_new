@@ -112,7 +112,9 @@ class CustomerQuotesTable
                         ->modalWidth(Width::Container)
                         ->media(function (Model $record) {
                             $path = 'commerce/quotes/devis_'.$record->reference.'.pdf';
-                            if (! Storage::disk('public')->exists('documents/'.$path)) {
+                            $disk = \App\Services\Core\DocumentService::getDisk();
+                            
+                            if (! Storage::disk($disk)->exists('documents/'.$path)) {
                                 try {
                                     app(CommerceDocumentationService::class)->generateQuotePdf($record);
                                 } catch (\Exception $e) {
@@ -124,7 +126,61 @@ class CustomerQuotesTable
                                     return '';
                                 }
                             }
-                            return Storage::url('documents/'.$path);
+                            
+                            if ($disk === 's3') {
+                                return Storage::disk($disk)->temporaryUrl('documents/'.$path, now()->addMinutes(5));
+                            }
+                            
+                            return Storage::disk($disk)->url('documents/'.$path);
+                        }),
+
+                    Action::make('requestSignature')
+                        ->label('Signature eIDAS')
+                        ->icon(Phosphor::SealCheck)
+                        ->color('info')
+                        ->form([
+                            \Filament\Forms\Components\TextInput::make('name')
+                                ->label('Nom du signataire')
+                                ->required()
+                                ->default(fn (CustomerQuote $record) => optional($record->client)->name),
+                            \Filament\Forms\Components\TextInput::make('email')
+                                ->label('Email du signataire')
+                                ->email()
+                                ->required()
+                                ->default(fn (CustomerQuote $record) => optional($record->client)->email),
+                        ])
+                        ->modalHeading('Demande de signature DocuSeal')
+                        ->modalDescription('Un e-mail certifié sera envoyé au client avec le devis.')
+                        ->action(function (CustomerQuote $record, array $data) {
+                            try {
+                                $path = 'commerce/quotes/devis_'.$record->reference.'.pdf';
+                                $disk = \App\Services\Core\DocumentService::getDisk();
+
+                                // S'assurer que le PDF est généré
+                                if (! Storage::disk($disk)->exists('documents/'.$path)) {
+                                    app(CommerceDocumentationService::class)->generateQuotePdf($record);
+                                }
+
+                                app(\App\Services\Core\SignatureService::class)->requestSignature(
+                                    $record,
+                                    \App\Enums\Core\SignatureType::EIDAS,
+                                    $data['email'],
+                                    $data['name'],
+                                    'documents/'.$path
+                                );
+
+                                \Filament\Notifications\Notification::make()
+                                    ->success()
+                                    ->title('Demande envoyée !')
+                                    ->body('Le devis a bien été envoyé pour signature.')
+                                    ->send();
+                            } catch (\Exception $e) {
+                                \Filament\Notifications\Notification::make()
+                                    ->danger()
+                                    ->title('Erreur')
+                                    ->body($e->getMessage())
+                                    ->send();
+                            }
                         }),
                 ]),
             ])
