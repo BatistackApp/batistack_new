@@ -84,4 +84,80 @@ class ChantierGanttWidget extends Widget
 
         return $tasks;
     }
+
+    public function updateTaskDates(string $taskId, string $startStr, string $endStr)
+    {
+        $start = \Carbon\Carbon::parse($startStr);
+        $end = \Carbon\Carbon::parse($endStr);
+
+        if (str_starts_with($taskId, 'task_')) {
+            $id = str_replace('task_', '', $taskId);
+            $task = \App\Models\Chantiers\ChantierTask::find($id);
+            if ($task) {
+                $task->update([
+                    'start_date' => $start,
+                    'end_date' => $end,
+                ]);
+            }
+        } elseif (str_starts_with($taskId, 'phase_')) {
+            $id = str_replace('phase_', '', $taskId);
+            $phase = \App\Models\Chantiers\ChantierPhase::find($id);
+            if ($phase) {
+                // Calculate difference in days to shift child tasks
+                $originalStart = $phase->start_date ? clone $phase->start_date : $start;
+                $diffInDays = $originalStart->diffInDays($start, false);
+
+                $phase->update([
+                    'start_date' => $start,
+                    'end_date' => $end,
+                ]);
+
+                // Shift child tasks automatically
+                if ($diffInDays !== 0) {
+                    foreach ($phase->tasks as $childTask) {
+                        if ($childTask->start_date) {
+                            $childTask->start_date = $childTask->start_date->addDays($diffInDays);
+                        }
+                        if ($childTask->end_date) {
+                            $childTask->end_date = $childTask->end_date->addDays($diffInDays);
+                        }
+                        $childTask->save();
+                    }
+                }
+            }
+        } elseif (str_starts_with($taskId, 'chantier_')) {
+            $id = str_replace('chantier_', '', $taskId);
+            $chantier = \App\Models\Chantiers\Chantier::find($id);
+            if ($chantier) {
+                $chantier->update([
+                    'start_date_preview' => $start,
+                    'end_date_preview' => $end,
+                ]);
+            }
+        }
+        
+        \Filament\Notifications\Notification::make()
+            ->title('Dates mises à jour')
+            ->success()
+            ->send();
+    }
+
+    public function updateTaskProgress(string $taskId, int $progress)
+    {
+        if (str_starts_with($taskId, 'task_')) {
+            $id = str_replace('task_', '', $taskId);
+            $task = \App\Models\Chantiers\ChantierTask::find($id);
+            if ($task) {
+                $task->update([
+                    'progress_percentage' => $progress,
+                    'is_completed' => $progress == 100,
+                ]);
+                
+                \Filament\Notifications\Notification::make()
+                    ->title('Avancement mis à jour')
+                    ->success()
+                    ->send();
+            }
+        }
+    }
 }

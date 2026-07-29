@@ -24,7 +24,7 @@ Le module **Chantiers** est le cœur de la gestion de projets BTP de l'ERP. Il p
 *   **Panel Chantiers (`app/Filament/Chantier`)** : Contrairement aux spécifications initiales, **l'interface utilisateur est entièrement développée et robuste**. Le panel dédié comprend :
     *   **Ressources** : `ChantierResource` (Formulaires et Infolists complexes, Vue détaillée) et `ChantierLogResource` (Journal de bord).
     *   **Widgets Analytiques** : `ChantierStatsOverview`, `ChantierFinancialOverview` (marge en temps réel).
-    *   **Widgets Avancés** : `ChantierMapWidget` (cartographie des chantiers en cours) et `ChantierGanttWidget` (visualisation planning).
+    *   **Widgets Avancés** : `ChantierMapWidget` (cartographie des chantiers en cours) et `ChantierGanttWidget` (visualisation planning **avec support du Drag & Drop interactif**, décalage automatique des dépendances enfants et Livewire asynchrone).
     *   **Tableaux** : `ActiveChantiersTable`, `LatestChantiersWidget`.
 
 ### 5. Tests
@@ -34,7 +34,6 @@ Le module **Chantiers** est le cœur de la gestion de projets BTP de l'ERP. Il p
 *   Le socle est complet. Des optimisations d'UX (ergonomie sur mobile pour les conducteurs de travaux) peuvent être affinées.
 
 ## 💡 Idées d'amélioration et Nouvelles Fonctionnalités
-*   **Planification Gantt (Interactive)** : Améliorer le widget Gantt actuel pour le rendre interactif, permettant de déplacer visuellement (Drag & Drop) les phases du chantier et l'affectation des équipes, avec recalcul automatique des dépendances.
 *   **Suivi de Chantier Mobile (Speech-to-Text)** : Via une PWA, permettre aux conducteurs de travaux d'utiliser la reconnaissance vocale pour dicter leur rapport de visite et le retranscrire automatiquement dans le journal de bord.
 *   **Module de Pointage Matériel (IoT)** : Intégrer des capteurs IoT ou des QR Codes pour tracker l'entrée/sortie du gros matériel sur le chantier et imputer le coût d'immobilisation de manière automatisée.
 *   **BIM (Building Information Modeling)** : Intégrer une visionneuse 3D de maquettes BIM (ex: Forge viewer) pour lier visuellement les tâches aux éléments de la maquette (cliquer sur un mur pour voir les tâches associées).
