@@ -39,7 +39,7 @@ class LowStockNotification extends Notification
 
         if ($this->stock->item->supplier_id) {
             $notification->actions([
-                \Filament\Notifications\Actions\Action::make('request_quote')
+                \Filament\Actions\Action::make('request_quote')
                     ->label('Demander prix')
                     ->button()
                     ->url(route('articles.request-quote', ['item' => $this->stock->item_id]))
