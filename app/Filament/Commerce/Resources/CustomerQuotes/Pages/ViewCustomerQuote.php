@@ -59,10 +59,26 @@ class ViewCustomerQuote extends ViewRecord
                 ->modalWidth(Width::Container)
                 ->media(function (Model $record) {
                     $path = 'commerce/quotes/devis_'.$record->reference.'.pdf';
-                    if (! Storage::disk('public')->exists('documents/'.$path)) {
-                        app(CommerceDocumentationService::class)->generateQuotePdf($record);
+                    $disk = \App\Services\Core\DocumentService::getDisk();
+
+                    if (! Storage::disk($disk)->exists('documents/'.$path)) {
+                        try {
+                            app(CommerceDocumentationService::class)->generateQuotePdf($record);
+                        } catch (\Exception $e) {
+                            \Filament\Notifications\Notification::make()
+                                ->danger()
+                                ->title('Erreur de génération PDF')
+                                ->body($e->getMessage())
+                                ->send();
+                            return '';
+                        }
                     }
-                    return Storage::url('documents/'.$path);
+
+                    if ($disk === 's3') {
+                        return Storage::disk($disk)->temporaryUrl('documents/'.$path, now()->addMinutes(5));
+                    }
+
+                    return Storage::disk($disk)->url('documents/'.$path);
                 }),
 
             ActionGroup::make([

@@ -110,9 +110,13 @@
 
     <!-- ACCORD ET SIGNATURES -->
     <div class="mt-16 flex justify-between items-end">
-        <div class="text-center w-5/12 border border-slate-200 p-4 rounded-xl bg-white shadow-sm">
+        <div class="text-center w-5/12 border border-slate-200 p-4 rounded-xl bg-white shadow-sm relative">
             <p class="font-bold text-[10px] uppercase text-slate-600 mb-20">Le Collaborateur Dépositaire</p>
             <p class="text-[8px] text-slate-400 italic">Signature précédée de la mention "Lu et approuvé"</p>
+            <!-- Tag DocuSeal caché pour le placement automatique de la signature -->
+            <div class="absolute bottom-10 left-0 right-0 text-[8px] text-transparent">
+                @{{Signature;role=Signataire;type=signature}}
+            </div>
         </div>
         <div class="text-center w-2/12 text-[8px] text-slate-400 italic mb-4">
             Fait à {{ $company->city }}, le {{ now()->format('d/m/Y') }}

@@ -61,7 +61,7 @@ class MedicalVisitsRelationManager extends RelationManager
                     ->label('Imprimer')
                     ->icon(Phosphor::Printer)
                     ->color('info')
-                    ->action(fn (MedicalVisit $record, RHDocumentService $service) => response()->download($service->generateSafetyPassport($record->employee))
+                    ->action(fn (MedicalVisit $record, RHDocumentService $service) => $service->download($service->generateSafetyPassport($record->employee))
                     ),
             ])
             ->headerActions([

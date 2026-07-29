@@ -118,11 +118,11 @@ class ContractsRelationManager extends RelationManager
                     ->label('Imprimer')
                     ->icon(Phosphor::Printer)
                     ->action(function (Contract $record, RHDocumentService $service) {
-                        $path = \Illuminate\Support\Facades\Storage::disk('public')->path('documents/rh/contrat_'.$record->employee->registration_number.'.pdf');
-                        if (!file_exists($path)) {
-                            $path = $service->generateContract($record);
+                        $relativePath = 'documents/rh/contrat_'.$record->employee->registration_number.'.pdf';
+                        if (!\Illuminate\Support\Facades\Storage::disk(\App\Services\Core\DocumentService::getDisk())->exists($relativePath)) {
+                            $relativePath = $service->generateContract($record);
                         }
-                        return response()->download($path);
+                        return $service->download($relativePath);
                     }),
                 Action::make('request_signature')
                     ->icon(Phosphor::PenNib)
@@ -131,7 +131,7 @@ class ContractsRelationManager extends RelationManager
                     ->action(function (Contract $record, SignatureService $service) {
                         $email = $record->employee->email;
                         $name = $record->employee->full_name;
-                        $pathFile = Storage::disk('public')->path('documents/rh/contrat_'.$record->employee->registration_number.'.pdf');
+                        $pathFile = 'documents/rh/contrat_'.$record->employee->registration_number.'.pdf';
 
                         if (! $email) {
                             Notification::make()->title('Erreur : Le salarié n\'a pas d\'adresse email')->danger()->send();

@@ -86,7 +86,7 @@ class CustomerInvoicesTable
                     Action::make('print')
                         ->label('PDF')
                         ->icon('heroicon-o-document')
-                        ->action(fn (CustomerInvoice $record, CommerceDocumentationService $service) => response()->download($service->generateInvoicePdf($record))),
+                        ->action(fn (CustomerInvoice $record, CommerceDocumentationService $service) => $service->download($service->generateInvoicePdf($record))),
 
                     Action::make('sendReminder')
                         ->label('Relancer')

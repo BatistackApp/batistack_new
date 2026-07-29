@@ -39,6 +39,12 @@
 
     <div class="mt-16 flex justify-around">
         <div class="border-t pt-2 w-48 text-center">Signature Employeur</div>
-        <div class="border-t pt-2 w-48 text-center">Signature Salarié</div>
+        <div class="border-t pt-2 w-48 text-center relative">
+            Signature Salarié
+            <!-- Tag DocuSeal caché pour le placement automatique de la signature -->
+            <div class="absolute bottom-6 left-0 right-0 text-[8px] text-transparent">
+                @{{Signature;role=Signataire;type=signature}}
+            </div>
+        </div>
     </div>
 @endsection

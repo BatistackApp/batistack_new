@@ -52,7 +52,7 @@ class SignatureRequestedMail extends Mailable
     {
         if ($this->documentPath) {
             return [
-                \Illuminate\Mail\Mailables\Attachment::fromPath($this->documentPath)
+                \Illuminate\Mail\Mailables\Attachment::fromStorageDisk(\App\Services\Core\DocumentService::getDisk(), $this->documentPath)
             ];
         }
 

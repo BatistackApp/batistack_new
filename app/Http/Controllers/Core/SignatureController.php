@@ -76,6 +76,23 @@ class SignatureController extends Controller
             } elseif ($signature->signable_type === \App\Models\Tiers\ThirdPartyDocument::class) {
                 $updates['status'] = \App\Enums\Tiers\ThirdPartyDocumentStatus::VALID;
                 $updates['signed_at'] = now();
+            } elseif ($signature->signable_type === \App\Models\Commerce\CustomerQuote::class) {
+                // Pour un devis client, on déclenche le processus d'acceptation complète (création chantier/commande)
+                // en utilisant l'utilisateur qui avait généré la demande de signature.
+                try {
+                    $responsable = \App\Models\User::find($signature->user_id);
+                    if ($responsable) {
+                        app(\App\Services\Commerce\QuoteService::class)->acceptQuote($signature->signable, $responsable);
+                    } else {
+                        // Secours au cas où l'utilisateur n'existe plus
+                        $signature->signable->update([
+                            'status' => \App\Enums\Commerce\QuoteStatus::SIGNED,
+                            'signed_at' => now(),
+                        ]);
+                    }
+                } catch (\Exception $e) {
+                    \Illuminate\Support\Facades\Log::error("Erreur lors de l'acceptation automatique du devis post-signature : " . $e->getMessage());
+                }
             }
 
             if (!empty($updates)) {
