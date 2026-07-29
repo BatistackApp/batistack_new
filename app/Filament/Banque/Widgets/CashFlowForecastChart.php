@@ -17,8 +17,16 @@ class CashFlowForecastChart extends ChartWidget
         return [
             'datasets' => [
                 [
-                    'label' => 'Solde Prévisionnel',
-                    'data' => $forecast['balances'],
+                    'label' => 'Solde Confirmé (Factures seules)',
+                    'data' => $forecast['balances_confirmed'],
+                    'borderColor' => '#475569',
+                    'backgroundColor' => 'rgba(71, 85, 105, 0.1)',
+                    'borderDash' => [5, 5],
+                    'fill' => false,
+                ],
+                [
+                    'label' => 'Solde Prévisionnel (Avec Devis)',
+                    'data' => $forecast['balances_optimistic'],
                     'borderColor' => '#8b5cf6',
                     'backgroundColor' => 'rgba(139, 92, 246, 0.2)',
                     'fill' => true,
