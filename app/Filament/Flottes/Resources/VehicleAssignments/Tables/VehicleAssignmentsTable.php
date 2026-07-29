@@ -148,8 +148,9 @@ class VehicleAssignmentsTable
                         ->color('info')
                         ->action(function (VehicleAssignment $record, FleetDocumentService $service) {
                             $path = $service->generateAssignmentForm($record);
+                            $disk = \App\Services\Core\DocumentService::getDisk();
 
-                            return response()->download($path);
+                            return \Illuminate\Support\Facades\Storage::disk($disk)->download($path);
                         }),
                 ]),
             ])

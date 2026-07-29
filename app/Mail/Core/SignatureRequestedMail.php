@@ -50,12 +50,6 @@ class SignatureRequestedMail extends Mailable
      */
     public function attachments(): array
     {
-        if ($this->documentPath) {
-            return [
-                \Illuminate\Mail\Mailables\Attachment::fromStorageDisk(\App\Services\Core\DocumentService::getDisk(), $this->documentPath)
-            ];
-        }
-
         return [];
     }
 }
