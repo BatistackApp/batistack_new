@@ -2,7 +2,9 @@
 
 namespace App\Models\RH;
 
+use App\Enums\RH\EquipementStatus;
 use App\Enums\RH\EquipementType;
+use App\Models\Articles\Item;
 use App\Observers\RH\EquipementObserver;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Builder;
@@ -27,11 +29,28 @@ class Equipement extends Model
         'expires_at',
         'last_check_at',
         'notes',
+        'item_id',
+        'status',
     ];
 
     public function employee(): BelongsTo
     {
         return $this->belongsTo(Employee::class);
+    }
+
+    public function item(): BelongsTo
+    {
+        return $this->belongsTo(Item::class);
+    }
+
+    public function assignments(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(EquipementAssignment::class);
+    }
+
+    public function currentAssignment(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(EquipementAssignment::class)->whereNull('returned_at');
     }
 
     protected function casts(): array
@@ -41,6 +60,7 @@ class Equipement extends Model
             'expires_at' => 'date',
             'last_check_at' => 'date',
             'type' => EquipementType::class,
+            'status' => EquipementStatus::class,
         ];
     }
 
