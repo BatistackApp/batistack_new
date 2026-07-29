@@ -204,7 +204,7 @@ class SituationsRelationManager extends RelationManager
                     Action::make('printpdf')
                         ->label('Imprimer')
                         ->icon(Phosphor::Printer)
-                        ->action(fn (CustomerSituation $record, CommerceDocumentationService $service) => response()->download($service->generateSituationPdf($record))),
+                        ->action(fn (CustomerSituation $record, CommerceDocumentationService $service) => $service->download($service->generateSituationPdf($record))),
 
                     Action::make('viewRelatedInvoice')
                         ->label('Voir Facture')

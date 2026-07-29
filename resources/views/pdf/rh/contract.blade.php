@@ -51,6 +51,10 @@
                 <img src="{{ $signature->signature_data }}" style="max-height: 80px; margin: 0 auto;" alt="Signature">
             @else
                 <p class="underline">Signature du Salarié</p>
+                <!-- Tag DocuSeal caché pour le placement automatique de la signature -->
+                <div style="color: transparent; font-size: 8px; margin-top: 40px;">
+                    @{{Signature;role=Signataire;type=signature}}
+                </div>
             @endif
         </div>
     </div>

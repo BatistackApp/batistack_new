@@ -20,6 +20,8 @@ Route::middleware([
 Route::get('/signature/{token}', [\App\Http\Controllers\Core\SignatureController::class, 'show'])->name('signature.show');
 Route::post('/signature/{token}', [\App\Http\Controllers\Core\SignatureController::class, 'sign'])->name('signature.sign');
 
+Route::post('/webhooks/docuseal', [\App\Http\Controllers\Core\SignatureWebhookController::class, 'handleDocuseal'])->name('webhooks.docuseal');
+
 Route::get('/health', function () {
     try {
         // Vérifier la connexion DB

@@ -55,8 +55,12 @@
     </div>
 
     <div class="mt-16 flex justify-between items-end">
-        <div class="text-center w-1/3">
+        <div class="text-center w-1/3 relative">
             <p class="font-bold mb-20 text-[10px] uppercase underline">Le Maître d'Ouvrage (Client)</p>
+            <!-- Tag DocuSeal caché pour le placement automatique de la signature -->
+            <div class="absolute bottom-0 w-full text-center text-transparent text-[8px]">
+                @{{Signature;role=Signataire;type=signature}}
+            </div>
         </div>
         <div class="text-center w-1/3 text-[8px] text-slate-400 italic">
             Fait à {{ $chantier->city }}, le {{ now()->format('d/m/Y') }}

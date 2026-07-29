@@ -147,7 +147,7 @@ class InvoicesRelationManager extends RelationManager
                     Action::make('print')
                         ->label('Imprimer')
                         ->icon(Phosphor::Printer)
-                        ->action(fn (Model $record, CommerceDocumentationService $service) => response()->download($service->generateInvoicePdf($record))),
+                        ->action(fn (Model $record, CommerceDocumentationService $service) => $service->download($service->generateInvoicePdf($record))),
 
                     Action::make('recordPayment')
                         ->label('Payer')

@@ -22,7 +22,7 @@ class ViewEmployee extends ViewRecord
                 ->label('Imprimer la fiche')
                 ->color('gray')
                 ->icon(Phosphor::Printer)
-                ->action(fn (Employee $record, RHDocumentService $service) => response()->download($service->generateFullRecord($record))),
+                ->action(fn (Employee $record, RHDocumentService $service) => $service->download($service->generateFullRecord($record))),
         ];
     }
 }

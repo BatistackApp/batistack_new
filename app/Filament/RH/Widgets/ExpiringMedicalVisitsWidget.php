@@ -58,7 +58,7 @@ class ExpiringMedicalVisitsWidget extends TableWidget
                     ->label('Passeport Sécurité')
                     ->icon(Phosphor::FilePdf)
                     ->color('gray')
-                    ->action(fn (MedicalVisit $record, RHDocumentService $service) => response()->download($service->generateSafetyPassport($record->employee))),
+                    ->action(fn (MedicalVisit $record, RHDocumentService $service) => $service->download($service->generateSafetyPassport($record->employee))),
 
                 Action::make('view_employee')
                     ->label('Gérer')

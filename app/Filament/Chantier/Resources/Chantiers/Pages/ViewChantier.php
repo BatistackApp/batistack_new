@@ -41,7 +41,7 @@ class ViewChantier extends ViewRecord
                         'client_id' => $record->client_id,
                         'chantier_id' => $record->id,
                         'reference' => 'FACT-SIT-' . uniqid(),
-                        'type' => \App\Enums\Commerce\InvoiceType::STANDARD,
+                        'type' => \App\Enums\Commerce\InvoiceType::SITUATION,
                         'status' => \App\Enums\Commerce\InvoiceStatus::DRAFT,
                         'total_ht' => $amountHt,
                         'total_tva' => $amountTva,

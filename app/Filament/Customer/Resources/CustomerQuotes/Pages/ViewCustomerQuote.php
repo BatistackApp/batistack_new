@@ -95,7 +95,7 @@ class ViewCustomerQuote extends ViewRecord
             ActionGroup::make([
                 Action::make('printQuote')
                     ->label('Imprimer le PDF')
-                    ->action(fn (Model $record, CommerceDocumentationService $service) => response()->download($service->generateQuotePdf($record)))
+                    ->action(fn (Model $record, CommerceDocumentationService $service) => $service->download($service->generateQuotePdf($record)))
                     ->icon(Phosphor::Printer),
             ]),
         ];

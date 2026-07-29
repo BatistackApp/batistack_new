@@ -149,8 +149,14 @@
                             @endif
                         </div>
                     @else
-                        <p>Bon pour accord, le ___________________</p>
-                        <p style="margin-top: 40px;">(Signature et cachet)</p>
+                        <div style="position: relative; display: inline-block; min-width: 250px; text-align: center;">
+                            <p>Bon pour accord, le ___________________</p>
+                            <p style="margin-top: 40px; margin-bottom: 20px;">(Signature et cachet)</p>
+                            <!-- Tag DocuSeal caché pour le placement automatique de la signature -->
+                            <div style="position: absolute; bottom: 0; left: 0; right: 0; color: transparent; font-size: 8px;">
+                                @{{Signature;role=Signataire;type=signature}}
+                            </div>
+                        </div>
                     @endif
                 </div>
         </div>

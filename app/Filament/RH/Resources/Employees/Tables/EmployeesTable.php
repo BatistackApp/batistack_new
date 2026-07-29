@@ -112,7 +112,7 @@ class EmployeesTable
                         ->action(function (Employee $record, array $data, RHDocumentService $service) {
                             $path = $service->generateProFormaPayslip($record, $data['month'], $data['year']);
 
-                            return response()->download($path);
+                            return $service->download($path);
                         }),
                     Action::make('download_affiliation')
                         ->label('Bulletin Affiliation PRO BTP')
