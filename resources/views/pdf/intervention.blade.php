@@ -100,4 +100,18 @@
             @endif
         </p>
     </div>
+
+    <div class="mt-20 flex justify-between items-end text-sm">
+        <div class="text-center w-1/3 border-t border-slate-400 pt-2 relative">
+            <p class="font-bold">Signature du Client</p>
+            <p class="text-[10px] text-slate-500 italic mt-1">Précédée de "Lu et approuvé"</p>
+            <!-- Tag DocuSeal caché pour le placement automatique de la signature -->
+            <div class="absolute bottom-8 left-0 right-0 text-[8px] text-transparent">
+                @{{Signature;role=Signataire;type=signature}}
+            </div>
+        </div>
+        <div class="text-center w-1/3 border-t border-slate-400 pt-2">
+            <p class="font-bold">Signature du Technicien</p>
+        </div>
+    </div>
 @endsection

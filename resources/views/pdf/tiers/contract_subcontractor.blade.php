@@ -66,7 +66,12 @@
             <div style="float: right; width: 45%;">
                 <p>Fait à ............................, le ............................</p>
                 <p><strong>Pour le Sous-Traitant</strong></p>
-                <div style="height: 100px; border: 1px solid #ccc; margin-top: 10px;"></div>
+                <div style="height: 100px; border: 1px solid #ccc; margin-top: 10px; position: relative;">
+                    <!-- Tag DocuSeal caché pour le placement automatique de la signature -->
+                    <div style="color: transparent; font-size: 8px; position: absolute; bottom: 5px; left: 5px;">
+                        @{{Signature;role=Signataire;type=signature}}
+                    </div>
+                </div>
             </div>
             <div style="clear: both;"></div>
         </div>
