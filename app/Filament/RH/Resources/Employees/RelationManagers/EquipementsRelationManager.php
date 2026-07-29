@@ -2,6 +2,7 @@
 
 namespace App\Filament\RH\Resources\Employees\RelationManagers;
 
+use App\Enums\RH\EquipementStatus;
 use App\Enums\RH\EquipementType;
 use Filament\Actions\AssociateAction;
 use Filament\Actions\BulkActionGroup;
@@ -58,6 +59,16 @@ class EquipementsRelationManager extends RelationManager
                             ->nullable()
                             ->unique(ignoreRecord: true)
                             ->placeholder('Scanner le code...'),
+                        Select::make('item_id')
+                            ->label('Article lié (Logistique)')
+                            ->relationship('item', 'name')
+                            ->searchable()
+                            ->nullable(),
+                        Select::make('status')
+                            ->label('Statut')
+                            ->options(EquipementStatus::class)
+                            ->default(EquipementStatus::AVAILABLE)
+                            ->required(),
                         DatePicker::make('assigned_at')
                             ->label('Date de remise')
                             ->default(now())
@@ -85,6 +96,9 @@ class EquipementsRelationManager extends RelationManager
                     ->label('Désignation')
                     ->searchable()
                     ->description(fn ($record) => $record->brand.($record->serial_number ? " | S/N: {$record->serial_number}" : '')),
+                TextColumn::make('status')
+                    ->label('Statut')
+                    ->badge(),
                 TextColumn::make('assigned_at')
                     ->label('Remis le')
                     ->date('d/m/Y')
