@@ -17,18 +17,21 @@ Le module **Articles & Stocks** permet la gestion complète de l'inventaire, du 
 *   **`CheckLowStockCommand`** : Commande nocturne d'analyse des stocks. Gère les alertes locales (entrepôts) et génère automatiquement les brouillons de Commandes d'Achat regroupés par `supplier_id` (basé sur le `min_stock` global et les commandes en cours).
 *   **Transfert de Kits (`transferKit`)** : Logique stricte de déstockage d'un ouvrage parent vers une camionnette, avec vérification de la disponibilité de chaque composant enfant dans l'entrepôt source.
 *   **Actions Filament** : `DestockKitAction` pour préparer rapidement un kit en 1 clic depuis l'interface (présente sur les listes Articles et Entrepôts).
+*   **Traçabilité Outillage (NFC/RFID)** : Interconnexion avec le module RH (`Equipements`). Le champ `item_id` sur un équipement RH permet d'associer un bien physique (ex: Perceuse N°123) au catalogue logistique global. Le suivi des prêts est géré via la table `equipement_assignments` et l'interface de scan NFC dédiée côté RH.
 
 ### 3. Observers & Événements (`app/Observers/Articles`)
 *   **`StockMouvementObserver`** : L'enregistrement automatique (Audit Log) est en place pour toute entrée/sortie d'inventaire, garantissant l'intégrité de la base.
 *   **`BarcodeObserver`** : Génération ou assignation de codes-barres lors de la création d'articles.
 
-### 4. Tests
+### 4. Interface Utilisateur (Filament)
+*   **Interfaces Filament (CRUD)** : Les ressources visuelles pour le module Articles existent et permettent la gestion du catalogue et des entrepôts.
+*   **Lecteur de Code-barres** : Intégration du module `filament-barcode-scanner-field` (utilisé notamment pour le module de scan outillage NFC côté RH).
+
+### 5. Tests
 *   100% de succès sur la suite de tests (125 tests). Couverture complète de la logique métier, du calcul du PUMP, et de la prévention des stocks négatifs.
 
 ## 🚧 Ce qu'il reste à faire
-*   **Interfaces Filament (CRUD)** : Actuellement, aucune ressource visuelle (`ItemResource`, `WarehouseResource`) n'est créée dans Filament. Le CRUD complet doit être généré.
 *   **Tableau de Bord Logistique** : Le Dashboard logistique (graphiques des mouvements, répartition par entrepôt) mentionné précédemment n'est pas implémenté dans l'arborescence Filament actuelle.
-*   **Lecteur de Code-barres** : Intégrer visuellement le module `filament-barcode-scanner-field` dans les formulaires d'entrées/sorties de stock.
 
 ## 💡 Idées d'amélioration et Nouvelles Fonctionnalités
-*   **Traçabilité Outillage (NFC/RFID)** : Intégration avancée avec des étiquettes NFC pour le suivi unitaire du petit outillage électroportatif coûteux (savoir qui l'a emprunté et sur quel chantier).
+*   **Prévisions par IA** : Anticiper les ruptures de stock selon les chantiers planifiés et la saisonnalité.
