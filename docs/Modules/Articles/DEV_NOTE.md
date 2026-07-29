@@ -15,6 +15,8 @@ Le module **Articles & Stocks** permet la gestion complète de l'inventaire, du 
 *   **`InventoryService`** : Valorisation de l'inventaire et recalcul dynamique du PUMP (Prix Unitaire Moyen Pondéré) lors des entrées en stock.
 *   **`ItemService`** : Gestion du cycle de vie des articles.
 *   **`CheckLowStockCommand`** : Commande nocturne d'analyse des stocks. Gère les alertes locales (entrepôts) et génère automatiquement les brouillons de Commandes d'Achat regroupés par `supplier_id` (basé sur le `min_stock` global et les commandes en cours).
+*   **Transfert de Kits (`transferKit`)** : Logique stricte de déstockage d'un ouvrage parent vers une camionnette, avec vérification de la disponibilité de chaque composant enfant dans l'entrepôt source.
+*   **Actions Filament** : `DestockKitAction` pour préparer rapidement un kit en 1 clic depuis l'interface (présente sur les listes Articles et Entrepôts).
 
 ### 3. Observers & Événements (`app/Observers/Articles`)
 *   **`StockMouvementObserver`** : L'enregistrement automatique (Audit Log) est en place pour toute entrée/sortie d'inventaire, garantissant l'intégrité de la base.
@@ -29,5 +31,4 @@ Le module **Articles & Stocks** permet la gestion complète de l'inventaire, du 
 *   **Lecteur de Code-barres** : Intégrer visuellement le module `filament-barcode-scanner-field` dans les formulaires d'entrées/sorties de stock.
 
 ## 💡 Idées d'amélioration et Nouvelles Fonctionnalités
-*   **Gestion des "Kits" de Chantier** : Permettre de préparer à l'avance des "Kits" ou "Palettes" avec une nomenclature précise (ex: Kit Pose Menuiserie) pour les déstocker en un seul clic vers une camionnette.
 *   **Traçabilité Outillage (NFC/RFID)** : Intégration avancée avec des étiquettes NFC pour le suivi unitaire du petit outillage électroportatif coûteux (savoir qui l'a emprunté et sur quel chantier).
