@@ -16,7 +16,7 @@ Le cœur regorge de services essentiels déjà implémentés et fonctionnels :
 *   **Génération de Documents** : 
     *   `DocumentService` : Moteur de génération de PDF.
     *   `PdfStamperService` : Apposition de certificats de signature numérique scellés (FPDI) sur les documents PDF existants.
-*   **Moteur de Signatures** : `SignatureService` gère le hachage SHA-256 (checksums) des documents, la création de tokens UUID, et la validation de l'intégrité des données.
+*   **Moteur de Signatures** : `SignatureService` a évolué vers une architecture basée sur des "Drivers" (`Manager`). Il supporte les providers `local` (solution interne BatiStack sans abonnement tiers) et `docuseal` via la configuration `.env`. Il gère le hachage SHA-256 des documents et met à jour automatiquement les documents signés (Devis, Contrats RH, etc.).
 *   **APIs & Utilitaires externes** :
     *   `SirenService` : Récupération des données d'entreprise via SIREN/SIRET.
     *   `GoogleMapsService` : Géocodage et calcul d'itinéraires.
@@ -25,7 +25,10 @@ Le cœur regorge de services essentiels déjà implémentés et fonctionnels :
 
 ### 3. Logique Asynchrone & Interfaces (Jobs, Mail, Http)
 *   **Jobs** : `CreateDocumentJob` (génération de PDF en arrière-plan) et `RefreshCoreCacheJob` (rafraîchissement du cache des paramètres).
-*   **Mails & Contrôleurs** : `SignatureController` et `SignatureRequestedMail` pour permettre aux clients de signer des documents via un lien externe sécurisé par Token.
+*   **Mails & Contrôleurs** : 
+    *   `SignatureController` gère la validation et l'apposition visuelle de la signature, avec acceptation automatique post-signature (ex: Devis vers Commande).
+    *   `SignatureRequestedMail` a été optimisé pour le Cloud (S3/Minio) et la sécurité : il n'attache **plus** le PDF en pièce jointe, forçant l'utilisateur à passer par un lien de portail sécurisé.
+*   **Stockage Cloud (S3/Minio)** : Pleine compatibilité S3 de BatiStack (utilisation de `temporaryUrl` pour l'aperçu dynamique de PDF sécurisés via `MediaAction` et de `Storage::disk()->download` pour contourner les limitations de `response()->download()` sur des fichiers non locaux - résolutions issues 117/118).
 *   **Commandes & Notifications** : `CheckCoreSettingsCommand` (vérification de l'intégrité de la configuration) et `ConfigurationChangedNotification`.
 
 ### 4. Tests
@@ -38,5 +41,5 @@ Le cœur regorge de services essentiels déjà implémentés et fonctionnels :
 *   **Dashboard** : Personnalisation du Dashboard de base (Widgets, KPI transverses).
 
 ## 💡 Idées d'amélioration et Nouvelles Fonctionnalités
-*   **Stockage Cloud** : Connecter le `DocumentService` à un bucket S3 pour archiver les PDF signés.
-*   **Signature Avancée** : Intégration optionnelle de prestataires certifiés eIDAS (ex: Yousign, DocuSign) dans le `SignatureService` pour des contrats à très forte valeur légale (actuellement, la signature "maison" avec empreinte est utilisée).
+*   **Gestion Documentaire Complète** : Interface d'arborescence GED pour visualiser et classer facilement tous les PDF générés par le `DocumentService`.
+*   **Workflow Approbations Multiples** : Permettre d'avoir plusieurs signataires sur un même document via le `SignatureService`.
