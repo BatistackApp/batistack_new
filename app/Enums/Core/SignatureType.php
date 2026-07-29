@@ -12,12 +12,15 @@ enum SignatureType: string implements HasIcon, HasLabel
     case OTP = 'otp';             // Code de validation par mail/SMS
     case CLICK = 'click';         // Simple clic d'approbation (interne)
 
+    case EIDAS = 'eidas';         // Signature certifiée eIDAS (Yousign, Docuseal)
+
     public function getLabel(): ?string
     {
         return match ($this) {
             self::AUTOGRAPH => 'Signature manuscrite',
             self::OTP => 'Validation OTP',
             self::CLICK => 'Approbation simple',
+            self::EIDAS => 'Signature certifiée (eIDAS)',
         };
     }
 
@@ -27,6 +30,7 @@ enum SignatureType: string implements HasIcon, HasLabel
             self::AUTOGRAPH => Phosphor::Signature,
             self::OTP => Phosphor::ShieldCheck,
             self::CLICK => Phosphor::CursorClick,
+            self::EIDAS => Phosphor::SealCheck,
         };
     }
 }
