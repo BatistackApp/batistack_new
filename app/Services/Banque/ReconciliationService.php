@@ -61,6 +61,23 @@ class ReconciliationService
                     ];
                 }
             }
+
+            // Also check for Payslips
+            $payslips = \App\Models\Paie\Payslip::where('status', '!=', \App\Enums\Paie\PayslipStatus::PAID)->with('employee')->get();
+            
+            foreach ($payslips as $payslip) {
+                if ($payslip->employee) {
+                    $score = $this->calculateScore($transaction, $payslip, $payslip->employee->first_name . ' ' . $payslip->employee->last_name);
+                    
+                    if ($score > 0) {
+                        $suggestions[] = [
+                            'model' => $payslip,
+                            'type' => \App\Models\Paie\Payslip::class,
+                            'score' => $score,
+                        ];
+                    }
+                }
+            }
         }
 
         // Sort suggestions by highest score first
@@ -112,7 +129,7 @@ class ReconciliationService
     {
         $score = 0;
         $absTransactionAmount = abs($transaction->amount);
-        $invoiceAmountTtc = $invoice->total_ttc ?? $invoice->amount_ttc ?? $invoice->total_amount ?? 0;
+        $invoiceAmountTtc = $invoice->total_ttc ?? $invoice->amount_ttc ?? $invoice->total_amount ?? $invoice->net_payable ?? 0;
 
         // 1. Exact amount match (+50 points)
         if (round($absTransactionAmount, 2) === round((float) $invoiceAmountTtc, 2)) {
@@ -121,7 +138,8 @@ class ReconciliationService
 
         // 2. Reference match in description (+40 points)
         $descriptionLower = strtolower($transaction->description);
-        if ($invoice->reference && str_contains($descriptionLower, strtolower($invoice->reference))) {
+        $reference = $invoice->reference ?? $invoice->period ?? null;
+        if ($reference && str_contains($descriptionLower, strtolower($reference))) {
             $score += 40;
         }
 
