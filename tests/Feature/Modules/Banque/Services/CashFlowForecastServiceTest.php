@@ -47,17 +47,17 @@ it('calculates cash flow forecast correctly over 30 days', function () {
     expect(count($forecast['labels']))->toBe(31); // Day 0 to 30 = 31 points
     
     // Day 0 (Today)
-    expect($forecast['balances'][0])->toBe(1000.0);
+    expect($forecast['balances_confirmed'][0])->toBe(1000.0);
     expect($forecast['incomes'][0])->toBe(0.0);
     
     // Day 5 (+500)
-    expect($forecast['balances'][5])->toBe(1500.0);
+    expect($forecast['balances_confirmed'][5])->toBe(1500.0);
     expect($forecast['incomes'][5])->toBe(500.0);
 
     // Day 10 (-200) -> balance becomes 1500 - 200 = 1300
-    expect($forecast['balances'][10])->toBe(1300.0);
+    expect($forecast['balances_confirmed'][10])->toBe(1300.0);
     expect($forecast['expenses'][10])->toBe(200.0);
 
     // Day 30 (end)
-    expect($forecast['balances'][30])->toBe(1300.0);
+    expect($forecast['balances_confirmed'][30])->toBe(1300.0);
 });
