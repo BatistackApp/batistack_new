@@ -4,6 +4,7 @@ namespace App\Filament\Articles\Resources\Items\Pages;
 
 use App\Filament\Articles\Resources\Items\ItemResource;
 use Filament\Actions\CreateAction;
+use App\Filament\Articles\Actions\DestockKitAction;
 use Filament\Resources\Pages\ListRecords;
 
 class ListItems extends ListRecords
@@ -33,6 +34,7 @@ class ListItems extends ListRecords
                     return response()->download($path);
                 }),
 
+            DestockKitAction::make(),
             CreateAction::make(),
         ];
     }

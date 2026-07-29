@@ -111,4 +111,30 @@ class StockService
             $this->entry($item, $to, $quantity, $item->purchase_price);
         });
     }
+
+    /**
+     * Transfère un Kit complet (et ses composants) entre deux dépôts.
+     * Si l'un des composants est en rupture, la transaction est annulée.
+     * @throws Throwable
+     */
+    public function transferKit(Item $kit, Warehouse $from, Warehouse $to, float $kitQuantity): void
+    {
+        if (! $kit->isComposed()) {
+            throw new ArticlesModuleException(
+                message: "L'article {$kit->reference} n'est pas un kit (composition).",
+                code: 400
+            );
+        }
+
+        DB::transaction(function () use ($kit, $from, $to, $kitQuantity) {
+            foreach ($kit->components as $composition) {
+                // La quantité requise pour un composant est sa quantité unitaire multipliée par le nombre de kits
+                $requiredQuantity = $composition->quantity * $kitQuantity;
+                
+                // On délègue le transfert du composant. 
+                // En cas de stock insuffisant, $this->exit() lèvera une exception et annulera la transaction.
+                $this->transfer($composition->childItem, $from, $to, $requiredQuantity);
+            }
+        });
+    }
 }
