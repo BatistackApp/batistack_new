@@ -28,10 +28,16 @@
                         }
                         
                         if (final_transcript !== '') {
-                            // Fetch the current content from Livewire
-                            let currentContent = this.$wire.get('data.content') || '';
-                            let newContent = currentContent + (currentContent ? ' ' : '') + final_transcript;
-                            this.$wire.set('data.content', newContent);
+                            let textarea = document.getElementById('speech-textarea');
+                            if (textarea) {
+                                let currentVal = textarea.value;
+                                textarea.value = currentVal + (currentVal ? ' ' : '') + final_transcript;
+                                textarea.dispatchEvent(new Event('input', { bubbles: true }));
+                            } else {
+                                let currentContent = this.$wire.get('data.content') || '';
+                                let newContent = currentContent + (currentContent ? ' ' : '') + final_transcript;
+                                this.$wire.set('data.content', newContent);
+                            }
                         }
                     };
 
