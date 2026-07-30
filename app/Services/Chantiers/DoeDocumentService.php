@@ -71,11 +71,11 @@ class DoeDocumentService extends DocumentService
         // 4. Parcourir et ajouter chaque document média au ZIP organisé par dossier (catégorie)
         foreach ($documents as $index => $doc) {
             $media = $doc->getFirstMedia('attachment');
-            if ($media && Storage::disk($media->disk)->exists($media->getPathRelativeToDisk())) {
+            if ($media && file_exists($media->getPath())) {
                 $fileExtension = pathinfo($media->file_name, PATHINFO_EXTENSION);
 
                 // Normalisation du nom de fichier dans le ZIP : "CATEGORIE/XX_Nom_Document.pdf"
-                $folder = Str::upper($doc->category);
+                $folder = Str::upper(is_string($doc->category) ? $doc->category : $doc->category->value);
                 $cleanName = Str::slug($doc->name);
                 $zipPath = $folder.'/'.str_pad($index + 1, 2, '0', STR_PAD_LEFT).'_'.$cleanName.'.'.$fileExtension;
 
@@ -86,7 +86,7 @@ class DoeDocumentService extends DocumentService
         // 5. Parcourir et ajouter chaque fiche technique
         foreach ($itemsWithSheets as $index => $item) {
             $media = $item->getFirstMedia('technical_sheet');
-            if ($media && Storage::disk($media->disk)->exists($media->getPathRelativeToDisk())) {
+            if ($media && file_exists($media->getPath())) {
                 $fileExtension = pathinfo($media->file_name, PATHINFO_EXTENSION);
                 $cleanName = Str::slug($item->name);
                 $zipPath = 'FICHES_TECHNIQUES/FT_'.str_pad($index + 1, 2, '0', STR_PAD_LEFT).'_'.$cleanName.'.'.$fileExtension;

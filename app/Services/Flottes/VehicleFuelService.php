@@ -115,6 +115,7 @@ class VehicleFuelService
             $transaction = FuelTransaction::create([
                 'vehicle_id' => $vehicle->id,
                 'employee_id' => $driverId,
+                'chantier_id' => $assignment?->chantier_id,
                 'liters' => $liters,
                 'cost_ht' => $costHt,
                 'odometer' => $odometer,

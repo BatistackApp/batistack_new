@@ -87,6 +87,38 @@ test('plein semaine avec pointage RH approuvé sans suspicion', function () {
     Notification::assertNothingSent();
 });
 
+test('plein est relié au chantier si le véhicule y est affecté', function () {
+    $datePlein = Carbon::parse('2026-06-15 10:00:00');
+    $chantier = \App\Models\Chantiers\Chantier::factory()->create();
+
+    VehicleAssignment::create([
+        'vehicle_id' => $this->vehicle->id,
+        'employee_id' => $this->employee->id,
+        'chantier_id' => $chantier->id,
+        'started_at' => $datePlein->copy()->startOfDay(),
+        'status' => 'active',
+    ]);
+    
+    TimeEntry::create([
+        'employee_id' => $this->employee->id,
+        'date' => $datePlein->toDateString(),
+        'hours' => 7.00,
+        'status' => TimeEntryStatus::APPROVED,
+        'type' => 'normal',
+    ]);
+
+    $transaction = $this->fuelService->processAndAuditFuelTransaction(
+        $this->vehicle,
+        40.0,
+        60.00,
+        50600.00,
+        $datePlein,
+        'STATION CHANTIER'
+    );
+
+    expect($transaction->chantier_id)->toBe($chantier->id);
+});
+
 test('plein dimanche identifié comme suspect', function () {
     User::factory()->create();
     $dimancheMatin = Carbon::parse('2026-05-17 10:00:00');
