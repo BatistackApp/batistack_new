@@ -12,7 +12,7 @@ Le module **Flottes** gère l'ensemble du parc automobile de l'entreprise (camio
 *   **Enums** : Large gamme de statuts gérés strictement (`VehicleStatus`, `AssignmentStatus`, `FineStatus`, `ConditionReportType`, etc.).
 
 ### 2. Logique Métier & Services (`app/Services/Flottes`)
-*   **Gestion des Frais** : `FleetCostService`, `FleetExpenseService`, `VehicleFuelService`, et `ExpenseImportService` pour calculer le TCO (Total Cost of Ownership) et intégrer les données. Intégration partielle de prestataires (ex: `UlysApiProvider` pour le télépéage).
+*   **Gestion des Frais** : `FleetCostService`, `FleetExpenseService`, `VehicleFuelService` (qui gère désormais la réconciliation automatique des coûts de carburant avec les chantiers), et `ExpenseImportService` pour calculer le TCO (Total Cost of Ownership) et intégrer les données. Intégration partielle de prestataires (ex: `UlysApiProvider` pour le télépéage, et import de CSV TotalEnergies/DKV).
 *   **Logique Métier** : `VehicleAssignmentService`, `VehicleConditionService`, `TrafficFineService` gèrent la complexité légale et opérationnelle (ex: qui conduisait au moment de l'amende).
 *   **Optimisation & Sécurité** : `RoutingOptimizationService` (bases de l'optimisation des trajets) et `VehicleAlertService` (alertes sur les entretiens à venir).
 
@@ -27,11 +27,7 @@ Le module **Flottes** gère l'ensemble du parc automobile de l'entreprise (camio
 ### 5. Tests
 *   Plus de 155 tests PestPHP validant l'ensemble de cette logique complexe (100% de réussite).
 
-## 🚧 Ce qu'il reste à faire
-*   (L'essentiel du module et les interfaces d'administration de base sont terminés).
-
-## 💡 Idées d'amélioration et Nouvelles Fonctionnalités
-*   **Import Automatique des Cartes Carburant** : Écrire un connecteur API ou un importateur CSV (ex: cartes TotalEnergies, DKV) pour remonter automatiquement les dépenses de carburant et réconcilier les factures avec les chantiers.
-*   **Géolocalisation (GPS Tracking)** : Intégration avec des boîtiers télématiques GPS (ex: Webfleet, Geotab) pour localiser les véhicules en temps réel et remonter les anomalies de conduite (freinages brusques, survitesse).
-*   **App Conducteur (État des Lieux Mobile)** : Une interface PWA dédiée aux chauffeurs permettant de faire leur Check-in / Check-out directement sur le parking avec prise de photo des éventuels dommages (rayures, chocs).
-*   **Optimisation des Trajets (Routing IA)** : Utiliser une API de routing pour suggérer la répartition la plus logique des véhicules le matin en fonction des chantiers prévus, afin de minimiser le kilométrage total de la flotte.
+## 🚀 Ce qu'il reste à faire
+- **Géolocalisation (GPS Tracking)** : Intégration avec des boîtiers télématiques GPS (ex: Webfleet, Geotab) pour localiser les véhicules en temps réel et remonter les anomalies de conduite (freinages brusques, survitesse).
+- **App Conducteur (État des Lieux Mobile)** : Une interface PWA dédiée aux chauffeurs permettant de faire leur Check-in / Check-out directement sur le parking avec prise de photo des éventuels dommages (rayures, chocs).
+- **Optimisation des Trajets (Routing IA)** : Utiliser une API de routing pour suggérer la répartition la plus logique des véhicules le matin en fonction des chantiers prévus, afin de minimiser le kilométrage total de la flotte.

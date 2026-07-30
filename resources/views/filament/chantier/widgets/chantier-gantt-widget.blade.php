@@ -14,19 +14,18 @@
             </style>
             <svg id="gantt"></svg>
             
-            <div x-data="{
+            <div 
+                x-load-css="[@js('https://unpkg.com/frappe-gantt@1.2.2/dist/frappe-gantt.css')]"
+                x-load-js="[@js('https://unpkg.com/frappe-gantt@1.2.2/dist/frappe-gantt.umd.js')]"
+                x-data="{
                 tasks: @js($this->getTasks()),
                 init() {
-                    if (typeof Gantt !== 'undefined') {
-                        this.renderGantt();
-                    } else {
-                        // Retry after a small delay in case the bundle is loading
-                        setTimeout(() => {
-                            if (typeof Gantt !== 'undefined') {
-                                this.renderGantt();
-                            }
-                        }, 500);
-                    }
+                    let checkGantt = setInterval(() => {
+                        if (typeof Gantt !== 'undefined') {
+                            clearInterval(checkGantt);
+                            this.renderGantt();
+                        }
+                    }, 100);
                 },
                 renderGantt() {
                     if (this.tasks.length === 0) {
@@ -45,6 +44,16 @@
                         padding: 18,
                         view_mode: 'Day',   
                         date_format: 'YYYY-MM-DD',
+                        language: 'fr',
+                        on_date_change: (task, start, end) => {
+                            // Extract YYYY-MM-DD from the date object
+                            let startStr = start.getFullYear() + '-' + String(start.getMonth() + 1).padStart(2, '0') + '-' + String(start.getDate()).padStart(2, '0');
+                            let endStr = end.getFullYear() + '-' + String(end.getMonth() + 1).padStart(2, '0') + '-' + String(end.getDate()).padStart(2, '0');
+                            $wire.updateTaskDates(task.id, startStr, endStr);
+                        },
+                        on_progress_change: (task, progress) => {
+                            $wire.updateTaskProgress(task.id, progress);
+                        },
                         custom_popup_html: function(task) {
                             return `
                                 <div class=\'p-2 bg-white shadow rounded border text-sm\'>

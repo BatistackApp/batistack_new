@@ -31,6 +31,7 @@ class Equipement extends Model
         'notes',
         'item_id',
         'status',
+        'daily_cost',
     ];
 
     public function employee(): BelongsTo
@@ -61,6 +62,7 @@ class Equipement extends Model
             'last_check_at' => 'date',
             'type' => EquipementType::class,
             'status' => EquipementStatus::class,
+            'daily_cost' => 'decimal:2',
         ];
     }
 

@@ -7,12 +7,12 @@ Le module **Chantiers** est le cœur de la gestion de projets BTP de l'ERP. Il p
 
 ### 1. Modèles de Données & Enums (`app/Models/Chantiers` & `app/Enums/Chantiers`)
 *   **`Chantier` & `ChantierPhase` & `ChantierTask`** : Structuration complète d'un projet de sa création (brouillon) à sa livraison, découpé en phases et en tâches.
-*   **`ChantierLog`** : Journal de bord (météo, personnel présent, incidents).
+*   **`ChantierLog`** : Journal de bord (météo, personnel présent, incidents). **Support de la dictée vocale (Speech-to-Text)** natif et optimisé PWA ajouté.
 *   **`DoeDocument`** : Suivi des Dossiers d'Ouvrages Exécutés (DOE).
 *   **`WeatherAlert`** : Intégration pour la sécurité météo sur chantiers.
 
 ### 2. Logique Métier & Services (`app/Services/Chantiers`)
-*   **`ChantierAnalyticService`** : La gestion des imputations de coûts et du suivi financier par chantier est en place, incluant l'intégration des **coûts de flotte** et des **coûts matériaux réels**.
+*   **`ChantierAnalyticService`** : La gestion des imputations de coûts et du suivi financier par chantier est en place, incluant l'intégration des **coûts de flotte**, des **coûts matériaux réels**, et des **coûts d'immobilisation de l'outillage/gros matériel (IoT)**.
 *   **`ChantierDocumentService` & `DoeDocumentService`** : Les fiches techniques des articles sont automatiquement incluses dans la génération du DOE. Compilation des médias et fiches validée.
 *   **`ChantierWorkflowService`** : Orchestration et automatisation des changements de statuts.
 *   **`ChantierLogService`** : Logique du journal de chantier quotidien.
@@ -24,7 +24,7 @@ Le module **Chantiers** est le cœur de la gestion de projets BTP de l'ERP. Il p
 *   **Panel Chantiers (`app/Filament/Chantier`)** : Contrairement aux spécifications initiales, **l'interface utilisateur est entièrement développée et robuste**. Le panel dédié comprend :
     *   **Ressources** : `ChantierResource` (Formulaires et Infolists complexes, Vue détaillée) et `ChantierLogResource` (Journal de bord).
     *   **Widgets Analytiques** : `ChantierStatsOverview`, `ChantierFinancialOverview` (marge en temps réel).
-    *   **Widgets Avancés** : `ChantierMapWidget` (cartographie des chantiers en cours) et `ChantierGanttWidget` (visualisation planning).
+    *   **Widgets Avancés** : `ChantierMapWidget` (cartographie des chantiers en cours) et `ChantierGanttWidget` (visualisation planning **avec support du Drag & Drop interactif**, décalage automatique des dépendances enfants et Livewire asynchrone).
     *   **Tableaux** : `ActiveChantiersTable`, `LatestChantiersWidget`.
 
 ### 5. Tests
@@ -34,7 +34,4 @@ Le module **Chantiers** est le cœur de la gestion de projets BTP de l'ERP. Il p
 *   Le socle est complet. Des optimisations d'UX (ergonomie sur mobile pour les conducteurs de travaux) peuvent être affinées.
 
 ## 💡 Idées d'amélioration et Nouvelles Fonctionnalités
-*   **Planification Gantt (Interactive)** : Améliorer le widget Gantt actuel pour le rendre interactif, permettant de déplacer visuellement (Drag & Drop) les phases du chantier et l'affectation des équipes, avec recalcul automatique des dépendances.
-*   **Suivi de Chantier Mobile (Speech-to-Text)** : Via une PWA, permettre aux conducteurs de travaux d'utiliser la reconnaissance vocale pour dicter leur rapport de visite et le retranscrire automatiquement dans le journal de bord.
-*   **Module de Pointage Matériel (IoT)** : Intégrer des capteurs IoT ou des QR Codes pour tracker l'entrée/sortie du gros matériel sur le chantier et imputer le coût d'immobilisation de manière automatisée.
-*   **BIM (Building Information Modeling)** : Intégrer une visionneuse 3D de maquettes BIM (ex: Forge viewer) pour lier visuellement les tâches aux éléments de la maquette (cliquer sur un mur pour voir les tâches associées).
+*   **BIM (Building Information Modeling)** : Intégration en cours (voir module Vision 3D).

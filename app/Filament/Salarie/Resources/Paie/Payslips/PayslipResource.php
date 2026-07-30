@@ -22,6 +22,7 @@ class PayslipResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
+
     protected static ?string $recordTitleAttribute = 'period';
 
     public static function form(Schema $schema): Schema

@@ -41,4 +41,29 @@ class EquipementAssignment extends Model
     {
         return $this->belongsTo(\App\Models\Chantiers\Chantier::class, 'chantier_id');
     }
+
+    /**
+     * Calcule le nombre de jours calendaires d'immobilisation.
+     */
+    public function getDurationInDays(): int
+    {
+        if (! $this->assigned_at) {
+            return 0;
+        }
+
+        $end = $this->returned_at ?? now();
+        $days = $this->assigned_at->diffInDays($end);
+
+        // Même si c'est rendu le même jour, on compte 1 jour.
+        return max(1, (int) $days);
+    }
+
+    /**
+     * Calcule le coût total d'immobilisation (Jours * Coût Journalier).
+     */
+    public function getImmobilizationCost(): float
+    {
+        $dailyCost = $this->equipement->daily_cost ?? 0;
+        return $this->getDurationInDays() * $dailyCost;
+    }
 }

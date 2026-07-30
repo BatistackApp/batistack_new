@@ -30,6 +30,19 @@ class BimAnnotationsRelationManager extends RelationManager
                     ->label('Description')
                     ->maxLength(65535)
                     ->columnSpanFull(),
+                \Filament\Forms\Components\MorphToSelect::make('target')
+                    ->label('Lier à un élément')
+                    ->types([
+                        \Filament\Forms\Components\MorphToSelect\Type::make(\App\Models\Chantiers\ChantierTask::class)
+                            ->label('Tâche de chantier')
+                            ->titleAttribute('title'),
+                        \Filament\Forms\Components\MorphToSelect\Type::make(\App\Models\Interventions\Intervention::class)
+                            ->label('Intervention')
+                            ->titleAttribute('title'),
+                    ])
+                    ->searchable()
+                    ->preload()
+                    ->columnSpanFull(),
                 // Les coordonnées XYZ sont gérées par le composant 3D
                 TextInput::make('position_x')
                     ->numeric()
