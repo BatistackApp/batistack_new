@@ -38,9 +38,11 @@ class ChantierLogForm
                     ViewField::make('speech_script')
                         ->view('filament.chantier.scripts.speech-recognition')
                         ->hiddenLabel(),
-                    RichEditor::make('content')
+                    \Filament\Forms\Components\Textarea::make('content')
                         ->label('Événements du jour')
                         ->required()
+                        ->rows(5)
+                        ->extraAttributes(['id' => 'speech-textarea'])
                         ->hintAction(
                             Action::make('dictate')
                                 ->icon('heroicon-m-microphone')

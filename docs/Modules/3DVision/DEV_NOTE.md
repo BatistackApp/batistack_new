@@ -20,8 +20,8 @@
 - **Système de Punaises (Annotations Interactives)** :
   - Base de données : Création du modèle `BimAnnotation` pour stocker les coordonnées X,Y,Z.
   - UI 3D : Bouton "Mode Annotation" transformant le curseur en crosshair, interceptant le clic sur la géométrie du modèle (Raycasting).
-  - Liaison avec le backend Filament : Envoi des coordonnées depuis JS vers Livewire pour ouvrir une modale de création d'annotation via une Action Infolist.
   - Affichage : Création de `BimAnnotationsRelationManager` pour la liste CRUD des punaises.
+  - **Interactivité Live & Polymorphisme** : Les punaises peuvent être liées de manière polymorphique à une `ChantierTask` ou à une `Intervention`. Au survol (Raycasting), un Tooltip affiche les informations de la tâche. Au clic, une fenêtre modale native Filament s'ouvre pour afficher les détails complets de la tâche associée.
 - **Tests** : 
   - Rédaction des tests PestPHP (`BimModelTest.php`).
   - Validation de la chaîne de téléchargement, attachement polymorphique, et purge disque (100% Passed).
@@ -30,7 +30,6 @@
 
 ## ⏳ Ce qu'il reste à faire (Next Steps)
 
-- **Lien avec les Interventions** : Actuellement la table `bim_annotations` possède des champs `target_type` et `target_id` qui sont vides. L'étape suivante consistera à permettre de lier une punaise à une Tâche ou à une Intervention dans le formulaire Filament de création d'annotation.
 - **Camera Focus au Clic** : Implémenter une fonction dans le Viewer 3D permettant de "Zoomer" ou de déplacer la caméra directement sur une punaise (annotation) cliquée depuis le tableau Filament (via un événement Livewire propagé à AlpineJS).
 - **Optimisation des chargements de gros fichiers IFC** : Le moteur `web-ifc` peut être gourmand. Il faudra éventuellement configurer un web worker (Multithreading) si de très gros modèles sont uploadés pour ne pas figer l'interface le temps du parsing géométrique.
 

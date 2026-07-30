@@ -69,6 +69,11 @@ class EquipementsRelationManager extends RelationManager
                             ->options(EquipementStatus::class)
                             ->default(EquipementStatus::AVAILABLE)
                             ->required(),
+                        TextInput::make('daily_cost')
+                            ->label('Coût journalier d\'immobilisation (€)')
+                            ->numeric()
+                            ->default(0)
+                            ->prefix('€'),
                         DatePicker::make('assigned_at')
                             ->label('Date de remise')
                             ->default(now())

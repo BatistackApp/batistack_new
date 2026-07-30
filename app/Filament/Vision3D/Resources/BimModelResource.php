@@ -132,6 +132,18 @@ class BimModelResource extends Resource
                                             ->required(),
                                         Textarea::make('description')
                                             ->label('Description'),
+                                        \Filament\Forms\Components\MorphToSelect::make('target')
+                                            ->label('Lier à un élément')
+                                            ->types([
+                                                \Filament\Forms\Components\MorphToSelect\Type::make(\App\Models\Chantiers\ChantierTask::class)
+                                                    ->label('Tâche de chantier')
+                                                    ->titleAttribute('title'),
+                                                \Filament\Forms\Components\MorphToSelect\Type::make(\App\Models\Interventions\Intervention::class)
+                                                    ->label('Intervention')
+                                                    ->titleAttribute('title'),
+                                            ])
+                                            ->searchable()
+                                            ->preload(),
                                     ])
                                     ->action(function (array $arguments, array $data, BimModel $record) {
                                         $record->annotations()->create([
@@ -140,7 +152,32 @@ class BimModelResource extends Resource
                                             'position_x' => $arguments['x'],
                                             'position_y' => $arguments['y'],
                                             'position_z' => $arguments['z'],
+                                            'target_type' => $data['target_type'] ?? null,
+                                            'target_id' => $data['target_id'] ?? null,
                                         ]);
+                                    }),
+                                Action::make('viewAnnotation')
+                                    ->modalHeading('Détails de l\'annotation')
+                                    ->modalSubmitAction(false)
+                                    ->modalCancelActionLabel('Fermer')
+                                    ->infolist(function (array $arguments) {
+                                        $annotation = \App\Models\Vision3D\BimAnnotation::with('target')->find($arguments['id'] ?? null);
+                                        if (!$annotation) return [];
+                                        
+                                        $components = [
+                                            TextEntry::make('title')->label('Titre')->default($annotation->title),
+                                            TextEntry::make('description')->label('Description')->default($annotation->description),
+                                        ];
+
+                                        if ($annotation->target) {
+                                            $components[] = Section::make('Élément lié')
+                                                ->schema([
+                                                    TextEntry::make('target.title')->label('Titre')->default($annotation->target->title),
+                                                    TextEntry::make('target.status')->label('Statut')->default($annotation->target->status?->getLabel() ?? 'En cours'),
+                                                ]);
+                                        }
+
+                                        return $components;
                                     })
                             ])
                             ->columnSpanFull(),
