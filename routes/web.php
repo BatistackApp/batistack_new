@@ -43,7 +43,7 @@ Route::get('/health', function () {
     }
 })->name('health');
 
-Route::get('/pass-securite/{uuid}', [\App\Http\Controllers\RH\PublicSafetyCheckController::class, 'show'])->name('public.safety-check');
+Route::get('/pass-securite/{uuid}', [\App\Http\Controllers\Public\PublicSafetyPassportController::class, 'show'])->name('public.safety-check');
 
 Route::get('/kiosk', \App\Livewire\Kiosk\BiometricClock::class)->name('kiosk.clock');
 Route::get('/kiosk/enroll', \App\Livewire\Kiosk\BiometricEnrollment::class)->name('kiosk.enroll');
