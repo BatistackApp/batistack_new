@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Str;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 
@@ -21,6 +22,7 @@ class Vehicle extends Model implements HasMedia
     use HasFactory, InteractsWithMedia;
 
     protected $fillable = [
+        'uuid',
         'reference',
         'license_plate',
         'brand',
@@ -39,6 +41,17 @@ class Vehicle extends Model implements HasMedia
         'usage_unit',
         'crit_air_level',
     ];
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($vehicle) {
+            if (empty($vehicle->uuid)) {
+                $vehicle->uuid = (string) Str::uuid();
+            }
+        });
+    }
 
     protected function casts(): array
     {

@@ -23,11 +23,11 @@ Le module **Flottes** gère l'ensemble du parc automobile de l'entreprise (camio
 *   **Administration visuelle complète** : Le dossier `app/Filament/Flottes` héberge le frontend du module.
 *   **Ressources** : `VehicleResource` et `VehicleAssignmentResource` sont implémentées avec des vues détaillées (Infolists pour le trajet et tables des états des lieux).
 *   **Widgets** : Un graphique d'état de la flotte (`VehicleStatusChart`).
+*   **App Conducteur (État des Lieux Mobile)** : Une interface PWA dédiée aux chauffeurs permettant de faire leur Check-in / Check-out directement sur le parking avec prise de photo des éventuels dommages (rayures, chocs).
+*   **Optimisation des Trajets (Routing IA)** : Nouvelle page Filament permettant de générer automatiquement des suggestions d'affectations (Véhicules disponibles -> Chantiers actifs) en utilisant l'API Google Maps Distance Matrix, pour minimiser le kilométrage global. Validation en un clic.
 
 ### 5. Tests
 *   Plus de 155 tests PestPHP validant l'ensemble de cette logique complexe (100% de réussite).
 
 ## 🚀 Ce qu'il reste à faire
 - **Géolocalisation (GPS Tracking)** : Intégration avec des boîtiers télématiques GPS (ex: Webfleet, Geotab) pour localiser les véhicules en temps réel et remonter les anomalies de conduite (freinages brusques, survitesse).
-- **App Conducteur (État des Lieux Mobile)** : Une interface PWA dédiée aux chauffeurs permettant de faire leur Check-in / Check-out directement sur le parking avec prise de photo des éventuels dommages (rayures, chocs).
-- **Optimisation des Trajets (Routing IA)** : Utiliser une API de routing pour suggérer la répartition la plus logique des véhicules le matin en fonction des chantiers prévus, afin de minimiser le kilométrage total de la flotte.
