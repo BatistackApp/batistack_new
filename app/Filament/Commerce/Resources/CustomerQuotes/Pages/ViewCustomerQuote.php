@@ -45,11 +45,41 @@ class ViewCustomerQuote extends ViewRecord
                     }
 
                     $record->update(['status' => QuoteStatus::SENT]);
-
-                    Notification::make()
-                        ->success()
-                        ->title('Devis envoyer au client')
-                        ->send();
+                    
+                    try {
+                        $path = app(CommerceDocumentationService::class)->generateQuotePdf($record);
+                        
+                        $client = $record->client;
+                        $contact = $client?->getPrimaryContact();
+                        $email = $contact?->email ?? $client?->email;
+                        $name = $contact ? trim("{$contact->first_name} {$contact->last_name}") : ($client?->name ?? 'Client');
+                        
+                        if ($email) {
+                            app(\App\Services\Core\SignatureService::class)->driver('local')->requestSignature(
+                                model: $record,
+                                type: \App\Enums\Core\SignatureType::AUTOGRAPH,
+                                email: $email,
+                                name: $name,
+                                documentPath: $path
+                            );
+                            
+                            Notification::make()
+                                ->success()
+                                ->title('Devis envoyé avec demande de signature au client')
+                                ->send();
+                        } else {
+                            Notification::make()
+                                ->warning()
+                                ->title('Devis généré mais le client n\'a pas d\'email pour la signature')
+                                ->send();
+                        }
+                    } catch (\Exception $e) {
+                        Notification::make()
+                            ->danger()
+                            ->title('Erreur lors de la préparation de la signature')
+                            ->body($e->getMessage())
+                            ->send();
+                    }
                 }),
 
             MediaAction::make()
