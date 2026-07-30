@@ -79,7 +79,14 @@ class ChantierAnalyticService
             ->get()
             ->sum(fn ($contract) => $rentalCostService->getCumulativeCost($contract));
 
-        $totalCost = $laborCost + $materialCost + $subcontractingCost + $fleetCost + $assetDepreciationCost + $assetMaintenanceCost + $rentalCost;
+        // 8. Coûts d'immobilisation de l'Outillage/Gros Matériel (Module RH)
+        $equipmentCost = \App\Models\RH\EquipementAssignment::query()
+            ->where('chantier_id', $chantier->id)
+            ->with('equipement')
+            ->get()
+            ->sum(fn ($assignment) => $assignment->getImmobilizationCost());
+
+        $totalCost = $laborCost + $materialCost + $subcontractingCost + $fleetCost + $assetDepreciationCost + $assetMaintenanceCost + $rentalCost + $equipmentCost;
         $budget = (float) $chantier->budget_total_ht;
         $marginReal = $budget - $totalCost;
 
@@ -97,6 +104,7 @@ class ChantierAnalyticService
                 'asset_depreciation_cost_real' => (float) $assetDepreciationCost,
                 'asset_maintenance_cost_real' => (float) $assetMaintenanceCost,
                 'rental_cost_real' => (float) $rentalCost,
+                'equipment_cost_real' => (float) $equipmentCost,
                 'total_cost_real' => $totalCost,
                 'budget_ht' => $budget,
                 'margin_real' => $marginReal,
