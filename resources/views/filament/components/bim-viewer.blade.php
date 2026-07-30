@@ -2,7 +2,7 @@
     $record = $getRecord();
     $url = \Illuminate\Support\Facades\Storage::disk('public')->url($record->file_path);
     $format = $record->format;
-    $annotations = $record->annotations()->get()->toArray();
+    $annotations = $record->annotations()->with('target')->get()->toArray();
 @endphp
 
 <div
@@ -28,6 +28,17 @@
         </div>
     </div>
     
+    <!-- Tooltip -->
+    <div x-show="tooltip.visible" 
+         class="absolute z-20 bg-gray-900/90 text-white p-3 rounded shadow-lg backdrop-blur-sm pointer-events-none border border-gray-700/50"
+         :style="`left: ${tooltip.x}px; top: ${tooltip.y}px; transform: translate(-50%, -100%); margin-top: -10px;`"
+         x-transition>
+        <div class="text-sm font-bold mb-1" x-text="tooltip.title"></div>
+        <div x-show="tooltip.targetTitle" class="text-xs text-primary-400 font-semibold" x-text="tooltip.targetTitle"></div>
+        <div x-show="tooltip.targetStatus" class="text-xs text-gray-300 mt-1" x-text="`Statut: ${tooltip.targetStatus}`"></div>
+        <div class="text-xs text-gray-400 mt-1 italic">Cliquez pour voir les détails</div>
+    </div>
+
     <!-- Controls Overlay -->
     <div class="absolute bottom-4 left-4 z-10 flex gap-2">
         <button type="button" @click="resetCamera" class="bg-gray-800 text-white px-3 py-1.5 rounded-lg shadow text-sm hover:bg-gray-700 transition">
@@ -52,10 +63,14 @@ document.addEventListener('alpine:init', () => {
         loading: true,
         loadingText: 'Chargement du modèle 3D...',
         annotationMode: false,
+        tooltip: { visible: false, x: 0, y: 0, title: '', targetTitle: '', targetStatus: '' },
+        annotationMeshes: [],
         viewer: null,
         scene: null,
         camera: null,
         renderer: null,
+        raycaster: null,
+        mouse: null,
 
         async init() {
             if (!this.url) {
@@ -101,8 +116,13 @@ document.addEventListener('alpine:init', () => {
                 // Dessiner les annotations existantes
                 this.drawAnnotations();
 
-                // Evénement de clic pour l'annotation
+                // Initialiser Raycaster pour le hover
+                this.raycaster = new window.THREE.Raycaster();
+                this.mouse = new window.THREE.Vector2();
+
+                // Evénements
                 container.addEventListener('click', (event) => this.handleIfcClick(event));
+                container.addEventListener('mousemove', (event) => this.handleMouseMove(event));
             } catch(e) {
                 console.error(e);
                 this.loadingText = "Impossible de charger le fichier IFC.";
@@ -177,14 +197,73 @@ document.addEventListener('alpine:init', () => {
                 const material = new window.THREE.MeshBasicMaterial( { color: 0xff0000 } );
                 const sphere = new window.THREE.Mesh( geometry, material );
                 sphere.position.set(ann.position_x, ann.position_y, ann.position_z);
+                
+                // Sauvegarder les données pour le raycasting
+                sphere.userData = { 
+                    id: ann.id, 
+                    title: ann.title,
+                    targetTitle: ann.target ? ann.target.title : null,
+                    targetStatus: ann.target && ann.target.status ? ann.target.status : null
+                };
+                
                 scene.add(sphere);
+                this.annotationMeshes.push(sphere);
             });
         },
 
-        handleIfcClick(event) {
-            if (!this.annotationMode || !this.viewer) return;
+        handleMouseMove(event) {
+            if (this.annotationMode || !this.viewer || !window.THREE || this.annotationMeshes.length === 0) {
+                this.tooltip.visible = false;
+                return;
+            }
 
-            // Utiliser le raycaster interne de web-ifc-viewer
+            const container = this.$refs.container;
+            const rect = container.getBoundingClientRect();
+            
+            this.mouse.x = ((event.clientX - rect.left) / container.clientWidth) * 2 - 1;
+            this.mouse.y = -((event.clientY - rect.top) / container.clientHeight) * 2 + 1;
+
+            this.raycaster.setFromCamera(this.mouse, this.viewer.context.getCamera());
+
+            const intersects = this.raycaster.intersectObjects(this.annotationMeshes);
+
+            if (intersects.length > 0) {
+                const hovered = intersects[0].object;
+                this.tooltip.visible = true;
+                this.tooltip.x = event.clientX - rect.left;
+                this.tooltip.y = event.clientY - rect.top;
+                this.tooltip.title = hovered.userData.title;
+                this.tooltip.targetTitle = hovered.userData.targetTitle;
+                this.tooltip.targetStatus = hovered.userData.targetStatus;
+                container.style.cursor = 'pointer';
+            } else {
+                this.tooltip.visible = false;
+                container.style.cursor = 'default';
+            }
+        },
+
+        handleIfcClick(event) {
+            const container = this.$refs.container;
+            
+            if (!this.annotationMode) {
+                // Check if we clicked on an existing annotation
+                if (this.tooltip.visible && this.annotationMeshes.length > 0) {
+                    const rect = container.getBoundingClientRect();
+                    this.mouse.x = ((event.clientX - rect.left) / container.clientWidth) * 2 - 1;
+                    this.mouse.y = -((event.clientY - rect.top) / container.clientHeight) * 2 + 1;
+                    this.raycaster.setFromCamera(this.mouse, this.viewer.context.getCamera());
+                    const intersects = this.raycaster.intersectObjects(this.annotationMeshes);
+                    
+                    if (intersects.length > 0) {
+                        const clicked = intersects[0].object;
+                        // Ouvrir la modale Livewire
+                        this.$wire.mountInfolistAction('viewAnnotation', { id: clicked.userData.id });
+                    }
+                }
+                return;
+            }
+
+            // Utiliser le raycaster interne de web-ifc-viewer pour placer une punaise
             const result = this.viewer.context.castRayIfc(event);
             
             if (result) {

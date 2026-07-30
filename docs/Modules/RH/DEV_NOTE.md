@@ -6,7 +6,7 @@ Le module **Ressources Humaines (RH)** est l'un des piliers centraux de Batistac
 ## 📌 État Actuel (Ce qui est fait)
 
 ### 1. Modèles de Données & Enums (`app/Models/RH` & `app/Enums/RH`)
-*   **Référentiel Salariés** : `Employee`, `Contract` (avec Types de contrats), `Equipement` (matériel confié).
+*   **Référentiel Salariés** : `Employee`, `Contract` (avec Types de contrats), `Equipement` (matériel confié avec gestion du coût d'immobilisation journalier).
 *   **Temps & Activité** : `TimeEntry` (Pointage), `Abscence` (Congés/Maladie).
 *   **Notes de Frais** : `ExpenseReport`, `ExpenseItem`.
 *   **Conformité & Santé** : `MedicalVisit`, `Qualification` (Habilitations, CACES).
