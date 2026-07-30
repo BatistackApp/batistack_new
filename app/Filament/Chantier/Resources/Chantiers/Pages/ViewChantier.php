@@ -94,6 +94,67 @@ class ViewChantier extends ViewRecord
                         ->success()
                         ->send();
                 }),
+
+            \Filament\Actions\Action::make('generate_pv')
+                ->label('PV de Réception')
+                ->icon(\ToneGabes\Filament\Icons\Enums\Phosphor::Handshake)
+                ->color('warning')
+                ->requiresConfirmation()
+                ->modalHeading('Générer le Procès-Verbal de Réception')
+                ->modalDescription('Le PV sera généré et une demande de signature sera automatiquement envoyée par email au client.')
+                ->action(function (\App\Models\Chantiers\Chantier $record, \App\Services\Chantiers\ChantierDocumentService $service, \App\Services\Core\SignatureService $signatureService) {
+                    $relativePath = $service->generateHandoverProtocol($record);
+                    $disk = \App\Services\Core\DocumentService::getDisk();
+                    
+                    $client = $record->client;
+                    $contact = $client?->getPrimaryContact();
+                    $email = $contact?->email ?? $client?->email;
+                    $name = $contact ? trim("{$contact->first_name} {$contact->last_name}") : ($client?->name ?? 'Client');
+                    
+                    if ($email) {
+                        $signatureService->driver()->requestSignature(
+                            model: $record,
+                            type: \App\Enums\Core\SignatureType::AUTOGRAPH,
+                            email: $email,
+                            name: $name,
+                            documentPath: $relativePath
+                        );
+                        
+                        \Filament\Notifications\Notification::make()
+                            ->title('PV de Réception généré')
+                            ->body("Une demande de signature a été envoyée au client ({$email}).")
+                            ->success()
+                            ->send();
+                    } else {
+                        \Filament\Notifications\Notification::make()
+                            ->title('PV de Réception généré')
+                            ->body("Le PV a été généré, mais le client n'a pas d'adresse email renseignée pour l'envoi de la signature.")
+                            ->warning()
+                            ->send();
+                    }
+                    
+                    return response()->download(\Illuminate\Support\Facades\Storage::disk($disk)->path($relativePath));
+                }),
+
+            \Filament\Actions\Action::make('generate_doe')
+                ->label('Générer le DOE')
+                ->icon(\ToneGabes\Filament\Icons\Enums\Phosphor::Archive)
+                ->color('primary')
+                ->requiresConfirmation()
+                ->modalHeading('Générer le Dossier d\'Ouvrage Exécuté')
+                ->modalDescription('Cette action va compiler tous les plans et fiches techniques validés en une seule archive ZIP.')
+                ->action(function (\App\Models\Chantiers\Chantier $record, \App\Services\Chantiers\DoeDocumentService $service) {
+                    try {
+                        $path = $service->compileDoe($record);
+                        return response()->download($path);
+                    } catch (\Exception $e) {
+                        \Filament\Notifications\Notification::make()
+                            ->danger()
+                            ->title('Erreur lors de la génération du DOE')
+                            ->body($e->getMessage())
+                            ->send();
+                    }
+                }),
             EditAction::make(),
         ];
     }

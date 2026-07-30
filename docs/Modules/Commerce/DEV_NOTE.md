@@ -24,6 +24,7 @@ Le module **Commerce** couvre l'intégralité du cycle de vente et d'achat de l'
 *   **Interfaces 100% complètes** : Le dossier `app/Filament/Commerce` est très riche. Toutes les ressources possèdent leur interface Filament traduite et avec les gestionnaires de relations (Relation Managers).
 *   **Workflows automatisés** : Ajout de boutons d'action rapide dans les tableaux pour transformer les documents sans friction.
 *   **Lecteur de Code-barres** : Intégration du scan de code-barres dans les formulaires des Commandes Clients et Factures Fournisseurs pour identifier et insérer rapidement des lignes d'articles.
+*   **Signature Électronique Intégrée** : Bouton d'envoi de devis intégrant une demande de signature numérique (via `LocalSignatureProvider`). Le client reçoit un email, signe sur le portail public, et le devis passe automatiquement en statut `ACCEPTED` déclenchant la suite du processus (création chantier/commande).
 
 ### 5. Tests
 *   Validation complète du module avec 100% de succès sur la gigantesque suite de **182 tests** PestPHP. Le cycle de vie complet est garanti sans faille logicielle.
@@ -33,6 +34,5 @@ Le module **Commerce** couvre l'intégralité du cycle de vente et d'achat de l'
 *   Intégrer les workflows de relances d'impayés.
 
 ## 💡 Idées d'amélioration et Nouvelles Fonctionnalités
-*   **Signature Électronique (DocuSeal)** : Déployer l'outil `docuseal` (présent dans composer) pour que les clients signent électroniquement et légalement les devis directement en ligne. L'acceptation du devis sera ainsi automatisée.
 *   **Paiement en ligne & Relances automatiques** : Intégrer un lien de paiement Stripe ou prélèvement SEPA (GoCardless) en bas de la facture électronique, couplé à un robot qui relance par email les impayés à J+3, J+15.
 *   **Bibliothèques d'Ouvrages** : Interfacer le devis avec Batiprix ou une autre bibliothèque d'ouvrages BTP standardisée pour accélérer le chiffrage.
