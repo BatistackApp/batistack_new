@@ -54,13 +54,31 @@ test('il calcule correctement les métriques de performance et le coût de main 
         'reference_id' => $chantier->id,
     ]);
 
+    // On simule une dépense de carburant pour la flotte
+    $vehicle = \App\Models\Flottes\Vehicle::factory()->create(['daily_rate' => 10, 'km_rate' => 0.5]);
+    \App\Models\Flottes\VehicleAssignment::factory()->create([
+        'vehicle_id' => $vehicle->id,
+        'chantier_id' => $chantier->id,
+        'started_at' => now()->subDays(2),
+        'ended_at' => now(),
+        'start_odometer' => 100,
+        'end_odometer' => 200, // 100km * 0.5 = 50 + 2j * 10 = 70 cost
+        'status' => \App\Enums\Flottes\AssignmentStatus::COMPLETED,
+    ]);
+    \App\Models\Flottes\FuelTransaction::factory()->create([
+        'vehicle_id' => $vehicle->id,
+        'chantier_id' => $chantier->id,
+        'cost_ht' => 45.50,
+    ]);
+
     $metrics = $this->service->getPerformanceMetrics($chantier);
 
     // Vérifications
     expect($metrics['hours']['real'])->toEqual(10)
         ->and($metrics['hours']['percent'])->toEqual(10)
         ->and($metrics['financials']['labor_cost_real'])->toEqual(200) // 10h * 20€
-        ->and($metrics['financials']['material_cost_real'])->toEqual(100); // 2 unités * 50€
+        ->and($metrics['financials']['material_cost_real'])->toEqual(100) // 2 unités * 50€
+        ->and($metrics['financials']['fleet_cost_real'])->toEqual(115.50); // 70 (forfait) + 45.50 (carburant)
 });
 
 test('il calcule l’avancement pondéré basé sur les heures estimées des tâches', function () {

@@ -22,6 +22,7 @@ class FuelTransaction extends Model
         'station_name',
         'is_suspicious',
         'suspicion_reason',
+        'chantier_id',
     ];
 
     public function vehicle(): BelongsTo
@@ -32,6 +33,11 @@ class FuelTransaction extends Model
     public function employee(): BelongsTo
     {
         return $this->belongsTo(Employee::class);
+    }
+
+    public function chantier(): BelongsTo
+    {
+        return $this->belongsTo(\App\Models\Chantiers\Chantier::class);
     }
 
     protected function casts(): array

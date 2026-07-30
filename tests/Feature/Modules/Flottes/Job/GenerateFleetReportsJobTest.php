@@ -14,7 +14,8 @@ uses(RefreshDatabase::class);
 
 describe('GenerateFleetReportsJob', function () {
     it('generates and stores fleet reports', function () {
-        Storage::fake('local');
+        $disk = config('filesystems.default');
+        Storage::fake($disk);
         $vehicle = Vehicle::factory()->create(['reference' => 'TEST-VEHICLE']);
 
         $serviceMock = Mockery::mock(FleetDocumentService::class);
@@ -48,11 +49,8 @@ describe('GenerateFleetReportsJob', function () {
 
         $path = "fleet_reports/{$vehicle->reference}/" . now()->format('Y-m-d');
         
-        $files = Storage::disk('local')->files($path);
+        $files = Storage::disk($disk)->files($path);
         
-        // Storage::put uses the default disk, which is 'local' unless configured otherwise.
-        // If it doesn't specify a disk, it uses the default one.
-        // We assert that the directory contains 4 files.
         expect($files)->toHaveCount(4);
     });
 

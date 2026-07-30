@@ -49,7 +49,7 @@ class ChantierAnalyticService
         $subcontractingCost = 0; // Sera lié au module Facturation Fournisseur
 
         // 3. Analyse des Véhicules (Module Flottes)
-        $fleetCost = \App\Models\Flottes\VehicleAssignment::query()
+        $fleetAssignmentCost = \App\Models\Flottes\VehicleAssignment::query()
             ->where('chantier_id', $chantier->id)
             ->whereIn('status', [
                 \App\Enums\Flottes\AssignmentStatus::ACTIVE,
@@ -57,6 +57,12 @@ class ChantierAnalyticService
             ])
             ->get()
             ->sum(fn ($assignment) => $assignment->getCost());
+            
+        $fuelCost = \App\Models\Flottes\FuelTransaction::query()
+            ->where('chantier_id', $chantier->id)
+            ->sum('cost_ht');
+            
+        $fleetCost = $fleetAssignmentCost + $fuelCost;
 
         // 4. Avancement Technique Pondéré
         $progress = $this->calculateWeightedProgress($chantier);

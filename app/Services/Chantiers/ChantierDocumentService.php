@@ -74,14 +74,14 @@ class ChantierDocumentService extends DocumentService
             'metrics' => $metrics,
             'title' => 'BILAN ANALYTIQUE : '.$chantier->name,
             'generated_at' => Carbon::now()->format('d/m/Y H:i'),
+            'position' => 'landscape',
         ];
 
         return $this->generate(
             'pdf.chantiers.rentability',
             $data,
             'bilan_'.$chantier->reference,
-            'chantiers/reports',
-            'landscape'
+            'chantiers/reports'
         );
     }
 
