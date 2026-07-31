@@ -58,6 +58,57 @@ class ExpenseReportsTable
             ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
+                    \Filament\Actions\BulkAction::make('export_sepa')
+                        ->label('Générer virements SEPA')
+                        ->icon('heroicon-o-currency-euro')
+                        ->color('success')
+                        ->requiresConfirmation()
+                        ->modalHeading('Exporter au format SEPA')
+                        ->modalDescription('Cette action va générer un fichier XML de virement SEPA pour les notes de frais sélectionnées.')
+                        ->form([
+                            \Filament\Forms\Components\Checkbox::make('mark_as_paid')
+                                ->label('Marquer les notes de frais comme payées ?')
+                                ->default(true)
+                        ])
+                        ->action(function (\Illuminate\Database\Eloquent\Collection $records, array $data, \App\Services\RH\SepaExportService $service) {
+                            // Ne traiter que les notes validées
+                            $validatedRecords = $records->filter(fn ($r) => $r->status === \App\Enums\RH\ExpenseReportStatus::VALIDATED);
+                            
+                            if ($validatedRecords->isEmpty()) {
+                                \Filament\Notifications\Notification::make()
+                                    ->title('Aucune note de frais validée sélectionnée.')
+                                    ->warning()
+                                    ->send();
+                                return;
+                            }
+
+                            try {
+                                $xmlContent = $service->generateForExpenseReports($validatedRecords);
+                                
+                                if ($data['mark_as_paid']) {
+                                    foreach ($validatedRecords as $record) {
+                                        $record->update(['status' => \App\Enums\RH\ExpenseReportStatus::PAID]);
+                                    }
+                                }
+                                
+                                \Filament\Notifications\Notification::make()
+                                    ->title('Fichier SEPA généré avec succès.')
+                                    ->success()
+                                    ->send();
+                                
+                                return response()->streamDownload(function () use ($xmlContent) {
+                                    echo $xmlContent;
+                                }, 'virements_sepa_' . date('Ymd_His') . '.xml');
+                                
+                            } catch (\Exception $e) {
+                                \Filament\Notifications\Notification::make()
+                                    ->title('Erreur lors de la génération SEPA')
+                                    ->body($e->getMessage())
+                                    ->danger()
+                                    ->send();
+                            }
+                        })
+                        ->deselectRecordsAfterCompletion(),
                 ]),
             ]);
     }
