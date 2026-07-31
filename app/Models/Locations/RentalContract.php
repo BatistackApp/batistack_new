@@ -24,6 +24,7 @@ class RentalContract extends Model
         'status' => RentalStatus::class,
         'billing_period' => RentalBillingPeriod::class,
         'daily_cost_ht' => 'decimal:2',
+        'supplier_score' => 'integer',
     ];
 
     public function supplier(): BelongsTo

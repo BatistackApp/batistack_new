@@ -9,6 +9,7 @@ use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ForceDeleteBulkAction;
 use Filament\Actions\RestoreBulkAction;
+use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TrashedFilter;
@@ -24,38 +25,38 @@ class RentalContractsTable
                     ->searchable()
                     ->sortable()
                     ->label('Référence'),
-                
+
                 TextColumn::make('chantier.name')
                     ->searchable()
                     ->sortable()
                     ->label('Chantier'),
-                
+
                 TextColumn::make('supplier.name')
                     ->searchable()
                     ->sortable()
                     ->label('Fournisseur'),
-                
+
                 TextColumn::make('status')
                     ->badge()
                     ->sortable()
                     ->searchable()
                     ->label('Statut'),
-                
+
                 TextColumn::make('start_date')
                     ->date('d/m/Y')
                     ->sortable()
                     ->label('Date de début'),
-                    
+
                 TextColumn::make('end_date')
                     ->date('d/m/Y')
                     ->sortable()
                     ->label('Date de fin'),
-                
+
                 TextColumn::make('billing_period')
                     ->badge()
                     ->sortable()
                     ->label('Période facturation'),
-                
+
                 TextColumn::make('daily_cost_ht')
                     ->money('EUR')
                     ->sortable()
@@ -66,18 +67,19 @@ class RentalContractsTable
                 SelectFilter::make('status')
                     ->options(RentalStatus::class)
                     ->label('Statut'),
-                
+
                 SelectFilter::make('chantier_id')
                     ->relationship('chantier', 'name')
                     ->label('Chantier'),
-                    
+
                 SelectFilter::make('supplier_id')
                     ->relationship('supplier', 'name')
                     ->label('Fournisseur'),
-                    
+
                 TrashedFilter::make(),
             ])
             ->recordActions([
+                ViewAction::make(),
                 EditAction::make(),
             ])
             ->toolbarActions([

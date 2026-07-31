@@ -50,10 +50,31 @@ class ViewRentalContract extends ViewRecord
                 ->color('danger')
                 ->requiresConfirmation()
                 ->visible(fn () => $this->record->status === RentalStatus::ACTIVE)
-                ->action(function () {
+                ->modalHeading('Terminer la location')
+                ->modalDescription('Souhaitez-vous évaluer le fournisseur pour cette location ? (Optionnel)')
+                ->schema([
+                    \Filament\Forms\Components\Radio::make('supplier_score')
+                        ->label('Note du fournisseur')
+                        ->options([
+                            1 => '1 ⭐ - Très insatisfaisant',
+                            2 => '2 ⭐ - Insatisfaisant',
+                            3 => '3 ⭐ - Correct',
+                            4 => '4 ⭐ - Satisfaisant',
+                            5 => '5 ⭐ - Excellent',
+                        ])
+                        ->inline()
+                        ->nullable(),
+                    \Filament\Forms\Components\Textarea::make('supplier_feedback')
+                        ->label('Commentaire / État du matériel')
+                        ->rows(3)
+                        ->nullable(),
+                ])
+                ->action(function (array $data) {
                     $this->record->update([
                         'status' => RentalStatus::TERMINATED,
                         'end_date' => now(),
+                        'supplier_score' => $data['supplier_score'] ?? null,
+                        'supplier_feedback' => $data['supplier_feedback'] ?? null,
                     ]);
                     
                     Notification::make()

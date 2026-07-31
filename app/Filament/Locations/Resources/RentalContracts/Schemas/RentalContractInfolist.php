@@ -69,6 +69,16 @@ class RentalContractInfolist
                                 })
                                 ->color('danger'),
                         ]),
+                        
+                    Section::make('Évaluation du fournisseur')
+                        ->schema([
+                            TextEntry::make('supplier_score')
+                                ->label('Note')
+                                ->formatStateUsing(fn ($state) => str_repeat('⭐', $state) . " ($state/5)"),
+                            TextEntry::make('supplier_feedback')
+                                ->label('Commentaire'),
+                        ])
+                        ->visible(fn ($record) => $record->supplier_score !== null),
                 ])->columnSpan(['lg' => 1]),
             ])
             ->columns(3);
