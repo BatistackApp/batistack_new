@@ -1,11 +1,18 @@
 <div class="fi-in-view-entry">
-    <div class="fi-in-view-entry-content">
+    <div class="fi-in-view-entry-content overflow-x-auto">
+        @php
+            $hasGrant = $getRecord()->grant_amount > 0;
+        @endphp
         <table class="w-full text-left divide-y divide-gray-200 dark:divide-white/5">
             <thead>
                 <tr>
                     <th class="px-3 py-2 text-sm font-semibold text-gray-900 dark:text-white">Période</th>
                     <th class="px-3 py-2 text-sm font-semibold text-gray-900 dark:text-white">Montant Dotation</th>
                     <th class="px-3 py-2 text-sm font-semibold text-gray-900 dark:text-white">VNC Restante</th>
+                    @if($hasGrant)
+                        <th class="px-3 py-2 text-sm font-semibold text-gray-900 dark:text-white">Reprise Subv.</th>
+                        <th class="px-3 py-2 text-sm font-semibold text-gray-900 dark:text-white">Subv. Restante</th>
+                    @endif
                     <th class="px-3 py-2 text-sm font-semibold text-gray-900 dark:text-white">Statut</th>
                 </tr>
             </thead>
@@ -21,6 +28,14 @@
                         <td class="px-3 py-2 text-sm text-gray-500 dark:text-gray-400">
                             {{ number_format($depreciation->remaining_vnc, 2, ',', ' ') }} €
                         </td>
+                        @if($hasGrant)
+                            <td class="px-3 py-2 text-sm text-gray-500 dark:text-gray-400">
+                                {{ number_format($depreciation->grant_reversal_amount, 2, ',', ' ') }} €
+                            </td>
+                            <td class="px-3 py-2 text-sm text-gray-500 dark:text-gray-400">
+                                {{ number_format($depreciation->grant_remaining_amount, 2, ',', ' ') }} €
+                            </td>
+                        @endif
                         <td class="px-3 py-2 text-sm">
                             @if($depreciation->is_passed)
                                 <span class="inline-flex items-center rounded-md bg-success-50 px-2 py-1 text-xs font-medium text-success-700 ring-1 ring-inset ring-success-600/20 dark:bg-success-400/10 dark:text-success-400 dark:ring-success-400/20">Passée</span>
@@ -31,7 +46,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="4" class="px-3 py-4 text-sm text-center text-gray-500 dark:text-gray-400">
+                        <td colspan="{{ $hasGrant ? 6 : 4 }}" class="px-3 py-4 text-sm text-center text-gray-500 dark:text-gray-400">
                             Aucun plan d'amortissement généré.
                         </td>
                     </tr>

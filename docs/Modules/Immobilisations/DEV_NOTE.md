@@ -23,15 +23,15 @@ Le module **Immobilisations** permet la gestion du patrimoine de l'entreprise (m
 ### 4. Interface Utilisateur (Filament)
 *   **Panel Dédié** : Provider `ImmobilisationPanelProvider` accessible sur `/immobilisation`.
 *   **Ressources (CRUD)** : `AssetCategoryResource` et `FixedAssetResource` (incluant les tables et formulaires V5).
+*   **Numérisation des Factures (OCR)** : Auto-complétion intelligente du formulaire de création (`FixedAssetForm`) via `GoogleCloudVisionOcrService` (qui détecte la date, le prix HT, le nom et déduit la catégorie). Le document (image de la facture) est sauvegardé via Spatie MediaLibrary. Optimisation des requêtes par un cache md5 du fichier.
 *   **Alertes et Dashboards** : `AssetAlertsWidget` listant le statut des machines (VGP Expirée/Imminente, Rentabilité critique si coûts réparations > VNC) et `TotalAssetsValueWidget`.
 *   **Traductions & Filtres** : Interface intégralement traduite avec filtres de recherche avancés.
 
 ### 5. Tests
-*   Tests unitaires complets sur les calculs d'amortissements et d'imputation analytique (`ImputationAnalytiqueTest`).
+*   Tests unitaires complets sur les calculs d'amortissements, d'imputation analytique et extraction OCR.
 
 ## 🚧 Ce qu'il reste à faire
 *   L'essentiel du module et la connectivité avec la DGFiP (FEC) sont terminés et robustes.
 
 ## 💡 Idées d'amélioration et Nouvelles Fonctionnalités
-*   **Numérisation des Factures (OCR)** : Ajouter la numérisation des factures fournisseurs via OCR lors de l'enregistrement de l'actif pour automatiser la saisie.
 *   **Gestion des Subventions d'Investissement** : Automatiser le traitement comptable (étalement) des subventions d'investissement liées aux immobilisations.

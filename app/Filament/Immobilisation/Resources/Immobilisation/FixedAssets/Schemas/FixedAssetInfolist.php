@@ -44,6 +44,13 @@ class FixedAssetInfolist
                         TextEntry::make('chantier.name')
                             ->label('Chantier d\'imputation')
                             ->placeholder('Aucun'),
+                        TextEntry::make('grant_amount')
+                            ->label('Subvention')
+                            ->money('EUR')
+                            ->visible(fn ($record) => $record->grant_amount > 0),
+                        TextEntry::make('grant_name')
+                            ->label('Origine de la subvention')
+                            ->visible(fn ($record) => $record->grant_amount > 0),
                     ])->columns(2),
 
                 Section::make('Tableau d\'amortissement prévisionnel')

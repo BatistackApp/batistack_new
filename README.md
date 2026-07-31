@@ -104,4 +104,4 @@ Batistack privilégie :
 2. **L'automatisation** (tâches planifiées pour les alertes, factures récurrentes, DSN).
 3. **L'expérience utilisateur** (interfaces Filament réactives, portails dédiés).
 
-*Développé pour les constructeurs qui exigent l'excellence opérationnelle.*
+*Développé pour les constructeurs qui exigent l'excellence opérationnelles.*

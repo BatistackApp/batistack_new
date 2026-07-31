@@ -108,7 +108,7 @@ class ViewFixedAsset extends ViewRecord
                     $service = new ImmobilisationDocumentService;
                     $path = $service->generateAssetSheet($record);
 
-                    return response()->download($path);
+                    return $service->download($path);
                 }),
             EditAction::make(),
         ];

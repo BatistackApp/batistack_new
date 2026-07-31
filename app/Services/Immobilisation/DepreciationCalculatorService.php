@@ -22,15 +22,41 @@ class DepreciationCalculatorService
             return [];
         }
 
+        $schedule = [];
         if ($asset->depreciation_method === DepreciationMethod::LINEAR) {
-            return $this->calculateLinear($asset, $baseValue);
+            $schedule = $this->calculateLinear($asset, $baseValue);
+        } elseif ($asset->depreciation_method === DepreciationMethod::DECLINING_BALANCE) {
+            $schedule = $this->calculateDecliningBalance($asset, $baseValue);
         }
 
-        if ($asset->depreciation_method === DepreciationMethod::DECLINING_BALANCE) {
-            return $this->calculateDecliningBalance($asset, $baseValue);
+        return $this->applyGrantToSchedule($schedule, $asset, $baseValue);
+    }
+
+    private function applyGrantToSchedule(array $schedule, FixedAsset $asset, float $baseValue): array
+    {
+        $grantAmount = $asset->grant_amount ?? 0;
+        if ($grantAmount <= 0) {
+            return $schedule;
         }
 
-        return [];
+        $remainingGrant = $grantAmount;
+
+        foreach ($schedule as $index => &$period) {
+            if ($index === array_key_last($schedule)) {
+                $reversal = round($remainingGrant, 2);
+            } else {
+                $ratio = $period['amount'] / $baseValue;
+                $reversal = round($grantAmount * $ratio, 2);
+            }
+            
+            $reversal = min($reversal, $remainingGrant);
+            $remainingGrant -= $reversal;
+
+            $period['grant_reversal_amount'] = max(0, $reversal);
+            $period['grant_remaining_amount'] = max(0, $remainingGrant);
+        }
+
+        return $schedule;
     }
 
     private function calculateLinear(FixedAsset $asset, float $baseValue): array
@@ -199,20 +225,50 @@ class DepreciationCalculatorService
         $newSchedule = [];
         $runningVnc = $newVnc;
 
+        // For grant reversal during recalculation:
+        // The remaining grant should also be distributed proportionally
+        $grantAmount = $asset->grant_amount ?? 0;
+        $passedGrantReversal = 0;
+        $remainingGrant = 0;
+
+        if ($grantAmount > 0) {
+            $passedGrantReversal = $asset->depreciations()->where('is_passed', true)->sum('grant_reversal_amount');
+            $remainingGrant = $grantAmount - $passedGrantReversal;
+        }
+
         foreach ($futurePeriods as $index => $period) {
             // If it's the last period, put the rest to avoid rounding issues
             if ($index === array_key_last($futurePeriods)) {
                 $amount = round($runningVnc, 2);
+                $grantReversal = round($remainingGrant, 2);
             } else {
                 $amount = round($period['amount'] * $ratio, 2);
+                
+                // Proportionally distribute the remaining grant based on the new depreciations
+                if ($newVnc > 0) {
+                    $grantRatio = $amount / $newVnc;
+                    $grantReversal = round(($grantAmount - $passedGrantReversal) * $grantRatio, 2);
+                } else {
+                    $grantReversal = 0;
+                }
             }
             
             $runningVnc -= $amount;
+            
+            if ($grantAmount > 0) {
+                $grantReversal = min($grantReversal, $remainingGrant);
+                $remainingGrant -= $grantReversal;
+            } else {
+                $grantReversal = 0;
+                $remainingGrant = 0;
+            }
 
             $newSchedule[] = [
                 'period_date' => $period['period_date'],
                 'amount' => max(0, $amount),
                 'remaining_vnc' => max(0, $runningVnc),
+                'grant_reversal_amount' => max(0, $grantReversal),
+                'grant_remaining_amount' => max(0, $remainingGrant),
             ];
         }
 
