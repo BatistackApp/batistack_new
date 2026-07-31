@@ -66,12 +66,44 @@ class GoogleCloudVisionOcrService implements OcrServiceInterface
                     $clientConfig['credentials'] = $apiKey;
                 }
 
-                $imageAnnotator = new ImageAnnotatorClient($clientConfig);
-                $image = file_get_contents($filePath);
-                $response = $imageAnnotator->documentTextDetection($image);
-                $annotation = $response->getFullTextAnnotation();
+                $imageAnnotator = $this->createClient($clientConfig);
+                $fileContent = file_get_contents($filePath);
+                $mimeType = mime_content_type($filePath);
+                $text = '';
 
-                $text = $annotation ? $annotation->getText() : '';
+                if ($mimeType === 'application/pdf') {
+                    // PDF Document Text Detection
+                    $feature = (new \Google\Cloud\Vision\V1\Feature())->setType(\Google\Cloud\Vision\V1\Feature\Type::DOCUMENT_TEXT_DETECTION);
+                    $inputConfig = (new \Google\Cloud\Vision\V1\InputConfig())
+                        ->setMimeType('application/pdf')
+                        ->setContent($fileContent);
+
+                    $request = (new \Google\Cloud\Vision\V1\AnnotateFileRequest())
+                        ->setInputConfig($inputConfig)
+                        ->setFeatures([$feature])
+                        ->setPages([1, 2, 3, 4, 5]);
+
+                    $batchRequest = (new \Google\Cloud\Vision\V1\BatchAnnotateFilesRequest())
+                        ->setRequests([$request]);
+
+                    $response = $imageAnnotator->batchAnnotateFiles($batchRequest);
+                    $responses = $response->getResponses();
+                    
+                    if (count($responses) > 0) {
+                        $fileResponse = $responses[0];
+                        foreach ($fileResponse->getResponses() as $pageResponse) {
+                            if ($pageResponse->getFullTextAnnotation()) {
+                                $text .= $pageResponse->getFullTextAnnotation()->getText() . "\n";
+                            }
+                        }
+                    }
+                } else {
+                    // Standard Image Text Detection
+                    $response = $imageAnnotator->documentTextDetection($fileContent);
+                    $annotation = $response->getFullTextAnnotation();
+                    $text = $annotation ? $annotation->getText() : '';
+                }
+
                 $imageAnnotator->close();
 
                 return $text;
@@ -80,6 +112,11 @@ class GoogleCloudVisionOcrService implements OcrServiceInterface
                 return '';
             }
         });
+    }
+
+    protected function createClient(array $clientConfig)
+    {
+        return new ImageAnnotatorClient($clientConfig);
     }
 
     private function parseText(string $text): array

@@ -64,7 +64,7 @@ class ItemsRelationManager extends RelationManager
                 \Filament\Forms\Components\SpatieMediaLibraryFileUpload::make('receipts')
                     ->label('Preuve (Ticket)')
                     ->collection('receipts')
-                    ->image()
+                    ->acceptedFileTypes(['image/*', 'application/pdf'])
                     ->columnSpanFull()
                     ->live(onBlur: false)
                     ->afterStateUpdated(function ($state, Set $set) {
@@ -244,8 +244,8 @@ class ItemsRelationManager extends RelationManager
                     ->icon('heroicon-o-camera')
                     ->schema([
                         FileUpload::make('receipt_image')
-                            ->label('Photo du ticket')
-                            ->image()
+                            ->label('Fichier du ticket (Image ou PDF)')
+                            ->acceptedFileTypes(['image/*', 'application/pdf'])
                             ->required(),
                     ])
                     ->action(function (array $data, RelationManager $livewire) {
