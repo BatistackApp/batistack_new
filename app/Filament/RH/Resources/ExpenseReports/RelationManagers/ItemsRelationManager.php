@@ -56,6 +56,11 @@ class ItemsRelationManager extends RelationManager
                     ->relationship('vehicle', 'license_plate')
                     ->visible(fn (Get $get) => in_array($get('category'), ['Carburant', 'Péage', 'Parking']))
                     ->required(fn (Get $get) => in_array($get('category'), ['Carburant', 'Péage', 'Parking'])),
+                Select::make('payment_method')
+                    ->label('Moyen de paiement')
+                    ->options(\App\Enums\RH\ExpensePaymentMethod::class)
+                    ->required()
+                    ->default(\App\Enums\RH\ExpensePaymentMethod::PERSONAL_CARD->value),
                 \Filament\Forms\Components\SpatieMediaLibraryFileUpload::make('receipts')
                     ->label('Preuve (Ticket)')
                     ->collection('receipts')
@@ -160,6 +165,9 @@ class ItemsRelationManager extends RelationManager
                         TextEntry::make('merchant')
                             ->label('Marchand')
                             ->placeholder('-'),
+                        TextEntry::make('payment_method')
+                            ->label('Moyen de paiement')
+                            ->badge(),
                         TextEntry::make('status')
                             ->label('Status')
                             ->badge(),
@@ -210,6 +218,10 @@ class ItemsRelationManager extends RelationManager
                 TextColumn::make('merchant')
                     ->label('Marchand')
                     ->searchable(),
+                TextColumn::make('payment_method')
+                    ->label('Paiement')
+                    ->badge()
+                    ->searchable(),
                 TextColumn::make('status')
                     ->label('Status')
                     ->badge()
@@ -249,6 +261,7 @@ class ItemsRelationManager extends RelationManager
                             'vat_amount' => $extractedData['vat_amount'],
                             'merchant' => $extractedData['merchant'],
                             'status' => 'pending',
+                            'payment_method' => \App\Enums\RH\ExpensePaymentMethod::PERSONAL_CARD->value,
                         ]);
 
                         try {
