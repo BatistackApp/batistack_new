@@ -13,6 +13,8 @@ class Depreciation extends Model
         'amount',
         'remaining_vnc',
         'is_passed',
+        'grant_reversal_amount',
+        'grant_remaining_amount',
     ];
 
     protected function casts(): array
@@ -21,6 +23,8 @@ class Depreciation extends Model
             'period_date' => 'date',
             'amount' => 'decimal:2',
             'remaining_vnc' => 'decimal:2',
+            'grant_reversal_amount' => 'decimal:2',
+            'grant_remaining_amount' => 'decimal:2',
             'is_passed' => 'boolean',
         ];
     }

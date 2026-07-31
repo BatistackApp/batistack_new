@@ -38,6 +38,9 @@
                 <li><span class="font-semibold text-indigo-900">Valeur brute :</span> {{ number_format($asset->purchase_price, 2, ',', ' ') }} €</li>
                 <li><span class="font-semibold text-indigo-900">Valeur résiduelle :</span> {{ number_format($asset->salvage_value, 2, ',', ' ') }} €</li>
                 <li><span class="font-semibold text-indigo-900">Méthode :</span> {{ $asset->depreciation_method->getLabel() }} sur {{ $asset->useful_life_years }} ans</li>
+                @if($asset->grant_amount > 0)
+                <li><span class="font-semibold text-indigo-900">Subvention ({{ $asset->grant_name ?? 'N/A' }}) :</span> {{ number_format($asset->grant_amount, 2, ',', ' ') }} €</li>
+                @endif
             </ul>
         </div>
     </div>
@@ -74,12 +77,20 @@
 
     <h2 class="text-2xl font-bold text-gray-700 mb-4 border-b-2 border-gray-200 pb-2">Tableau d'Amortissement</h2>
     
+    @php
+        $hasGrant = $asset->grant_amount > 0;
+    @endphp
+
     <table class="min-w-full divide-y divide-gray-200 border rounded-lg overflow-hidden">
         <thead class="bg-gray-100">
             <tr>
                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date (Période)</th>
                 <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Dotation (€)</th>
                 <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">VNC Restante (€)</th>
+                @if($hasGrant)
+                    <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Reprise Subv. (€)</th>
+                    <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Subv. Restante (€)</th>
+                @endif
                 <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Statut</th>
             </tr>
         </thead>
@@ -89,6 +100,10 @@
                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ $depreciation->period_date->format('d/m/Y') }}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-right font-bold text-gray-700">{{ number_format($depreciation->amount, 2, ',', ' ') }}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-500">{{ number_format($depreciation->remaining_vnc, 2, ',', ' ') }}</td>
+                @if($hasGrant)
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-500">{{ number_format($depreciation->grant_reversal_amount, 2, ',', ' ') }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-500">{{ number_format($depreciation->grant_remaining_amount, 2, ',', ' ') }}</td>
+                @endif
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-center">
                     @if($depreciation->is_passed)
                         <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Passée</span>

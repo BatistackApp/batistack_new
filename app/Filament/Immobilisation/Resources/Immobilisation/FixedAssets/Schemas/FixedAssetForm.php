@@ -101,6 +101,18 @@ class FixedAssetForm
                             ->helperText('Laissez vide si l\'équipement n\'est pas soumis aux VGP.')
                             ->prefixIcon('heroicon-o-shield-check'),
                     ]),
+                Section::make('Subvention / Financement')
+                    ->schema([
+                        TextInput::make('grant_amount')
+                            ->label('Montant de la subvention')
+                            ->numeric()
+                            ->default(0)
+                            ->prefix('€')
+                            ->helperText('La subvention sera étalée au même rythme que l\'amortissement (Norme PCG).'),
+                        TextInput::make('grant_name')
+                            ->label('Origine de la subvention (Ex: BPI, Région)')
+                            ->maxLength(255),
+                    ])->columns(2),
                 Select::make('supplier_invoice_id')
                     ->label('Facture d\'achat liée')
                     ->relationship('supplierInvoice', 'reference')

@@ -27,6 +27,8 @@ class FixedAsset extends Model implements HasMedia
         'chantier_id',
         'last_inventoried_at',
         'vgp_frequency_months',
+        'grant_amount',
+        'grant_name',
     ];
 
     protected function casts(): array
