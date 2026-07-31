@@ -27,11 +27,13 @@ class ExpenseItem extends Model implements HasMedia
         'status',
         'rejection_reason',
         'vehicle_id',
+        'payment_method',
     ];
 
     protected $casts = [
         'date' => 'date',
         'status' => \App\Enums\RH\ExpenseItemStatus::class,
+        'payment_method' => \App\Enums\RH\ExpensePaymentMethod::class,
     ];
 
     public function report(): BelongsTo

@@ -6,9 +6,12 @@ use Illuminate\Database\Eloquent\Model;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
-class FixedAsset extends Model
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
+
+class FixedAsset extends Model implements HasMedia
 {
-    use HasFactory;
+    use HasFactory, InteractsWithMedia;
     protected $fillable = [
         'asset_category_id',
         'name',
@@ -24,6 +27,8 @@ class FixedAsset extends Model
         'chantier_id',
         'last_inventoried_at',
         'vgp_frequency_months',
+        'grant_amount',
+        'grant_name',
     ];
 
     protected function casts(): array

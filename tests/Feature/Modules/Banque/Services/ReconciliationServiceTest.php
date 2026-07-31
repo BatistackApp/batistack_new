@@ -61,3 +61,52 @@ it('bulkReconcile processes transactions above threshold', function () {
     expect($t1->fresh()->status->value)->toBe('reconciled');
     expect($t2->fresh()->status->value)->toBe('pending');
 });
+
+it('suggests exact matches for corporate card expense items', function () {
+    $account = BankAccount::factory()->create();
+    
+    $expenseItem = \App\Models\RH\ExpenseItem::factory()->create([
+        'amount_ttc' => 55.50,
+        'merchant' => 'TotalEnergies',
+        'date' => now()->subDays(2),
+        'payment_method' => \App\Enums\RH\ExpensePaymentMethod::CORPORATE_CARD,
+        'status' => \App\Enums\RH\ExpenseItemStatus::PENDING,
+    ]);
+
+    $transaction = BankTransaction::factory()->create([
+        'bank_account_id' => $account->id,
+        'amount' => -55.50, // debit
+        'description' => 'Achat CB TotalEnergies Paris', // Merchant matches
+        'date' => now(), // within 2 days
+    ]);
+
+    $service = new ReconciliationService();
+    $suggestions = $service->suggestMatches($transaction);
+
+    // Score should be 50 (amount) + 30 (date) + 20 (merchant) = 100
+    expect($suggestions)->not->toBeEmpty()
+        ->and($suggestions[0]['model']->id)->toBe($expenseItem->id)
+        ->and($suggestions[0]['type'])->toBe(\App\Models\RH\ExpenseItem::class)
+        ->and($suggestions[0]['score'])->toBe(100);
+});
+
+it('ignores personal card expense items', function () {
+    $account = BankAccount::factory()->create();
+    
+    $expenseItem = \App\Models\RH\ExpenseItem::factory()->create([
+        'amount_ttc' => 55.50,
+        'payment_method' => \App\Enums\RH\ExpensePaymentMethod::PERSONAL_CARD,
+    ]);
+
+    $transaction = BankTransaction::factory()->create([
+        'bank_account_id' => $account->id,
+        'amount' => -55.50,
+    ]);
+
+    $service = new ReconciliationService();
+    $suggestions = $service->suggestMatches($transaction);
+
+    $expenseItemSuggestions = array_filter($suggestions, fn($s) => $s['type'] === \App\Models\RH\ExpenseItem::class);
+    
+    expect($expenseItemSuggestions)->toBeEmpty();
+});

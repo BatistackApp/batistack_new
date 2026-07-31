@@ -17,6 +17,39 @@ class FixedAssetForm
     {
         return $schema
             ->schema([
+                \Filament\Forms\Components\SpatieMediaLibraryFileUpload::make('invoice_upload')
+                    ->collection('invoices')
+                    ->label('Numérisation OCR (Glissez la facture ici)')
+                    ->image()
+                    ->helperText('Uniquement des images (JPG, PNG). L\'IA remplira automatiquement les champs.')
+                    ->live(onBlur: false)
+                    ->afterStateUpdated(function (\Livewire\Features\SupportFileUploads\TemporaryUploadedFile $state, \Filament\Forms\Set $set) {
+                        if ($state) {
+                            $ocrService = app(\App\Services\RH\OcrServiceInterface::class);
+                            $data = $ocrService->extractAssetData($state->getRealPath());
+
+                            if (!empty($data['purchase_price'])) {
+                                $set('purchase_price', $data['purchase_price']);
+                            }
+                            if (!empty($data['purchase_date'])) {
+                                $set('purchase_date', $data['purchase_date']);
+                            }
+                            if (!empty($data['merchant'])) {
+                                $set('name', $data['merchant']);
+                            }
+                            if (!empty($data['asset_category_id'])) {
+                                $set('asset_category_id', $data['asset_category_id']);
+                            }
+
+                            \Filament\Notifications\Notification::make()
+                                ->title('Analyse OCR terminée')
+                                ->body('Les données de la facture ont été extraites.')
+                                ->success()
+                                ->send();
+                        }
+                    })
+                    ->columnSpanFull(),
+
                 Select::make('asset_category_id')
                     ->label('Catégorie d\'actif')
                     ->relationship('category', 'name')
@@ -68,6 +101,18 @@ class FixedAssetForm
                             ->helperText('Laissez vide si l\'équipement n\'est pas soumis aux VGP.')
                             ->prefixIcon('heroicon-o-shield-check'),
                     ]),
+                Section::make('Subvention / Financement')
+                    ->schema([
+                        TextInput::make('grant_amount')
+                            ->label('Montant de la subvention')
+                            ->numeric()
+                            ->default(0)
+                            ->prefix('€')
+                            ->helperText('La subvention sera étalée au même rythme que l\'amortissement (Norme PCG).'),
+                        TextInput::make('grant_name')
+                            ->label('Origine de la subvention (Ex: BPI, Région)')
+                            ->maxLength(255),
+                    ])->columns(2),
                 Select::make('supplier_invoice_id')
                     ->label('Facture d\'achat liée')
                     ->relationship('supplierInvoice', 'reference')

@@ -56,7 +56,10 @@ class ExpenseItemObserver
         if ($reportId) {
             $report = \App\Models\RH\ExpenseReport::find($reportId);
             if ($report) {
-                $report->total_amount = $report->items()->sum('amount_ttc');
+                // Seuls les paiements avec carte personnelle doivent Ǹtre remboursǸs au salariǸ
+                $report->total_amount = $report->items()
+                    ->where('payment_method', '!=', \App\Enums\RH\ExpensePaymentMethod::CORPORATE_CARD->value)
+                    ->sum('amount_ttc');
                 $report->save();
             }
         }
