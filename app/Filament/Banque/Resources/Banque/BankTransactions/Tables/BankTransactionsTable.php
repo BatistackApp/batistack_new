@@ -109,7 +109,11 @@ class BankTransactionsTable
                         $suggestions = $service->suggestMatches($record);
                         $options = [];
                         foreach ($suggestions as $s) {
-                            $ref = $s['model']->reference ?? ('Note de frais ' . $s['model']->id);
+                            if ($s['model'] instanceof \App\Models\RH\ExpenseItem) {
+                                $ref = 'Ticket Corpo ' . $s['model']->merchant . ' du ' . ($s['model']->date ? $s['model']->date->format('d/m') : '');
+                            } else {
+                                $ref = $s['model']->reference ?? ('Note de frais ' . $s['model']->id);
+                            }
                             $options[$s['type'].':'.$s['model']->id] = "{$ref} (Score: {$s['score']}%)";
                         }
 
@@ -125,9 +129,10 @@ class BankTransactionsTable
                         [$type, $id] = explode(':', $data['invoice_id']);
 
                         $allowedTypes = [
-                            CustomerInvoice::class,
-                            SupplierInvoice::class,
+                            \App\Models\Commerce\CustomerInvoice::class,
+                            \App\Models\Commerce\SupplierInvoice::class,
                             \App\Models\RH\ExpenseReport::class,
+                            \App\Models\RH\ExpenseItem::class,
                         ];
 
                         if (!in_array($type, $allowedTypes)) {

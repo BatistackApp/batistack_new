@@ -62,6 +62,32 @@ class ReconciliationService
                 }
             }
 
+            // Also check for Corporate Card ExpenseItems (tickets individuels)
+            $expenseItems = \App\Models\RH\ExpenseItem::where('payment_method', \App\Enums\RH\ExpensePaymentMethod::CORPORATE_CARD->value)
+                ->where('status', '!=', \App\Enums\RH\ExpenseItemStatus::REJECTED)
+                ->get();
+
+            // Filter out those already reconciled
+            $reconciledItemIds = \App\Models\Banque\BankReconciliation::where('reconcilable_type', \App\Models\RH\ExpenseItem::class)
+                ->pluck('reconcilable_id')
+                ->toArray();
+            
+            foreach ($expenseItems as $item) {
+                if (in_array($item->id, $reconciledItemIds)) {
+                    continue;
+                }
+
+                $score = $this->calculateExpenseItemScore($transaction, $item);
+                
+                if ($score > 0) {
+                    $suggestions[] = [
+                        'model' => $item,
+                        'type' => \App\Models\RH\ExpenseItem::class,
+                        'score' => $score,
+                    ];
+                }
+            }
+
             // Also check for Payslips
             $payslips = \App\Models\Paie\Payslip::where('status', '!=', \App\Enums\Paie\PayslipStatus::PAID)->with('employee')->get();
             
@@ -146,6 +172,42 @@ class ReconciliationService
         // 3. Third party name match in description (+10 points)
         if (!empty($thirdPartyName) && str_contains($descriptionLower, strtolower($thirdPartyName))) {
             $score += 10;
+        }
+
+        return $score;
+    }
+
+    /**
+     * Calculates a matching score between a transaction and an expense item.
+     */
+    private function calculateExpenseItemScore(BankTransaction $transaction, \App\Models\RH\ExpenseItem $item): int
+    {
+        $score = 0;
+        $absTransactionAmount = abs($transaction->amount);
+        $itemAmountTtc = $item->amount_ttc ?? 0;
+
+        // 1. Exact amount match (+50 points)
+        if (round($absTransactionAmount, 2) === round((float) $itemAmountTtc, 2)) {
+            $score += 50;
+        }
+
+        // 2. Date match (transaction date can be a few days after ticket date) (+30 points)
+        if ($item->date && $transaction->date) {
+            $diffDays = $transaction->date->diffInDays($item->date, false);
+            // Si la transaction est passée entre 0 et 4 jours après le ticket
+            if ($diffDays <= 0 && $diffDays >= -4) {
+                $score += 30;
+            } elseif (abs($diffDays) <= 7) {
+                // Si la date est proche (1 semaine)
+                $score += 10;
+            }
+        }
+
+        // 3. Merchant name match in description (+20 points)
+        $descriptionLower = strtolower($transaction->description);
+        $merchant = $item->merchant ?? '';
+        if (!empty($merchant) && str_contains($descriptionLower, strtolower($merchant))) {
+            $score += 20;
         }
 
         return $score;
