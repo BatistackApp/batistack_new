@@ -15,8 +15,9 @@ Le module **Banque** gère la trésorerie de l'entreprise. Il permet de connecte
 *   **Synchronisation et Import** : `StatementImportService` supporte l'import manuel (CSV/QIF).
 *   **Moteur d'Intelligence** : 
     *   `TransactionCategorizationService` : Catégorise automatiquement les lignes selon le libellé.
-    *   `ReconciliationService` : Moteur de suggestion intelligent qui attribue un score de pertinence pour matcher une transaction avec une Facture.
+    *   `ReconciliationService` : Moteur de suggestion intelligent qui attribue un score de pertinence pour matcher une transaction avec une Facture ou un Ticket de Frais (Carte Corporate) (Issue #143).
 *   **Trésorerie** : `CashFlowForecastService` (Moteur pour calculer et projeter les flux de trésorerie).
+*   **Export SEPA** : Génération de fichiers de virement SEPA pour le paiement groupé des notes de frais validées (Issue #142).
 
 ### 3. Observers & Événements (`app/Observers/Banque`)
 *   **`BankReconciliationObserver`** : Écoute les lettrages. Dès qu'une facture est intégralement couverte par une ou plusieurs transactions, son statut bascule instantanément sur `PAID` (Payée).
@@ -26,7 +27,7 @@ Le module **Banque** gère la trésorerie de l'entreprise. Il permet de connecte
 *   **Prévisionnel de Trésorerie (Forecast)** : Widget graphique interactif superposant le "Solde Confirmé" (basé sur le reste à payer des factures clients et fournisseurs) et le "Solde Prévisionnel" (incluant le lissage des devis signés non encore facturés sur 30 jours).
 
 ## 🚧 Ce qu'il reste à faire
-*   **Notes de Frais avec OCR** : Développer la brique de notes de frais pour les salariés (scanner le ticket de caisse, extraire le montant/TVA automatiquement, et l'envoyer en validation avant remboursement).
+*   **Paiement Fournisseurs SEPA** : Étendre l'export SEPA (actuellement utilisé pour les Notes de Frais) au paiement groupé des factures fournisseurs.
 
 ## 💡 Idées d'amélioration et Nouvelles Fonctionnalités
 *   **Appariement des Paies** : Permettre le lettrage automatique des lignes de virement "Salaires" avec les fiches de paie générées par le module RH.

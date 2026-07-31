@@ -19,7 +19,9 @@ Le module **Ressources Humaines (RH)** est l'un des piliers centraux de Batistac
     *   **Subrogation** : Calcul automatique des Indemnités Journalières lors d'un arrêt, génération de l'attestation de salaire PDF.
     *   **Affiliation** : Génération du bulletin PRO BTP automatique post-onboarding.
 *   **Paie & Temps** : `PayrollGenerationService` consolide les variables de paie en fin de mois (heures de base, heures supplémentaires, absences, primes). Génération d'un export mensuel CSV des heures et de Fiches de Paie Pro Forma (estimatives).
-*   **Notes de Frais & OCR** : Workflow complet de soumission. Moteur OCR (`GoogleCloudVisionOcrService`) intégré pour l'extraction automatique des montants et catégorisation depuis les tickets.
+*   **Notes de Frais & OCR** : Workflow complet de soumission. Moteur OCR (`GoogleCloudVisionOcrService`) intégré pour l'extraction automatique des montants et catégorisation depuis les tickets. Support natif des factures PDF multi-pages (Issue #144).
+    *   Gestion du moyen de paiement (Carte Personnelle ou Carte Corporate). Les dépenses par carte corpo sont automatiquement exclues du montant à rembourser au salarié (Issue #143).
+*   **Export SEPA** : Génération automatique de fichiers de virement SEPA (pain.001.001.03) pour le remboursement groupé des notes de frais validées (Issue #142).
 *   **Signature Électronique** : API DocuSeal intégrée pour les contrats.
 
 ### 3. Observers & Événements (`app/Observers/RH`)
@@ -40,7 +42,4 @@ Le module **Ressources Humaines (RH)** est l'un des piliers centraux de Batistac
 
 ## 💡 Idées d'amélioration et Nouvelles Fonctionnalités
 *   **Intégration DSN complète** : Déclaration Sociale Nominative via API net-entreprises.
-*   **Export Comptable & SEPA** : Générer automatiquement un fichier de virement SEPA pour le remboursement groupé des notes de frais validées.
-*   **Rapprochement Bancaire (Cartes Corpo)** : Intégrer une API (Bridge/Plaid) pour réconcilier automatiquement les dépenses des cartes "Corporate" de l'entreprise avec les tickets scannés par les salariés.
-*   **OCR Multi-Pages & PDF** : Étendre le support OCR pour traiter les factures PDF multi-pages, et pas uniquement les photos JPEG de tickets.
 *   **Avances sur Frais** : Permettre aux salariés de demander une avance budgétaire pour un grand déplacement à venir, avec suivi et déduction automatique lors de la saisie de la note de frais finale.
