@@ -43,3 +43,4 @@ Le module **Ressources Humaines (RH)** est l'un des piliers centraux de Batistac
 ## 💡 Idées d'amélioration et Nouvelles Fonctionnalités
 *   **Intégration DSN complète** : Déclaration Sociale Nominative via API net-entreprises.
 *   **Avances sur Frais** : Permettre aux salariés de demander une avance budgétaire pour un grand déplacement à venir, avec suivi et déduction automatique lors de la saisie de la note de frais finale.
+*   **Refonte du Dashboard Ressources Humaines (Widgets Avancés)** : Intégration de `laboiteacode/filament-dashboard-widgets` pour afficher le volume d'heures supplémentaires (Variance), la conformité légale CACES/Médicale (Goal), la répartition des contrats (Composition) et les demandes en attente (Detail List).

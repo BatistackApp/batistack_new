@@ -43,3 +43,4 @@ Le cœur regorge de services essentiels déjà implémentés et fonctionnels :
 ## 💡 Idées d'amélioration et Nouvelles Fonctionnalités
 *   **Gestion Documentaire Complète** : Interface d'arborescence GED pour visualiser et classer facilement tous les PDF générés par le `DocumentService`.
 *   **Workflow Approbations Multiples** : Permettre d'avoir plusieurs signataires sur un même document via le `SignatureService`.
+*   **Refonte du Dashboard (Widgets Avancés)** : Intégrer le package `laboiteacode/filament-dashboard-widgets` pour ajouter des widgets professionnels sur le panel Core (Suivi des limites d'APIs externes, tendance des signatures numériques sur 30 jours, jauge de progression de l'onboarding et logs des dernières activités critiques).

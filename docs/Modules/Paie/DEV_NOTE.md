@@ -38,3 +38,4 @@ Le module **Paie** centralise l'édition et le calcul des bulletins de salaire (
 *   **Gestion des Congés Payés et Absences** : Interfacer encore plus profondément avec le module RH pour déduire automatiquement les jours d'absence (maladie, CP) sur le bulletin.
 *   **Simulation de Paie** : Créer un outil Brut -> Net ou Net -> Brut pour prévoir le coût employeur d'une embauche ou d'une augmentation.
 *   **Multi-Conventions Collectives** : Le système supportant déjà plusieurs profils, il suffirait de créer (seeder) les profils "Ouvriers" et "Cadres" pour compléter l'offre.
+*   **Refonte du Dashboard Gestion Sociale (Widgets Avancés)** : Intégration de `laboiteacode/filament-dashboard-widgets` pour afficher la variance de la masse salariale, la structure des coûts (Composition), l'avancement de la campagne de paie (Goal) et le suivi des acomptes (Detail List).

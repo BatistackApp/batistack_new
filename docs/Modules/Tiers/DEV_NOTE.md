@@ -34,3 +34,4 @@ Le module **Tiers** est le cœur de la relation externe de Batistack. Il central
 
 ## 💡 Idées d'amélioration et Nouvelles Fonctionnalités
 *   **Signature Électronique (Sous-Traitants)** : Intégration avancée de la signature électronique pour les devis et les marchés de sous-traitance (ex: DocuSeal) afin de contractualiser plus rapidement avec les partenaires externes.
+*   **Refonte du Dashboard CRM (Widgets Avancés)** : Intégration de `laboiteacode/filament-dashboard-widgets` pour afficher les alertes de conformité (Detail List), l'acquisition client (Variance), la qualité de la base (Goal) et la répartition du portefeuille (Composition).

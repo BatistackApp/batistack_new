@@ -31,3 +31,6 @@ Le module **Flottes** gère l'ensemble du parc automobile de l'entreprise (camio
 
 ## 🚀 Ce qu'il reste à faire
 - **Géolocalisation (GPS Tracking)** : Intégration avec des boîtiers télématiques GPS (ex: Webfleet, Geotab) pour localiser les véhicules en temps réel et remonter les anomalies de conduite (freinages brusques, survitesse).
+
+## 💡 Idées d'amélioration et Nouvelles Fonctionnalités
+- **Refonte du Dashboard Gestionnaire de Parc (Widgets Avancés)** : Intégration de `laboiteacode/filament-dashboard-widgets` pour afficher le dépassement kilométrique (Leasing), la variance des frais de carburant/TCO, la composition du parc et les alertes d'entretien.

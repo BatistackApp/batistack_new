@@ -32,3 +32,4 @@ Le module **Banque** gère la trésorerie de l'entreprise. Il permet de connecte
 ## 💡 Idées d'amélioration et Nouvelles Fonctionnalités
 *   **Appariement des Paies** : Permettre le lettrage automatique des lignes de virement "Salaires" avec les fiches de paie générées par le module RH.
 *   **Module "Comptabilité" complet** : (Mis en attente) Prévoir à terme la création d'un module dédié pour générer les écritures comptables et les exports standards (FEC, Sage, Cegid, etc.) destinés à l'expert-comptable.
+*   **Refonte du Dashboard Financier (Widgets Avancés)** : Intégration de `laboiteacode/filament-dashboard-widgets` pour afficher la variance de la trésorerie, la comparaison Entrées/Sorties, la répartition des dépenses et le taux de rapprochement bancaire.
