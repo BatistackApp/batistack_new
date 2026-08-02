@@ -50,6 +50,12 @@ class SignatureRequestedMail extends Mailable
      */
     public function attachments(): array
     {
+        if ($this->documentPath) {
+            return [
+                Attachment::fromPath($this->documentPath)
+            ];
+        }
+        
         return [];
     }
 }

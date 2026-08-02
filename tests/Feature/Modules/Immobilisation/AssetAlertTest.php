@@ -74,12 +74,12 @@ it('generates tco alerts when maintenance exceeds vnc', function () {
     $ids = $asset->depreciations()->orderBy('period_date')->take(4)->pluck('id');
     $asset->depreciations()->whereIn('id', $ids)->update(['is_passed' => true]);
 
-    // Add maintenance of 3000
+    // Add maintenance of 15000 to ensure cost > max possible VNC (10000)
     AssetMaintenance::create([
         'fixed_asset_id' => $asset->id,
         'maintenance_date' => now(),
         'type' => 'curative',
-        'cost_ht' => 3000,
+        'cost_ht' => 15000,
         'description' => 'Grosse panne moteur',
     ]);
 

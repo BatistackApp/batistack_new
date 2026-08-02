@@ -93,7 +93,13 @@ class PayrollGenerationService
                     
                     if ($start <= $end) {
                         // Count weekdays
-                        $absenceDays += $start->diffInDaysFiltered(fn (Carbon $date) => $date->isWeekday(), $end) + 1;
+                        $days = 0;
+                        for ($date = $start->copy(); $date->lte($end); $date->addDay()) {
+                            if ($date->isWeekday()) {
+                                $days++;
+                            }
+                        }
+                        $absenceDays += $days;
                     }
                 }
 

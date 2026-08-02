@@ -83,8 +83,8 @@ test('génère correctement la valorisation en PDF', function () {
     $fullPath = $this->service->generateValuationPdf();
 
     // Vérifier que le fichier a été généré
-    expect($fullPath)->toBeFile();
+    expect(\Illuminate\Support\Facades\Storage::disk('public')->exists($fullPath))->toBeTrue();
 
     // Nettoyage
-    @unlink($fullPath);
+    \Illuminate\Support\Facades\Storage::disk('public')->delete($fullPath);
 });
