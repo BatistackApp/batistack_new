@@ -31,7 +31,8 @@ Le module **Articles & Stocks** permet la gestion complète de l'inventaire, du 
 *   100% de succès sur la suite de tests (125 tests). Couverture complète de la logique métier, du calcul du PUMP, et de la prévention des stocks négatifs.
 
 ## 🚧 Ce qu'il reste à faire
-*   **Tableau de Bord Logistique** : Le Dashboard logistique (graphiques des mouvements, répartition par entrepôt) mentionné précédemment n'est pas implémenté dans l'arborescence Filament actuelle.
+*   **Tableau de Bord Logistique** : Le Dashboard logistique complet n'est pas encore finalisé. Il nécessitera l'intégration de widgets avancés (via le package `laboiteacode`) pour suivre la valeur d'inventaire, les ruptures et la rotation.
 
 ## 💡 Idées d'amélioration et Nouvelles Fonctionnalités
 *   **Prévisions par IA** : Anticiper les ruptures de stock selon les chantiers planifiés et la saisonnalité.
+*   **Refonte du Dashboard Logistique (Widgets Avancés)** : Intégration de `laboiteacode/filament-dashboard-widgets` pour afficher la répartition par entrepôt, les alertes de stock minimal, et la variance du PUMP.

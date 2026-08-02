@@ -36,3 +36,4 @@ Le module **Commerce** couvre l'intégralité du cycle de vente et d'achat de l'
 ## 💡 Idées d'amélioration et Nouvelles Fonctionnalités
 *   **Paiement en ligne & Relances automatiques** : Intégrer un lien de paiement Stripe ou prélèvement SEPA (GoCardless) en bas de la facture électronique, couplé à un robot qui relance par email les impayés à J+3, J+15.
 *   **Bibliothèques d'Ouvrages** : Interfacer le devis avec Batiprix ou une autre bibliothèque d'ouvrages BTP standardisée pour accélérer le chiffrage.
+*   **Refonte du Dashboard Commercial (Widgets Avancés)** : Intégration de `laboiteacode/filament-dashboard-widgets` pour afficher le CA (Variance), le funnel de conversion (Devis -> Facture), la progression des objectifs et les alertes d'impayés.
