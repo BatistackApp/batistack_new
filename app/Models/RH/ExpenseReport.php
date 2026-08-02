@@ -17,6 +17,7 @@ class ExpenseReport extends Model
         'year',
         'status',
         'total_amount',
+        'advance_deducted',
     ];
 
     protected $casts = [
@@ -31,5 +32,15 @@ class ExpenseReport extends Model
     public function items(): HasMany
     {
         return $this->hasMany(ExpenseItem::class);
+    }
+
+    public function advances(): HasMany
+    {
+        return $this->hasMany(ExpenseAdvance::class);
+    }
+
+    public function getAmountToPayAttribute(): float
+    {
+        return max(0, $this->total_amount - $this->advance_deducted);
     }
 }

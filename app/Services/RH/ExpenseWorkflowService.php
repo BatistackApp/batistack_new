@@ -31,25 +31,38 @@ class ExpenseWorkflowService
      */
     public function validate(ExpenseReport $report): void
     {
-        if ($report->status !== ExpenseReportStatus::SUBMITTED) {
-            throw new Exception("Le rapport doit être soumis avant de pouvoir être validé.");
-        }
+        \Illuminate\Support\Facades\DB::transaction(function () use (&$report) {
+            $report = ExpenseReport::where('id', $report->id)->lockForUpdate()->firstOrFail();
 
-        $pendingItems = $report->items()->where('status', ExpenseItemStatus::PENDING)->count();
+            if ($report->status !== ExpenseReportStatus::SUBMITTED) {
+                throw new Exception("Le rapport doit être soumis avant de pouvoir être validé.");
+            }
 
-        if ($pendingItems > 0) {
-            throw new Exception("Impossible de valider la note de frais : il reste {$pendingItems} ligne(s) en attente.");
-        }
+            $pendingItems = $report->items()->where('status', ExpenseItemStatus::PENDING)->count();
 
-        // Calculate total amount based ONLY on approved items
-        $totalAmount = $report->items()
-            ->where('status', ExpenseItemStatus::APPROVED)
-            ->sum('amount_ttc');
+            if ($pendingItems > 0) {
+                throw new Exception("Impossible de valider la note de frais : il reste {$pendingItems} ligne(s) en attente.");
+            }
 
-        $report->update([
-            'status' => ExpenseReportStatus::VALIDATED,
-            'total_amount' => $totalAmount,
-        ]);
+            // Calculate total amount based ONLY on approved items
+            $totalAmount = $report->items()
+                ->where('status', ExpenseItemStatus::APPROVED)
+                ->sum('amount_ttc');
+
+            // Handle attached advances
+            $advances = $report->advances()->where('status', \App\Enums\RH\ExpenseAdvanceStatus::PAID)->lockForUpdate()->get();
+            $advanceDeducted = $advances->sum('amount');
+
+            foreach ($advances as $advance) {
+                $advance->update(['status' => \App\Enums\RH\ExpenseAdvanceStatus::DEDUCTED]);
+            }
+
+            $report->update([
+                'status' => ExpenseReportStatus::VALIDATED,
+                'total_amount' => $totalAmount,
+                'advance_deducted' => $advanceDeducted,
+            ]);
+        });
     }
 
     /**

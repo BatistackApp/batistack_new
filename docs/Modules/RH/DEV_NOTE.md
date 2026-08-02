@@ -21,7 +21,8 @@ Le module **Ressources Humaines (RH)** est l'un des piliers centraux de Batistac
 *   **Paie & Temps** : `PayrollGenerationService` consolide les variables de paie en fin de mois (heures de base, heures supplémentaires, absences, primes). Génération d'un export mensuel CSV des heures et de Fiches de Paie Pro Forma (estimatives).
 *   **Notes de Frais & OCR** : Workflow complet de soumission. Moteur OCR (`GoogleCloudVisionOcrService`) intégré pour l'extraction automatique des montants et catégorisation depuis les tickets. Support natif des factures PDF multi-pages (Issue #144).
     *   Gestion du moyen de paiement (Carte Personnelle ou Carte Corporate). Les dépenses par carte corpo sont automatiquement exclues du montant à rembourser au salarié (Issue #143).
-*   **Export SEPA** : Génération automatique de fichiers de virement SEPA (pain.001.001.03) pour le remboursement groupé des notes de frais validées (Issue #142).
+    *   **Avances sur Frais** : Les salariés peuvent demander des avances budgétaires (`ExpenseAdvance`), qui sont virées via SEPA. Lors de la saisie de la note de frais finale, l'avance est automatiquement déduite du reste à payer (Issue #145).
+*   **Export SEPA** : Génération automatique de fichiers de virement SEPA (pain.001.001.03) pour le remboursement groupé des notes de frais validées (Issue #142) et le paiement des avances sur frais.
 *   **Signature Électronique** : API DocuSeal intégrée pour les contrats.
 
 ### 3. Observers & Événements (`app/Observers/RH`)
@@ -42,5 +43,4 @@ Le module **Ressources Humaines (RH)** est l'un des piliers centraux de Batistac
 
 ## 💡 Idées d'amélioration et Nouvelles Fonctionnalités
 *   **Intégration DSN complète** : Déclaration Sociale Nominative via API net-entreprises.
-*   **Avances sur Frais** : Permettre aux salariés de demander une avance budgétaire pour un grand déplacement à venir, avec suivi et déduction automatique lors de la saisie de la note de frais finale.
 *   **Refonte du Dashboard Ressources Humaines (Widgets Avancés)** : Intégration de `laboiteacode/filament-dashboard-widgets` pour afficher le volume d'heures supplémentaires (Variance), la conformité légale CACES/Médicale (Goal), la répartition des contrats (Composition) et les demandes en attente (Detail List).

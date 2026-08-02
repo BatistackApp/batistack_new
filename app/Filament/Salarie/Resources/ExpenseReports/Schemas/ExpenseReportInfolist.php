@@ -2,6 +2,9 @@
 
 namespace App\Filament\Salarie\Resources\ExpenseReports\Schemas;
 
+use Carbon\Carbon;
+use Filament\Infolists\Components\TextEntry;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 
 class ExpenseReportInfolist
@@ -10,17 +13,17 @@ class ExpenseReportInfolist
     {
         return $schema
             ->components([
-                \Filament\Infolists\Components\Section::make('Détails de la note de frais')
+                Section::make('Détails de la note de frais')
                     ->schema([
-                        \Filament\Infolists\Components\TextEntry::make('month')
+                        TextEntry::make('month')
                             ->label('Mois')
-                            ->formatStateUsing(fn ($state) => \Carbon\Carbon::create()->day(1)->month($state)->translatedFormat('F')),
-                        \Filament\Infolists\Components\TextEntry::make('year')
+                            ->formatStateUsing(fn ($state) => Carbon::create()->day(1)->month($state)->translatedFormat('F')),
+                        TextEntry::make('year')
                             ->label('Année'),
-                        \Filament\Infolists\Components\TextEntry::make('status')
+                        TextEntry::make('status')
                             ->label('Statut')
                             ->badge(),
-                        \Filament\Infolists\Components\TextEntry::make('total_amount')
+                        TextEntry::make('total_amount')
                             ->label('Montant Total')
                             ->money('EUR'),
                     ])->columns(4),

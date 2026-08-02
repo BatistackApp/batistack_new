@@ -12,8 +12,24 @@ class ListExpenseReports extends ListRecords
 
     protected function getHeaderActions(): array
     {
+        $advanceIds = [];
+
         return [
-            CreateAction::make(),
+            CreateAction::make()
+                ->mutateFormDataUsing(function (array $data) use (&$advanceIds) {
+                    $data['employee_id'] = auth()->user()->getEmployeeIdOrFail();
+                    
+                    $advanceIds = $data['advance_ids'] ?? [];
+                    unset($data['advance_ids']);
+                    
+                    return $data;
+                })
+                ->after(function (\Illuminate\Database\Eloquent\Model $record) use (&$advanceIds) {
+                    if (!empty($advanceIds)) {
+                        \App\Models\RH\ExpenseAdvance::whereIn('id', $advanceIds)
+                            ->update(['expense_report_id' => $record->id]);
+                    }
+                }),
         ];
     }
 }

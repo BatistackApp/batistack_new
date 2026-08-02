@@ -2,6 +2,10 @@
 
 namespace App\Filament\Salarie\Resources\ExpenseReports\Schemas;
 
+use Carbon\Carbon;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 
 class ExpenseReportForm
@@ -10,22 +14,34 @@ class ExpenseReportForm
     {
         return $schema
             ->components([
-                \Filament\Forms\Components\Section::make('Informations de la note')
+                Section::make('Informations de la note')
+                    ->columnSpanFull()
                     ->schema([
-                        \Filament\Forms\Components\Select::make('month')
+                        Select::make('month')
                             ->label('Mois')
                             ->options(
-                                collect(range(1, 12))->mapWithKeys(fn ($m) => [$m => \Carbon\Carbon::create()->day(1)->month($m)->translatedFormat('F')])->toArray()
+                                collect(range(1, 12))->mapWithKeys(fn ($m) => [$m => Carbon::create()->day(1)->month($m)->translatedFormat('F')])->toArray()
                             )
-                            ->disabled()
                             ->required(),
-                        \Filament\Forms\Components\TextInput::make('year')
+                        TextInput::make('year')
                             ->label('Année')
-                            ->disabled()
                             ->required(),
-                        \Filament\Forms\Components\TextInput::make('status')
+                        TextInput::make('status')
                             ->label('Statut')
                             ->disabled(),
+                        Select::make('advance_ids')
+                            ->label('Avances à déduire')
+                            ->multiple()
+                            ->options(function () {
+                                $employeeId = \App\Models\RH\Employee::where('user_id', auth()->id())->value('id');
+                                return \App\Models\RH\ExpenseAdvance::where('employee_id', $employeeId)
+                                             ->where('status', \App\Enums\RH\ExpenseAdvanceStatus::PAID)
+                                             ->pluck('reason', 'id');
+                            })
+                            ->preload()
+                            ->searchable()
+                            ->columnSpanFull()
+                            ->helperText("Sélectionnez les avances déjà versées qui couvrent ce déplacement."),
                     ])->columns(3),
             ]);
     }

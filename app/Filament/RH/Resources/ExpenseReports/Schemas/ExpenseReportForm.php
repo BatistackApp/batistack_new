@@ -18,6 +18,7 @@ class ExpenseReportForm
                     ->getOptionLabelFromRecordUsing(fn ($record) => "{$record->first_name} {$record->last_name}")
                     ->preload()
                     ->searchable()
+                    ->live()
                     ->required(),
                 TextInput::make('month')
                     ->label('Mois')
@@ -43,6 +44,18 @@ class ExpenseReportForm
                     ->numeric()
                     ->suffix('€')
                     ->default(0.0),
+                Select::make('advance_ids')
+                    ->label('Avances à déduire')
+                    ->multiple()
+                    ->options(fn (\Filament\Forms\Get $get) => 
+                        \App\Models\RH\ExpenseAdvance::where('employee_id', $get('employee_id'))
+                            ->where('status', \App\Enums\RH\ExpenseAdvanceStatus::PAID)
+                            ->pluck('reason', 'id')
+                    )
+                    ->preload()
+                    ->searchable()
+                    ->columnSpanFull()
+                    ->helperText("Sélectionnez les avances déjà versées au salarié qui couvrent ce déplacement."),
             ]);
     }
 }
