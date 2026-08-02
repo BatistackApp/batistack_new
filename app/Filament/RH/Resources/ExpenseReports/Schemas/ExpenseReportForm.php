@@ -44,15 +44,13 @@ class ExpenseReportForm
                     ->numeric()
                     ->suffix('€')
                     ->default(0.0),
-                Select::make('advances')
+                Select::make('advance_ids')
                     ->label('Avances à déduire')
                     ->multiple()
-                    ->relationship(
-                        name: 'advances', 
-                        titleAttribute: 'reason',
-                        modifyQueryUsing: fn (\Illuminate\Database\Eloquent\Builder $query, \Filament\Forms\Get $get) => 
-                            $query->where('employee_id', $get('employee_id'))
-                                  ->where('status', \App\Enums\RH\ExpenseAdvanceStatus::PAID)
+                    ->options(fn (\Filament\Forms\Get $get) => 
+                        \App\Models\RH\ExpenseAdvance::where('employee_id', $get('employee_id'))
+                            ->where('status', \App\Enums\RH\ExpenseAdvanceStatus::PAID)
+                            ->pluck('reason', 'id')
                     )
                     ->preload()
                     ->searchable()

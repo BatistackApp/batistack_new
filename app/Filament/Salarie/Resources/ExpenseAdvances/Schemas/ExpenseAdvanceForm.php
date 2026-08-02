@@ -10,21 +10,33 @@ class ExpenseAdvanceForm
     {
         return $schema
             ->components([
-                \Filament\Forms\Components\TextInput::make('amount')
-                    ->numeric()
-                    ->required()
-                    ->prefix('€')
-                    ->label('Montant demandé'),
-
-                \Filament\Forms\Components\DatePicker::make('request_date')
-                    ->required()
-                    ->default(now())
-                    ->label('Date de la demande'),
-
-                \Filament\Forms\Components\Textarea::make('reason')
-                    ->required()
+                \Filament\Schemas\Components\Section::make('Détails de la demande')
                     ->columnSpanFull()
-                    ->label('Motif du déplacement / Dépense'),
+                    ->description('Veuillez renseigner le montant, la date prévue et le motif de votre avance sur frais.')
+                    ->icon('heroicon-o-currency-euro')
+                    ->schema([
+                        \Filament\Forms\Components\TextInput::make('amount')
+                            ->numeric()
+                            ->minValue(0.01)
+                            ->required()
+                            ->prefix('€')
+                            ->label('Montant demandé')
+                            ->columnSpan(1),
+
+                        \Filament\Forms\Components\DatePicker::make('request_date')
+                            ->required()
+                            ->default(now())
+                            ->label('Date de la demande')
+                            ->columnSpan(1),
+
+                        \Filament\Forms\Components\Textarea::make('reason')
+                            ->required()
+                            ->columnSpanFull()
+                            ->rows(3)
+                            ->label('Motif du déplacement / Dépense')
+                            ->placeholder('Ex: Déplacement client Paris, Réservation Hôtel, etc.'),
+                    ])
+                    ->columns(2),
             ]);
     }
 }

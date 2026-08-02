@@ -29,18 +29,15 @@ class ExpenseReportForm
                         TextInput::make('status')
                             ->label('Statut')
                             ->disabled(),
-                        Select::make('advances')
+                        Select::make('advance_ids')
                             ->label('Avances à déduire')
                             ->multiple()
-                            ->relationship(
-                                name: 'advances',
-                                titleAttribute: 'reason',
-                                modifyQueryUsing: function (\Illuminate\Database\Eloquent\Builder $query) {
-                                    $employeeId = \App\Models\RH\Employee::where('user_id', auth()->id())->value('id');
-                                    return $query->where('employee_id', $employeeId)
-                                                 ->where('status', \App\Enums\RH\ExpenseAdvanceStatus::PAID);
-                                }
-                            )
+                            ->options(function () {
+                                $employeeId = \App\Models\RH\Employee::where('user_id', auth()->id())->value('id');
+                                return \App\Models\RH\ExpenseAdvance::where('employee_id', $employeeId)
+                                             ->where('status', \App\Enums\RH\ExpenseAdvanceStatus::PAID)
+                                             ->pluck('reason', 'id');
+                            })
                             ->preload()
                             ->searchable()
                             ->columnSpanFull()

@@ -52,7 +52,7 @@ class ExpenseAdvanceResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        $employeeId = \App\Models\RH\Employee::where('user_id', auth()->id())->value('id');
+        $employeeId = auth()->user()->getEmployeeIdOrFail();
         return parent::getEloquentQuery()->where('employee_id', $employeeId);
     }
 }

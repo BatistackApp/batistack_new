@@ -11,8 +11,7 @@ class CreateExpenseAdvance extends CreateRecord
 
     protected function mutateFormDataBeforeCreate(array $data): array
     {
-        $employeeId = \App\Models\RH\Employee::where('user_id', auth()->id())->value('id');
-        $data['employee_id'] = $employeeId;
+        $data['employee_id'] = auth()->user()->getEmployeeIdOrFail();
         $data['status'] = \App\Enums\RH\ExpenseAdvanceStatus::PENDING;
 
         return $data;

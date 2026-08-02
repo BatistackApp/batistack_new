@@ -2,7 +2,10 @@
 
 namespace App\Enums\RH;
 
-enum ExpenseAdvanceStatus: string
+use Filament\Support\Contracts\HasColor;
+use Filament\Support\Contracts\HasLabel;
+
+enum ExpenseAdvanceStatus: string implements HasColor, HasLabel
 {
     case PENDING = 'PENDING';
     case APPROVED = 'APPROVED';

@@ -40,6 +40,10 @@ it('calculates the correct amount to pay with deducted advances', function () {
         'status' => ExpenseItemStatus::APPROVED,
     ]);
 
+    // Verify constraints before linking
+    expect($advance->employee_id)->toBe($report->employee_id)
+        ->and($advance->status)->toBe(ExpenseAdvanceStatus::PAID);
+
     // Link advance to report
     $advance->update(['expense_report_id' => $report->id]);
 

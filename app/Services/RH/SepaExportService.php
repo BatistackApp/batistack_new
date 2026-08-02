@@ -112,6 +112,9 @@ class SepaExportService
             if (empty($employee->iban) || empty($employee->bic)) {
                 throw new \Exception("L'employé {$employee->first_name} {$employee->last_name} n'a pas d'IBAN ou de BIC renseigné sur sa fiche.");
             }
+            if ($advance->amount <= 0) {
+                continue;
+            }
 
             $amountInCents = (int) round($advance->amount * 100);
 
