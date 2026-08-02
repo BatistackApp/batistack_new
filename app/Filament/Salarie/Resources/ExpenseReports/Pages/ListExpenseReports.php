@@ -13,7 +13,12 @@ class ListExpenseReports extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            CreateAction::make(),
+            CreateAction::make()
+                ->mutateFormDataUsing(function (array $data): array {
+                    $employeeId = \App\Models\RH\Employee::where('user_id', auth()->id())->value('id');
+                    $data['employee_id'] = $employeeId;
+                    return $data;
+                }),
         ];
     }
 }

@@ -46,9 +46,18 @@ class ExpenseWorkflowService
             ->where('status', ExpenseItemStatus::APPROVED)
             ->sum('amount_ttc');
 
+        // Handle attached advances
+        $advances = $report->advances()->where('status', \App\Enums\RH\ExpenseAdvanceStatus::PAID)->get();
+        $advanceDeducted = $advances->sum('amount');
+
+        foreach ($advances as $advance) {
+            $advance->update(['status' => \App\Enums\RH\ExpenseAdvanceStatus::DEDUCTED]);
+        }
+
         $report->update([
             'status' => ExpenseReportStatus::VALIDATED,
             'total_amount' => $totalAmount,
+            'advance_deducted' => $advanceDeducted,
         ]);
     }
 

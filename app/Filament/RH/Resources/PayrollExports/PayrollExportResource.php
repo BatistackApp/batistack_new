@@ -22,6 +22,10 @@ class PayrollExportResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
+    protected static ?string $navigationLabel = 'Exports Paie';
+    protected static ?string $modelLabel = 'Export Paie';
+    protected static ?string $pluralModelLabel = 'Exports Paie';
+
     public static function form(Schema $schema): Schema
     {
         return PayrollExportForm::configure($schema);
