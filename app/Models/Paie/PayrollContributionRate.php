@@ -15,6 +15,8 @@ class PayrollContributionRate extends Model
         'base_formula',
         'is_deductible',
         'is_fiscally_reintegrated',
+        'valid_from',
+        'valid_to',
     ];
 
     protected $casts = [
@@ -23,7 +25,20 @@ class PayrollContributionRate extends Model
         'is_deductible' => 'boolean',
         'is_fiscally_reintegrated' => 'boolean',
         'base_formula' => \App\Enums\Paie\ContributionBaseFormula::class,
+        'valid_from' => 'date',
+        'valid_to' => 'date',
     ];
+
+    public function scopeValidAt($query, \Carbon\Carbon $date)
+    {
+        return $query->where(function ($q) use ($date) {
+            $q->whereNull('valid_from')
+              ->orWhere('valid_from', '<=', $date);
+        })->where(function ($q) use ($date) {
+            $q->whereNull('valid_to')
+              ->orWhere('valid_to', '>=', $date);
+        });
+    }
 
     public function profile()
     {
