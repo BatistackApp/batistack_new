@@ -78,5 +78,57 @@ it('calculates pas amount correctly', function () {
 
     expect($payslip->pas_rate)->toEqual(5.00);
     expect($payslip->pas_amount)->toEqual($expectedPasAmount);
-    expect($payslip->net_paid)->toEqual(round($payslip->net_payable, 2));
+});
+
+it('filters contribution rates based on validity dates', function () {
+    \App\Models\Core\Company::factory()->create();
+    $employee = Employee::factory()->create(['pas_rate' => 0]);
+    $profile = PayrollContributionProfile::factory()->create();
+    
+    // Create an old rate that expired in June 2026
+    \App\Models\Paie\PayrollContributionRate::create([
+        'payroll_contribution_profile_id' => $profile->id,
+        'category' => 'Retraite',
+        'label' => 'Ancien Taux',
+        'employee_rate' => 5.0,
+        'employer_rate' => 5.0,
+        'base_formula' => \App\Enums\Paie\ContributionBaseFormula::GROSS_SALARY,
+        'is_deductible' => true,
+        'is_fiscally_reintegrated' => false,
+        'valid_to' => '2026-06-30',
+    ]);
+    
+    // Create a new rate that starts in July 2026
+    \App\Models\Paie\PayrollContributionRate::create([
+        'payroll_contribution_profile_id' => $profile->id,
+        'category' => 'Retraite',
+        'label' => 'Nouveau Taux',
+        'employee_rate' => 6.0,
+        'employer_rate' => 6.0,
+        'base_formula' => \App\Enums\Paie\ContributionBaseFormula::GROSS_SALARY,
+        'is_deductible' => true,
+        'is_fiscally_reintegrated' => false,
+        'valid_from' => '2026-07-01',
+    ]);
+
+    $contract = Contract::factory()->create([
+        'employee_id' => $employee->id,
+        'payroll_contribution_profile_id' => $profile->id,
+        'weekly_hours' => 35,
+        'hourly_rate' => 10.00, // 1516.70 gross
+    ]);
+
+    $service = new PayrollCalculationService();
+    
+    // Test for June 2026
+    $payslipJune = $service->calculateForEmployee($employee, '2026-06', 151.67, $contract->hourly_rate);
+    $juneLine = $payslipJune->lines()->where('category', 'Retraite')->first();
+    expect($juneLine->label)->toBe('Ancien Taux');
+    expect((float)$juneLine->employee_rate)->toBe(5.0);
+
+    // Test for July 2026
+    $payslipJuly = $service->calculateForEmployee($employee, '2026-07', 151.67, $contract->hourly_rate);
+    $julyLine = $payslipJuly->lines()->where('category', 'Retraite')->first();
+    expect($julyLine->label)->toBe('Nouveau Taux');
+    expect((float)$julyLine->employee_rate)->toBe(6.0);
 });

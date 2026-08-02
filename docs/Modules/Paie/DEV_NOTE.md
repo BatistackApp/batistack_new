@@ -6,7 +6,7 @@ Le module **Paie** centralise l'édition et le calcul des bulletins de salaire (
 ## 📌 État Actuel (Ce qui est fait)
 
 ### 1. Modèles de Données & Enums (`app/Models/Paie` & `app/Enums/Paie`)
-*   **Bulletin & Cotisations** : `Payslip`, `PayslipLine`, `PayrollContributionProfile`, `PayrollContributionRate`.
+*   **Bulletin & Cotisations** : `Payslip`, `PayslipLine`, `PayrollContributionProfile`, `PayrollContributionRate` (supporte le versionnement historique avec `valid_from` et `valid_to`).
 *   **Avances** : `AdvancePayment`.
 *   **Enums strictes** : `PayslipStatus`, `AdvancePaymentStatus`, `AdvancePaymentType`, `ContributionBaseFormula`.
 
@@ -34,7 +34,6 @@ Le module **Paie** centralise l'édition et le calcul des bulletins de salaire (
 *   Le module paie de base est d'ores et déjà entièrement opérationnel, incluant des fonctionnalités comptables avancées.
 
 ## 💡 Idées d'amélioration et Nouvelles Fonctionnalités
-*   **Versionnement des Taux de Cotisation** : Ajouter des dates de validité (`valid_from`, `valid_to`) sur les taux pour conserver l'historique lors des changements de barèmes sans dupliquer les profils.
 *   **Gestion des Congés Payés et Absences** : Interfacer encore plus profondément avec le module RH pour déduire automatiquement les jours d'absence (maladie, CP) sur le bulletin.
 *   **Simulation de Paie** : Créer un outil Brut -> Net ou Net -> Brut pour prévoir le coût employeur d'une embauche ou d'une augmentation.
 *   **Multi-Conventions Collectives** : Le système supportant déjà plusieurs profils, il suffirait de créer (seeder) les profils "Ouvriers" et "Cadres" pour compléter l'offre.

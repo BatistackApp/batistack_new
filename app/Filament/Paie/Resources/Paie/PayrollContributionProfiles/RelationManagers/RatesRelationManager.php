@@ -60,6 +60,12 @@ class RatesRelationManager extends RelationManager
                     ->label('Déductible ?')
                     ->default(true)
                     ->required(),
+                Forms\Components\DatePicker::make('valid_from')
+                    ->label('Valide du')
+                    ->nullable(),
+                Forms\Components\DatePicker::make('valid_to')
+                    ->label('Valide jusqu\'au')
+                    ->nullable(),
             ]);
     }
 
@@ -87,6 +93,16 @@ class RatesRelationManager extends RelationManager
                 IconColumn::make('is_deductible')
                     ->label('Déductible ?')
                     ->boolean(),
+                TextColumn::make('valid_from')
+                    ->label('Du')
+                    ->date('d/m/Y')
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: false),
+                TextColumn::make('valid_to')
+                    ->label('Au')
+                    ->date('d/m/Y')
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: false),
             ])
             ->filters([
                 //
