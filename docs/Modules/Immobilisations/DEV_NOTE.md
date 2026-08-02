@@ -35,3 +35,4 @@ Le module **Immobilisations** permet la gestion du patrimoine de l'entreprise (m
 
 ## 💡 Idées d'amélioration et Nouvelles Fonctionnalités
 *   **Gestion des Subventions d'Investissement** : Automatiser le traitement comptable (étalement) des subventions d'investissement liées aux immobilisations.
+*   **Refonte du Dashboard Patrimoine (Widgets Avancés)** : Intégration de `laboiteacode/filament-dashboard-widgets` pour afficher la VNC (Variance), la répartition par catégorie, la conformité VGP (Goal) et les alertes de rentabilité (Detail List).

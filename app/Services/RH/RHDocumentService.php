@@ -118,12 +118,13 @@ class RHDocumentService extends DocumentService
             'generated_at' => Carbon::now()->format('d/m/Y H:i'),
         ];
 
+        $data['position'] = 'landscape';
+
         return $this->generate(
             'pdf.rh.monthly_timesheet',
             $data,
             "releve_heures_{$employee->id}_{$year}_{$month}",
-            'rh/timesheets',
-            'landscape'
+            'rh/timesheets'
         );
     }
 

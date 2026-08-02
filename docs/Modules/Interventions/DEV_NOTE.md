@@ -35,3 +35,4 @@ Le module **Interventions** permet la gestion complète du service après-vente 
 *   **Tracking GPS des Camions** : Lier les interventions à la géolocalisation des flottes pour optimiser automatiquement les tournées des techniciens (calcul de l'itinéraire le plus court via l'API Google Maps ou OSRM).
 *   **QR Code Matériel** : Scanner directement les pièces de rechange depuis le camion avec l'appareil photo du smartphone pour les ajouter automatiquement à la liste des matériaux consommés.
 *   **Historique Prédictif** : Analyser la fréquence des pannes sur certains équipements clients pour proposer des contrats de maintenance préventifs de manière proactive (Machine Learning basique).
+*   **Refonte du Dashboard SAV (Widgets Avancés)** : Intégration de `laboiteacode/filament-dashboard-widgets` pour afficher la rentabilité du SAV (Variance), le respect des SLA (Goal), l'entonnoir des interventions (Funnel) et les alertes urgentes (Detail List).

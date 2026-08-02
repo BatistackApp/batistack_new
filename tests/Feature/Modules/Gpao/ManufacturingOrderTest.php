@@ -104,7 +104,7 @@ it('generates MRP requirements when manufacturing order is created', function ()
     expect((float) $req2->quantity_required)->toEqual(100.0);
 });
 
-it('consumes inventory when manufacturing order is in progress', function () {
+it('consumes inventory when manufacturing order is completed', function () {
     $order = ManufacturingOrder::create([
         'reference' => 'OF-002',
         'item_id' => $this->parentItem->id,
@@ -112,7 +112,7 @@ it('consumes inventory when manufacturing order is in progress', function () {
         'status' => ManufacturingStatus::DRAFT,
     ]);
 
-    $order->update(['status' => ManufacturingStatus::IN_PROGRESS]);
+    $order->update(['status' => ManufacturingStatus::COMPLETED]);
 
     // Vérifier les mouvements de stock OUT
     $movements = StockMouvement::whereHas('stock', function ($q) {

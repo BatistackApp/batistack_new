@@ -37,3 +37,4 @@ Le module **GPAO** a pour objectif de gérer les opérations de production ou d'
 
 ## 💡 Idées d'amélioration et Nouvelles Fonctionnalités
 *   **Traçabilité des Lots et Numéros de Série** : Associer des numéros de lot ou de série aux matières premières consommées et aux produits finis pour une traçabilité ascendante et descendante parfaite (indispensable pour certaines normes de qualité).
+*   **Refonte du Dashboard Atelier (Widgets Avancés)** : Intégration de `laboiteacode/filament-dashboard-widgets` pour afficher le TRS (Variance), le taux de qualité (Goal), l'état des OFs (Funnel) et les alertes de ruptures (Detail List).

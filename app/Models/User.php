@@ -54,6 +54,15 @@ class User extends Authenticatable implements FilamentUser
         return false;
     }
 
+    public function getEmployeeIdOrFail(): int
+    {
+        $employeeId = \App\Models\RH\Employee::where('user_id', $this->id)->value('id');
+        if (!$employeeId) {
+            throw new \Exception('Aucun employé lié à votre compte.');
+        }
+        return (int) $employeeId;
+    }
+
     /**
      * Get the attributes that should be cast.
      *

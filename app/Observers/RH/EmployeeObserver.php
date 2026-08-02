@@ -54,15 +54,16 @@ class EmployeeObserver
             $employee->user->updateQuietly(['email' => $employee->email]);
         }
 
-        // Si l'onboarding vient d'être complété
         if ($employee->wasChanged('onboarding_completed') && $employee->onboarding_completed) {
             try {
-                $pdfAbsolutePath = app(\App\Services\RH\RHDocumentService::class)->generateAffiliationMutuelle($employee);
+                $relativePath = app(\App\Services\RH\RHDocumentService::class)->generateAffiliationMutuelle($employee);
+                $disk = \App\Services\Core\DocumentService::getDisk();
+                $absolutePath = \Illuminate\Support\Facades\Storage::disk($disk)->path($relativePath);
 
-                $employee->addMedia($pdfAbsolutePath)
+                $employee->addMedia($absolutePath)
                     ->toMediaCollection('rh_documents');
             } catch (\Exception $e) {
-                Log::error("Impossible de générer le bulletin d'affiliation: " . $e->getMessage());
+                \Illuminate\Support\Facades\Log::error("Impossible de générer le bulletin d'affiliation: " . $e->getMessage());
             }
         }
     }

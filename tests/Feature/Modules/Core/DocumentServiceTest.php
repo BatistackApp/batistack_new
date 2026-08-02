@@ -20,7 +20,7 @@ it('generates a pdf document', function () {
         $path = $service->generate('testing.dummy', [], 'test_file', 'reports');
 
         expect(Storage::disk('public')->exists('documents/reports/test_file.pdf'))->toBeTrue();
-        expect($path)->toBe(Storage::disk('public')->path('documents/reports/test_file.pdf'));
+        expect($path)->toBe('documents/reports/test_file.pdf');
     } catch (CouldNotTakeBrowsershot $e) {
         $this->markTestSkipped('Browsershot/Puppeteer is not available on this system.');
     } catch (\Exception $e) {

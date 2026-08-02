@@ -42,11 +42,13 @@ it('generates payroll variables correctly', function () {
         'status' => TimeEntryStatus::APPROVED,
     ]);
 
+    $startDate = Carbon::create($year, $month, 1)->next(\Carbon\Carbon::MONDAY);
+    
     // 3. Add Absence (2 days)
     Abscence::factory()->create([
         'employee_id' => $employee->id,
-        'start_date' => Carbon::create($year, $month, 15),
-        'end_date' => Carbon::create($year, $month, 16),
+        'start_date' => $startDate,
+        'end_date' => $startDate->copy()->addDay(),
         'type' => \App\Enums\RH\AbsenceType::PAID_LEAVE,
     ]);
 

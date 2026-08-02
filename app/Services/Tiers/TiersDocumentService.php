@@ -27,12 +27,13 @@ class TiersDocumentService extends DocumentService
             'company' => Company::first(),
         ];
 
+        $data['position'] = 'landscape';
+
         return $this->generate(
             'pdf.tiers.list',
             $data,
             'liste_tiers_'.now()->format('Ymd_Hi'),
-            'tiers',
-            'landscape'
+            'tiers'
         );
     }
 
@@ -55,12 +56,13 @@ class TiersDocumentService extends DocumentService
             'company' => Company::first(),
         ];
 
+        $data['position'] = 'portrait';
+
         return $this->generate(
             'pdf.tiers.details',
             $data,
             'fiche_tiers_'.$thirdParty->id.'_'.now()->format('Ymd_Hi'),
-            'tiers',
-            'portait'
+            'tiers'
         );
     }
 

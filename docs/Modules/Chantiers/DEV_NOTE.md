@@ -35,3 +35,4 @@ Le module **Chantiers** est le cœur de la gestion de projets BTP de l'ERP. Il p
 
 ## 💡 Idées d'amélioration et Nouvelles Fonctionnalités
 *   **BIM (Building Information Modeling)** : Intégration en cours (voir module Vision 3D).
+*   **Refonte du Dashboard Directeur de Travaux (Widgets Avancés)** : Intégration de `laboiteacode/filament-dashboard-widgets` pour afficher la variance de la marge globale, le funnel des projets, la consommation d'heures et les alertes météo/incidents.

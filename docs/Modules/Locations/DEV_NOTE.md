@@ -32,4 +32,4 @@ Le module **Locations** permet de gérer l'ensemble des locations de matériel (
 
 ## 💡 Idées d'amélioration et Nouvelles Fonctionnalités
 *   **Suivi Géolocalisé** : Si du gros équipement (ex: pelles, grues) est loué avec des capteurs GPS, pouvoir remonter leur position via une API externe directement sur la fiche d'information du `RentalContract`.
-*   **Scoring Fournisseurs** : Permettre de noter le fournisseur en fin de contrat (état du matériel, respect des délais de livraison) pour générer un "Score" fournisseur visible par les acheteurs lors de futures locations.
+*   **Refonte du Dashboard Matériel Externe (Widgets Avancés)** : Intégration de `laboiteacode/filament-dashboard-widgets` pour afficher la variance des coûts de location, le statut des contrats (Segment Bar), le budget par fournisseur (Composition) et les restitutions imminentes (Detail List).

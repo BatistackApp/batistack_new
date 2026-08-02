@@ -100,10 +100,10 @@ class ImmobilisationDocumentService extends DocumentService
             data: [
                 'chantier' => $chantier,
                 'assets' => $assets,
+                'position' => 'portrait'
             ],
             filename: 'fiche_inventaire_chantier_' . $chantier->id,
-            type: 'immobilisations',
-            position: 'portrait'
+            type: 'immobilisations'
         );
     }
 
@@ -131,10 +131,10 @@ class ImmobilisationDocumentService extends DocumentService
             data: [
                 'assets' => $assets,
                 'qrCodes' => $qrCodes,
+                'position' => 'portrait'
             ],
             filename: 'plaquette_qr_codes_' . now()->format('Ymd_His'),
-            type: 'immobilisations',
-            position: 'portrait'
+            type: 'immobilisations'
         );
     }
 }

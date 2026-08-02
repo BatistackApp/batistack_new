@@ -120,8 +120,12 @@ class PayrollCalculationService
         // --- PRE-CALCUL REINTEGRATION FISCALE ---
         // La CSG et le Net Imposable nécessitent de connaître les parts patronales Mutuelle/Prévoyance
         $fiscalReintegration = 0;
+        
+        $periodDate = \Carbon\Carbon::createFromFormat('Y-m', $period)->endOfMonth()->startOfDay();
+        $validRates = $profile ? $profile->rates()->validAt($periodDate)->get() : collect();
+
         if ($profile) {
-            foreach ($profile->rates as $rate) {
+            foreach ($validRates as $rate) {
                 if ($rate->is_fiscally_reintegrated && $rate->base_formula === ContributionBaseFormula::GROSS_SALARY) {
                     $fiscalReintegration += round($grossSalary * ($rate->employer_rate / 100), 2);
                 }
@@ -135,7 +139,7 @@ class PayrollCalculationService
         $csgNonDeductibleAmount = 0;
 
         if ($profile) {
-            foreach ($profile->rates as $rate) {
+            foreach ($validRates as $rate) {
                 $base = $grossSalary;
                 if ($rate->base_formula === ContributionBaseFormula::CSG_BASE) {
                     $base = $csgBase;

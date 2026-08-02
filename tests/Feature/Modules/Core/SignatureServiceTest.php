@@ -11,7 +11,7 @@ beforeEach(function () {
     // Création d'un utilisateur pour simuler l'authentification requise par le service
     $this->user = User::factory()->create();
     $this->actingAs($this->user);
-    $this->service = new SignatureService;
+    $this->service = app(SignatureService::class);
 });
 
 /**
