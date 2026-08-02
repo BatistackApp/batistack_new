@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "f3e07151f9e19fb933b4b0663f5b82ed",
+    "content-hash": "3c3b57ad087858eeb2f145cac0234808",
     "packages": [
         {
             "name": "achyutn/filament-log-viewer",
@@ -4633,6 +4633,80 @@
                 "source": "https://github.com/kirschbaum-development/eloquent-power-joins/tree/4.3.3"
             },
             "time": "2026-07-23T11:41:37+00:00"
+        },
+        {
+            "name": "laboiteacode/filament-dashboard-widgets",
+            "version": "v1.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/La-boite-a-code/Filament-Dashboard-Widgets.git",
+                "reference": "b38ea179fab3fb1ac64e01c33e9ec5cbfb1e1405"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/La-boite-a-code/Filament-Dashboard-Widgets/zipball/b38ea179fab3fb1ac64e01c33e9ec5cbfb1e1405",
+                "reference": "b38ea179fab3fb1ac64e01c33e9ec5cbfb1e1405",
+                "shasum": ""
+            },
+            "require": {
+                "filament/filament": "^4.12|^5.7.1",
+                "illuminate/contracts": "^12.0|^13.0",
+                "php": "^8.3",
+                "spatie/laravel-package-tools": "^1.15"
+            },
+            "require-dev": {
+                "larastan/larastan": "^3.0",
+                "laravel/pint": "^1.18",
+                "orchestra/testbench": "^10.0|^11.0",
+                "pestphp/pest": "^3.7|^4.0",
+                "pestphp/pest-plugin-livewire": "^3.0|^4.0",
+                "phpstan/extension-installer": "^1.4",
+                "phpstan/phpstan": "^2.0",
+                "phpstan/phpstan-deprecation-rules": "^2.0"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "LaBoiteACode\\FilamentDashboardWidgets\\FilamentDashboardWidgetsServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "LaBoiteACode\\FilamentDashboardWidgets\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "La Boite A Code",
+                    "email": "alexandre@laboiteacode.fr",
+                    "role": "Developer"
+                }
+            ],
+            "description": "A collection of ready to use, professional dashboard widgets for Filament: metrics, goals, breakdowns, trends and recent items.",
+            "homepage": "https://github.com/la-boite-a-code/filament-dashboard-widgets",
+            "keywords": [
+                "Metrics",
+                "analytics",
+                "dashboard",
+                "filament",
+                "filamentphp",
+                "kpi",
+                "laboiteacode",
+                "laravel",
+                "widgets"
+            ],
+            "support": {
+                "docs": "https://github.com/la-boite-a-code/filament-dashboard-widgets/blob/main/README.md",
+                "issues": "https://github.com/la-boite-a-code/filament-dashboard-widgets/issues",
+                "source": "https://github.com/la-boite-a-code/filament-dashboard-widgets"
+            },
+            "time": "2026-07-24T06:13:18+00:00"
         },
         {
             "name": "laravel-notification-channels/webpush",
@@ -17971,5 +18045,5 @@
         "ext-zip": "*"
     },
     "platform-dev": {},
-    "plugin-api-version": "2.6.0"
+    "plugin-api-version": "2.9.0"
 }
