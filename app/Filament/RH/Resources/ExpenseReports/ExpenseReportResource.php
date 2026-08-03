@@ -25,6 +25,8 @@ class ExpenseReportResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
+    protected static \UnitEnum|string|null $navigationGroup = 'Suivi & Pointages';
+
     protected static ?string $recordTitleAttribute = 'id';
 
     public static function form(Schema $schema): Schema
