@@ -8,9 +8,11 @@ use App\Enums\Commerce\PaymentType;
 use App\Events\Commerce\PaymentCancelledEvent;
 use App\Events\Commerce\PaymentRecordedEvent;
 use App\Models\Commerce\Payment;
+use App\Models\Commerce\CustomerInvoice;
 use App\Models\Core\Company;
 use App\Models\Tiers\ThirdParty;
 use App\Services\Commerce\PaymentRecordingService;
+use App\Services\Commerce\PaymentService;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
 use Mockery;
@@ -139,6 +141,19 @@ describe('PaymentRecordingService - recordPayment', function () {
         })->toThrow(\Exception::class, 'trop ancienne');
     });
 
+    test('valide que le tiers existe', function () {
+        $nonExistentCustomer = ThirdParty::make(['id' => 999]); // Non sauvegardé
+        expect(function () use ($nonExistentCustomer) {
+            $this->service->recordPayment(
+                third_party: $nonExistentCustomer,
+                type: PaymentType::IN,
+                method: PaymentMethod::BANK_TRANSFER,
+                amount: 1000.00,
+                payment_date: now()
+            );
+        })->toThrow(\Exception::class, 'tiers n\'existe pas');
+    });
+
     test('enregistre un décaissement fournisseur', function () {
         $payment = $this->service->recordPayment(
             third_party: $this->supplier,
@@ -151,6 +166,8 @@ describe('PaymentRecordingService - recordPayment', function () {
         expect($payment->type)->toBe(PaymentType::OUT)
             ->and($payment->reference)->toMatch('/^OUT-/');
     });
+
+    // We can test default branch of match($type) by using reflection or passing a fake enum case if possible, but PHP 8.1 enums are strict. We will simulate it by mocking the enum, but wait, PaymentType only has IN and OUT. The `default` branch might be unreachable natively.
 
     test('rejette une référence dupliquée', function () {
         // Créer un premier paiement
@@ -174,6 +191,49 @@ describe('PaymentRecordingService - recordPayment', function () {
                 reference: 'UNIQUE-REF-123'
             );
         })->toThrow(\Exception::class, 'existe déjà');
+    });
+});
+
+describe('PaymentRecordingService - recordPaymentWithAllocations', function () {
+    test('enregistre un paiement et alloue sur les factures', function () {
+        $invoice1 = CustomerInvoice::factory()->create(['client_id' => $this->customer->id, 'status' => \App\Enums\Commerce\InvoiceStatus::VALIDATED, 'total_ttc' => 5000.0]);
+        $invoice2 = CustomerInvoice::factory()->create(['client_id' => $this->customer->id, 'status' => \App\Enums\Commerce\InvoiceStatus::VALIDATED, 'total_ttc' => 6000.0]);
+
+        $payment = $this->service->recordPaymentWithAllocations(
+            third_party: $this->customer,
+            type: PaymentType::IN,
+            method: PaymentMethod::BANK_TRANSFER,
+            amount: 11000.00,
+            payment_date: now(),
+            allocations: [
+                ['invoice' => $invoice1, 'amount' => 5000.0],
+                ['invoice' => $invoice2, 'amount' => 6000.0],
+            ]
+        );
+
+        expect($payment)->toBeInstanceOf(Payment::class)
+            ->and($payment->amount)->toEqual(11000.00)
+            ->and($payment->allocations)->toHaveCount(2);
+        
+        expect($invoice1->fresh()->status)->toBe(\App\Enums\Commerce\InvoiceStatus::PAID)
+            ->and($invoice2->fresh()->status)->toBe(\App\Enums\Commerce\InvoiceStatus::PAID);
+    });
+
+    test('échoue si le montant alloué ne correspond pas au montant total', function () {
+        $invoice1 = CustomerInvoice::factory()->create(['client_id' => $this->customer->id, 'status' => \App\Enums\Commerce\InvoiceStatus::VALIDATED, 'total_ttc' => 5000.0]);
+
+        expect(function () use ($invoice1) {
+            $this->service->recordPaymentWithAllocations(
+                third_party: $this->customer,
+                type: PaymentType::IN,
+                method: PaymentMethod::BANK_TRANSFER,
+                amount: 6000.00, // != 5000
+                payment_date: now(),
+                allocations: [
+                    ['invoice' => $invoice1, 'amount' => 5000.0],
+                ]
+            );
+        })->toThrow(\Exception::class, 'Somme des allocations');
     });
 });
 
@@ -276,19 +336,26 @@ describe('PaymentRecordingService - updatePayment', function () {
 
 describe('PaymentRecordingService - cancelPayment', function () {
 
-    test('annule un paiement', function () {
-        $payment = $this->service->recordPayment(
+    test('annule un paiement et dé-lettre les factures', function () {
+        $invoice = CustomerInvoice::factory()->create(['client_id' => $this->customer->id, 'status' => \App\Enums\Commerce\InvoiceStatus::VALIDATED, 'total_ttc' => 1000.0]);
+        
+        $payment = $this->service->recordPaymentWithAllocations(
             third_party: $this->customer,
             type: PaymentType::IN,
             method: PaymentMethod::BANK_TRANSFER,
             amount: 1000.00,
-            payment_date: now()
+            payment_date: now(),
+            allocations: [['invoice' => $invoice, 'amount' => 1000.0]]
         );
+
+        expect($invoice->fresh()->status)->toBe(\App\Enums\Commerce\InvoiceStatus::PAID);
 
         $cancelled = $this->service->cancelPayment($payment, 'Erreur de saisie');
 
         expect($cancelled->status)->toBe(PaymentStatus::FAILED)
-            ->and($cancelled->notes)->toContain('Annulé');
+            ->and($cancelled->notes)->toContain('Annulé')
+            ->and($invoice->fresh()->status)->toBe(\App\Enums\Commerce\InvoiceStatus::VALIDATED)
+            ->and($cancelled->allocations()->count())->toBe(0);
     });
 
     test('dispache l\'événement PaymentCancelledEvent', function () {
