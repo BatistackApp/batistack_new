@@ -72,6 +72,10 @@ Route::middleware(['auth'])->group(function () {
         return back();
     })->name('articles.request-quote');
     Route::get('/bridge/callback', \App\Http\Controllers\Banque\BridgeCallbackController::class)->name('bridge.callback');
+
+    // API Offline Technicien
+    Route::get('/api/technicien/interventions', [\App\Http\Controllers\Api\TechnicienSyncController::class, 'index'])->name('technicien.api.interventions');
+    Route::post('/api/technicien/sync', [\App\Http\Controllers\Api\TechnicienSyncController::class, 'sync'])->name('technicien.api.sync');
 });
 require __DIR__.'/settings.php';
 // require __DIR__.'/test.php';

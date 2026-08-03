@@ -204,7 +204,7 @@ class ThirdParty extends Model implements HasMedia
     public function getMainAddress(): ?Address
     {
         return $this->addresses()
-            ->where('is_primary', true)
+            ->where('is_default', true)
             ->first() ?? $this->addresses()->first();
     }
 
