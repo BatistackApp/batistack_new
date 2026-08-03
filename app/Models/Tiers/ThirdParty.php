@@ -95,6 +95,11 @@ class ThirdParty extends Model implements HasMedia
         return $this->hasMany(CustomerQuote::class, 'id', 'client_id');
     }
 
+    public function clientEquipments(): HasMany
+    {
+        return $this->hasMany(\App\Models\Interventions\ClientEquipment::class);
+    }
+
     public function getComplianceStatusLabelAttribute(): string
     {
         if ($this->compliant_status['compliant']) {

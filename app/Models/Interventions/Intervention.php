@@ -33,6 +33,7 @@ class Intervention extends Model implements HasMedia
         'scheduled_at',
         'completed_at',
         'flat_rate_price',
+        'client_equipment_id',
     ];
 
     protected $casts = [
@@ -71,5 +72,10 @@ class Intervention extends Model implements HasMedia
     public function signatures(): \Illuminate\Database\Eloquent\Relations\MorphMany
     {
         return $this->morphMany(\App\Models\Core\Signature::class, 'signable');
+    }
+
+    public function clientEquipment(): BelongsTo
+    {
+        return $this->belongsTo(ClientEquipment::class);
     }
 }

@@ -34,7 +34,16 @@ class InterventionForm
                                             ->searchable()
                                             ->preload()
                                             ->required()
+                                            ->live()
                                             ->label('Client'),
+
+                                        Select::make('client_equipment_id')
+                                            ->label('Équipement concerné')
+                                            ->relationship('clientEquipment', 'name', fn (\Illuminate\Database\Eloquent\Builder $query, Get $get) => $query->where('third_party_id', $get('third_party_id')))
+                                            ->searchable()
+                                            ->preload()
+                                            ->nullable()
+                                            ->disabled(fn (Get $get) => ! $get('third_party_id')),
 
                                         Select::make('chantier_id')
                                             ->relationship('chantier', 'reference')
