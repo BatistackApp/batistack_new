@@ -66,3 +66,20 @@ it('handles optimization failure and sends error notification', function () {
     expect($notification->data['title'] ?? '')->toContain('Erreur');
     expect($notification->data['body'] ?? '')->toContain('Error message');
 });
+
+it('aborts if technician is not found', function () {
+    $date = '2026-08-03';
+
+    // Mock the service to ensure it's NEVER called
+    $mockService = Mockery::mock(RouteOptimizationService::class);
+    $mockService->shouldNotReceive('optimizeForTechnician');
+
+    $this->app->instance(RouteOptimizationService::class, $mockService);
+
+    // Pass a non-existent technician ID
+    $job = new OptimizeTechnicianRouteJob(99999, $date);
+    $job->handle(app(RouteOptimizationService::class));
+    
+    // Test passes if no exception is thrown and optimizeForTechnician was not called
+    expect(true)->toBeTrue();
+});
