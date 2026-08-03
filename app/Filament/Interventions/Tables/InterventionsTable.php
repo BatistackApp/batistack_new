@@ -74,70 +74,10 @@ class InterventionsTable
                     ->relationship('thirdParty', 'name')
                     ->searchable(),
             ])
-            ->recordActions([
+            ->recordActions(array_merge([
                 ViewAction::make(),
                 EditAction::make(),
-                Action::make('sign')
-                    ->label('Faire Signer')
-                    ->icon('heroicon-o-pencil-square')
-                    ->color('success')
-                    ->visible(fn (Intervention $record) => $record->status === InterventionStatus::TERMINEE)
-                    ->form([
-                        TextInput::make('signer_name')
-                            ->label('Nom du signataire (Client)')
-                            ->required(),
-                        SignaturePad::make('signature')
-                            ->label('Signature')
-                            ->required(),
-                    ])
-                    ->action(function (Intervention $record, array $data, SignatureService $signatureService) {
-                        $signatureService->sign(
-                            model: $record,
-                            signatureData: $data['signature'],
-                            type: SignatureType::AUTOGRAPH,
-                            additionalMetadata: [
-                                'signer_name' => $data['signer_name'],
-                                'role' => 'client',
-                            ]
-                        );
-
-                        Notification::make()
-                            ->title('Intervention signée et scellée avec succès !')
-                            ->success()
-                            ->send();
-                    }),
-                Action::make('download_pdf')
-                    ->label('Télécharger le Bon')
-                    ->icon('heroicon-o-document-arrow-down')
-                    ->action(function (Intervention $record, InterventionPdfService $pdfService) {
-                        $path = $pdfService->generatePdf($record);
-
-                        return response()->download($path);
-                    }),
-                Action::make('create_invoice')
-                    ->label('Générer Facture')
-                    ->icon('heroicon-o-document-currency-euro')
-                    ->color('warning')
-                    ->visible(fn (Intervention $record) => $record->status === InterventionStatus::TERMINEE)
-                    ->requiresConfirmation()
-                    ->action(function (Intervention $record, InterventionBillingService $billingService) {
-                        try {
-                            $invoice = $billingService->generateInvoice($record);
-                            if ($invoice) {
-                                Notification::make()
-                                    ->title('Facture générée avec succès !')
-                                    ->success()
-                                    ->send();
-                            }
-                        } catch (\Exception $e) {
-                            Notification::make()
-                                ->title('Erreur lors de la facturation')
-                                ->body($e->getMessage())
-                                ->danger()
-                                ->send();
-                        }
-                    }),
-            ])
+            ], \App\Filament\Interventions\InterventionResource::getSharedActions()))
             ->groupedBulkActions([
                 DeleteBulkAction::make(),
                 BulkAction::make('change_status')
@@ -149,14 +89,44 @@ class InterventionsTable
                             ->options(InterventionStatus::class)
                             ->required(),
                     ])
-                    ->action(function (\Illuminate\Database\Eloquent\Collection $records, array $data): void {
-                        foreach ($records as $record) {
-                            $record->update(['status' => $data['status']]);
+                    ->action(function (\Illuminate\Database\Eloquent\Collection $records, array $data, \App\Services\Interventions\InterventionManagementService $interventionService): void {
+                        try {
+                            \Illuminate\Support\Facades\DB::transaction(function () use ($records, $data, $interventionService) {
+                                foreach ($records as $record) {
+                                    \Illuminate\Support\Facades\Gate::authorize('update', $record);
+
+                                    $targetStatus = $data['status'];
+                                    $isTerminee = $targetStatus === InterventionStatus::TERMINEE->value || $targetStatus === InterventionStatus::TERMINEE;
+
+                                    if ($isTerminee) {
+                                        $success = $interventionService->completeIntervention($record);
+                                    } else {
+                                        $success = $record->update(['status' => $targetStatus]);
+                                    }
+
+                                    if (!$success) {
+                                        throw new \Exception("La mise à jour a échoué pour l'intervention {$record->reference}");
+                                    }
+                                }
+                            });
+
+                            Notification::make()
+                                ->title('Statuts mis à jour avec succès')
+                                ->success()
+                                ->send();
+                        } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
+                            Notification::make()
+                                ->title('Action non autorisée')
+                                ->body('Vous n\'avez pas la permission de modifier cette intervention.')
+                                ->danger()
+                                ->send();
+                        } catch (\Exception $e) {
+                            Notification::make()
+                                ->title('Erreur')
+                                ->body($e->getMessage())
+                                ->danger()
+                                ->send();
                         }
-                        Notification::make()
-                            ->title('Statuts mis à jour avec succès')
-                            ->success()
-                            ->send();
                     })
                     ->deselectRecordsAfterCompletion(),
             ]);

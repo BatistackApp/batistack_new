@@ -30,17 +30,18 @@ class InterventionManagementService
         ]);
     }
 
-    public function completeIntervention(Intervention $intervention): void
+    public function completeIntervention(Intervention $intervention): bool
     {
-        $intervention->update([
+        $updated = $intervention->update([
             'status' => InterventionStatus::TERMINEE,
             'completed_at' => now(),
         ]);
 
-        // Trigger stock decrement
-        app(InterventionStockService::class)->processMaterials($intervention);
+        if ($updated) {
+            // Trigger stock decrement
+            app(InterventionStockService::class)->processMaterials($intervention);
+        }
         
-        // Trigger billing if needed
-        // This could be automatic or manual depending on business rules. We'll leave it manual/triggered elsewhere for now.
+        return $updated;
     }
 }
