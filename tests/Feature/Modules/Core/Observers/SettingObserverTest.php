@@ -32,3 +32,48 @@ test('multiple settings can coexist', function () {
 
     expect(Setting::count())->toBe(2);
 });
+
+test('validation fails for invalid integer', function () {
+    expect(function () {
+        Setting::factory()->create(['key' => 'test_int', 'type' => 'integer', 'value' => 'not an int']);
+    })->toThrow(\Exception::class, 'entier');
+});
+
+test('validation fails for invalid boolean', function () {
+    expect(function () {
+        Setting::factory()->create(['key' => 'test_bool', 'type' => 'boolean', 'value' => 'not a bool']);
+    })->toThrow(\Exception::class, 'booléen');
+});
+
+test('validation fails for invalid email', function () {
+    expect(function () {
+        Setting::factory()->create(['key' => 'test_email', 'type' => 'email', 'value' => 'not-an-email']);
+    })->toThrow(\Exception::class, 'invalide');
+});
+
+test('validation fails for invalid url', function () {
+    expect(function () {
+        Setting::factory()->create(['key' => 'test_url', 'type' => 'url', 'value' => 'not-a-url']);
+    })->toThrow(\Exception::class, 'invalide');
+});
+
+test('validation fails for invalid array', function () {
+    expect(function () {
+        Setting::factory()->create(['key' => 'test_array', 'type' => 'array', 'value' => 'not-json']);
+    })->toThrow(\Exception::class, 'JSON');
+});
+
+test('cannot delete critical setting', function () {
+    expect(function () {
+        $this->setting->delete();
+    })->toThrow(\Exception::class, 'critique');
+});
+
+test('cache is forgotten on operations', function () {
+    Cache::shouldReceive('forget')->with('core_setting_test_cache')->times(3);
+    Cache::shouldReceive('forget')->with('core_settings_all')->times(3);
+    
+    $setting = Setting::factory()->create(['key' => 'test_cache', 'value' => 'v1']);
+    $setting->update(['value' => 'v2']);
+    $setting->delete();
+});
