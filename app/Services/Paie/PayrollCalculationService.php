@@ -68,6 +68,59 @@ class PayrollCalculationService
             ];
         }
 
+        // --- GESTION DES ABSENCES (Issue #148) ---
+        $startOfMonth = \Carbon\Carbon::createFromFormat('Y-m', $period)->startOfMonth();
+        $endOfMonth = $startOfMonth->copy()->endOfMonth();
+
+        $absences = \App\Models\RH\Abscence::where('employee_id', $employee->id)
+            ->where(function ($query) use ($startOfMonth, $endOfMonth) {
+                $query->whereBetween('start_date', [$startOfMonth, $endOfMonth])
+                    ->orWhereBetween('end_date', [$startOfMonth, $endOfMonth])
+                    ->orWhere(function ($q) use ($startOfMonth, $endOfMonth) {
+                        $q->where('start_date', '<', $startOfMonth)
+                          ->where('end_date', '>', $endOfMonth);
+                    });
+            })
+            ->get();
+
+        $dailyHours = $contract && $contract->weekly_hours ? round($contract->weekly_hours / 5, 2) : 7.0;
+
+        foreach ($absences as $absence) {
+            $overlapStart = $absence->start_date->copy()->max($startOfMonth);
+            $overlapEnd = $absence->end_date->copy()->min($endOfMonth);
+
+            // Calculer les jours ouvrés (lundi à vendredi)
+            $workingDays = 0;
+            $current = $overlapStart->copy();
+            while ($current <= $overlapEnd) {
+                if ($current->isWeekday()) {
+                    $workingDays++;
+                }
+                $current = $current->addDay();
+            }
+
+            $absenceHours = $workingDays * $dailyHours;
+
+            if ($absenceHours > 0) {
+                $deductionAmount = round($absenceHours * $hourlyRate, 2);
+                $labelSuffix = ' du ' . $absence->start_date->format('d/m/Y') . ' au ' . $absence->end_date->format('d/m/Y') . ' (' . $workingDays . 'j)';
+                
+                $customBonuses[] = [
+                    'label' => 'Absence ' . $absence->getType()->getLabel() . $labelSuffix,
+                    'amount' => -$deductionAmount,
+                    'is_taxable' => true,
+                ];
+
+                if ($absence->is_paid) {
+                    $customBonuses[] = [
+                        'label' => 'Indemnité ' . $absence->getType()->getLabel() . $labelSuffix,
+                        'amount' => $deductionAmount,
+                        'is_taxable' => true,
+                    ];
+                }
+            }
+        }
+
         // 2. Notes de Frais
         $expenseReportsAmount = \App\Models\RH\ExpenseReport::where('employee_id', $employee->id)
             ->where('year', $year)

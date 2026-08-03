@@ -17,6 +17,7 @@ Le module **Tiers** est le cœur de la relation externe de Batistack. Il central
     *   `VigilanceService` pour l'évaluation financière et de solvabilité en temps réel (via `recherche-entreprises.api.gouv.fr`) afin de détecter les liquidations ou redressements judiciaires et afficher des alertes visuelles.
 *   **Scoring** : `SupplierScoringService` (Scoring Fournisseur basé sur la qualité, délais, litiges).
 *   **Gestion Documentaire** : `TiersDocumentService` centralise les documents obligatoires avec suivi des expirations (notifications automatisées à J-30 et J-7).
+*   **Signature Électronique (Sous-Traitants)** : Intégration avancée de la signature électronique pour les devis et les marchés de sous-traitance afin de contractualiser plus rapidement avec les partenaires externes (Issue #146).
 *   **Portail d'Appels d'Offres Privé** : Publication de consultations pour les sous-traitants qui peuvent soumettre leurs offres chiffrées via leur portail.
 
 ### 3. Observers & Événements (`app/Observers/Tiers`)
@@ -33,5 +34,4 @@ Le module **Tiers** est le cœur de la relation externe de Batistack. Il central
 *   La base du module est terminée et extrêmement complète. Aucune amélioration prioritaire n'est requise dans l'immédiat.
 
 ## 💡 Idées d'amélioration et Nouvelles Fonctionnalités
-*   **Signature Électronique (Sous-Traitants)** : Intégration avancée de la signature électronique pour les devis et les marchés de sous-traitance (ex: DocuSeal) afin de contractualiser plus rapidement avec les partenaires externes.
 *   **Refonte du Dashboard CRM (Widgets Avancés)** : Intégration de `laboiteacode/filament-dashboard-widgets` pour afficher les alertes de conformité (Detail List), l'acquisition client (Variance), la qualité de la base (Goal) et la répartition du portefeuille (Composition).

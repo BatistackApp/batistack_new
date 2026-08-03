@@ -393,6 +393,29 @@ class PayslipResource extends Resource
                         TextEntry::make('expense_reports_amount')->label('Remboursement Frais')->money('EUR'),
                     ]),
 
+                Section::make('Absences, Primes et Indemnités')
+                    ->columnSpanFull()
+                    ->schema([
+                        RepeatableEntry::make('custom_bonuses')
+                            ->label('')
+                            ->schema([
+                                TextEntry::make('label')
+                                    ->label('Libellé')
+                                    ->weight(FontWeight::SemiBold),
+                                TextEntry::make('amount')
+                                    ->label('Montant')
+                                    ->money('EUR')
+                                    ->color(fn ($state) => $state < 0 ? 'danger' : 'success'),
+                                TextEntry::make('is_taxable')
+                                    ->label('Soumis à cotisations (Brut)')
+                                    ->formatStateUsing(fn (bool $state): string => $state ? 'Oui' : 'Non')
+                                    ->badge()
+                                    ->color(fn (bool $state): string => $state ? 'warning' : 'gray'),
+                            ])
+                            ->columns(3),
+                    ])
+                    ->visible(fn (Model $record) => !empty($record->custom_bonuses)),
+
                 Section::make('Détail des cotisations')
                     ->columnSpanFull()
                     ->schema([
