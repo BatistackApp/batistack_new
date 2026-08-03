@@ -25,6 +25,11 @@ class InterventionResource extends Resource
         return InterventionForm::configure($schema);
     }
 
+    public static function infolist(Schema $schema): Schema
+    {
+        return \App\Filament\Interventions\Schemas\InterventionInfolist::configure($schema);
+    }
+
     public static function table(Table $table): Table
     {
         return InterventionsTable::configure($table);
@@ -42,6 +47,7 @@ class InterventionResource extends Resource
         return [
             'index' => ListInterventions::route('/'),
             'create' => CreateIntervention::route('/create'),
+            'view' => \App\Filament\Interventions\Pages\ViewIntervention::route('/{record}'),
             'edit' => EditIntervention::route('/{record}/edit'),
         ];
     }

@@ -10,6 +10,7 @@ use App\Services\Core\SignatureService;
 use App\Services\Interventions\InterventionBillingService;
 use App\Services\Interventions\InterventionPdfService;
 use Filament\Actions\Action;
+use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -137,10 +138,27 @@ class InterventionsTable
                         }
                     }),
             ])
-            ->toolbarActions([
-                BulkActionGroup::make([
-                    DeleteBulkAction::make(),
-                ]),
+            ->groupedBulkActions([
+                DeleteBulkAction::make(),
+                BulkAction::make('change_status')
+                    ->label('Changer le statut')
+                    ->icon('heroicon-o-arrow-path')
+                    ->schema([
+                        \Filament\Forms\Components\Select::make('status')
+                            ->label('Nouveau statut')
+                            ->options(InterventionStatus::class)
+                            ->required(),
+                    ])
+                    ->action(function (\Illuminate\Database\Eloquent\Collection $records, array $data): void {
+                        foreach ($records as $record) {
+                            $record->update(['status' => $data['status']]);
+                        }
+                        Notification::make()
+                            ->title('Statuts mis à jour avec succès')
+                            ->success()
+                            ->send();
+                    })
+                    ->deselectRecordsAfterCompletion(),
             ]);
     }
 }

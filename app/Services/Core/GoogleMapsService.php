@@ -18,6 +18,11 @@ class GoogleMapsService
         $this->apiKey = $this->settingService->get('google_maps_key');
     }
 
+    public function hasApiKey(): bool
+    {
+        return !empty($this->apiKey);
+    }
+
     /**
      * Convertit une adresse textuelle en coordonnées GPS (lat, lng).
      * @throws ConnectionException
@@ -77,6 +82,82 @@ class GoogleMapsService
                 ];
             }
         }
+
+        return null;
+    }
+
+    /**
+     * Calcule l'itinéraire optimal (Travelling Salesperson Problem).
+     * @param string $origin Origine (lat,lng ou adresse)
+     * @param string $destination Destination (lat,lng ou adresse)
+     * @param array $waypoints Liste des points de passage (lat,lng ou adresse)
+     * @return array|null [ 'waypoint_order' => [1, 0, ...], 'legs' => [...] ]
+     * @throws ConnectionException
+     */
+    public function optimizeRoute(string $origin, string $destination, array $waypoints): ?array
+    {
+        if (! $this->apiKey || empty($waypoints)) {
+            \Illuminate\Support\Facades\Log::error('GoogleMapsService::optimizeRoute failed: apiKey missing or waypoints empty');
+            return null;
+        }
+
+        $intermediates = [];
+        foreach ($waypoints as $wp) {
+            // Check if lat,lng or address
+            if (str_contains($wp, ',')) {
+                $parts = explode(',', $wp);
+                $intermediates[] = [
+                    'location' => [
+                        'latLng' => [
+                            'latitude' => (float) trim($parts[0]),
+                            'longitude' => (float) trim($parts[1]),
+                        ]
+                    ]
+                ];
+            } else {
+                $intermediates[] = ['address' => $wp];
+            }
+        }
+
+        $payload = [
+            'origin' => ['address' => $origin],
+            'destination' => ['address' => $destination],
+            'intermediates' => $intermediates,
+            'travelMode' => 'DRIVE',
+            'optimizeWaypointOrder' => true,
+        ];
+
+        $response = Http::withHeaders([
+            'X-Goog-Api-Key' => $this->apiKey,
+            'X-Goog-FieldMask' => 'routes.optimizedIntermediateWaypointIndex,routes.legs.duration,routes.legs.distanceMeters',
+        ])->post('https://routes.googleapis.com/directions/v2:computeRoutes', $payload);
+
+        if ($response->successful() && isset($response->json()['routes'][0])) {
+            $route = $response->json()['routes'][0];
+            
+            // Convert legs to legacy format expected by RouteOptimizationService
+            $legacyLegs = [];
+            if (isset($route['legs'])) {
+                foreach ($route['legs'] as $leg) {
+                    $durationStr = $leg['duration'] ?? '0s';
+                    $durationSecs = (int) str_replace('s', '', $durationStr);
+                    $legacyLegs[] = [
+                        'duration' => ['value' => $durationSecs],
+                        'distance' => ['value' => $leg['distanceMeters'] ?? 0],
+                    ];
+                }
+            }
+
+            return [
+                'waypoint_order' => $route['optimizedIntermediateWaypointIndex'] ?? [], 
+                'legs' => $legacyLegs,
+            ];
+        }
+
+        \Illuminate\Support\Facades\Log::error('GoogleMaps API Error in optimizeRoute (Routes API)', [
+            'status' => $response->status(),
+            'body' => $response->json()
+        ]);
 
         return null;
     }
