@@ -4,6 +4,7 @@ use App\Models\Banque\BankAccount;
 use App\Models\Banque\BankTransaction;
 use App\Models\Commerce\CustomerInvoice;
 use App\Models\Tiers\ThirdParty;
+use App\Models\Commerce\SupplierInvoice;
 use App\Services\Banque\ReconciliationService;
 
 it('suggests exact matches with high score', function () {
@@ -109,4 +110,143 @@ it('ignores personal card expense items', function () {
     $expenseItemSuggestions = array_filter($suggestions, fn($s) => $s['type'] === \App\Models\RH\ExpenseItem::class);
     
     expect($expenseItemSuggestions)->toBeEmpty();
+});
+
+it('suggests supplier invoices and expense reports for debit transactions', function () {
+    $account = BankAccount::factory()->create();
+    $supplier = ThirdParty::factory()->create(['name' => 'Fournisseur A']);
+    
+    $supplierInvoice = SupplierInvoice::factory()->create([
+        'supplier_id' => $supplier->id,
+        'reference' => 'F-100',
+        'status' => 'draft',
+        'amount_ttc' => 500.00,
+    ]);
+
+    $employee = \App\Models\RH\Employee::factory()->create(['first_name' => 'Jean', 'last_name' => 'Dupont']);
+    $expenseReport = \App\Models\RH\ExpenseReport::factory()->create([
+        'employee_id' => $employee->id,
+        'month' => '07',
+        'year' => 2026,
+        'status' => \App\Enums\RH\ExpenseReportStatus::VALIDATED,
+        'total_amount' => 150.00,
+    ]);
+
+    // Transaction for supplier
+    $txSupplier = BankTransaction::factory()->create([
+        'bank_account_id' => $account->id,
+        'amount' => -500.00,
+        'description' => 'Virement Fournisseur A F-100',
+    ]);
+
+    // Transaction for expense report
+    $txExpense = BankTransaction::factory()->create([
+        'bank_account_id' => $account->id,
+        'amount' => -150.00,
+        'description' => 'Remboursement NDF Jean Dupont 2026-07',
+    ]);
+
+    $service = new ReconciliationService();
+    
+    $suggestionsSupplier = $service->suggestMatches($txSupplier);
+    expect($suggestionsSupplier)->not->toBeEmpty()
+        ->and($suggestionsSupplier[0]['type'])->toBe(SupplierInvoice::class)
+        ->and($suggestionsSupplier[0]['model']->id)->toBe($supplierInvoice->id);
+
+    $suggestionsExpense = $service->suggestMatches($txExpense);
+    expect($suggestionsExpense)->not->toBeEmpty()
+        ->and($suggestionsExpense[0]['type'])->toBe(\App\Models\RH\ExpenseReport::class)
+        ->and($suggestionsExpense[0]['model']->id)->toBe($expenseReport->id);
+});
+
+it('suggests payslips for debit transactions', function () {
+    $account = BankAccount::factory()->create();
+    $employee = \App\Models\RH\Employee::factory()->create(['first_name' => 'Jean', 'last_name' => 'Dupont']);
+    
+    $payslip = \App\Models\Paie\Payslip::factory()->create([
+        'employee_id' => $employee->id,
+        'period' => '2026-07',
+        'status' => \App\Enums\Paie\PayslipStatus::DRAFT,
+        'net_payable' => 2000.00,
+    ]);
+
+    $tx = BankTransaction::factory()->create([
+        'bank_account_id' => $account->id,
+        'amount' => -2000.00,
+        'description' => 'Salaire Jean Dupont 2026-07',
+    ]);
+
+    $service = new ReconciliationService();
+    $suggestions = $service->suggestMatches($tx);
+
+    expect($suggestions)->not->toBeEmpty()
+        ->and($suggestions[0]['type'])->toBe(\App\Models\Paie\Payslip::class)
+        ->and($suggestions[0]['model']->id)->toBe($payslip->id);
+});
+
+it('skips expense items already reconciled', function () {
+    $account = BankAccount::factory()->create();
+    $expenseItem = \App\Models\RH\ExpenseItem::factory()->create([
+        'amount_ttc' => 50.00,
+        'payment_method' => \App\Enums\RH\ExpensePaymentMethod::CORPORATE_CARD,
+        'status' => \App\Enums\RH\ExpenseItemStatus::PENDING,
+    ]);
+    
+    $dummyTx = BankTransaction::factory()->create([
+        'bank_account_id' => $account->id,
+        'amount' => -50.00,
+    ]);
+
+    // Simulate it's already reconciled
+    \App\Models\Banque\BankReconciliation::create([
+        'bank_transaction_id' => $dummyTx->id,
+        'reconcilable_type' => \App\Models\RH\ExpenseItem::class,
+        'reconcilable_id' => $expenseItem->id,
+        'amount_applied' => 50.00,
+    ]);
+
+    $transaction = BankTransaction::factory()->create([
+        'bank_account_id' => $account->id,
+        'amount' => -50.00,
+    ]);
+
+    $service = new ReconciliationService();
+    $suggestions = $service->suggestMatches($transaction);
+    
+    $expenseItemSuggestions = array_filter($suggestions, fn($s) => $s['type'] === \App\Models\RH\ExpenseItem::class);
+    expect($expenseItemSuggestions)->toBeEmpty();
+});
+
+it('skips non pending transactions in bulkReconcile', function () {
+    $account = BankAccount::factory()->create();
+    
+    $t1 = BankTransaction::factory()->create(['bank_account_id' => $account->id, 'amount' => 100.0, 'status' => 'reconciled']);
+    
+    $service = new ReconciliationService();
+    $success = $service->bulkReconcile(BankTransaction::where('id', $t1->id)->get());
+    
+    expect($success)->toBe(0);
+});
+
+it('scores expense item with diffDays between 5 and 7 correctly', function () {
+    $account = BankAccount::factory()->create();
+    
+    $expenseItem = \App\Models\RH\ExpenseItem::factory()->create([
+        'amount_ttc' => 55.50,
+        'date' => now()->subDays(6), // 6 days ago
+        'payment_method' => \App\Enums\RH\ExpensePaymentMethod::CORPORATE_CARD,
+    ]);
+
+    $transaction = BankTransaction::factory()->create([
+        'bank_account_id' => $account->id,
+        'amount' => -55.50,
+        'date' => now(), 
+    ]);
+
+    $service = new ReconciliationService();
+    $suggestions = $service->suggestMatches($transaction);
+
+    // Score: 50 (amount) + 10 (diff <= 7) = 60
+    expect($suggestions)->not->toBeEmpty()
+        ->and($suggestions[0]['score'])->toBe(60);
 });

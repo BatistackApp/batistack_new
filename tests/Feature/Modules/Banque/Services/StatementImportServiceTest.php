@@ -34,3 +34,49 @@ it('imports csv statements correctly', function () {
 
     Storage::disk('local')->delete('test_statement.csv');
 });
+
+it('ignores duplicate transactions based on external_id hash', function () {
+    $company = Company::factory()->create();
+    $account = BankAccount::factory()->create(['company_id' => $company->id]);
+    
+    $csvContent = "Date,Libellé,Montant\n";
+    $csvContent .= "2026-07-10,Virement Client Dupont,1500.00\n";
+    Storage::disk('local')->put('test_dup.csv', $csvContent);
+    $filePath = Storage::disk('local')->path('test_dup.csv');
+
+    $service = new StatementImportService();
+    
+    // Premier import
+    $imported1 = $service->importCsv($account, $filePath);
+    expect($imported1)->toBe(1);
+
+    // Deuxième import avec le même fichier (duplicate key 23000)
+    $imported2 = $service->importCsv($account, $filePath);
+    expect($imported2)->toBe(0);
+
+    Storage::disk('local')->delete('test_dup.csv');
+});
+
+it('throws QueryException if it is not an integrity constraint violation', function () {
+    $company = Company::factory()->create();
+    $account = BankAccount::factory()->create(['company_id' => $company->id]);
+    
+    $csvContent = "Date,Libellé,Montant\n";
+    $csvContent .= "2026-07-10,Test Error,10.00\n";
+    Storage::disk('local')->put('test_err.csv', $csvContent);
+    $filePath = Storage::disk('local')->path('test_err.csv');
+
+    // Forcer une erreur SQL différente de 23000
+    \App\Models\Banque\BankTransaction::saving(function ($tx) {
+        throw new \Illuminate\Database\QueryException('sqlite', 'INSERT...', [], new \PDOException('Fake Error', 1111));
+    });
+
+    $service = new StatementImportService();
+    
+    expect(fn() => $service->importCsv($account, $filePath))->toThrow(\Illuminate\Database\QueryException::class);
+
+    // Nettoyage de l'événement et du fichier
+    \App\Models\Banque\BankTransaction::flushEventListeners();
+    \App\Models\Banque\BankTransaction::boot();
+    Storage::disk('local')->delete('test_err.csv');
+});
