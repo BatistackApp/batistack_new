@@ -128,10 +128,10 @@ class ContractsRelationManager extends RelationManager
                     ->icon(Phosphor::PenNib)
                     ->color('info')
                     ->visible(fn (Contract $record) => $record->signature_status === SignatureStatus::PENDING)
-                    ->action(function (Contract $record, SignatureService $service) {
+                    ->action(function (Contract $record, SignatureService $signatureService, RHDocumentService $documentService) {
                         $email = $record->employee->email;
                         $name = $record->employee->full_name;
-                        $pathFile = 'documents/rh/contrat_'.$record->employee->registration_number.'.pdf';
+                        $relativePath = 'documents/rh/contrat_'.$record->employee->registration_number.'.pdf';
 
                         if (! $email) {
                             Notification::make()->title('Erreur : Le salarié n\'a pas d\'adresse email')->danger()->send();
@@ -139,12 +139,19 @@ class ContractsRelationManager extends RelationManager
                             return;
                         }
 
-                        $service->requestSignature(
+                        $disk = \App\Services\Core\DocumentService::getDisk();
+                        if (!\Illuminate\Support\Facades\Storage::disk($disk)->exists($relativePath)) {
+                            $relativePath = $documentService->generateContract($record);
+                        }
+                        
+                        $absolutePath = \Illuminate\Support\Facades\Storage::disk($disk)->path($relativePath);
+
+                        $signatureService->requestSignature(
                             model: $record,
                             type: SignatureType::AUTOGRAPH,
                             email: $email,
                             name: $name,
-                            documentPath: $pathFile,
+                            documentPath: $absolutePath,
                         );
 
                         Notification::make()->title('Demande de signature envoyée par email')->success()->send();

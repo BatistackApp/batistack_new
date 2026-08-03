@@ -20,6 +20,8 @@ class CibtpDeclarationResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
+    protected static \UnitEnum|string|null $navigationGroup = 'Déclarations & Exports';
+
     protected static ?string $recordTitleAttribute = 'date';
 
     public static function form(Schema $schema): Schema

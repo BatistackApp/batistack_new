@@ -29,7 +29,7 @@ class PayrollContributionRate extends Model
         'valid_to' => 'date',
     ];
 
-    public function scopeValidAt($query, \Carbon\Carbon $date)
+    public function scopeValidAt($query, \Carbon\CarbonInterface $date)
     {
         return $query->where(function ($q) use ($date) {
             $q->whereNull('valid_from')

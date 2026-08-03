@@ -27,6 +27,7 @@ class EmployeeResource extends Resource
     protected static ?string $model = Employee::class;
 
     protected static string|BackedEnum|null $navigationIcon = Phosphor::UserList;
+    protected static \UnitEnum|string|null $navigationGroup = 'Annuaire & Dossiers';
     protected static ?string $modelLabel = 'Employé';
     protected static ?string $pluralModelLabel = 'Collaborateurs';
 

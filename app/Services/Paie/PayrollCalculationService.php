@@ -68,6 +68,59 @@ class PayrollCalculationService
             ];
         }
 
+        // --- GESTION DES ABSENCES (Issue #148) ---
+        $startOfMonth = \Carbon\Carbon::createFromFormat('Y-m', $period)->startOfMonth();
+        $endOfMonth = $startOfMonth->copy()->endOfMonth();
+
+        $absences = \App\Models\RH\Abscence::where('employee_id', $employee->id)
+            ->where(function ($query) use ($startOfMonth, $endOfMonth) {
+                $query->whereBetween('start_date', [$startOfMonth, $endOfMonth])
+                    ->orWhereBetween('end_date', [$startOfMonth, $endOfMonth])
+                    ->orWhere(function ($q) use ($startOfMonth, $endOfMonth) {
+                        $q->where('start_date', '<', $startOfMonth)
+                          ->where('end_date', '>', $endOfMonth);
+                    });
+            })
+            ->get();
+
+        $dailyHours = $contract && $contract->weekly_hours ? round($contract->weekly_hours / 5, 2) : 7.0;
+
+        foreach ($absences as $absence) {
+            $overlapStart = $absence->start_date->copy()->max($startOfMonth);
+            $overlapEnd = $absence->end_date->copy()->min($endOfMonth);
+
+            // Calculer les jours ouvrés (lundi à vendredi)
+            $workingDays = 0;
+            $current = $overlapStart->copy();
+            while ($current <= $overlapEnd) {
+                if ($current->isWeekday()) {
+                    $workingDays++;
+                }
+                $current = $current->addDay();
+            }
+
+            $absenceHours = $workingDays * $dailyHours;
+
+            if ($absenceHours > 0) {
+                $deductionAmount = round($absenceHours * $hourlyRate, 2);
+                $labelSuffix = ' du ' . $absence->start_date->format('d/m/Y') . ' au ' . $absence->end_date->format('d/m/Y') . ' (' . $workingDays . 'j)';
+                
+                $customBonuses[] = [
+                    'label' => 'Absence ' . $absence->getType()->getLabel() . $labelSuffix,
+                    'amount' => -$deductionAmount,
+                    'is_taxable' => true,
+                ];
+
+                if ($absence->is_paid) {
+                    $customBonuses[] = [
+                        'label' => 'Indemnité ' . $absence->getType()->getLabel() . $labelSuffix,
+                        'amount' => $deductionAmount,
+                        'is_taxable' => true,
+                    ];
+                }
+            }
+        }
+
         // 2. Notes de Frais
         $expenseReportsAmount = \App\Models\RH\ExpenseReport::where('employee_id', $employee->id)
             ->where('year', $year)
@@ -115,70 +168,26 @@ class PayrollCalculationService
         $payslip->save();
 
         $totalEmployeeContributions = 0;
-        $totalEmployerContributions = 0;
+        // Utilisation du service de simulation pour le calcul brut -> net
+        $simulator = new \App\Services\Paie\PayrollSimulatorService();
+        $simulationDate = \Carbon\Carbon::createFromFormat('Y-m', $period)->endOfMonth()->startOfDay();
         
-        // --- PRE-CALCUL REINTEGRATION FISCALE ---
-        // La CSG et le Net Imposable nécessitent de connaître les parts patronales Mutuelle/Prévoyance
-        $fiscalReintegration = 0;
+        $simulation = $simulator->simulateFromGross($grossSalary, $profile, $simulationDate);
+
+        $totalEmployeeContributions = $simulation['total_employee_contributions'];
+        $totalEmployerContributions = $simulation['total_employer_contributions'];
         
-        $periodDate = \Carbon\Carbon::createFromFormat('Y-m', $period)->endOfMonth()->startOfDay();
-        $validRates = $profile ? $profile->rates()->validAt($periodDate)->get() : collect();
-
-        if ($profile) {
-            foreach ($validRates as $rate) {
-                if ($rate->is_fiscally_reintegrated && $rate->base_formula === ContributionBaseFormula::GROSS_SALARY) {
-                    $fiscalReintegration += round($grossSalary * ($rate->employer_rate / 100), 2);
-                }
-            }
-        }
-
-        $csgBase = round($grossSalary * 0.9825, 2); // Base CSG standard (98.25% du brut)
-        $csgBase += $fiscalReintegration; // Ajout dynamique de la part patronale Prévoyance/Mutuelle
-        
-        $totalDeductibleContributions = 0;
-        $csgNonDeductibleAmount = 0;
-
-        if ($profile) {
-            foreach ($validRates as $rate) {
-                $base = $grossSalary;
-                if ($rate->base_formula === ContributionBaseFormula::CSG_BASE) {
-                    $base = $csgBase;
-                } elseif ($rate->base_formula === ContributionBaseFormula::OPPBTP_BASE) {
-                    $base = round($grossSalary * 1.1394, 2);
-                }
-
-                $employeeAmount = round($base * ($rate->employee_rate / 100), 2);
-                $employerAmount = round($base * ($rate->employer_rate / 100), 2);
-
-                $payslip->lines()->create([
-                    'category' => $rate->category,
-                    'label' => $rate->label,
-                    'base' => $base,
-                    'employee_rate' => $rate->employee_rate,
-                    'employer_rate' => $rate->employer_rate,
-                    'employee_amount' => $employeeAmount,
-                    'employer_amount' => $employerAmount,
-                ]);
-
-                $totalEmployeeContributions += $employeeAmount;
-                $totalEmployerContributions += $employerAmount;
-
-                if ($rate->is_deductible) {
-                    $totalDeductibleContributions += $employeeAmount;
-                } else {
-                    $csgNonDeductibleAmount += $employeeAmount;
-                }
-            }
+        // Enregistrement des lignes
+        foreach ($simulation['lines'] as $line) {
+            $payslip->lines()->create($line);
         }
 
         $exonerationEmployer = 939.74; // Réduction Fillon simulée
         $totalEmployerContributions -= $exonerationEmployer;
 
         // --- CALCULS DES NETS ---
-        $netSocial = round($grossSalary - $totalEmployeeContributions, 2);
-        
-        // Net imposable = Net social + CSG non déductible + réintégration fiscale (mutuelle/prévoyance)
-        $taxableNet = round($netSocial + $csgNonDeductibleAmount + $fiscalReintegration, 2);
+        $netSocial = $simulation['net_social'];
+        $taxableNet = $simulation['taxable_net'];
 
         // PAS (Prélèvement à la source)
         $pasRate = $employee->pas_rate ?? 0;
