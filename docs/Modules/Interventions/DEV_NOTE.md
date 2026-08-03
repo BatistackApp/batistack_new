@@ -6,7 +6,7 @@ Le module **Interventions** permet la gestion complète du service après-vente 
 ## 📌 État Actuel (Ce qui est fait)
 
 ### 1. Modèles de Données & Enums (`app/Models/Interventions` & `app/Enums/Interventions`)
-*   **Modèles** : `Intervention`, `InterventionWorker` (techniciens assignés), `InterventionMaterial` (pièces détachées et consommables utilisés).
+*   **Modèles** : `Intervention`, `InterventionWorker` (techniciens assignés), `InterventionMaterial` (pièces détachées et consommables utilisés), `ClientEquipment` (matériel client pour le suivi prédictif).
 *   **Enums** : `InterventionStatus` (Planifiée, En cours, Terminée, etc.) et `InterventionType` (Régie, Forfait).
 
 ### 2. Logique Métier & Services (`app/Services/Interventions`)
@@ -14,6 +14,7 @@ Le module **Interventions** permet la gestion complète du service après-vente 
 *   **Gestion des Stocks (`InterventionStockService`)** : Déstockage automatique des pièces détachées (`StockMouvementService`) relié à l'entrepôt ou au camion du technicien lorsque l'intervention bascule au statut "Terminée".
 *   **Facturation (`InterventionBillingService`)** : Génération automatique d'une facture client brouillon (`CustomerInvoice`) détaillée (TVA standard, responsable assigné) à la clôture de l'intervention.
 *   **Documents & Signatures (`InterventionPdfService`)** : Génération d'un "Bon de Travail" PDF (sans prix) avec apposition automatique du certificat de signature cryptographique via Puppeteer/Browsershot.
+*   **Maintenance Prédictive (`PredictiveMaintenanceService`)** : Analyse de la fréquence des pannes (MTBF) sur le matériel client (`ClientEquipment`) et proposition proactive de contrats de maintenance sous forme de devis brouillon (`CustomerQuote`).
 
 ### 3. Observers & Événements (`app/Observers/Interventions`)
 *   **`InterventionObserver`** : Génération automatique des références (ex: INT-YYYY-001) et correction de l'assignation automatique de la `company_id`.
@@ -23,6 +24,9 @@ Le module **Interventions** permet la gestion complète du service après-vente 
 *   **Espace Administrateur** : Panel complet pour la gestion, l'édition, le suivi du déstockage et la génération de factures (via PanelSwitch).
 *   **Espace Technicien SAV** : Panel dédié et sécurisé (`/technicien`) protégé par le middleware `EnsureUserIsTechnician`. L'interface est simplifiée, restreinte aux interventions assignées ("Planifiée" ou supérieur). Les données financières y sont masquées en lecture seule.
 *   **Signature Client** : Intégration du composant de signature électronique (`filament-autograph`) directement en action sur la table. Toute modification ultérieure invalide automatiquement la signature (génération d'un Token UUID pour scellement cryptographique).
+*   **QR Code Matériel** : Intégration d'un scanner permettant d'ajouter rapidement des pièces détachées directement depuis le camion via un smartphone.
+*   **Application Mobile Technicien (PWA/Offline)** : Créer une interface simplifiée (Offline-first) pour le technicien sur le terrain, permettant de synchroniser les interventions réalisées et les pièces utilisées une fois la connexion réseau retrouvée.
+*   **Tracking GPS des Camions** : Lier les interventions à la géolocalisation des flottes pour optimiser automatiquement les tournées des techniciens (calcul de l'itinéraire le plus court via l'API Google Maps ou OSRM).
 
 ### 5. Tests
 *   Couverture robuste avec PestPHP. L'intégralité de la logique métier, du déstockage automatique, de la facturation, des signatures, et des contraintes d'intégrité de la base de données passe avec succès (100% de réussite).
@@ -31,8 +35,4 @@ Le module **Interventions** permet la gestion complète du service après-vente 
 *   Le socle initial du module est terminé et opérationnel, y compris avec les signatures cryptographiques.
 
 ## 💡 Idées d'amélioration et Nouvelles Fonctionnalités
-*   **Application Mobile Technicien (PWA/Offline)** : Créer une interface simplifiée (Offline-first) pour le technicien sur le terrain, permettant de synchroniser les interventions réalisées et les pièces utilisées une fois la connexion réseau retrouvée.
-*   **Tracking GPS des Camions** : Lier les interventions à la géolocalisation des flottes pour optimiser automatiquement les tournées des techniciens (calcul de l'itinéraire le plus court via l'API Google Maps ou OSRM).
-*   **QR Code Matériel** : Scanner directement les pièces de rechange depuis le camion avec l'appareil photo du smartphone pour les ajouter automatiquement à la liste des matériaux consommés.
-*   **Historique Prédictif** : Analyser la fréquence des pannes sur certains équipements clients pour proposer des contrats de maintenance préventifs de manière proactive (Machine Learning basique).
 *   **Refonte du Dashboard SAV (Widgets Avancés)** : Intégration de `laboiteacode/filament-dashboard-widgets` pour afficher la rentabilité du SAV (Variance), le respect des SLA (Goal), l'entonnoir des interventions (Funnel) et les alertes urgentes (Detail List).

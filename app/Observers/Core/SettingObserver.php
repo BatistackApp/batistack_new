@@ -126,12 +126,10 @@ class SettingObserver
         }
     }
 
-    /**
-     * @throws Exception
-     */
     private function validateBoolean($value): void
     {
-        if (! in_array($value, ['true', 'false', 1, 0, true, false])) {
+        $valid = ['true', 'false', '1', '0', 1, 0, true, false];
+        if (! in_array($value, $valid, true)) {
             throw new Exception('La valeur doit être un booléen');
         }
     }
