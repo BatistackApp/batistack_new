@@ -20,7 +20,11 @@ class Dashboard extends BaseDashboard
     {
         return [
             ArticlesStatsOverview::class,
+            \App\Filament\Articles\Widgets\InventoryValueVarianceWidget::class,
+            \App\Filament\Articles\Widgets\StockRotationTrendWidget::class,
+            \App\Filament\Articles\Widgets\LowStockAlertWidget::class,
             \App\Filament\Articles\Widgets\StockMovementsChart::class,
+            \App\Filament\Articles\Widgets\StockCompositionWidget::class,
             \App\Filament\Articles\Widgets\WarehouseDistributionChart::class,
             \App\Filament\Articles\Widgets\LatestStockMouvementsWidget::class,
             \App\Filament\Articles\Widgets\ExpectedDeliveriesWidget::class,
