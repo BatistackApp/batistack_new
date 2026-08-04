@@ -28,7 +28,7 @@ Le module **Articles & Stocks** permet la gestion complète de l'inventaire, du 
 *   **Lecteur de Code-barres** : Intégration du module `filament-barcode-scanner-field` (utilisé notamment pour le module de scan outillage NFC côté RH).
 
 ### 5. Tests
-*   100% de succès sur la suite de tests (125 tests). Couverture complète de la logique métier, du calcul du PUMP, et de la prévention des stocks négatifs.
+*   100% de succès sur la suite de tests (125 tests). Couverture complète de la logique métier (calcul du PUMP, prévention des stocks négatifs, seuils d'alerte, transfert de kits, gestion de la récursion infinie pour les compositions, etc.) via `InventoryServiceTest`, `ItemServiceTest`, et `StockServiceTest`.
 
 ## 🚧 Ce qu'il reste à faire
 *   **Tableau de Bord Logistique** : Le Dashboard logistique complet n'est pas encore finalisé. Il nécessitera l'intégration de widgets avancés (via le package `laboiteacode`) pour suivre la valeur d'inventaire, les ruptures et la rotation.

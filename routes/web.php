@@ -22,6 +22,11 @@ Route::post('/signature/{token}', [\App\Http\Controllers\Core\SignatureControlle
 
 Route::post('/webhooks/docuseal', [\App\Http\Controllers\Core\SignatureWebhookController::class, 'handleDocuseal'])->name('webhooks.docuseal');
 
+Route::get('/bim-viewer-headless/{id}', function ($id) {
+    $model = \App\Models\Vision3D\BimModel::findOrFail($id);
+    return view('bim.headless', compact('model'));
+})->name('bim-viewer.headless');
+
 Route::get('/health', function () {
     try {
         // Vérifier la connexion DB

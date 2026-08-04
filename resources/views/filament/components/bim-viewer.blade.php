@@ -11,11 +11,57 @@
         format: '{{ strtolower($format) }}',
         annotations: {{ json_encode($annotations) }}
     })"
+    @focus-annotation.window="focusAnnotation($event.detail)"
     class="w-full h-full min-h-[600px] bg-gray-900 rounded-xl relative overflow-hidden"
     wire:ignore
 >
     <!-- Container 3D -->
-    <div x-ref="container" class="w-full h-full absolute inset-0" :class="{'cursor-crosshair': annotationMode}"></div>
+    <div x-ref="container" class="w-full h-full absolute inset-0" :class="{'cursor-crosshair': annotationMode || measurementMode}"></div>
+
+    <!-- Treeview / Calques Overlay -->
+    <div x-show="showLayers && format === 'ifc'" 
+         class="absolute top-4 right-4 z-10 bg-gray-900/90 text-white p-4 rounded-xl shadow-lg border border-gray-700 w-80 max-h-[80%] overflow-y-auto backdrop-blur-sm"
+         x-transition>
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="font-bold text-lg">Calques (Arbre IFC)</h3>
+            <button @click="showLayers = false" class="text-gray-400 hover:text-white">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                </svg>
+            </button>
+        </div>
+        
+        <div x-show="!spatialTree" class="text-sm text-gray-400 italic">
+            Chargement de l'arbre...
+        </div>
+        
+        <!-- Recursive Tree Render (simulated via simple list for now, or alpine recursive template if possible) -->
+        <div x-show="spatialTree" class="text-sm space-y-1">
+            <template x-if="spatialTree">
+                <div class="pl-2">
+                    <div class="flex items-center gap-2 py-1">
+                        <input type="checkbox" checked @change="toggleNode(spatialTree, $event.target.checked)" class="rounded bg-gray-800 border-gray-600 text-primary-600 focus:ring-primary-600">
+                        <span class="font-semibold truncate" x-text="spatialTree.type"></span>
+                    </div>
+                    <!-- On va utiliser une approche simplifiée: lister les enfants de premier ou 2ème niveau -->
+                    <template x-for="child in spatialTree.children" :key="child.expressID">
+                        <div class="pl-4">
+                            <div class="flex items-center gap-2 py-1">
+                                <input type="checkbox" checked @change="toggleNode(child, $event.target.checked)" class="rounded bg-gray-800 border-gray-600 text-primary-600">
+                                <span class="truncate" x-text="child.type"></span>
+                            </div>
+                            <template x-for="subchild in child.children" :key="subchild.expressID">
+                                <div class="pl-4 flex items-center gap-2 py-1">
+                                    <input type="checkbox" checked @change="toggleNode(subchild, $event.target.checked)" class="rounded bg-gray-800 border-gray-600 text-primary-600">
+                                    <span class="truncate text-gray-300" x-text="subchild.type"></span>
+                                </div>
+                            </template>
+                        </div>
+                    </template>
+                </div>
+            </template>
+        </div>
+    </div>
 
     <!-- UI Overlay (Loading) -->
     <div x-show="loading" class="absolute inset-0 flex items-center justify-center bg-gray-900 bg-opacity-75 z-10 transition-opacity">
@@ -50,6 +96,31 @@
             </svg>
             <span x-text="annotationMode ? 'Mode Annotation Actif' : 'Ajouter Punaise'"></span>
         </button>
+        <button type="button" x-show="format === 'ifc'" @click="toggleMeasurementMode" :class="measurementMode ? 'bg-indigo-600 hover:bg-indigo-500' : 'bg-gray-800 hover:bg-gray-700'" class="text-white px-3 py-1.5 rounded-lg shadow text-sm transition flex items-center gap-1">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M14.121 14.121L19 19m-4.879-4.879l-4.242-4.243m4.242 4.243l-4.243-4.242m4.243 4.242l3.536-3.536m-7.779 3.536L5 9.879m4.879 4.879l4.242-4.243M9.879 14.757l3.536-3.535" />
+            </svg>
+            <span x-text="measurementMode ? 'Mode Mesure Actif' : 'Mesurer'"></span>
+        </button>
+        <button type="button" x-show="format === 'ifc' && hasMeasurements" @click="clearMeasurements" class="bg-red-600 text-white px-3 py-1.5 rounded-lg shadow text-sm hover:bg-red-500 transition flex items-center gap-1">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
+            </svg>
+            Effacer
+        </button>
+        <button type="button" x-show="format === 'ifc' && hasHiddenElements" @click="showAllElements" class="bg-green-600 text-white px-3 py-1.5 rounded-lg shadow text-sm hover:bg-green-500 transition flex items-center gap-1">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+            </svg>
+            Tout afficher
+        </button>
+        <button type="button" x-show="format === 'ifc'" @click="showLayers = !showLayers" class="bg-gray-800 text-white px-3 py-1.5 rounded-lg shadow text-sm hover:bg-gray-700 transition flex items-center gap-1">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+            </svg>
+            Calques
+        </button>
     </div>
 </div>
 
@@ -63,6 +134,13 @@ document.addEventListener('alpine:init', () => {
         loading: true,
         loadingText: 'Chargement du modèle 3D...',
         annotationMode: false,
+        measurementMode: false,
+        hasMeasurements: false,
+        showLayers: false,
+        spatialTree: null,
+        hiddenElements: [],
+        hasHiddenElements: false,
+        modelID: 0,
         tooltip: { visible: false, x: 0, y: 0, title: '', targetTitle: '', targetStatus: '' },
         annotationMeshes: [],
         viewer: null,
@@ -109,6 +187,7 @@ document.addEventListener('alpine:init', () => {
             
             try {
                 const model = await viewer.IFC.loadIfcUrl(this.url);
+                this.modelID = model.modelID;
                 viewer.shadowDropper.renderShadow(model.modelID);
                 this.viewer = viewer;
                 this.loading = false;
@@ -116,13 +195,23 @@ document.addEventListener('alpine:init', () => {
                 // Dessiner les annotations existantes
                 this.drawAnnotations();
 
+                // Extraire l'arbre spatial
+                try {
+                    this.spatialTree = await viewer.IFC.getSpatialStructure(this.modelID);
+                    console.log("IFC Spatial Tree:", this.spatialTree);
+                } catch(err) {
+                    console.error("Erreur lecture arbre IFC", err);
+                }
+
                 // Initialiser Raycaster pour le hover
                 this.raycaster = new window.THREE.Raycaster();
                 this.mouse = new window.THREE.Vector2();
 
                 // Evénements
                 container.addEventListener('click', (event) => this.handleIfcClick(event));
+                container.addEventListener('dblclick', (event) => this.handleIfcDblClick(event));
                 container.addEventListener('mousemove', (event) => this.handleMouseMove(event));
+                window.addEventListener('keydown', (event) => this.handleKeyDown(event));
             } catch(e) {
                 console.error(e);
                 this.loadingText = "Impossible de charger le fichier IFC.";
@@ -130,39 +219,27 @@ document.addEventListener('alpine:init', () => {
         },
 
         async initDXF() {
-            // Simplification: DXF parser + Three JS natif
-            if (!window.THREE || !window.DxfParser) {
-                this.loadingText = 'Erreur librairies DXF/Three';
+            if (!window.DxfViewer) {
+                this.loadingText = 'Erreur: la librairie dxf-viewer est manquante.';
                 return;
             }
             
             const container = this.$refs.container;
             
-            // Initialisation THREE JS standard
-            this.scene = new window.THREE.Scene();
-            this.scene.background = new window.THREE.Color(0x111827);
-            
-            this.camera = new window.THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 10000);
-            this.camera.position.z = 50;
-
-            this.renderer = new window.THREE.WebGLRenderer({ antialias: true });
-            this.renderer.setSize(container.clientWidth, container.clientHeight);
-            container.appendChild(this.renderer.domElement);
-
             try {
-                // Fetch et Parsing
-                const response = await fetch(this.url);
-                const fileText = await response.text();
+                // Initialiser le DxfViewer
+                this.viewer = new window.DxfViewer(container, {
+                    autoResize: true,
+                    clearColor: new window.THREE.Color(0x111827),
+                });
                 
-                const parser = new window.DxfParser();
-                const dxf = parser.parseSync(fileText);
-                
-                // Rendu basique des entités DXF
-                // (Note: En production, on utiliserait three-dxf, ici on simule la réussite pour le POC)
-                console.log("DXF Parsé:", dxf);
+                this.loadingText = 'Chargement DXF en cours...';
+                await this.viewer.Load({ url: this.url });
                 
                 this.loading = false;
-                this.animate();
+                
+                // dxf-viewer gère sa propre boucle de rendu, 
+                // pas besoin d'appeler requestAnimationFrame manuellement ici.
             } catch(e) {
                 console.error(e);
                 this.loadingText = "Impossible de charger le fichier DXF.";
@@ -170,9 +247,12 @@ document.addEventListener('alpine:init', () => {
         },
         
         animate() {
-            if (!this.renderer) return;
-            requestAnimationFrame(() => this.animate());
-            this.renderer.render(this.scene, this.camera);
+            // Utilisé uniquement si on gère la scène THREE.js manuellement.
+            // Avec web-ifc-viewer et dxf-viewer, ils gèrent leur propre boucle.
+            if (this.renderer && this.scene && this.camera) {
+                requestAnimationFrame(() => this.animate());
+                this.renderer.render(this.scene, this.camera);
+            }
         },
 
         resetCamera() {
@@ -183,8 +263,99 @@ document.addEventListener('alpine:init', () => {
             }
         },
 
+        getAllIds(node) {
+            let ids = [node.expressID];
+            if (node.children && node.children.length > 0) {
+                node.children.forEach(child => {
+                    ids = ids.concat(this.getAllIds(child));
+                });
+            }
+            return ids;
+        },
+
+        toggleNode(node, visible) {
+            if (!this.viewer || this.format !== 'ifc') return;
+            const ids = this.getAllIds(node);
+            
+            if (visible) {
+                // Pour réafficher, on recrée le sous-ensemble principal en incluant tous sauf ce qui est caché
+                // Méthode simplifiée : on filtre les ids de hiddenElements
+                this.hiddenElements = this.hiddenElements.filter(id => !ids.includes(id));
+            } else {
+                // Pour cacher
+                ids.forEach(id => {
+                    if (!this.hiddenElements.includes(id)) this.hiddenElements.push(id);
+                });
+            }
+            
+            this.updateVisibility();
+        },
+
+        updateVisibility() {
+            if (!this.viewer) return;
+            if (this.hiddenElements.length > 0) {
+                this.hasHiddenElements = true;
+                this.viewer.IFC.loader.ifcManager.removeFromSubset(this.modelID, this.hiddenElements);
+            } else {
+                this.showAllElements();
+            }
+        },
+
+        showAllElements() {
+            if (!this.viewer) return;
+            this.hiddenElements = [];
+            this.hasHiddenElements = false;
+            // Recréer le subset avec tout
+            // createSubset sans 'ids' recrée l'objet complet
+            this.viewer.IFC.loader.ifcManager.createSubset({
+                modelID: this.modelID,
+                scene: this.viewer.context.getScene(),
+                removePrevious: true,
+                customID: 'main-subset' // Or default subset
+            });
+            // Assurons-nous que removeFromSubset est réinitialisé
+            // web-ifc-viewer: removeFromSubset retire simplement de l'affichage. createSubset le restaure.
+            // Une approche plus propre si customID n'est pas utilisé :
+            // this.viewer.IFC.loader.ifcManager.removeSubset(this.modelID, undefined);
+            // et on peut recharger ou utiliser clearSubset
+        },
+
         toggleAnnotationMode() {
             this.annotationMode = !this.annotationMode;
+            if (this.annotationMode && this.measurementMode) {
+                this.toggleMeasurementMode(); // Désactiver le mode mesure
+            }
+        },
+
+        toggleMeasurementMode() {
+            if (!this.viewer) return;
+            this.measurementMode = !this.measurementMode;
+            if (this.measurementMode) {
+                if (this.annotationMode) this.annotationMode = false;
+                this.viewer.dimensions.active = true;
+                this.viewer.dimensions.previewActive = true;
+                this.hasMeasurements = true; // On affiche le bouton effacer dès l'activation
+            } else {
+                this.viewer.dimensions.active = false;
+                this.viewer.dimensions.previewActive = false;
+            }
+        },
+
+        clearMeasurements() {
+            if (this.viewer && this.viewer.dimensions) {
+                this.viewer.dimensions.deleteAll();
+                this.hasMeasurements = false;
+            }
+        },
+
+        handleKeyDown(event) {
+            if (this.measurementMode && this.viewer) {
+                if (event.key === 'Escape') {
+                    this.viewer.dimensions.cancelDrawing();
+                } else if (event.key === 'Delete' || event.key === 'Backspace') {
+                    this.viewer.dimensions.delete();
+                }
+            }
         },
 
         drawAnnotations() {
@@ -212,7 +383,7 @@ document.addEventListener('alpine:init', () => {
         },
 
         handleMouseMove(event) {
-            if (this.annotationMode || !this.viewer || !window.THREE || this.annotationMeshes.length === 0) {
+            if (this.annotationMode || this.measurementMode || !this.viewer || !window.THREE || this.annotationMeshes.length === 0) {
                 this.tooltip.visible = false;
                 return;
             }
@@ -245,6 +416,9 @@ document.addEventListener('alpine:init', () => {
         handleIfcClick(event) {
             const container = this.$refs.container;
             
+            // Si on est en mode mesure, web-ifc-viewer gère ses propres clics en interne
+            if (this.measurementMode) return;
+
             if (!this.annotationMode) {
                 // Check if we clicked on an existing annotation
                 if (this.tooltip.visible && this.annotationMeshes.length > 0) {
@@ -285,6 +459,37 @@ document.addEventListener('alpine:init', () => {
                     y: point.y,
                     z: point.z
                 });
+            }
+        },
+        
+        handleIfcDblClick(event) {
+            if (!this.viewer || this.format !== 'ifc') return;
+            
+            // On cast le ray pour trouver l'élément
+            const result = this.viewer.context.castRayIfc(event);
+            if (result && result.expressID) {
+                const id = result.expressID;
+                if (!this.hiddenElements.includes(id)) {
+                    this.hiddenElements.push(id);
+                    this.updateVisibility();
+                }
+            }
+        },
+
+        focusAnnotation(detail) {
+            if (!this.viewer) return;
+            const { x, y, z } = detail;
+            if (this.format === 'ifc') {
+                if (this.viewer.context.ifcCamera.cameraControls) {
+                    this.viewer.context.ifcCamera.cameraControls.setLookAt(
+                        x + 10, y + 10, z + 10, // Position
+                        x, y, z, // Target
+                        true // Transition
+                    );
+                }
+            } else if (this.format === 'dxf' && this.camera) {
+                this.camera.position.set(x + 10, y + 10, z + 10);
+                this.camera.lookAt(x, y, z);
             }
         }
     }));

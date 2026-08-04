@@ -26,6 +26,9 @@ Le module **Banque** gère la trésorerie de l'entreprise. Il permet de connecte
 *   **Panel Filament Banque** : Tableau de bord complet avec visualisation des comptes, indicateurs de trésorerie globale, et widget de suivi des synchronisations.
 *   **Prévisionnel de Trésorerie (Forecast)** : Widget graphique interactif superposant le "Solde Confirmé" (basé sur le reste à payer des factures clients et fournisseurs) et le "Solde Prévisionnel" (incluant le lissage des devis signés non encore facturés sur 30 jours).
 
+### 5. Tests
+*   Validation solide des intégrations bancaires via PestPHP, incluant la simulation de la synchronisation Open Banking (Bridge API), l'import manuel (StatementImportService) et surtout l'algorithme de lettrage intelligent (ReconciliationService) avec gestion des cas d'usage multiples (doublons, erreurs API).
+
 ## 🚧 Ce qu'il reste à faire
 *   **Paiement Fournisseurs SEPA** : Étendre l'export SEPA (actuellement utilisé pour les Notes de Frais) au paiement groupé des factures fournisseurs.
 
