@@ -132,7 +132,7 @@ class PaymentRecordingService
         PaymentType $type,
         PaymentMethod $method,
         float $amount,
-        Carbon $payment_date,
+        Carbon|CarbonInterface|CarbonImmutable $payment_date,
         array $allocations,
         ?string $reference = null,
         ?string $notes = null,

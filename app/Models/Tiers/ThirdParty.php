@@ -92,7 +92,22 @@ class ThirdParty extends Model implements HasMedia
 
     public function customerQuotes(): HasMany
     {
-        return $this->hasMany(CustomerQuote::class, 'id', 'client_id');
+        return $this->hasMany(CustomerQuote::class, 'client_id');
+    }
+
+    public function customerInvoices(): HasMany
+    {
+        return $this->hasMany(\App\Models\Commerce\CustomerInvoice::class, 'client_id');
+    }
+
+    public function payments(): HasMany
+    {
+        return $this->hasMany(\App\Models\Commerce\Payment::class, 'third_party_id');
+    }
+
+    public function clientEquipments(): HasMany
+    {
+        return $this->hasMany(\App\Models\Interventions\ClientEquipment::class);
     }
 
     public function getComplianceStatusLabelAttribute(): string
@@ -204,7 +219,7 @@ class ThirdParty extends Model implements HasMedia
     public function getMainAddress(): ?Address
     {
         return $this->addresses()
-            ->where('is_primary', true)
+            ->where('is_default', true)
             ->first() ?? $this->addresses()->first();
     }
 

@@ -27,3 +27,4 @@ junit.xml
 /packages.txt
 /GEMINI.md
 test_*.php
+/coverage/clover.xml

@@ -34,7 +34,16 @@ class InterventionForm
                                             ->searchable()
                                             ->preload()
                                             ->required()
+                                            ->live()
                                             ->label('Client'),
+
+                                        Select::make('client_equipment_id')
+                                            ->label('Équipement concerné')
+                                            ->relationship('clientEquipment', 'name', fn (\Illuminate\Database\Eloquent\Builder $query, Get $get) => $query->where('third_party_id', $get('third_party_id')))
+                                            ->searchable()
+                                            ->preload()
+                                            ->nullable()
+                                            ->disabled(fn (Get $get) => ! $get('third_party_id')),
 
                                         Select::make('chantier_id')
                                             ->relationship('chantier', 'reference')
@@ -111,7 +120,28 @@ class InterventionForm
                                     ->relationship('materials')
                                     ->label('Pièces de rechange et matériel consommé')
                                     ->schema([
-                                        Grid::make(['default' => 1, 'sm' => 3])->schema([
+                                        Grid::make(['default' => 1, 'sm' => 5])->schema([
+                                            \Marcelorodrigo\FilamentBarcodeScannerField\Forms\Components\BarcodeInput::make('barcode_scanner')
+                                                ->label('Scanner')
+                                                ->placeholder('Scanner le code-barres')
+                                                ->live()
+                                                ->dehydrated(false)
+                                                ->afterStateUpdated(function ($state, callable $set) {
+                                                    if ($state) {
+                                                        $item = Item::where('barcode', $state)->first();
+                                                        if ($item) {
+                                                            $set('item_id', $item->id);
+                                                            $set('selling_price', $item->selling_price);
+                                                        } else {
+                                                            \Filament\Notifications\Notification::make()
+                                                                ->warning()
+                                                                ->title('Article introuvable')
+                                                                ->body("Code-barres {$state} inconnu.")
+                                                                ->send();
+                                                        }
+                                                    }
+                                                }),
+
                                             Select::make('item_id')
                                                 ->label('Article')
                                                 ->options(Item::pluck('name', 'id'))

@@ -27,6 +27,7 @@ class TechnicienPanelProvider extends PanelProvider
         return $panel
             ->id('technicien')
             ->path('technicien')
+            ->viteTheme('resources/css/filament/technicien/theme.css')
             ->login()
             ->sidebarCollapsibleOnDesktop()
             ->databaseNotifications()

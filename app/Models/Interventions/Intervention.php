@@ -14,11 +14,13 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use App\Observers\Interventions\InterventionObserver;
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
 
 #[ObservedBy([InterventionObserver::class])]
-class Intervention extends Model
+class Intervention extends Model implements HasMedia
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, InteractsWithMedia;
 
     protected $fillable = [
         'company_id',
@@ -31,6 +33,7 @@ class Intervention extends Model
         'scheduled_at',
         'completed_at',
         'flat_rate_price',
+        'client_equipment_id',
     ];
 
     protected $casts = [
@@ -69,5 +72,10 @@ class Intervention extends Model
     public function signatures(): \Illuminate\Database\Eloquent\Relations\MorphMany
     {
         return $this->morphMany(\App\Models\Core\Signature::class, 'signable');
+    }
+
+    public function clientEquipment(): BelongsTo
+    {
+        return $this->belongsTo(ClientEquipment::class);
     }
 }

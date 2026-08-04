@@ -21,6 +21,8 @@ class PayrollExportResource extends Resource
     protected static ?string $model = PayrollExport::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    
+    protected static \UnitEnum|string|null $navigationGroup = 'Déclarations & Exports';
 
     protected static ?string $navigationLabel = 'Exports Paie';
     protected static ?string $modelLabel = 'Export Paie';

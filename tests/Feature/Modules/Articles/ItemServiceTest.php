@@ -105,3 +105,42 @@ test('il peut calculer le coût d\'un ouvrage imbriqué dans un autre', function
         expect($costs['total_cost'])->toEqual(22.00);
     });
 });
+
+/**
+ * Test de l'exception de récursivité infinie (profondeur > 5).
+ */
+test('il lance une exception si la profondeur dépasse 5 (récursivité infinie)', function () {
+    Item::withoutEvents(function () {
+        $work = Item::factory()->create(['type' => ItemType::WORK]);
+        
+        // On simule une boucle infinie en ajoutant l'ouvrage comme composant de lui-même
+        $work->components()->create([
+            'child_item_id' => $work->id, 
+            'quantity' => 1, 
+            'loss_percentage' => 0
+        ]);
+
+        expect(fn() => $this->itemService->calculateDetailedCost($work))
+            ->toThrow(\App\Exceptions\Articles\ArticlesModuleException::class, "Profondeur maximale de l'ouvrage atteinte (Récursion infinie suspectée).");
+    });
+});
+
+/**
+ * Test du calcul de prix pour le client.
+ */
+test('il retourne le prix correct pour le client (getPricingForClient)', function () {
+    Item::withoutEvents(function () {
+        $material = Item::create([
+            'reference' => 'MAT-CLIENT',
+            'name' => 'Composant Client',
+            'type' => ItemType::STOCKABLE,
+            'purchase_price' => 10.00,
+            'unit_id' => $this->unit->id,
+            'vat_rate_id' => $this->vat->id,
+        ]);
+
+        $pricing = $this->itemService->getPricingForClient($material);
+
+        expect($pricing)->toEqual(10.00);
+    });
+});

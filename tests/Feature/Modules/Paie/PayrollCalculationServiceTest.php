@@ -132,3 +132,56 @@ it('filters contribution rates based on validity dates', function () {
     expect($julyLine->label)->toBe('Nouveau Taux');
     expect((float)$julyLine->employee_rate)->toBe(6.0);
 });
+
+it('deducts absence days and adds indemnity if paid', function () {
+    \App\Models\Core\Company::factory()->create();
+    $employee = Employee::factory()->create(['pas_rate' => 0]);
+    $profile = PayrollContributionProfile::factory()->create();
+    $contract = Contract::factory()->create([
+        'employee_id' => $employee->id,
+        'payroll_contribution_profile_id' => $profile->id,
+        'weekly_hours' => 35,
+        'hourly_rate' => 10.00,
+    ]);
+
+    // Create a 3-day sickness absence (Wednesday to Friday)
+    \App\Models\RH\Abscence::withoutEvents(function () use ($employee) {
+        \App\Models\RH\Abscence::factory()->create([
+            'employee_id' => $employee->id,
+            'type' => \App\Enums\RH\AbsenceType::SICK_LEAVE,
+            'start_date' => '2026-07-08',
+            'end_date' => '2026-07-10',
+            'is_paid' => false,
+        ]);
+
+        // Create a 2-day paid leave (Monday to Tuesday)
+        \App\Models\RH\Abscence::factory()->create([
+            'employee_id' => $employee->id,
+            'type' => \App\Enums\RH\AbsenceType::PAID_LEAVE,
+            'start_date' => '2026-07-20',
+            'end_date' => '2026-07-21',
+            'is_paid' => true,
+        ]);
+    });
+
+    $service = new PayrollCalculationService();
+    $payslip = $service->calculateForEmployee($employee, '2026-07', 151.67, $contract->hourly_rate);
+
+    // Assert that the custom bonuses contain the absence deductions
+    $bonuses = collect($payslip->custom_bonuses);
+    
+    // Sick leave deduction (3 days * 7h = 21h => -210)
+    $sickLeaveDeduction = $bonuses->where('amount', -210.00)->first();
+    expect($sickLeaveDeduction)->not->toBeNull();
+    expect($sickLeaveDeduction['label'])->toContain('Arrêt Maladie');
+
+    // Paid leave deduction (2 days * 7h = 14h => -140)
+    $paidLeaveDeduction = $bonuses->where('amount', -140.00)->first();
+    expect($paidLeaveDeduction)->not->toBeNull();
+    expect($paidLeaveDeduction['label'])->toContain('Congés Payés');
+
+    // Paid leave indemnity (+140)
+    $paidLeaveIndemnity = $bonuses->where('amount', 140.00)->first();
+    expect($paidLeaveIndemnity)->not->toBeNull();
+    expect($paidLeaveIndemnity['label'])->toContain('Indemnité Congés Payés');
+});
