@@ -35,7 +35,7 @@ class InvoiceSendingFailedNotification extends Notification implements ShouldQue
             ->line("**Détails de l'incident :**")
             ->line("• **Facture** : {$this->invoice->reference}")
             ->line("• **Client** : {$this->invoice->client->name}")
-            ->line('• **Contact email** : '.$this->invoice->client->primaryContact?->email ?? 'Non défini')
+            ->line('• **Contact email** : '.($this->invoice->client->primaryContact?->email ?? $this->invoice->client->email ?? 'Non défini'))
             ->line("• **Statut facture** : {$this->invoice->status->getLabel()}")
             ->line('• **Montant** : '.number_format($this->invoice->total_ttc, 2, ',', ' ').' € TTC')
             ->line('')

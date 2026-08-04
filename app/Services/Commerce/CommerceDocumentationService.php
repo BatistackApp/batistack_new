@@ -177,7 +177,12 @@ class CommerceDocumentationService extends DocumentService
     /**
      * Génère un relevé de compte client (liste des factures et paiements).
      */
-    public function generateCustomerStatement(int $clientId, Carbon|CarbonInterface|null $startDate = null, Carbon|CarbonInterface|null $endDate = null): string
+    public function generateCustomerStatement(
+        int $clientId,
+        Carbon|CarbonInterface|null $startDate = null,
+        Carbon|CarbonInterface|null $endDate = null,
+        ?string $status = null
+    ): string
     {
         $client = ThirdParty::findOrFail($clientId);
         $client->load(['customerInvoices', 'payments']);
@@ -185,6 +190,7 @@ class CommerceDocumentationService extends DocumentService
         $invoices = $client->customerInvoices()
             ->when($startDate, fn ($q) => $q->whereDate('created_at', '>=', $startDate))
             ->when($endDate, fn ($q) => $q->whereDate('created_at', '<=', $endDate))
+            ->when($status, fn ($q) => $q->where('status', $status))
             ->orderBy('created_at')
             ->get();
 
@@ -202,6 +208,7 @@ class CommerceDocumentationService extends DocumentService
             'payments' => $payments,
             'startDate' => $startDate ?? Carbon::now()->subMonths(3),
             'endDate' => $endDate ?? Carbon::now(),
+            'status' => $status,
             'title' => 'RELEVÉ DE COMPTE CLIENT - '.$client->name,
             'generated_at' => Carbon::now()->format('d/m/Y H:i'),
         ];

@@ -44,6 +44,7 @@ class ArticlesPanelProvider extends PanelProvider
                 TableLayoutTogglePlugin::make()
                     ->setDefaultLayout('list')
                     ->displayToggleAction(true),
+                \LaBoiteACode\FilamentDashboardWidgets\FilamentDashboardWidgetsPlugin::make(),
             ])
             ->middleware([
                 EncryptCookies::class,

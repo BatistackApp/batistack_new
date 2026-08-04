@@ -2,78 +2,75 @@
 
 namespace App\Jobs\Commerce;
 
+use App\Mail\Commerce\CustomerInvoiceMail;
 use App\Models\Commerce\CustomerInvoice;
 use App\Models\User;
-use App\Notifications\Commerce\InvoiceGeneratedNotification;
 use App\Notifications\Commerce\InvoiceSendingFailedNotification;
+use App\Services\Commerce\CommerceDocumentationService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification;
-use Log;
 
 class SendCustomerInvoiceEmailJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public int $tries = 3;              // Nombre de tentatives
+    public int $tries = 3;
 
-    public int $timeout = 120;          // Timeout en secondes
+    public int $timeout = 120;
 
-    public array $backoff = [60, 300];    // Délais de retry (1min, 5min)
+    public array $backoff = [60, 300];
 
     public function __construct(protected CustomerInvoice $invoice) {}
 
-    /**
-     * @throws \Exception
-     */
-    public function handle(): void
+    public function handle(CommerceDocumentationService $documents): void
     {
         try {
-            // 1. Vérification que la facture est en statut VALIDATED
-            if ($this->invoice->status->value !== 'validated') {
-                Log::warning("Invoice {$this->invoice->reference} is not in validated status");
+            $this->invoice->loadMissing(['client.primaryContact']);
+
+            if (! in_array($this->invoice->status->value, ['validated', 'partially_paid', 'paid'], true)) {
+                Log::warning("Invoice {$this->invoice->reference} cannot be sent from status {$this->invoice->status->value}");
 
                 return;
             }
 
-            // 2. Récupération du contact principal du client
-            $contact = $this->invoice->client?->primaryContact;
-            if (! $contact || ! $contact->email) {
+            $email = $this->invoice->client?->getPrimaryContact()?->email ?: $this->invoice->client?->email;
+            if (! $email) {
                 Log::warning("No valid contact email for invoice {$this->invoice->reference}");
 
                 return;
             }
 
-            // 3. Envoi de l'email avec la facture en pièce jointe
-            $contact->notify(new InvoiceGeneratedNotification($this->invoice));
+            $pdfPath = $documents->generateInvoicePdf($this->invoice);
 
-            // 4. Marquage du timestamp d'envoi
+            Mail::to($email)->send(new CustomerInvoiceMail($this->invoice, $pdfPath));
+
             $this->invoice->updateQuietly([
                 'sent_at' => now(),
             ]);
 
-            Log::info("Invoice {$this->invoice->reference} sent to {$contact->email}");
-
-        } catch (\Exception $e) {
+            Log::info("Invoice {$this->invoice->reference} sent to {$email}");
+        } catch (\Throwable $e) {
             Log::error("Error sending invoice {$this->invoice->reference}: ".$e->getMessage());
-            throw $e; // Déclenche une retry
+            throw $e;
         }
     }
 
-    public function fail(?\Throwable $exception = null): void
+    public function failed(?\Throwable $exception = null): void
     {
         Log::critical("Invoice {$this->invoice->reference} email delivery failed permanently", [
-            'error' => $exception->getMessage(),
+            'error' => $exception?->getMessage(),
         ]);
 
-        // Notification au service Compta
         $admins = User::where('is_admin', true)->get();
         Notification::send(
             $admins,
-            new InvoiceSendingFailedNotification($this->invoice, $exception)
+            new InvoiceSendingFailedNotification($this->invoice, $exception ?? new \RuntimeException('Unknown mail delivery error'))
         );
     }
 }
