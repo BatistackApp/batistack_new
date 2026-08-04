@@ -33,7 +33,7 @@ class AppServiceProvider extends ServiceProvider
         \App\Models\Banque\BankReconciliation::observe(\App\Observers\Banque\BankReconciliationObserver::class);
         \App\Models\Immobilisation\FixedAsset::observe(\App\Observers\Immobilisation\FixedAssetObserver::class);
         \App\Models\Locations\RentalContract::observe(\App\Observers\Locations\RentalContractObserver::class);
-        
+
         if (app()->isProduction() || env('FORCE_HTTPS', false)) {
             \Illuminate\Support\Facades\URL::forceScheme('https');
             request()->server->set('HTTPS', 'on');
@@ -56,6 +56,9 @@ class AppServiceProvider extends ServiceProvider
                     'locations',
                     'gpao',
                     'technicien',
+                    'customer',
+                    'salarie',
+                    'terrain',
                 ])
                 ->modalHeading('Espaces')
                 ->slideOver()
@@ -74,6 +77,9 @@ class AppServiceProvider extends ServiceProvider
                     'locations' => Phosphor::KeyReturn,
                     'gpao' => Phosphor::Factory,
                     'technicien' => Phosphor::Wrench,
+                    'customer' => Phosphor::User,
+                    'salarie' => Phosphor::UserRectangle,
+                    'terrain' => Phosphor::MapTrifold,
                 ])
                 ->labels([
                     'core' => 'Configurations',
@@ -90,6 +96,9 @@ class AppServiceProvider extends ServiceProvider
                     'locations' => 'Locations',
                     'gpao' => 'Atelier & Production',
                     'technicien' => 'Espace Technicien',
+                    'customer' => 'Espace Client',
+                    'salarie' => 'Espace Salarié',
+                    'terrain' => 'Espace Terrain',
                 ]);
         });
 
