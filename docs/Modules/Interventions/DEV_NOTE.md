@@ -25,14 +25,15 @@ Le module **Interventions** permet la gestion complète du service après-vente 
 *   **Espace Technicien SAV** : Panel dédié et sécurisé (`/technicien`) protégé par le middleware `EnsureUserIsTechnician`. L'interface est simplifiée, restreinte aux interventions assignées ("Planifiée" ou supérieur). Les données financières y sont masquées en lecture seule.
 *   **Signature Client** : Intégration du composant de signature électronique (`filament-autograph`) directement en action sur la table. Toute modification ultérieure invalide automatiquement la signature (génération d'un Token UUID pour scellement cryptographique).
 *   **QR Code Matériel** : Intégration d'un scanner permettant d'ajouter rapidement des pièces détachées directement depuis le camion via un smartphone.
-*   **Application Mobile Technicien (PWA/Offline)** : Créer une interface simplifiée (Offline-first) pour le technicien sur le terrain, permettant de synchroniser les interventions réalisées et les pièces utilisées une fois la connexion réseau retrouvée.
-*   **Tracking GPS des Camions** : Lier les interventions à la géolocalisation des flottes pour optimiser automatiquement les tournées des techniciens (calcul de l'itinéraire le plus court via l'API Google Maps ou OSRM).
+
 
 ### 5. Tests
-*   Couverture robuste avec PestPHP. L'intégralité de la logique métier, du déstockage automatique, de la facturation, des signatures, et des contraintes d'intégrité de la base de données passe avec succès (100% de réussite).
+*   Couverture robuste avec PestPHP. L'intégralité de la logique métier (gestion, facturation, maintenance prédictive, optimisation d'itinéraire), du déstockage automatique, de la facturation, des signatures, et des contraintes d'intégrité passe avec succès (100% de réussite). Les composants mineurs et les observers sont également couverts.
 
 ## 🚧 Ce qu'il reste à faire
 *   Le socle initial du module est terminé et opérationnel, y compris avec les signatures cryptographiques.
 
 ## 💡 Idées d'amélioration et Nouvelles Fonctionnalités
+*   **Application Mobile Technicien (PWA/Offline)** : Créer une interface simplifiée (Offline-first) pour le technicien sur le terrain, permettant de synchroniser les interventions réalisées et les pièces utilisées une fois la connexion réseau retrouvée.
+*   **Tracking GPS des Camions** : Lier les interventions à la géolocalisation des flottes pour optimiser automatiquement les tournées des techniciens (calcul de l'itinéraire le plus court via l'API Google Maps ou OSRM).
 *   **Refonte du Dashboard SAV (Widgets Avancés)** : Intégration de `laboiteacode/filament-dashboard-widgets` pour afficher la rentabilité du SAV (Variance), le respect des SLA (Goal), l'entonnoir des interventions (Funnel) et les alertes urgentes (Detail List).
