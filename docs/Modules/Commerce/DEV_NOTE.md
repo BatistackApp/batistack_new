@@ -8,12 +8,12 @@ Le module **Commerce** couvre l'intégralité du cycle de vente et d'achat de l'
 ### 1. Modèles de Données & Enums (`app/Models/Commerce` & `app/Enums/Commerce`)
 *   **Ventes (Clients)** : `CustomerQuote`, `CustomerOrder`, `CustomerDeliveryNote`, `CustomerSituation`, `CustomerInvoice`, `CustomerCreditNote` et leurs lignes de détails respectives.
 *   **Achats (Fournisseurs)** : `PurchaseRequest`, `PurchaseOrder`, `ReceiptNote`, `SubcontractorSituation`, `SupplierInvoice`, `SupplierCreditNote` et leurs lignes de détails.
-*   **Paiements** : `Payment` et `PaymentAllocation` (pour gérer les règlements partiels).
+*   **Paiements** : `Payment` et `PaymentAllocation` (pour gérer les règlements partiels et l'allocation des paiements aux factures).
 *   **Enums strictes** : Gestion rigoureuse des statuts (`QuoteStatus`, `OrderStatus`, `DeliveryStatus`, `InvoiceStatus`, `PaymentStatus`).
 
 ### 2. Logique Métier & Services (`app/Services/Commerce`)
 *   **Génération et Conversion** : `QuoteService`, `CustomerOrderService`, `PurchaseService`, `SituationService`, etc., pour la transformation fluide d'un document à un autre (ex: Devis -> Commande).
-*   **Génération de Documents** : Génération PDF des documents avec l'identité de l'entreprise, configurée via Browsershot. Les problèmes de race conditions sur la génération ont été fixés (Jobs asynchrones). L'affichage PDF à la volée est implémenté. Mise en page CSS corrigée.
+*   **Génération de Documents** : Génération PDF des documents avec l'identité de l'entreprise (configurée via Browsershot), incluant désormais les bons de commande (client/fournisseur), situations de travaux, audits de factures fournisseurs, et relevés de compte client. L'affichage PDF à la volée est implémenté avec gestion asynchrone pour éviter les race conditions.
 *   **Numérotation & Légalisation** : `InvoiceLegalizationService`. Résolution des erreurs de séquençage et des contraintes d'unicité lors de la validation des factures.
 *   **Analytique et Sécurité** : `CommerceAnalyticService`, `SupplierInvoiceAuditService` et `RetentionGuaranteeService`.
 
@@ -27,7 +27,7 @@ Le module **Commerce** couvre l'intégralité du cycle de vente et d'achat de l'
 *   **Signature Électronique Intégrée** : Bouton d'envoi de devis intégrant une demande de signature numérique (via `LocalSignatureProvider`). Le client reçoit un email, signe sur le portail public, et le devis passe automatiquement en statut `ACCEPTED` déclenchant la suite du processus (création chantier/commande).
 
 ### 5. Tests
-*   Validation complète du module avec 100% de succès sur la gigantesque suite de **182 tests** PestPHP. Le cycle de vie complet est garanti sans faille logicielle.
+*   Validation complète du module avec 100% de succès sur la gigantesque suite de tests PestPHP (incluant les nouvelles fonctionnalités : rapports PDF, allocations de paiements, annulations et dé-lettrages). Le cycle de vie complet est garanti sans faille logicielle.
 
 ## 🚧 Ce qu'il reste à faire
 *   Peaufiner potentiellement certains détails cosmétiques des exports PDF selon les retours utilisateurs finaux.
