@@ -60,6 +60,7 @@ class CorePanelProvider extends PanelProvider
                 AuthDesignerPlugin::make()
                     ->login(),
                 FilamentJobsMonitorPlugin::make(),
+                \LaBoiteACode\FilamentDashboardWidgets\FilamentDashboardWidgetsPlugin::make(),
             ])
             ->databaseNotifications()
             ->authMiddleware([
