@@ -8,7 +8,7 @@ use Filament\Widgets\StatsOverviewWidget\Stat;
 
 class PurchasesStatsWidget extends StatsOverviewWidget
 {
-    protected static ?int $sort = 3;
+    protected static ?int $sort = 6;
     protected int | string | array $columnSpan = 'full';
 
     protected function getStats(): array

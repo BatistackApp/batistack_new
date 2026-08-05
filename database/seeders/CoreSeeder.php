@@ -19,6 +19,7 @@ class CoreSeeder extends Seeder
             ['key' => 'siren_api_key'],
             ['key' => 'ocr_enabled', 'type' => 'boolean', 'value' => '0'],
             ['key' => 'ocr_google_key'],
+            ['key' => 'commerce_monthly_revenue_goal', 'type' => 'number', 'value' => '100000'],
         ];
 
         foreach ($settings as $setting) {
