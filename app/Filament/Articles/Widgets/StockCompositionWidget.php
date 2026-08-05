@@ -20,14 +20,15 @@ class StockCompositionWidget extends CompositionWidget
     protected function getComposition(): Composition
     {
         $stocks = Cache::remember('dashboard_stock_composition', 300, function () {
-            return Stock::with('store')
-                ->selectRaw('store_id, sum(quantity * unit_price) as total_value')
-                ->groupBy('store_id')
+            return Stock::with('warehouse')
+                ->join('items', 'stocks.item_id', '=', 'items.id')
+                ->selectRaw('stocks.warehouse_id, sum(stocks.quantity * items.purchase_price) as total_value')
+                ->groupBy('stocks.warehouse_id')
                 ->get();
         });
         
         $slices = $stocks->map(function ($stock) {
-            return CompositionSlice::make($stock->store?->name ?? 'Magasin inconnu', $stock->total_value)
+            return CompositionSlice::make($stock->warehouse?->name ?? 'Magasin inconnu', $stock->total_value)
                 ->color($this->getRandomColor());
         })->toArray();
         
