@@ -33,3 +33,6 @@ Le module **Locations** permet de gérer l'ensemble des locations de matériel (
 
 ## 💡 Idées d'amélioration et Nouvelles Fonctionnalités
 *   **Suivi Géolocalisé** : Si du gros équipement (ex: pelles, grues) est loué avec des capteurs GPS, pouvoir remonter leur position via une API externe directement sur la fiche d'information du `RentalContract`.
+*   **Extension "Location Client" (Location Sortante)** : Permettre de louer le matériel en propre (Immobilisations) à des clients ou sous-traitants, avec génération automatique des factures de vente récurrentes.
+*   **Comparateur de Prix Fournisseurs** : Intégrer les grilles tarifaires des fournisseurs pour suggérer automatiquement le loueur le plus économique lors d'un besoin matériel.
+*   **Gestion des Dépassements et Pénalités** : Alertes urgentes de restitution (J-1) et majoration automatique du coût analytique en cas de retard de restitution sans avenant.

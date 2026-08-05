@@ -19,6 +19,7 @@ Le module **Paie** centralise l'édition et le calcul des bulletins de salaire (
     *   `AccountingExportService` : Génère l'OD Comptable (journal de paie en partie double : 641100, 421000, 431000...).
     *   `PayslipPdfService` : Génération du PDF avec cumuls annuels dynamiques.
 *   **Clôture** : `PayslipLockService` verrouille les pointages et les bulletins en fin de mois.
+*   **Simulateur** : `PayrollSimulatorService` offre un outil Brut -> Net ou Net -> Brut pour prévoir le coût employeur.
 
 ### 3. Interface Utilisateur (Filament & Espace Salarié)
 *   **Gestion (RH/Admin)** :
@@ -35,6 +36,8 @@ Le module **Paie** centralise l'édition et le calcul des bulletins de salaire (
 *   Le module paie de base est d'ores et déjà entièrement opérationnel, incluant des fonctionnalités comptables avancées.
 
 ## 💡 Idées d'amélioration et Nouvelles Fonctionnalités
+*   **Coffre-Fort Numérique Sécurisé (Digiposte / eDoc)** : Intégrer une API pour déposer automatiquement et légalement (pendant 50 ans) les bulletins de salaire dans le coffre-fort numérique (CPA) de chaque employé, remplaçant la simple vue PDF.
+*   **Télétransmission DSN Automatique (API Machine-to-Machine)** : Connexion à l'API URSSAF/Net-Entreprises pour télétransmettre la DSN et récupérer les accusés de réception (CRM) directement depuis l'ERP sans manipuler de fichiers CSV.
+*   **Gestion de la Subrogation et du Maintien de Salaire (IJSS)** : Intégrer les règles de maintien de salaire de la Convention Collective du BTP et déduire/verser les Indemnités Journalières de Sécurité Sociale (IJSS) en cas d'arrêt longue maladie.
 *   **Gestion des Congés Payés et Absences** : Interfacer encore plus profondément avec le module RH pour déduire automatiquement les jours d'absence (maladie, CP) sur le bulletin.
-*   **Simulation de Paie** : Créer un outil Brut -> Net ou Net -> Brut pour prévoir le coût employeur d'une embauche ou d'une augmentation.
-*   **Multi-Conventions Collectives** : Le système supportant déjà plusieurs profils, il suffirait de créer (seeder) les profils "Ouvriers" et "Cadres" pour compléter l'offre.
+*   **Multi-Conventions Collectives** : Créer (via Seeders) les profils de cotisations officiels pour les "Ouvriers" et "Cadres" afin de compléter l'offre (le système supporte déjà techniquement ces variations).

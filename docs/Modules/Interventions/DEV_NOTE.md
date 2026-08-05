@@ -32,7 +32,7 @@ Le module **Interventions** permet la gestion complète du service après-vente 
 
 ## 🚧 Ce qu'il reste à faire
 *   Le socle initial du module est terminé et opérationnel, y compris avec les signatures cryptographiques.
+*   **Portail Client (Vérification)** : Un portail client est déjà préparé. Il faut s'assurer qu'il permet bien au client de visualiser son parc de matériel (`ClientEquipment`) et de déclarer une panne/demander une intervention sur cet équipement spécifique.
 
 ## 💡 Idées d'amélioration et Nouvelles Fonctionnalités
-*   **Application Mobile Technicien (PWA/Offline)** : Créer une interface simplifiée (Offline-first) pour le technicien sur le terrain, permettant de synchroniser les interventions réalisées et les pièces utilisées une fois la connexion réseau retrouvée.
-*   **Tracking GPS des Camions** : Lier les interventions à la géolocalisation des flottes pour optimiser automatiquement les tournées des techniciens (calcul de l'itinéraire le plus court via l'API Google Maps ou OSRM).
+

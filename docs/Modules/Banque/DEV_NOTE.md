@@ -31,8 +31,11 @@ Le module **Banque** gère la trésorerie de l'entreprise. Il permet de connecte
 *   Validation solide des intégrations bancaires via PestPHP, incluant la simulation de la synchronisation Open Banking (Bridge API), l'import manuel (StatementImportService) et surtout l'algorithme de lettrage intelligent (ReconciliationService) avec gestion des cas d'usage multiples (doublons, erreurs API).
 
 ## 🚧 Ce qu'il reste à faire
-*   **Paiement Fournisseurs SEPA** : Étendre l'export SEPA (actuellement utilisé pour les Notes de Frais) au paiement groupé des factures fournisseurs.
+*   Le module est fondamentalement complet, bien que les fonctionnalités ci-dessous puissent être implémentées.
 
 ## 💡 Idées d'amélioration et Nouvelles Fonctionnalités
-*   **Appariement des Paies** : Permettre le lettrage automatique des lignes de virement "Salaires" avec les fiches de paie générées par le module RH.
+*   **Paiement Fournisseurs SEPA** : Créer une action groupée sur la liste des factures fournisseurs pour générer un fichier de virement SEPA global, de la même manière que pour les notes de frais.
+*   **Renouvellement de l'authentification forte (DSP2)** : Alerte proactive (notification Filament) avant l'expiration du token bancaire (90 jours) pour inviter l'administrateur à se réauthentifier sans perdre la synchronisation.
+*   **Tableau de bord "Clôture Mensuelle"** : Vue de supervision listant les anomalies pour l'expert-comptable (transactions orphelines, montants élevés sans justificatifs, désynchronisation des statuts).
+*   **Lettrage Automatique des Paies (Appariement RH)** : Interconnecter le moteur de rapprochement avec le module RH pour lettrer automatiquement les flux "Salaires" avec les fiches de paie générées.
 *   **Module "Comptabilité" complet** : (Mis en attente) Prévoir à terme la création d'un module dédié pour générer les écritures comptables et les exports standards (FEC, Sage, Cegid, etc.) destinés à l'expert-comptable.

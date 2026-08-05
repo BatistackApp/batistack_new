@@ -43,4 +43,6 @@ Le module **Ressources Humaines (RH)** est l'un des piliers centraux de Batistac
 *   Le module est fonctionnellement très abouti et couvre tous les besoins RH classiques et avancés. Il est en phase de maintenance/amélioration continue.
 
 ## 💡 Idées d'amélioration et Nouvelles Fonctionnalités
-*   **Intégration DSN complète** : Déclaration Sociale Nominative via API net-entreprises.
+*   **Entretiens Annuels et Évaluations Professionnelles** : Planification et gestion des entretiens obligatoires. Génération du compte-rendu PDF avec grille d'évaluation et signature électronique manager/employé.
+*   **Gestion de la Formation (OPCO)** : Suivi des sessions de formation, des coûts (et remboursements OPCO), avec mise à jour et renouvellement automatiques des Habilitations/CACES des participants.
+*   **Détection d'Anomalies de Pointage** : Algorithme de contrôle croisant les heures de pointage avec les données du module Flottes (trajet du véhicule) pour détecter automatiquement les incohérences ou les heures supplémentaires abusives et lever une alerte RH.

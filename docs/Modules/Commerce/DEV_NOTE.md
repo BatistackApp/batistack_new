@@ -32,8 +32,7 @@ Le module **Commerce** couvre l'intégralité du cycle de vente et d'achat de l'
 
 ## 🚧 Ce qu'il reste à faire
 *   Peaufiner potentiellement certains détails cosmétiques des exports PDF selon les retours utilisateurs finaux.
-*   Intégrer les workflows de relances d'impayés.
 
 ## 💡 Idées d'amélioration et Nouvelles Fonctionnalités
-*   **Paiement en ligne & Relances automatiques** : Intégrer un lien de paiement Stripe ou prélèvement SEPA (GoCardless) en bas de la facture électronique, couplé à un robot qui relance par email les impayés à J+3, J+15.
-*   **Bibliothèques d'Ouvrages** : Interfacer le devis avec Batiprix ou une autre bibliothèque d'ouvrages BTP standardisée pour accélérer le chiffrage.
+*   **Relances Automatiques d'Impayés (Dunning Process)** : Mettre en place une tâche planifiée pour vérifier chaque nuit les factures échues et envoyer automatiquement des e-mails graduels (Relance amiable à J+3, J+15, puis Mise en demeure avec ajout automatique des indemnités forfaitaires de 40€ et pénalités de retard à J+30).
+*   **Paiement en Ligne Sécurisé (Stripe / GoCardless)** : Intégrer un QR Code ou lien cliquable sur le PDF de la facture. Le client paie par CB ou mandat SEPA, ce qui lettre automatiquement la facture dans le système sans intervention humaine.

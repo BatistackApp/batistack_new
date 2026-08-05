@@ -37,7 +37,7 @@ class StockRotationTrendWidget extends TrendWidget
         
         $cacheKey = "dashboard_stock_rotation_{$days}";
         
-        $points = Cache::remember($cacheKey, 300, function () use ($days) {
+        $rawPoints = Cache::remember($cacheKey, 300, function () use ($days) {
             $period = CarbonPeriod::create(now()->subDays($days), now());
             $data = [];
             
@@ -52,14 +52,26 @@ class StockRotationTrendWidget extends TrendWidget
                 $dateStr = $date->format('Y-m-d');
                 $total = isset($mouvements[$dateStr]) ? $mouvements[$dateStr]->sum('quantity') : 0;
                 
-                $data[] = TrendPoint::make($date->format('d/m'), $total);
+                $data[] = [
+                    'label' => $date->format('d/m'),
+                    'value' => (float) $total
+                ];
             }
             
             return $data;
         });
 
-        // Calcul simpliste du total
-        $total = array_sum(array_map(fn($p) => $p->getValue(), $points));
+        $points = [];
+        $total = 0;
+        foreach ($rawPoints as $pt) {
+            if ($pt instanceof TrendPoint) {
+                $points[] = $pt;
+                $total += $pt->getValue();
+            } else {
+                $points[] = TrendPoint::make($pt['label'], $pt['value']);
+                $total += $pt['value'];
+            }
+        }
 
         return Trend::make('Sorties cumulées')
             ->value($total)

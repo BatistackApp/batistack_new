@@ -34,3 +34,6 @@ Le module **Tiers** est le cœur de la relation externe de Batistack. Il central
 ## 🚧 Ce qu'il reste à faire
 *   La base du module est terminée et extrêmement complète. Aucune amélioration prioritaire n'est requise dans l'immédiat.
 
+## 💡 Idées d'amélioration et Nouvelles Fonctionnalités
+*   **Collecte Automatique des Documents Légaux** : Connecter l'ERP à une API légale tierce (e-Attestations ou Provigis) pour télécharger et mettre à jour automatiquement les Kbis et attestations URSSAF des sous-traitants, annulant le besoin de relance manuelle.
+*   **Module d'E-Mailing et Campagnes** : Création d'un outil de publipostage intégré pour cibler la base de données Contacts B2B (ex: informations de fermeture annuelle aux sous-traitants, offres de maintenance aux clients).
