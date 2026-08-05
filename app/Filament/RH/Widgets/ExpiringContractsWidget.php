@@ -12,7 +12,7 @@ use ToneGabes\Filament\Icons\Enums\Phosphor;
 
 class ExpiringContractsWidget extends TableWidget
 {
-    protected static ?int $sort = 3;
+    protected static ?int $sort = 6;
 
     protected int|string|array $columnSpan = 'full';
 

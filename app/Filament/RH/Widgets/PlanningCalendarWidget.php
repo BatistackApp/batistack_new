@@ -12,7 +12,8 @@ use Illuminate\Support\Collection;
 
 class PlanningCalendarWidget extends CalendarWidget
 {
-    protected static ?int $sort = 3;
+    protected static ?int $sort = 5;
+    protected int | string | array $columnSpan = 'full';
 
     protected bool $isHeaderCalendar = true; // Use simple true/false if valid, or just let it be
 

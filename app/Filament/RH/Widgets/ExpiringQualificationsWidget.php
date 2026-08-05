@@ -12,9 +12,8 @@ use ToneGabes\Filament\Icons\Enums\Phosphor;
 
 class ExpiringQualificationsWidget extends TableWidget
 {
-    protected static ?int $sort = 2;
-
-
+    protected static ?int $sort = 8;
+    protected int | string | array $columnSpan = 'full';
     protected static ?string $heading = 'Alertes Sécurité & Habilitations (Échéance < 60j)';
 
     public function table(Table $table): Table
