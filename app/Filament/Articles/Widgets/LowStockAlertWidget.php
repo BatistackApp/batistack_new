@@ -27,7 +27,7 @@ class LowStockAlertWidget extends DetailListWidget
                 ->badge('Stock: ' . $stock->quantity . ' (Alerte: ' . $stock->min_threshold . ')')
                 ->badgeColor('danger')
                 ->icon('heroicon-o-exclamation-triangle')
-                ->url(route('filament.articles.resources.stocks.edit', ['record' => $stock->id]));
+                ->url($stock->item_id ? route('filament.articles.resources.items.edit', ['record' => $stock->item_id]) : '#');
         })->toArray();
     }
 }
