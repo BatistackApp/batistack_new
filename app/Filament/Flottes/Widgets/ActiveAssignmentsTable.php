@@ -15,7 +15,7 @@ class ActiveAssignmentsTable extends TableWidget
 {
     protected static ?string $heading = 'Suivi des Équipages sur les Routes';
 
-    protected static ?int $sort = 3;
+    protected static ?int $sort = 7;
 
     protected int | string | array $columnSpan = 'full';
 

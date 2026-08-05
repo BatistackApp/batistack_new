@@ -133,7 +133,6 @@ class ThirdPartyForm
                                     ->schema([
                                         TextInput::make('iban')
                                             ->label('IBAN')
-                                            ->mask('aa99 9999 9999 9999 9999 9999 9999 9999')
                                             ->rule(new Iban),
 
                                         TextInput::make('bic')

@@ -252,9 +252,8 @@ class CustomerInvoice extends Model
      */
     public function scopeUnpaid($query)
     {
-        return $query->where('status', InvoiceStatus::VALIDATED)
-            ->withSum('allocations', 'allocated_amount')
-            ->havingRaw('COALESCE(allocations_sum_allocated_amount, 0) < total_ttc');
+        return $query->whereIn('status', [InvoiceStatus::VALIDATED, InvoiceStatus::PARTIALLY_PAID])
+            ->whereRaw('total_ttc > COALESCE((select sum(allocated_amount) from payment_allocations where payment_allocations.payable_id = customer_invoices.id and payment_allocations.payable_type = ?), 0)', [self::class]);
     }
 
     /**

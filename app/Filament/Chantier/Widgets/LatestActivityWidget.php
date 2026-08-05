@@ -19,7 +19,8 @@ class LatestActivityWidget extends TableWidget
 {
     protected static ?string $heading = 'Derniers événements terrain';
 
-    protected static ?int $sort = 3;
+    protected static ?int $sort = 9;
+    protected int | string | array $columnSpan = 'full';
 
     public function table(Table $table): Table
     {

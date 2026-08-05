@@ -33,7 +33,7 @@ class AppServiceProvider extends ServiceProvider
         \App\Models\Banque\BankReconciliation::observe(\App\Observers\Banque\BankReconciliationObserver::class);
         \App\Models\Immobilisation\FixedAsset::observe(\App\Observers\Immobilisation\FixedAssetObserver::class);
         \App\Models\Locations\RentalContract::observe(\App\Observers\Locations\RentalContractObserver::class);
-        
+
         if (app()->isProduction() || env('FORCE_HTTPS', false)) {
             \Illuminate\Support\Facades\URL::forceScheme('https');
             request()->server->set('HTTPS', 'on');
@@ -55,7 +55,6 @@ class AppServiceProvider extends ServiceProvider
                     'immobilisation',
                     'locations',
                     'gpao',
-                    'technicien',
                 ])
                 ->modalHeading('Espaces')
                 ->slideOver()
@@ -73,7 +72,6 @@ class AppServiceProvider extends ServiceProvider
                     'immobilisation' => Phosphor::BoxArrowUp,
                     'locations' => Phosphor::KeyReturn,
                     'gpao' => Phosphor::Factory,
-                    'technicien' => Phosphor::Wrench,
                 ])
                 ->labels([
                     'core' => 'Configurations',
@@ -89,7 +87,6 @@ class AppServiceProvider extends ServiceProvider
                     'immobilisation' => 'Immobilisations',
                     'locations' => 'Locations',
                     'gpao' => 'Atelier & Production',
-                    'technicien' => 'Espace Technicien',
                 ]);
         });
 

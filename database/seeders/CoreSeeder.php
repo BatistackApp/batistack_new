@@ -19,6 +19,7 @@ class CoreSeeder extends Seeder
             ['key' => 'siren_api_key'],
             ['key' => 'ocr_enabled', 'type' => 'boolean', 'value' => '0'],
             ['key' => 'ocr_google_key'],
+            ['key' => 'commerce_monthly_revenue_goal', 'type' => 'number', 'value' => '100000'],
         ];
 
         foreach ($settings as $setting) {
@@ -33,6 +34,7 @@ class CoreSeeder extends Seeder
             ['name' => 'Heure', 'symbol' => 'h', 'type' => UnitType::TIME],
             ['name' => 'Unité', 'symbol' => 'u', 'type' => UnitType::UNIT],
             ['name' => 'Forfait', 'symbol' => 'FF', 'type' => UnitType::FORFAIT],
+            ['name' => 'Tonnes', 'symbol' => 't', 'type' => UnitType::WEIGHT],
         ];
 
         foreach ($units as $unit) {
@@ -45,6 +47,7 @@ class CoreSeeder extends Seeder
             ['name' => 'TVA Intermédiaire 10%', 'rate' => 10.0000],
             ['name' => 'TVA Réduite 5.5%', 'rate' => 5.5000],
             ['name' => 'TVA 2.1%', 'rate' => 2.1000],
+            ['name' => 'TVA en autoliquidation', 'rate' => 0],
         ];
 
         foreach ($vats as $vat) {

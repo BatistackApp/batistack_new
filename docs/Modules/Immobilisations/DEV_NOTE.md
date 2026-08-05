@@ -24,7 +24,7 @@ Le module **Immobilisations** permet la gestion du patrimoine de l'entreprise (m
 *   **Panel Dédié** : Provider `ImmobilisationPanelProvider` accessible sur `/immobilisation`.
 *   **Ressources (CRUD)** : `AssetCategoryResource` et `FixedAssetResource` (incluant les tables et formulaires V5).
 *   **Numérisation des Factures (OCR)** : Auto-complétion intelligente du formulaire de création (`FixedAssetForm`) via `GoogleCloudVisionOcrService` (qui détecte la date, le prix HT, le nom et déduit la catégorie). Le document (image de la facture) est sauvegardé via Spatie MediaLibrary. Optimisation des requêtes par un cache md5 du fichier.
-*   **Alertes et Dashboards** : `AssetAlertsWidget` listant le statut des machines (VGP Expirée/Imminente, Rentabilité critique si coûts réparations > VNC) et `TotalAssetsValueWidget`.
+*   **Alertes et Dashboards Avancés** : Intégration de tableaux de bord responsifs via `laboiteacode/filament-dashboard-widgets` avec indicateurs de Valeur Nette Comptable (Variance VNC globale), de la répartition des actifs (Camembert), d'un objectif de conformité VGP, et d'une liste ciblée des alertes de rentabilité et VGP.
 *   **Traductions & Filtres** : Interface intégralement traduite avec filtres de recherche avancés.
 
 ### 5. Tests
@@ -35,4 +35,3 @@ Le module **Immobilisations** permet la gestion du patrimoine de l'entreprise (m
 
 ## 💡 Idées d'amélioration et Nouvelles Fonctionnalités
 *   **Gestion des Subventions d'Investissement** : Automatiser le traitement comptable (étalement) des subventions d'investissement liées aux immobilisations.
-*   **Refonte du Dashboard Patrimoine (Widgets Avancés)** : Intégration de `laboiteacode/filament-dashboard-widgets` pour afficher la VNC (Variance), la répartition par catégorie, la conformité VGP (Goal) et les alertes de rentabilité (Detail List).

@@ -10,18 +10,14 @@ use Filament\Widgets\StatsOverviewWidget\Stat;
 
 class BanqueStatsOverview extends StatsOverviewWidget
 {
+    protected static ?int $sort = 3;
+
     protected function getStats(): array
     {
-        $totalBalance = BankAccount::sum('balance');
         $pendingCount = BankTransaction::where('status', TransactionStatus::PENDING)->count();
         $pendingAmount = BankTransaction::where('status', TransactionStatus::PENDING)->sum('amount');
 
         return [
-            Stat::make('Trésorerie Globale', number_format($totalBalance, 2, ',', ' ').' €')
-                ->description('Solde de tous les comptes synchronisés')
-                ->descriptionIcon('heroicon-m-banknotes')
-                ->color('success'),
-
             Stat::make('Transactions à lettrer', $pendingCount)
                 ->description('Action requise')
                 ->descriptionIcon('heroicon-m-exclamation-circle')

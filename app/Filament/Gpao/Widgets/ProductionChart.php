@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Filament\Widgets\Gpao;
+namespace App\Filament\Gpao\Widgets;
 
 use App\Enums\Gpao\ManufacturingStatus;
 use App\Models\Gpao\ManufacturingOrder;
@@ -10,7 +10,7 @@ use Illuminate\Support\Carbon;
 class ProductionChart extends ChartWidget
 {
     protected ?string $heading = 'Production (OF Terminés)';
-    protected static ?int $sort = 2;
+    protected static ?int $sort = 3;
     protected int | string | array $columnSpan = 'full';
 
     protected function getFilters(): ?array

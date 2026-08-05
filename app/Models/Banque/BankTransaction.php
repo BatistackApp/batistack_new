@@ -54,4 +54,24 @@ class BankTransaction extends Model
     {
         return $this->hasMany(BankReconciliation::class);
     }
+
+    public function scopeIncomes($query)
+    {
+        return $query->where('type', TransactionType::CREDIT);
+    }
+
+    public function scopeExpenses($query)
+    {
+        return $query->where('type', TransactionType::DEBIT);
+    }
+
+    public function scopeThisMonth($query)
+    {
+        return $query->whereBetween('date', [now()->startOfMonth(), now()->endOfMonth()]);
+    }
+
+    public function scopeLastSixMonths($query)
+    {
+        return $query->where('date', '>=', now()->subMonths(6)->startOfMonth());
+    }
 }

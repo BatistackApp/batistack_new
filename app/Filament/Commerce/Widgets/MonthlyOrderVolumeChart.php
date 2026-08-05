@@ -8,7 +8,7 @@ use Filament\Widgets\ChartWidget;
 class MonthlyOrderVolumeChart extends ChartWidget
 {
     protected ?string $heading = 'Évolution des commandes de l\'année (HT)';
-    protected static ?int $sort = 4;
+    protected static ?int $sort = 5;
     protected int | string | array $columnSpan = 'full';
 
     protected function getData(): array

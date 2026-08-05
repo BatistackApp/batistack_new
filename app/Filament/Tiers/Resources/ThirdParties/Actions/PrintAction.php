@@ -3,8 +3,10 @@
 namespace App\Filament\Tiers\Resources\ThirdParties\Actions;
 
 use App\Models\Tiers\ThirdParty;
+use App\Services\Core\DocumentService;
 use App\Services\Tiers\TiersDocumentService;
 use Filament\Actions\Action;
+use Storage;
 use ToneGabes\Filament\Icons\Enums\Phosphor;
 
 class PrintAction
@@ -27,7 +29,7 @@ class PrintAction
                 ->color('info')
                 ->action(function (TiersDocumentService $service, ThirdParty $record) {
                     $path = $service->generateDetails($record);
-                    return response()->download($path);
+                    return Storage::disk(DocumentService::getDisk())->download($path);
                 }),
         };
 
