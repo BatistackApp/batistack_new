@@ -25,6 +25,7 @@ Le module **Banque** gère la trésorerie de l'entreprise. Il permet de connecte
 ### 4. Interface Utilisateur (Filament)
 *   **Panel Filament Banque** : Tableau de bord complet avec visualisation des comptes, indicateurs de trésorerie globale, et widget de suivi des synchronisations.
 *   **Prévisionnel de Trésorerie (Forecast)** : Widget graphique interactif superposant le "Solde Confirmé" (basé sur le reste à payer des factures clients et fournisseurs) et le "Solde Prévisionnel" (incluant le lissage des devis signés non encore facturés sur 30 jours).
+*   **Refonte du Dashboard Financier** : Intégration avancée de widgets (`laboiteacode/filament-dashboard-widgets`) affichant la variance de la trésorerie, la comparaison temporelle des flux, la répartition sectorielle des dépenses, et l'objectif de rapprochement bancaire.
 
 ### 5. Tests
 *   Validation solide des intégrations bancaires via PestPHP, incluant la simulation de la synchronisation Open Banking (Bridge API), l'import manuel (StatementImportService) et surtout l'algorithme de lettrage intelligent (ReconciliationService) avec gestion des cas d'usage multiples (doublons, erreurs API).
@@ -35,4 +36,3 @@ Le module **Banque** gère la trésorerie de l'entreprise. Il permet de connecte
 ## 💡 Idées d'amélioration et Nouvelles Fonctionnalités
 *   **Appariement des Paies** : Permettre le lettrage automatique des lignes de virement "Salaires" avec les fiches de paie générées par le module RH.
 *   **Module "Comptabilité" complet** : (Mis en attente) Prévoir à terme la création d'un module dédié pour générer les écritures comptables et les exports standards (FEC, Sage, Cegid, etc.) destinés à l'expert-comptable.
-*   **Refonte du Dashboard Financier (Widgets Avancés)** : Intégration de `laboiteacode/filament-dashboard-widgets` pour afficher la variance de la trésorerie, la comparaison Entrées/Sorties, la répartition des dépenses et le taux de rapprochement bancaire.
