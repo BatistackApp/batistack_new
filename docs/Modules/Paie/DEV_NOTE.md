@@ -25,6 +25,7 @@ Le module **Paie** centralise l'édition et le calcul des bulletins de salaire (
     *   Formulaires intelligents (le choix de l'employé pré-remplit les taux depuis son contrat).
     *   Infolists ultra-détaillées avec grille des cotisations et synthèse Brut/Net.
     *   Génération en masse asynchrone des fiches de paie.
+    *   **Dashboard Gestion Sociale (Widgets Avancés)** : Intégration de `laboiteacode/filament-dashboard-widgets` pour afficher la variance de la masse salariale, la structure des coûts (Composition), l'avancement de la campagne de paie (Goal) et le suivi des acomptes (Detail List).
 *   **Espace Salarié** : Panel `/salarie` où l'employé peut consulter ses fiches validées/payées. Un Job asynchrone notifie l'employé (Push + Email) lorsque la fiche est publiée.
 
 ### 4. Tests et Seeders
@@ -37,4 +38,3 @@ Le module **Paie** centralise l'édition et le calcul des bulletins de salaire (
 *   **Gestion des Congés Payés et Absences** : Interfacer encore plus profondément avec le module RH pour déduire automatiquement les jours d'absence (maladie, CP) sur le bulletin.
 *   **Simulation de Paie** : Créer un outil Brut -> Net ou Net -> Brut pour prévoir le coût employeur d'une embauche ou d'une augmentation.
 *   **Multi-Conventions Collectives** : Le système supportant déjà plusieurs profils, il suffirait de créer (seeder) les profils "Ouvriers" et "Cadres" pour compléter l'offre.
-*   **Refonte du Dashboard Gestion Sociale (Widgets Avancés)** : Intégration de `laboiteacode/filament-dashboard-widgets` pour afficher la variance de la masse salariale, la structure des coûts (Composition), l'avancement de la campagne de paie (Goal) et le suivi des acomptes (Detail List).
