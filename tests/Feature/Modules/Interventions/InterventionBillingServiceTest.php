@@ -15,6 +15,8 @@ beforeEach(function () {
     $this->service = new InterventionBillingService();
     $this->company = Company::factory()->create();
     $this->client = ThirdParty::factory()->create();
+    $this->chantier = \App\Models\Chantiers\Chantier::factory()->create();
+    \App\Models\Core\VatRate::factory()->create(['id' => 1]);
 });
 
 describe('InterventionBillingService', function () {
@@ -22,6 +24,7 @@ describe('InterventionBillingService', function () {
         $intervention = Intervention::factory()->create([
             'company_id' => $this->company->id,
             'third_party_id' => $this->client->id,
+            'chantier_id' => $this->chantier->id,
             'status' => InterventionStatus::PLANIFIEE,
             'type' => InterventionType::REGIE
         ]);
@@ -34,6 +37,7 @@ describe('InterventionBillingService', function () {
         $intervention = Intervention::factory()->create([
             'company_id' => $this->company->id,
             'third_party_id' => $this->client->id,
+            'chantier_id' => $this->chantier->id,
             'status' => InterventionStatus::TERMINEE,
             'type' => InterventionType::FORFAIT,
             'flat_rate_price' => 500,
@@ -48,6 +52,7 @@ describe('InterventionBillingService', function () {
         $intervention = Intervention::factory()->create([
             'company_id' => $this->company->id,
             'third_party_id' => $this->client->id,
+            'chantier_id' => $this->chantier->id,
             'status' => InterventionStatus::TERMINEE,
             'type' => InterventionType::REGIE,
         ]);
