@@ -12,7 +12,7 @@ Le module **Articles & Stocks** permet la gestion complète de l'inventaire, du 
 
 ### 2. Logique Métier, Services & Commandes (`app/Services/Articles` & `app/Console/Commands`)
 *   **`StockService`** : Logique robuste pour la gestion des mouvements de stock. Vérifie les disponibilités, gère les transferts entre entrepôts et déclenche les alertes de seuil.
-*   **`InventoryService`** : Valorisation de l'inventaire et recalcul dynamique du PUMP (Prix Unitaire Moyen Pondéré) lors des entrées en stock.
+*   **`InventoryService` & `CycleCountingService`** : Valorisation de l'inventaire, recalcul dynamique du PUMP, et gestion complète des inventaires tournants (comptages réguliers générés automatiquement, validation et régularisations).
 *   **`ItemService`** : Gestion du cycle de vie des articles.
 *   **`CheckLowStockCommand`** : Commande nocturne d'analyse des stocks. Gère les alertes locales (entrepôts) et génère automatiquement les brouillons de Commandes d'Achat regroupés par `supplier_id` (basé sur le `min_stock` global et les commandes en cours).
 *   **Transfert de Kits (`transferKit`)** : Logique stricte de déstockage d'un ouvrage parent vers une camionnette, avec vérification de la disponibilité de chaque composant enfant dans l'entrepôt source.
@@ -26,6 +26,7 @@ Le module **Articles & Stocks** permet la gestion complète de l'inventaire, du 
 
 ### 4. Interface Utilisateur (Filament)
 *   **Interfaces Filament (CRUD)** : Les ressources visuelles pour le module Articles existent et permettent la gestion du catalogue et des entrepôts.
+    *   *Inventaire Tournant* : L'interface permet la génération d'un comptage aléatoire ou planifié, et une saisie rapide des stocks réels. Processus d'approbation intégré avec traçabilité complète.
     *   *Stock Réservé* : L'affichage des stocks dans la fiche d'un article distingue le "Stock Physique", le "Stock Réservé" (badge) et le "Stock Disponible" (calculé dynamiquement).
     *   *Actions rapides* : Boutons d'action "Réserver", "Libérer" et "Consommer Rsv." directement intégrés aux lignes de la table des stocks pour une gestion fluide des réservations chantiers.
 *   **Lecteur de Code-barres** : Intégration du module `filament-barcode-scanner-field` (utilisé notamment pour le module de scan outillage NFC côté RH).
@@ -39,5 +40,4 @@ Le module **Articles & Stocks** permet la gestion complète de l'inventaire, du 
 
 ## 💡 Idées d'amélioration et Nouvelles Fonctionnalités
 *   **Prévisions par IA** : Anticiper les ruptures de stock selon les chantiers planifiés et la saisonnalité.
-*   **Inventaires Physiques (Cycle Counting)** : Module d'inventaire tournant proposant des recomptages partiels et réguliers des rayons pour lisser la charge d'inventaire annuel.
 *   **Impression d'Étiquettes PDF** : Génération de planches d'étiquettes avec Code-barres/QR Codes et références pour faciliter l'étiquetage physique des rayonnages et le scan mobile.
