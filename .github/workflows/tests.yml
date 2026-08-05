@@ -24,7 +24,6 @@ jobs:
         with:
           filters: |
             Articles:
-              - 'app/Filament/Articles/**'
               - 'app/Console/Articles/**'
               - 'app/Enums/Articles/**'
               - 'app/Events/Articles/**'
@@ -37,7 +36,6 @@ jobs:
               - 'app/Services/Articles/**'
               - 'tests/Feature/Modules/Articles/**'
             Chantiers:
-              - 'app/Filament/Chantiers/**'
               - 'app/Console/Chantiers/**'
               - 'app/Enums/Chantiers/**'
               - 'app/Events/Chantiers/**'
@@ -50,7 +48,6 @@ jobs:
               - 'app/Services/Chantiers/**'
               - 'tests/Feature/Modules/Chantiers/**'
             Commerce:
-              - 'app/Filament/Commerce/**'
               - 'app/Console/Commerce/**'
               - 'app/Enums/Commerce/**'
               - 'app/Events/Commerce/**'
@@ -63,7 +60,6 @@ jobs:
               - 'app/Services/Commerce/**'
               - 'tests/Feature/Modules/Commerce/**'
             Core:
-              - 'app/Filament/Core/**'
               - 'app/Console/Core/**'
               - 'app/Enums/Core/**'
               - 'app/Events/Core/**'
@@ -76,7 +72,6 @@ jobs:
               - 'app/Services/Core/**'
               - 'tests/Feature/Modules/Core/**'
             Flottes:
-              - 'app/Filament/Flottes/**'
               - 'app/Console/Flottes/**'
               - 'app/Enums/Flottes/**'
               - 'app/Events/Flottes/**'
@@ -89,7 +84,6 @@ jobs:
               - 'app/Services/Flottes/**'
               - 'tests/Feature/Modules/Flottes/**'
             RH:
-              - 'app/Filament/RH/**'
               - 'app/Console/RH/**'
               - 'app/Enums/RH/**'
               - 'app/Events/RH/**'
@@ -102,7 +96,6 @@ jobs:
               - 'app/Services/RH/**'
               - 'tests/Feature/Modules/RH/**'
             Tiers:
-              - 'app/Filament/Tiers/**'
               - 'app/Console/Tiers/**'
               - 'app/Enums/Tiers/**'
               - 'app/Events/Tiers/**'
@@ -115,7 +108,6 @@ jobs:
               - 'app/Services/Tiers/**'
               - 'tests/Feature/Modules/Tiers/**'
             Banque:
-              - 'app/Filament/Banque/**'
               - 'app/Console/Banque/**'
               - 'app/Enums/Banque/**'
               - 'app/Events/Banque/**'
@@ -128,7 +120,6 @@ jobs:
               - 'app/Services/Banque/**'
               - 'tests/Feature/Modules/Banque/**'
             Immobilisation:
-              - 'app/Filament/Immobilisation/**'
               - 'app/Console/Immobilisation/**'
               - 'app/Enums/Immobilisation/**'
               - 'app/Events/Immobilisation/**'
@@ -141,7 +132,6 @@ jobs:
               - 'app/Services/Immobilisation/**'
               - 'tests/Feature/Modules/Immobilisation/**'
             Paie:
-              - 'app/Filament/Paie/**'
               - 'app/Console/Paie/**'
               - 'app/Enums/Paie/**'
               - 'app/Events/Paie/**'
@@ -154,7 +144,6 @@ jobs:
               - 'app/Services/Paie/**'
               - 'tests/Feature/Modules/Paie/**'
             Gpao:
-              - 'app/Filament/Gpao/**'
               - 'app/Console/Gpao/**'
               - 'app/Enums/Gpao/**'
               - 'app/Events/Gpao/**'
@@ -167,7 +156,6 @@ jobs:
               - 'app/Services/Gpao/**'
               - 'tests/Feature/Modules/Gpao/**'
             Interventions:
-              - 'app/Filament/Interventions/**'
               - 'app/Console/Interventions/**'
               - 'app/Enums/Interventions/**'
               - 'app/Events/Interventions/**'
@@ -180,7 +168,6 @@ jobs:
               - 'app/Services/Interventions/**'
               - 'tests/Feature/Modules/Interventions/**'
             Vision3D:
-              - 'app/Filament/Vision3D/**'
               - 'app/Console/Vision3D/**'
               - 'app/Enums/Vision3D/**'
               - 'app/Events/Vision3D/**'
