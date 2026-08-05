@@ -15,7 +15,7 @@ class FraudVigilanceWidget extends TableWidget
 {
     protected static ?string $heading = 'Vigilance & Audit Anti-Fraude';
     protected int | string | array $columnSpan = 'full';
-    protected static ?int $sort = 3;
+    protected static ?int $sort = 6;
 
     public function table(Table $table): Table
     {

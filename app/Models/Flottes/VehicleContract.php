@@ -23,6 +23,7 @@ class VehicleContract extends Model
         'start_date',
         'end_date',
         'annual_cost_ht',
+        'max_mileage',
     ];
 
     public function vehicle(): BelongsTo

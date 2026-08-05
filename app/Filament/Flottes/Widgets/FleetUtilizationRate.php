@@ -12,7 +12,7 @@ use ToneGabes\Filament\Icons\Enums\Phosphor;
 
 class FleetUtilizationRate extends StatsOverviewWidget
 {
-    protected static ?int $sort = 1;
+    protected static ?int $sort = 3;
 
     protected function getStats(): array
     {
