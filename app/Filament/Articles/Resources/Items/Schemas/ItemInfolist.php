@@ -132,6 +132,7 @@ class ItemInfolist
                                         SpatieMediaLibraryImageEntry::make('barcode')
                                             ->label('QR Code Identification')
                                             ->collection('barcode')
+                                            ->conversion('')
                                             ->square(),
 
                                         TextEntry::make('updated_at')

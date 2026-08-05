@@ -62,7 +62,7 @@ class StockService
             ->where('warehouse_id', $warehouse->id)
             ->first();
 
-        if (! $stock || $stock->quantity < $quantity) {
+        if (! $stock || $stock->getAvailableQuantity() < $quantity) {
             // Note : Selon la config (E3), on peut autoriser le stock négatif ou bloquer.
             // Ici, nous lançons une exception par sécurité.
             Log::alert("Stock insuffisant dans le dépôt {$warehouse->name} pour l'article {$item->reference}.");
@@ -98,6 +98,79 @@ class StockService
                 ->body("Stock bas dans le dépôt {$warehouse->name} pour l'article {$item->reference}.")
                 ->send();
         }
+    }
+
+    /**
+     * Consomme du stock préalablement réservé (diminue le stock physique ET le stock réservé).
+     * @throws Throwable
+     */
+    public function consumeReserved(Item $item, Warehouse $warehouse, float $quantity, string $reason, ?\App\Enums\Articles\StockMouvementSource $source = null, ?int $referenceId = null): void
+    {
+        $stock = Stock::where('item_id', $item->id)
+            ->where('warehouse_id', $warehouse->id)
+            ->first();
+
+        if (! $stock || $stock->reserved_quantity < $quantity) {
+            Log::alert("Stock réservé insuffisant dans le dépôt {$warehouse->name} pour l'article {$item->reference}.");
+            $exception = new ArticlesModuleException(
+                message: "Stock réservé insuffisant dans le dépôt {$warehouse->name} pour l'article {$item->reference}.",
+                code: 400,
+            );
+            $exception->notify();
+            throw $exception;
+        }
+
+        DB::transaction(function () use ($stock, $quantity, $reason, $source, $referenceId) {
+            $stock->reserved_quantity -= $quantity;
+            $quantityBefore = $stock->quantity;
+            $stock->quantity -= $quantity;
+            $stock->save();
+
+            \App\Models\Articles\StockMouvement::create([
+                'stock_id' => $stock->id,
+                'user_id' => auth()->id(),
+                'type' => \App\Enums\Articles\StockMouvementType::OUT,
+                'reference_type' => $source ?? \App\Enums\Articles\StockMouvementSource::INTERNAL,
+                'reference_id' => $referenceId,
+                'quantity_before' => $quantityBefore,
+                'quantity_delta' => -$quantity,
+                'quantity_after' => $stock->quantity,
+                'reason' => $reason . ' (Stock Réservé)',
+            ]);
+        });
+
+        // Logique d'alerte si stock < seuil
+        if ($stock->quantity <= $stock->min_threshold) {
+            Notification::make()
+                ->warning()
+                ->title('Stock bas dans le dépôt')
+                ->body("Stock bas dans le dépôt {$warehouse->name} pour l'article {$item->reference}.")
+                ->send();
+        }
+    }
+
+    /**
+     * Réserve du stock
+     */
+    public function reserve(Item $item, Warehouse $warehouse, float $quantity): void
+    {
+        $stock = Stock::where('item_id', $item->id)->where('warehouse_id', $warehouse->id)->first();
+        if (! $stock) {
+            throw new ArticlesModuleException("Stock introuvable.", 404);
+        }
+        $stock->reserve($quantity);
+    }
+
+    /**
+     * Libère du stock réservé
+     */
+    public function release(Item $item, Warehouse $warehouse, float $quantity): void
+    {
+        $stock = Stock::where('item_id', $item->id)->where('warehouse_id', $warehouse->id)->first();
+        if (! $stock) {
+            throw new ArticlesModuleException("Stock introuvable.", 404);
+        }
+        $stock->release($quantity);
     }
 
     /**

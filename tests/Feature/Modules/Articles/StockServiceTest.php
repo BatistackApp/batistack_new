@@ -106,3 +106,51 @@ test('il lance une exception si l\'article n\'est pas un kit pour le transfert d
     $this->expectException(\App\Exceptions\Articles\ArticlesModuleException::class);
     $this->stockService->transferKit($this->item, $this->warehouseA, $this->warehouseB, 1);
 });
+
+test('il peut réserver du stock et le stock disponible diminue', function () {
+    $this->stockService->entry($this->item, $this->warehouseA, 50, 100.00);
+    $this->stockService->reserve($this->item, $this->warehouseA, 20);
+
+    $stock = Stock::where('item_id', $this->item->id)->where('warehouse_id', $this->warehouseA->id)->first();
+    expect($stock->quantity)->toEqual(50)
+        ->and($stock->reserved_quantity)->toEqual(20)
+        ->and($stock->getAvailableQuantity())->toEqual(30);
+});
+
+test('il ne peut pas réserver plus que le stock disponible', function () {
+    $this->stockService->entry($this->item, $this->warehouseA, 50, 100.00);
+    $this->stockService->reserve($this->item, $this->warehouseA, 40);
+
+    $this->expectException(\App\Exceptions\Articles\ArticlesModuleException::class);
+    $this->stockService->reserve($this->item, $this->warehouseA, 20); // Seulement 10 disponibles
+});
+
+test('une sortie standard échoue si elle empiète sur le stock réservé', function () {
+    $this->stockService->entry($this->item, $this->warehouseA, 50, 100.00);
+    $this->stockService->reserve($this->item, $this->warehouseA, 40); // Reste 10 dispos
+
+    $this->expectException(Exception::class);
+    $this->stockService->exit($this->item, $this->warehouseA, 20, 'Sortie standard');
+});
+
+test('il peut consommer du stock réservé', function () {
+    $this->stockService->entry($this->item, $this->warehouseA, 50, 100.00);
+    $this->stockService->reserve($this->item, $this->warehouseA, 30);
+
+    $this->stockService->consumeReserved($this->item, $this->warehouseA, 20, 'Chantier X');
+
+    $stock = Stock::where('item_id', $this->item->id)->where('warehouse_id', $this->warehouseA->id)->first();
+    expect($stock->quantity)->toEqual(30)
+        ->and($stock->reserved_quantity)->toEqual(10)
+        ->and($stock->getAvailableQuantity())->toEqual(20);
+});
+
+test('il peut libérer du stock réservé', function () {
+    $this->stockService->entry($this->item, $this->warehouseA, 50, 100.00);
+    $this->stockService->reserve($this->item, $this->warehouseA, 30);
+    $this->stockService->release($this->item, $this->warehouseA, 10);
+
+    $stock = Stock::where('item_id', $this->item->id)->where('warehouse_id', $this->warehouseA->id)->first();
+    expect($stock->reserved_quantity)->toEqual(20)
+        ->and($stock->getAvailableQuantity())->toEqual(30);
+});

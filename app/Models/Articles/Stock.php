@@ -20,6 +20,7 @@ class Stock extends Model
         'item_id',
         'warehouse_id',
         'quantity',
+        'reserved_quantity',
         'min_threshold',
     ];
 
@@ -101,9 +102,25 @@ class Stock extends Model
         return $query->orderBy('quantity', $direction);
     }
 
+    /**
+     * Scope: Stock disponible suffisant
+     */
+    public function scopeAvailable(Builder $query, float $neededQuantity = 0): Builder
+    {
+        return $query->whereRaw('(quantity - reserved_quantity) >= ?', [$neededQuantity]);
+    }
+
     // ============================================
     // METHODS MÉTIER
     // ============================================
+
+    /**
+     * Obtenir la quantité réellement disponible (Physique - Réservée)
+     */
+    public function getAvailableQuantity(): float
+    {
+        return $this->quantity - $this->reserved_quantity;
+    }
 
     /**
      * Vérifier si le stock est bas
@@ -171,6 +188,38 @@ class Stock extends Model
             'reference_type' => $source,
             'reference_id' => $referenceId,
         ]);
+    }
+
+    /**
+     * Réserver une quantité de stock
+     */
+    public function reserve(float $quantity): void
+    {
+        if ($this->getAvailableQuantity() < $quantity) {
+            throw new \App\Exceptions\Articles\ArticlesModuleException(
+                message: "Quantité disponible insuffisante pour réserver.",
+                code: 400
+            );
+        }
+
+        $this->reserved_quantity += $quantity;
+        $this->save();
+    }
+
+    /**
+     * Libérer une quantité de stock réservé
+     */
+    public function release(float $quantity): void
+    {
+        if ($this->reserved_quantity < $quantity) {
+            throw new \App\Exceptions\Articles\ArticlesModuleException(
+                message: "Impossible de libérer plus que la quantité réservée.",
+                code: 400
+            );
+        }
+
+        $this->reserved_quantity -= $quantity;
+        $this->save();
     }
 
     /**
