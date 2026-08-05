@@ -37,3 +37,6 @@ Le module **GPAO** a pour objectif de gérer les opérations de production ou d'
 
 ## 💡 Idées d'amélioration et Nouvelles Fonctionnalités
 *   **Traçabilité des Lots et Numéros de Série** : Associer des numéros de lot ou de série aux matières premières consommées et aux produits finis pour une traçabilité ascendante et descendante parfaite (indispensable pour certaines normes de qualité).
+*   **Gestion des Rebuts (Scrap Management)** : Déclaration de rebut par l'opérateur avec motif, ajustement automatique du stock et génération de KPIs sur le Taux de Rebut.
+*   **Maintenance des Machines (mini-GMAO)** : Carnet d'entretien par machine, tickets de maintenance préventive basés sur l'utilisation et tickets curatifs pour éviter les arrêts de production prolongés.
+*   **Ordonnancement Automatique IA (APS)** : Outil de tri intelligent sur le Kanban pour ordonnancer automatiquement les OFs afin de minimiser les goulots d'étranglement selon les matières, machines et délais clients.

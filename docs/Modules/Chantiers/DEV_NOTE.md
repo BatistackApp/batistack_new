@@ -33,6 +33,9 @@ Le module **Chantiers** est le cœur de la gestion de projets BTP de l'ERP. Il p
 
 ## 🚧 Ce qu'il reste à faire
 *   Le socle est complet. Des optimisations d'UX (ergonomie sur mobile pour les conducteurs de travaux) peuvent être affinées.
+*   **Portail Sous-Traitants (Vérification)** : Vérifier que le `SubcontractorPanel` permet bien aux sous-traitants d'interagir spécifiquement avec les tâches de chantier qui leur sont assignées et d'uploader leurs factures de situation liées à l'avancement.
 
 ## 💡 Idées d'amélioration et Nouvelles Fonctionnalités
 *   **BIM (Building Information Modeling)** : Intégration en cours (voir module Vision 3D).
+*   **Planning des Ressources (Resource Planner)** : Implémenter un calendrier interactif (drag & drop) pour planifier et affecter les équipes (employés) et les équipements lourds aux chantiers/tâches.
+*   **Audits QSE & Checklists** : Créer un "Form Builder" pour modéliser des checklists dynamiques de contrôle de qualité ou visites de sécurité sur chantier, avec signature numérique et photos.

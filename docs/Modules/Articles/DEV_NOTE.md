@@ -26,13 +26,16 @@ Le module **Articles & Stocks** permet la gestion complète de l'inventaire, du 
 ### 4. Interface Utilisateur (Filament)
 *   **Interfaces Filament (CRUD)** : Les ressources visuelles pour le module Articles existent et permettent la gestion du catalogue et des entrepôts.
 *   **Lecteur de Code-barres** : Intégration du module `filament-barcode-scanner-field` (utilisé notamment pour le module de scan outillage NFC côté RH).
+*   **Dashboard Logistique** : Tableau de bord intégrant des widgets analytiques avancés pour suivre la valeur d'inventaire par magasin, les tendances de sorties de stock et les alertes (via `laboiteacode/filament-dashboard-widgets`).
 
 ### 5. Tests
 *   100% de succès sur la suite de tests (125 tests). Couverture complète de la logique métier (calcul du PUMP, prévention des stocks négatifs, seuils d'alerte, transfert de kits, gestion de la récursion infinie pour les compositions, etc.) via `InventoryServiceTest`, `ItemServiceTest`, et `StockServiceTest`.
 
 ## 🚧 Ce qu'il reste à faire
-*   **Tableau de Bord Logistique** : Le Dashboard logistique complet n'est pas encore finalisé. Il nécessitera l'intégration de widgets avancés (via le package `laboiteacode`) pour suivre la valeur d'inventaire, les ruptures et la rotation.
+*   Le module est complet dans sa version actuelle.
 
 ## 💡 Idées d'amélioration et Nouvelles Fonctionnalités
 *   **Prévisions par IA** : Anticiper les ruptures de stock selon les chantiers planifiés et la saisonnalité.
-*   **Refonte du Dashboard Logistique (Widgets Avancés)** : Intégration de `laboiteacode/filament-dashboard-widgets` pour afficher la répartition par entrepôt, les alertes de stock minimal, et la variance du PUMP.
+*   **Réservation de Stock (Allocation)** : Introduire un stock réservé (virtuel) affecté aux chantiers planifiés pour empêcher la consommation d'articles critiques.
+*   **Inventaires Physiques (Cycle Counting)** : Module d'inventaire tournant proposant des recomptages partiels et réguliers des rayons pour lisser la charge d'inventaire annuel.
+*   **Impression d'Étiquettes PDF** : Génération de planches d'étiquettes avec Code-barres/QR Codes et références pour faciliter l'étiquetage physique des rayonnages et le scan mobile.

@@ -13,7 +13,7 @@ Le module **Flottes** gère l'ensemble du parc automobile de l'entreprise (camio
 
 ### 2. Logique Métier & Services (`app/Services/Flottes`)
 *   **Gestion des Frais** : `FleetCostService`, `FleetExpenseService`, `VehicleFuelService` (qui gère désormais la réconciliation automatique des coûts de carburant avec les chantiers), et `ExpenseImportService` pour calculer le TCO (Total Cost of Ownership) et intégrer les données. Intégration partielle de prestataires (ex: `UlysApiProvider` pour le télépéage, et import de CSV TotalEnergies/DKV).
-*   **Logique Métier** : `VehicleAssignmentService`, `VehicleConditionService`, `TrafficFineService` gèrent la complexité légale et opérationnelle (ex: qui conduisait au moment de l'amende).
+*   **Logique Métier** : `VehicleAssignmentService`, `VehicleConditionService`. `TrafficFineService` gère la complexité légale (ex: qui conduisait au moment de l'amende) : **la désignation du conducteur lors d'une infraction est déjà automatisée** (croisement de la date de l'amende avec la table des affectations).
 *   **Optimisation & Sécurité** : `RoutingOptimizationService` (bases de l'optimisation des trajets) et `VehicleAlertService` (alertes sur les entretiens à venir).
 
 ### 3. Observers & Règles Métier (`app/Observers/Flottes`)
@@ -30,7 +30,7 @@ Le module **Flottes** gère l'ensemble du parc automobile de l'entreprise (camio
 *   Plus de 155 tests PestPHP validant l'ensemble de cette logique complexe (100% de réussite).
 
 ## 🚀 Ce qu'il reste à faire
-- **Géolocalisation (GPS Tracking)** : Intégration avec des boîtiers télématiques GPS (ex: Webfleet, Geotab) pour localiser les véhicules en temps réel et remonter les anomalies de conduite (freinages brusques, survitesse).
+*   Le module est aujourd'hui complet pour une gestion courante de la flotte.
 
 ## 💡 Idées d'amélioration et Nouvelles Fonctionnalités
-- **Application mobile dédiée** : Amélioration de l'interface des états des lieux pour une utilisation hors-ligne.
+*   **Bilan Carbone Automatisé (Rapports RSE)** : Croiser les imports de cartes carburant avec le type de moteur du véhicule pour calculer automatiquement l'empreinte CO2 (Tonnes d'équivalent CO2) de la flotte, répartie par mois et par Chantier.
