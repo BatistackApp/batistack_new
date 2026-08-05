@@ -62,6 +62,11 @@ class ContractsRelationManager extends RelationManager
                             ->numeric()
                             ->prefix('€')
                             ->required(),
+                        TextInput::make('max_mileage')
+                            ->label('Kilométrage Maximum (Contrat)')
+                            ->numeric()
+                            ->suffix('km')
+                            ->placeholder('ex: 50000'),
                         DatePicker::make('start_date')
                             ->label('Date d\'effet')
                             ->required()

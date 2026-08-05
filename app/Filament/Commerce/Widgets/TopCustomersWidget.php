@@ -8,7 +8,7 @@ use Filament\Tables\Columns\TextColumn;
 
 class TopCustomersWidget extends BaseWidget
 {
-    protected static ?int $sort = 5;
+    protected static ?int $sort = 7;
     // Laissons Filament gérer la taille selon l'écran. 1 colonne sur 2 pour les grands écrans.
     protected int | string | array $columnSpan = [
         'md' => 1,

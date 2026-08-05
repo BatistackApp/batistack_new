@@ -2,8 +2,6 @@
 
 namespace App\Providers\Filament;
 
-use App\Filament\Immobilisation\Widgets\DepreciationForecastChart;
-use App\Filament\Immobilisation\Widgets\TotalAssetsValueWidget;
 use App\Http\Middleware\EnsureUserIsAdmin;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
@@ -41,10 +39,6 @@ class ImmobilisationPanelProvider extends PanelProvider
                 Dashboard::class,
             ])
             ->discoverWidgets(in: app_path('Filament/Immobilisation/Widgets'), for: 'App\Filament\Immobilisation\Widgets')
-            ->widgets([
-                TotalAssetsValueWidget::class,
-                DepreciationForecastChart::class,
-            ])
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,

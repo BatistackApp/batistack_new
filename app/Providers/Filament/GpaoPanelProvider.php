@@ -38,7 +38,7 @@ class GpaoPanelProvider extends PanelProvider
             ->pages([
                 Dashboard::class,
             ])
-            ->discoverWidgets(in: app_path('Filament/Widgets/Gpao'), for: 'App\Filament\Widgets\Gpao')
+            ->discoverWidgets(in: app_path('Filament/Gpao/Widgets'), for: 'App\Filament\Gpao\Widgets')
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,

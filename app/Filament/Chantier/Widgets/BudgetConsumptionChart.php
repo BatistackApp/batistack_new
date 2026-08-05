@@ -11,7 +11,7 @@ class BudgetConsumptionChart extends ChartWidget
 {
     protected ?string $heading = 'Analyse de Consommation Heures (Top 5 Chantiers Actifs)';
 
-    protected static ?int $sort = 2;
+    protected static ?int $sort = 6;
     protected int | string | array $columnSpan = 'full';
     protected ?string $maxHeight = '350px';
 

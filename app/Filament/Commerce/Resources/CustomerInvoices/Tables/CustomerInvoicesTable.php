@@ -4,14 +4,21 @@ namespace App\Filament\Commerce\Resources\CustomerInvoices\Tables;
 
 use App\Enums\Commerce\InvoiceStatus;
 use App\Enums\Commerce\InvoiceType;
+use App\Jobs\Commerce\SendCustomerInvoiceEmailJob;
+use App\Jobs\Commerce\SendCustomerStatementEmailJob;
 use App\Models\Commerce\CustomerInvoice;
+use App\Models\Tiers\ThirdParty;
 use App\Services\Commerce\CommerceDocumentationService;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
+use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
+use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
@@ -79,6 +86,47 @@ class CustomerInvoicesTable
                     ->label('Factures en retard')
                     ->query(fn (Builder $query) => $query->where('due_date', '<', now())->where('status', '!=', InvoiceStatus::PAID)),
             ])
+            ->headerActions([
+                Action::make('sendCustomerStatement')
+                    ->label('Envoyer un relevé client')
+                    ->icon('heroicon-o-envelope')
+                    ->form([
+                        Select::make('client_id')
+                            ->label('Client')
+                            ->options(fn () => ThirdParty::clients()->orderBy('name')->pluck('name', 'id')->toArray())
+                            ->searchable()
+                            ->required(),
+                        DatePicker::make('start_date')
+                            ->label('Du')
+                            ->native(false),
+                        DatePicker::make('end_date')
+                            ->label('Au')
+                            ->native(false),
+                        Select::make('status')
+                            ->label('Statut des factures')
+                            ->options(InvoiceStatus::class)
+                            ->placeholder('Tous les statuts'),
+                        TextInput::make('email')
+                            ->label('Email destinataire')
+                            ->email()
+                            ->helperText('Laissez vide pour utiliser le contact principal du client.'),
+                    ])
+                    ->action(function (array $data) {
+                        SendCustomerStatementEmailJob::dispatch(
+                            (int) $data['client_id'],
+                            $data['start_date'] ?? null,
+                            $data['end_date'] ?? null,
+                            $data['status'] ?? null,
+                            $data['email'] ?? null,
+                        );
+
+                        Notification::make()
+                            ->title('Relevé client en cours d’envoi')
+                            ->body('Le PDF sera généré puis envoyé par email.')
+                            ->success()
+                            ->send();
+                    }),
+            ])
             ->recordActions([
                 ActionGroup::make([
                     ViewAction::make(),
@@ -143,6 +191,37 @@ class CustomerInvoicesTable
                                 Notification::make()->danger()->title('Erreur')->body($e->getMessage())->send();
                             }
                         }),
+                ]),
+            ])
+            ->bulkActions([
+                BulkActionGroup::make([
+                    BulkAction::make('sendByEmail')
+                        ->label('Envoyer les factures par email')
+                        ->icon('heroicon-o-paper-airplane')
+                        ->requiresConfirmation()
+                        ->modalHeading('Envoyer les factures sélectionnées')
+                        ->modalDescription('Les factures validées, partiellement payées ou payées seront envoyées au contact principal du client avec le PDF en pièce jointe.')
+                        ->action(function ($records) {
+                            $sent = 0;
+                            $skipped = 0;
+
+                            foreach ($records as $invoice) {
+                                if (! in_array($invoice->status, [InvoiceStatus::VALIDATED, InvoiceStatus::PARTIALLY_PAID, InvoiceStatus::PAID], true)) {
+                                    $skipped++;
+                                    continue;
+                                }
+
+                                SendCustomerInvoiceEmailJob::dispatch($invoice);
+                                $sent++;
+                            }
+
+                            Notification::make()
+                                ->title("{$sent} facture(s) mise(s) en file d’envoi")
+                                ->body($skipped > 0 ? "{$skipped} facture(s) ignorée(s) car non envoyable(s)." : null)
+                                ->success()
+                                ->send();
+                        }),
+                    DeleteBulkAction::make(),
                 ]),
             ]);
     }

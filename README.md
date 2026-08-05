@@ -5,7 +5,7 @@
 # 🏗️ Batistack - L'ERP Nouvelle Génération pour le BTP
 
 **Batistack** est un Progiciel de Gestion Intégré (ERP) modulaire, conçu spécifiquement pour les entreprises du bâtiment et des travaux publics (BTP). 
-Développé avec [Laravel 11](https://laravel.com) et propulsé par [Filament v3](https://filamentphp.com/), Batistack offre une expérience utilisateur premium, une architecture robuste (Monolithe Modulaire), et une intégration profonde entre tous les métiers de l'entreprise.
+Développé avec [Laravel 13](https://laravel.com) et propulsé par [Filament v5](https://filamentphp.com/) / [Livewire 4](https://livewire.laravel.com/), Batistack offre une expérience utilisateur premium, une architecture robuste (Monolithe Modulaire), et une intégration profonde entre tous les métiers de l'entreprise.
 
 ---
 
@@ -37,10 +37,10 @@ L'application est structurée autour d'une architecture **Monolithe Modulaire** 
 
 ## 🛠️ Stack Technologique
 
-*   **Framework Backend** : [Laravel 11](https://laravel.com/) (PHP 8.2+)
-*   **Framework Frontend (Admin)** : [Filament PHP v3](https://filamentphp.com/) (TALL Stack : Tailwind CSS, Alpine.js, Laravel, Livewire)
+*   **Framework Backend** : [Laravel 13](https://laravel.com/) (PHP 8.3+ requis, PHP 8.4 utilisé en local)
+*   **Framework Frontend (Admin)** : [Filament PHP v5](https://filamentphp.com/) avec [Livewire 4](https://livewire.laravel.com/) (TALL Stack : Tailwind CSS, Alpine.js, Laravel, Livewire)
 *   **Base de Données** : MySQL 8+ / MariaDB / PostgreSQL
-*   **Tests** : [Pest PHP](https://pestphp.com/) (Plus de 1000 tests avec une couverture complète de la logique métier)
+*   **Tests** : [Pest PHP v4](https://pestphp.com/) pour la couverture de la logique métier et des fonctionnalités critiques
 *   **Tâches Asynchrones** : Laravel Horizon / Redis (Génération PDF, OCR, Mails, Webhooks)
 *   **Génération PDF** : Spatie Browsershot (Puppeteer)
 

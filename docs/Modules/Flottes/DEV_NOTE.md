@@ -22,7 +22,7 @@ Le module **Flottes** gère l'ensemble du parc automobile de l'entreprise (camio
 ### 4. Interface Utilisateur (Filament)
 *   **Administration visuelle complète** : Le dossier `app/Filament/Flottes` héberge le frontend du module.
 *   **Ressources** : `VehicleResource` et `VehicleAssignmentResource` sont implémentées avec des vues détaillées (Infolists pour le trajet et tables des états des lieux).
-*   **Widgets** : Un graphique d'état de la flotte (`VehicleStatusChart`).
+*   **Refonte du Dashboard Gestionnaire de Parc** : Implémentation avancée de widgets (`laboiteacode`) pour suivre l'usure kilométrique des leasings (`max_mileage`), la variance des TCO mensuels, la composition de la flotte et les alertes de maintenance.
 *   **App Conducteur (État des Lieux Mobile)** : Une interface PWA dédiée aux chauffeurs permettant de faire leur Check-in / Check-out directement sur le parking avec prise de photo des éventuels dommages (rayures, chocs).
 *   **Optimisation des Trajets (Routing IA)** : Nouvelle page Filament permettant de générer automatiquement des suggestions d'affectations (Véhicules disponibles -> Chantiers actifs) en utilisant l'API Google Maps Distance Matrix, pour minimiser le kilométrage global. Validation en un clic.
 
@@ -33,4 +33,4 @@ Le module **Flottes** gère l'ensemble du parc automobile de l'entreprise (camio
 - **Géolocalisation (GPS Tracking)** : Intégration avec des boîtiers télématiques GPS (ex: Webfleet, Geotab) pour localiser les véhicules en temps réel et remonter les anomalies de conduite (freinages brusques, survitesse).
 
 ## 💡 Idées d'amélioration et Nouvelles Fonctionnalités
-- **Refonte du Dashboard Gestionnaire de Parc (Widgets Avancés)** : Intégration de `laboiteacode/filament-dashboard-widgets` pour afficher le dépassement kilométrique (Leasing), la variance des frais de carburant/TCO, la composition du parc et les alertes d'entretien.
+- **Application mobile dédiée** : Amélioration de l'interface des états des lieux pour une utilisation hors-ligne.

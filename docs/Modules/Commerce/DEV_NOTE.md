@@ -25,6 +25,7 @@ Le module **Commerce** couvre l'intégralité du cycle de vente et d'achat de l'
 *   **Workflows automatisés** : Ajout de boutons d'action rapide dans les tableaux pour transformer les documents sans friction.
 *   **Lecteur de Code-barres** : Intégration du scan de code-barres dans les formulaires des Commandes Clients et Factures Fournisseurs pour identifier et insérer rapidement des lignes d'articles.
 *   **Signature Électronique Intégrée** : Bouton d'envoi de devis intégrant une demande de signature numérique (via `LocalSignatureProvider`). Le client reçoit un email, signe sur le portail public, et le devis passe automatiquement en statut `ACCEPTED` déclenchant la suite du processus (création chantier/commande).
+*   **Refonte du Dashboard Commercial** : Intégration avancée de widgets (`laboiteacode`) affichant le CA avec variance, l'entonnoir de conversion paramétrable, la progression des objectifs mensuels et les alertes d'impayés.
 
 ### 5. Tests
 *   Validation complète du module avec 100% de succès sur la gigantesque suite de tests PestPHP (incluant les nouvelles fonctionnalités : rapports PDF, allocations de paiements, annulations et dé-lettrages). Le cycle de vie complet est garanti sans faille logicielle.
@@ -36,4 +37,3 @@ Le module **Commerce** couvre l'intégralité du cycle de vente et d'achat de l'
 ## 💡 Idées d'amélioration et Nouvelles Fonctionnalités
 *   **Paiement en ligne & Relances automatiques** : Intégrer un lien de paiement Stripe ou prélèvement SEPA (GoCardless) en bas de la facture électronique, couplé à un robot qui relance par email les impayés à J+3, J+15.
 *   **Bibliothèques d'Ouvrages** : Interfacer le devis avec Batiprix ou une autre bibliothèque d'ouvrages BTP standardisée pour accélérer le chiffrage.
-*   **Refonte du Dashboard Commercial (Widgets Avancés)** : Intégration de `laboiteacode/filament-dashboard-widgets` pour afficher le CA (Variance), le funnel de conversion (Devis -> Facture), la progression des objectifs et les alertes d'impayés.

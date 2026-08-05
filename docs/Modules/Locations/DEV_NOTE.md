@@ -21,7 +21,8 @@ Le module **Locations** permet de gérer l'ensemble des locations de matériel (
 ### 4. Interface Utilisateur (Filament)
 *   **Panel Dédié** : Provider `LocationsPanelProvider`.
 *   **Ressource** : `RentalContractResource` incluant Formulaire (avec Repeater), Tableau de bord (avec filtres avancés) et Infolist (vue détaillée) intégrant des actions rapides (Générer facture, Terminer location).
-*   **Widgets** : `ActiveRentalsWidget` (KPIs) et `RentalCalendarWidget` (Calendrier interactif via `guava/calendar` pour visualiser la timeline des locations).
+*   **Widgets** : `RentalCalendarWidget` (Calendrier interactif via `guava/calendar` pour visualiser la timeline des locations).
+*   **Dashboard Matériel Externe (Widgets Avancés)** : Intégration de `laboiteacode/filament-dashboard-widgets` pour afficher la variance des coûts de location, le statut des contrats (Segment Bar), le budget par fournisseur (Composition) et les restitutions imminentes (Detail List).
 *   **Intégration Chantiers** : Création d'un tableau de bord unifié (`DeployedResourcesWidget`) sur la vue détaillée d'un chantier, fusionnant le matériel en propre (Immobilisations) et les locations externes.
 
 ### 5. Tests
@@ -32,4 +33,3 @@ Le module **Locations** permet de gérer l'ensemble des locations de matériel (
 
 ## 💡 Idées d'amélioration et Nouvelles Fonctionnalités
 *   **Suivi Géolocalisé** : Si du gros équipement (ex: pelles, grues) est loué avec des capteurs GPS, pouvoir remonter leur position via une API externe directement sur la fiche d'information du `RentalContract`.
-*   **Refonte du Dashboard Matériel Externe (Widgets Avancés)** : Intégration de `laboiteacode/filament-dashboard-widgets` pour afficher la variance des coûts de location, le statut des contrats (Segment Bar), le budget par fournisseur (Composition) et les restitutions imminentes (Detail List).

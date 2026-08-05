@@ -2,9 +2,12 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Banque\Widgets\GlobalBalanceVarianceWidget;
+use App\Filament\Banque\Widgets\ReconciliationGoalWidget;
+use App\Filament\Banque\Widgets\CashFlowComparisonWidget;
+use App\Filament\Banque\Widgets\ExpensesCompositionWidget;
 use App\Filament\Banque\Widgets\BankAccountsStatusList;
 use App\Filament\Banque\Widgets\BanqueStatsOverview;
-use App\Filament\Banque\Widgets\CashFlowChart;
 use App\Filament\Banque\Widgets\CashFlowForecastChart;
 use App\Filament\Banque\Widgets\PendingTransactionsTable;
 use Filament\Http\Middleware\Authenticate;
@@ -43,8 +46,11 @@ class BanquePanelProvider extends PanelProvider
             ])
             ->discoverWidgets(in: app_path('Filament/Banque/Widgets'), for: 'App\Filament\Banque\Widgets')
             ->widgets([
+                GlobalBalanceVarianceWidget::class,
                 BanqueStatsOverview::class,
-                CashFlowChart::class,
+                ReconciliationGoalWidget::class,
+                CashFlowComparisonWidget::class,
+                ExpensesCompositionWidget::class,
                 CashFlowForecastChart::class,
                 PendingTransactionsTable::class,
                 BankAccountsStatusList::class,

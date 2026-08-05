@@ -4,10 +4,10 @@ namespace App\Services\Tiers;
 
 use App\Models\Core\Company;
 use App\Models\Tiers\ThirdParty;
-use App\Services\Core\CompanyService;
 use App\Services\Core\DocumentService;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Log;
 
 class TiersDocumentService extends DocumentService
 {
@@ -58,12 +58,17 @@ class TiersDocumentService extends DocumentService
 
         $data['position'] = 'portrait';
 
-        return $this->generate(
-            'pdf.tiers.details',
-            $data,
-            'fiche_tiers_'.$thirdParty->id.'_'.now()->format('Ymd_Hi'),
-            'tiers'
-        );
+        try {
+            return $this->generate(
+                'pdf.tiers.details',
+                $data,
+                'fiche_tiers_'.$thirdParty->id.'_'.now()->format('Ymd_Hi'),
+                'tiers'
+            );
+        } catch (\Exception $exception) {
+            Log::emergency($exception);
+            return $exception->getMessage();
+        }
     }
 
     public function generateContract(ThirdParty $thirdParty, bool $view = false): string
@@ -77,7 +82,7 @@ class TiersDocumentService extends DocumentService
             'tiers' => $thirdParty,
         ];
 
-        $pdf =  $this->generate(
+        $pdf = $this->generate(
             view: 'pdf.tiers.contract_subcontractor',
             data: $data,
             filename: 'contract_'.$thirdParty->id.'_'.now()->format('Ymd_Hi'),

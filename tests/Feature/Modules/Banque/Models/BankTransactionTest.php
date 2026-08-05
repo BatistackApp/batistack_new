@@ -21,3 +21,19 @@ it('casts enums correctly', function () {
     expect($transaction->type)->toBe(TransactionType::CREDIT)
         ->and($transaction->status)->toBe(TransactionStatus::PENDING);
 });
+
+it('filters by incomes and expenses', function () {
+    BankTransaction::factory()->create(['type' => TransactionType::CREDIT]);
+    BankTransaction::factory()->create(['type' => TransactionType::DEBIT]);
+
+    expect(BankTransaction::incomes()->count())->toBe(1)
+        ->and(BankTransaction::expenses()->count())->toBe(1);
+});
+
+it('filters by this month and last six months', function () {
+    BankTransaction::factory()->create(['date' => now()]);
+    BankTransaction::factory()->create(['date' => now()->subMonths(7)]);
+    
+    expect(BankTransaction::thisMonth()->count())->toBe(1)
+        ->and(BankTransaction::lastSixMonths()->count())->toBe(1);
+});
