@@ -25,7 +25,7 @@ Le module **GPAO** a pour objectif de gérer les opérations de production ou d'
     *   `ManufacturingOrderResource` pour la gestion classique.
     *   **Vue Kanban Sur-Mesure** (Alpine.js / Livewire) avec Drag & Drop fonctionnel pour visualiser les OFs.
     *   **Calendrier Capacitaire** (FullCalendar) pour gérer le planning interactif de la production.
-    *   **Dashboard KPI Production** (Taux de qualité, coûts de production, temps de cycle).
+    *   **Dashboard KPI Production Avancé** : Intégration de tableaux de bord responsifs basés sur `laboiteacode/filament-dashboard-widgets` avec indicateurs clés (TRS Global et Objectif de Qualité), le Tunnel de Fabrication pour les OFs, et une gestion ciblée des Ruptures de Stocks et bloquages d'OF.
 *   **Portail Salarié (Interface Opérateur)** : Page simplifiée optimisée pour les tablettes (`AtelierProduction`) permettant le **pointage en temps réel** ("Démarrer", "Pause", "Terminer"). La Main d'Œuvre (MOD) est ainsi tracée et valorisée instantanément.
 *   **Alertes Temps Réel** : Intégration de WebPush (PWA) pour notifier les opérateurs d'urgences directement sur leur terminal, même en arrière-plan.
 
@@ -37,4 +37,3 @@ Le module **GPAO** a pour objectif de gérer les opérations de production ou d'
 
 ## 💡 Idées d'amélioration et Nouvelles Fonctionnalités
 *   **Traçabilité des Lots et Numéros de Série** : Associer des numéros de lot ou de série aux matières premières consommées et aux produits finis pour une traçabilité ascendante et descendante parfaite (indispensable pour certaines normes de qualité).
-*   **Refonte du Dashboard Atelier (Widgets Avancés)** : Intégration de `laboiteacode/filament-dashboard-widgets` pour afficher le TRS (Variance), le taux de qualité (Goal), l'état des OFs (Funnel) et les alertes de ruptures (Detail List).
