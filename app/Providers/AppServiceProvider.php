@@ -55,10 +55,6 @@ class AppServiceProvider extends ServiceProvider
                     'immobilisation',
                     'locations',
                     'gpao',
-                    'technicien',
-                    'customer',
-                    'salarie',
-                    'terrain',
                 ])
                 ->modalHeading('Espaces')
                 ->slideOver()
@@ -76,10 +72,6 @@ class AppServiceProvider extends ServiceProvider
                     'immobilisation' => Phosphor::BoxArrowUp,
                     'locations' => Phosphor::KeyReturn,
                     'gpao' => Phosphor::Factory,
-                    'technicien' => Phosphor::Wrench,
-                    'customer' => Phosphor::User,
-                    'salarie' => Phosphor::UserRectangle,
-                    'terrain' => Phosphor::MapTrifold,
                 ])
                 ->labels([
                     'core' => 'Configurations',
@@ -95,10 +87,6 @@ class AppServiceProvider extends ServiceProvider
                     'immobilisation' => 'Immobilisations',
                     'locations' => 'Locations',
                     'gpao' => 'Atelier & Production',
-                    'technicien' => 'Espace Technicien',
-                    'customer' => 'Espace Client',
-                    'salarie' => 'Espace Salarié',
-                    'terrain' => 'Espace Terrain',
                 ]);
         });
 
