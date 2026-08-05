@@ -23,7 +23,8 @@ Le module **Chantiers** est le cœur de la gestion de projets BTP de l'ERP. Il p
 ### 4. Interface Utilisateur (Filament)
 *   **Panel Chantiers (`app/Filament/Chantier`)** : Contrairement aux spécifications initiales, **l'interface utilisateur est entièrement développée et robuste**. Le panel dédié comprend :
     *   **Ressources** : `ChantierResource` (Formulaires et Infolists complexes, Vue détaillée) et `ChantierLogResource` (Journal de bord).
-    *   **Widgets Analytiques** : `ChantierStatsOverview`, `ChantierFinancialOverview` (marge en temps réel).
+    *   **Widgets Analytiques** : `ChantierFinancialOverview` (marge en temps réel).
+    *   **Refonte du Dashboard Directeur de Travaux** : Intégration avancée de widgets (`laboiteacode`) affichant la variance de la marge globale, le funnel des projets, la consommation d'heures et les alertes d'incidents.
     *   **Widgets Avancés** : `ChantierMapWidget` (cartographie des chantiers en cours) et `ChantierGanttWidget` (visualisation planning **avec support du Drag & Drop interactif**, décalage automatique des dépendances enfants et Livewire asynchrone).
     *   **Tableaux** : `ActiveChantiersTable`, `LatestChantiersWidget`.
 
@@ -35,4 +36,3 @@ Le module **Chantiers** est le cœur de la gestion de projets BTP de l'ERP. Il p
 
 ## 💡 Idées d'amélioration et Nouvelles Fonctionnalités
 *   **BIM (Building Information Modeling)** : Intégration en cours (voir module Vision 3D).
-*   **Refonte du Dashboard Directeur de Travaux (Widgets Avancés)** : Intégration de `laboiteacode/filament-dashboard-widgets` pour afficher la variance de la marge globale, le funnel des projets, la consommation d'heures et les alertes météo/incidents.

@@ -13,7 +13,8 @@ use Filament\Widgets\TableWidget;
 
 class ActiveChantiersTable extends TableWidget
 {
-    protected static ?int $sort = 3;
+    protected static ?int $sort = 8;
+    protected int | string | array $columnSpan = 'full';
 
     protected static ?string $heading = 'Suivi d\'Avancement des Chantiers Actifs';
 

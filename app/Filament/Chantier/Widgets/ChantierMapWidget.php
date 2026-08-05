@@ -9,7 +9,7 @@ use Filament\Widgets\Widget;
 class ChantierMapWidget extends Widget
 {
     protected string $view = 'filament.chantier.widgets.chantier-map-widget';
-    protected static ?int $sort = 1;
+    protected static ?int $sort = 7;
     protected int | string | array $columnSpan = 'full';
 
     /**

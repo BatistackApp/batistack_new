@@ -11,7 +11,7 @@ class GlobalSafetyHealthWidget extends Widget
 {
     protected string $view = 'filament.chantier.widgets.global-safety-health-widget';
 
-    protected static ?int $sort = 0;
+    protected static ?int $sort = 5;
 
     protected int | string | array $columnSpan = 'full';
 
