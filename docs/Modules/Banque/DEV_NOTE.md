@@ -27,6 +27,7 @@ Le module **Banque** gère la trésorerie de l'entreprise. Il permet de connecte
 *   **Prévisionnel de Trésorerie (Forecast)** : Widget graphique interactif superposant le "Solde Confirmé" (basé sur le reste à payer des factures clients et fournisseurs) et le "Solde Prévisionnel" (incluant le lissage des devis signés non encore facturés sur 30 jours).
 *   **Refonte du Dashboard Financier** : Intégration avancée de widgets (`laboiteacode/filament-dashboard-widgets`) affichant la variance de la trésorerie, la comparaison temporelle des flux, la répartition sectorielle des dépenses, et l'objectif de rapprochement bancaire.
 *   **Factures Fournisseurs (Commerce)** : Bulk Action "Payer par virement (SEPA)" pour générer le XML de paiement et passer le statut des factures en "Paiement en cours".
+*   **Tableau de bord "Clôture Mensuelle"** : Page de supervision (`MonthlyClosing`) dédiée à l'expert-comptable listant les anomalies via des widgets séparés : transactions non catégorisées, transactions > 1000€ orphelines, et factures (clients/fournisseurs) marquées payées manuellement sans flux bancaire rattaché.
 
 ### 5. Tests
 *   Validation solide des intégrations bancaires via PestPHP, incluant la simulation de la synchronisation Open Banking (Bridge API), l'import manuel (StatementImportService) et surtout l'algorithme de lettrage intelligent (ReconciliationService) avec gestion des cas d'usage multiples (doublons, erreurs API).
@@ -39,6 +40,5 @@ Le module **Banque** gère la trésorerie de l'entreprise. Il permet de connecte
 *   Le module est fondamentalement complet, bien que les fonctionnalités ci-dessous puissent être implémentées.
 
 ## 💡 Idées d'amélioration et Nouvelles Fonctionnalités
-*   **Tableau de bord "Clôture Mensuelle"** : Vue de supervision listant les anomalies pour l'expert-comptable (transactions orphelines, montants élevés sans justificatifs, désynchronisation des statuts).
 *   **Lettrage Automatique des Paies (Appariement RH)** : Interconnecter le moteur de rapprochement avec le module RH pour lettrer automatiquement les flux "Salaires" avec les fiches de paie générées.
 *   **Module "Comptabilité" complet** : (Mis en attente) Prévoir à terme la création d'un module dédié pour générer les écritures comptables et les exports standards (FEC, Sage, Cegid, etc.) destinés à l'expert-comptable.
