@@ -26,6 +26,9 @@ class ChantierResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Phosphor::HardHat;
 
+    protected static string | \UnitEnum | null $navigationGroup = 'Chantiers';
+    protected static ?int $navigationSort = 1;
+
     protected static ?string $recordTitleAttribute = 'name';
 
     public static function form(Schema $schema): Schema
@@ -53,6 +56,7 @@ class ChantierResource extends Resource
             \App\Filament\Chantier\Resources\Chantiers\RelationManagers\BimModelsRelationManager::class,
             \App\Filament\Chantier\Resources\Chantiers\RelationManagers\InvoicesRelationManager::class,
             \App\Filament\Chantier\Resources\Chantiers\RelationManagers\WeatherAlertsRelationManager::class,
+            \App\Filament\Chantier\Resources\Chantiers\RelationManagers\DoeDocumentsRelationManager::class,
         ];
     }
 

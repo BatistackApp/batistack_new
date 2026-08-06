@@ -88,6 +88,11 @@ class Vehicle extends Model implements HasMedia
         return $this->hasMany(VehicleContract::class);
     }
 
+    public function resourceAllocations(): \Illuminate\Database\Eloquent\Relations\MorphMany
+    {
+        return $this->morphMany(\App\Models\Chantiers\ResourceAllocation::class, 'allocatable');
+    }
+
     public function fines(): HasMany
     {
         return $this->hasMany(TrafficFine::class);

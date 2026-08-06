@@ -77,7 +77,7 @@ class BimAnnotationsRelationManager extends RelationManager
                 // Normalement les annotations sont créées via la vue 3D
             ])
             ->actions([
-                \Filament\Tables\Actions\Action::make('focus')
+                \Filament\Actions\Action::make('focus')
                     ->label('Voir dans la maquette')
                     ->icon('heroicon-o-eye')
                     ->action(function (\App\Models\Vision3D\BimAnnotation $record, \Livewire\Component $livewire) {
@@ -87,8 +87,8 @@ class BimAnnotationsRelationManager extends RelationManager
                             z: $record->position_z
                         );
                     }),
-                \Filament\Tables\Actions\EditAction::make(),
-                \Filament\Tables\Actions\DeleteAction::make(),
+                \Filament\Actions\EditAction::make(),
+                \Filament\Actions\DeleteAction::make(),
             ])
             ->bulkActions([
                 \Filament\Actions\BulkActionGroup::make([
