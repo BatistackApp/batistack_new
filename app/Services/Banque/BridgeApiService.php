@@ -276,28 +276,24 @@ class BridgeApiService
             $items = $response->json('resources');
 
             foreach ($items as $item) {
+                $requiresAction = (isset($item['status']) && $item['status'] === 2);
+                
                 // Bridge API v3 items typically use status_validation_expires_at
                 $expiresAt = $item['status_validation_expires_at'] ?? $item['authentication_expires_at'] ?? null;
+                $daysRemaining = null;
+                $expirationDate = null;
                 
                 if ($expiresAt) {
                     $expirationDate = Carbon::parse($expiresAt);
                     $daysRemaining = $now->diffInDays($expirationDate, false); // false = allow negative
-
-                    if ($daysRemaining <= 5) {
-                        $expiringItems[] = [
-                            'item_id' => $item['id'],
-                            'bank_name' => $item['bank_id'], // or we could fetch bank details if needed
-                            'expires_at' => $expirationDate->toIso8601String(),
-                            'days_remaining' => $daysRemaining,
-                        ];
-                    }
-                } elseif (isset($item['status']) && $item['status'] === 2) {
-                    // Status 2 in Bridge often means ACTION_REQUIRED (SCA needed)
+                }
+                
+                if ($requiresAction || ($daysRemaining !== null && $daysRemaining <= 5)) {
                     $expiringItems[] = [
                         'item_id' => $item['id'],
-                        'bank_name' => $item['bank_id'],
-                        'expires_at' => null,
-                        'days_remaining' => 0,
+                        'bank_name' => $item['bank_id'] ?? 'Banque inconnue',
+                        'expires_at' => $expirationDate ? $expirationDate->toIso8601String() : null,
+                        'days_remaining' => $daysRemaining ?? 0,
                     ];
                 }
             }

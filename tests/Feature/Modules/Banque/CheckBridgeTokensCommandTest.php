@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Cache;
 
 it('checks bridge tokens and sends notifications when expiring', function () {
     $company = Company::factory()->create();
-    BankAccount::factory()->create(['company_id' => $company->id]);
+    BankAccount::factory()->create(['company_id' => $company->id, 'bridge_account_id' => 'bridge-123']);
     
     $admin = User::factory()->create(['is_admin' => true]);
 

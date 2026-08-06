@@ -17,9 +17,15 @@ class SepaExportService
      * @return string XML content
      * @throws \Exception
      */
-    public function generateForSupplierInvoices(Collection $invoices): string
+    public function generateForSupplierInvoices(Collection $invoices, \App\Models\Core\Company $company = null): string
     {
-        $companyAccount = BankAccount::first();
+        $company = $company ?? \App\Models\Core\Company::first();
+        
+        if (!$company) {
+            throw new \Exception("Aucune entreprise trouvée.");
+        }
+        
+        $companyAccount = BankAccount::where('company_id', $company->id)->first();
 
         if (!$companyAccount || empty($companyAccount->iban) || empty($companyAccount->bic)) {
             throw new \Exception("Le compte en banque principal de l'entreprise (ou son IBAN/BIC) n'est pas configuré.");

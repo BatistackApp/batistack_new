@@ -50,6 +50,7 @@ it('generates sepa xml for supplier invoices', function () {
 });
 
 it('throws exception if company bank account is missing', function () {
+    $company = Company::factory()->create();
     BankAccount::query()->delete();
 
     $invoices = new Collection();

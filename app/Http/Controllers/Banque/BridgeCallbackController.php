@@ -59,9 +59,15 @@ class BridgeCallbackController extends Controller
             return redirect('/login')->with('error', 'Authentication required.');
         }
 
-        $company = Company::first();
+        $companyId = $request->query('company_id');
+        $company = Company::find($companyId);
+        
         if (!$company) {
             return redirect('/')->with('error', 'Aucune entreprise trouvée.');
+        }
+
+        if (!$user->is_admin) {
+            return redirect('/')->with('error', 'Non autorisé.');
         }
 
         $externalUserId = 'company_' . $company->id;
