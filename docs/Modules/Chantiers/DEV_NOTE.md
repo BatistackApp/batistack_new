@@ -31,6 +31,12 @@ Le module **Chantiers** est le cœur de la gestion de projets BTP de l'ERP. Il p
 
 ### 5. Tests
 *   Testé à 100% avec PestPHP (les 39 tests métier passent avec succès, y compris les tests d'évaluation financière, analytique, de génération de DOE, et de prévention de double-réservation `ResourcePlannerTest`).
+*   Couverture complète des Checklists Dynamiques (`ChecklistTest.php`) avec vérification du rendu, soumission et génération de signature.
+
+### 6. Audits QSE & Checklists Dynamiques
+*   **Création de modèles dynamiques** : `ChecklistTemplate` permet via le champ Builder de créer des formulaires JSON (texte, cases à cocher, photos).
+*   **Remplissage et soumission** : Page dédiée `FillChecklistPage` convertissant les modèles JSON en formulaires natifs Filament.
+*   **Signature électronique** : Intégration de `saade/filament-autograph` pour la validation sur le terrain.
 
 ## 🚧 Ce qu'il reste à faire
 *   Le socle est complet. Des optimisations d'UX (ergonomie sur mobile pour les conducteurs de travaux) peuvent être affinées.
@@ -38,4 +44,3 @@ Le module **Chantiers** est le cœur de la gestion de projets BTP de l'ERP. Il p
 
 ## 💡 Idées d'amélioration et Nouvelles Fonctionnalités
 *   **BIM (Building Information Modeling)** : Intégration en cours (voir module Vision 3D).
-*   **Audits QSE & Checklists** : Créer un "Form Builder" pour modéliser des checklists dynamiques de contrôle de qualité ou visites de sécurité sur chantier, avec signature numérique et photos.

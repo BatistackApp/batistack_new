@@ -9,9 +9,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class SubcontractorSituation extends Model
+use Spatie\MediaLibrary\HasMedia;
+use Spatie\MediaLibrary\InteractsWithMedia;
+
+class SubcontractorSituation extends Model implements HasMedia
 {
-    use HasFactory;
+    use HasFactory, InteractsWithMedia;
 
     protected $fillable = [
         'subcontractor_id',
@@ -47,5 +50,11 @@ class SubcontractorSituation extends Model
             'total_ht' => 'decimal:2',
             'retenue_garantie_amount' => 'decimal:2',
         ];
+    }
+
+    public function registerMediaCollections(): void
+    {
+        $this->addMediaCollection('invoice_document')
+            ->singleFile();
     }
 }

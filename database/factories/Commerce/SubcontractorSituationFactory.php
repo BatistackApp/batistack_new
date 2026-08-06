@@ -24,7 +24,7 @@ class SubcontractorSituationFactory extends Factory
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
 
-            'third_party_id' => ThirdParty::factory(),
+            'subcontractor_id' => ThirdParty::factory(),
             'chantier_id' => Chantier::factory(),
             'purchase_order_id' => PurchaseOrder::factory(),
         ];
