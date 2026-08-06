@@ -49,6 +49,7 @@ class InventoryCycleForm
                                 TextInput::make('counted_quantity')
                                     ->label('Quantité comptée')
                                     ->numeric()
+                                    ->minValue(0)
                                     ->required(fn (string $operation, $get, ?\Illuminate\Database\Eloquent\Model $record) => $record?->cycle?->status !== InventoryCycleStatus::COMPLETED)
                                     ->disabled(fn ($get) => in_array($get('../../status'), [InventoryCycleStatus::PENDING_REVIEW->value, InventoryCycleStatus::COMPLETED->value, InventoryCycleStatus::CANCELLED->value])),
                             ]),

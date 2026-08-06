@@ -125,7 +125,7 @@ class StocksRelationManager extends RelationManager
                             ->maxValue(fn ($record) => $record->getAvailableQuantity()),
                     ])
                     ->action(function ($record, array $data) {
-                        $record->reserve($data['quantity']);
+                        app(\App\Services\Articles\StockService::class)->reserve($record->item, $record->warehouse, $data['quantity']);
                         \Filament\Notifications\Notification::make()->title('Stock réservé')->success()->send();
                     }),
                 Action::make('release')
@@ -140,7 +140,7 @@ class StocksRelationManager extends RelationManager
                             ->maxValue(fn ($record) => $record->reserved_quantity),
                     ])
                     ->action(function ($record, array $data) {
-                        $record->release($data['quantity']);
+                        app(\App\Services\Articles\StockService::class)->release($record->item, $record->warehouse, $data['quantity']);
                         \Filament\Notifications\Notification::make()->title('Stock libéré')->success()->send();
                     })
                     ->visible(fn ($record) => $record->reserved_quantity > 0),
@@ -162,7 +162,8 @@ class StocksRelationManager extends RelationManager
                     ])
                     ->action(function ($record, array $data) {
                         $chantier = \App\Models\Chantiers\Chantier::find($data['chantier_id']);
-                        $reason = "Consommation pour le chantier : " . ($chantier ? $chantier->name : 'Inconnu');
+                        if (!$chantier) return;
+                        $reason = "Consommation pour le chantier : " . $chantier->name;
 
                         app(\App\Services\Articles\StockService::class)->consumeReserved(
                             $record->item,
@@ -170,7 +171,7 @@ class StocksRelationManager extends RelationManager
                             $data['quantity'],
                             $reason,
                             \App\Enums\Articles\StockMouvementSource::SITE,
-                            $data['chantier_id']
+                            $chantier->id
                         );
                         \Filament\Notifications\Notification::make()->title('Stock consommé')->success()->send();
                     })

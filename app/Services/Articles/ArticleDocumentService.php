@@ -9,6 +9,11 @@ use Illuminate\Support\Collection;
 
 class ArticleDocumentService extends DocumentService
 {
+    public static function getDisk(): string
+    {
+        return 'local'; // Disque privé pour la sécurité
+    }
+
     /**
      * Génère des étiquettes PDF pour une collection d'articles.
      */
@@ -59,7 +64,7 @@ class ArticleDocumentService extends DocumentService
         return $this->generate(
             view: $view,
             data: $data,
-            filename: 'etiquettes_articles_' . now()->format('Ymd_His'),
+            filename: 'etiquettes_articles_' . now()->format('Ymd_His') . '_' . uniqid(),
             type: 'articles'
         );
     }

@@ -54,8 +54,17 @@ class InventoryCyclesTable
                 EditAction::make(),
             ])
             ->toolbarActions([
-                BulkActionGroup::make([
-                    DeleteBulkAction::make(),
+                \Filament\Tables\Actions\BulkActionGroup::make([
+                    \Filament\Tables\Actions\DeleteBulkAction::make()
+                        ->action(function (\Illuminate\Database\Eloquent\Collection $records, \Filament\Tables\Actions\DeleteBulkAction $action) {
+                            if ($records->contains(fn($record) => $record->status === \App\Enums\Articles\InventoryCycleStatus::COMPLETED)) {
+                                \Filament\Notifications\Notification::make()->danger()->title('Impossible de supprimer des cycles complétés.')->send();
+                                $action->failure();
+                                return;
+                            }
+                            $records->each->delete();
+                            \Filament\Notifications\Notification::make()->success()->title('Supprimé avec succès.')->send();
+                        }),
                 ]),
             ]);
     }

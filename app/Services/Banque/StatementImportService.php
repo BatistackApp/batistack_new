@@ -19,7 +19,7 @@ class StatementImportService
         $imported = 0;
 
         if (($handle = fopen($filePath, "r")) !== FALSE) {
-            $header = fgetcsv($handle, 1000, ","); // Assuming comma separated header
+            fgetcsv($handle, 1000, ","); // Assuming comma separated header
 
             while (($data = fgetcsv($handle, 1000, ",")) !== FALSE) {
                 // Expected format: date, description, amount

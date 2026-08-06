@@ -19,6 +19,8 @@ return new class extends Migration
             $table->decimal('counted_quantity', 10, 4)->nullable();
             $table->string('status')->default('pending');
             $table->timestamps();
+
+            $table->unique(['inventory_cycle_id', 'item_id']);
         });
     }
 

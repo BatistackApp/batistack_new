@@ -22,7 +22,19 @@ class InventoryService
         DB::transaction(function () use ($item, $warehouse, $foundQuantity, $reason) {
             $stock = Stock::where('item_id', $item->id)
                 ->where('warehouse_id', $warehouse->id)
+                ->lockForUpdate()
                 ->first();
+
+            if ($foundQuantity < 0) {
+                throw new \App\Exceptions\Articles\ArticlesModuleException("La quantité trouvée ne peut pas être négative.", 400);
+            }
+
+            if ($stock && $foundQuantity < $stock->reserved_quantity) {
+                throw new \App\Exceptions\Articles\ArticlesModuleException(
+                    "La quantité trouvée ({$foundQuantity}) ne peut pas être inférieure à la quantité réservée ({$stock->reserved_quantity}).",
+                    400
+                );
+            }
 
             $theoreticalQuantity = $stock ? $stock->quantity : 0;
             $adjustment = $foundQuantity - $theoreticalQuantity;
@@ -32,10 +44,16 @@ class InventoryService
             }
 
             // Mise à jour du stock
-            $stock = Stock::updateOrCreate(
-                ['item_id' => $item->id, 'warehouse_id' => $warehouse->id],
-                ['quantity' => $foundQuantity]
-            );
+            if (!$stock) {
+                $stock = Stock::create([
+                    'item_id' => $item->id,
+                    'warehouse_id' => $warehouse->id,
+                    'quantity' => $foundQuantity
+                ]);
+            } else {
+                $stock->quantity = $foundQuantity;
+                $stock->save();
+            }
 
             // Création du mouvement de stock
             \App\Models\Articles\StockMouvement::create([

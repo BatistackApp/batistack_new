@@ -58,6 +58,18 @@ class CycleCountingService
      */
     public function submitForReview(InventoryCycle $cycle): void
     {
+        if ($cycle->status !== InventoryCycleStatus::PENDING) {
+            throw new \App\Exceptions\Articles\ArticlesModuleException("Le cycle n'est pas dans un état soumettable.", 400);
+        }
+
+        if ($cycle->lines()->count() === 0) {
+            throw new \App\Exceptions\Articles\ArticlesModuleException("Le cycle ne contient aucune ligne.", 400);
+        }
+
+        if ($cycle->lines()->whereNull('counted_quantity')->exists()) {
+            throw new \App\Exceptions\Articles\ArticlesModuleException("Toutes les lignes doivent être comptées avant soumission.", 400);
+        }
+
         $cycle->update([
             'status' => InventoryCycleStatus::PENDING_REVIEW,
         ]);
@@ -71,21 +83,33 @@ class CycleCountingService
     public function approveCycle(InventoryCycle $cycle, User $manager): void
     {
         DB::transaction(function () use ($cycle, $manager) {
+            $lockedCycle = InventoryCycle::with('lines.item')->lockForUpdate()->find($cycle->id);
+
+            if ($lockedCycle->status !== InventoryCycleStatus::PENDING_REVIEW) {
+                throw new \App\Exceptions\Articles\ArticlesModuleException("Ce cycle n'est plus en attente de validation.", 400);
+            }
+
+            foreach ($lockedCycle->lines as $line) {
+                if ($line->counted_quantity === null || $line->status !== InventoryCycleLineStatus::COUNTED) {
+                    throw new \App\Exceptions\Articles\ArticlesModuleException("Toutes les lignes doivent être comptées.", 400);
+                }
+            }
+
             $inventoryService = app(InventoryService::class);
 
-            foreach ($cycle->lines as $line) {
-                if ($line->counted_quantity !== null && $line->counted_quantity != $line->theoretical_quantity) {
+            foreach ($lockedCycle->lines as $line) {
+                if ($line->counted_quantity != $line->theoretical_quantity) {
                     // Appliquer la régularisation
                     $inventoryService->reconcile(
                         $line->item,
-                        $cycle->warehouse,
+                        $lockedCycle->warehouse,
                         $line->counted_quantity,
-                        "Régularisation inventaire tournant #{$cycle->id}"
+                        "Régularisation inventaire tournant #{$lockedCycle->id}"
                     );
                 }
             }
 
-            $cycle->update([
+            $lockedCycle->update([
                 'status' => InventoryCycleStatus::COMPLETED,
                 'approved_by' => $manager->id,
                 'approved_at' => now(),
