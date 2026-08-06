@@ -86,6 +86,11 @@ class Employee extends Model implements HasMedia
         return $this->hasMany(ExpenseReport::class);
     }
 
+    public function resourceAllocations(): \Illuminate\Database\Eloquent\Relations\MorphMany
+    {
+        return $this->morphMany(\App\Models\Chantiers\ResourceAllocation::class, 'allocatable');
+    }
+
     public function absences(): HasMany
     {
         return $this->hasMany(Abscence::class);
