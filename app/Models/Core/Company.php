@@ -48,6 +48,11 @@ class Company extends Model implements HasMedia
         return $this->morphMany(Signature::class, 'signable');
     }
 
+    public function bankAccounts(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(\App\Models\Banque\BankAccount::class);
+    }
+
     public function registerMediaCollections(): void
     {
         $this->addMediaCollection('core')

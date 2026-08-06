@@ -6,6 +6,7 @@ use App\Enums\Commerce\InvoiceStatus;
 use App\Models\Commerce\SupplierInvoice;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
+use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -92,6 +93,56 @@ class SupplierInvoicesTable
             ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
+                    BulkAction::make('export_sepa')
+                        ->label('Payer par virement (SEPA)')
+                        ->icon('heroicon-o-currency-euro')
+                        ->color('success')
+                        ->requiresConfirmation()
+                        ->modalHeading('Exporter au format SEPA')
+                        ->modalDescription('Cette action va générer un fichier XML de virement SEPA pour les factures sélectionnées.')
+                        ->schema([
+                            \Filament\Forms\Components\Checkbox::make('mark_as_paid')
+                                ->label('Passer les factures en statut "Paiement en cours" ?')
+                                ->default(true)
+                        ])
+                        ->action(function (\Illuminate\Database\Eloquent\Collection $records, array $data, \App\Services\Commerce\SepaExportService $service) {
+                            $validRecords = $records->filter(fn ($r) => in_array($r->status, [InvoiceStatus::BON_A_PAYER, InvoiceStatus::VALIDATED]));
+
+                            if ($validRecords->isEmpty()) {
+                                \Filament\Notifications\Notification::make()
+                                    ->title('Aucune facture "Bon à payer" ou "Validée" sélectionnée.')
+                                    ->warning()
+                                    ->send();
+                                return;
+                            }
+
+                            try {
+                                $xmlContent = $service->generateForSupplierInvoices($validRecords);
+
+                                if ($data['mark_as_paid']) {
+                                    foreach ($validRecords as $record) {
+                                        $record->update(['status' => InvoiceStatus::PAYMENT_IN_PROGRESS]);
+                                    }
+                                }
+
+                                \Filament\Notifications\Notification::make()
+                                    ->title('Fichier SEPA généré avec succès.')
+                                    ->success()
+                                    ->send();
+
+                                return response()->streamDownload(function () use ($xmlContent) {
+                                    echo $xmlContent;
+                                }, 'fournisseurs_sepa_' . date('Ymd_His') . '.xml', ['Content-Type' => 'application/xml']);
+
+                            } catch (\Exception $e) {
+                                \Filament\Notifications\Notification::make()
+                                    ->title('Erreur lors de la génération SEPA')
+                                    ->body($e->getMessage())
+                                    ->danger()
+                                    ->send();
+                            }
+                        })
+                        ->deselectRecordsAfterCompletion(),
                 ]),
             ]);
     }

@@ -245,4 +245,72 @@ class BridgeApiService
 
         return $imported;
     }
+
+    /**
+     * Check items (bank connections) for DSP2 expiration.
+     * Returns an array of items expiring in 5 days or less.
+     */
+    public function checkItemsExpiration(int $companyId): array
+    {
+        $externalUserId = 'company_' . $companyId;
+        $token = $this->getAccessToken($externalUserId);
+
+        $endpoint = "{$this->baseUrl}/aggregation/items";
+        $hasMore = true;
+        $params = ['limit' => 100];
+        $expiringItems = [];
+        $now = now();
+
+        while ($hasMore && $endpoint) {
+            $response = \Illuminate\Support\Facades\Http::withToken($token)
+                ->withHeaders([
+                    'Bridge-Version' => $this->version,
+                    'Client-Id' => $this->clientId,
+                    'Client-Secret' => $this->clientSecret,
+                ])->get($endpoint, $params);
+
+            if (!$response->successful()) {
+                throw new \Exception('Bridge API Items Fetch Failed: ' . $response->body());
+            }
+
+            $items = $response->json('resources');
+
+            foreach ($items as $item) {
+                // Bridge API v3 items typically use status_validation_expires_at
+                $expiresAt = $item['status_validation_expires_at'] ?? $item['authentication_expires_at'] ?? null;
+                
+                if ($expiresAt) {
+                    $expirationDate = Carbon::parse($expiresAt);
+                    $daysRemaining = $now->diffInDays($expirationDate, false); // false = allow negative
+
+                    if ($daysRemaining <= 5) {
+                        $expiringItems[] = [
+                            'item_id' => $item['id'],
+                            'bank_name' => $item['bank_id'], // or we could fetch bank details if needed
+                            'expires_at' => $expirationDate->toIso8601String(),
+                            'days_remaining' => $daysRemaining,
+                        ];
+                    }
+                } elseif (isset($item['status']) && $item['status'] === 2) {
+                    // Status 2 in Bridge often means ACTION_REQUIRED (SCA needed)
+                    $expiringItems[] = [
+                        'item_id' => $item['id'],
+                        'bank_name' => $item['bank_id'],
+                        'expires_at' => null,
+                        'days_remaining' => 0,
+                    ];
+                }
+            }
+
+            $nextUri = $response->json('pagination.next_uri');
+            if ($nextUri) {
+                $endpoint = $this->baseUrl . str_replace('/v3', '', $nextUri);
+                $params = [];
+            } else {
+                $hasMore = false;
+            }
+        }
+
+        return $expiringItems;
+    }
 }
