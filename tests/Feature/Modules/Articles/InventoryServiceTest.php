@@ -12,6 +12,9 @@ test('il régularise le stock à la valeur trouvée lors de l\'inventaire', func
     // Stock théorique de 50
     Stock::create(['item_id' => $item->id, 'warehouse_id' => $warehouse->id, 'quantity' => 50]);
 
+    $user = \App\Models\User::factory()->create();
+    $this->actingAs($user);
+
     $service = new InventoryService;
 
     // Inventaire réel : on ne trouve que 42 unités

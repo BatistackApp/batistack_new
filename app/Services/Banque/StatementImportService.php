@@ -7,6 +7,7 @@ use App\Enums\Banque\TransactionType;
 use App\Models\Banque\BankAccount;
 use App\Models\Banque\BankTransaction;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Log;
 
 class StatementImportService
 {
@@ -16,10 +17,10 @@ class StatementImportService
     public function importCsv(BankAccount $account, string $filePath): int
     {
         $imported = 0;
-        
+
         if (($handle = fopen($filePath, "r")) !== FALSE) {
-            $header = fgetcsv($handle, 1000, ","); // Assuming comma separated header
-            
+            fgetcsv($handle, 1000, ","); // Assuming comma separated header
+
             while (($data = fgetcsv($handle, 1000, ",")) !== FALSE) {
                 // Expected format: date, description, amount
                 if (count($data) >= 3) {
@@ -40,6 +41,7 @@ class StatementImportService
                         $tx->forceFill(['external_id' => $hashId])->save();
                         $imported++;
                     } catch (\Illuminate\Database\QueryException $e) {
+                        Log::emergency($e->getMessage());
                         // 23000 is the SQLSTATE code for integrity constraint violation (e.g. duplicate key)
                         if ($e->getCode() !== '23000') {
                             throw $e;
@@ -49,7 +51,7 @@ class StatementImportService
             }
             fclose($handle);
         }
-        
+
         return $imported;
     }
 }

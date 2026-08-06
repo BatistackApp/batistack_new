@@ -8,6 +8,8 @@ Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
 
+Schedule::command('inventory:generate-cycle-counts')->weeklyOn(1, '03:00');
+
 // Tiers
 
 Schedule::command('tiers:verify-vigilance')

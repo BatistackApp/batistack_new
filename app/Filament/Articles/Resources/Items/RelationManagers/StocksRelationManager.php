@@ -21,6 +21,7 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Model;
 use ToneGabes\Filament\Icons\Enums\Phosphor;
+use Filament\Actions\Action;
 
 class StocksRelationManager extends RelationManager
 {
@@ -80,9 +81,22 @@ class StocksRelationManager extends RelationManager
                     ->label('Dépôt')
                     ->weight('bold'),
                 TextColumn::make('quantity')
-                    ->label('Disponible')
+                    ->label('Physique')
                     ->numeric(decimalPlaces: 2)
-                    ->color(fn ($record) => $record->quantity <= $record->min_threshold ? 'danger' : 'success')
+                    ->color('gray')
+                    ->suffix(fn ($record) => " {$record->item->unit->symbol}"),
+                TextColumn::make('reserved_quantity')
+                    ->label('Réservé')
+                    ->numeric(decimalPlaces: 2)
+                    ->badge()
+                    ->color('warning')
+                    ->suffix(fn ($record) => " {$record->item->unit->symbol}"),
+                TextColumn::make('available')
+                    ->label('Disponible')
+                    ->state(fn ($record) => $record->getAvailableQuantity())
+                    ->numeric(decimalPlaces: 2)
+                    ->weight('bold')
+                    ->color(fn ($record) => $record->getAvailableQuantity() <= $record->min_threshold ? 'danger' : 'success')
                     ->suffix(fn ($record) => " {$record->item->unit->symbol}"),
                 TextColumn::make('min_threshold')
                     ->label('Seuil mini')
@@ -99,6 +113,69 @@ class StocksRelationManager extends RelationManager
                 AssociateAction::make(),
             ])
             ->recordActions([
+                Action::make('reserve')
+                    ->label('Réserver')
+                    ->icon(Phosphor::LockKey)
+                    ->color('warning')
+                    ->form([
+                        TextInput::make('quantity')
+                            ->label('Quantité à réserver')
+                            ->numeric()
+                            ->required()
+                            ->maxValue(fn ($record) => $record->getAvailableQuantity()),
+                    ])
+                    ->action(function ($record, array $data) {
+                        app(\App\Services\Articles\StockService::class)->reserve($record->item, $record->warehouse, $data['quantity']);
+                        \Filament\Notifications\Notification::make()->title('Stock réservé')->success()->send();
+                    }),
+                Action::make('release')
+                    ->label('Libérer')
+                    ->icon(Phosphor::LockKeyOpen)
+                    ->color('gray')
+                    ->form([
+                        TextInput::make('quantity')
+                            ->label('Quantité à libérer')
+                            ->numeric()
+                            ->required()
+                            ->maxValue(fn ($record) => $record->reserved_quantity),
+                    ])
+                    ->action(function ($record, array $data) {
+                        app(\App\Services\Articles\StockService::class)->release($record->item, $record->warehouse, $data['quantity']);
+                        \Filament\Notifications\Notification::make()->title('Stock libéré')->success()->send();
+                    })
+                    ->visible(fn ($record) => $record->reserved_quantity > 0),
+                Action::make('consume')
+                    ->label('Consommer Rsv.')
+                    ->icon(Phosphor::Package)
+                    ->color('primary')
+                    ->form([
+                        TextInput::make('quantity')
+                            ->label('Quantité à consommer')
+                            ->numeric()
+                            ->required()
+                            ->maxValue(fn ($record) => $record->reserved_quantity),
+                        \Filament\Forms\Components\Select::make('chantier_id')
+                            ->label('Chantier')
+                            ->options(\App\Models\Chantiers\Chantier::pluck('name', 'id'))
+                            ->searchable()
+                            ->required(),
+                    ])
+                    ->action(function ($record, array $data) {
+                        $chantier = \App\Models\Chantiers\Chantier::find($data['chantier_id']);
+                        if (!$chantier) return;
+                        $reason = "Consommation pour le chantier : " . $chantier->name;
+
+                        app(\App\Services\Articles\StockService::class)->consumeReserved(
+                            $record->item,
+                            $record->warehouse,
+                            $data['quantity'],
+                            $reason,
+                            \App\Enums\Articles\StockMouvementSource::SITE,
+                            $chantier->id
+                        );
+                        \Filament\Notifications\Notification::make()->title('Stock consommé')->success()->send();
+                    })
+                    ->visible(fn ($record) => $record->reserved_quantity > 0),
                 ViewAction::make(),
                 EditAction::make(),
                 DissociateAction::make(),
