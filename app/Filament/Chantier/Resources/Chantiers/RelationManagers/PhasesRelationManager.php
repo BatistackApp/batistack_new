@@ -86,7 +86,40 @@ class PhasesRelationManager extends RelationManager
                                 Toggle::make('is_completed')
                                     ->label('Terminée')
                                     ->onColor('success'),
-                            ])->columns(4)->columnSpanFull(),
+                            ])->columns(4)->columnSpanFull()
+                            ->extraItemActions([
+                                \Filament\Actions\Action::make('fill_checklist')
+                                    ->label('Remplir Checklist')
+                                    ->icon('heroicon-m-clipboard-document-check')
+                                    ->form([
+                                        \Filament\Forms\Components\Select::make('template_id')
+                                            ->label('Modèle de Checklist')
+                                            ->options(\App\Models\Chantiers\ChecklistTemplate::where('is_active', true)->pluck('name', 'id'))
+                                            ->required(),
+                                    ])
+                                    ->action(function (array $arguments, array $data, Repeater $component) {
+                                        $state = $component->getItemState($arguments['item']);
+                                        // $state['id'] only exists if the record is saved. For unsaved records, it might not exist.
+                                        // In Filament v3, repeater items that are loaded from DB have an ID in the state sometimes, or we can get the record.
+                                        $taskId = $state['id'] ?? null;
+                                        if (!$taskId) {
+                                            // Fallback: try to extract ID from the item key if it's an existing record UUID/ID
+                                            if (str_starts_with($arguments['item'], 'record-')) {
+                                                $taskId = str_replace('record-', '', $arguments['item']);
+                                            }
+                                        }
+
+                                        if (!$taskId) {
+                                            \Filament\Notifications\Notification::make()
+                                                ->title('Veuillez sauvegarder la tâche d\'abord')
+                                                ->danger()
+                                                ->send();
+                                            return;
+                                        }
+                                        
+                                        redirect()->to('/chantier/fill-checklist-page?task_id=' . $taskId . '&template_id=' . $data['template_id']);
+                                    }),
+                            ]),
                     ]),
             ]);
     }

@@ -71,7 +71,7 @@ class DoeDocumentService extends DocumentService
         // 4. Parcourir et ajouter chaque document média au ZIP organisé par dossier (catégorie)
         foreach ($documents as $index => $doc) {
             $media = $doc->getFirstMedia('attachment');
-            if ($media && file_exists($media->getPath())) {
+            if ($media) {
                 $fileExtension = pathinfo($media->file_name, PATHINFO_EXTENSION);
 
                 // Normalisation du nom de fichier dans le ZIP : "CATEGORIE/XX_Nom_Document.pdf"
@@ -79,19 +79,27 @@ class DoeDocumentService extends DocumentService
                 $cleanName = Str::slug($doc->name);
                 $zipPath = $folder.'/'.str_pad($index + 1, 2, '0', STR_PAD_LEFT).'_'.$cleanName.'.'.$fileExtension;
 
-                $zip->addFile($media->getPath(), $zipPath);
+                if (in_array($media->disk, ['local', 'public']) && file_exists($media->getPath())) {
+                    $zip->addFile($media->getPath(), $zipPath);
+                } else {
+                    $zip->addFromString($zipPath, Storage::disk($media->disk)->get($media->getPathRelativeToRoot()));
+                }
             }
         }
 
         // 5. Parcourir et ajouter chaque fiche technique
         foreach ($itemsWithSheets as $index => $item) {
             $media = $item->getFirstMedia('technical_sheet');
-            if ($media && file_exists($media->getPath())) {
+            if ($media) {
                 $fileExtension = pathinfo($media->file_name, PATHINFO_EXTENSION);
                 $cleanName = Str::slug($item->name);
                 $zipPath = 'FICHES_TECHNIQUES/FT_'.str_pad($index + 1, 2, '0', STR_PAD_LEFT).'_'.$cleanName.'.'.$fileExtension;
 
-                $zip->addFile($media->getPath(), $zipPath);
+                if (in_array($media->disk, ['local', 'public']) && file_exists($media->getPath())) {
+                    $zip->addFile($media->getPath(), $zipPath);
+                } else {
+                    $zip->addFromString($zipPath, Storage::disk($media->disk)->get($media->getPathRelativeToRoot()));
+                }
             }
         }
 

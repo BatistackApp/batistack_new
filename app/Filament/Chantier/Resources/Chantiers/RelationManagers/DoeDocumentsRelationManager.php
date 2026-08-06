@@ -42,6 +42,7 @@ class DoeDocumentsRelationManager extends RelationManager
         return $schema
             ->components([
                 Section::make('Fiche de documentation')
+                    ->columnSpanFull()
                     ->schema([
                         TextInput::make('name')
                             ->label('Intitulé de la pièce')
@@ -109,5 +110,10 @@ class DoeDocumentsRelationManager extends RelationManager
                     DeleteBulkAction::make(),
                 ]),
             ]);
+    }
+
+    public function isReadOnly(): bool
+    {
+        return false;
     }
 }

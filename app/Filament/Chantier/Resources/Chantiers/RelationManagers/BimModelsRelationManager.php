@@ -2,12 +2,18 @@
 
 namespace App\Filament\Chantier\Resources\Chantiers\RelationManagers;
 
+use App\Filament\Vision3D\Resources\BimModelResource;
 use App\Models\Vision3D\BimModel;
-use Filament\Forms;
+use Filament\Actions\Action;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\CreateAction;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
+use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
 use Filament\Resources\RelationManagers\RelationManager;
-use Filament\Schemas\Components\FileUpload;
-use Filament\Schemas\Components\Select;
-use Filament\Schemas\Components\TextInput;
 use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -48,7 +54,7 @@ class BimModelsRelationManager extends RelationManager
                     ->directory('bim_models')
                     ->preserveFilenames()
                     ->getUploadedFileNameForStorageUsing(function (TemporaryUploadedFile $file): string {
-                        return (string) str($file->getClientOriginalName())->prepend(now()->timestamp . '_');
+                        return (string) str($file->getClientOriginalName())->prepend(now()->timestamp.'_');
                     })
                     ->required()
                     ->columnSpanFull(),
@@ -61,7 +67,8 @@ class BimModelsRelationManager extends RelationManager
             ->recordTitleAttribute('name')
             ->columns([
                 Tables\Columns\TextColumn::make('name')->label('Nom'),
-                Tables\Columns\BadgeColumn::make('format')->label('Format')
+                Tables\Columns\TextColumn::make('format')->label('Format')
+                    ->badge()
                     ->colors([
                         'primary' => 'ifc',
                         'warning' => 'dxf',
@@ -70,26 +77,31 @@ class BimModelsRelationManager extends RelationManager
                     ]),
                 Tables\Columns\TextColumn::make('file_size')
                     ->label('Taille')
-                    ->formatStateUsing(fn ($state) => number_format($state / 1048576, 2) . ' Mo'),
+                    ->formatStateUsing(fn ($state) => number_format($state / 1048576, 2).' Mo'),
             ])
             ->filters([
                 //
             ])
             ->headerActions([
-                Tables\Actions\CreateAction::make(),
+                CreateAction::make(),
             ])
-            ->actions([
-                Tables\Actions\Action::make('view')
+            ->recordActions([
+                Action::make('view')
                     ->label('Visualiser')
                     ->icon('heroicon-o-eye')
-                    ->url(fn (BimModel $record): string => \App\Filament\Vision3D\Resources\BimModelResource::getUrl('view', ['record' => $record])),
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
+                    ->url(fn (BimModel $record): string => BimModelResource::getUrl('view', ['record' => $record], panel: 'vision3d')),
+                EditAction::make(),
+                DeleteAction::make(),
             ])
-            ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+            ->groupedBulkActions([
+                BulkActionGroup::make([
+                    DeleteBulkAction::make(),
                 ]),
             ]);
+    }
+
+    public function isReadOnly(): bool
+    {
+        return false;
     }
 }
