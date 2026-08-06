@@ -20,6 +20,9 @@ use Illuminate\Support\Facades\Queue;
 beforeEach(function () {
     Queue::fake();
 
+    $this->user = User::factory()->create();
+    $this->actingAs($this->user);
+    \App\Models\Core\Company::factory()->create();
     $this->customer = ThirdParty::factory()->state(['type' => 'client'])->create();
     Contact::factory()->create([
         'third_party_id' => $this->customer->id,
@@ -33,7 +36,7 @@ beforeEach(function () {
 describe('SendCustomerInvoiceEmailJob - Envoi asynchrone de factures', function () {
 
     test('envoie l\'email avec la facture au client', function () {
-        Notification::fake();
+        Mail::fake();
 
         $invoice = CustomerInvoice::factory()->create([
             'client_id' => $this->customer->id,
@@ -41,21 +44,13 @@ describe('SendCustomerInvoiceEmailJob - Envoi asynchrone de factures', function 
             'sent_at' => null,
         ]);
 
-        // Recharger le client avec ses contacts avant de lancer le job (pour le test)
         $invoice->load('client.contacts');
 
-        // Instancier et exécuter le job manuellement pour le tester
         $job = new SendCustomerInvoiceEmailJob($invoice);
-        $job->handle();
+        app()->call([$job, 'handle']);
 
-        // Recharger le client pour l'assertion
-        $this->customer->load('primaryContact');
-
-        // Vérifier que la notification a été envoyée
-        Notification::assertSentTo(
-            $this->customer->primaryContact,
-            InvoiceGeneratedNotification::class
-        );
+        Mail::assertQueued(\App\Mail\Commerce\CustomerInvoiceMail::class);
+        expect($invoice->fresh()->sent_at)->not->toBeNull();
     });
 
     test('enregistre le timestamp d\'envoi', function () {
@@ -69,7 +64,7 @@ describe('SendCustomerInvoiceEmailJob - Envoi asynchrone de factures', function 
         $invoice->load('client.contacts');
 
         $job = new SendCustomerInvoiceEmailJob($invoice);
-        $job->handle();
+        app()->call([$job, 'handle']);
 
         expect($invoice->fresh()->sent_at)->not->toBeNull();
     });
@@ -96,7 +91,7 @@ describe('SendCustomerInvoiceEmailJob - Envoi asynchrone de factures', function 
         $invoice->load('client.contacts');
 
         $job = new SendCustomerInvoiceEmailJob($invoice);
-        $job->handle();
+        app()->call([$job, 'handle']);
 
         Notification::assertNothingSent();
     });
@@ -107,13 +102,14 @@ describe('SendCustomerInvoiceEmailJob - Envoi asynchrone de factures', function 
             'status' => InvoiceStatus::VALIDATED,
         ]);
 
-        // Supprimer l'email du contact
+        // Supprimer l'email du contact et du client
         $this->customer->primaryContact?->update(['email' => null]);
+        $this->customer->update(['email' => null]);
 
         $invoice->load('client.contacts');
 
         $job = new SendCustomerInvoiceEmailJob($invoice);
-        $job->handle();
+        app()->call([$job, 'handle']);
 
         // Le job ne doit pas échouer, juste logger un warning
         expect($invoice->fresh()->sent_at)->toBeNull();

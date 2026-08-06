@@ -99,3 +99,8 @@ Schedule::command('banque:sync-bridge')
     ->dailyAt('04:00')
     ->timezone('Europe/Paris')
     ->onFailure(fn () => logger()->error("Échec de la synchronisation des comptes bancaires Bridge."));
+
+Schedule::command('app:check-bridge-tokens')
+    ->dailyAt('09:00')
+    ->timezone('Europe/Paris')
+    ->onFailure(fn () => logger()->error("Échec de la vérification des tokens Bridge API."));
