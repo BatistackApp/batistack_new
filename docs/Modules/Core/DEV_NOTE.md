@@ -31,17 +31,21 @@ Le cœur regorge de services essentiels déjà implémentés et fonctionnels :
 *   **Stockage Cloud (S3/Minio)** : Pleine compatibilité S3 de BatiStack (utilisation de `temporaryUrl` pour l'aperçu dynamique de PDF sécurisés via `MediaAction` et de `Storage::disk()->download` pour contourner les limitations de `response()->download()` sur des fichiers non locaux - résolutions issues 117/118).
 *   **Commandes & Notifications** : `CheckCoreSettingsCommand` (vérification de l'intégrité de la configuration) et `ConfigurationChangedNotification`.
 
-### 4. Tests
+### 4. Interface Utilisateur (Filament)
+*   **Paramétrage Filament (UI)** : Les interfaces pour administrer les Taux de TVA, les Unités, les Paramètres Globaux et les Entreprises sont implémentées.
+*   **Dashboard** : Tableau de bord de base configurable.
+
+### 5. Tests
 *   Les Observers (`CompanyObserver`, `SettingObserver`, `UnitObserver`, `VatRateObserver`) garantissent l'intégrité des données, avec une couverture de tests validant la sécurité et l'invalidation du cache.
 *   La logique de hachage de la signature et le typage strict sont en place.
 *   Couverture complète ajoutée pour `CompanyService` (données d'en-tête de documents) et `GoogleMapsService` (géocodage, matrice de distance, optimisation d'itinéraire).
 
 ## 🚧 Ce qu'il reste à faire
-*   **Paramétrage Filament (UI)** : Bien que les bases de la base de données soient solides, les interfaces Filament (pages de paramètres) pour administrer les Taux de TVA, les Unités, les Paramètres Globaux et les Entreprises doivent être finalisées ou créées.
-*   **Rôles et Permissions** : Intégration complète de Filament Shield ou d'un système similaire pour la gestion granulaire des rôles (Admin, Technicien, Commercial) au niveau global.
-*   **Dashboard** : Personnalisation du Dashboard de base (Widgets, KPI transverses).
+*   **Rôles et Permissions** : Intégration de Filament Shield ou système similaire. *Spécificité : Les rôles devront être en relation directe avec les postes de l'entreprise (Poste du contrat RH)*.
+*   **Dashboard** : Personnalisation avancée du Dashboard de base (Widgets, KPI transverses).
 
 ## 💡 Idées d'amélioration et Nouvelles Fonctionnalités
+*   **Activity Log / Piste d'Audit** : Intégrer `spatie/laravel-activitylog` pour tracer toutes les modifications et suppressions sur les entités critiques (Devis, Factures, Chantiers) avec un historique détaillé (Qui, Quand, Quoi).
 *   **Gestion Documentaire Complète** : Interface d'arborescence GED pour visualiser et classer facilement tous les PDF générés par le `DocumentService`.
 *   **Workflow Approbations Multiples** : Permettre d'avoir plusieurs signataires sur un même document via le `SignatureService`.
 *   **Refonte du Dashboard (Widgets Avancés)** : Intégrer le package `laboiteacode/filament-dashboard-widgets` pour ajouter des widgets professionnels sur le panel Core (Suivi des limites d'APIs externes, tendance des signatures numériques sur 30 jours, jauge de progression de l'onboarding et logs des dernières activités critiques).

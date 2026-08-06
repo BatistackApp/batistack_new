@@ -28,6 +28,14 @@
 
 ---
 
+- **Mesure de distances sur la maquette** : Clic point A / Clic point B pour calculer et afficher la distance réelle entre eux.
+- **Système de calques (Layers) IFC / DXF** : Arborescence permettant de cacher/afficher des couches spécifiques (par exemple : cacher les murs, afficher la tuyauterie).
+- **Cacher temporairement un élément 3D** : Capacité de double cliquer sur un élément puis d'appuyer sur "Suppr" pour le rendre transparent/invisible pendant l'inspection.
+- **Support complet de three-dxf** : Mappage fidèle des couleurs, épaisseurs de traits, et textes des plans AutoCAD 2D.
+- **Miniature (Thumbnail) automatique** : Snapshot PNG généré en arrière-plan à l'upload pour illustrer le tableau Filament.
+
+---
+
 ## ⏳ Ce qu'il reste à faire (Next Steps)
 
 - **Camera Focus au Clic** : Implémenter une fonction dans le Viewer 3D permettant de "Zoomer" ou de déplacer la caméra directement sur une punaise (annotation) cliquée depuis le tableau Filament (via un événement Livewire propagé à AlpineJS).
@@ -36,19 +44,6 @@
 ---
 
 ## 💡 Idées d'améliorations et Nouvelles Fonctionnalités
-
-### À inclure sous forme de "Issues GitHub" (Backlog)
-- [ ] **Feature Issue : "Mesure de distances sur la maquette"**
-  > Permettre à l'utilisateur de cliquer sur deux points dans le viewer 3D pour calculer et afficher la distance réelle entre eux (très utile pour vérifier la largeur d'un mur ou d'une porte).
-  
-- [ ] **Feature Issue : "Système de calques (Layers) IFC / DXF"**
-  > Implémenter une arborescence (Treeview) permettant de cacher/afficher des couches spécifiques (par exemple : cacher les murs, afficher la tuyauterie, etc.) en exploitant l'arbre IFC.
-  
-- [ ] **Feature Issue : "Cacher temporairement un élément 3D"**
-  > Ajouter la capacité de double cliquer sur un élément (mur, toit) puis d'appuyer sur un bouton (ou la touche "Suppr" du clavier) pour le rendre transparent/invisible, afin de voir ce qui se cache derrière pendant l'inspection.
-  
-- [ ] **Feature Issue : "Support complet de three-dxf"**
-  > Actuellement, le POC parse le DXF, mais un rendu complexe nécessiterait d'intégrer une librairie spécialisée pour mapper fidèlement les couleurs, épaisseurs de traits, et textes des plans AutoCAD 2D.
-  
-- [ ] **Enhancement Issue : "Miniature (Thumbnail) automatique"**
-  > À l'upload d'un fichier 3D, demander au moteur de faire un rendu (snapshot PNG) en arrière-plan pour l'utiliser comme image de miniature dans le tableau (liste) des maquettes dans Filament.
+*   **Intégration Réalité Augmentée (AR / WebXR)** : Permettre au chef de chantier de superposer la maquette 3D sur le monde réel via la caméra de sa tablette (WebXR), facilitant le repérage des réseaux invisibles derrière les murs.
+*   **Comparaison de Révisions BIM (Version Control 3D)** : Permettre l'upload d'une nouvelle version (V2) d'une maquette existante et générer un affichage colorimétrique des changements (Vert = Ajouté, Rouge = Supprimé, Orange = Modifié).
+*   **Détection Automatique de Collisions (Clash Detection)** : Scanner la maquette à la recherche d'intersections géométriques illogiques entre les corps d'état (ex: tuyau traversant une poutre) et générer automatiquement des punaises rouges d'alerte.

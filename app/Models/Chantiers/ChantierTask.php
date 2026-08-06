@@ -30,6 +30,11 @@ class ChantierTask extends Model
         return $this->belongsTo(ChantierPhase::class, 'chantier_phase_id');
     }
 
+    public function allocations(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(ResourceAllocation::class, 'chantier_task_id');
+    }
+
     protected function casts(): array
     {
         return [

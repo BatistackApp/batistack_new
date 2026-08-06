@@ -79,6 +79,10 @@ class EmployeeObserver
         if ($employee->timeEntries()->exists()) {
             throw new \Exception('Cannot delete: has time entries');
         }
+
+        \App\Models\Chantiers\ResourceAllocation::where('allocatable_type', Employee::class)
+            ->where('allocatable_id', $employee->id)
+            ->delete();
     }
 
     public function deleted(Employee $employee): void

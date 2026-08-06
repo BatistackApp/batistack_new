@@ -19,10 +19,22 @@ class InventoryService
      */
     public function reconcile(Item $item, Warehouse $warehouse, float $foundQuantity, string $reason): void
     {
-        DB::transaction(function () use ($item, $warehouse, $foundQuantity) {
+        DB::transaction(function () use ($item, $warehouse, $foundQuantity, $reason) {
             $stock = Stock::where('item_id', $item->id)
                 ->where('warehouse_id', $warehouse->id)
+                ->lockForUpdate()
                 ->first();
+
+            if ($foundQuantity < 0) {
+                throw new \App\Exceptions\Articles\ArticlesModuleException("La quantité trouvée ne peut pas être négative.", 400);
+            }
+
+            if ($stock && $foundQuantity < $stock->reserved_quantity) {
+                throw new \App\Exceptions\Articles\ArticlesModuleException(
+                    "La quantité trouvée ({$foundQuantity}) ne peut pas être inférieure à la quantité réservée ({$stock->reserved_quantity}).",
+                    400
+                );
+            }
 
             $theoreticalQuantity = $stock ? $stock->quantity : 0;
             $adjustment = $foundQuantity - $theoreticalQuantity;
@@ -32,12 +44,29 @@ class InventoryService
             }
 
             // Mise à jour du stock
-            Stock::updateOrCreate(
-                ['item_id' => $item->id, 'warehouse_id' => $warehouse->id],
-                ['quantity' => $foundQuantity]
-            );
+            if (!$stock) {
+                $stock = Stock::create([
+                    'item_id' => $item->id,
+                    'warehouse_id' => $warehouse->id,
+                    'quantity' => $foundQuantity
+                ]);
+            } else {
+                $stock->quantity = $foundQuantity;
+                $stock->save();
+            }
 
-            // Logique d'audit à implémenter pour tracer l'ajustement analytique
+            // Création du mouvement de stock
+            \App\Models\Articles\StockMouvement::create([
+                'stock_id' => $stock->id,
+                'user_id' => auth()->id() ?? 1,
+                'type' => $adjustment > 0 ? \App\Enums\Articles\StockMouvementType::IN : \App\Enums\Articles\StockMouvementType::OUT,
+                'quantity_before' => $theoreticalQuantity,
+                'quantity_delta' => $adjustment,
+                'quantity_after' => $foundQuantity,
+                'description' => $reason,
+                'reference_type' => \App\Enums\Articles\StockMouvementSource::INVENTORY,
+                'reference_id' => null,
+            ]);
         });
     }
 

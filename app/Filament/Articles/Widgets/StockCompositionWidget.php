@@ -19,17 +19,25 @@ class StockCompositionWidget extends CompositionWidget
 
     protected function getComposition(): Composition
     {
-        $stocks = Cache::remember('dashboard_stock_composition', 300, function () {
-            return Stock::with('store')
-                ->selectRaw('store_id, sum(quantity * unit_price) as total_value')
-                ->groupBy('store_id')
-                ->get();
+        $cachedData = Cache::remember('dashboard_stock_composition', 300, function () {
+            return Stock::with('warehouse')
+                ->join('items', 'stocks.item_id', '=', 'items.id')
+                ->selectRaw('stocks.warehouse_id, sum(stocks.quantity * items.purchase_price) as total_value')
+                ->groupBy('stocks.warehouse_id')
+                ->get()
+                ->map(function ($stock) {
+                    return [
+                        'label' => $stock->warehouse?->name ?? 'Magasin inconnu',
+                        'value' => (float) $stock->total_value,
+                        'color' => $this->getRandomColor(),
+                    ];
+                })->toArray();
         });
         
-        $slices = $stocks->map(function ($stock) {
-            return CompositionSlice::make($stock->store?->name ?? 'Magasin inconnu', $stock->total_value)
-                ->color($this->getRandomColor());
-        })->toArray();
+        $slices = array_map(function ($item) {
+            return CompositionSlice::make($item['label'], $item['value'])
+                ->color($item['color']);
+        }, $cachedData);
         
         return Composition::make('Valeur des stocks')
             ->type('doughnut')

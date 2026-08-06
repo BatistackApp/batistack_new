@@ -29,6 +29,7 @@ uses(RefreshDatabase::class);
 describe('Commerce Jobs', function () {
     beforeEach(function () {
         Queue::fake([GenerateDocumentJob::class]);
+        \App\Models\Core\Company::factory()->create();
     });
 
     it('checks expired quotes and notifies user', function () {
@@ -99,19 +100,18 @@ describe('Commerce Jobs', function () {
     });
 
     it('sends customer invoice email', function () {
-        Notification::fake();
+        \Illuminate\Support\Facades\Mail::fake();
+        
+        $client = ThirdParty::factory()->create(['type' => 'client']);
+        $contact = Contact::factory()->create(['third_party_id' => $client->id, 'is_primary' => true, 'email' => 'test@test.com']);
         
         $invoice = CustomerInvoice::factory()->create([
+            'client_id' => $client->id,
             'status' => InvoiceStatus::VALIDATED
         ]);
-        $client = $invoice->client;
-        $contact = Contact::factory()->create(['third_party_id' => $client->id, 'is_primary' => true]);
 
-        SendCustomerInvoiceEmailJob::dispatch($invoice);
+        SendCustomerInvoiceEmailJob::dispatch($invoice->fresh());
 
-        Notification::assertSentTo(
-            $contact,
-            \App\Notifications\Commerce\InvoiceGeneratedNotification::class
-        );
+        \Illuminate\Support\Facades\Mail::assertQueued(\App\Mail\Commerce\CustomerInvoiceMail::class);
     });
 });

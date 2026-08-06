@@ -77,6 +77,7 @@ Route::middleware(['auth'])->group(function () {
         return back();
     })->name('articles.request-quote');
     Route::get('/bridge/callback', \App\Http\Controllers\Banque\BridgeCallbackController::class)->name('bridge.callback');
+    Route::get('/bridge/renew', [\App\Http\Controllers\Banque\BridgeCallbackController::class, 'renew'])->name('bridge.renew');
 
     // API Offline Technicien
     Route::get('/api/technicien/interventions', [\App\Http\Controllers\Api\TechnicienSyncController::class, 'index'])->name('technicien.api.interventions');

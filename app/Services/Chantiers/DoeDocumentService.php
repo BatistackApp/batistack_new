@@ -69,9 +69,11 @@ class DoeDocumentService extends DocumentService
         $zip->addFile(Storage::disk('public')->path($sommairePath), '00_SOMMAIRE_OFFICIEL.pdf');
 
         // 4. Parcourir et ajouter chaque document média au ZIP organisé par dossier (catégorie)
+        $tempFiles = [];
+        
         foreach ($documents as $index => $doc) {
             $media = $doc->getFirstMedia('attachment');
-            if ($media && file_exists($media->getPath())) {
+            if ($media) {
                 $fileExtension = pathinfo($media->file_name, PATHINFO_EXTENSION);
 
                 // Normalisation du nom de fichier dans le ZIP : "CATEGORIE/XX_Nom_Document.pdf"
@@ -79,23 +81,44 @@ class DoeDocumentService extends DocumentService
                 $cleanName = Str::slug($doc->name);
                 $zipPath = $folder.'/'.str_pad($index + 1, 2, '0', STR_PAD_LEFT).'_'.$cleanName.'.'.$fileExtension;
 
-                $zip->addFile($media->getPath(), $zipPath);
+                if (in_array($media->disk, ['local', 'public']) && file_exists($media->getPath())) {
+                    $zip->addFile($media->getPath(), $zipPath);
+                } else {
+                    $tempFilePath = tempnam(sys_get_temp_dir(), 'doe_doc_');
+                    file_put_contents($tempFilePath, Storage::disk($media->disk)->get($media->getPathRelativeToRoot()));
+                    $zip->addFile($tempFilePath, $zipPath);
+                    $tempFiles[] = $tempFilePath;
+                }
             }
         }
 
         // 5. Parcourir et ajouter chaque fiche technique
         foreach ($itemsWithSheets as $index => $item) {
             $media = $item->getFirstMedia('technical_sheet');
-            if ($media && file_exists($media->getPath())) {
+            if ($media) {
                 $fileExtension = pathinfo($media->file_name, PATHINFO_EXTENSION);
                 $cleanName = Str::slug($item->name);
                 $zipPath = 'FICHES_TECHNIQUES/FT_'.str_pad($index + 1, 2, '0', STR_PAD_LEFT).'_'.$cleanName.'.'.$fileExtension;
 
-                $zip->addFile($media->getPath(), $zipPath);
+                if (in_array($media->disk, ['local', 'public']) && file_exists($media->getPath())) {
+                    $zip->addFile($media->getPath(), $zipPath);
+                } else {
+                    $tempFilePath = tempnam(sys_get_temp_dir(), 'doe_ft_');
+                    file_put_contents($tempFilePath, Storage::disk($media->disk)->get($media->getPathRelativeToRoot()));
+                    $zip->addFile($tempFilePath, $zipPath);
+                    $tempFiles[] = $tempFilePath;
+                }
             }
         }
 
         $zip->close();
+        
+        // Clean up temp files
+        foreach ($tempFiles as $tempFile) {
+            if (file_exists($tempFile)) {
+                unlink($tempFile);
+            }
+        }
 
         // Retourne le chemin du fichier ZIP prêt à être téléchargé ou archivé
         return $zipFullPath;

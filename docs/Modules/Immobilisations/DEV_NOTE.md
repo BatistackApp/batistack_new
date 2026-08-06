@@ -34,4 +34,5 @@ Le module **Immobilisations** permet la gestion du patrimoine de l'entreprise (m
 *   L'essentiel du module et la connectivité avec la DGFiP (FEC) sont terminés et robustes.
 
 ## 💡 Idées d'amélioration et Nouvelles Fonctionnalités
-*   **Gestion des Subventions d'Investissement** : Automatiser le traitement comptable (étalement) des subventions d'investissement liées aux immobilisations.
+*   **Logistique de Transfert Inter-Chantiers** : Mettre en place un système de demande de mouvement pour le gros matériel (grues, pelles) générant un Bon de Transport PDF et basculant automatiquement l'imputation analytique vers le nouveau chantier.
+*   **Suivi Physique et Audit d'Inventaire (PWA)** : Actuellement les QR Codes redirigent vers la fiche Filament. L'idée est de créer une vraie interface d'audit permettant de valider la présence physique de l'actif ("Vu le JJ/MM") lors des inventaires de fin d'année.

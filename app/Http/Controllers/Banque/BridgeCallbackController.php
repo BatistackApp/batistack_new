@@ -48,4 +48,39 @@ class BridgeCallbackController extends Controller
 
         return redirect('/banque/banque/bank-accounts')->with('success', "Connexion terminée. L'importation de l'historique de vos transactions ({$dispatchedCount} comptes) est en cours en arrière-plan.");
     }
+
+    /**
+     * Renew an existing connection (Open Banking / DSP2 flow).
+     */
+    public function renew(Request $request, BridgeApiService $bridgeService)
+    {
+        $user = $request->user();
+        if (!$user) {
+            return redirect('/login')->with('error', 'Authentication required.');
+        }
+
+        $companyId = $request->query('company_id');
+        $company = Company::find($companyId);
+        
+        if (!$company) {
+            return redirect('/')->with('error', 'Aucune entreprise trouvée.');
+        }
+
+        if (!$user->is_admin) {
+            return redirect('/')->with('error', 'Non autorisé.');
+        }
+
+        $externalUserId = 'company_' . $company->id;
+        $userEmail = $user->email;
+        $callbackUrl = route('bridge.callback');
+
+        try {
+            $url = $bridgeService->createManagementSessionUrl($externalUserId, $userEmail, $callbackUrl);
+
+            return redirect($url);
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Bridge renew session failed: ' . $e->getMessage());
+            return redirect('/banque/banque/bank-accounts')->with('error', 'Erreur lors du renouvellement de la connexion: ' . $e->getMessage());
+        }
+    }
 }

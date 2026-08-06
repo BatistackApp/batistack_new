@@ -25,7 +25,9 @@ Le module **Tiers** est le cœur de la relation externe de Batistack. Il central
 
 ### 4. Interface Utilisateur (Filament & Portails)
 *   **Administration** : Les fondations du Panel Filament sont complètes (`ThirdPartyResource`, vues Infolist massives offrant une vue 360° financière et opérationnelle).
-*   **Portails B2B** : Accès dédiés et sécurisés pour les Sous-traitants (`SubcontractorPanel`) et les Clients (`CustomerPanel`).
+*   **Portails B2B** : 
+    *   **SubcontractorPanel** (Sous-traitants) : Gestion des consultations, visualisation des tâches de chantiers assignées avec mise à jour de l'avancement, et upload de factures de situation (PDF via Spatie MediaLibrary) (Issue #223).
+    *   **CustomerPanel** (Clients) : Espace sécurisé pour les clients finaux.
 *   **Dashboard CRM (Widgets Avancés)** : Intégration de `laboiteacode/filament-dashboard-widgets` pour afficher les alertes de conformité (Detail List), l'acquisition client (Variance), la qualité de la base (Goal) et la répartition du portefeuille (Composition).
 
 ### 5. Tests
@@ -34,3 +36,6 @@ Le module **Tiers** est le cœur de la relation externe de Batistack. Il central
 ## 🚧 Ce qu'il reste à faire
 *   La base du module est terminée et extrêmement complète. Aucune amélioration prioritaire n'est requise dans l'immédiat.
 
+## 💡 Idées d'amélioration et Nouvelles Fonctionnalités
+*   **Collecte Automatique des Documents Légaux** : Connecter l'ERP à une API légale tierce (e-Attestations ou Provigis) pour télécharger et mettre à jour automatiquement les Kbis et attestations URSSAF des sous-traitants, annulant le besoin de relance manuelle.
+*   **Module d'E-Mailing et Campagnes** : Création d'un outil de publipostage intégré pour cibler la base de données Contacts B2B (ex: informations de fermeture annuelle aux sous-traitants, offres de maintenance aux clients).

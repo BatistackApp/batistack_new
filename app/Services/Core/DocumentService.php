@@ -32,13 +32,23 @@ class DocumentService
         $browsershot = Browsershot::html(view($view, $data)->render())
             ->setNodeBinary(config('browsershot.node_binary_path'))
             ->setNpmBinary(config('browsershot.npm_binary_path'))
-            ->format('A4')
-            ->margins(10, 10, 10, 10)
             ->showBackground()
             ->waitUntilNetworkIdle()
             ->noSandbox();
             
-        if (isset($data['position']) && $data['position'] !== 'portait') {
+        if (isset($data['paperSize'])) {
+            $browsershot->paperSize($data['paperSize']['width'], $data['paperSize']['height']);
+        } else {
+            $browsershot->format($data['format'] ?? 'A4');
+        }
+
+        if (isset($data['margins'])) {
+            $browsershot->margins($data['margins']['top'] ?? 0, $data['margins']['right'] ?? 0, $data['margins']['bottom'] ?? 0, $data['margins']['left'] ?? 0);
+        } else {
+            $browsershot->margins(10, 10, 10, 10);
+        }
+            
+        if (isset($data['position']) && $data['position'] !== 'portrait') {
             $browsershot->landscape();
         }
 

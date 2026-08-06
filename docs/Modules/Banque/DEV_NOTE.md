@@ -17,7 +17,7 @@ Le module **Banque** gère la trésorerie de l'entreprise. Il permet de connecte
     *   `TransactionCategorizationService` : Catégorise automatiquement les lignes selon le libellé.
     *   `ReconciliationService` : Moteur de suggestion intelligent qui attribue un score de pertinence pour matcher une transaction avec une Facture ou un Ticket de Frais (Carte Corporate) (Issue #143).
 *   **Trésorerie** : `CashFlowForecastService` (Moteur pour calculer et projeter les flux de trésorerie).
-*   **Export SEPA** : Génération de fichiers de virement SEPA pour le paiement groupé des notes de frais validées (Issue #142).
+*   **Export SEPA** : Génération de fichiers de virement SEPA pour le paiement groupé des notes de frais validées et **des factures fournisseurs** (Issue #142, #218).
 
 ### 3. Observers & Événements (`app/Observers/Banque`)
 *   **`BankReconciliationObserver`** : Écoute les lettrages. Dès qu'une facture est intégralement couverte par une ou plusieurs transactions, son statut bascule instantanément sur `PAID` (Payée).
@@ -26,13 +26,19 @@ Le module **Banque** gère la trésorerie de l'entreprise. Il permet de connecte
 *   **Panel Filament Banque** : Tableau de bord complet avec visualisation des comptes, indicateurs de trésorerie globale, et widget de suivi des synchronisations.
 *   **Prévisionnel de Trésorerie (Forecast)** : Widget graphique interactif superposant le "Solde Confirmé" (basé sur le reste à payer des factures clients et fournisseurs) et le "Solde Prévisionnel" (incluant le lissage des devis signés non encore facturés sur 30 jours).
 *   **Refonte du Dashboard Financier** : Intégration avancée de widgets (`laboiteacode/filament-dashboard-widgets`) affichant la variance de la trésorerie, la comparaison temporelle des flux, la répartition sectorielle des dépenses, et l'objectif de rapprochement bancaire.
+*   **Factures Fournisseurs (Commerce)** : Bulk Action "Payer par virement (SEPA)" pour générer le XML de paiement et passer le statut des factures en "Paiement en cours".
+*   **Tableau de bord "Clôture Mensuelle"** : Page de supervision (`MonthlyClosing`) dédiée à l'expert-comptable listant les anomalies via des widgets séparés : transactions non catégorisées, transactions > 1000€ orphelines, et factures (clients/fournisseurs) marquées payées manuellement sans flux bancaire rattaché.
 
 ### 5. Tests
 *   Validation solide des intégrations bancaires via PestPHP, incluant la simulation de la synchronisation Open Banking (Bridge API), l'import manuel (StatementImportService) et surtout l'algorithme de lettrage intelligent (ReconciliationService) avec gestion des cas d'usage multiples (doublons, erreurs API).
+*   Test unitaire sur la génération SEPA (`SupplierInvoiceSepaTest`) pour garantir le formatage correct du XML selon la norme `.pain`.
+
+### 6. Tâches Planifiées (Background Jobs)
+*   **Vérification des Tokens Bridge (DSP2)** : Commande (`CheckBridgeTokensCommand`) planifiée quotidiennement pour vérifier l'expiration des tokens bancaires Open Banking et notifier l'administrateur financier de se réauthentifier 5 jours avant l'échéance. (Issue #217)
 
 ## 🚧 Ce qu'il reste à faire
-*   **Paiement Fournisseurs SEPA** : Étendre l'export SEPA (actuellement utilisé pour les Notes de Frais) au paiement groupé des factures fournisseurs.
+*   Le module est fondamentalement complet, bien que les fonctionnalités ci-dessous puissent être implémentées.
 
 ## 💡 Idées d'amélioration et Nouvelles Fonctionnalités
-*   **Appariement des Paies** : Permettre le lettrage automatique des lignes de virement "Salaires" avec les fiches de paie générées par le module RH.
+*   **Lettrage Automatique des Paies (Appariement RH)** : Interconnecter le moteur de rapprochement avec le module RH pour lettrer automatiquement les flux "Salaires" avec les fiches de paie générées.
 *   **Module "Comptabilité" complet** : (Mis en attente) Prévoir à terme la création d'un module dédié pour générer les écritures comptables et les exports standards (FEC, Sage, Cegid, etc.) destinés à l'expert-comptable.
