@@ -22,7 +22,9 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('checklist_submissions', function (Blueprint $table) {
-            $table->string('signature_path')->nullable()->change();
+            // Reverting to string is destructive (data truncation for LONGTEXT).
+            // We intentionally leave it as longText to avoid data loss on rollback.
+            // $table->string('signature_path')->nullable()->change();
         });
     }
 };

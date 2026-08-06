@@ -69,6 +69,8 @@ class DoeDocumentService extends DocumentService
         $zip->addFile(Storage::disk('public')->path($sommairePath), '00_SOMMAIRE_OFFICIEL.pdf');
 
         // 4. Parcourir et ajouter chaque document média au ZIP organisé par dossier (catégorie)
+        $tempFiles = [];
+        
         foreach ($documents as $index => $doc) {
             $media = $doc->getFirstMedia('attachment');
             if ($media) {
@@ -82,7 +84,10 @@ class DoeDocumentService extends DocumentService
                 if (in_array($media->disk, ['local', 'public']) && file_exists($media->getPath())) {
                     $zip->addFile($media->getPath(), $zipPath);
                 } else {
-                    $zip->addFromString($zipPath, Storage::disk($media->disk)->get($media->getPathRelativeToRoot()));
+                    $tempFilePath = tempnam(sys_get_temp_dir(), 'doe_doc_');
+                    file_put_contents($tempFilePath, Storage::disk($media->disk)->get($media->getPathRelativeToRoot()));
+                    $zip->addFile($tempFilePath, $zipPath);
+                    $tempFiles[] = $tempFilePath;
                 }
             }
         }
@@ -98,12 +103,22 @@ class DoeDocumentService extends DocumentService
                 if (in_array($media->disk, ['local', 'public']) && file_exists($media->getPath())) {
                     $zip->addFile($media->getPath(), $zipPath);
                 } else {
-                    $zip->addFromString($zipPath, Storage::disk($media->disk)->get($media->getPathRelativeToRoot()));
+                    $tempFilePath = tempnam(sys_get_temp_dir(), 'doe_ft_');
+                    file_put_contents($tempFilePath, Storage::disk($media->disk)->get($media->getPathRelativeToRoot()));
+                    $zip->addFile($tempFilePath, $zipPath);
+                    $tempFiles[] = $tempFilePath;
                 }
             }
         }
 
         $zip->close();
+        
+        // Clean up temp files
+        foreach ($tempFiles as $tempFile) {
+            if (file_exists($tempFile)) {
+                unlink($tempFile);
+            }
+        }
 
         // Retourne le chemin du fichier ZIP prêt à être téléchargé ou archivé
         return $zipFullPath;

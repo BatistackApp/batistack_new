@@ -106,6 +106,10 @@ class VehicleObserver
             throw new \Exception("Impossible de supprimer {$vehicle->reference}: affectations actives détectées.");
         }
 
+        \App\Models\Chantiers\ResourceAllocation::where('allocatable_type', Vehicle::class)
+            ->where('allocatable_id', $vehicle->id)
+            ->delete();
+
         Log::warning('Véhicule supprimé', [
             'reference' => $vehicle->reference,
             'license_plate' => $vehicle->license_plate,

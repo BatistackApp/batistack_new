@@ -20,7 +20,7 @@ class ChecklistSubmission extends Model
     protected function casts(): array
     {
         return [
-            'data' => 'array',
+            'data' => \Illuminate\Database\Eloquent\Casts\AsArrayObject::class,
         ];
     }
 

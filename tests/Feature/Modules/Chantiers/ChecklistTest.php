@@ -40,7 +40,7 @@ it('can render fill checklist page and submit data', function () {
             'signature' => 'data:image/png;base64,1234567890'
         ])
         ->call('submit')
-        ->assertRedirect('/chantier/chantier-tasks/' . $task->id)
+        ->assertRedirect('/chantier/chantiers/' . $task->phase->chantier_id . '/edit')
         ->assertNotified();
 
     $this->assertDatabaseHas('checklist_submissions', [

@@ -36,28 +36,32 @@ class ResourcePlanner extends Page
         $this->currentWeekStart = Carbon::parse($this->currentWeekStart)->subWeek()->format('Y-m-d');
     }
 
+    #[\Livewire\Attributes\Computed]
     public function getTasksProperty()
     {
         // Only load tasks that are active or not completed
         return ChantierTask::with('phase.chantier')->where('is_completed', false)->get();
     }
 
+    #[\Livewire\Attributes\Computed]
     public function getEmployeesProperty()
     {
         return Employee::where('is_active', true)->get();
     }
 
+    #[\Livewire\Attributes\Computed]
     public function getVehiclesProperty()
     {
         return Vehicle::all();
     }
 
+    #[\Livewire\Attributes\Computed]
     public function getAllocationsProperty()
     {
         $start = Carbon::parse($this->currentWeekStart);
         $end = $start->copy()->endOfWeek();
 
-        return ResourceAllocation::with('allocatable')
+        return ResourceAllocation::with(['task', 'allocatable'])
             ->whereBetween('date', [$start, $end])
             ->get();
     }
@@ -86,7 +90,7 @@ class ResourcePlanner extends Page
             'chantier_task_id' => $taskId,
             'allocatable_type' => $allocatableType,
             'allocatable_id' => $resourceId,
-            'date' => $parsedDate,
+            'date' => $parsedDate->format('Y-m-d'),
         ]);
 
         Notification::make()

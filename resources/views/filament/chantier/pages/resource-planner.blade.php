@@ -45,7 +45,7 @@
                             "
                             class="p-2 border rounded-md shadow-sm bg-white dark:bg-gray-800 cursor-grab active:cursor-grabbing hover:border-primary-500 transition-colors"
                         >
-                            {{ $vehicle->name }} ({{ $vehicle->license_plate ?? 'N/A' }})
+                            {{ $vehicle->getDisplayName() }}
                         </div>
                     @endforeach
                 </div>
@@ -100,7 +100,7 @@
                                             x-data="{ isDragOver: false }"
                                             x-on:dragover.prevent="isDragOver = true"
                                             x-on:dragleave.prevent="isDragOver = false"
-                                            x-on:drop="
+                                            x-on:drop.prevent="
                                                 isDragOver = false;
                                                 let type = event.dataTransfer.getData('resourceType');
                                                 let id = event.dataTransfer.getData('resourceId');
@@ -114,10 +114,12 @@
                                                 @foreach($dayAllocations as $allocation)
                                                     <div class="text-xs p-1 rounded-sm flex justify-between items-center group {{ $allocation->allocatable_type === 'App\Models\RH\Employee' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' : 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200' }}">
                                                         <span class="truncate">
-                                                            @if($allocation->allocatable_type === 'App\Models\RH\Employee')
+                                                            @if($allocation->allocatable instanceof \App\Models\RH\Employee)
                                                                 {{ $allocation->allocatable->first_name }}
+                                                            @elseif($allocation->allocatable instanceof \App\Models\Flottes\Vehicle)
+                                                                {{ $allocation->allocatable->getDisplayName() }}
                                                             @else
-                                                                {{ $allocation->allocatable->name ?? 'Véhicule' }}
+                                                                Ressource non trouvée
                                                             @endif
                                                         </span>
                                                         <button 

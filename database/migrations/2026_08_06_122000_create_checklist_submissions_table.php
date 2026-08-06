@@ -13,8 +13,8 @@ return new class extends Migration
     {
         Schema::create('checklist_submissions', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('checklist_template_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('chantier_task_id')->constrained()->cascadeOnDelete();
+            $table->foreignIdFor(\App\Models\Chantiers\ChecklistTemplate::class)->constrained()->cascadeOnDelete();
+            $table->foreignIdFor(\App\Models\Chantiers\ChantierTask::class)->nullable()->constrained()->nullOnDelete();
             $table->foreignId('submitted_by')->constrained('users')->cascadeOnDelete();
             $table->json('data')->nullable();
             $table->string('signature_path')->nullable();
