@@ -81,6 +81,33 @@ class ItemsTable
             ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
+                    \Filament\Actions\BulkAction::make('printLabels')
+                        ->label('Imprimer Étiquettes')
+                        ->icon('heroicon-o-printer')
+                        ->form([
+                            \Filament\Forms\Components\Select::make('format')
+                                ->label("Format d'impression")
+                                ->options([
+                                    'a4' => 'Planche A4 (Avery 3x7)',
+                                    'dymo_28_89' => 'Thermique Dymo (28x89mm)',
+                                    'dymo_59_190' => 'Thermique Dymo (59x190mm)',
+                                ])
+                                ->required()
+                                ->default('a4'),
+                            \Filament\Forms\Components\TextInput::make('copies')
+                                ->label('Nombre de copies par article')
+                                ->numeric()
+                                ->default(1)
+                                ->required()
+                                ->minValue(1)
+                                ->maxValue(100),
+                        ])
+                        ->action(function (\Illuminate\Database\Eloquent\Collection $records, array $data) {
+                            $service = app(\App\Services\Articles\ArticleDocumentService::class);
+                            $path = $service->generateLabels($records, $data['format'], (int)$data['copies']);
+                            return $service->download($path);
+                        })
+                        ->deselectRecordsAfterCompletion(),
                 ]),
             ]);
     }

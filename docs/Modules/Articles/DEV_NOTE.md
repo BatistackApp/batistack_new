@@ -32,12 +32,14 @@ Le module **Articles & Stocks** permet la gestion complète de l'inventaire, du 
 *   **Lecteur de Code-barres** : Intégration du module `filament-barcode-scanner-field` (utilisé notamment pour le module de scan outillage NFC côté RH).
 *   **Dashboard Logistique** : Tableau de bord intégrant des widgets analytiques avancés pour suivre la valeur d'inventaire par magasin, les tendances de sorties de stock et les alertes (via `laboiteacode/filament-dashboard-widgets`).
 
+*   **Impression d'Étiquettes PDF** : Action de masse (BulkAction) disponible sur la ressource Articles pour générer des étiquettes au format A4 (Avery 3x7) ou Thermique (Dymo) incluant le QR Code de l'article pour le scan physique.
+
 ### 5. Tests
 *   100% de succès sur la suite de tests (plus de 130 tests). Couverture complète de la logique métier (calcul du PUMP, prévention des stocks négatifs, seuils d'alerte, transfert de kits, gestion de la récursion infinie pour les compositions, **tests complets de la réservation de stock et blocage des sorties sur stock réservé**, etc.) via `InventoryServiceTest`, `ItemServiceTest`, et `StockServiceTest`.
+*   **Couverture d'Interface** : Tests de l'action d'impression d'étiquettes (`ItemLabelsTest.php`) avec mock du moteur PDF.
 
 ## 🚧 Ce qu'il reste à faire
 *   Le module est complet dans sa version actuelle.
 
 ## 💡 Idées d'amélioration et Nouvelles Fonctionnalités
 *   **Prévisions par IA** : Anticiper les ruptures de stock selon les chantiers planifiés et la saisonnalité.
-*   **Impression d'Étiquettes PDF** : Génération de planches d'étiquettes avec Code-barres/QR Codes et références pour faciliter l'étiquetage physique des rayonnages et le scan mobile.
