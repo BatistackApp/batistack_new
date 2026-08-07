@@ -55,6 +55,7 @@ class CustomerQuoteResource extends Resource
     {
         return [
             ItemsRelationManager::class,
+            \Relaticle\ActivityLog\Filament\RelationManagers\ActivityLogRelationManager::class,
         ];
     }
 

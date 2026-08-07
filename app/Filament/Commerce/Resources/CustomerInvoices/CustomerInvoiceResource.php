@@ -53,6 +53,7 @@ class CustomerInvoiceResource extends Resource
         return [
             ItemsRelationManager::class,
             PaymentsRelationManager::class,
+            \Relaticle\ActivityLog\Filament\RelationManagers\ActivityLogRelationManager::class,
         ];
     }
 
