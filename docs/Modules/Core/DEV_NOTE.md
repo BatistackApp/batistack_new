@@ -40,8 +40,14 @@ Le cœur regorge de services essentiels déjà implémentés et fonctionnels :
 *   La logique de hachage de la signature et le typage strict sont en place.
 *   Couverture complète ajoutée pour `CompanyService` (données d'en-tête de documents) et `GoogleMapsService` (géocodage, matrice de distance, optimisation d'itinéraire).
 
+### 6. Gestion des Droits et Permissions (Filament Shield)
+*   Intégration de `spatie/laravel-permission` via `bezhansalleh/filament-shield`.
+*   Les permissions granulaires (CRUD) sont automatiquement générées via la commande `shield:generate`.
+*   **Synchronisation RH (Issue #226)** : Attribution dynamique du rôle utilisateur en fonction de l'intitulé de poste (`job_title`) renseigné dans le contrat actif du module RH. 
+*   **Révocation automatisée** : Tâche planifiée quotidienne `rh:sync-expired-roles` pour désactiver automatiquement les droits liés à un poste en cas d'expiration du contrat.
+
 ## 🚧 Ce qu'il reste à faire
-*   **Rôles et Permissions** : Intégration de Filament Shield ou système similaire. *Spécificité : Les rôles devront être en relation directe avec les postes de l'entreprise (Poste du contrat RH)*.
+*   Le module Core sert de socle pour l'ensemble du système. Sa maintenance se fait en continu à mesure que les autres modules évoluent.
 *   **Dashboard** : Personnalisation avancée du Dashboard de base (Widgets, KPI transverses).
 
 ## 💡 Idées d'amélioration et Nouvelles Fonctionnalités
