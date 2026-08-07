@@ -46,7 +46,8 @@ class CustomerInvoiceForm
                                 return $query->where('client_id', $clientId);
                             })
                             ->searchable()
-                            ->preload(),
+                            ->preload()
+                            ->required(),
 
                         Select::make('type')
                             ->label('Type de facture')

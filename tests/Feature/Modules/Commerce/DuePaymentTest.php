@@ -17,9 +17,16 @@ beforeEach(function () {
     Company::factory()->create();
     $this->service = app(DuePaymentService::class);
 
-    // Test data
     $this->customer = ThirdParty::factory()->state(['type' => 'client'])->create();
     $this->supplier = ThirdParty::factory()->state(['type' => 'supplier'])->create();
+    
+    // Create a 0% VAT rate for penalties
+    \App\Models\Core\VatRate::create([
+        'name' => 'TVA 0%',
+        'rate' => 0,
+        'is_default' => false,
+        'is_active' => true,
+    ]);
 
     Event::fake();
 });
@@ -460,5 +467,54 @@ describe('DuePaymentService - generatePaymentReminder', function () {
 
         expect($reminder['invoices'])->toBeEmpty()
             ->and($reminder['total_due'])->toEqual(0.0);
+    });
+});
+
+describe('DuePaymentService - applyPenalties', function () {
+    test('calcule les pénalités sur le reste à payer pour une facture partiellement payée', function () {
+        $invoice = CustomerInvoice::factory()->create([
+            'client_id' => $this->customer->id,
+            'status' => InvoiceStatus::VALIDATED,
+            'due_date' => now()->subDays(365), // 1 an de retard pour avoir exactement 10%
+            'total_ht' => 1000.00,
+            'total_ttc' => 1200.00,
+        ]);
+
+        // Créer un paiement partiel de 700€
+        $payment = \App\Models\Commerce\Payment::factory()->create([
+            'third_party_id' => $this->customer->id,
+            'amount' => 700.00,
+            'payment_date' => now(),
+        ]);
+
+        $invoice->allocations()->create([
+            'payment_id' => $payment->id,
+            'allocated_amount' => 700.00,
+        ]);
+
+        // Reste à payer = 500€
+        // Pénalités de 10% sur 1 an = 50€
+        // Indemnité forfaitaire = 40€
+
+        // On appelle la méthode protégée via reflection ou on déclenche processOverdueInvoices qui l'appelle
+        // On va juste forcer l'appel via un closure bound
+        $applyPenalties = function () use ($invoice) {
+            $this->applyPenalties($invoice);
+        };
+        $applyPenalties->call($this->service);
+
+        $invoice->refresh();
+
+        // Vérifier les lignes ajoutées
+        $penaltiesItem = $invoice->items()->where('name', 'Pénalités de retard')->first();
+        expect($penaltiesItem)->not->toBeNull()
+            ->and($penaltiesItem->total_ht)->toEqual(50.00); // 10% de 500€ = 50€
+            
+        $feeItem = $invoice->items()->where('name', 'LIKE', '%Indemnité forfaitaire de recouvrement%')->first();
+        expect($feeItem)->not->toBeNull()
+            ->and($feeItem->total_ht)->toEqual(40.00);
+            
+        // Total = 1200 + 50 + 40 = 1290
+        expect($invoice->total_ttc)->toEqual(1290.00);
     });
 });
