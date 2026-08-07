@@ -20,7 +20,12 @@ Route::middleware([
 Route::get('/signature/{token}', [\App\Http\Controllers\Core\SignatureController::class, 'show'])->name('signature.show');
 Route::post('/signature/{token}', [\App\Http\Controllers\Core\SignatureController::class, 'sign'])->name('signature.sign');
 
+Route::get('/pay/invoice/{invoice}', [\App\Http\Controllers\Commerce\StripePaymentController::class, 'checkout'])->name('pay.invoice')->middleware('signed');
+Route::get('/payment/success', [\App\Http\Controllers\Commerce\StripePaymentController::class, 'success'])->name('payment.success');
+Route::get('/payment/cancel', [\App\Http\Controllers\Commerce\StripePaymentController::class, 'cancel'])->name('payment.cancel');
+
 Route::post('/webhooks/docuseal', [\App\Http\Controllers\Core\SignatureWebhookController::class, 'handleDocuseal'])->name('webhooks.docuseal');
+Route::post('/webhooks/stripe', [\App\Http\Controllers\Commerce\StripeWebhookController::class, 'handleWebhook'])->name('webhooks.stripe');
 
 Route::get('/bim-viewer-headless/{id}', function ($id) {
     $model = \App\Models\Vision3D\BimModel::findOrFail($id);

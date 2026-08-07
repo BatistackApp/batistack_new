@@ -18,6 +18,8 @@ Le module **Commerce** couvre l'intégralité du cycle de vente et d'achat de l'
 *   **Analytique et Sécurité** : `CommerceAnalyticService`, `SupplierInvoiceAuditService` et `RetentionGuaranteeService`.
 *   **Relances Automatiques d'Impayés (Dunning Process)** : Tâche planifiée (`commerce:process-dunning` via `DuePaymentService`) vérifiant chaque nuit les factures échues et envoyant automatiquement des e-mails graduels (Relance amiable à J+3, J+15, puis Mise en demeure avec ajout automatique des indemnités forfaitaires de 40€ et pénalités de retard à J+30).
 
+*   **Paiement en Ligne Sécurisé (Stripe)** : Intégration de l'API Stripe pour le paiement des factures. Un QR Code cliquable est généré sur le PDF des factures validées menant vers une page Checkout sécurisée. Un webhook Stripe écoute les succès de paiement pour automatiser la création de `Payment` et son `PaymentAllocation`, ce qui bascule la facture en "Payée" sans intervention humaine.
+
 ### 3. Observers & Événements (`app/Observers/Commerce`)
 *   Multiples Observers (`CustomerQuoteObserver`, `CustomerInvoiceObserver`, etc.) gérant la numérotation automatique et la mise à jour en cascade des statuts de documents liés.
 
@@ -29,9 +31,7 @@ Le module **Commerce** couvre l'intégralité du cycle de vente et d'achat de l'
 *   **Refonte du Dashboard Commercial** : Intégration avancée de widgets (`laboiteacode`) affichant le CA avec variance, l'entonnoir de conversion paramétrable, la progression des objectifs mensuels et les alertes d'impayés.
 
 ### 5. Tests
-*   Validation complète du module avec 100% de succès sur la gigantesque suite de tests PestPHP (incluant les nouvelles fonctionnalités : rapports PDF, allocations de paiements, annulations et dé-lettrages). Le cycle de vie complet est garanti sans faille logicielle.
+*   Validation complète du module avec 100% de succès sur la gigantesque suite de tests PestPHP (incluant les nouvelles fonctionnalités : rapports PDF, allocations de paiements, annulations, dé-lettrages et paiements Stripe en ligne avec webhooks). Le cycle de vie complet est garanti sans faille logicielle.
 
 ## 🚧 Ce qu'il reste à faire
 *   Peaufiner potentiellement certains détails cosmétiques des exports PDF selon les retours utilisateurs finaux.
-
-*   **Paiement en Ligne Sécurisé (Stripe / GoCardless)** : Intégrer un QR Code ou lien cliquable sur le PDF de la facture. Le client paie par CB ou mandat SEPA, ce qui lettre automatiquement la facture dans le système sans intervention humaine.

@@ -7,6 +7,7 @@ use App\Models\Commerce\CustomerOrder;
 use App\Services\Commerce\CustomerOrderService;
 use Filament\Resources\Pages\CreateRecord;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Log;
 
 class CreateCustomerInvoice extends CreateRecord
 {
@@ -18,13 +19,18 @@ class CreateCustomerInvoice extends CreateRecord
      */
     protected function handleRecordCreation(array $data): Model
     {
-        return app(CustomerOrderService::class)->createInvoice(
-            order: CustomerOrder::query()->findOrFail($data['order_id']),
-            type: $data['type'],
-            responsable: auth()->user(),
-            situation: isset($data['customer_situation_id']) ? \App\Models\Commerce\CustomerSituation::find($data['customer_situation_id']) : null,
-            acompteAmount: $data['amountAcompte'] ?? null,
-        );
+        try {
+            return app(CustomerOrderService::class)->createInvoice(
+                order: CustomerOrder::query()->findOrFail($data['order_id']),
+                type: $data['type'],
+                responsable: auth()->user(),
+                situation: isset($data['customer_situation_id']) ? \App\Models\Commerce\CustomerSituation::find($data['customer_situation_id']) : null,
+                acompteAmount: $data['amountAcompte'] ?? null,
+            );
+        } catch (\Exception $exception) {
+            Log::emergency($exception->getMessage());
+            throw $exception;
+        }
     }
 
     protected function getRedirectUrl(): string

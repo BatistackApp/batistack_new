@@ -183,10 +183,23 @@
     </div>
 
     <!-- Conditions et notes -->
-    <div class="payment-terms">
+    <div class="payment-terms" style="float: left; width: 60%;">
         <strong>Modalités de paiement :</strong><br>
         Virement bancaire sur le compte de l'entreprise. Les chèques sans provision seront frappés de pénalités conformément à la loi.
     </div>
+
+    @if($invoice->status === \App\Enums\Commerce\InvoiceStatus::VALIDATED)
+    @php
+        $paymentUrl = \Illuminate\Support\Facades\URL::signedRoute('pay.invoice', ['invoice' => $invoice->id]);
+    @endphp
+    <div style="float: right; text-align: center; margin-top: 20px; border: 1px solid #bfdbfe; padding: 5px; border-radius: 4px; background-color: #eff6ff;">
+        <a href="{{ $paymentUrl }}" style="color: inherit; text-decoration: none;">
+            <img src="{{ (new \chillerlan\QRCode\QRCode)->render($paymentUrl) }}" alt="QR Code Paiement" width="80" style="margin-bottom: 5px;">
+            <div style="font-size: 9px; font-weight: bold; color: #1e40af;">Payer en ligne sécurisé</div>
+            <div style="font-size: 8px; color: #3b82f6;">(Stripe / SEPA)</div>
+        </a>
+    </div>
+    @endif
     <div style="clear: both;"></div>
 
     <!-- Pied de page -->
