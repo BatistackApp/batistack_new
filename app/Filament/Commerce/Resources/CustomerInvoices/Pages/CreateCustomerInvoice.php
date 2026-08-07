@@ -27,7 +27,7 @@ class CreateCustomerInvoice extends CreateRecord
                 situation: isset($data['customer_situation_id']) ? \App\Models\Commerce\CustomerSituation::find($data['customer_situation_id']) : null,
                 acompteAmount: $data['amountAcompte'] ?? null,
             );
-        } catch (\Exception $exception) {
+        } catch (\Throwable $exception) {
             Log::emergency($exception->getMessage());
             throw $exception;
         }

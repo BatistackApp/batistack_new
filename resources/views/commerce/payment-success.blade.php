@@ -7,12 +7,21 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                     </svg>
                 </div>
-                <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
-                    Paiement réussi !
-                </h2>
-                <p class="mt-2 text-center text-sm text-gray-600">
-                    Merci pour votre paiement. Votre facture est désormais réglée et sera mise à jour dans notre système.
-                </p>
+                @if($isPending ?? false)
+                    <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
+                        Paiement en cours...
+                    </h2>
+                    <p class="mt-2 text-center text-sm text-gray-600">
+                        Votre transaction (virement) a bien été initiée. Votre facture sera validée dès réception des fonds par notre banque.
+                    </p>
+                @else
+                    <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
+                        Paiement réussi !
+                    </h2>
+                    <p class="mt-2 text-center text-sm text-gray-600">
+                        Merci pour votre paiement. Votre facture est désormais réglée et sera mise à jour dans notre système.
+                    </p>
+                @endif
             </div>
             <div class="mt-8 text-center">
                 <a href="{{ url('/') }}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">

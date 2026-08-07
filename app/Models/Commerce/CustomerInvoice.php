@@ -41,6 +41,7 @@ class CustomerInvoice extends Model
         'total_tva',
         'dunning_level',
         'last_dunning_at',
+        'stripe_session_id',
     ];
 
     public function client(): BelongsTo

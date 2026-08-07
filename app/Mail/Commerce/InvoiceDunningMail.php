@@ -19,6 +19,18 @@ class InvoiceDunningMail extends Mailable implements ShouldQueue
         public int $level
     ) {}
 
+    public function shouldSend(): bool
+    {
+        $this->invoice->refresh();
+
+        if ($this->invoice->is_fully_paid || $this->invoice->dunning_level !== $this->level) {
+            \Illuminate\Support\Facades\Log::info("Dunning mail aborted for invoice {$this->invoice->reference}: status changed.");
+            return false;
+        }
+
+        return true;
+    }
+
     public function envelope(): Envelope
     {
         $subject = match ($this->level) {

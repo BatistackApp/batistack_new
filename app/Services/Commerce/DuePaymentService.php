@@ -158,35 +158,48 @@ class DuePaymentService
 
     protected function processInvoice(CustomerInvoice $invoice, int $nextLevel, int $daysOverdue)
     {
-        // Appliquer les frais si on passe au niveau 3 (Mise en demeure)
-        if ($nextLevel === 3) {
-            $this->applyPenalties($invoice);
-        }
-
-        // Envoyer l'email
-        // On récupère le contact principal ou email de facturation
-        $contact = $invoice->client->contacts()->where('is_primary', true)->first();
-        $email = $contact ? $contact->email : $invoice->client->email;
-
-        if ($email) {
-            Mail::to($email)->send(new InvoiceDunningMail($invoice, $nextLevel));
-        } else {
-            Log::warning("No email found for client {$invoice->client->id} on invoice {$invoice->id}");
-        }
-
-        // Mettre à jour le statut de relance
-        $invoice->update([
-            'dunning_level' => $nextLevel,
-            'last_dunning_at' => now(),
-        ]);
+        $shouldSendEmail = false;
         
-        Log::info("Invoice {$invoice->reference} advanced to dunning level {$nextLevel}.");
+        \Illuminate\Support\Facades\DB::transaction(function () use ($invoice, $nextLevel, &$shouldSendEmail) {
+            $invoice = CustomerInvoice::lockForUpdate()->find($invoice->id);
+            
+            if (!$invoice || $invoice->dunning_level >= $nextLevel || $invoice->is_fully_paid) {
+                return;
+            }
+
+            // Appliquer les frais si on passe au niveau 3 (Mise en demeure)
+            if ($nextLevel === 3) {
+                $this->applyPenalties($invoice);
+            }
+
+            // Mettre à jour le statut de relance
+            $invoice->update([
+                'dunning_level' => $nextLevel,
+                'last_dunning_at' => now(),
+            ]);
+            
+            $shouldSendEmail = true;
+        });
+
+        if ($shouldSendEmail) {
+            // Envoyer l'email
+            // On récupère le contact principal ou email de facturation
+            $contact = $invoice->client->contacts()->where('is_primary', true)->first();
+            $email = ($contact && !empty($contact->email)) ? $contact->email : $invoice->client->email;
+
+            if ($email) {
+                Mail::to($email)->send(new InvoiceDunningMail($invoice, $nextLevel));
+                Log::info("Invoice {$invoice->reference} advanced to dunning level {$nextLevel}.");
+            } else {
+                Log::warning("No email found for client {$invoice->client->id} on invoice {$invoice->id}");
+            }
+        }
     }
 
     protected function applyPenalties(CustomerInvoice $invoice)
     {
-        // On vérifie qu'on n'a pas déjà ajouté l'indemnité
-        $hasFee = $invoice->items()->where('name', 'LIKE', '%Indemnité forfaitaire de recouvrement%')->exists();
+        // On vérifie qu'on n'a pas déjà ajouté l'indemnité (avec verrou)
+        $hasFee = $invoice->items()->where('name', 'LIKE', '%Indemnité forfaitaire de recouvrement%')->lockForUpdate()->exists();
         
         if ($hasFee) {
             return;
@@ -195,10 +208,11 @@ class DuePaymentService
         // Récupérer la TVA 0% 
         $vatRate = VatRate::where('rate', 0)->first();
         
-        // Calcul des pénalités (Total TTC * 10% / 365 * jours de retard)
-        // Les pénalités s'appliquent sur le TTC
+        // Calcul des pénalités sur le RESTE À PAYER
+        $amountToPenalize = $invoice->amount_remaining;
+        
         $days = $invoice->getDaysOverdue();
-        $penalties = round($invoice->total_ttc * (self::DEFAULT_PENALTY_RATE / 100) * ($days / 365), 2);
+        $penalties = round($amountToPenalize * (self::DEFAULT_PENALTY_RATE / 100) * ($days / 365), 2);
 
         // 1. Ligne: Indemnité forfaitaire
         CustomerInvoiceItem::create([
