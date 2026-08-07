@@ -16,6 +16,7 @@ Le module **Commerce** couvre l'intégralité du cycle de vente et d'achat de l'
 *   **Génération de Documents** : Génération PDF des documents avec l'identité de l'entreprise (configurée via Browsershot), incluant désormais les bons de commande (client/fournisseur), situations de travaux, audits de factures fournisseurs, et relevés de compte client. L'affichage PDF à la volée est implémenté avec gestion asynchrone pour éviter les race conditions.
 *   **Numérotation & Légalisation** : `InvoiceLegalizationService`. Résolution des erreurs de séquençage et des contraintes d'unicité lors de la validation des factures.
 *   **Analytique et Sécurité** : `CommerceAnalyticService`, `SupplierInvoiceAuditService` et `RetentionGuaranteeService`.
+*   **Relances Automatiques d'Impayés (Dunning Process)** : Tâche planifiée (`commerce:process-dunning` via `DuePaymentService`) vérifiant chaque nuit les factures échues et envoyant automatiquement des e-mails graduels (Relance amiable à J+3, J+15, puis Mise en demeure avec ajout automatique des indemnités forfaitaires de 40€ et pénalités de retard à J+30).
 
 ### 3. Observers & Événements (`app/Observers/Commerce`)
 *   Multiples Observers (`CustomerQuoteObserver`, `CustomerInvoiceObserver`, etc.) gérant la numérotation automatique et la mise à jour en cascade des statuts de documents liés.
@@ -33,6 +34,4 @@ Le module **Commerce** couvre l'intégralité du cycle de vente et d'achat de l'
 ## 🚧 Ce qu'il reste à faire
 *   Peaufiner potentiellement certains détails cosmétiques des exports PDF selon les retours utilisateurs finaux.
 
-## 💡 Idées d'amélioration et Nouvelles Fonctionnalités
-*   **Relances Automatiques d'Impayés (Dunning Process)** : Mettre en place une tâche planifiée pour vérifier chaque nuit les factures échues et envoyer automatiquement des e-mails graduels (Relance amiable à J+3, J+15, puis Mise en demeure avec ajout automatique des indemnités forfaitaires de 40€ et pénalités de retard à J+30).
 *   **Paiement en Ligne Sécurisé (Stripe / GoCardless)** : Intégrer un QR Code ou lien cliquable sur le PDF de la facture. Le client paie par CB ou mandat SEPA, ce qui lettre automatiquement la facture dans le système sans intervention humaine.

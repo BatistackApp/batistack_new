@@ -2,166 +2,126 @@
 
 namespace App\Services\Commerce;
 
-use App\Enums\Commerce\InvoiceStatus;
 use App\Models\Commerce\CustomerInvoice;
-use App\Models\Commerce\PaymentAllocation;
-use App\Models\Commerce\SupplierInvoice;
-use App\Models\Tiers\ThirdParty;
-use Illuminate\Support\Carbon;
-use Illuminate\Support\Collection;
+use App\Models\Commerce\CustomerInvoiceItem;
+use App\Models\Core\VatRate;
+use App\Mail\Commerce\InvoiceDunningMail;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
 
 class DuePaymentService
 {
     /**
-     * Récupère toutes les factures clients impayées avec échéance dépassée.
-     *
-     * @param  int  $daysOverdue  Nombre de jours de retard minimum (par défaut : 1)
+     * Taux légal par défaut pour les pénalités de retard (ex: BCE + 10 points, disons 10% annuels par simplicité)
      */
-    public function getOverdueCustomerInvoices(int $daysOverdue = 1): Collection
+    const DEFAULT_PENALTY_RATE = 10.0;
+
+    /**
+     * Indemnité forfaitaire pour frais de recouvrement (Loi LME)
+     */
+    const DUNNING_FLAT_FEE = 40.0;
+
+    public function processOverdueInvoices()
     {
-        return CustomerInvoice::where('status', InvoiceStatus::VALIDATED)
-            ->whereNotNull('due_date')
-            ->where('due_date', '<', Carbon::now()->subDays($daysOverdue))
-            ->with(['client', 'order'])
-            ->orderBy('due_date', 'asc')
+        Log::info("Starting Dunning Process for overdue invoices.");
+
+        // J+30 : Mise en demeure (Niveau 3)
+        $this->processLevel(30, 2, 3);
+
+        // J+15 : Relance 2 (Niveau 2)
+        $this->processLevel(15, 1, 2);
+
+        // J+3 : Relance Amiable (Niveau 1)
+        $this->processLevel(3, 0, 1);
+        
+        Log::info("Dunning Process finished.");
+    }
+
+    protected function processLevel(int $days, int $currentLevel, int $nextLevel)
+    {
+        $invoices = CustomerInvoice::eligibleForDunning($days, $currentLevel)
+            ->with(['client.contacts', 'items'])
             ->get();
-    }
 
-    /**
-     * Récupère les factures fournisseurs à payer dans les N prochains jours.
-     *
-     * @param  int  $daysAhead  Horizon de paiement (par défaut : 7 jours)
-     */
-    public function getUpcomingSupplierPayments(int $daysAhead = 7): Collection
-    {
-        return SupplierInvoice::whereIn('status', [InvoiceStatus::VALIDATED])
-            ->whereNotNull('due_date')
-            ->whereBetween('due_date', [
-                Carbon::now(),
-                Carbon::now()->addDays($daysAhead),
-            ])
-            ->with(['supplier', 'order'])
-            ->orderBy('due_date', 'asc')
-            ->get();
-    }
-
-    /**
-     * Calcule le solde comptable d'un client (factures - paiements).
-     *
-     * @return array ['total_invoiced' => float, 'total_paid' => float, 'balance' => float]
-     */
-    public function getClientBalance(ThirdParty $client): array
-    {
-        // Total facturé (TTC)
-        $totalInvoiced = CustomerInvoice::where('client_id', $client->id)
-            ->whereIn('status', [InvoiceStatus::VALIDATED, InvoiceStatus::PAID])
-            ->sum('total_ttc');
-
-        // Total payé (via allocations)
-        $totalPaid = PaymentAllocation::whereHasMorph(
-            'payable',
-            [CustomerInvoice::class],
-            function ($q) use ($client) {
-                $q->where('client_id', $client->id);
-            }
-        )->sum('allocated_amount');
-
-        $balance = $totalInvoiced - $totalPaid;
-
-        return [
-            'total_invoiced' => (float) $totalInvoiced,
-            'total_paid' => (float) $totalPaid,
-            'balance' => (float) $balance,
-        ];
-    }
-
-    /**
-     * Récupère le tableau de bord des encours clients.
-     * Groupe les clients par niveau de retard.
-     */
-    public function getCustomerAgingReport(): array
-    {
-        $overdueInvoices = $this->getOverdueCustomerInvoices(1);
-        $now = Carbon::now();
-
-        $aging = [
-            '0-30_days' => [],
-            '31-60_days' => [],
-            '61-90_days' => [],
-            'over_90_days' => [],
-        ];
-
-        // Définir les bornes pour chaque tranche de retard
-        $boundary_30_days = $now->copy()->subDays(30);
-        $boundary_60_days = $now->copy()->subDays(60);
-        $boundary_90_days = $now->copy()->subDays(90);
-
-        foreach ($overdueInvoices as $invoice) {
-            $dueDate = $invoice->due_date;
-            // Comparer la date d'échéance avec les bornes
-            if ($dueDate->isAfter($boundary_30_days)) {
-                $aging['0-30_days'][] = $invoice;
-            } elseif ($dueDate->isAfter($boundary_60_days)) {
-                $aging['31-60_days'][] = $invoice;
-            } elseif ($dueDate->isAfter($boundary_90_days)) {
-                $aging['61-90_days'][] = $invoice;
-            } else {
-                $aging['over_90_days'][] = $invoice;
+        foreach ($invoices as $invoice) {
+            try {
+                $this->processInvoice($invoice, $nextLevel, $days);
+            } catch (\Exception $e) {
+                Log::error("Error processing dunning for invoice {$invoice->id}: " . $e->getMessage());
             }
         }
-
-        return [
-            'summary' => [
-                '0-30' => collect($aging['0-30_days'])->sum('total_ttc'),
-                '31-60' => collect($aging['31-60_days'])->sum('total_ttc'),
-                '61-90' => collect($aging['61-90_days'])->sum('total_ttc'),
-                '90+' => collect($aging['over_90_days'])->sum('total_ttc'),
-            ],
-            'details' => $aging,
-        ];
     }
 
-    /**
-     * Calcule l'encours fournisseur global (à payer).
-     */
-    public function getTotalSupplierOutstanding(): float
+    protected function processInvoice(CustomerInvoice $invoice, int $nextLevel, int $daysOverdue)
     {
-        return SupplierInvoice::whereIn('status', [InvoiceStatus::VALIDATED, InvoiceStatus::LITIGE])
-            ->sum('amount_ttc');
+        // Appliquer les frais si on passe au niveau 3 (Mise en demeure)
+        if ($nextLevel === 3) {
+            $this->applyPenalties($invoice);
+        }
+
+        // Envoyer l'email
+        // On récupère le contact principal ou email de facturation
+        $contact = $invoice->client->contacts()->where('is_primary', true)->first();
+        $email = $contact ? $contact->email : $invoice->client->email;
+
+        if ($email) {
+            Mail::to($email)->send(new InvoiceDunningMail($invoice, $nextLevel));
+        } else {
+            Log::warning("No email found for client {$invoice->client->id} on invoice {$invoice->id}");
+        }
+
+        // Mettre à jour le statut de relance
+        $invoice->update([
+            'dunning_level' => $nextLevel,
+            'last_dunning_at' => now(),
+        ]);
+        
+        Log::info("Invoice {$invoice->reference} advanced to dunning level {$nextLevel}.");
     }
 
-    /**
-     * Génère une liste de relance de niveau N pour un client.
-     *
-     * @param  ThirdParty  $client  Le client à relancer
-     * @param  int  $reminderLevel  Niveau de relance (1, 2, 3)
-     * @return array Informations de la relance
-     */
-    public function generatePaymentReminder(ThirdParty $client, int $reminderLevel = 1): array
+    protected function applyPenalties(CustomerInvoice $invoice)
     {
-        $overdueInvoices = CustomerInvoice::where('client_id', $client->id)
-            ->where('status', InvoiceStatus::VALIDATED)
-            ->whereNotNull('due_date')
-            ->where('due_date', '<', Carbon::now())
-            ->orderBy('due_date', 'asc')
-            ->get();
+        // On vérifie qu'on n'a pas déjà ajouté l'indemnité
+        $hasFee = $invoice->items()->where('name', 'LIKE', '%Indemnité forfaitaire de recouvrement%')->exists();
+        
+        if ($hasFee) {
+            return;
+        }
 
-        $totalDue = $overdueInvoices->sum('total_ttc');
+        // Récupérer la TVA 0% 
+        $vatRate = VatRate::where('rate', 0)->first();
+        
+        // Calcul des pénalités (Total TTC * 10% / 365 * jours de retard)
+        // Les pénalités s'appliquent sur le TTC
+        $days = $invoice->getDaysOverdue();
+        $penalties = round($invoice->total_ttc * (self::DEFAULT_PENALTY_RATE / 100) * ($days / 365), 2);
 
-        $reminderText = match ($reminderLevel) {
-            1 => 'PREMIÈRE RELANCE AMIABLE',
-            2 => 'SECONDE RELANCE - MISE EN DEMEURE',
-            3 => 'DERNIÈRE RELANCE AVANT CONTENTIEUX',
-            default => 'RELANCE DE PAIEMENT',
-        };
+        // 1. Ligne: Indemnité forfaitaire
+        CustomerInvoiceItem::create([
+            'customer_invoice_id' => $invoice->id,
+            'name' => 'Indemnité forfaitaire de recouvrement (loi LME)',
+            'quantity' => 1,
+            'price_unit' => self::DUNNING_FLAT_FEE,
+            'vat_rate_id' => $vatRate?->id,
+            'total_ht' => self::DUNNING_FLAT_FEE,
+        ]);
 
-        return [
-            'client' => $client,
-            'level' => $reminderLevel,
-            'title' => $reminderText,
-            'invoices' => $overdueInvoices,
-            'total_due' => $totalDue,
-            'generated_at' => Carbon::now(),
-        ];
+        // 2. Ligne: Pénalités de retard
+        if ($penalties > 0) {
+            CustomerInvoiceItem::create([
+                'customer_invoice_id' => $invoice->id,
+                'name' => 'Pénalités de retard',
+                'quantity' => 1,
+                'price_unit' => $penalties,
+                'vat_rate_id' => $vatRate?->id,
+                'total_ht' => $penalties,
+            ]);
+        }
+
+        // Recalculer le total de la facture en ajoutant les frais (TVA 0% donc HT = TTC)
+        $invoice->update([
+            'total_ht' => $invoice->total_ht + self::DUNNING_FLAT_FEE + $penalties,
+            'total_ttc' => $invoice->total_ttc + self::DUNNING_FLAT_FEE + $penalties,
+        ]);
     }
 }

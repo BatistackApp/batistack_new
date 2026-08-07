@@ -10,6 +10,12 @@ Artisan::command('inspire', function () {
 
 Schedule::command('inventory:generate-cycle-counts')->weeklyOn(1, '03:00');
 
+// Commerce
+Schedule::command('commerce:process-dunning')
+    ->dailyAt('01:00')
+    ->timezone('Europe/Paris')
+    ->onFailure(fn () => logger()->error("Échec de la relance automatique des factures."));
+
 // Tiers
 
 Schedule::command('tiers:verify-vigilance')
