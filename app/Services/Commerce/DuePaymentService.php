@@ -21,6 +21,110 @@ class DuePaymentService
      */
     const DUNNING_FLAT_FEE = 40.0;
 
+    public function getOverdueCustomerInvoices(int $daysOverdue = 1)
+    {
+        return CustomerInvoice::where('status', \App\Enums\Commerce\InvoiceStatus::VALIDATED)
+            ->where('due_date', '<=', now()->subDays($daysOverdue)->endOfDay())
+            ->orderBy('due_date', 'asc')
+            ->get();
+    }
+
+    public function getUpcomingSupplierPayments(int $daysAhead = 7)
+    {
+        return \App\Models\Commerce\SupplierInvoice::where('status', \App\Enums\Commerce\InvoiceStatus::VALIDATED)
+            ->where('due_date', '>=', now()->startOfDay())
+            ->where('due_date', '<=', now()->addDays($daysAhead)->endOfDay())
+            ->get();
+    }
+
+    public function getClientBalance(\App\Models\Tiers\ThirdParty $client)
+    {
+        $invoices = CustomerInvoice::where('client_id', $client->id)
+            ->whereIn('status', [\App\Enums\Commerce\InvoiceStatus::VALIDATED, \App\Enums\Commerce\InvoiceStatus::PAID])
+            ->get();
+
+        $totalInvoiced = (float) $invoices->sum('total_ttc');
+        
+        $totalPaid = (float) \App\Models\Commerce\PaymentAllocation::where('payable_type', CustomerInvoice::class)
+            ->whereIn('payable_id', $invoices->pluck('id'))
+            ->sum('allocated_amount');
+
+        return [
+            'total_invoiced' => $totalInvoiced,
+            'total_paid' => $totalPaid,
+            'balance' => $totalInvoiced - $totalPaid,
+        ];
+    }
+
+    public function getCustomerAgingReport()
+    {
+        $overdue = CustomerInvoice::where('status', \App\Enums\Commerce\InvoiceStatus::VALIDATED)
+            ->where('due_date', '<', now()->startOfDay())
+            ->get();
+
+        $summary = [
+            '0-30' => 0.0,
+            '31-60' => 0.0,
+            '61-90' => 0.0,
+            '90+' => 0.0,
+        ];
+
+        foreach ($overdue as $invoice) {
+            $days = (int) $invoice->due_date->diffInDays(now());
+            if ($days <= 30) {
+                $summary['0-30'] += (float) $invoice->total_ttc;
+            } elseif ($days <= 60) {
+                $summary['31-60'] += (float) $invoice->total_ttc;
+            } elseif ($days <= 90) {
+                $summary['61-90'] += (float) $invoice->total_ttc;
+            } else {
+                $summary['90+'] += (float) $invoice->total_ttc;
+            }
+        }
+
+        return ['summary' => $summary];
+    }
+
+    public function getTotalSupplierOutstanding()
+    {
+        return (float) \App\Models\Commerce\SupplierInvoice::whereIn('status', [
+            \App\Enums\Commerce\InvoiceStatus::VALIDATED, 
+            \App\Enums\Commerce\InvoiceStatus::LITIGE
+        ])->sum('amount_ttc');
+    }
+
+    public function generatePaymentReminder(\App\Models\Tiers\ThirdParty $client, int $reminderLevel = 1)
+    {
+        $titles = [
+            1 => 'PREMIÈRE RELANCE AMIABLE',
+            2 => 'SECONDE RELANCE - MISE EN DEMEURE',
+            3 => 'DERNIÈRE RELANCE AVANT CONTENTIEUX',
+        ];
+
+        $invoices = CustomerInvoice::where('client_id', $client->id)
+            ->where('status', \App\Enums\Commerce\InvoiceStatus::VALIDATED)
+            ->where('due_date', '<', now()->startOfDay())
+            ->get();
+            
+        if ($invoices->isEmpty()) {
+            return [
+                'client' => $client,
+                'level' => $reminderLevel,
+                'title' => $titles[$reminderLevel] ?? 'RELANCE',
+                'total_due' => 0.0,
+                'invoices' => collect(),
+            ];
+        }
+
+        return [
+            'client' => $client,
+            'level' => $reminderLevel,
+            'title' => $titles[$reminderLevel] ?? 'RELANCE',
+            'total_due' => (float) $invoices->sum('total_ttc'),
+            'invoices' => $invoices,
+        ];
+    }
+
     public function processOverdueInvoices()
     {
         Log::info("Starting Dunning Process for overdue invoices.");
