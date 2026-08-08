@@ -53,8 +53,29 @@ class ManufacturingOrderObserver
             // Mettre à jour sans déclencher d'événements
             $manufacturingOrder->updateQuietly(['total_labor_cost' => $totalLaborCost]);
 
+            // Mettre à jour l'utilisation des machines
+            $this->updateMachineUsage($manufacturingOrder);
+
             // Générer l'étiquette / PDF de l'OF de façon asynchrone
             \App\Jobs\Gpao\GenerateManufacturingOrderPdfJob::dispatch($manufacturingOrder->id);
+        }
+    }
+
+    protected function updateMachineUsage(ManufacturingOrder $order): void
+    {
+        $hours = $order->timeEntries()->sum('hours') ?: 4; // Mock: 4 hours si non tracé
+        
+        foreach ($order->machines as $machine) {
+            $machine->increment('usage_hours', $hours);
+
+            if ($machine->usage_hours >= $machine->maintenance_interval_hours) {
+                \App\Models\Gpao\MachineMaintenanceTicket::create([
+                    'machine_id' => $machine->id,
+                    'type' => 'preventive',
+                    'status' => 'open',
+                    'description' => 'Maintenance préventive requise suite au dépassement du seuil d\'utilisation.',
+                ]);
+            }
         }
     }
 

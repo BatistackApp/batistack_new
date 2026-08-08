@@ -17,7 +17,13 @@ Le module **GPAO** a pour objectif de gérer les opérations de production ou d'
 *   **Documentation (`GpaoDocumentService`)** : Génération de documents PDF avec QR codes (via le package `chillerlan/php-qrcode`) attachés aux OFs, facilitant le scan logistique.
 
 ### 3. Observers & Événements (`app/Observers/Gpao`)
-*   **`ManufacturingOrderObserver`** : Déclenche les actions MRP à la création et gère le cycle de vie de l'OF (ex: génération automatique d'OF lorsqu'une commande client est confirmée).
+*   **`ManufacturingOrderObserver`** : Déclenche les actions MRP à la création et gère le cycle de vie de l'OF (ex: génération automatique d'OF lorsqu'une commande client est confirmée). Il calcule et met également à jour les heures d'utilisation (`usage_hours`) de la machine assignée lorsqu'un OF se termine, et déclenche la création d'un ticket de maintenance préventive si le seuil est dépassé.
+
+### 4. Nouveautés Récentes (Issues 229, 230, 231, 232)
+*   **Traçabilité** : Ajout des champs de `batch_number` et `serial_number` sur les composants consommés (`ManufacturingRequirement`) et les produits finis (`ManufacturingOrder`).
+*   **Gestion des Rebuts (Scrap)** : Nouvelle déclaration de perte intégrée sur l'OF (`ManufacturingScrapService`). Ajustement auto du stock, motif, et affichage du Taux de Rebut Global via un widget Filament.
+*   **mini-GMAO** : Intégration des `Machine` et de leurs tickets d'intervention (`MachineMaintenanceTicket`). Assignation des OFs aux machines pour anticiper l'entretien selon la durée d'utilisation.
+*   **APS (Ordonnancement IA)** : Implémentation du service `ApsSchedulingService` qui planifie automatiquement les OFs ouverts sur les machines en respectant les délais de livraison client (mix de priorité) et la disponibilité du stock. Un bouton a été ajouté au Kanban GPAO.
 
 ### 4. Interface Utilisateur (Filament)
 *   **Espace Dédié (Panel Switch)** : Création d'un panneau Filament spécifique "Atelier & Production" (`GpaoPanelProvider`).
@@ -36,7 +42,4 @@ Le module **GPAO** a pour objectif de gérer les opérations de production ou d'
 *   *(L'essentiel du module, incluant l'UI avancée et la logique MRP, est terminé).*
 
 ## 💡 Idées d'amélioration et Nouvelles Fonctionnalités
-*   **Traçabilité des Lots et Numéros de Série** : Associer des numéros de lot ou de série aux matières premières consommées et aux produits finis pour une traçabilité ascendante et descendante parfaite (indispensable pour certaines normes de qualité).
-*   **Gestion des Rebuts (Scrap Management)** : Déclaration de rebut par l'opérateur avec motif, ajustement automatique du stock et génération de KPIs sur le Taux de Rebut.
-*   **Maintenance des Machines (mini-GMAO)** : Carnet d'entretien par machine, tickets de maintenance préventive basés sur l'utilisation et tickets curatifs pour éviter les arrêts de production prolongés.
-*   **Ordonnancement Automatique IA (APS)** : Outil de tri intelligent sur le Kanban pour ordonnancer automatiquement les OFs afin de minimiser les goulots d'étranglement selon les matières, machines et délais clients.
+*   **Connexion IoT et ERP** : Remontée des quantités produites et des temps de cycle directement depuis les API machines (OPC-UA).

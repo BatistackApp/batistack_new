@@ -2,29 +2,29 @@
 
 namespace App\Models\Gpao;
 
-use App\Models\Articles\Item;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use App\Models\Articles\Item;
+use App\Models\User;
 
-class ManufacturingRequirement extends Model
+class ManufacturingScrap extends Model
 {
     use HasFactory;
 
     protected $fillable = [
         'manufacturing_order_id',
         'item_id',
-        'quantity_required',
-        'quantity_consumed',
-        'batch_number',
-        'serial_number',
+        'quantity',
+        'reason',
+        'notes',
+        'reported_by_id',
     ];
 
     protected function casts(): array
     {
         return [
-            'quantity_required' => 'decimal:4',
-            'quantity_consumed' => 'decimal:4',
+            'quantity' => 'decimal:4',
         ];
     }
 
@@ -36,5 +36,10 @@ class ManufacturingRequirement extends Model
     public function item(): BelongsTo
     {
         return $this->belongsTo(Item::class);
+    }
+
+    public function reportedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'reported_by_id');
     }
 }
