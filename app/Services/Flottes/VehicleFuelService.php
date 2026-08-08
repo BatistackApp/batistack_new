@@ -146,7 +146,7 @@ class VehicleFuelService
      */
     private function getEmissionFactor(string $fuelType): float
     {
-        $type = strtolower(trim($fuelType));
+        $type = mb_strtolower(trim($fuelType));
         return match ($type) {
             'diesel', 'gazole', 'b7', 'b10' => 2.64,
             'essence', 'sp95', 'sp98', 'e10', 'hybride' => 2.28,

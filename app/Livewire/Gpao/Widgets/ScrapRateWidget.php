@@ -10,9 +10,10 @@ class ScrapRateWidget extends StatsOverviewWidget
     protected function getStats(): array
     {
         $totalScrap = \App\Models\Gpao\ManufacturingScrap::sum('quantity');
-        $totalProduced = \App\Models\Gpao\ManufacturingOrder::sum('quantity_produced') ?: 1; // avoid div by 0
+        $totalProduced = \App\Models\Gpao\ManufacturingOrder::sum('quantity_produced');
         
-        $rate = ($totalScrap / $totalProduced) * 100;
+        $denominator = $totalProduced + $totalScrap;
+        $rate = $denominator > 0 ? ($totalScrap / $denominator) * 100 : 0;
 
         return [
             Stat::make('Taux de Rebut Global', number_format($rate, 2) . '%')

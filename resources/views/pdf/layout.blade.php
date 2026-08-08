@@ -301,11 +301,11 @@
             <img src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url('core/company_logo.png') }}" alt="logo" style="max-width: 150px; max-height: 70px;">
         </div>
         <div class="company-details" style="display: inline-block; margin-left: 20px;">
-            <span style="font-weight: bold; font-size: 1.2rem; color: #1e40af;">{{ $company->legal_name }}</span><br>
-            <span>{{ $company->address }}</span><br>
-            <span>{{ $company->zip_code }} {{ $company->city }}</span><br>
-            <span>Téléphone: {{ $company->phone }}</span><br>
-            <span>Email: {{ $company->email }}</span>
+            <span style="font-weight: bold; font-size: 1.2rem; color: #1e40af;">{{ $company?->legal_name ?? 'Batistack' }}</span><br>
+            <span>{{ $company?->address ?? '' }}</span><br>
+            <span>{{ $company?->zip_code ?? '' }} {{ $company?->city ?? '' }}</span><br>
+            <span>Téléphone: {{ $company?->phone ?? '' }}</span><br>
+            <span>Email: {{ $company?->email ?? '' }}</span>
         </div>
     </div>
     @yield("header_right")
@@ -314,8 +314,8 @@
     @yield('content')
 </main>
 <div class="footer">
-    {{ $company->legal_name }} @if($company->capital)au capital de {{ number_format($company->capital, 2, ',', ' ') }}€@endif - SIRET: {{ $company->siret }} <br>
-    {{ $company->address }}, {{ $company->zip_code }} {{ $company->city }} - TVA Intracommunautaire: {{ $company->vat_number ?? 'Non applicable' }}
+    {{ $company?->legal_name ?? 'Batistack' }} @if($company?->capital)au capital de {{ number_format($company->capital, 2, ',', ' ') }}€@endif - SIRET: {{ $company?->siret ?? '' }} <br>
+    {{ $company?->address ?? '' }}, {{ $company?->zip_code ?? '' }} {{ $company?->city ?? '' }} - TVA Intracommunautaire: {{ $company?->vat_number ?? 'Non applicable' }}
 </div>
 </body>
 </html>

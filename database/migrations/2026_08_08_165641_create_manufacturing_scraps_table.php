@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('manufacturing_order_id')->constrained()->cascadeOnDelete();
             $table->foreignId('item_id')->constrained()->cascadeOnDelete();
-            $table->decimal('quantity', 15, 4);
+            $table->decimal('quantity', 15, 4)->unsigned();
             $table->string('reason');
             $table->text('notes')->nullable();
             $table->foreignId('reported_by_id')->nullable()->constrained('users')->nullOnDelete();

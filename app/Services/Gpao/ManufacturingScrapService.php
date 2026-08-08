@@ -19,6 +19,10 @@ class ManufacturingScrapService
      */
     public function declareScrap(ManufacturingOrder $order, Item $item, float $quantity, string $reason, ?string $notes = null, ?int $reportedById = null): ManufacturingScrap
     {
+        if ($quantity <= 0) {
+            throw new \InvalidArgumentException('Quantity must be strictly positive.');
+        }
+
         return DB::transaction(function () use ($order, $item, $quantity, $reason, $notes, $reportedById) {
             // 1. Create the scrap record
             $scrap = ManufacturingScrap::create([

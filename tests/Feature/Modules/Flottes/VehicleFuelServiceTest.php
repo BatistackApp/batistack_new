@@ -83,6 +83,23 @@ it('calculates CO2 emission properly based on vehicle fuel type', function () {
     );
 
     expect($transaction2->co2_emission_kg)->toEqual(114.0);
+
+    $vehicleElectric = Vehicle::factory()->create([
+        'fuel_type' => 'Électrique',
+        'odometer' => 10000,
+    ]);
+
+    // 50 Liters of Electric (0.0 kg/L) = 0 kg CO2 (though liters don't make sense for electric, logic holds)
+    $transaction3 = $service->processAndAuditFuelTransaction(
+        vehicle: $vehicleElectric,
+        liters: 50.0,
+        costHt: 10.0,
+        odometer: 10100,
+        purchasedAt: Carbon::now(),
+        stationName: 'Supercharger'
+    );
+
+    expect($transaction3->co2_emission_kg)->toEqual(0.0);
 });
 
 test('refuse plein si odomètre inférieur', function () {

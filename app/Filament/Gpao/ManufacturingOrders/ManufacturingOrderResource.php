@@ -51,6 +51,7 @@ class ManufacturingOrderResource extends Resource
                         \Filament\Forms\Components\TextInput::make('quantity')
                             ->label('Quantité (Rebut)')
                             ->numeric()
+                            ->minValue(0.0001)
                             ->required(),
                         \Filament\Forms\Components\Select::make('reason')
                             ->label('Motif')

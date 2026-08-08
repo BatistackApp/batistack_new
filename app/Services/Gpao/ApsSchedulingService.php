@@ -9,34 +9,27 @@ use App\Enums\Gpao\ManufacturingStatus;
 class ApsSchedulingService
 {
     /**
-     * Optimizes scheduling of OPEN manufacturing orders.
+     * Optimizes scheduling of PLANNED manufacturing orders.
      * Takes into account customer order delivery date (mix logic) and material availability.
+     * Returns an array of orders that could not be scheduled due to material shortages.
      */
-    public function scheduleOpenOrders(): void
+    public function scheduleOpenOrders(): array
     {
-        $orders = ManufacturingOrder::where('status', ManufacturingStatus::OPEN)
+        $orders = ManufacturingOrder::where('status', ManufacturingStatus::PLANNED)
             ->with(['customerOrder', 'requirements.item'])
             ->get();
 
         // Sort by priority (mix of urgency and material availability)
         $sortedOrders = $orders->sortBy(function ($order) {
-            // 1. If material is not available, it gets lower priority (high number)
-            $materialAvailable = $this->isMaterialAvailable($order);
-            
-            // 2. Deadline score (closer deadline = lower score)
+            // Deadline score (closer deadline = lower score)
             $deadline = $order->customerOrder?->delivery_date;
-            $deadlineScore = $deadline ? $deadline->timestamp : now()->addYear()->timestamp;
-
-            // Material available = 0, not available = 1 (pushes it down the list)
-            $availabilityScore = $materialAvailable ? 0 : 10000000000;
-
-            return $availabilityScore + $deadlineScore;
+            return $deadline ? $deadline->timestamp : now()->addYear()->timestamp;
         });
 
         // Simple scheduling assigning them back-to-back on available operational machines
         $machines = Machine::where('status', \App\Enums\Gpao\MachineStatus::OPERATIONAL)->get();
         if ($machines->isEmpty()) {
-            return;
+            return [];
         }
 
         $machineAvailability = [];
@@ -44,7 +37,14 @@ class ApsSchedulingService
             $machineAvailability[$machine->id] = now();
         }
 
+        $shortages = [];
+
         foreach ($sortedOrders as $order) {
+            if (!$this->isMaterialAvailable($order)) {
+                $shortages[] = $order;
+                continue;
+            }
+
             // Find machine with earliest availability
             asort($machineAvailability);
             $bestMachineId = array_key_first($machineAvailability);
@@ -63,6 +63,8 @@ class ApsSchedulingService
             // Update machine availability for the next order
             $machineAvailability[$bestMachineId] = $startTime->addHours($durationHours);
         }
+
+        return $shortages;
     }
 
     protected function isMaterialAvailable(ManufacturingOrder $order): bool

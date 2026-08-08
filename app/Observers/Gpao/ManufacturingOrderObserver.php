@@ -69,12 +69,19 @@ class ManufacturingOrderObserver
             $machine->increment('usage_hours', $hours);
 
             if ($machine->usage_hours >= $machine->maintenance_interval_hours) {
-                \App\Models\Gpao\MachineMaintenanceTicket::create([
-                    'machine_id' => $machine->id,
-                    'type' => 'preventive',
-                    'status' => 'open',
-                    'description' => 'Maintenance préventive requise suite au dépassement du seuil d\'utilisation.',
-                ]);
+                $hasOpenTicket = \App\Models\Gpao\MachineMaintenanceTicket::where('machine_id', $machine->id)
+                    ->where('type', 'preventive')
+                    ->where('status', 'open')
+                    ->exists();
+
+                if (!$hasOpenTicket) {
+                    \App\Models\Gpao\MachineMaintenanceTicket::create([
+                        'machine_id' => $machine->id,
+                        'type' => 'preventive',
+                        'status' => 'open',
+                        'description' => 'Maintenance préventive requise suite au dépassement du seuil d\'utilisation.',
+                    ]);
+                }
             }
         }
     }
