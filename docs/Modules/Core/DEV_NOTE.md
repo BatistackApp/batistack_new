@@ -40,12 +40,22 @@ Le cœur regorge de services essentiels déjà implémentés et fonctionnels :
 *   La logique de hachage de la signature et le typage strict sont en place.
 *   Couverture complète ajoutée pour `CompanyService` (données d'en-tête de documents) et `GoogleMapsService` (géocodage, matrice de distance, optimisation d'itinéraire).
 
+### 6. Gestion des Droits et Permissions (Filament Shield)
+*   Intégration de `spatie/laravel-permission` via `bezhansalleh/filament-shield`.
+*   Les permissions granulaires (CRUD) sont automatiquement générées via la commande `shield:generate`.
+*   **Synchronisation RH (Issue #226)** : Attribution dynamique du rôle utilisateur en fonction de l'intitulé de poste (`job_title`) renseigné dans le contrat actif du module RH. 
+*   **Révocation automatisée** : Tâche planifiée quotidienne `rh:sync-expired-roles` pour désactiver automatiquement les droits liés à un poste en cas d'expiration du contrat.
+
+### 7. Piste d'Audit / Activity Log (Issue #227)
+*   **Traçabilité Globale** : Intégration de `spatie/laravel-activitylog` via le plugin `batistackapp/activity-log`.
+*   **Entités Suivies** : Historisation de toutes les modifications (création, mise à jour, suppression) sur les modèles critiques (Devis, Factures, Chantiers).
+*   **Visualisation UI** : Un composant `ActivityLogRelationManager` est greffé aux ressources Filament pour offrir une vue chronologique (Timeline) claire sur l'historique de chaque entité.
+
 ## 🚧 Ce qu'il reste à faire
-*   **Rôles et Permissions** : Intégration de Filament Shield ou système similaire. *Spécificité : Les rôles devront être en relation directe avec les postes de l'entreprise (Poste du contrat RH)*.
+*   Le module Core sert de socle pour l'ensemble du système. Sa maintenance se fait en continu à mesure que les autres modules évoluent.
 *   **Dashboard** : Personnalisation avancée du Dashboard de base (Widgets, KPI transverses).
 
 ## 💡 Idées d'amélioration et Nouvelles Fonctionnalités
-*   **Activity Log / Piste d'Audit** : Intégrer `spatie/laravel-activitylog` pour tracer toutes les modifications et suppressions sur les entités critiques (Devis, Factures, Chantiers) avec un historique détaillé (Qui, Quand, Quoi).
 *   **Gestion Documentaire Complète** : Interface d'arborescence GED pour visualiser et classer facilement tous les PDF générés par le `DocumentService`.
 *   **Workflow Approbations Multiples** : Permettre d'avoir plusieurs signataires sur un même document via le `SignatureService`.
 *   **Refonte du Dashboard (Widgets Avancés)** : Intégrer le package `laboiteacode/filament-dashboard-widgets` pour ajouter des widgets professionnels sur le panel Core (Suivi des limites d'APIs externes, tendance des signatures numériques sur 30 jours, jauge de progression de l'onboarding et logs des dernières activités critiques).

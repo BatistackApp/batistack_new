@@ -19,10 +19,16 @@ use Illuminate\Support\Str;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 
+use Relaticle\ActivityLog\Concerns\InteractsWithTimeline;
+use Relaticle\ActivityLog\Contracts\HasTimeline;
+use Relaticle\ActivityLog\Timeline\TimelineBuilder;
+use Spatie\Activitylog\Support\LogOptions;
+use Spatie\Activitylog\Models\Concerns\LogsActivity;
+
 #[ObservedBy([ChantierObserver::class])]
-class Chantier extends Model implements HasMedia
+class Chantier extends Model implements HasMedia, HasTimeline
 {
-    use HasFactory, InteractsWithMedia;
+    use HasFactory, InteractsWithMedia, LogsActivity, InteractsWithTimeline;
 
     protected $fillable = [
         'uuid',
@@ -180,5 +186,18 @@ class Chantier extends Model implements HasMedia
         return (float) $this->timeEntries()
             ->where('status', TimeEntryStatus::APPROVED)
             ->sum('hours');
+    }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logAll()
+            ->logOnlyDirty()
+            ->dontLogEmptyChanges();
+    }
+
+    public function timeline(): TimelineBuilder
+    {
+        return TimelineBuilder::make($this)->fromActivityLog();
     }
 }

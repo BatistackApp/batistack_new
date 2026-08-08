@@ -3,6 +3,7 @@
 namespace App\Providers\Filament;
 
 use AchyutN\FilamentLogViewer\FilamentLogViewer;
+use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
 use App\Http\Middleware\EnsureUserIsAdmin;
 use Caresome\FilamentAuthDesigner\AuthDesignerPlugin;
 use Croustibat\FilamentJobsMonitor\FilamentJobsMonitorPlugin;
@@ -55,6 +56,7 @@ class CorePanelProvider extends PanelProvider
                 DispatchServingFilamentEvent::class,
             ])
             ->plugins([
+                FilamentShieldPlugin::make(),
                 FilamentInboxPlugin::make(),
                 FilamentLogViewer::make(),
                 AuthDesignerPlugin::make()
