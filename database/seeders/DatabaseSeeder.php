@@ -26,6 +26,8 @@ class DatabaseSeeder extends Seeder
             '--panel' => 'core',
         ]);
 
+        $this->call(ShieldSeeder::class);
+
         $admin = User::where('email', 'admin@admin.com')->first();
         if ($admin) {
             \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'super_admin', 'guard_name' => 'web']);
