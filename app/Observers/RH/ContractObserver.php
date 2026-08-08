@@ -37,7 +37,23 @@ class ContractObserver
 
     public function updated(Contract $contract): void
     {
-        if ($contract->isDirty('job_title') || $contract->isDirty('start_date') || $contract->isDirty('end_date')) {
+        if ($contract->isDirty('employee_id') && $contract->getOriginal('employee_id')) {
+            $oldEmployee = \App\Models\RH\Employee::find($contract->getOriginal('employee_id'));
+            if ($oldEmployee && $oldEmployee->user) {
+                $oldJobTitle = $contract->getOriginal('job_title');
+                if ($oldJobTitle && \Spatie\Permission\Models\Role::where('name', $oldJobTitle)->exists()) {
+                    $oldEmployee->user->removeRole($oldJobTitle);
+                }
+                // Réconcilier le vieil employé
+                if ($activeOld = $oldEmployee->contracts()->active()->latest()->first()) {
+                    if (\Spatie\Permission\Models\Role::where('name', $activeOld->job_title)->exists()) {
+                        $oldEmployee->user->assignRole($activeOld->job_title);
+                    }
+                }
+            }
+        }
+
+        if ($contract->isDirty('job_title') || $contract->isDirty('start_date') || $contract->isDirty('end_date') || $contract->isDirty('employee_id')) {
             if ($contract->isDirty('job_title') && $contract->getOriginal('job_title')) {
                 if ($contract->employee?->user && \Spatie\Permission\Models\Role::where('name', $contract->getOriginal('job_title'))->exists()) {
                     $contract->employee->user->removeRole($contract->getOriginal('job_title'));
@@ -71,18 +87,23 @@ class ContractObserver
         }
     }
 
-    protected function syncUserRole(Contract $contract): void
+    public function syncUserRole(Contract $contract): void
     {
         $employee = $contract->employee;
         if ($employee && $employee->user) {
             $user = $employee->user;
-            if ($contract->isActive()) {
-                if (\Spatie\Permission\Models\Role::where('name', $contract->job_title)->exists()) {
-                    $user->assignRole($contract->job_title);
-                }
-            } else {
+            
+            $activeJobTitles = $employee->contracts()->active()->pluck('job_title')->filter()->unique()->toArray();
+            
+            if (! $contract->isActive() && $contract->job_title && !in_array($contract->job_title, $activeJobTitles)) {
                 if (\Spatie\Permission\Models\Role::where('name', $contract->job_title)->exists()) {
                     $user->removeRole($contract->job_title);
+                }
+            }
+            
+            foreach ($activeJobTitles as $jobTitle) {
+                if (\Spatie\Permission\Models\Role::where('name', $jobTitle)->exists()) {
+                    $user->assignRole($jobTitle);
                 }
             }
         }

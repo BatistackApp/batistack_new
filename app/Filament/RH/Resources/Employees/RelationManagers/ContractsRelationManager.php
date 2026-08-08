@@ -56,6 +56,7 @@ class ContractsRelationManager extends RelationManager
                                     ->unique(\Spatie\Permission\Models\Role::class, 'name', ignoreRecord: false)
                             ])
                             ->createOptionUsing(function (array $data) {
+                                \Illuminate\Support\Facades\Gate::authorize('create', \Spatie\Permission\Models\Role::class);
                                 $role = \Spatie\Permission\Models\Role::create(['name' => $data['name'], 'guard_name' => 'web']);
                                 return $role->name;
                             })

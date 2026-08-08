@@ -27,30 +27,36 @@ class SyncExpiredContractsRolesCommand extends Command
      */
     public function handle()
     {
-        // On récupère tous les contrats expirés qui pourraient encore avoir un impact
-        // Pour être sûr, on vérifie les employés qui ont un contrat échu hier
-        $expiredContracts = Contract::whereDate('end_date', '<', today())->get();
+        // On récupère les contrats expirés ou qui commencent aujourd'hui
+        $contractsToProcess = Contract::whereDate('end_date', '<', today())
+            ->orWhereDate('start_date', '<=', today())
+            ->get();
 
-        foreach ($expiredContracts as $contract) {
+        foreach ($contractsToProcess as $contract) {
             $employee = $contract->employee;
             
             if ($employee && $employee->user) {
-                // S'il n'a pas de contrat actif en cours
-                if (! $employee->contracts()->active()->exists()) {
+                // Obtenir tous les postes des contrats actifs de cet employé
+                $activeJobTitles = $employee->contracts()->active()->pluck('job_title')->filter()->unique()->toArray();
+                
+                // Si le contrat n'est pas actif et son rôle n'est pas dans un contrat actif, on le retire
+                if (! $contract->isActive() && $contract->job_title && !in_array($contract->job_title, $activeJobTitles)) {
                     if (\Spatie\Permission\Models\Role::where('name', $contract->job_title)->exists()) {
                         $employee->user->removeRole($contract->job_title);
                         $this->info("Rôle retiré pour {$employee->user->email} suite à l'expiration du contrat.");
                     }
-                } else {
-                    // S'il a un autre contrat actif, on s'assure qu'il a le bon rôle
-                    $activeContract = $employee->contracts()->active()->latest()->first();
-                    if (\Spatie\Permission\Models\Role::where('name', $activeContract->job_title)->exists()) {
-                        $employee->user->assignRole($activeContract->job_title);
+                }
+                
+                // Assigner les rôles pour tous les contrats actifs
+                foreach ($activeJobTitles as $jobTitle) {
+                    if (\Spatie\Permission\Models\Role::where('name', $jobTitle)->exists()) {
+                        $employee->user->assignRole($jobTitle);
+                        $this->info("Rôle {$jobTitle} attribué pour {$employee->user->email} suite à l'activation d'un contrat.");
                     }
                 }
             }
         }
         
-        $this->info("Synchronisation des rôles pour les contrats expirés terminée.");
+        $this->info("Synchronisation des rôles pour les contrats expirés et actifs terminée.");
     }
 }

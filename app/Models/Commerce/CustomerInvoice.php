@@ -436,7 +436,7 @@ class CustomerInvoice extends Model implements HasTimeline
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-            ->logAll()
+            ->logOnly(['client_id', 'chantier_id', 'customer_order_id', 'customer_situation_id', 'reference', 'type', 'status', 'total_ht', 'total_ttc', 'due_date', 'cancellation_reason', 'responsable_id', 'sent_at', 'total_tva', 'dunning_level', 'last_dunning_at'])
             ->logOnlyDirty()
             ->dontLogEmptyChanges();
     }

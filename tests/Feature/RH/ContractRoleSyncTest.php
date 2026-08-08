@@ -36,7 +36,7 @@ it('assigns role when active contract is created', function () {
     expect($user->fresh()->hasRole($roleName))->toBeTrue();
 });
 
-it('removes role when contract is deleted', function () {
+it('removes role when contract expires', function () {
     $roleName = 'Ouvrier';
     Role::create(['name' => $roleName, 'guard_name' => 'web']);
 
@@ -56,5 +56,31 @@ it('removes role when contract is deleted', function () {
 
     // Let's modify the end_date to past, save, then delete.
     $contract->update(['end_date' => now()->subDays(2)]);
+    expect($user->fresh()->hasRole($roleName))->toBeFalse();
+});
+
+it('removes role when contract is deleted', function () {
+    $roleName = 'Apprenti';
+    Role::create(['name' => $roleName, 'guard_name' => 'web']);
+
+    $user = User::factory()->create();
+    $employee = Employee::factory()->create(['user_id' => $user->id]);
+
+    // Create an inactive contract
+    $contract = Contract::factory()->create([
+        'employee_id' => $employee->id,
+        'job_title' => $roleName,
+        'start_date' => now()->subDays(30),
+        'end_date' => now()->subDays(10), // Past, so inactive
+        'type' => ContractType::CDI,
+        'hourly_rate' => 15,
+    ]);
+
+    // Give the user the role manually to test deletion logic
+    $user->assignRole($roleName);
+    expect($user->fresh()->hasRole($roleName))->toBeTrue();
+
+    $contract->delete();
+    
     expect($user->fresh()->hasRole($roleName))->toBeFalse();
 });

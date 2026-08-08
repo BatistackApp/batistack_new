@@ -16,6 +16,9 @@ beforeEach(function () {
     // Act as user to log causer
     $this->user = User::factory()->create();
     $this->actingAs($this->user);
+    
+    // Create a company to avoid PDF generation errors in views
+    \App\Models\Core\Company::factory()->create(['legal_name' => 'Test Company']);
 
     // Mock document service to avoid PDF generation errors
     $mock = Mockery::mock(CommerceDocumentService::class);
@@ -24,14 +27,76 @@ beforeEach(function () {
     $this->app->instance(CommerceDocumentService::class, $mock);
 });
 
-it('Chantier uses LogsActivity trait', function () {
-    expect(class_uses_recursive(Chantier::class))->toContain(Spatie\Activitylog\Models\Concerns\LogsActivity::class);
+it('logs activity when a Chantier is created and updated', function () {
+    $chantier = Chantier::factory()->create(['name' => 'Original Name']);
+
+    $creationLog = Activity::where('subject_type', Chantier::class)
+        ->where('subject_id', $chantier->id)
+        ->where('event', 'created')
+        ->first();
+        
+    expect($creationLog)->not->toBeNull()
+        ->and($creationLog->causer_id)->toBe($this->user->id);
+
+    $chantier->update(['name' => 'Updated Name']);
+
+    $updateLog = Activity::where('subject_type', Chantier::class)
+        ->where('subject_id', $chantier->id)
+        ->where('event', 'updated')
+        ->first();
+
+    expect($updateLog)->not->toBeNull();
 });
 
-it('CustomerInvoice uses LogsActivity trait', function () {
-    expect(class_uses_recursive(CustomerInvoice::class))->toContain(Spatie\Activitylog\Models\Concerns\LogsActivity::class);
+it('logs activity when a CustomerInvoice is created and updated', function () {
+    $client = ThirdParty::factory()->create();
+    $chantier = Chantier::factory()->create();
+    $invoice = CustomerInvoice::factory()->create([
+        'client_id' => $client->id, 
+        'chantier_id' => $chantier->id, 
+        'total_ht' => 100,
+        'reference' => 'INV-001'
+    ]);
+
+    $creationLog = Activity::where('subject_type', CustomerInvoice::class)
+        ->where('subject_id', $invoice->id)
+        ->where('event', 'created')
+        ->first();
+        
+    expect($creationLog)->not->toBeNull();
+
+    $invoice->update(['total_ht' => 200]);
+
+    $updateLog = Activity::where('subject_type', CustomerInvoice::class)
+        ->where('subject_id', $invoice->id)
+        ->where('event', 'updated')
+        ->first();
+
+    expect($updateLog)->not->toBeNull();
 });
 
-it('CustomerQuote uses LogsActivity trait', function () {
-    expect(class_uses_recursive(CustomerQuote::class))->toContain(Spatie\Activitylog\Models\Concerns\LogsActivity::class);
+it('logs activity when a CustomerQuote is created and updated', function () {
+    $client = ThirdParty::factory()->create();
+    $chantier = Chantier::factory()->create();
+    $quote = CustomerQuote::factory()->create([
+        'client_id' => $client->id, 
+        'chantier_id' => $chantier->id, 
+        'total_ht' => 500
+    ]);
+
+    $creationLog = Activity::where('subject_type', CustomerQuote::class)
+        ->where('subject_id', $quote->id)
+        ->where('event', 'created')
+        ->first();
+        
+    expect($creationLog)->not->toBeNull();
+
+    $quote->update(['total_ht' => 1000]);
+
+    $updateLog = Activity::where('subject_type', CustomerQuote::class)
+        ->where('subject_id', $quote->id)
+        ->where('event', 'updated')
+        ->first();
+
+    expect($updateLog)->not->toBeNull();
 });

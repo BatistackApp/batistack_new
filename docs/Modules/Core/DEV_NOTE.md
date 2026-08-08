@@ -47,7 +47,7 @@ Le cœur regorge de services essentiels déjà implémentés et fonctionnels :
 *   **Révocation automatisée** : Tâche planifiée quotidienne `rh:sync-expired-roles` pour désactiver automatiquement les droits liés à un poste en cas d'expiration du contrat.
 
 ### 7. Piste d'Audit / Activity Log (Issue #227)
-*   **Tracabilité Globale** : Intégration de `spatie/laravel-activitylog` via le plugin `batistackapp/activity-log`.
+*   **Traçabilité Globale** : Intégration de `spatie/laravel-activitylog` via le plugin `batistackapp/activity-log`.
 *   **Entités Suivies** : Historisation de toutes les modifications (création, mise à jour, suppression) sur les modèles critiques (Devis, Factures, Chantiers).
 *   **Visualisation UI** : Un composant `ActivityLogRelationManager` est greffé aux ressources Filament pour offrir une vue chronologique (Timeline) claire sur l'historique de chaque entité.
 
