@@ -283,7 +283,16 @@
             page-break-after: always;
         }
     </style>
+    <style>
+        .gantt-container { overflow-x: auto; }
+        .bar-milestone .bar { fill: #f97316; }
+        .bar-phase .bar { fill: #3b82f6; }
+        .bar-task .bar { fill: #94a3b8; }
+        .bar-task-completed .bar { fill: #22c55e; }
+    </style>
     @yield('styles')
+    <link rel="stylesheet" href="https://unpkg.com/frappe-gantt@1.2.2/dist/frappe-gantt.css">
+    <script src="https://unpkg.com/frappe-gantt@1.2.2/dist/frappe-gantt.umd.js"></script>
 </head>
 <body class="bg-white text-slate-900 font-sans p-8 antialiased">
 <header class="header">

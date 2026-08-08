@@ -50,6 +50,9 @@ class ChantierFinancialOverview extends StatsOverviewWidget
         if (($financials['asset_maintenance_cost_real'] ?? 0) > 0) {
             $descriptionCosts .= ' + Réparations';
         }
+        if (($financials['purchase_cost_real'] ?? 0) > 0) {
+            $descriptionCosts .= ' + Achats (Revente)';
+        }
 
         return [
             Stat::make('Budget Vendu (HT)', number_format($budget, 2, ',', ' ') . ' €')

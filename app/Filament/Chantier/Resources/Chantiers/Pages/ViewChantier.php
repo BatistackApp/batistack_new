@@ -14,6 +14,34 @@ class ViewChantier extends ViewRecord
     protected function getHeaderActions(): array
     {
         return [
+            \Filament\Actions\ActionGroup::make([
+                \Filament\Actions\Action::make('print_start_order')
+                    ->label('Ordre de Service')
+                    ->icon(\ToneGabes\Filament\Icons\Enums\Phosphor::FilePdf)
+                    ->action(function (\App\Models\Chantiers\Chantier $record, \App\Services\Chantiers\ChantierDocumentService $service) {
+                        $path = $service->generateStartOrder($record);
+                        return response()->download(\Illuminate\Support\Facades\Storage::disk(\App\Services\Core\DocumentService::getDisk())->path($path));
+                    }),
+                \Filament\Actions\Action::make('print_rentability')
+                    ->label('Bilan Analytique')
+                    ->icon(\ToneGabes\Filament\Icons\Enums\Phosphor::ChartLineUp)
+                    ->action(function (\App\Models\Chantiers\Chantier $record, \App\Services\Chantiers\ChantierDocumentService $service) {
+                        $path = $service->generateRentabilityReport($record);
+                        return response()->download(\Illuminate\Support\Facades\Storage::disk(\App\Services\Core\DocumentService::getDisk())->path($path));
+                    }),
+                \Filament\Actions\Action::make('print_journal')
+                    ->label('Journal de Chantier')
+                    ->icon(\ToneGabes\Filament\Icons\Enums\Phosphor::BookOpen)
+                    ->action(function (\App\Models\Chantiers\Chantier $record, \App\Services\Chantiers\ChantierDocumentService $service) {
+                        $path = $service->generateWeeklyJournal($record, now());
+                        return response()->download(\Illuminate\Support\Facades\Storage::disk(\App\Services\Core\DocumentService::getDisk())->path($path));
+                    }),
+            ])
+            ->label('Impressions')
+            ->icon(\ToneGabes\Filament\Icons\Enums\Phosphor::Printer)
+            ->button()
+            ->color('gray'),
+
             \Filament\Actions\Action::make('generate_invoice')
                 ->label('Facturer Situation')
                 ->icon(\ToneGabes\Filament\Icons\Enums\Phosphor::Receipt)
@@ -68,7 +96,20 @@ class ViewChantier extends ViewRecord
                         ->searchable(),
                     \Filament\Forms\Components\Select::make('employee_id')
                         ->label('Conducteur (Optionnel)')
-                        ->options(\App\Models\RH\Employee::all()->mapWithKeys(fn($e) => [$e->id => "{$e->first_name} {$e->last_name}"]))
+                        ->options(function (\Filament\Resources\Pages\ViewRecord $livewire) {
+                            $options = [];
+                            $chantier = $livewire->getRecord();
+                            $employees = $chantier->members()->with(['currentContract', 'qualifications'])->get();
+                            foreach ($employees as $emp) {
+                                $job = $emp->currentContract?->job_title ?? 'Non défini';
+                                $hasPermis = $emp->qualifications->contains(function ($q) {
+                                    return $q->type === \App\Enums\RH\QualificationType::PERMIS && $q->isActive();
+                                });
+                                $status = $hasPermis ? '🚗 Permis OK' : '❌ Pas de permis';
+                                $options[$emp->id] = "{$emp->full_name} | {$job} | {$status}";
+                            }
+                            return $options;
+                        })
                         ->searchable(),
                     \Filament\Forms\Components\DatePicker::make('started_at')
                         ->label('Date de début')
