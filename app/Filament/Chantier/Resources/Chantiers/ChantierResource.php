@@ -57,6 +57,7 @@ class ChantierResource extends Resource
             \App\Filament\Chantier\Resources\Chantiers\RelationManagers\InvoicesRelationManager::class,
             \App\Filament\Chantier\Resources\Chantiers\RelationManagers\WeatherAlertsRelationManager::class,
             \App\Filament\Chantier\Resources\Chantiers\RelationManagers\DoeDocumentsRelationManager::class,
+            \Relaticle\ActivityLog\Filament\RelationManagers\ActivityLogRelationManager::class,
         ];
     }
 

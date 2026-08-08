@@ -2,10 +2,11 @@
 
 namespace Database\Seeders;
 
+use App\Enums\RH\ContractType;
 use App\Models\RH\Contract;
 use App\Models\RH\Employee;
-use App\Models\User;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Artisan;
 
@@ -25,6 +26,12 @@ class DatabaseSeeder extends Seeder
             '--panel' => 'core',
         ]);
 
+        $admin = User::where('email', 'admin@admin.com')->first();
+        if ($admin) {
+            \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'super_admin', 'guard_name' => 'web']);
+            $admin->assignRole('super_admin');
+        }
+
         $this->call(CoreSeeder::class);
 
         Employee::create([
@@ -43,7 +50,7 @@ class DatabaseSeeder extends Seeder
 
         Contract::create([
             'employee_id' => 1,
-            'type' => \App\Enums\RH\ContractType::CDI,
+            'type' => ContractType::CDI,
             'start_date' => now()->subYear(),
             'job_title' => 'Administrateur',
             'hourly_rate' => 20.00,

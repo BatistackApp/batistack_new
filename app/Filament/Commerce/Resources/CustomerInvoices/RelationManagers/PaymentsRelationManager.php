@@ -34,10 +34,19 @@ class PaymentsRelationManager extends RelationManager
     public function table(Table $table): Table
     {
         return $table
-            ->recordTitleAttribute('reference')
+            ->recordTitleAttribute('payment.reference')
             ->columns([
-                TextColumn::make('reference')
+                TextColumn::make('payment.reference')
+                    ->label('Référence du paiement')
                     ->searchable(),
+                TextColumn::make('allocated_amount')
+                    ->label('Montant alloué')
+                    ->money('EUR')
+                    ->sortable(),
+                TextColumn::make('payment.payment_date')
+                    ->label('Date')
+                    ->date()
+                    ->sortable(),
             ])
             ->filters([
                 //

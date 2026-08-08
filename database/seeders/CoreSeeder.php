@@ -48,6 +48,7 @@ class CoreSeeder extends Seeder
             ['name' => 'TVA Réduite 5.5%', 'rate' => 5.5000],
             ['name' => 'TVA 2.1%', 'rate' => 2.1000],
             ['name' => 'TVA en autoliquidation', 'rate' => 0],
+            ['name' => 'TVA 0% (Franchise / Indemnité)', 'rate' => 0],
         ];
 
         foreach ($vats as $vat) {

@@ -17,10 +17,16 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 
+use Relaticle\ActivityLog\Concerns\InteractsWithTimeline;
+use Relaticle\ActivityLog\Contracts\HasTimeline;
+use Relaticle\ActivityLog\Timeline\TimelineBuilder;
+use Spatie\Activitylog\Support\LogOptions;
+use Spatie\Activitylog\Models\Concerns\LogsActivity;
+
 #[ObservedBy([CustomerQuoteObserver::class])]
-class CustomerQuote extends Model
+class CustomerQuote extends Model implements HasTimeline
 {
-    use HasFactory;
+    use HasFactory, LogsActivity, InteractsWithTimeline;
 
     protected $fillable = [
         'client_id',
@@ -90,5 +96,18 @@ class CustomerQuote extends Model
         }
 
         return $totalTva;
+    }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logAll()
+            ->logOnlyDirty()
+            ->dontLogEmptyChanges();
+    }
+
+    public function timeline(): TimelineBuilder
+    {
+        return TimelineBuilder::make($this)->fromActivityLog();
     }
 }

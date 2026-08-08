@@ -45,10 +45,22 @@ class ContractsRelationManager extends RelationManager
                             ->options(ContractType::class)
                             ->required()
                             ->native(false),
-                        TextInput::make('job_title')
+                        Select::make('job_title')
                             ->label('Intitulé du poste')
-                            ->required()
-                            ->placeholder('ex: Couvreur N3P2'),
+                            ->options(fn () => \Spatie\Permission\Models\Role::pluck('name', 'name'))
+                            ->searchable()
+                            ->createOptionForm([
+                                TextInput::make('name')
+                                    ->label('Nom du poste/rôle')
+                                    ->required()
+                                    ->unique(\Spatie\Permission\Models\Role::class, 'name', ignoreRecord: false)
+                            ])
+                            ->createOptionUsing(function (array $data) {
+                                \Illuminate\Support\Facades\Gate::authorize('create', \Spatie\Permission\Models\Role::class);
+                                $role = \Spatie\Permission\Models\Role::create(['name' => $data['name'], 'guard_name' => 'web']);
+                                return $role->name;
+                            })
+                            ->required(),
                         DatePicker::make('start_date')
                             ->label('Date d\'entrée')
                             ->required()

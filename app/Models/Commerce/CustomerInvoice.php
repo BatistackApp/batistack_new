@@ -18,10 +18,16 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Date;
 
+use Relaticle\ActivityLog\Concerns\InteractsWithTimeline;
+use Relaticle\ActivityLog\Contracts\HasTimeline;
+use Relaticle\ActivityLog\Timeline\TimelineBuilder;
+use Spatie\Activitylog\Support\LogOptions;
+use Spatie\Activitylog\Models\Concerns\LogsActivity;
+
 #[ObservedBy([CustomerInvoiceObserver::class])]
-class CustomerInvoice extends Model
+class CustomerInvoice extends Model implements HasTimeline
 {
-    use HasFactory;
+    use HasFactory, LogsActivity, InteractsWithTimeline;
 
     protected $fillable = [
         'client_id',
@@ -39,6 +45,9 @@ class CustomerInvoice extends Model
         'sent_at',
         'signature_hash',
         'total_tva',
+        'dunning_level',
+        'last_dunning_at',
+        'stripe_session_id',
     ];
 
     public function client(): BelongsTo
@@ -85,6 +94,7 @@ class CustomerInvoice extends Model
             'total_ttc' => 'decimal:2',
             'due_date' => 'datetime',
             'sent_at' => 'datetime',
+            'last_dunning_at' => 'datetime',
         ];
     }
 
@@ -269,6 +279,19 @@ class CustomerInvoice extends Model
     }
 
     /**
+     * Filtrer les factures éligibles à une relance spécifique
+     *
+     * @param int $days Nombre de jours de retard minimum requis
+     * @param int $currentLevel Le niveau de relance actuel (ex: 0 pour passer à 1)
+     */
+    public function scopeEligibleForDunning($query, int $days, int $currentLevel)
+    {
+        return $query->unpaid()
+            ->where('due_date', '<=', now()->subDays($days))
+            ->where('dunning_level', $currentLevel);
+    }
+
+    /**
      * Filtrer les factures partiellement payées
      *
      * Exemple:
@@ -408,5 +431,18 @@ class CustomerInvoice extends Model
         }
 
         return Date::parse($this->due_date)->diffInDays(now());
+    }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly(['client_id', 'chantier_id', 'customer_order_id', 'customer_situation_id', 'reference', 'type', 'status', 'total_ht', 'total_ttc', 'due_date', 'cancellation_reason', 'responsable_id', 'sent_at', 'total_tva', 'dunning_level', 'last_dunning_at'])
+            ->logOnlyDirty()
+            ->dontLogEmptyChanges();
+    }
+
+    public function timeline(): TimelineBuilder
+    {
+        return TimelineBuilder::make($this)->fromActivityLog();
     }
 }

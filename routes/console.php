@@ -8,7 +8,17 @@ Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
 
+Schedule::command('queue:work --stop-when-empty')->everyMinute();
+Schedule::command('model:prune')->daily();
+Schedule::command('rh:sync-expired-roles')->dailyAt('01:00');
+
 Schedule::command('inventory:generate-cycle-counts')->weeklyOn(1, '03:00');
+
+// Commerce
+Schedule::command('commerce:process-dunning')
+    ->dailyAt('01:00')
+    ->timezone('Europe/Paris')
+    ->onFailure(fn () => logger()->error("Échec de la relance automatique des factures."));
 
 // Tiers
 
