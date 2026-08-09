@@ -88,9 +88,68 @@
         </table>
     </div>
 
-    <div class="p-6 border-2 border-dashed border-slate-300 rounded-xl bg-slate-50 text-[10px] text-justify">
+    <!-- RESSOURCES DÉPLOYÉES -->
+    <div class="mb-8">
+        <h2 class="text-xs font-bold bg-slate-800 text-white p-2 mb-4 uppercase">Ressources Déployées (Propre, Location, Véhicules)</h2>
+        <table class="text-[10px]">
+            <thead>
+            <tr class="bg-slate-100 text-slate-700">
+                <th class="text-left py-2 px-3">Désignation</th>
+                <th class="text-left">Type</th>
+                <th class="text-left">Fournisseur / Conducteur</th>
+                <th class="text-center">Dates (Début - Fin)</th>
+                <th class="text-center">Statut</th>
+            </tr>
+            </thead>
+            <tbody>
+            @forelse($deployedResources ?? [] as $resource)
+                <tr>
+                    <td class="py-2 px-3 font-bold">{{ $resource['name'] }}</td>
+                    <td>{{ $resource['type'] }}</td>
+                    <td>{{ $resource['supplier'] }}</td>
+                    <td class="text-center">{{ $resource['start_date'] }} - {{ $resource['end_date'] }}</td>
+                    <td class="text-center">
+                        <span class="font-bold text-[8px] px-1 py-0.5 rounded bg-slate-100 text-slate-700">{{ $resource['status'] }}</span>
+                    </td>
+                </tr>
+            @empty
+                <tr><td colspan="5" class="py-4 italic text-slate-400 text-center">Aucune ressource matérielle déployée sur ce chantier.</td></tr>
+            @endforelse
+            </tbody>
+        </table>
+    </div>
+
+    <div class="p-6 border-2 border-dashed border-slate-300 rounded-xl bg-slate-50 text-[10px] text-justify mb-8">
         <p class="font-bold uppercase mb-2">Instructions de Sécurité :</p>
         <p>Le personnel doit obligatoirement porter ses Équipements de Protection Individuelle (EPI). Tout incident ou anomalie sur le site doit être immédiatement rapporté au conducteur de travaux via le journal de bord numérique Batistack.</p>
+    </div>
+
+    <!-- PLANNING GANTT -->
+    <div class="mb-8" style="page-break-inside: avoid;">
+        <h2 class="text-xs font-bold bg-slate-800 text-white p-2 mb-4 uppercase">Planning de Chantier (Gantt)</h2>
+        <svg id="gantt" width="100%" height="auto"></svg>
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                var tasks = {!! json_encode($ganttTasks ?? []) !!};
+                if (tasks.length > 0 && typeof Gantt !== 'undefined') {
+                    new Gantt('#gantt', tasks, {
+                        header_height: 50,
+                        column_width: 30,
+                        step: 24,
+                        view_modes: ['Quarter Day', 'Half Day', 'Day', 'Week', 'Month'],
+                        bar_height: 20,
+                        bar_corner_radius: 3,
+                        arrow_curve: 5,
+                        padding: 18,
+                        view_mode: 'Day',   
+                        date_format: 'YYYY-MM-DD',
+                        language: 'fr'
+                    });
+                } else if (tasks.length === 0) {
+                    document.getElementById('gantt').innerHTML = '<text x="10" y="20">Aucune donnée pour ce chantier.</text>';
+                }
+            });
+        </script>
     </div>
 
     <footer class="fixed bottom-0 left-0 w-full p-8 text-[8px] text-slate-400 border-t border-slate-100 flex justify-between">

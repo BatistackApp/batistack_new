@@ -112,6 +112,8 @@ class VehicleFuelService
                 }
             }
 
+            $co2EmissionKg = $liters * $this->getEmissionFactor($vehicle->fuel_type ?? '');
+
             $transaction = FuelTransaction::create([
                 'vehicle_id' => $vehicle->id,
                 'employee_id' => $driverId,
@@ -123,6 +125,7 @@ class VehicleFuelService
                 'station_name' => $stationName,
                 'is_suspicious' => $isSuspicious,
                 'suspicion_reason' => $suspicionReason,
+                'co2_emission_kg' => $co2EmissionKg,
             ]);
 
             if ($isSuspicious) {
@@ -136,6 +139,22 @@ class VehicleFuelService
 
             return $transaction;
         });
+    }
+
+    /**
+     * Obtient le facteur d'émission CO2 (kg/L) selon le type de carburant.
+     */
+    private function getEmissionFactor(string $fuelType): float
+    {
+        $type = mb_strtolower(trim($fuelType));
+        return match ($type) {
+            'diesel', 'gazole', 'b7', 'b10' => 2.64,
+            'essence', 'sp95', 'sp98', 'e10', 'hybride' => 2.28,
+            'gpl' => 1.66,
+            'e85', 'superéthanol' => 0.70, // Valeur moyenne puit-à-roue
+            'electrique', 'électrique' => 0.0,
+            default => 2.28, // Moyenne conservatrice (essence) si inconnu
+        };
     }
 
     /**

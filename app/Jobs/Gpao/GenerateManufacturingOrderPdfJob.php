@@ -33,8 +33,9 @@ class GenerateManufacturingOrderPdfJob implements ShouldQueue
             $order->clearMediaCollection('pdf_documents');
 
             $pdfPath = $documentService->generateManufacturingOrderPdf($order);
+            $disk = \App\Services\Core\DocumentService::getDisk();
             
-            $order->addMedia($pdfPath)
+            $order->addMediaFromDisk($pdfPath, $disk)
                 ->toMediaCollection('pdf_documents');
 
             Log::info("OF PDF generated and attached", ['order_id' => $order->id, 'reference' => $order->reference]);

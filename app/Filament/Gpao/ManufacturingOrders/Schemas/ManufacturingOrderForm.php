@@ -63,6 +63,19 @@ class ManufacturingOrderForm
 
                             DatePicker::make('end_date')
                                 ->label('Date de fin prévue'),
+                                
+                            TextInput::make('batch_number')
+                                ->label('N° de Lot (Produit)'),
+                                
+                            TextInput::make('serial_number')
+                                ->label('N° de Série (Produit)'),
+                                
+                            Select::make('machines')
+                                ->label('Machines Assignées')
+                                ->relationship('machines', 'name')
+                                ->multiple()
+                                ->searchable()
+                                ->preload(),
                         ])->columns(2),
                 ])->columnSpan('full'),
             ]);

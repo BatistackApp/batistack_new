@@ -47,10 +47,18 @@ class MembersRelationManager extends RelationManager
                     ->label('Assigner un ouvrier')
                     ->preloadRecordSelect()
                     ->schema([
-                        Select::make('recordId') // Le nom du champ doit être 'recordId' pour l'AttachAction
+                        Select::make('recordId')
                             ->label('Sélectionner un employé')
-                            ->options(Employee::all()->pluck('full_name', 'id')->toArray())
-                            ->getOptionLabelsUsing(fn ($record) => $record->full_name.' '.$record->currentContract->job_title)
+                            ->options(function (\Filament\Resources\RelationManagers\RelationManager $livewire) {
+                                $options = [];
+                                foreach (Employee::with('currentContract')->get() as $emp) {
+                                    $check = app(ChantierAnalyticService::class)->canAssignEmployee($livewire->getOwnerRecord(), $emp);
+                                    $status = $check['status'] ? '✅ Apte' : '❌ Inapte/Alerte';
+                                    $job = $emp->currentContract?->job_title ?? 'Non défini';
+                                    $options[$emp->id] = "{$emp->full_name} | {$job} | {$status}";
+                                }
+                                return $options;
+                            })
                             ->searchable()
                             ->preload(),
                     ])

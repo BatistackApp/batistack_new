@@ -23,6 +23,7 @@ class FuelTransaction extends Model
         'is_suspicious',
         'suspicion_reason',
         'chantier_id',
+        'co2_emission_kg',
     ];
 
     public function vehicle(): BelongsTo
@@ -48,6 +49,7 @@ class FuelTransaction extends Model
             'odometer' => 'decimal:2',
             'purchased_at' => 'datetime',
             'is_suspicious' => 'boolean',
+            'co2_emission_kg' => 'decimal:2',
         ];
     }
 
@@ -149,5 +151,10 @@ class FuelTransaction extends Model
     public function getDisplayName(): string
     {
         return "{$this->vehicle->getDisplayName()} - {$this->liters}L @ {$this->station_name}";
+    }
+
+    public function getCo2InTons(): float
+    {
+        return $this->co2_emission_kg ? (float) $this->co2_emission_kg / 1000 : 0.0;
     }
 }
