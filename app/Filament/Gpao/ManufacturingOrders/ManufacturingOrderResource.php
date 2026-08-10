@@ -39,7 +39,41 @@ class ManufacturingOrderResource extends Resource
     {
         return ManufacturingOrdersTable::configure($table)
             ->pushActions([
-                \Filament\Tables\Actions\Action::make('trigger_alert')
+                \Filament\Actions\Action::make('declare_scrap')
+                    ->label('Déclarer Rebut')
+                    ->icon('heroicon-o-trash')
+                    ->color('warning')
+                    ->form([
+                        \Filament\Forms\Components\Select::make('item_id')
+                            ->label('Composant perdu')
+                            ->options(fn (ManufacturingOrder $record) => $record->requirements()->with('item')->get()->pluck('item.name', 'item_id'))
+                            ->required(),
+                        \Filament\Forms\Components\TextInput::make('quantity')
+                            ->label('Quantité (Rebut)')
+                            ->numeric()
+                            ->minValue(0.0001)
+                            ->required(),
+                        \Filament\Forms\Components\Select::make('reason')
+                            ->label('Motif')
+                            ->options([
+                                'machine_breakdown' => 'Casse Machine',
+                                'material_defect' => 'Défaut Matière',
+                                'human_error' => 'Erreur Humaine',
+                            ])
+                            ->required(),
+                        \Filament\Forms\Components\Textarea::make('notes')
+                            ->label('Commentaires'),
+                    ])
+                    ->action(function (array $data, ManufacturingOrder $record, \App\Services\Gpao\ManufacturingScrapService $scrapService) {
+                        $item = \App\Models\Articles\Item::find($data['item_id']);
+                        $scrapService->declareScrap($record, $item, (float) $data['quantity'], $data['reason'], $data['notes'] ?? null);
+                        
+                        \Filament\Notifications\Notification::make()
+                            ->title('Rebut déclaré et stock mis à jour')
+                            ->success()
+                            ->send();
+                    }),
+                \Filament\Actions\Action::make('trigger_alert')
                     ->label('Alerte Urgence')
                     ->icon('heroicon-o-bell-alert')
                     ->color('danger')

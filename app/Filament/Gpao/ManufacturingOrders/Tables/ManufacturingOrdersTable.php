@@ -132,7 +132,8 @@ class ManufacturingOrdersTable
 
                         // Generate on the fly
                         $pdfPath = (new GpaoDocumentService)->generateManufacturingOrderPdf($record);
-                        $media = $record->addMedia($pdfPath)->toMediaCollection('pdf_documents');
+                        $disk = \App\Services\Core\DocumentService::getDisk();
+                        $media = $record->addMediaFromDisk($pdfPath, $disk)->toMediaCollection('pdf_documents');
 
                         return response()->download($media->getPath(), $media->file_name);
                     }),

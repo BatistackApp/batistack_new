@@ -37,6 +37,8 @@ class ManufacturingOrder extends Model implements HasMedia
         'end_date',
         'total_labor_cost',
         'total_material_cost',
+        'batch_number',
+        'serial_number',
     ];
 
     protected function casts(): array
@@ -71,6 +73,16 @@ class ManufacturingOrder extends Model implements HasMedia
     public function customerOrder(): BelongsTo
     {
         return $this->belongsTo(CustomerOrder::class);
+    }
+
+    public function machines(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(Machine::class);
+    }
+
+    public function scraps(): HasMany
+    {
+        return $this->hasMany(ManufacturingScrap::class);
     }
 
     public function parent(): BelongsTo

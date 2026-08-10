@@ -23,21 +23,25 @@ class RequirementsRelationManager extends RelationManager
     {
         return $schema
             ->components([
-                \Filament\Schemas\Components\Select::make('item_id')
+                \Filament\Forms\Components\Select::make('item_id')
                     ->relationship('item', 'name')
                     ->label('Article')
                     ->required()
                     ->searchable()
                     ->preload(),
-                \Filament\Schemas\Components\TextInput::make('quantity_required')
+                \Filament\Forms\Components\TextInput::make('quantity_required')
                     ->label('Quantité Requise')
                     ->required()
                     ->numeric(),
-                \Filament\Schemas\Components\TextInput::make('quantity_consumed')
+                \Filament\Forms\Components\TextInput::make('quantity_consumed')
                     ->label('Quantité Consommée')
                     ->required()
                     ->numeric()
                     ->default(0),
+                \Filament\Forms\Components\TextInput::make('batch_number')
+                    ->label('N° Lot'),
+                \Filament\Forms\Components\TextInput::make('serial_number')
+                    ->label('N° Série'),
             ]);
     }
 
@@ -57,6 +61,12 @@ class RequirementsRelationManager extends RelationManager
                     ->numeric(),
                 TextColumn::make('item.unit.symbol')
                     ->label('Unité'),
+                TextColumn::make('batch_number')
+                    ->label('N° Lot')
+                    ->searchable(),
+                TextColumn::make('serial_number')
+                    ->label('N° Série')
+                    ->searchable(),
             ])
             ->filters([
                 //

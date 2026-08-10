@@ -46,6 +46,62 @@ test('gère distance nulle', function () {
         ->and($analysis['average_consumption_100km'])->toEqual(0.0);
 });
 
+it('calculates CO2 emission properly based on vehicle fuel type', function () {
+    $vehicle = Vehicle::factory()->create([
+        'fuel_type' => 'Diesel',
+        'odometer' => 10000,
+    ]);
+
+    $service = new VehicleFuelService();
+
+    // 50 Liters of Diesel (2.64 kg/L) = 132 kg CO2
+    $transaction = $service->processAndAuditFuelTransaction(
+        vehicle: $vehicle,
+        liters: 50.0,
+        costHt: 75.0,
+        odometer: 10100,
+        purchasedAt: Carbon::now(),
+        stationName: 'Test Station'
+    );
+
+    expect($transaction->co2_emission_kg)->toEqual(132.0);
+    expect($transaction->getCo2InTons())->toEqual(0.132);
+
+    $vehicleEssence = Vehicle::factory()->create([
+        'fuel_type' => 'Essence',
+        'odometer' => 10000,
+    ]);
+
+    // 50 Liters of Essence (2.28 kg/L) = 114 kg CO2
+    $transaction2 = $service->processAndAuditFuelTransaction(
+        vehicle: $vehicleEssence,
+        liters: 50.0,
+        costHt: 75.0,
+        odometer: 10100,
+        purchasedAt: Carbon::now(),
+        stationName: 'Test Station'
+    );
+
+    expect($transaction2->co2_emission_kg)->toEqual(114.0);
+
+    $vehicleElectric = Vehicle::factory()->create([
+        'fuel_type' => 'Électrique',
+        'odometer' => 10000,
+    ]);
+
+    // 50 Liters of Electric (0.0 kg/L) = 0 kg CO2 (though liters don't make sense for electric, logic holds)
+    $transaction3 = $service->processAndAuditFuelTransaction(
+        vehicle: $vehicleElectric,
+        liters: 50.0,
+        costHt: 10.0,
+        odometer: 10100,
+        purchasedAt: Carbon::now(),
+        stationName: 'Supercharger'
+    );
+
+    expect($transaction3->co2_emission_kg)->toEqual(0.0);
+});
+
 test('refuse plein si odomètre inférieur', function () {
     expect(fn () => $this->fuelService->logFuelConsumption($this->vehicle, 30.0, 50.00, 49900.00, now()))
         ->toThrow(Exception::class);

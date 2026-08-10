@@ -54,6 +54,23 @@ class DeployedResourcesWidget extends Widget
             }
         }
 
+        // 3. Vehicles
+        $vehicleAssignments = \App\Models\Flottes\VehicleAssignment::with(['vehicle', 'employee'])
+            ->where('chantier_id', $chantier->id)
+            ->get();
+            
+        foreach ($vehicleAssignments as $assignment) {
+            $resources[] = [
+                'name' => $assignment->vehicle->brand . ' ' . $assignment->vehicle->model . ' (' . $assignment->vehicle->license_plate . ')',
+                'type' => 'Véhicule',
+                'supplier' => $assignment->employee ? $assignment->employee->full_name : 'Sans conducteur',
+                'status' => $assignment->status?->getLabel() ?? 'Actif',
+                'start_date' => $assignment->started_at?->format('d/m/Y') ?? '-',
+                'end_date' => $assignment->ended_at?->format('d/m/Y') ?? '-',
+                'cost' => 'Selon conso (Carburant/Km)',
+            ];
+        }
+
         return $resources;
     }
 }

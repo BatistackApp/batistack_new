@@ -25,6 +25,7 @@ Le module **Flottes** gère l'ensemble du parc automobile de l'entreprise (camio
 *   **Refonte du Dashboard Gestionnaire de Parc** : Implémentation avancée de widgets (`laboiteacode`) pour suivre l'usure kilométrique des leasings (`max_mileage`), la variance des TCO mensuels, la composition de la flotte et les alertes de maintenance.
 *   **App Conducteur (État des Lieux Mobile)** : Une interface PWA dédiée aux chauffeurs permettant de faire leur Check-in / Check-out directement sur le parking avec prise de photo des éventuels dommages (rayures, chocs).
 *   **Optimisation des Trajets (Routing IA)** : Nouvelle page Filament permettant de générer automatiquement des suggestions d'affectations (Véhicules disponibles -> Chantiers actifs) en utilisant l'API Google Maps Distance Matrix, pour minimiser le kilométrage global. Validation en un clic.
+*   **Bilan Carbone Automatisé (Rapports RSE)** : Nouvelle page Filament (RseReport) croisant les imports de transactions de carburant avec le type de moteur du véhicule (`fuel_type`) pour calculer automatiquement l'empreinte CO2 (kg convertis en Tonnes d'équivalent CO2) de la flotte, répartie par mois et imputée par Chantier.
 
 ### 5. Tests
 *   Plus de 155 tests PestPHP validant l'ensemble de cette logique complexe (100% de réussite).
@@ -33,4 +34,4 @@ Le module **Flottes** gère l'ensemble du parc automobile de l'entreprise (camio
 *   Le module est aujourd'hui complet pour une gestion courante de la flotte.
 
 ## 💡 Idées d'amélioration et Nouvelles Fonctionnalités
-*   **Bilan Carbone Automatisé (Rapports RSE)** : Croiser les imports de cartes carburant avec le type de moteur du véhicule pour calculer automatiquement l'empreinte CO2 (Tonnes d'équivalent CO2) de la flotte, répartie par mois et par Chantier.
+*   **Intégration Télématique Avancée** : Remontée des kilomètres et codes erreurs OBD en temps réel via des boîtiers branchés dans les véhicules.

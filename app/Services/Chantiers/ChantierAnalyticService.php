@@ -92,7 +92,13 @@ class ChantierAnalyticService
             ->get()
             ->sum(fn ($assignment) => $assignment->getImmobilizationCost());
 
-        $totalCost = $laborCost + $materialCost + $subcontractingCost + $fleetCost + $assetDepreciationCost + $assetMaintenanceCost + $rentalCost + $equipmentCost;
+        // 9. Achats directs (Commandes fournisseurs pour le chantier)
+        $purchaseCost = \App\Models\Commerce\PurchaseOrder::query()
+            ->where('chantier_id', $chantier->id)
+            ->where('status', '!=', \App\Enums\Commerce\OrderStatus::CANCELLED)
+            ->sum('total_ht');
+
+        $totalCost = $laborCost + $materialCost + $subcontractingCost + $fleetCost + $assetDepreciationCost + $assetMaintenanceCost + $rentalCost + $equipmentCost + $purchaseCost;
         $budget = (float) $chantier->budget_total_ht;
         $marginReal = $budget - $totalCost;
 
@@ -111,6 +117,7 @@ class ChantierAnalyticService
                 'asset_maintenance_cost_real' => (float) $assetMaintenanceCost,
                 'rental_cost_real' => (float) $rentalCost,
                 'equipment_cost_real' => (float) $equipmentCost,
+                'purchase_cost_real' => (float) $purchaseCost,
                 'total_cost_real' => $totalCost,
                 'budget_ht' => $budget,
                 'margin_real' => $marginReal,
