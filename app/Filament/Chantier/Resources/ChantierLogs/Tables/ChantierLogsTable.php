@@ -18,7 +18,7 @@ class ChantierLogsTable
         return $table
             ->defaultSort('date', 'desc')
             ->columns([
-                TextColumn::make('date')->date('d/m/Y')->sortable(),
+                TextColumn::make('date')->label('Date')->date('d/m/Y')->sortable(),
                 TextColumn::make('chantier.name')->label('Chantier')->searchable(),
                 TextColumn::make('user.name')->label('Auteur'),
                 IconColumn::make('incident_reported')

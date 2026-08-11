@@ -32,7 +32,7 @@ class PayslipForm
                     ->label('Taux horaire')
                     ->required()
                     ->numeric(),
-                \Filament\Forms\Components\Select::make('status')
+                \Filament\Forms\Components\Select::make('status')->label('Statut')
                     ->label('Statut')
                     ->options(\App\Enums\Paie\PayslipStatus::class)
                     ->required()
@@ -46,7 +46,7 @@ class PayslipForm
                         TextInput::make('label')
                             ->label('Libellé de la prime')
                             ->required(),
-                        TextInput::make('amount')
+                        TextInput::make('amount')->label('Montant')
                             ->label('Montant (€)')
                             ->numeric()
                             ->required(),

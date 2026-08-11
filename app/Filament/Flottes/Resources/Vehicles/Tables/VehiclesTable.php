@@ -30,7 +30,7 @@ class VehiclesTable
                     ->label('')
                     ->collection('photos')
                     ->circular(),
-                TextColumn::make('reference')
+                TextColumn::make('reference')->label('Référence')
                     ->label('Réf.')
                     ->searchable()
                     ->sortable()
@@ -45,7 +45,7 @@ class VehiclesTable
                     ->label('Marque & Modèle')
                     ->getStateUsing(fn (Vehicle $record) => "{$record->brand} {$record->model}")
                     ->searchable(),
-                TextColumn::make('type')
+                TextColumn::make('type')->label('Type')
                     ->label('Type')
                     ->badge(),
                 TextColumn::make('crit_air_level')
@@ -64,7 +64,7 @@ class VehiclesTable
                     ->numeric(decimalPlaces: 1)
                     ->suffix(fn (Vehicle $record) => $record->usage_unit === 'hours' ? ' h' : ' km')
                     ->sortable(),
-                TextColumn::make('status')
+                TextColumn::make('status')->label('Statut')
                     ->label('Statut')
                     ->badge(),
                 TextColumn::make('tco_cache')
@@ -74,9 +74,9 @@ class VehiclesTable
                     ->sortable(),
             ])
             ->filters([
-                SelectFilter::make('status')
+                SelectFilter::make('status')->label('Statut')
                     ->options(VehicleStatus::class),
-                SelectFilter::make('type')
+                SelectFilter::make('type')->label('Type')
                     ->options(VehicleType::class),
                 SelectFilter::make('crit_air_level')
                     ->label('Contrainte ZFE')

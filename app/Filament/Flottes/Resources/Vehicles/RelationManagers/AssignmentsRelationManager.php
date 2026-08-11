@@ -46,7 +46,7 @@ class AssignmentsRelationManager extends RelationManager
                             ->required()
                             ->searchable()
                             ->preload(),
-                        Select::make('chantier_id')
+                        Select::make('chantier_id')->label('Chantier')
                             ->label('Chantier d\'imputation')
                             ->options(Chantier::pluck('name', 'id'))
                             ->searchable()
@@ -95,7 +95,7 @@ class AssignmentsRelationManager extends RelationManager
                     ->color('primary')
                     ->weight('bold')
                     ->placeholder('-'),
-                TextColumn::make('status')
+                TextColumn::make('status')->label('Statut')
                     ->label('Statut')
                     ->badge(),
             ])

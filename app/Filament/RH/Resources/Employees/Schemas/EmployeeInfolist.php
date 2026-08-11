@@ -68,11 +68,11 @@ class EmployeeInfolist
                                         TextEntry::make('social_security_number')
                                             ->label('N° Sécurité Sociale')
                                             ->fontFamily('mono'),
-                                        TextEntry::make('email')
+                                        TextEntry::make('email')->label('Email')
                                             ->label('Email pro')
                                             ->icon(Phosphor::Envelope)
                                             ->copyable(),
-                                        TextEntry::make('phone')
+                                        TextEntry::make('phone')->label('Téléphone')
                                             ->label('Téléphone')
                                             ->icon(Phosphor::Phone),
                                     ]),

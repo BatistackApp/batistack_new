@@ -50,7 +50,7 @@ class EmployeesTable
                     ->placeholder('Aucun contrat actif')
                     ->description(fn (Employee $record) => $record->currentContract?->type?->getLabel()),
 
-                TextColumn::make('phone')
+                TextColumn::make('phone')->label('Téléphone')
                     ->label('Téléphone')
                     ->toggleable(isToggledHiddenByDefault: true),
 

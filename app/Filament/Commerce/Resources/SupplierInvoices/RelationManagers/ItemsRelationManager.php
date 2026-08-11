@@ -26,10 +26,10 @@ class ItemsRelationManager extends RelationManager
                     ->label('Article')
                     ->options(Item::pluck('name', 'id'))
                     ->searchable(),
-                TextInput::make('name')
+                TextInput::make('name')->label('Nom')
                     ->label('Désignation')
                     ->required(),
-                TextInput::make('quantity')
+                TextInput::make('quantity')->label('Quantité')
                     ->label('Quantité')
                     ->numeric()
                     ->required(),

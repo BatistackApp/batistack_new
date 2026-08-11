@@ -22,12 +22,12 @@ class InvoicesRelationManager extends RelationManager
     {
         return $table
             ->columns([
-                TextColumn::make('reference')
+                TextColumn::make('reference')->label('Référence')
                     ->label('Réf. Facture')
                     ->searchable()
                     ->sortable()
                     ->fontFamily('mono'),
-                TextColumn::make('status')
+                TextColumn::make('status')->label('Statut')
                     ->label('Statut')
                     ->badge(),
                 TextColumn::make('total_ht')
@@ -43,7 +43,7 @@ class InvoicesRelationManager extends RelationManager
                     ->getStateUsing(fn ($record) => number_format($record->payment_percentage, 0) . ' %')
                     ->badge()
                     ->color(fn ($record) => $record->payment_percentage >= 100 ? 'success' : ($record->payment_percentage > 0 ? 'warning' : 'danger')),
-                TextColumn::make('created_at')
+                TextColumn::make('created_at')->label('Créé le')
                     ->label('Émise le')
                     ->date('d/m/Y')
                     ->sortable(),

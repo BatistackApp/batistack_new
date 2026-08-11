@@ -44,7 +44,7 @@ class DoeDocumentsRelationManager extends RelationManager
                 Section::make('Fiche de documentation')
                     ->columnSpanFull()
                     ->schema([
-                        TextInput::make('name')
+                        TextInput::make('name')->label('Nom')
                             ->label('Intitulé de la pièce')
                             ->required()
                             ->placeholder('ex: Notice technique pompe à chaleur Daikin'),
@@ -70,7 +70,7 @@ class DoeDocumentsRelationManager extends RelationManager
         return $table
             ->recordTitleAttribute('name')
             ->columns([
-                TextColumn::make('name')
+                TextColumn::make('name')->label('Nom')
                     ->label('Intitulé')
                     ->searchable()
                     ->weight('bold'),

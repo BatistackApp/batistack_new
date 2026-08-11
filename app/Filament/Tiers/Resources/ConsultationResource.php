@@ -34,7 +34,7 @@ class ConsultationResource extends Resource
     {
         return $schema
             ->components([
-                Select::make('chantier_id')
+                Select::make('chantier_id')->label('Chantier')
                     ->relationship('chantier', 'name')
                     ->required()
                     ->searchable()
@@ -44,7 +44,7 @@ class ConsultationResource extends Resource
                     ->maxLength(255),
                 DateTimePicker::make('deadline')
                     ->required(),
-                Select::make('status')
+                Select::make('status')->label('Statut')
                     ->options([
                         'draft' => 'Brouillon',
                         'published' => 'Publié',
@@ -53,7 +53,7 @@ class ConsultationResource extends Resource
                     ])
                     ->required()
                     ->default('draft'),
-                RichEditor::make('description')
+                RichEditor::make('description')->label('Description')
                     ->columnSpanFull(),
             ]);
     }
@@ -71,7 +71,7 @@ class ConsultationResource extends Resource
                 Tables\Columns\TextColumn::make('deadline')
                     ->dateTime('d/m/Y H:i')
                     ->sortable(),
-                Tables\Columns\TextColumn::make('status')
+                Tables\Columns\TextColumn::make('status')->label('Statut')
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {
                         'draft' => 'gray',

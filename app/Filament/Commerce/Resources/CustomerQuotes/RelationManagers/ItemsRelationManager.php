@@ -52,7 +52,7 @@ class ItemsRelationManager extends RelationManager
                     ->money('EUR')
                     ->label('Prix Unitaire HT'),
 
-                TextColumn::make('quantity')
+                TextColumn::make('quantity')->label('Quantité')
                     ->label('Qte.'),
 
                 TextColumn::make('total_ht')
@@ -91,11 +91,11 @@ class ItemsRelationManager extends RelationManager
                                 TextInput::make('lot_label')
                                     ->label('Lot'),
 
-                                TextInput::make('name')
+                                TextInput::make('name')->label('Nom')
                                     ->required()
                                     ->label('Désignation'),
 
-                                TextInput::make('quantity')
+                                TextInput::make('quantity')->label('Quantité')
                                     ->required()
                                     ->label('Quantité')
                                     ->live()

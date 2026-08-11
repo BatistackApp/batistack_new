@@ -19,7 +19,7 @@ class CustomerOrderInfolist
     {
         return $schema
             ->components([
-                ProgressStepper::make('status')
+                ProgressStepper::make('status')->label('Statut')
                     ->optionsFromEnum(OrderStatus::class)
                     ->size(Size::Large)
                     ->columnSpanFull()
@@ -32,7 +32,7 @@ class CustomerOrderInfolist
                             ->columnSpan(8)
                             ->columns(4)
                             ->schema([
-                                TextEntry::make('reference')
+                                TextEntry::make('reference')->label('Référence')
                                     ->label('Numéro')
                                     ->icon(Phosphor::Hash),
 
@@ -46,7 +46,7 @@ class CustomerOrderInfolist
                                     ->visible(fn (CustomerOrder $record) => $record->quote !== null)
                                     ->url(fn (CustomerOrder $record) => "/customer/customer-quotes/{$record->quote->id}"),
 
-                                TextEntry::make('status')
+                                TextEntry::make('status')->label('Statut')
                                     ->label('Etat de la commande'),
 
                             ]),

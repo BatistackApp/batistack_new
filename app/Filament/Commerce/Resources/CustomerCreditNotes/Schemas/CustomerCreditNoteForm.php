@@ -10,7 +10,7 @@ class CustomerCreditNoteForm
     {
         return $schema
             ->components([
-                \Filament\Forms\Components\Select::make('client_id')
+                \Filament\Forms\Components\Select::make('client_id')->label('Client')
                     ->label('Client')
                     ->relationship('client', 'name')
                     ->required()
@@ -19,11 +19,11 @@ class CustomerCreditNoteForm
                     ->label('Facture Client liée')
                     ->relationship('invoice', 'reference')
                     ->searchable(),
-                \Filament\Forms\Components\TextInput::make('reference')
+                \Filament\Forms\Components\TextInput::make('reference')->label('Référence')
                     ->label('Référence')
                     ->required()
                     ->maxLength(255),
-                \Filament\Forms\Components\Select::make('status')
+                \Filament\Forms\Components\Select::make('status')->label('Statut')
                     ->label('Statut')
                     ->options(\App\Enums\Commerce\InvoiceStatus::class)
                     ->required()

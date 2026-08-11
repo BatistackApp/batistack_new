@@ -35,7 +35,7 @@ class ItemsRelationManager extends RelationManager
     {
         return $schema
             ->components([
-                TextInput::make('name')
+                TextInput::make('name')->label('Nom')
                     ->required()
                     ->maxLength(255),
             ]);
@@ -53,7 +53,7 @@ class ItemsRelationManager extends RelationManager
                     ->label('Désignation')
                     ->description(fn (Model $record) => $record->item->description),
 
-                TextColumn::make('quantity')
+                TextColumn::make('quantity')->label('Quantité')
                     ->label('Qte.')
                     ->numeric(),
 
@@ -124,11 +124,11 @@ class ItemsRelationManager extends RelationManager
                         Grid::make(5)
                             ->columnSpanFull()
                             ->schema([
-                                TextInput::make('name')
+                                TextInput::make('name')->label('Nom')
                                     ->required()
                                     ->label('Désignation'),
 
-                                TextInput::make('quantity')
+                                TextInput::make('quantity')->label('Quantité')
                                     ->required()
                                     ->label('Quantité')
                                     ->live()

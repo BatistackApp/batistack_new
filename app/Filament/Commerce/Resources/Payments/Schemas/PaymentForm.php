@@ -22,12 +22,12 @@ class PaymentForm
                 Section::make('Informations de paiement')
                     ->columns(2)
                     ->schema([
-                        TextInput::make('reference')
+                        TextInput::make('reference')->label('Référence')
                             ->label('Référence de paiement')
                             ->required()
                             ->unique(ignoreRecord: true),
 
-                        Select::make('type')
+                        Select::make('type')->label('Type')
                             ->label('Type')
                             ->options(PaymentType::class)
                             ->required()
@@ -43,13 +43,13 @@ class PaymentForm
                             ->label('Date de paiement')
                             ->required(),
 
-                        TextInput::make('amount')
+                        TextInput::make('amount')->label('Montant')
                             ->label('Montant')
                             ->numeric()
                             ->required()
                             ->prefix('€'),
 
-                        Select::make('status')
+                        Select::make('status')->label('Statut')
                             ->label('Statut')
                             ->options(PaymentStatus::class)
                             ->required()
@@ -58,7 +58,7 @@ class PaymentForm
 
                 Section::make('Notes')
                     ->schema([
-                        Textarea::make('notes')
+                        Textarea::make('notes')->label('Notes')
                             ->label('Observations')
                             ->rows(3),
                     ]),

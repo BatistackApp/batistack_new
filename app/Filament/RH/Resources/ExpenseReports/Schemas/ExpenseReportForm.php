@@ -28,7 +28,7 @@ class ExpenseReportForm
                     ->label('Année')
                     ->required()
                     ->numeric(),
-                Select::make('status')
+                Select::make('status')->label('Statut')
                     ->label('Statut')
                     ->options([
                         'draft' => 'Brouillon',
@@ -38,7 +38,7 @@ class ExpenseReportForm
                     ])
                     ->required()
                     ->default('draft'),
-                TextInput::make('total_amount')
+                TextInput::make('total_amount')->label('Montant total')
                     ->label('Montant Total')
                     ->required()
                     ->numeric()

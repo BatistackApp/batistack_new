@@ -29,7 +29,7 @@ class ChantierForm
                                 Section::make()
                                     ->columns(2)
                                     ->schema([
-                                        TextInput::make('reference')
+                                        TextInput::make('reference')->label('Référence')
                                             ->label('Référence Chantier')
                                             ->required()
                                             ->unique(ignoreRecord: true)
@@ -42,16 +42,16 @@ class ChantierForm
                                                 return 'CH-' . now()->year . '-001';
                                             })
                                             ->placeholder('ex: CH-2026-001'),
-                                        Select::make('status')
+                                        Select::make('status')->label('Statut')
                                             ->label('Statut Opérationnel')
                                             ->options(ChantierStatus::class)
                                             ->required()
                                             ->native(false),
-                                        TextInput::make('name')
+                                        TextInput::make('name')->label('Nom')
                                             ->label('Désignation du projet')
                                             ->required()
                                             ->columnSpanFull(),
-                                        Select::make('client_id')
+                                        Select::make('client_id')->label('Client')
                                             ->label('Client (Maître d\'ouvrage)')
                                             ->relationship('client', 'name')
                                             ->searchable()

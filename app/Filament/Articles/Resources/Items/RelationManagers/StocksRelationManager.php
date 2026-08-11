@@ -49,7 +49,7 @@ class StocksRelationManager extends RelationManager
                     ->required()
                     ->disabledOn('edit')
                     ->native(false),
-                TextInput::make('quantity')
+                TextInput::make('quantity')->label('Quantité')
                     ->label('Quantité en stock')
                     ->numeric()
                     ->required()
@@ -80,7 +80,7 @@ class StocksRelationManager extends RelationManager
                 TextColumn::make('warehouse.name')
                     ->label('Dépôt')
                     ->weight('bold'),
-                TextColumn::make('quantity')
+                TextColumn::make('quantity')->label('Quantité')
                     ->label('Physique')
                     ->numeric(decimalPlaces: 2)
                     ->color('gray')
@@ -118,7 +118,7 @@ class StocksRelationManager extends RelationManager
                     ->icon(Phosphor::LockKey)
                     ->color('warning')
                     ->form([
-                        TextInput::make('quantity')
+                        TextInput::make('quantity')->label('Quantité')
                             ->label('Quantité à réserver')
                             ->numeric()
                             ->required()
@@ -133,7 +133,7 @@ class StocksRelationManager extends RelationManager
                     ->icon(Phosphor::LockKeyOpen)
                     ->color('gray')
                     ->form([
-                        TextInput::make('quantity')
+                        TextInput::make('quantity')->label('Quantité')
                             ->label('Quantité à libérer')
                             ->numeric()
                             ->required()
@@ -149,12 +149,12 @@ class StocksRelationManager extends RelationManager
                     ->icon(Phosphor::Package)
                     ->color('primary')
                     ->form([
-                        TextInput::make('quantity')
+                        TextInput::make('quantity')->label('Quantité')
                             ->label('Quantité à consommer')
                             ->numeric()
                             ->required()
                             ->maxValue(fn ($record) => $record->reserved_quantity),
-                        \Filament\Forms\Components\Select::make('chantier_id')
+                        \Filament\Forms\Components\Select::make('chantier_id')->label('Chantier')
                             ->label('Chantier')
                             ->options(\App\Models\Chantiers\Chantier::pluck('name', 'id'))
                             ->searchable()

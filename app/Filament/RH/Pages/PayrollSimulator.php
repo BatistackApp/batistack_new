@@ -58,7 +58,7 @@ class PayrollSimulator extends Page implements HasForms
                             ->inline()
                             ->required(),
                         
-                        TextInput::make('amount')
+                        TextInput::make('amount')->label('Montant')
                             ->label('Montant (€)')
                             ->numeric()
                             ->required(),

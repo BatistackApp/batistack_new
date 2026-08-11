@@ -36,7 +36,7 @@ class ItemsRelationManager extends RelationManager
     {
         return $schema
             ->components([
-                Select::make('chantier_id')
+                Select::make('chantier_id')->label('Chantier')
                     ->label('Chantier')
                     ->relationship('chantier', 'name'),
                 Select::make('category')
@@ -106,7 +106,7 @@ class ItemsRelationManager extends RelationManager
                             \Illuminate\Support\Facades\Log::error('OCR Live Error: ' . $e->getMessage());
                         }
                     }),
-                DatePicker::make('date')
+                DatePicker::make('date')->label('Date')
                     ->label('Date')
                     ->native(false)
                     ->displayFormat('d/m/Y')
@@ -123,7 +123,7 @@ class ItemsRelationManager extends RelationManager
                     ->numeric(),
                 TextInput::make('merchant')
                     ->label('Marchand'),
-                Select::make('status')
+                Select::make('status')->label('Statut')
                     ->label('Status')
                     ->options(ExpenseItemStatus::class)
                     ->required(),
@@ -148,7 +148,7 @@ class ItemsRelationManager extends RelationManager
                             ->label('Véhicule')
                             ->visible(fn ($record) => in_array($record->category, ['Carburant', 'Péage', 'Parking']))
                             ->placeholder('-'),
-                        TextEntry::make('date')
+                        TextEntry::make('date')->label('Date')
                             ->label('Date')
                             ->date(),
                         TextEntry::make('amount_ttc')
@@ -168,16 +168,16 @@ class ItemsRelationManager extends RelationManager
                         TextEntry::make('payment_method')
                             ->label('Moyen de paiement')
                             ->badge(),
-                        TextEntry::make('status')
+                        TextEntry::make('status')->label('Statut')
                             ->label('Status')
                             ->badge(),
                         TextEntry::make('rejection_reason')
                             ->label('Raison du rejet')
                             ->placeholder('-'),
-                        TextEntry::make('created_at')
+                        TextEntry::make('created_at')->label('Créé le')
                             ->dateTime()
                             ->placeholder('-'),
-                        TextEntry::make('updated_at')
+                        TextEntry::make('updated_at')->label('Mis à jour le')
                             ->dateTime()
                             ->placeholder('-'),
                         \Filament\Infolists\Components\SpatieMediaLibraryImageEntry::make('receipts')
@@ -199,7 +199,7 @@ class ItemsRelationManager extends RelationManager
                 TextColumn::make('category')
                     ->label('Categorie')
                     ->searchable(),
-                TextColumn::make('date')
+                TextColumn::make('date')->label('Date')
                     ->label('Date')
                     ->date()
                     ->sortable(),
@@ -222,15 +222,15 @@ class ItemsRelationManager extends RelationManager
                     ->label('Paiement')
                     ->badge()
                     ->searchable(),
-                TextColumn::make('status')
+                TextColumn::make('status')->label('Statut')
                     ->label('Status')
                     ->badge()
                     ->searchable(),
-                TextColumn::make('created_at')
+                TextColumn::make('created_at')->label('Créé le')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('updated_at')
+                TextColumn::make('updated_at')->label('Mis à jour le')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),

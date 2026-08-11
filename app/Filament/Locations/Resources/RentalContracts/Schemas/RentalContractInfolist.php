@@ -42,7 +42,7 @@ class RentalContractInfolist
                 Group::make([
                     Section::make('Suivi & Facturation')
                         ->schema([
-                            TextEntry::make('status')
+                            TextEntry::make('status')->label('Statut')
                                 ->badge()
                                 ->label('Statut'),
                             TextEntry::make('billing_period')

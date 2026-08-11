@@ -26,7 +26,7 @@ class CustomerSituationsTable
                 TextColumn::make('total_ttc')->label('Total TTC')->numeric()->sortable(),
             ])
             ->filters([
-                SelectFilter::make('status')
+                SelectFilter::make('status')->label('Statut')
                     ->label('Statut')
                     ->options(InvoiceStatus::class),
             ])

@@ -29,20 +29,20 @@ class RentalContractForm
                                     ->required()
                                     ->label('Fournisseur'),
                                 
-                                Select::make('chantier_id')
+                                Select::make('chantier_id')->label('Chantier')
                                     ->relationship('chantier', 'name')
                                     ->searchable()
                                     ->preload()
                                     ->required()
                                     ->label('Chantier d\'imputation'),
                                 
-                                TextInput::make('reference')
+                                TextInput::make('reference')->label('Référence')
                                     ->required()
                                     ->unique(ignoreRecord: true)
                                     ->label('Référence')
                                     ->maxLength(255),
                                 
-                                TextInput::make('name')
+                                TextInput::make('name')->label('Nom')
                                     ->required()
                                     ->maxLength(255)
                                     ->label('Nom / Désignation courte'),
@@ -53,15 +53,15 @@ class RentalContractForm
                                 Repeater::make('lines')
                                     ->relationship()
                                     ->schema([
-                                        TextInput::make('name')
+                                        TextInput::make('name')->label('Nom')
                                             ->required()
                                             ->label('Désignation de l\'article'),
                                         
-                                        TextInput::make('description')
+                                        TextInput::make('description')->label('Description')
                                             ->label('Description')
                                             ->nullable(),
                                             
-                                        TextInput::make('quantity')
+                                        TextInput::make('quantity')->label('Quantité')
                                             ->required()
                                             ->numeric()
                                             ->default(1)
@@ -84,7 +84,7 @@ class RentalContractForm
                     ->schema([
                         Section::make('Période et Statut')
                             ->schema([
-                                Select::make('status')
+                                Select::make('status')->label('Statut')
                                     ->options(RentalStatus::class)
                                     ->default(RentalStatus::DRAFT)
                                     ->label('Statut')

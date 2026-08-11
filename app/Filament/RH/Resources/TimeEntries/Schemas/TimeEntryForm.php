@@ -32,7 +32,7 @@ class TimeEntryForm
                                     ->required()
                                     ->disabledOn('edit'),
 
-                                Select::make('chantier_id')
+                                Select::make('chantier_id')->label('Chantier')
                                     ->label('Chantier / Projet')
                                     ->relationship('chantier', 'name')
                                     ->placeholder('Rechercher un chantier...')
@@ -53,7 +53,7 @@ class TimeEntryForm
                                     ->native(false)
                                     ->displayFormat('d/m/Y'),
 
-                                Select::make('type')
+                                Select::make('type')->label('Type')
                                     ->label('Nature des heures')
                                     ->options(TimeEntryType::class)
                                     ->default(TimeEntryType::NORMAL)
@@ -98,7 +98,7 @@ class TimeEntryForm
                                     ]),
                             ])->columnSpanFull(),
 
-                        Textarea::make('description')
+                        Textarea::make('description')->label('Description')
                             ->label('Commentaires de la semaine')
                             ->columnSpanFull()
                             ->placeholder('Description succincte des travaux réalisés durant la semaine...'),

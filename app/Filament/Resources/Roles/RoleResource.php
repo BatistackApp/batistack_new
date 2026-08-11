@@ -50,7 +50,7 @@ class RoleResource extends Resource
                     ->schema([
                         Section::make()
                             ->schema([
-                                TextInput::make('name')
+                                TextInput::make('name')->label('Nom')
                                     ->label(__('filament-shield::filament-shield.field.name'))
                                     ->unique(
                                         ignoreRecord: true, /** @phpstan-ignore-next-line */
@@ -92,7 +92,7 @@ class RoleResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make('name')
+                TextColumn::make('name')->label('Nom')
                     ->weight(FontWeight::Medium)
                     ->label(__('filament-shield::filament-shield.column.name'))
                     ->formatStateUsing(fn (string $state): string => Str::headline($state))
@@ -113,7 +113,7 @@ class RoleResource extends Resource
                     ->label(__('filament-shield::filament-shield.column.permissions'))
                     ->counts('permissions')
                     ->color('primary'),
-                TextColumn::make('updated_at')
+                TextColumn::make('updated_at')->label('Mis à jour le')
                     ->label(__('filament-shield::filament-shield.column.updated_at'))
                     ->dateTime(),
             ])

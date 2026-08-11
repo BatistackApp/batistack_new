@@ -42,17 +42,17 @@ class TimeEntryResource extends Resource
     {
         return $schema
             ->schema([
-                Select::make('chantier_id')
+                Select::make('chantier_id')->label('Chantier')
                     ->label('Chantier')
                     ->relationship('chantier', 'name')
                     ->searchable()
                     ->required(),
-                DatePicker::make('date')
+                DatePicker::make('date')->label('Date')
                     ->label('Date')
                     ->required()
                     ->default(now())
                     ->native(false),
-                Select::make('type')
+                Select::make('type')->label('Type')
                     ->label('Type de pointage')
                     ->options(TimeEntryType::class)
                     ->default(TimeEntryType::NORMAL->value)
@@ -70,11 +70,11 @@ class TimeEntryResource extends Resource
                 Toggle::make('is_grand_deplacement')
                     ->label('Grand déplacement ?')
                     ->default(false),
-                Textarea::make('description')
+                Textarea::make('description')->label('Description')
                     ->label('Commentaire')
                     ->maxLength(65535)
                     ->columnSpanFull(),
-                Hidden::make('status')
+                Hidden::make('status')->label('Statut')
                     ->default(TimeEntryStatus::DRAFT->value),
                 Hidden::make('employee_id')
                     ->default(fn () => Auth::user()?->salarie?->id),
@@ -85,7 +85,7 @@ class TimeEntryResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('date')
+                Tables\Columns\TextColumn::make('date')->label('Date')
                     ->label('Date')
                     ->date()
                     ->sortable(),
@@ -102,10 +102,10 @@ class TimeEntryResource extends Resource
                     ->suffix(' h')
                     ->sortable()
                     ->toggleable(),
-                Tables\Columns\TextColumn::make('type')
+                Tables\Columns\TextColumn::make('type')->label('Type')
                     ->label('Type')
                     ->badge(),
-                Tables\Columns\TextColumn::make('status')
+                Tables\Columns\TextColumn::make('status')->label('Statut')
                     ->label('Statut')
                     ->badge(),
             ])

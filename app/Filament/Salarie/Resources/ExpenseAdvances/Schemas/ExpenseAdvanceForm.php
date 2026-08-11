@@ -15,7 +15,7 @@ class ExpenseAdvanceForm
                     ->description('Veuillez renseigner le montant, la date prévue et le motif de votre avance sur frais.')
                     ->icon('heroicon-o-currency-euro')
                     ->schema([
-                        \Filament\Forms\Components\TextInput::make('amount')
+                        \Filament\Forms\Components\TextInput::make('amount')->label('Montant')
                             ->numeric()
                             ->minValue(0.01)
                             ->required()

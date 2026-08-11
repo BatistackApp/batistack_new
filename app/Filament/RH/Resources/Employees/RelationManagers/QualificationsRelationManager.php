@@ -34,7 +34,7 @@ class QualificationsRelationManager extends RelationManager
     {
         return $schema
             ->components([
-                Select::make('type')
+                Select::make('type')->label('Type')
                     ->label('Type d\'habilitation')
                     ->options(QualificationType::class)
                     ->required()
@@ -67,7 +67,7 @@ class QualificationsRelationManager extends RelationManager
         return $table
             ->recordTitleAttribute('label')
             ->columns([
-                IconColumn::make('type')
+                IconColumn::make('type')->label('Type')
                     ->label('')
                     ->icon(fn ($state) => $state->getIcon()),
                 TextColumn::make('label')

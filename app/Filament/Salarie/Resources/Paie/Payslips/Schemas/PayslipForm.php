@@ -68,7 +68,7 @@ class PayslipForm
                 TextInput::make('employer_cost')
                     ->numeric()
                     ->prefix('$'),
-                Select::make('status')
+                Select::make('status')->label('Statut')
                     ->options(PayslipStatus::class)
                     ->default('draft')
                     ->required(),

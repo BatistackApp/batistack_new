@@ -42,7 +42,7 @@ class BimModelResource extends Resource
             ->components([
                 Section::make('Détails de la maquette')
                     ->components([
-                        TextInput::make('name')
+                        TextInput::make('name')->label('Nom')
                             ->label('Nom')
                             ->required()
                             ->maxLength(255),
@@ -77,7 +77,7 @@ class BimModelResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('name')
+                Tables\Columns\TextColumn::make('name')->label('Nom')
                     ->label('Nom')
                     ->searchable()
                     ->sortable(),
@@ -96,7 +96,7 @@ class BimModelResource extends Resource
                     ->formatStateUsing(fn ($state) => number_format($state / 1048576, 2) . ' Mo')
                     ->sortable(),
 
-                Tables\Columns\TextColumn::make('created_at')
+                Tables\Columns\TextColumn::make('created_at')->label('Créé le')
                     ->label('Créé le')
                     ->dateTime('d/m/Y H:i')
                     ->sortable(),
@@ -130,7 +130,7 @@ class BimModelResource extends Resource
                                         TextInput::make('title')
                                             ->label('Titre')
                                             ->required(),
-                                        Textarea::make('description')
+                                        Textarea::make('description')->label('Description')
                                             ->label('Description'),
                                         \Filament\Forms\Components\MorphToSelect::make('target')
                                             ->label('Lier à un élément')

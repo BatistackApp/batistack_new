@@ -30,7 +30,7 @@ class CustomerQuoteForm
                     ->columns(2)
                     ->columnSpanFull()
                     ->schema([
-                        TextInput::make('reference')
+                        TextInput::make('reference')->label('Référence')
                             ->label('Numéro de devis')
                             ->readOnly()
                             ->default(fn (QuoteService $service) => $service->generateReferenceQuote())
@@ -42,7 +42,7 @@ class CustomerQuoteForm
                             ->default(Auth::user()->id)
                             ->required(),
 
-                        Select::make('client_id')
+                        Select::make('client_id')->label('Client')
                             ->label('Client')
                             ->options(ThirdParty::where('type', ThirdPartyType::CLIENT)->pluck('name', 'id'))
                             ->searchable()
@@ -50,13 +50,13 @@ class CustomerQuoteForm
                             ->required()
                             ->live(),
 
-                        Select::make('chantier_id')
+                        Select::make('chantier_id')->label('Chantier')
                             ->label('Chantier')
                             ->relationship('chantier', 'reference')
                             ->searchable()
                             ->preload(),
 
-                        Select::make('status')
+                        Select::make('status')->label('Statut')
                             ->label('Statut')
                             ->options(QuoteStatus::class)
                             ->default(QuoteStatus::DRAFT)

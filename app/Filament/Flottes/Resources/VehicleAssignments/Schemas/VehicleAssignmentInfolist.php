@@ -35,7 +35,7 @@ class VehicleAssignmentInfolist
                             ]),
                         Grid::make(3)
                             ->schema([
-                                TextEntry::make('status')
+                                TextEntry::make('status')->label('Statut')
                                     ->label('Statut')
                                     ->badge(),
 
@@ -59,7 +59,7 @@ class VehicleAssignmentInfolist
                             ->schema([
                                 Grid::make(4)
                                     ->schema([
-                                        TextEntry::make('type')
+                                        TextEntry::make('type')->label('Type')
                                             ->label('Type d\'Intempérie')
                                             ->badge()
                                             ->color(fn (string $state): string => match ($state) {
@@ -79,7 +79,7 @@ class VehicleAssignmentInfolist
                                             ->label('Fin')
                                             ->dateTime('d/m/Y H:i')
                                             ->placeholder('En cours'),
-                                        TextEntry::make('description')
+                                        TextEntry::make('description')->label('Description')
                                             ->label('Description')
                                             ->columnSpanFull(),
                                     ]),

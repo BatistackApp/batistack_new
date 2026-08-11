@@ -33,7 +33,7 @@ class ThirdPartyInfolist
                                     ->schema([
                                         TextEntry::make('name')->label('Nom Commercial')->weight('bold'),
                                         TextEntry::make('legal_name')->label('Raison Sociale'),
-                                        TextEntry::make('type')->badge(),
+                                        TextEntry::make('type')->label('Type')->badge(),
                                         TextEntry::make('siret')->label('SIRET')->fontFamily('mono'),
                                         TextEntry::make('vat_number')->label('TVA')->fontFamily('mono'),
                                         IconEntry::make('is_active')->label('Actif')->boolean(),
@@ -46,7 +46,7 @@ class ThirdPartyInfolist
                                 RepeatableEntry::make('addresses')
                                     ->grid(2)
                                     ->schema([
-                                        TextEntry::make('type')->badge(),
+                                        TextEntry::make('type')->label('Type')->badge(),
                                         TextEntry::make('full_address')
                                             ->icon(Phosphor::MapTrifold),
                                     ]),

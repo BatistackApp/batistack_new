@@ -13,9 +13,9 @@ class InventoryCycleInfolist
             ->components([
                 TextEntry::make('warehouse.name')
                     ->label('Dépôt'),
-                TextEntry::make('name')
+                TextEntry::make('name')->label('Nom')
                     ->label('Nom du cycle'),
-                TextEntry::make('status')
+                TextEntry::make('status')->label('Statut')
                     ->label('Statut')
                     ->badge(),
                 TextEntry::make('creator.name')
@@ -28,11 +28,11 @@ class InventoryCycleInfolist
                     ->label('Date d\'approbation')
                     ->dateTime()
                     ->placeholder('-'),
-                TextEntry::make('created_at')
+                TextEntry::make('created_at')->label('Créé le')
                     ->label('Créé le')
                     ->dateTime()
                     ->placeholder('-'),
-                TextEntry::make('updated_at')
+                TextEntry::make('updated_at')->label('Mis à jour le')
                     ->label('Modifié le')
                     ->dateTime()
                     ->placeholder('-'),

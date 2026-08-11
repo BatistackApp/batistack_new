@@ -45,7 +45,7 @@ class SubcontractorInvoiceResource extends Resource
 
         return $schema
             ->components([
-                Select::make('chantier_id')
+                Select::make('chantier_id')->label('Chantier')
                     ->label('Chantier concerné')
                     ->options(function () use ($subcontractorId) {
                         if (!$subcontractorId) return [];
@@ -58,7 +58,7 @@ class SubcontractorInvoiceResource extends Resource
                     ->required()
                     ->searchable(),
 
-                TextInput::make('reference')
+                TextInput::make('reference')->label('Référence')
                     ->label('Numéro de facture')
                     ->required()
                     ->maxLength(255),
@@ -88,7 +88,7 @@ class SubcontractorInvoiceResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make('reference')
+                TextColumn::make('reference')->label('Référence')
                     ->label('Référence')
                     ->searchable()
                     ->sortable(),
@@ -102,10 +102,10 @@ class SubcontractorInvoiceResource extends Resource
                 TextColumn::make('total_ht')
                     ->label('Montant HT')
                     ->money('EUR'),
-                TextColumn::make('status')
+                TextColumn::make('status')->label('Statut')
                     ->label('Statut')
                     ->badge(),
-                TextColumn::make('created_at')
+                TextColumn::make('created_at')->label('Créé le')
                     ->label('Date d\'envoi')
                     ->date('d/m/Y')
                     ->sortable(),

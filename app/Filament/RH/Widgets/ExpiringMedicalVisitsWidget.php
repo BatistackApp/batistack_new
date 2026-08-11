@@ -31,7 +31,7 @@ class ExpiringMedicalVisitsWidget extends TableWidget
             ->columns([
                 TextColumn::make('employee.full_name')
                     ->label('Collaborateur'),
-                TextColumn::make('type')
+                TextColumn::make('type')->label('Type')
                     ->badge(),
                 TextColumn::make('aptitude')
                     ->badge(),

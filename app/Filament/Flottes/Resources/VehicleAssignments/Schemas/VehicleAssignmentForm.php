@@ -37,7 +37,7 @@ class VehicleAssignmentForm
                             ->preload()
                             ->disabledOn('edit'),
 
-                        Select::make('chantier_id')
+                        Select::make('chantier_id')->label('Chantier')
                             ->label('Chantier d\'imputation analytique')
                             ->relationship('chantier', 'name')
                             ->searchable()

@@ -30,9 +30,12 @@ Le module **Immobilisations** permet la gestion du patrimoine de l'entreprise (m
 ### 5. Tests
 *   Tests unitaires complets sur les calculs d'amortissements, d'imputation analytique et extraction OCR.
 
+### 6. Transfert et Inventaire
+*   **Transfert Inter-Chantiers** : Demandes de mouvements avec `AssetTransfer`, génération de Bon de Transport (PDF) et mise à jour de l'imputation analytique de l'actif.
+*   **Audit d'Inventaire** : Interface dédiée de scan PWA (`InventoryAudit`) pour valider la présence physique d'un actif via son QR Code.
+
 ## 🚧 Ce qu'il reste à faire
 *   L'essentiel du module et la connectivité avec la DGFiP (FEC) sont terminés et robustes.
 
 ## 💡 Idées d'amélioration et Nouvelles Fonctionnalités
-*   **Logistique de Transfert Inter-Chantiers** : Mettre en place un système de demande de mouvement pour le gros matériel (grues, pelles) générant un Bon de Transport PDF et basculant automatiquement l'imputation analytique vers le nouveau chantier.
-*   **Suivi Physique et Audit d'Inventaire (PWA)** : Actuellement les QR Codes redirigent vers la fiche Filament. L'idée est de créer une vraie interface d'audit permettant de valider la présence physique de l'actif ("Vu le JJ/MM") lors des inventaires de fin d'année.
+*   *Aucune idée d'amélioration pour le moment.*

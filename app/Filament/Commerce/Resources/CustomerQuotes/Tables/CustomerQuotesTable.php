@@ -28,7 +28,7 @@ class CustomerQuotesTable
         return $table
             ->defaultSort('created_at', 'desc')
             ->columns([
-                TextColumn::make('reference')
+                TextColumn::make('reference')->label('Référence')
                     ->label('Numéro')
                     ->searchable()
                     ->sortable(),
@@ -38,7 +38,7 @@ class CustomerQuotesTable
                     ->searchable()
                     ->sortable(),
 
-                TextColumn::make('status')
+                TextColumn::make('status')->label('Statut')
                     ->label('Statut')
                     ->badge(),
 
@@ -52,16 +52,16 @@ class CustomerQuotesTable
                     ->date('d/m/Y')
                     ->sortable(),
 
-                TextColumn::make('created_at')
+                TextColumn::make('created_at')->label('Créé le')
                     ->label('Créé le')
                     ->dateTime('d/m/Y H:i')
                     ->sortable(),
             ])
             ->filters([
-                SelectFilter::make('status')
+                SelectFilter::make('status')->label('Statut')
                     ->options(QuoteStatus::class),
 
-                SelectFilter::make('client_id')
+                SelectFilter::make('client_id')->label('Client')
                     ->relationship('client', 'name')
                     ->searchable()
                     ->preload(),
@@ -139,11 +139,11 @@ class CustomerQuotesTable
                         ->icon(Phosphor::SealCheck)
                         ->color('info')
                         ->form([
-                            \Filament\Forms\Components\TextInput::make('name')
+                            \Filament\Forms\Components\TextInput::make('name')->label('Nom')
                                 ->label('Nom du signataire')
                                 ->required()
                                 ->default(fn (CustomerQuote $record) => optional($record->client)->name),
-                            \Filament\Forms\Components\TextInput::make('email')
+                            \Filament\Forms\Components\TextInput::make('email')->label('Email')
                                 ->label('Email du signataire')
                                 ->email()
                                 ->required()

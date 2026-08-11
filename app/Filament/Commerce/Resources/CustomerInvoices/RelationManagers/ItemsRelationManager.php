@@ -82,7 +82,7 @@ class ItemsRelationManager extends RelationManager
                             })
                             ->reactive(),
 
-                        TextInput::make('name')
+                        TextInput::make('name')->label('Nom')
                             ->label('Désignation')
                             ->required(),
 
@@ -101,7 +101,7 @@ class ItemsRelationManager extends RelationManager
                             })
                             ->required(),
 
-                        TextInput::make('quantity')
+                        TextInput::make('quantity')->label('Quantité')
                             ->label('Quantité')
                             ->required()
                             ->reactive()
@@ -144,11 +144,11 @@ class ItemsRelationManager extends RelationManager
                 TextColumn::make('item.reference')
                     ->label('Référence'),
 
-                TextColumn::make('name')
+                TextColumn::make('name')->label('Nom')
                     ->description(fn (Model $record) => $record->item->description)
                     ->label('Nom'),
 
-                TextColumn::make('quantity')
+                TextColumn::make('quantity')->label('Quantité')
                     ->numeric()
                     ->alignCenter()
                     ->label('Qte'),

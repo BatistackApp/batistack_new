@@ -48,7 +48,7 @@ class ManufacturingOrderResource extends Resource
                             ->label('Composant perdu')
                             ->options(fn (ManufacturingOrder $record) => $record->requirements()->with('item')->get()->pluck('item.name', 'item_id'))
                             ->required(),
-                        \Filament\Forms\Components\TextInput::make('quantity')
+                        \Filament\Forms\Components\TextInput::make('quantity')->label('Quantité')
                             ->label('Quantité (Rebut)')
                             ->numeric()
                             ->minValue(0.0001)
@@ -61,7 +61,7 @@ class ManufacturingOrderResource extends Resource
                                 'human_error' => 'Erreur Humaine',
                             ])
                             ->required(),
-                        \Filament\Forms\Components\Textarea::make('notes')
+                        \Filament\Forms\Components\Textarea::make('notes')->label('Notes')
                             ->label('Commentaires'),
                     ])
                     ->action(function (array $data, ManufacturingOrder $record, \App\Services\Gpao\ManufacturingScrapService $scrapService) {

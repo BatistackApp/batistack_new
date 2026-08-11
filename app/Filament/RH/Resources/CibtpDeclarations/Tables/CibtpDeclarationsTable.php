@@ -17,7 +17,7 @@ class CibtpDeclarationsTable
     {
         return $table
             ->columns([
-                TextColumn::make('date')
+                TextColumn::make('date')->label('Date')
                     ->label('Date')
                     ->date('d/m/Y')
                     ->sortable(),
@@ -38,7 +38,7 @@ class CibtpDeclarationsTable
                     ->numeric()
                     ->sortable(),
 
-                TextColumn::make('status')
+                TextColumn::make('status')->label('Statut')
                     ->label('Statut')
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {
@@ -62,7 +62,7 @@ class CibtpDeclarationsTable
                     ->icon('heroicon-o-exclamation-triangle'),
             ])
             ->filters([
-                SelectFilter::make('status')
+                SelectFilter::make('status')->label('Statut')
                     ->label('Filtrer par statut')
                     ->options([
                         'draft' => 'Brouillon',

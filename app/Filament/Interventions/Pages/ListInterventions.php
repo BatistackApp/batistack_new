@@ -23,7 +23,7 @@ class ListInterventions extends ListRecords
                         ->options(\App\Models\RH\Employee::all()->pluck('full_name', 'id'))
                         ->required()
                         ->searchable(),
-                    \Filament\Forms\Components\DatePicker::make('date')
+                    \Filament\Forms\Components\DatePicker::make('date')->label('Date')
                         ->label('Date')
                         ->required()
                         ->default(now()),

@@ -31,7 +31,7 @@ class ManufacturingOrdersRelationManager extends RelationManager
         return $table
             ->recordTitleAttribute('reference')
             ->columns([
-                Tables\Columns\TextColumn::make('reference')
+                Tables\Columns\TextColumn::make('reference')->label('Référence')
                     ->label('Référence')
                     ->searchable(),
 
@@ -43,7 +43,7 @@ class ManufacturingOrdersRelationManager extends RelationManager
                     ->label('Qté. Prévue')
                     ->numeric(),
 
-                Tables\Columns\TextColumn::make('status')
+                Tables\Columns\TextColumn::make('status')->label('Statut')
                     ->label('Statut')
                     ->badge(),
             ])
