@@ -61,9 +61,21 @@ class Employee extends Model implements HasMedia
         return $this->hasMany(Contract::class);
     }
 
-    public function currentContract(): HasOne
+    public function currentContract()
     {
-        return $this->hasOne(Contract::class)->latestOfMany();
+        return $this->hasOne(Contract::class)->ofMany([
+            'start_date' => 'max',
+        ], function ($query) {
+            $query->where(function ($q) {
+                $q->whereNull('end_date')
+                  ->orWhere('end_date', '>=', now());
+            });
+        });
+    }
+
+    public function wageGarnishments(): HasMany
+    {
+        return $this->hasMany(WageGarnishment::class);
     }
 
     public function qualifications(): HasMany

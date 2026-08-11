@@ -169,6 +169,19 @@ class ContractsRelationManager extends RelationManager
                         Notification::make()->title('Demande de signature envoyée par email')->success()->send();
                     })
                     ->label('Demander Signature'),
+                \Filament\Tables\Actions\ActionGroup::make([
+                    Action::make('trial_end')
+                        ->label('Rupture Période d\'Essai')
+                        ->icon(Phosphor::FileMinus)
+                        ->color('danger')
+                        ->action(fn (Contract $record, RHDocumentService $service) => $service->download($service->generateTrialPeriodEndLetter($record))),
+                    Action::make('cdd_terminate')
+                        ->label('Avenant Rupture CDD')
+                        ->icon(Phosphor::FileX)
+                        ->color('danger')
+                        ->visible(fn (Contract $record) => $record->type === ContractType::CDD)
+                        ->action(fn (Contract $record, RHDocumentService $service) => $service->download($service->generateCddEarlyTermination($record))),
+                ])->label('Documents de rupture')->icon(Phosphor::Files),
             ]);
     }
 

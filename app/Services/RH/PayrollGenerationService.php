@@ -121,6 +121,19 @@ class PayrollGenerationService
                 // Overtime pay (majoration 25% simple assumption for V1)
                 $estimatedGrossSalary += $overtimeHours * $hourlyRate * 1.25;
 
+                // 8. SATD Deductions
+                $netSalaryEstimate = $estimatedGrossSalary * 0.78; // Approx 78% for deduction calc
+                $satdDeduction = 0;
+                $activeSatd = $employee->wageGarnishments()
+                    ->where('is_active', true)
+                    ->where('start_date', '<=', $endDate)
+                    ->first();
+                if ($activeSatd) {
+                    $satdDeduction = $activeSatd->calculateDeduction($netSalaryEstimate);
+                    // Update collected amount conceptually, but usually done upon actual payroll validation.
+                    // For now, just record the deduction.
+                }
+
                 // Save Variable
                 PayrollVariable::updateOrCreate(
                     [
@@ -135,6 +148,7 @@ class PayrollGenerationService
                         'travel_allowances' => $travelAllowances,
                         'expense_reports_total' => $expenseReportsTotal,
                         'estimated_gross_salary' => $estimatedGrossSalary,
+                        'satd_deduction' => $satdDeduction,
                     ]
                 );
 
