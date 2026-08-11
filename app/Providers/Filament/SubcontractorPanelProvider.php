@@ -22,6 +22,7 @@ use Illuminate\View\Middleware\ShareErrorsFromSession;
 
 class SubcontractorPanelProvider extends PanelProvider
 {
+    use \App\Providers\Filament\Traits\HasKnowledgeBaseCompanion;
     public function panel(Panel $panel): Panel
     {
         return $panel
@@ -44,6 +45,7 @@ class SubcontractorPanelProvider extends PanelProvider
                 AccountWidget::class,
                 FilamentInfoWidget::class,
             ])
+            ->plugin(\Guava\FilamentKnowledgeBase\Plugins\KnowledgeBaseCompanionPlugin::make()->knowledgeBasePanelId('docs'))
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
@@ -61,3 +63,6 @@ class SubcontractorPanelProvider extends PanelProvider
             ]);
     }
 }
+
+
+

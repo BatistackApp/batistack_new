@@ -22,6 +22,7 @@ use Illuminate\View\Middleware\ShareErrorsFromSession;
 
 class TerrainPanelProvider extends PanelProvider
 {
+    use \App\Providers\Filament\Traits\HasKnowledgeBaseCompanion;
     public function panel(Panel $panel): Panel
     {
         return $panel
@@ -42,6 +43,7 @@ class TerrainPanelProvider extends PanelProvider
                 Dashboard::class,
             ])
             ->discoverWidgets(in: app_path('Filament/Terrain/Widgets'), for: 'App\Filament\Terrain\Widgets')
+            ->plugin(\Guava\FilamentKnowledgeBase\Plugins\KnowledgeBaseCompanionPlugin::make()->knowledgeBasePanelId('docs'))
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
@@ -59,3 +61,6 @@ class TerrainPanelProvider extends PanelProvider
             ]);
     }
 }
+
+
+

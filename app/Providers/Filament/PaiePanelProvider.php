@@ -22,6 +22,7 @@ use Illuminate\View\Middleware\ShareErrorsFromSession;
 
 class PaiePanelProvider extends PanelProvider
 {
+    use \App\Providers\Filament\Traits\HasKnowledgeBaseCompanion;
     public function panel(Panel $panel): Panel
     {
         return $panel
@@ -40,6 +41,7 @@ class PaiePanelProvider extends PanelProvider
                 Dashboard::class,
             ])
             ->discoverWidgets(in: app_path('Filament/Paie/Widgets'), for: 'App\Filament\Paie\Widgets')
+            ->plugin(\Guava\FilamentKnowledgeBase\Plugins\KnowledgeBaseCompanionPlugin::make()->knowledgeBasePanelId('docs'))
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
@@ -57,3 +59,6 @@ class PaiePanelProvider extends PanelProvider
             ]);
     }
 }
+
+
+

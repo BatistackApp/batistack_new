@@ -34,6 +34,7 @@
         "gheith3/filament-relation-pages": "^1.0",
         "google/cloud-vision": "^2.2",
         "guava/calendar": "^3.1",
+        "guava/filament-knowledge-base": "*",
         "harvirsidhu/filament-cards": "^1.0",
         "hugomyb/filament-media-action": "^5.0",
         "hydrat/filament-table-layout-toggle": "4.0",

@@ -22,6 +22,7 @@ use Illuminate\View\Middleware\ShareErrorsFromSession;
 
 class ChantierPanelProvider extends PanelProvider
 {
+    use \App\Providers\Filament\Traits\HasKnowledgeBaseCompanion;
     public function panel(Panel $panel): Panel
     {
         return $panel
@@ -43,6 +44,7 @@ class ChantierPanelProvider extends PanelProvider
             ->discoverResources(in: app_path('Filament/Chantier/Resources'), for: 'App\Filament\Chantier\Resources')
             ->discoverPages(in: app_path('Filament/Chantier/Pages'), for: 'App\Filament\Chantier\Pages')
             ->discoverWidgets(in: app_path('Filament/Chantier/Widgets'), for: 'App\Filament\Chantier\Widgets')
+            ->plugin(\Guava\FilamentKnowledgeBase\Plugins\KnowledgeBaseCompanionPlugin::make()->knowledgeBasePanelId('docs'))
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
@@ -60,3 +62,6 @@ class ChantierPanelProvider extends PanelProvider
             ]);
     }
 }
+
+
+
