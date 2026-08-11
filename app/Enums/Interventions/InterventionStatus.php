@@ -14,6 +14,7 @@ enum InterventionStatus: string implements HasLabel, HasColor, HasIcon
     case FACTUREE = 'facturee';
     case ANNULEE = 'annulee';
     case BROUILLON = 'brouillon';
+    case SOUMIS = 'soumis';
 
     public function getLabel(): ?string
     {
@@ -24,6 +25,7 @@ enum InterventionStatus: string implements HasLabel, HasColor, HasIcon
             self::FACTUREE => 'Facturée',
             self::ANNULEE => 'Annulée',
             self::BROUILLON => 'Brouillon',
+            self::SOUMIS => 'Soumise',
         };
     }
 
@@ -31,6 +33,7 @@ enum InterventionStatus: string implements HasLabel, HasColor, HasIcon
     {
         return match ($this) {
             self::PLANIFIEE, self::BROUILLON => 'gray',
+            self::SOUMIS => 'info',
             self::EN_COURS => 'warning',
             self::TERMINEE => 'success',
             self::FACTUREE => 'primary',
@@ -47,6 +50,7 @@ enum InterventionStatus: string implements HasLabel, HasColor, HasIcon
             self::FACTUREE => 'heroicon-m-banknotes',
             self::ANNULEE => 'heroicon-m-x-circle',
             self::BROUILLON => 'heroicon-m-pencil',
+            self::SOUMIS => 'heroicon-m-paper-airplane',
         };
     }
 }

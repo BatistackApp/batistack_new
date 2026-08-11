@@ -27,12 +27,17 @@ Le module **Interventions** permet la gestion complète du service après-vente 
 *   **QR Code Matériel** : Intégration d'un scanner permettant d'ajouter rapidement des pièces détachées directement depuis le camion via un smartphone.
 *   **Dashboard SAV (Widgets Avancés)** : Intégration de `laboiteacode/filament-dashboard-widgets` pour afficher la rentabilité du SAV (Variance), le respect des SLA (Goal), l'entonnoir des interventions (Funnel) et les alertes urgentes (Detail List).
 
-### 5. Tests
+### 5. Portail Client SAV (Espace Client)
+*   **Sécurisation** : Accès restreint via `EnsureUserIsCustomer` et scope strict `auth()->user()->contact` pour s'assurer que le client ne voit que ses données.
+*   **Mes Équipements (`ClientEquipmentResource`)** : Affichage en lecture seule du parc matériel (marque, numéro de série).
+*   **Déclaration de panne** : Action intégrée au tableau de bord permettant au client de déclarer une panne directement, créant instantanément une `Intervention` (`SOUMIS`, `REGIE`) sans avoir à contacter le standard.
+*   **Suivi des demandes (`InterventionResource`)** : Espace permettant au client de suivre le statut et l'avancement de ses tickets SAV signalés.
+
+### 6. Tests
 *   Couverture robuste avec PestPHP. L'intégralité de la logique métier (gestion, facturation, maintenance prédictive, optimisation d'itinéraire), du déstockage automatique, de la facturation, des signatures, et des contraintes d'intégrité passe avec succès (100% de réussite). Les composants mineurs et les observers sont également couverts.
 
 ## 🚧 Ce qu'il reste à faire
-*   Le socle initial du module est terminé et opérationnel, y compris avec les signatures cryptographiques.
-*   **Portail Client (Vérification)** : Un portail client est déjà préparé. Il faut s'assurer qu'il permet bien au client de visualiser son parc de matériel (`ClientEquipment`) et de déclarer une panne/demander une intervention sur cet équipement spécifique.
+*   Le socle initial du module est terminé et opérationnel, y compris avec les signatures cryptographiques et le portail client SAV.
 
 ## 💡 Idées d'amélioration et Nouvelles Fonctionnalités
 
