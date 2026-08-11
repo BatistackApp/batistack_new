@@ -27,7 +27,13 @@ class RentalContractForm
                                     ->searchable()
                                     ->preload()
                                     ->required()
-                                    ->label('Fournisseur'),
+                                    ->label('Fournisseur')
+                                    ->hintAction(
+                                        \Filament\Forms\Components\Actions\Action::make('comparator')
+                                            ->label('Comparer les prix')
+                                            ->icon('heroicon-m-calculator')
+                                            ->url(fn () => \App\Filament\Locations\Pages\Locations\SupplierPriceComparator::getUrl(), shouldOpenInNewTab: true)
+                                    ),
                                 
                                 Select::make('chantier_id')->label('Chantier')
                                     ->relationship('chantier', 'name')
@@ -94,8 +100,12 @@ class RentalContractForm
                                     ->label('Date de début')
                                     ->required(),
                                     
+                                DatePicker::make('expected_end_date')
+                                    ->label('Date de fin prévue')
+                                    ->nullable(),
+                                    
                                 DatePicker::make('end_date')
-                                    ->label('Date de fin (prévue ou réelle)')
+                                    ->label('Date de fin réelle (restitution)')
                                     ->nullable(),
                             ]),
                             
@@ -113,6 +123,12 @@ class RentalContractForm
                                     ->label('Coût journalier HT (pour Analytique)')
                                     ->suffix('€')
                                     ->helperText('Ce montant sera imputé chaque jour sur le chantier.'),
+                                    
+                                TextInput::make('daily_penalty_rate')
+                                    ->numeric()
+                                    ->label('Majoration / Pénalité de retard (par jour)')
+                                    ->suffix('€')
+                                    ->helperText('Appliqué si la date de fin prévue est dépassée.'),
                             ])
                     ])
                     ->columnSpan(['lg' => 1]),

@@ -33,11 +33,38 @@ class RentalCostService
     }
 
     /**
-     * Calcule le coÃ»t cumulÃ© du contrat.
+     * Calcule le nombre de jours de pénalité de retard.
+     */
+    public function getPenaltyDays(RentalContract $contract, ?Carbon $upToDate = null): int
+    {
+        if (!$contract->expected_end_date || !$contract->daily_penalty_rate) {
+            return 0;
+        }
+
+        $end = $upToDate ?? today();
+        
+        if ($contract->end_date && $contract->end_date->isBefore($end)) {
+            $end = $contract->end_date;
+        }
+
+        if ($contract->expected_end_date->isAfter($end) || $contract->expected_end_date->isSameDay($end)) {
+            return 0;
+        }
+
+        return $contract->expected_end_date->diffInDays($end);
+    }
+
+    /**
+     * Calcule le coût cumulé du contrat incluant les pénalités.
      */
     public function getCumulativeCost(RentalContract $contract, ?Carbon $upToDate = null): float
     {
         $days = $this->getActiveDays($contract, $upToDate);
-        return $days * (float) $contract->daily_cost_ht;
+        $baseCost = $days * (float) $contract->daily_cost_ht;
+
+        $penaltyDays = $this->getPenaltyDays($contract, $upToDate);
+        $penaltyCost = $penaltyDays * (float) $contract->daily_penalty_rate;
+
+        return $baseCost + $penaltyCost;
     }
 }

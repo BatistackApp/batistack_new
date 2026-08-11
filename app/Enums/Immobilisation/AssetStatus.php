@@ -11,6 +11,7 @@ enum AssetStatus: string implements HasLabel, HasColor
     case IN_MAINTENANCE = 'in_maintenance';
     case DEPRECIATED = 'depreciated';
     case DISPOSED = 'disposed';
+    case RENTED = 'rented';
 
     public function getLabel(): ?string
     {
@@ -19,6 +20,7 @@ enum AssetStatus: string implements HasLabel, HasColor
             self::IN_MAINTENANCE => 'En réparation',
             self::DEPRECIATED => 'Totalement amorti',
             self::DISPOSED => 'Cédé / Rebut',
+            self::RENTED => 'En location (Externe)',
         };
     }
 
@@ -29,6 +31,7 @@ enum AssetStatus: string implements HasLabel, HasColor
             self::IN_MAINTENANCE => 'warning',
             self::DEPRECIATED => 'info',
             self::DISPOSED => 'gray',
+            self::RENTED => 'purple',
         };
     }
 }
