@@ -36,7 +36,7 @@ class AbsenceResource extends Resource
     {
         return $schema
             ->schema([
-                Forms\Components\Select::make('type')
+                Forms\Components\Select::make('type')->label('Type')
                     ->options([
                         'Congés payés' => 'Congés payés',
                         'Maladie' => 'Maladie',
@@ -59,7 +59,7 @@ class AbsenceResource extends Resource
                     ->maxLength(65535)
                     ->columnSpanFull(),
                 // On cache les champs "status" et "employee_id" car c'est géré automatiquement
-                Forms\Components\Hidden::make('status')
+                Forms\Components\Hidden::make('status')->label('Statut')
                     ->default('En attente'),
                 Forms\Components\Hidden::make('employee_id')
                     ->default(fn () => Auth::user()?->salarie?->id),
@@ -70,7 +70,7 @@ class AbsenceResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('type')
+                Tables\Columns\TextColumn::make('type')->label('Type')
                     ->searchable()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('start_date')
@@ -81,7 +81,7 @@ class AbsenceResource extends Resource
                     ->label('Au')
                     ->date()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('status')
+                Tables\Columns\TextColumn::make('status')->label('Statut')
                     ->label('Statut')
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {
@@ -89,7 +89,7 @@ class AbsenceResource extends Resource
                         'Refusé' => 'danger',
                         default => 'warning',
                     }),
-                Tables\Columns\TextColumn::make('created_at')
+                Tables\Columns\TextColumn::make('created_at')->label('Créé le')
                     ->label('Demandé le')
                     ->dateTime()
                     ->sortable()

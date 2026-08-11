@@ -20,12 +20,12 @@ class LatestChantiersWidget extends TableWidget
             ->query(fn (): Builder => Chantier::query()->latest()->limit(5))
             ->paginated(false)
             ->columns([
-                TextColumn::make('name')
+                TextColumn::make('name')->label('Nom')
                     ->label('Nom du Chantier')
                     ->searchable(),
                 TextColumn::make('client.name')
                     ->label('Client'),
-                TextColumn::make('status')
+                TextColumn::make('status')->label('Statut')
                     ->badge(),
                 TextColumn::make('start_date')
                     ->date('d/m/Y')

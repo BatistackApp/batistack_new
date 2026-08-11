@@ -24,7 +24,7 @@ class AssetMaintenanceForm
         }
 
         $components = array_merge($components, [
-            \Filament\Forms\Components\Select::make('chantier_id')
+            \Filament\Forms\Components\Select::make('chantier_id')->label('Chantier')
                     ->label('Chantier imputé (Optionnel)')
                     ->relationship('chantier', 'name')
                     ->searchable()
@@ -34,7 +34,7 @@ class AssetMaintenanceForm
                     ->label('Date d\'intervention')
                     ->required()
                     ->default(now()),
-                \Filament\Forms\Components\Select::make('type')
+                \Filament\Forms\Components\Select::make('type')->label('Type')
                     ->label('Type d\'intervention')
                     ->options([
                         'preventive' => 'Entretien Préventif',
@@ -51,7 +51,7 @@ class AssetMaintenanceForm
                     ->label('Garage / Prestataire'),
                 \Filament\Forms\Components\TextInput::make('invoice_ref')
                     ->label('Référence Facture'),
-                \Filament\Forms\Components\Textarea::make('description')
+                \Filament\Forms\Components\Textarea::make('description')->label('Description')
                     ->label('Description de la panne / intervention')
                     ->columnSpanFull()
                     ->required(),

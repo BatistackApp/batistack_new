@@ -26,7 +26,7 @@ class ChantierInfolist
                             ->schema([
                                 TextEntry::make('name')->label('Désignation')->weight('bold')->size('lg'),
                                 TextEntry::make('reference')->label('Référence')->fontFamily('mono'),
-                                TextEntry::make('status')->badge(),
+                                TextEntry::make('status')->label('Statut')->badge(),
                                 TextEntry::make('manager.full_name')->label('Responsable')->icon(Phosphor::UserGear),
                             ]),
                     ]),

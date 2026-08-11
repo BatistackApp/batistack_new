@@ -17,10 +17,10 @@ class BankAccountForm
                     ->label('Société')
                     ->relationship('company', 'legal_name')
                     ->required(),
-                TextInput::make('name')
+                TextInput::make('name')->label('Nom')
                     ->label('Nom du compte')
                     ->required(),
-                Select::make('type')
+                Select::make('type')->label('Type')
                     ->label('Type de compte')
                     ->options(BankAccountType::class)
                     ->default('checking')

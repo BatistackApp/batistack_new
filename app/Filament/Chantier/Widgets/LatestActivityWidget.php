@@ -29,7 +29,7 @@ class LatestActivityWidget extends TableWidget
                 ChantierLog::query()->latest()->limit(5)
             )
             ->columns([
-                TextColumn::make('created_at')
+                TextColumn::make('created_at')->label('Créé le')
                     ->label('Heure')
                     ->dateTime('H:i')
                     ->description(fn ($record) => $record->date->format('d/m/Y')),
@@ -53,7 +53,7 @@ class LatestActivityWidget extends TableWidget
                                     ->label('Chantier')
                                     ->icon(Phosphor::HardHat),
 
-                                TextEntry::make('date')
+                                TextEntry::make('date')->label('Date')
                                     ->label('Poster le')
                                     ->date('d/m/Y'),
 

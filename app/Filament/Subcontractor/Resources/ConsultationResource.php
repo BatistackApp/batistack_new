@@ -49,7 +49,7 @@ class ConsultationResource extends Resource
                     ->label('Date limite')
                     ->dateTime('d/m/Y H:i')
                     ->sortable(),
-                Tables\Columns\TextColumn::make('status')
+                Tables\Columns\TextColumn::make('status')->label('Statut')
                     ->label('Statut')
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {
@@ -67,7 +67,7 @@ class ConsultationResource extends Resource
                     ->color('primary')
                     ->visible(fn (Consultation $record) => $record->status === 'published')
                     ->schema([
-                        TextInput::make('amount')
+                        TextInput::make('amount')->label('Montant')
                             ->label('Montant de votre offre (€ HT)')
                             ->numeric()
                             ->required()

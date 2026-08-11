@@ -33,7 +33,7 @@ class ItemForm
                                 Section::make()
                                     ->columns(2)
                                     ->schema([
-                                        TextInput::make('reference')
+                                        TextInput::make('reference')->label('Référence')
                                             ->label('Référence SKU')
                                             ->required()
                                             ->unique(ignoreRecord: true)
@@ -43,11 +43,11 @@ class ItemForm
                                             ->nullable()
                                             ->unique(ignoreRecord: true)
                                             ->placeholder('Scanner ou taper le code...'),
-                                        TextInput::make('name')
+                                        TextInput::make('name')->label('Nom')
                                             ->label('Désignation')
                                             ->required()
                                             ->maxLength(255),
-                                        Select::make('type')
+                                        Select::make('type')->label('Type')
                                             ->label('Nature de l\'article')
                                             ->options(ItemType::class)
                                             ->required()
@@ -64,7 +64,7 @@ class ItemForm
                                             ->searchable()
                                             ->preload()
                                             ->nullable(),
-                                        Textarea::make('description')
+                                        Textarea::make('description')->label('Description')
                                             ->label('Description technique')
                                             ->columnSpanFull(),
                                     ]),

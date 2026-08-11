@@ -30,17 +30,17 @@ class ChantiersTable
     {
         return $table
             ->columns([
-                TextColumn::make('reference')
+                TextColumn::make('reference')->label('Référence')
                     ->label('Réf.')
                     ->searchable()
                     ->sortable()
                     ->fontFamily('mono'),
-                TextColumn::make('name')
+                TextColumn::make('name')->label('Nom')
                     ->label('Chantier')
                     ->searchable()
                     ->wrap()
                     ->description(fn (Chantier $record) => $record->client->name),
-                TextColumn::make('status')
+                TextColumn::make('status')->label('Statut')
                     ->label('État')
                     ->badge(),
                 TextColumn::make('progress')
@@ -54,7 +54,7 @@ class ChantiersTable
                     ->color(fn (Chantier $record) => $record->real_hours > $record->budget_hours ? 'danger' : 'gray'),
             ])
             ->filters([
-                SelectFilter::make('status')->options(ChantierStatus::class),
+                SelectFilter::make('status')->label('Statut')->options(ChantierStatus::class),
                 SelectFilter::make('manager_id')->label('Conducteur')->relationship('manager', 'last_name'),
             ])
             ->recordActions([
@@ -95,7 +95,7 @@ class ChantiersTable
                                     })->pluck('name', 'id');
                                 })
                                 ->required(),
-                            TextInput::make('quantity')
+                            TextInput::make('quantity')->label('Quantité')
                                 ->label('Quantité')
                                 ->numeric()
                                 ->required()

@@ -15,7 +15,7 @@ class SubcontractorSituationForm
                     ->relationship('subcontractor', 'name')
                     ->required()
                     ->searchable(),
-                \Filament\Forms\Components\Select::make('chantier_id')
+                \Filament\Forms\Components\Select::make('chantier_id')->label('Chantier')
                     ->label('Chantier')
                     ->relationship('chantier', 'reference')
                     ->searchable(),
@@ -23,7 +23,7 @@ class SubcontractorSituationForm
                     ->label('Commande Fournisseur')
                     ->relationship('order', 'reference')
                     ->searchable(),
-                \Filament\Forms\Components\TextInput::make('reference')
+                \Filament\Forms\Components\TextInput::make('reference')->label('Référence')
                     ->label('Référence')
                     ->required()
                     ->maxLength(255),
@@ -40,7 +40,7 @@ class SubcontractorSituationForm
                     ->label('Retenue de garantie')
                     ->numeric()
                     ->prefix('€'),
-                \Filament\Forms\Components\Select::make('status')
+                \Filament\Forms\Components\Select::make('status')->label('Statut')
                     ->label('Statut')
                     ->options(\App\Enums\Commerce\InvoiceStatus::class)
                     ->required()

@@ -61,22 +61,22 @@ class MonProfil extends Page implements HasSchemas
                 Section::make('Informations de contact')
                     ->description('Mettez à jour vos informations personnelles.')
                     ->schema([
-                        TextInput::make('phone')
+                        TextInput::make('phone')->label('Téléphone')
                             ->label('Téléphone')
                             ->tel()
                             ->maxLength(255),
-                        TextInput::make('email')
+                        TextInput::make('email')->label('Email')
                             ->label('Adresse email')
                             ->email()
                             ->maxLength(255),
-                        TextInput::make('address')
+                        TextInput::make('address')->label('Adresse')
                             ->label('Adresse postale')
                             ->maxLength(255)
                             ->columnSpanFull(),
                         TextInput::make('postal_code')
                             ->label('Code postal')
                             ->maxLength(255),
-                        TextInput::make('city')
+                        TextInput::make('city')->label('Ville')
                             ->label('Ville')
                             ->maxLength(255),
                     ])

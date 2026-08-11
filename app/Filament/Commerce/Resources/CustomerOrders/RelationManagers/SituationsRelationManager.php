@@ -53,7 +53,7 @@ class SituationsRelationManager extends RelationManager
                     ->label('Numéro de situation')
                     ->disabled(),
 
-                Select::make('status')
+                Select::make('status')->label('Statut')
                     ->label('Statut')
                     ->options(InvoiceStatus::class)
                     ->required()
@@ -91,17 +91,17 @@ class SituationsRelationManager extends RelationManager
                     ->money('EUR')
                     ->sortable(),
 
-                TextColumn::make('status')
+                TextColumn::make('status')->label('Statut')
                     ->label('Statut')
                     ->badge(),
 
-                TextColumn::make('created_at')
+                TextColumn::make('created_at')->label('Créé le')
                     ->label('Créée le')
                     ->dateTime('d/m/Y H:i')
                     ->sortable(),
             ])
             ->filters([
-                SelectFilter::make('status')
+                SelectFilter::make('status')->label('Statut')
                     ->options(InvoiceStatus::class),
             ])
             ->headerActions([
@@ -216,7 +216,7 @@ class SituationsRelationManager extends RelationManager
                                 ->columnSpanFull()
                                 ->columns(2)
                                 ->schema([
-                                    TextEntry::make('reference')
+                                    TextEntry::make('reference')->label('Référence')
                                         ->label('Référence'),
                                 ]),
                         ]),

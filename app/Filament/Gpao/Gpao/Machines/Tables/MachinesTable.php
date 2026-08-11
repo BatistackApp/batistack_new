@@ -14,11 +14,11 @@ class MachinesTable
     {
         return $table
             ->columns([
-                TextColumn::make('name')
+                TextColumn::make('name')->label('Nom')
                     ->searchable(),
-                TextColumn::make('reference')
+                TextColumn::make('reference')->label('Référence')
                     ->searchable(),
-                TextColumn::make('status')
+                TextColumn::make('status')->label('Statut')
                     ->badge()
                     ->searchable(),
                 TextColumn::make('usage_hours')
@@ -27,11 +27,11 @@ class MachinesTable
                 TextColumn::make('maintenance_interval_hours')
                     ->numeric()
                     ->sortable(),
-                TextColumn::make('created_at')
+                TextColumn::make('created_at')->label('Créé le')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('updated_at')
+                TextColumn::make('updated_at')->label('Mis à jour le')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),

@@ -53,13 +53,13 @@ class SaisieHeuresCollective extends Page
                 Section::make('Contexte de la Journée')
                     ->columnSpanFull()
                     ->schema([
-                        DatePicker::make('date')
+                        DatePicker::make('date')->label('Date')
                             ->label('Date d\'intervention')
                             ->required()
                             ->native(false)
                             ->default(now()),
 
-                        Select::make('chantier_id')
+                        Select::make('chantier_id')->label('Chantier')
                             ->label('Chantier concerné')
                             ->options($chantiersQuery)
                             ->required()

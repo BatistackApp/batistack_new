@@ -13,7 +13,7 @@ class SupplierCreditNotesTable
     {
         return $table
             ->columns([
-                \Filament\Tables\Columns\TextColumn::make('reference')
+                \Filament\Tables\Columns\TextColumn::make('reference')->label('Référence')
                     ->label('Référence')
                     ->searchable()
                     ->sortable(),
@@ -29,7 +29,7 @@ class SupplierCreditNotesTable
                     ->label('Total HT')
                     ->money('EUR')
                     ->sortable(),
-                \Filament\Tables\Columns\TextColumn::make('status')
+                \Filament\Tables\Columns\TextColumn::make('status')->label('Statut')
                     ->label('Statut')
                     ->badge()
                     ->sortable(),

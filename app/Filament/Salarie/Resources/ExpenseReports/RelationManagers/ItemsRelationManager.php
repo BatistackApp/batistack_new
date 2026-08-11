@@ -37,7 +37,7 @@ class ItemsRelationManager extends RelationManager
     {
         return $schema
             ->components([
-                Select::make('chantier_id')
+                Select::make('chantier_id')->label('Chantier')
                     ->label('Chantier')
                     ->relationship('chantier', 'name'),
                 Select::make('category')
@@ -106,7 +106,7 @@ class ItemsRelationManager extends RelationManager
                             Log::error('OCR Live Error: '.$e->getMessage());
                         }
                     }),
-                DatePicker::make('date')
+                DatePicker::make('date')->label('Date')
                     ->label('Date')
                     ->native(false)
                     ->displayFormat('d/m/Y')
@@ -131,7 +131,7 @@ class ItemsRelationManager extends RelationManager
         return $table
             ->recordTitleAttribute('category')
             ->columns([
-                TextColumn::make('date')
+                TextColumn::make('date')->label('Date')
                     ->label('Date')
                     ->date('d/m/Y')
                     ->sortable(),
@@ -140,7 +140,7 @@ class ItemsRelationManager extends RelationManager
                 TextColumn::make('amount_ttc')
                     ->label('Montant TTC')
                     ->money('EUR'),
-                TextColumn::make('status')
+                TextColumn::make('status')->label('Statut')
                     ->label('Statut')
                     ->badge(),
             ])

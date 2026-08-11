@@ -17,7 +17,7 @@ class CustomerDeliveryNoteInfolist
     {
         return $schema
             ->components([
-                ProgressStepper::make('status')
+                ProgressStepper::make('status')->label('Statut')
                     ->hiddenLabel()
                     ->optionsFromEnum(DeliveryStatus::class)
                     ->size(Size::Large)
@@ -41,7 +41,7 @@ class CustomerDeliveryNoteInfolist
                             ->color('primary')
                             ->url(fn (CustomerDeliveryNote $record) => "/customer/customer-delivery-notes/{$record->id}"),
 
-                        TextEntry::make('status')
+                        TextEntry::make('status')->label('Statut')
                             ->label('Etat de la commande')
                             ->badge(),
                     ]),

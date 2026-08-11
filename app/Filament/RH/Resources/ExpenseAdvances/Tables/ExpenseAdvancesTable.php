@@ -27,7 +27,7 @@ class ExpenseAdvancesTable
                     ->sortable()
                     ->searchable(['first_name', 'last_name']),
 
-                TextColumn::make('amount')
+                TextColumn::make('amount')->label('Montant')
                     ->money('EUR')
                     ->sortable()
                     ->label('Montant'),
@@ -37,7 +37,7 @@ class ExpenseAdvancesTable
                     ->sortable()
                     ->label('Date'),
 
-                TextColumn::make('status')
+                TextColumn::make('status')->label('Statut')
                     ->badge()
                     ->label('Statut'),
 
@@ -47,7 +47,7 @@ class ExpenseAdvancesTable
                     ->placeholder('-'),
             ])
             ->filters([
-                SelectFilter::make('status')
+                SelectFilter::make('status')->label('Statut')
                     ->options(ExpenseAdvanceStatus::class)
                     ->label('Statut'),
             ])

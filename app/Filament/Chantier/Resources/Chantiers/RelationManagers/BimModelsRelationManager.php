@@ -31,7 +31,7 @@ class BimModelsRelationManager extends RelationManager
     {
         return $schema
             ->components([
-                TextInput::make('name')
+                TextInput::make('name')->label('Nom')
                     ->label('Nom')
                     ->required()
                     ->maxLength(255),

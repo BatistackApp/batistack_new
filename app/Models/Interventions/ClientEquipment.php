@@ -3,10 +3,18 @@
 namespace App\Models\Interventions;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class ClientEquipment extends Model
 {
+    use HasFactory;
+
     protected $table = 'client_equipments';
+
+    protected static function newFactory()
+    {
+        return \Database\Factories\ClientEquipmentFactory::new();
+    }
 
     protected $fillable = [
         'company_id',

@@ -36,13 +36,13 @@ class DocumentsRelationManager extends RelationManager
     {
         return $schema
             ->components([
-                Select::make('type')
+                Select::make('type')->label('Type')
                     ->options(\App\Enums\Tiers\ThirdPartyDocumentType::class)
                     ->required(),
                 DatePicker::make('expiration_date')
                     ->label('Date d\'expiration')
                     ->required(),
-                Select::make('status')
+                Select::make('status')->label('Statut')
                     ->options(\App\Enums\Tiers\ThirdPartyDocumentStatus::class)
                     ->default(\App\Enums\Tiers\ThirdPartyDocumentStatus::VALID)
                     ->required(),
@@ -59,13 +59,13 @@ class DocumentsRelationManager extends RelationManager
         return $table
             ->recordTitleAttribute('type')
             ->columns([
-                Tables\Columns\TextColumn::make('type')
+                Tables\Columns\TextColumn::make('type')->label('Type')
                     ->label('Type'),
                 Tables\Columns\TextColumn::make('expiration_date')
                     ->label('Date d\'expiration')
                     ->date('d/m/Y')
                     ->sortable(),
-                Tables\Columns\TextColumn::make('status')
+                Tables\Columns\TextColumn::make('status')->label('Statut')
                     ->label('Statut')
                     ->badge(),
             ])

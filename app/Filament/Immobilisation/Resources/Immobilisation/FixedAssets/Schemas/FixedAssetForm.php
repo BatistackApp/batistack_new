@@ -56,7 +56,7 @@ class FixedAssetForm
                     ->required()
                     ->searchable()
                     ->preload(),
-                TextInput::make('name')
+                TextInput::make('name')->label('Nom')
                     ->label('Nom de l\'immobilisation')
                     ->required()
                     ->maxLength(255),
@@ -89,7 +89,7 @@ class FixedAssetForm
                     ->default(5),
                 Section::make('Suivi et Réglementation')
                     ->schema([
-                        Select::make('status')
+                        Select::make('status')->label('Statut')
                             ->label('Statut')
                             ->options(AssetStatus::class)
                             ->default(AssetStatus::ACTIVE)
@@ -123,7 +123,7 @@ class FixedAssetForm
                     ->relationship('vehicle', 'license_plate')
                     ->searchable()
                     ->preload(),
-                Select::make('chantier_id')
+                Select::make('chantier_id')->label('Chantier')
                     ->label('Chantier d\'imputation analytique')
                     ->relationship('chantier', 'name')
                     ->searchable()

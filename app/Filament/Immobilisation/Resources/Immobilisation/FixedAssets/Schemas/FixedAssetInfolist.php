@@ -18,7 +18,7 @@ class FixedAssetInfolist
                         TextEntry::make('name')->label('Nom'),
                         TextEntry::make('category.name')->label('Catégorie'),
                         TextEntry::make('purchase_price')->label('Valeur d\'achat')->money('EUR'),
-                        TextEntry::make('status')
+                        TextEntry::make('status')->label('Statut')
                             ->label('Statut')
                             ->badge(),
                         TextEntry::make('vgp_status')

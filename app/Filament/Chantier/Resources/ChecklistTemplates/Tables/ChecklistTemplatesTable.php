@@ -13,7 +13,7 @@ class ChecklistTemplatesTable
     {
         return $table
             ->columns([
-                \Filament\Tables\Columns\TextColumn::make('name')
+                \Filament\Tables\Columns\TextColumn::make('name')->label('Nom')
                     ->label('Nom du modèle')
                     ->searchable()
                     ->sortable(),
@@ -21,7 +21,7 @@ class ChecklistTemplatesTable
                     ->label('Actif')
                     ->boolean()
                     ->sortable(),
-                \Filament\Tables\Columns\TextColumn::make('created_at')
+                \Filament\Tables\Columns\TextColumn::make('created_at')->label('Créé le')
                     ->label('Créé le')
                     ->dateTime('d/m/Y H:i')
                     ->sortable(),

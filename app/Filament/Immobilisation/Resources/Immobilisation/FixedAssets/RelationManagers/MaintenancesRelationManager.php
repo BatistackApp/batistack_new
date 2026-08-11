@@ -37,7 +37,7 @@ class MaintenancesRelationManager extends RelationManager
                     ->label('Date')
                     ->date('d/m/Y')
                     ->sortable(),
-                \Filament\Tables\Columns\TextColumn::make('type')
+                \Filament\Tables\Columns\TextColumn::make('type')->label('Type')
                     ->label('Type')
                     ->formatStateUsing(fn ($state) => match($state) {
                         'preventive' => 'Préventif',

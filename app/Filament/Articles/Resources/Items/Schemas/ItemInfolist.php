@@ -34,11 +34,11 @@ class ItemInfolist
 
                                 Grid::make(1)
                                     ->schema([
-                                        TextEntry::make('name')
+                                        TextEntry::make('name')->label('Nom')
                                             ->label('Désignation')
                                             ->weight('bold')
                                             ->size('lg'),
-                                        TextEntry::make('reference')
+                                        TextEntry::make('reference')->label('Référence')
                                             ->label('Référence')
                                             ->fontFamily('mono')
                                             ->copyable(),
@@ -46,7 +46,7 @@ class ItemInfolist
 
                                 Grid::make(1)
                                     ->schema([
-                                        TextEntry::make('type')
+                                        TextEntry::make('type')->label('Type')
                                             ->badge(),
                                         IconEntry::make('is_active')
                                             ->label('Statut')
@@ -67,7 +67,7 @@ class ItemInfolist
                                         TextEntry::make('unit.name')
                                             ->label('Unité de mesure')
                                             ->icon(Phosphor::Scales),
-                                        TextEntry::make('description')
+                                        TextEntry::make('description')->label('Description')
                                             ->label('Notes techniques')
                                             ->placeholder('Aucune description')
                                             ->columnSpan(2),
@@ -135,7 +135,7 @@ class ItemInfolist
                                             ->conversion('')
                                             ->square(),
 
-                                        TextEntry::make('updated_at')
+                                        TextEntry::make('updated_at')->label('Mis à jour le')
                                             ->label('Dernière mise à jour')
                                             ->dateTime('d/m/Y H:i')
                                             ->since(),

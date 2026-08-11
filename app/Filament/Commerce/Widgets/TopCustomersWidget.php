@@ -31,7 +31,7 @@ class TopCustomersWidget extends BaseWidget
             )
             ->defaultSort('total_revenue', 'desc')
             ->columns([
-                TextColumn::make('name')
+                TextColumn::make('name')->label('Nom')
                     ->label('Client'),
                 TextColumn::make('total_revenue')
                     ->label('Chiffre d\'affaires (HT)')

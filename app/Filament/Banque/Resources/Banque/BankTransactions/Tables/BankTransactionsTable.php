@@ -36,19 +36,19 @@ class BankTransactionsTable
                     ->label('ID Externe')
                     ->searchable()
                     ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('date')
+                TextColumn::make('date')->label('Date')
                     ->label('Date')
                     ->date('d/m/Y')
                     ->sortable(),
-                TextColumn::make('description')
+                TextColumn::make('description')->label('Description')
                     ->label('Libellé')
                     ->searchable(),
-                TextColumn::make('amount')
+                TextColumn::make('amount')->label('Montant')
                     ->label('Montant')
                     ->money('eur')
                     ->sortable()
                     ->color(fn ($state) => $state > 0 ? 'success' : 'danger'),
-                TextColumn::make('type')
+                TextColumn::make('type')->label('Type')
                     ->label('Type')
                     ->badge()
                     ->searchable(),
@@ -58,15 +58,15 @@ class BankTransactionsTable
                     ->color(fn ($record) => $record->category?->color ?? 'gray')
                     ->searchable()
                     ->toggleable(),
-                TextColumn::make('status')
+                TextColumn::make('status')->label('Statut')
                     ->label('Statut')
                     ->badge()
                     ->searchable(),
-                TextColumn::make('created_at')
+                TextColumn::make('created_at')->label('Créé le')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('updated_at')
+                TextColumn::make('updated_at')->label('Mis à jour le')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
@@ -77,10 +77,10 @@ class BankTransactionsTable
                     ->relationship('bankAccount', 'name')
                     ->searchable()
                     ->preload(),
-                \Filament\Tables\Filters\SelectFilter::make('status')
+                \Filament\Tables\Filters\SelectFilter::make('status')->label('Statut')
                     ->label('Statut')
                     ->options(\App\Enums\Banque\TransactionStatus::class),
-                \Filament\Tables\Filters\Filter::make('date')
+                \Filament\Tables\Filters\Filter::make('date')->label('Date')
                     ->label('Plage de date')
                     ->form([
                         \Filament\Forms\Components\DatePicker::make('created_from')->label('Du'),

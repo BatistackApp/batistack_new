@@ -40,7 +40,7 @@ class ContractsRelationManager extends RelationManager
                 Section::make('Détails du Contrat')
                     ->columnSpanFull()
                     ->schema([
-                        Select::make('type')
+                        Select::make('type')->label('Type')
                             ->label('Type de contrat')
                             ->options(ContractType::class)
                             ->required()
@@ -50,7 +50,7 @@ class ContractsRelationManager extends RelationManager
                             ->options(fn () => \Spatie\Permission\Models\Role::pluck('name', 'name'))
                             ->searchable()
                             ->createOptionForm([
-                                TextInput::make('name')
+                                TextInput::make('name')->label('Nom')
                                     ->label('Nom du poste/rôle')
                                     ->required()
                                     ->unique(\Spatie\Permission\Models\Role::class, 'name', ignoreRecord: false)
@@ -99,7 +99,7 @@ class ContractsRelationManager extends RelationManager
                 TextColumn::make('job_title')
                     ->label('Poste')
                     ->weight('bold'),
-                TextColumn::make('type')
+                TextColumn::make('type')->label('Type')
                     ->label('Type')
                     ->badge(),
                 TextColumn::make('start_date')

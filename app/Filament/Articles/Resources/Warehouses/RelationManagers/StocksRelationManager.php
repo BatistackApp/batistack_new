@@ -35,7 +35,7 @@ class StocksRelationManager extends RelationManager
                 TextColumn::make('item.name')
                     ->label('Article')
                     ->searchable(),
-                TextColumn::make('quantity')
+                TextColumn::make('quantity')->label('Quantité')
                     ->label('Stock actuel')
                     ->numeric(decimalPlaces: 2)
                     ->color(fn ($record) => $record->quantity <= $record->min_threshold ? 'danger' : 'success')

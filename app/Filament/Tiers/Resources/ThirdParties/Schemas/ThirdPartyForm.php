@@ -61,12 +61,12 @@ class ThirdPartyForm
                                                         }
                                                     })
                                             ),
-                                        TextInput::make('name')
+                                        TextInput::make('name')->label('Nom')
                                             ->label('Nom commercial')
                                             ->required(),
                                         TextInput::make('legal_name')
                                             ->label('Raison sociale'),
-                                        Select::make('type')
+                                        Select::make('type')->label('Type')
                                             ->label('Type de partenaire')
                                             ->options(ThirdPartyType::class)
                                             ->required()
@@ -111,8 +111,8 @@ class ThirdPartyForm
                                 Section::make('Contact Global')
                                     ->columns(2)
                                     ->schema([
-                                        TextInput::make('email')->email(),
-                                        TextInput::make('phone')->tel(),
+                                        TextInput::make('email')->label('Email')->email(),
+                                        TextInput::make('phone')->label('Téléphone')->tel(),
                                         TextInput::make('website')->url(),
                                     ]),
                                 Section::make('Conditions Financières')

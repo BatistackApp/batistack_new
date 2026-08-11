@@ -76,13 +76,13 @@ class ScanEquipementPage extends Page implements HasForms
                             ->required(fn (callable $get) => $get('action_type') === 'borrow')
                             ->visible(fn (callable $get) => $get('action_type') === 'borrow'),
 
-                        Select::make('chantier_id')
+                        Select::make('chantier_id')->label('Chantier')
                             ->label('Chantier de destination (Optionnel)')
                             ->options(Chantier::pluck('name', 'id'))
                             ->searchable()
                             ->visible(fn (callable $get) => $get('action_type') === 'borrow'),
 
-                        TextInput::make('notes')
+                        TextInput::make('notes')->label('Notes')
                             ->label('Observations (État, pannes, etc.)')
                             ->visible(fn (callable $get) => filled($get('equipement_id'))),
                     ])

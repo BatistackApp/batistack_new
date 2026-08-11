@@ -74,11 +74,11 @@ class ViewFixedAsset extends ViewRecord
                 ->modalHeading('Déclarer une perte de valeur')
                 ->modalDescription('Attention, cette action va réduire la Valeur Nette Comptable de l\'actif et recalculer son plan d\'amortissement de façon permanente.')
                 ->schema([
-                    DatePicker::make('date')
+                    DatePicker::make('date')->label('Date')
                         ->label('Date de constatation')
                         ->default(now())
                         ->required(),
-                    TextInput::make('amount')
+                    TextInput::make('amount')->label('Montant')
                         ->label('Montant de la dépréciation (HT)')
                         ->numeric()
                         ->prefix('€')

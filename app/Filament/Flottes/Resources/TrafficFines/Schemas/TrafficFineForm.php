@@ -20,7 +20,7 @@ class TrafficFineForm
                 Section::make('Informations sur l\'infraction')
                     ->columns(2)
                     ->schema([
-                        TextInput::make('reference')
+                        TextInput::make('reference')->label('Référence')
                             ->label('Numéro d\'avis de contravention')
                             ->required()
                             ->unique(ignoreRecord: true)
@@ -43,7 +43,7 @@ class TrafficFineForm
                             ->live()
                             ->afterStateUpdated(fn ($state, callable $set) => $set('employee_id', null)),
 
-                        TextInput::make('amount')
+                        TextInput::make('amount')->label('Montant')
                             ->label('Montant de l\'amende forfaitaire')
                             ->numeric()
                             ->prefix('€')
@@ -54,7 +54,7 @@ class TrafficFineForm
                             ->numeric()
                             ->default(0),
 
-                        Select::make('status')
+                        Select::make('status')->label('Statut')
                             ->label('Statut du dossier')
                             ->options(FineStatus::class)
                             ->required()

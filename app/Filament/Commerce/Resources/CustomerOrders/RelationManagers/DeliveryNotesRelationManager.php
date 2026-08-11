@@ -63,12 +63,12 @@ class DeliveryNotesRelationManager extends RelationManager
             ->emptyStateHeading('Aucun BL pour cette commande')
             ->emptyStateDescription('Créer un nouveau BL pour commencer.')
             ->columns([
-                TextColumn::make('reference')
+                TextColumn::make('reference')->label('Référence')
                     ->label('Numéro BL')
                     ->searchable()
                     ->sortable(),
 
-                TextColumn::make('status')
+                TextColumn::make('status')->label('Statut')
                     ->label('Statut')
                     ->badge(),
 
@@ -81,13 +81,13 @@ class DeliveryNotesRelationManager extends RelationManager
                     ->label('Nb articles')
                     ->counts('items'),
 
-                TextColumn::make('created_at')
+                TextColumn::make('created_at')->label('Créé le')
                     ->label('Créé le')
                     ->dateTime('d/m/Y H:i')
                     ->sortable(),
             ])
             ->filters([
-                SelectFilter::make('status')
+                SelectFilter::make('status')->label('Statut')
                     ->options(DeliveryStatus::class),
             ])
             ->headerActions([
@@ -137,7 +137,7 @@ class DeliveryNotesRelationManager extends RelationManager
                                     ->numeric()
                                     ->required(),
 
-                                TextInput::make('notes')
+                                TextInput::make('notes')->label('Notes')
                                     ->label('Notes')
                                     ->columnSpanFull(),
                             ]),
@@ -221,7 +221,7 @@ class DeliveryNotesRelationManager extends RelationManager
                         ->icon(Phosphor::ArrowsDownUp)
                         ->color('purple')
                         ->schema([
-                            Select::make('status')
+                            Select::make('status')->label('Statut')
                                 ->label('Transition')
                                 ->options(DeliveryStatus::class),
                         ])

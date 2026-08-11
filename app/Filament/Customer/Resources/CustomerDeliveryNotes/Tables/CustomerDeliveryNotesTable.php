@@ -24,7 +24,7 @@ class CustomerDeliveryNotesTable
                     ->newQuery()
             )
             ->columns([
-                TextColumn::make('reference')
+                TextColumn::make('reference')->label('Référence')
                     ->label('Référence'),
 
                 TextColumn::make('client.addresses')
@@ -45,7 +45,7 @@ class CustomerDeliveryNotesTable
                     ->alignCenter()
                     ->counts('items'),
 
-                TextColumn::make('status')
+                TextColumn::make('status')->label('Statut')
                     ->label('Etat')
                     ->badge()
                     ->formatStateUsing(fn (CustomerDeliveryNote $record) => $record->status === DeliveryStatus::DELIVERED ? 'Livrée le '.$record->delivery_date->format('d/m/Y') : $record->status->getLabel()),

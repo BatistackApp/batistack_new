@@ -21,9 +21,11 @@ class RentalContract extends Model
     protected $casts = [
         'start_date' => 'date',
         'end_date' => 'date',
+        'expected_end_date' => 'date',
         'status' => RentalStatus::class,
         'billing_period' => RentalBillingPeriod::class,
         'daily_cost_ht' => 'decimal:2',
+        'daily_penalty_rate' => 'decimal:2',
         'supplier_score' => 'integer',
     ];
 

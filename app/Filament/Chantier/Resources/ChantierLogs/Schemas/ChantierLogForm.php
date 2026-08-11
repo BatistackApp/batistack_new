@@ -21,12 +21,12 @@ class ChantierLogForm
         return $schema
             ->components([
                 Grid::make(2)->schema([
-                    Select::make('chantier_id')
+                    Select::make('chantier_id')->label('Chantier')
                         ->relationship('chantier', 'name')
                         ->searchable()
                         ->preload()
                         ->required(),
-                    DatePicker::make('date')
+                    DatePicker::make('date')->label('Date')
                         ->default(now())
                         ->required()
                         ->native(false),

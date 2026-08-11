@@ -28,11 +28,23 @@ Le module **Locations** permet de gérer l'ensemble des locations de matériel (
 ### 5. Tests
 *   Des tests unitaires/fonctionnels exhaustifs couvrent l'analytique et la génération de factures. Tous passent avec succès.
 
+### 6. Locations Sortantes (Location Client)
+*   Création des modèles `OutboundRentalContract` et `OutboundRentalLine`.
+*   Facturation via `OutboundRentalBillingService`.
+*   Mise à jour automatique du statut des `FixedAsset` (statut `RENTED`) via `OutboundRentalObserver`.
+
+### 7. Comparateur de Prix Fournisseurs
+*   Modèle `SupplierPriceGrid` pour stocker les grilles tarifaires.
+*   Page dédiée autonome `SupplierPriceComparator` (Comparateur).
+*   Intégration via `HintAction` dans le `RentalContractForm`.
+
+### 8. Dépassements et Pénalités
+*   Ajout de `daily_penalty_rate` et `expected_end_date` sur `RentalContract`.
+*   Mise à jour de `RentalCostService` pour intégrer les pénalités au coût analytique.
+*   Commande Cron `CheckRentalOveragesCommand` pour notifier les fins imminentes et appliquer les majorations de retard.
+
 ## 🚧 Ce qu'il reste à faire
-*   L'ensemble du module (Backend et Frontend) est totalement fonctionnel. Aucune tâche bloquante.
+*   Couverture par les tests unitaires / fonctionnels PestPHP pour les modules Locations Sortantes, Comparateur, et Pénalités.
 
 ## 💡 Idées d'amélioration et Nouvelles Fonctionnalités
 *   **Suivi Géolocalisé** : Si du gros équipement (ex: pelles, grues) est loué avec des capteurs GPS, pouvoir remonter leur position via une API externe directement sur la fiche d'information du `RentalContract`.
-*   **Extension "Location Client" (Location Sortante)** : Permettre de louer le matériel en propre (Immobilisations) à des clients ou sous-traitants, avec génération automatique des factures de vente récurrentes.
-*   **Comparateur de Prix Fournisseurs** : Intégrer les grilles tarifaires des fournisseurs pour suggérer automatiquement le loueur le plus économique lors d'un besoin matériel.
-*   **Gestion des Dépassements et Pénalités** : Alertes urgentes de restitution (J-1) et majoration automatique du coût analytique en cas de retard de restitution sans avenant.

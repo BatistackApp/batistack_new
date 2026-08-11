@@ -26,11 +26,11 @@ class ActiveChantiersTable extends TableWidget
                     ->with(['manager', 'client'])
             )
             ->columns([
-                TextColumn::make('reference')
+                TextColumn::make('reference')->label('Référence')
                     ->label('Réf.')
                     ->fontFamily('mono'),
 
-                TextColumn::make('name')
+                TextColumn::make('name')->label('Nom')
                     ->label('Désignation')
                     ->wrap()
                     ->description(fn (Chantier $record) => $record->manager?->full_name ?? 'Sans responsable'),

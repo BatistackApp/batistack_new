@@ -81,10 +81,10 @@ class VariablesRelationManager extends RelationManager
                     ->numeric(),
                 TextEntry::make('estimated_gross_salary')
                     ->numeric(),
-                TextEntry::make('created_at')
+                TextEntry::make('created_at')->label('Créé le')
                     ->dateTime()
                     ->placeholder('-'),
-                TextEntry::make('updated_at')
+                TextEntry::make('updated_at')->label('Mis à jour le')
                     ->dateTime()
                     ->placeholder('-'),
             ]);
