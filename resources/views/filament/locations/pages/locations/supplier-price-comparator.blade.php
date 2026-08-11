@@ -44,7 +44,7 @@
                 </table>
             </div>
         </x-filament::card>
-    @elseif(!is_null($equipment_category))
+    @elseif(!empty($data['equipment_category']))
         <x-filament::card class="mt-6">
             <p class="text-gray-500">Aucun tarif trouvé pour cette catégorie d'équipement.</p>
         </x-filament::card>

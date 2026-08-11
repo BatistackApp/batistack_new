@@ -30,6 +30,10 @@ class OutboundRentalBillingService
             default => Carbon::now()->startOfMonth(),
         };
 
+        if ($contract->status !== 'active') {
+            return;
+        }
+
         if ($contract->lines->isEmpty()) {
             return;
         }
@@ -70,10 +74,10 @@ class OutboundRentalBillingService
 
             CustomerInvoiceItem::create([
                 'customer_invoice_id' => $invoice->id,
-                'description' => 'Location: ' . ($line->fixedAsset->name ?? 'Équipement'),
+                'name' => 'Location: ' . ($line->fixedAsset->name ?? 'Équipement'),
                 'quantity' => $days,
-                'unit_price' => $line->daily_rate,
-                'tax_rate' => 20.00,
+                'price_unit' => $line->daily_rate,
+                'vat_rate_id' => 1,
             ]);
         }
 
