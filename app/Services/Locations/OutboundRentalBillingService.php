@@ -4,7 +4,7 @@ namespace App\Services\Locations;
 
 use App\Models\Locations\OutboundRentalContract;
 use App\Models\Commerce\CustomerInvoice;
-use App\Models\Commerce\CustomerInvoiceLine;
+use App\Models\Commerce\CustomerInvoiceItem;
 use Carbon\Carbon;
 
 class OutboundRentalBillingService
@@ -34,29 +34,29 @@ class OutboundRentalBillingService
             return;
         }
 
-        $exists = CustomerInvoice::where('third_party_id', $contract->third_party_id)
-            ->where('created_at', '>=', $startOfPeriod)
-            ->where('notes', 'like', '%Contrat ' . $contract->reference . '%')
-            ->exists();
+        $billingKey = 'OUT-' . $contract->id . '-' . $startOfPeriod->format('Ym');
+
+        $exists = CustomerInvoice::where('billing_key', $billingKey)->exists();
 
         if ($exists) {
             return;
         }
 
-        $this->createInvoice($contract);
+        $this->createInvoice($contract, $billingKey);
     }
 
-    protected function createInvoice(OutboundRentalContract $contract): void
+    protected function createInvoice(OutboundRentalContract $contract, string $billingKey): void
     {
         $invoice = CustomerInvoice::create([
-            'company_id' => $contract->company_id,
-            'third_party_id' => $contract->third_party_id,
-            'type' => 'invoice',
-            'status' => 'draft',
+            'client_id' => $contract->third_party_id,
+            'type' => \App\Enums\Commerce\InvoiceType::SIMPLE,
+            'status' => \App\Enums\Commerce\InvoiceStatus::DRAFT,
             'reference' => 'INV-OUT-' . time(),
             'issue_date' => Carbon::now(),
             'due_date' => Carbon::now()->addDays(30),
+            'responsable_id' => auth()->id() ?? 1,
             'notes' => 'Location de matériel - Contrat ' . $contract->reference,
+            'billing_key' => $billingKey,
         ]);
 
         foreach ($contract->lines as $line) {
@@ -68,7 +68,7 @@ class OutboundRentalBillingService
                 default => 30,
             };
 
-            CustomerInvoiceLine::create([
+            CustomerInvoiceItem::create([
                 'customer_invoice_id' => $invoice->id,
                 'description' => 'Location: ' . ($line->fixedAsset->name ?? 'Équipement'),
                 'quantity' => $days,

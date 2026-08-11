@@ -5,6 +5,9 @@ namespace App\Models\Locations;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
+
+#[ObservedBy(\App\Observers\Locations\OutboundRentalLineObserver::class)]
 class OutboundRentalLine extends Model
 {
     /** @use HasFactory<\Database\Factories\Locations\OutboundRentalLineFactory> */

@@ -12,11 +12,12 @@ class OutboundRentalContractForm
     {
         return $schema
             ->components([
-                \Filament\Forms\Components\Section::make('Informations Principales')->schema([
+                \Filament\Forms\Components\Section::make('Informations de Base')->schema([
                     \Filament\Forms\Components\Select::make('company_id')
-                        ->relationship('company', 'name')
-                        ->default(fn () => \App\Models\Core\Company::first()?->id)
-                        ->required(),
+                        ->relationship('company', 'legal_name')
+                        ->label('Société')
+                        ->required()
+                        ->default(1),
                     \Filament\Forms\Components\Select::make('third_party_id')
                         ->relationship('thirdParty', 'name')
                         ->label('Client')

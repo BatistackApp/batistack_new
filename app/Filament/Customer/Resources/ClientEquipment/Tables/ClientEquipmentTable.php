@@ -8,7 +8,7 @@ use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Tables\Table;
 
-use Filament\Tables\Actions\Action;
+use Filament\Actions\Action;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\Textarea;
 use Filament\Notifications\Notification;
@@ -31,7 +31,7 @@ class ClientEquipmentTable
             ->filters([
                 //
             ])
-            ->actions([
+            ->recordActions([
                 Action::make('report_breakdown')
                     ->label('Signaler une panne')
                     ->icon('heroicon-m-exclamation-triangle')
@@ -43,8 +43,17 @@ class ClientEquipmentTable
                             ->rows(4),
                     ])
                     ->action(function (array $data, Model $record) {
-                        $contact = auth()->user()->contact;
+                        $contact = auth()->user()?->contact;
                         
+                        if (! $contact) {
+                            Notification::make()
+                                ->title('Erreur')
+                                ->body('Aucun contact associé à votre compte.')
+                                ->danger()
+                                ->send();
+                            return;
+                        }
+
                         Intervention::create([
                             'company_id' => $record->company_id,
                             'third_party_id' => $contact->third_party_id,
@@ -52,7 +61,6 @@ class ClientEquipmentTable
                             'type' => InterventionType::REGIE,
                             'status' => InterventionStatus::SOUMIS,
                             'description' => $data['description'],
-                            // 'reference' => ... ? Can be left to observer/default
                         ]);
                         
                         Notification::make()
@@ -62,7 +70,7 @@ class ClientEquipmentTable
                             ->send();
                     }),
             ])
-            ->bulkActions([
+            ->toolbarActions([
                 // Read-only
             ]);
     }

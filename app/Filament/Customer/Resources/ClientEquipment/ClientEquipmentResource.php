@@ -43,18 +43,7 @@ class ClientEquipmentResource extends Resource
         return false;
     }
 
-    public static function getEloquentQuery(): Builder
-    {
-        $contact = \App\Models\Tiers\Contact::where('user_id', auth()->id())->first();
-        
-        $query = parent::getEloquentQuery();
-        
-        if (! $contact) {
-            return $query->whereRaw('1 = 0');
-        }
-        
-        return $query->where('third_party_id', $contact->third_party_id);
-    }
+    use \App\Filament\Customer\Concerns\ScopesToAuthenticatedThirdParty;
 
     public static function form(Schema $schema): Schema
     {

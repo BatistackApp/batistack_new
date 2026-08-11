@@ -24,12 +24,12 @@ class InterventionsTable
                 TextColumn::make('created_at')->label('Créée le')->date(),
             ])
             ->filters([
-                TrashedFilter::make(),
+                //
             ])
-            ->actions([
-                \Filament\Tables\Actions\ViewAction::make(),
+            ->recordActions([
+                ViewAction::make(),
             ])
-            ->bulkActions([
+            ->toolbarActions([
                 //
             ]);
     }

@@ -37,18 +37,36 @@ class OutboundRentalObserver
     }
 
     /**
+     * Handle the OutboundRentalContract "deleted" event.
+     */
+    public function deleted(OutboundRentalContract $contract): void
+    {
+        $this->releaseAssets($contract);
+    }
+
+    /**
      * Handle the OutboundRentalContract "restored" event.
      */
-    public function restored(OutboundRentalContract $outboundRentalContract): void
+    public function restored(OutboundRentalContract $contract): void
     {
-        //
+        $this->updateAssetStatus($contract);
     }
 
     /**
      * Handle the OutboundRentalContract "force deleted" event.
      */
-    public function forceDeleted(OutboundRentalContract $outboundRentalContract): void
+    public function forceDeleted(OutboundRentalContract $contract): void
     {
-        //
+        $this->releaseAssets($contract);
+    }
+    
+    protected function releaseAssets(OutboundRentalContract $contract): void
+    {
+        $status = \App\Enums\Immobilisation\AssetStatus::ACTIVE;
+        $contract->lines()->each(function ($line) use ($status) {
+            if ($line->fixedAsset) {
+                $line->fixedAsset->update(['status' => $status]);
+            }
+        });
     }
 }

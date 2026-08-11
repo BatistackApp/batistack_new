@@ -37,6 +37,11 @@ class OutboundRentalContract extends Model
         return $this->belongsTo(\App\Models\Tiers\ThirdParty::class);
     }
 
+    public function company()
+    {
+        return $this->belongsTo(\App\Models\Core\Company::class);
+    }
+
     public function chantier()
     {
         return $this->belongsTo(\App\Models\Chantiers\Chantier::class);

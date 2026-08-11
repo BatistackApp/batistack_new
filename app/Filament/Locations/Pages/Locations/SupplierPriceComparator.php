@@ -4,8 +4,9 @@ namespace App\Filament\Locations\Pages\Locations;
 
 use Filament\Pages\Page;
 
-class SupplierPriceComparator extends Page
+class SupplierPriceComparator extends Page implements \Filament\Forms\Contracts\HasForms
 {
+    use \Filament\Forms\Concerns\InteractsWithForms;
     protected static \BackedEnum|string|null $navigationIcon = 'heroicon-o-calculator';
     protected static ?string $navigationLabel = 'Comparateur de Prix';
     protected static ?string $title = 'Comparateur de Tarifs Fournisseurs';
@@ -13,8 +14,7 @@ class SupplierPriceComparator extends Page
 
     protected string $view = 'filament.locations.pages.locations.supplier-price-comparator';
 
-    public ?string $equipment_category = null;
-    public ?int $duration_days = null;
+    public ?array $data = [];
     public array $results = [];
 
     public function mount()
@@ -22,9 +22,9 @@ class SupplierPriceComparator extends Page
         $this->form->fill();
     }
 
-    protected function getFormSchema(): array
+    public function form(\Filament\Schemas\Schema $form): \Filament\Schemas\Schema
     {
-        return [
+        return $form->schema([
             \Filament\Forms\Components\Select::make('equipment_category')
                 ->label('Catégorie d\'équipement')
                 ->options(function () {
@@ -37,8 +37,9 @@ class SupplierPriceComparator extends Page
             \Filament\Forms\Components\TextInput::make('duration_days')
                 ->label('Durée (en jours)')
                 ->numeric()
+                ->minValue(1)
                 ->required(),
-        ];
+        ])->statePath('data');
     }
 
     public function search()
@@ -63,27 +64,29 @@ class SupplierPriceComparator extends Page
             $daysLeft = $remainingDays % 7;
 
             $cost = 0;
-            if ($grid->monthly_rate && $months > 0) {
-                $cost += $months * $grid->monthly_rate;
-            } elseif ($grid->weekly_rate && $months > 0) {
-                $weeks += $months * 4; // fallback approx
-            } elseif ($grid->daily_rate && $months > 0) {
-                $daysLeft += $months * 30;
-            }
-
-            if ($grid->weekly_rate && $weeks > 0) {
-                $cost += $weeks * $grid->weekly_rate;
-            } elseif ($grid->daily_rate && $weeks > 0) {
-                $daysLeft += $weeks * 7;
-            }
-
-            if ($grid->daily_rate && $daysLeft > 0) {
-                $cost += $daysLeft * $grid->daily_rate;
-            }
             
-            // Simplified logic: If no specific rate, fallback to daily if exists
-            if ($cost == 0 && $grid->daily_rate) {
-                $cost = $days * $grid->daily_rate;
+            if ($months > 0) {
+                if ($grid->monthly_rate) {
+                    $cost += $months * $grid->monthly_rate;
+                } else {
+                    return null;
+                }
+            }
+
+            if ($weeks > 0) {
+                if ($grid->weekly_rate) {
+                    $cost += $weeks * $grid->weekly_rate;
+                } else {
+                    return null;
+                }
+            }
+
+            if ($daysLeft > 0) {
+                if ($grid->daily_rate) {
+                    $cost += $daysLeft * $grid->daily_rate;
+                } else {
+                    return null;
+                }
             }
 
             return [
@@ -93,6 +96,6 @@ class SupplierPriceComparator extends Page
                 'monthly_rate' => $grid->monthly_rate,
                 'total_cost' => $cost,
             ];
-        })->sortBy('total_cost')->values()->toArray();
+        })->filter()->sortBy('total_cost')->values()->toArray();
     }
 }
