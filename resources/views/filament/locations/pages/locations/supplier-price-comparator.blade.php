@@ -32,11 +32,11 @@
                                     @endif
                                     {{ $result['supplier_name'] }}
                                 </td>
-                                <td class="p-4">{{ $result['daily_rate'] ? number_format($result['daily_rate'], 2) . ' €' : '-' }}</td>
-                                <td class="p-4">{{ $result['weekly_rate'] ? number_format($result['weekly_rate'], 2) . ' €' : '-' }}</td>
-                                <td class="p-4">{{ $result['monthly_rate'] ? number_format($result['monthly_rate'], 2) . ' €' : '-' }}</td>
+                                <td class="p-4">{{ !is_null($result['daily_rate']) ? number_format($result['daily_rate'], 2, ',', ' ') . ' €' : '-' }}</td>
+                                <td class="p-4">{{ !is_null($result['weekly_rate']) ? number_format($result['weekly_rate'], 2, ',', ' ') . ' €' : '-' }}</td>
+                                <td class="p-4">{{ !is_null($result['monthly_rate']) ? number_format($result['monthly_rate'], 2, ',', ' ') . ' €' : '-' }}</td>
                                 <td class="p-4 font-bold text-primary-600 dark:text-primary-400">
-                                    {{ number_format($result['total_cost'], 2) }} €
+                                    {{ number_format($result['total_cost'], 2, ',', ' ') }} €
                                 </td>
                             </tr>
                         @endforeach

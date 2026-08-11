@@ -2,7 +2,6 @@
 
 namespace App\Filament\Customer\Resources\ClientEquipment;
 
-use App\Filament\Customer\Resources\ClientEquipment\Pages\CreateClientEquipment;
 use App\Filament\Customer\Resources\ClientEquipment\Pages\EditClientEquipment;
 use App\Filament\Customer\Resources\ClientEquipment\Pages\ListClientEquipment;
 use App\Filament\Customer\Resources\ClientEquipment\Pages\ViewClientEquipment;
@@ -83,7 +82,6 @@ class ClientEquipmentResource extends Resource
     {
         return [
             'index' => ListClientEquipment::route('/'),
-            'create' => CreateClientEquipment::route('/create'),
             'view' => ViewClientEquipment::route('/{record}'),
             'edit' => EditClientEquipment::route('/{record}/edit'),
         ];

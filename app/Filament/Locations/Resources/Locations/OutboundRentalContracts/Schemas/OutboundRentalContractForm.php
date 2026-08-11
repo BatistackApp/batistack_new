@@ -52,11 +52,14 @@ class OutboundRentalContractForm
                     \Filament\Forms\Components\DatePicker::make('start_date')
                         ->required()
                         ->default(now()),
-                    \Filament\Forms\Components\DatePicker::make('expected_end_date'),
-                    \Filament\Forms\Components\DatePicker::make('actual_end_date'),
+                    \Filament\Forms\Components\DatePicker::make('expected_end_date')
+                        ->afterOrEqual('start_date'),
+                    \Filament\Forms\Components\DatePicker::make('actual_end_date')
+                        ->afterOrEqual('start_date'),
                     \Filament\Forms\Components\TextInput::make('daily_penalty_rate')
                         ->label('Pénalité de retard par jour')
                         ->numeric()
+                        ->minValue(0)
                         ->prefix('€'),
                 ])->columns(2),
                 
@@ -70,6 +73,7 @@ class OutboundRentalContractForm
                                 ->required(),
                             \Filament\Forms\Components\TextInput::make('daily_rate')
                                 ->numeric()
+                                ->minValue(0)
                                 ->prefix('€')
                                 ->required(),
                         ])

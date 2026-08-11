@@ -30,6 +30,10 @@ class OutboundRentalBillingService
             default => Carbon::now()->startOfMonth(),
         };
 
+        if ($contract->lines->isEmpty()) {
+            return;
+        }
+
         $exists = CustomerInvoice::where('third_party_id', $contract->third_party_id)
             ->where('created_at', '>=', $startOfPeriod)
             ->where('notes', 'like', '%Contrat ' . $contract->reference . '%')
@@ -72,5 +76,7 @@ class OutboundRentalBillingService
                 'tax_rate' => 20.00,
             ]);
         }
+
+        $contract->update(['last_invoice_id' => $invoice->id]);
     }
 }

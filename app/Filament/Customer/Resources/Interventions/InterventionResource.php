@@ -2,7 +2,6 @@
 
 namespace App\Filament\Customer\Resources\Interventions;
 
-use App\Filament\Customer\Resources\Interventions\Pages\CreateIntervention;
 use App\Filament\Customer\Resources\Interventions\Pages\EditIntervention;
 use App\Filament\Customer\Resources\Interventions\Pages\ListInterventions;
 use App\Filament\Customer\Resources\Interventions\Pages\ViewIntervention;
@@ -84,7 +83,6 @@ class InterventionResource extends Resource
     {
         return [
             'index' => ListInterventions::route('/'),
-            'create' => CreateIntervention::route('/create'),
             'view' => ViewIntervention::route('/{record}'),
             'edit' => EditIntervention::route('/{record}/edit'),
         ];

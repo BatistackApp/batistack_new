@@ -18,7 +18,13 @@ class OutboundRentalContractFactory extends Factory
     public function definition(): array
     {
         return [
-            //
+            'company_id' => \App\Models\Core\Company::factory(),
+            'third_party_id' => \App\Models\Tiers\ThirdParty::factory(),
+            'chantier_id' => \App\Models\Chantiers\Chantier::factory(),
+            'reference' => 'OUT-' . $this->faker->unique()->numberBetween(1000, 9999),
+            'status' => 'draft',
+            'billing_period' => 'monthly',
+            'start_date' => now(),
         ];
     }
 }
