@@ -39,8 +39,10 @@ class WageGarnishment extends Model
      */
     public function calculateDeduction(float $netSalary): float
     {
+        $remainingDue = max(0, $this->total_amount_due - $this->amount_collected);
+
         if ($this->monthly_deduction !== null) {
-            return (float) min($this->monthly_deduction, $this->total_amount_due - $this->amount_collected);
+            return (float) max(0, min(max(0, $this->monthly_deduction), $remainingDue));
         }
 
         // Barème légal simplifié (Tranches 2024 indicatives, hors charges de famille)
@@ -58,6 +60,9 @@ class WageGarnishment extends Model
             return 0; // RSA insaisissable
         }
 
+        if ($netSalary > 0) {
+            $saisissable += min($netSalary, 434) / 10;
+        }
         if ($netSalary > 434) {
             $saisissable += min($netSalary - 434, 852 - 434) / 5;
         }
@@ -78,7 +83,6 @@ class WageGarnishment extends Model
         $maxSaisissable = max(0, $netSalary - 635);
         $saisissable = min($saisissable, $maxSaisissable);
 
-        $remainingDue = $this->total_amount_due - $this->amount_collected;
-        return round(min($saisissable, $remainingDue), 2);
+        return round(max(0, min($saisissable, $remainingDue)), 2);
     }
 }

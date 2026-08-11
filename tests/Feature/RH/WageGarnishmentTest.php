@@ -18,9 +18,18 @@ it('calculates automatic deduction correctly', function () {
     // Net salary below RSA (635)
     expect($garnishment->calculateDeduction(600))->toEqual(0.0);
 
+    // Test with high RSA protection
+    // Net salary 650:
+    // Tranche 1 (0 to 434): 434 / 10 = 43.4
+    // Tranche 2 (434 to 650): (650 - 434) / 5 = 43.2
+    // Total without cap = 86.6. RSA Cap = 650 - 635 = 15. Expected = 15.0
+    expect($garnishment->calculateDeduction(650))->toEqual(15.0);
+
     // Net salary 800
-    // Tranche 1 (434 à 800): 800 - 434 = 366. 366 / 5 = 73.2
-    expect($garnishment->calculateDeduction(800))->toEqual(round((800 - 434) / 5, 2));
+    // Tranche 1 (0 to 434): 434 / 10 = 43.4
+    // Tranche 2 (434 to 800): (800 - 434) / 5 = 73.2
+    // Total = 43.4 + 73.2 = 116.60
+    expect($garnishment->calculateDeduction(800))->toEqual(116.60);
 
     // Test with monthly_deduction override
     $garnishment->update(['monthly_deduction' => 50.0]);

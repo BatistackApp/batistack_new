@@ -28,7 +28,7 @@
             conformément aux dispositions de l'article L. 1243-1 du Code du travail.
         </p>
         <p>
-            Le présent contrat de travail prendra par conséquent fin le <strong>{{ now()->format('d/m/Y') }}</strong> au soir.
+            Le présent contrat de travail prendra par conséquent fin le <strong>{{ $termination_date ? $termination_date->format('d/m/Y') : now()->format('d/m/Y') }}</strong> au soir.
         </p>
         <p>
             L'Employeur remettra au Salarié à cette date son certificat de travail, l'attestation France Travail et son reçu pour solde de tout compte.

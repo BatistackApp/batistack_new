@@ -160,8 +160,12 @@ return [
             'password' => env('REDIS_PASSWORD'),
             'port' => env('REDIS_PORT', '6379'),
             'database' => env('REDIS_DB', '0'),
-            'read_write_timeout' => env('REDIS_READ_WRITE_TIMEOUT', -1),
-            'tcp_keepalive' => env('REDIS_TCP_KEEPALIVE', 60),
+            ...(env('REDIS_CLIENT', 'phpredis') === 'phpredis' ? [
+                'read_timeout' => env('REDIS_READ_TIMEOUT', 60),
+                'tcp_keepalive' => env('REDIS_TCP_KEEPALIVE', 60),
+            ] : [
+                'read_write_timeout' => env('REDIS_READ_WRITE_TIMEOUT', -1),
+            ]),
             'max_retries' => env('REDIS_MAX_RETRIES', 3),
             'backoff_algorithm' => env('REDIS_BACKOFF_ALGORITHM', 'decorrelated_jitter'),
             'backoff_base' => env('REDIS_BACKOFF_BASE', 100),
@@ -175,8 +179,12 @@ return [
             'password' => env('REDIS_PASSWORD'),
             'port' => env('REDIS_PORT', '6379'),
             'database' => env('REDIS_CACHE_DB', '1'),
-            'read_write_timeout' => env('REDIS_READ_WRITE_TIMEOUT', -1),
-            'tcp_keepalive' => env('REDIS_TCP_KEEPALIVE', 60),
+            ...(env('REDIS_CLIENT', 'phpredis') === 'phpredis' ? [
+                'read_timeout' => env('REDIS_READ_TIMEOUT', 60),
+                'tcp_keepalive' => env('REDIS_TCP_KEEPALIVE', 60),
+            ] : [
+                'read_write_timeout' => env('REDIS_READ_WRITE_TIMEOUT', -1),
+            ]),
             'max_retries' => env('REDIS_MAX_RETRIES', 3),
             'backoff_algorithm' => env('REDIS_BACKOFF_ALGORITHM', 'decorrelated_jitter'),
             'backoff_base' => env('REDIS_BACKOFF_BASE', 100),

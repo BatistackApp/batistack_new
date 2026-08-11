@@ -66,10 +66,11 @@ class Employee extends Model implements HasMedia
         return $this->hasOne(Contract::class)->ofMany([
             'start_date' => 'max',
         ], function ($query) {
-            $query->where(function ($q) {
-                $q->whereNull('end_date')
-                  ->orWhere('end_date', '>=', now());
-            });
+            $query->where('start_date', '<=', now())
+                  ->where(function ($q) {
+                      $q->whereNull('end_date')
+                        ->orWhere('end_date', '>=', now());
+                  });
         });
     }
 

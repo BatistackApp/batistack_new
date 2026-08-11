@@ -174,13 +174,19 @@ class ContractsRelationManager extends RelationManager
                         ->label('Rupture Période d\'Essai')
                         ->icon(Phosphor::FileMinus)
                         ->color('danger')
+                        ->visible(fn (Contract $record) => $record->trial_end_date && $record->trial_end_date->isFuture())
                         ->action(fn (Contract $record, RHDocumentService $service) => $service->download($service->generateTrialPeriodEndLetter($record))),
                     Action::make('cdd_terminate')
                         ->label('Avenant Rupture CDD')
                         ->icon(Phosphor::FileX)
                         ->color('danger')
                         ->visible(fn (Contract $record) => $record->type === ContractType::CDD)
-                        ->action(fn (Contract $record, RHDocumentService $service) => $service->download($service->generateCddEarlyTermination($record))),
+                        ->form([
+                            DatePicker::make('termination_date')
+                                ->label('Date de rupture négociée')
+                                ->required()
+                        ])
+                        ->action(fn (Contract $record, array $data, RHDocumentService $service) => $service->download($service->generateCddEarlyTermination($record, \Illuminate\Support\Carbon::parse($data['termination_date'])))),
                 ])->label('Documents de rupture')->icon(Phosphor::Files),
             ]);
     }

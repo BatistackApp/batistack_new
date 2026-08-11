@@ -30,8 +30,17 @@
         </section>
 
         <section>
-            <h3 class="font-bold uppercase text-blue-batistack underline mb-2">Article 3 : Période d'essai</h3>
-            <p>Le présent contrat est conclu avec une période d'essai de 2 mois, renouvelable une fois. Durant cette période, chacune des parties pourra rompre le contrat sous réserve de respecter le délai de prévenance légal ou conventionnel.</p>
+            <h3 class="font-bold uppercase text-blue-batistack underline mb-2">Article 3 : Durée et Période d'essai</h3>
+            <p>Le présent contrat est conclu sous la forme d'un <strong>{{ $contract->type->getDescription() }}</strong>.
+            @if($contract->type === \App\Enums\RH\ContractType::CDD && $contract->end_date)
+                Il prendra fin le <strong>{{ $contract->end_date->format('d/m/Y') }}</strong>.
+            @endif
+            @if($contract->trial_end_date)
+                Il est assorti d'une période d'essai courant jusqu'au <strong>{{ $contract->trial_end_date->format('d/m/Y') }}</strong>, éventuellement renouvelable selon les conditions légales ou conventionnelles. Durant cette période, chacune des parties pourra rompre le contrat sous réserve de respecter le délai de prévenance légal.
+            @else
+                Le contrat n'est assorti d'aucune période d'essai.
+            @endif
+            </p>
         </section>
 
         <section>
@@ -136,7 +145,7 @@
 
         <section>
             <h3 class="font-bold uppercase text-blue-batistack underline mb-2">Article 24 : Litiges et Juridiction Compétente</h3>
-            <p>Tout litige relatif à l'exécution ou à la rupture du présent contrat relèvera de la compétence exclusive du Conseil de Prud'hommes du lieu de signature ou d'exécution du contrat.</p>
+            <p>Tout litige relatif à l'exécution ou à la rupture du présent contrat relèvera de la compétence du Conseil de Prud'hommes territorialement compétent, conformément aux dispositions légales applicables.</p>
         </section>
     </div>
 

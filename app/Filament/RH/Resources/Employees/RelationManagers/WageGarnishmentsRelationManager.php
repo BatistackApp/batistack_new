@@ -68,7 +68,10 @@ class WageGarnishmentsRelationManager extends RelationManager
                 IconColumn::make('is_active')->label('Actif')->boolean(),
             ])
             ->headerActions([
-                CreateAction::make()->label('Nouveau SATD'),
+                \Filament\Tables\Actions\CreateAction::make()->label('Nouveau SATD'),
+            ])
+            ->recordActions([
+                \Filament\Tables\Actions\EditAction::make(),
             ]);
     }
 

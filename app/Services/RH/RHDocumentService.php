@@ -58,7 +58,7 @@ class RHDocumentService extends DocumentService
         );
     }
 
-    public function generateCddEarlyTermination(Contract $contract): string
+    public function generateCddEarlyTermination(Contract $contract, ?Carbon $terminationDate = null): string
     {
         $contract->load(['employee']);
 
@@ -68,6 +68,7 @@ class RHDocumentService extends DocumentService
             'employee' => $contract->employee,
             'title' => 'AVENANT RUPTURE CDD - '.$contract->employee->full_name,
             'generated_at' => Carbon::now()->format('d/m/Y H:i'),
+            'termination_date' => $terminationDate,
         ];
 
         return $this->generate(
@@ -257,9 +258,23 @@ class RHDocumentService extends DocumentService
         $netSalary = $grossSalary * 0.78;
 
         $satdDeduction = 0;
-        $activeSatd = $employee->wageGarnishments()->where('is_active', true)->where('start_date', '<=', Carbon::create($year, $month, 1)->endOfMonth())->first();
-        if ($activeSatd) {
-            $satdDeduction = $activeSatd->calculateDeduction($netSalary);
+        
+        $activeSatds = $employee->wageGarnishments()
+            ->where('is_active', true)
+            ->where('start_date', '<=', Carbon::create($year, $month, 1)->endOfMonth())
+            ->orderBy('start_date', 'asc')
+            ->get();
+
+        if ($activeSatds->isNotEmpty()) {
+            $dummyGarnishment = new \App\Models\RH\WageGarnishment(['total_amount_due' => 99999999, 'amount_collected' => 0]);
+            $maxDeduction = $dummyGarnishment->calculateDeduction($netSalary);
+            
+            foreach ($activeSatds as $satd) {
+                if ($satdDeduction >= $maxDeduction) break;
+                $deduction = $satd->calculateDeduction($netSalary);
+                $actualDeduction = min($deduction, $maxDeduction - $satdDeduction);
+                $satdDeduction += $actualDeduction;
+            }
         }
 
         $summary = [

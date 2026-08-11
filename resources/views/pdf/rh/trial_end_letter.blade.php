@@ -27,15 +27,28 @@
             <strong>Objet : Rupture de votre période d'essai</strong>
         </p>
         <p>Madame, Monsieur,</p>
+        @php
+            $notificationDate = now();
+            $tenureDays = $contract->start_date->diffInDays($notificationDate);
+            if ($tenureDays < 8) {
+                $noticeDays = 1;
+            } elseif ($tenureDays <= 30) {
+                $noticeDays = 2;
+            } elseif ($tenureDays <= 90) {
+                $noticeDays = 14;
+            } else {
+                $noticeDays = 30; // 1 mois
+            }
+            $endDate = $notificationDate->copy()->addDays($noticeDays);
+        @endphp
         <p>
             Vous avez été embauché(e) au sein de notre entreprise le {{ $contract->start_date->format('d/m/Y') }} en qualité de {{ $contract->job_title }}.
-            Votre contrat de travail prévoyait une période d'essai de deux mois.
         </p>
         <p>
-            Par la présente, nous vous informons que nous avons décidé de mettre fin à cette période d'essai, conformément aux dispositions prévues par votre contrat de travail et la convention collective applicable.
+            Par la présente, nous vous informons que nous avons décidé de mettre fin à votre période d'essai, conformément aux dispositions prévues par votre contrat de travail et la législation applicable.
         </p>
         <p>
-            En application du délai de prévenance légal en vigueur, votre contrat de travail prendra définitivement fin le <strong>{{ now()->addDays(2)->format('d/m/Y') }}</strong> (à titre indicatif, sous réserve du calcul exact du délai de prévenance).
+            En application du délai de prévenance légal en vigueur ({{ $noticeDays }} jour{{ $noticeDays > 1 ? 's' : '' }} compte tenu de votre temps de présence), votre contrat de travail prendra définitivement fin le <strong>{{ $endDate->format('d/m/Y') }}</strong> au soir.
         </p>
         <p>
             À la date de rupture de votre contrat, nous vous remettrons votre certificat de travail, votre reçu pour solde de tout compte, ainsi que votre attestation France Travail.
