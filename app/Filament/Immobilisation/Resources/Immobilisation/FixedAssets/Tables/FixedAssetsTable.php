@@ -32,7 +32,7 @@ class FixedAssetsTable
     {
         return $table
             ->columns([
-                TextColumn::make('name')
+                TextColumn::make('name')->label('Nom')
                     ->label('Nom')
                     ->searchable(),
                 TextColumn::make('category.name')
@@ -46,7 +46,7 @@ class FixedAssetsTable
                     ->label('Valeur brute')
                     ->money('EUR')
                     ->sortable(),
-                TextColumn::make('status')
+                TextColumn::make('status')->label('Statut')
                     ->label('Statut')
                     ->badge()
                     ->sortable()
@@ -81,10 +81,10 @@ class FixedAssetsTable
                     ->relationship('category', 'name')
                     ->searchable()
                     ->preload(),
-                SelectFilter::make('status')
+                SelectFilter::make('status')->label('Statut')
                     ->label('Statut')
                     ->options(AssetStatus::class),
-                SelectFilter::make('chantier_id')
+                SelectFilter::make('chantier_id')->label('Chantier')
                     ->label('Chantier')
                     ->relationship('chantier', 'name')
                     ->searchable()
@@ -147,7 +147,7 @@ class FixedAssetsTable
                     ->icon('heroicon-o-clipboard-document-check')
                     ->color('success')
                     ->schema([
-                        Select::make('chantier_id')
+                        Select::make('chantier_id')->label('Chantier')
                             ->label('Chantier')
                             ->options(Chantier::pluck('name', 'id'))
                             ->searchable()

@@ -23,21 +23,21 @@ class BankTransactionForm
                     ->label('ID Externe')
                     ->disabled()
                     ->dehydrated(false),
-                DatePicker::make('date')
+                DatePicker::make('date')->label('Date')
                     ->label('Date')
                     ->required(),
-                TextInput::make('description')
+                TextInput::make('description')->label('Description')
                     ->label('Libellé')
                     ->required(),
-                TextInput::make('amount')
+                TextInput::make('amount')->label('Montant')
                     ->label('Montant')
                     ->required()
                     ->numeric(),
-                Select::make('type')
+                Select::make('type')->label('Type')
                     ->label('Type')
                     ->options(TransactionType::class)
                     ->required(),
-                Select::make('status')
+                Select::make('status')->label('Statut')
                     ->label('Statut')
                     ->options(TransactionStatus::class)
                     ->default('pending')

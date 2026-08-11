@@ -19,7 +19,7 @@ class ManufacturingOrderForm
                 Group::make()->schema([
                     Section::make('Détails de l\'Ordre')
                         ->schema([
-                            TextInput::make('reference')
+                            TextInput::make('reference')->label('Référence')
                                 ->label('Référence')
                                 ->default('OF-'.strtoupper(uniqid()))
                                 ->required()
@@ -37,7 +37,7 @@ class ManufacturingOrderForm
                                 ->preload()
                                 ->required(),
 
-                            Select::make('status')
+                            Select::make('status')->label('Statut')
                                 ->label('Statut')
                                 ->options(ManufacturingStatus::class)
                                 ->default(ManufacturingStatus::DRAFT)

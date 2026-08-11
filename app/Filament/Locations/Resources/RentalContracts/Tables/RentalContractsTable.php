@@ -21,7 +21,7 @@ class RentalContractsTable
     {
         return $table
             ->columns([
-                TextColumn::make('reference')
+                TextColumn::make('reference')->label('Référence')
                     ->searchable()
                     ->sortable()
                     ->label('Référence'),
@@ -36,7 +36,7 @@ class RentalContractsTable
                     ->sortable()
                     ->label('Fournisseur'),
 
-                TextColumn::make('status')
+                TextColumn::make('status')->label('Statut')
                     ->badge()
                     ->sortable()
                     ->searchable()
@@ -64,11 +64,11 @@ class RentalContractsTable
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                SelectFilter::make('status')
+                SelectFilter::make('status')->label('Statut')
                     ->options(RentalStatus::class)
                     ->label('Statut'),
 
-                SelectFilter::make('chantier_id')
+                SelectFilter::make('chantier_id')->label('Chantier')
                     ->relationship('chantier', 'name')
                     ->label('Chantier'),
 

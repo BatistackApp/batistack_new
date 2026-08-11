@@ -14,7 +14,7 @@ class AssetCategoriesTable
     {
         return $table
             ->columns([
-                TextColumn::make('name')
+                TextColumn::make('name')->label('Nom')
                     ->label('Désignation')
                     ->searchable(),
                 TextColumn::make('account_code')
@@ -28,12 +28,12 @@ class AssetCategoriesTable
                     ->label('Méthode')
                     ->badge()
                     ->searchable(),
-                TextColumn::make('created_at')
+                TextColumn::make('created_at')->label('Créé le')
                     ->label('Créé le')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('updated_at')
+                TextColumn::make('updated_at')->label('Mis à jour le')
                     ->label('Mis à jour le')
                     ->dateTime()
                     ->sortable()

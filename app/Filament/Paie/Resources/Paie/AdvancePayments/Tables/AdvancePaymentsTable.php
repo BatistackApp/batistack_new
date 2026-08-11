@@ -18,7 +18,7 @@ class AdvancePaymentsTable
                     ->label('Employé')
                     ->sortable()
                     ->searchable(),
-                TextColumn::make('amount')
+                TextColumn::make('amount')->label('Montant')
                     ->label('Montant')
                     ->money('EUR')
                     ->sortable(),
@@ -30,10 +30,10 @@ class AdvancePaymentsTable
                     ->label('Date paiement')
                     ->date('d/m/Y')
                     ->sortable(),
-                TextColumn::make('type')
+                TextColumn::make('type')->label('Type')
                     ->label('Type')
                     ->searchable(),
-                TextColumn::make('status')
+                TextColumn::make('status')->label('Statut')
                     ->label('Statut')
                     ->badge()
                     ->color(fn (\App\Enums\Paie\AdvancePaymentStatus $state): string => match ($state) {
@@ -43,11 +43,11 @@ class AdvancePaymentsTable
                         \App\Enums\Paie\AdvancePaymentStatus::DEDUCTED => 'gray',
                     })
                     ->searchable(),
-                TextColumn::make('created_at')
+                TextColumn::make('created_at')->label('Créé le')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('updated_at')
+                TextColumn::make('updated_at')->label('Mis à jour le')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),

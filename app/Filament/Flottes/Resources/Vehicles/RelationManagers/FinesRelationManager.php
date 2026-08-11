@@ -38,7 +38,7 @@ class FinesRelationManager extends RelationManager
                 Section::make('Détails du PV')
                     ->columns(2)
                     ->schema([
-                        TextInput::make('reference')
+                        TextInput::make('reference')->label('Référence')
                             ->label('N° Avis de Contravention')
                             ->required()
                             ->unique(ignoreRecord: true),
@@ -46,7 +46,7 @@ class FinesRelationManager extends RelationManager
                             ->label('Date & Heure de l\'infraction')
                             ->required()
                             ->native(false),
-                        TextInput::make('amount')
+                        TextInput::make('amount')->label('Montant')
                             ->label('Montant de l\'amende (€)')
                             ->numeric()
                             ->prefix('€')
@@ -62,7 +62,7 @@ class FinesRelationManager extends RelationManager
                             ->searchable()
                             ->preload()
                             ->helperText('Laissez vide pour appliquer la résolution automatique basé sur le planning.'),
-                        Select::make('status')
+                        Select::make('status')->label('Statut')
                             ->label('Statut')
                             ->options(FineStatus::class)
                             ->required()
@@ -77,7 +77,7 @@ class FinesRelationManager extends RelationManager
         return $table
             ->recordTitleAttribute('reference')
             ->columns([
-                TextColumn::make('reference')
+                TextColumn::make('reference')->label('Référence')
                     ->label('N° PV')
                     ->fontFamily('mono')
                     ->searchable(),
@@ -88,12 +88,12 @@ class FinesRelationManager extends RelationManager
                 TextColumn::make('infraction_at')
                     ->label('Date d\'infraction')
                     ->dateTime('d/m/Y H:i'),
-                TextColumn::make('amount')
+                TextColumn::make('amount')->label('Montant')
                     ->label('Montant')
                     ->money('EUR')
                     ->color('danger')
                     ->weight('bold'),
-                TextColumn::make('status')
+                TextColumn::make('status')->label('Statut')
                     ->label('État')
                     ->badge(),
             ])

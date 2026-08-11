@@ -44,7 +44,7 @@ class ContractsRelationManager extends RelationManager
                             ->required()
                             ->searchable()
                             ->preload(),
-                        Select::make('type')
+                        Select::make('type')->label('Type')
                             ->label('Type de contrat')
                             ->options([
                                 'insurance' => 'Assurance',
@@ -83,7 +83,7 @@ class ContractsRelationManager extends RelationManager
         return $table
             ->recordTitleAttribute('policy_number')
             ->columns([
-                TextColumn::make('type')
+                TextColumn::make('type')->label('Type')
                     ->label('Type')
                     ->badge()
                     ->formatStateUsing(fn ($state) => match ($state) {

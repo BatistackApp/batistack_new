@@ -16,7 +16,7 @@ class InventoryCycleForm
                 \Filament\Schemas\Components\Section::make('Informations générales')
                     ->columns(3)
                     ->schema([
-                        TextInput::make('name')
+                        TextInput::make('name')->label('Nom')
                             ->label('Nom du cycle')
                             ->disabled()
                             ->required(),
@@ -25,7 +25,7 @@ class InventoryCycleForm
                             ->relationship('warehouse', 'name')
                             ->disabled()
                             ->required(),
-                        Select::make('status')
+                        Select::make('status')->label('Statut')
                             ->label('Statut')
                             ->options(InventoryCycleStatus::class)
                             ->disabled()

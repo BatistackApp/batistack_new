@@ -15,7 +15,7 @@ class WarehouseForm
             ->components([
                 Section::make('Détails du Dépôt')
                     ->schema([
-                        TextInput::make('name')
+                        TextInput::make('name')->label('Nom')
                             ->label('Nom du dépôt')
                             ->required(),
                         TextInput::make('location')

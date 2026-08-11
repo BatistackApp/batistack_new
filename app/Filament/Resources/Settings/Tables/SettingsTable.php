@@ -44,7 +44,7 @@ class SettingsTable
                     })
                     ->html(),
 
-                TextColumn::make('updated_at')
+                TextColumn::make('updated_at')->label('Mis à jour le')
                     ->label('Modifié')
                     ->since()
                     ->sortable(),

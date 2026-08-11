@@ -45,20 +45,20 @@ class InterventionForm
                                             ->nullable()
                                             ->disabled(fn (Get $get) => ! $get('third_party_id')),
 
-                                        Select::make('chantier_id')
+                                        Select::make('chantier_id')->label('Chantier')
                                             ->relationship('chantier', 'reference')
                                             ->searchable()
                                             ->preload()
                                             ->label('Chantier associé')
                                             ->nullable(),
 
-                                        Select::make('type')
+                                        Select::make('type')->label('Type')
                                             ->options(InterventionType::class)
                                             ->required()
                                             ->live()
                                             ->label('Type d\'intervention'),
 
-                                        Select::make('status')
+                                        Select::make('status')->label('Statut')
                                             ->options(InterventionStatus::class)
                                             ->required()
                                             ->default(InterventionStatus::BROUILLON)
@@ -81,7 +81,7 @@ class InterventionForm
                                             ->nullable(),
                                     ]),
 
-                                RichEditor::make('description')
+                                RichEditor::make('description')->label('Description')
                                     ->label('Description de l\'intervention / Panne')
                                     ->columnSpanFull()
                                     ->nullable(),
@@ -157,7 +157,7 @@ class InterventionForm
                                                 ->preload()
                                                 ->required(),
 
-                                            TextInput::make('quantity')
+                                            TextInput::make('quantity')->label('Quantité')
                                                 ->label('Quantité')
                                                 ->numeric()
                                                 ->required()

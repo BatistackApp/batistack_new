@@ -21,7 +21,7 @@ class SupplierInvoiceForm
                     ->columnSpanFull()
                     ->columns(2)
                     ->schema([
-                        TextInput::make('reference')
+                        TextInput::make('reference')->label('Référence')
                             ->label('Numéro de facture')
                             ->required(),
 
@@ -42,7 +42,7 @@ class SupplierInvoiceForm
                             ->label('Échéance')
                             ->required(),
 
-                        Select::make('status')
+                        Select::make('status')->label('Statut')
                             ->label('Statut')
                             ->options(InvoiceStatus::class)
                             ->required()
@@ -100,12 +100,12 @@ class SupplierInvoiceForm
                                         }
                                     }),
 
-                                TextInput::make('name')
+                                TextInput::make('name')->label('Nom')
                                     ->label('Description')
                                     ->columnSpan(2)
                                     ->required(),
 
-                                TextInput::make('quantity')
+                                TextInput::make('quantity')->label('Quantité')
                                     ->label('Quantité')
                                     ->numeric()
                                     ->required(),
@@ -144,7 +144,7 @@ class SupplierInvoiceForm
 
                 Section::make('Audit 3 voies')
                     ->schema([
-                        Select::make('status')
+                        Select::make('status')->label('Statut')
                             ->label('Statut de l\'audit')
                             ->options(InvoiceStatus::class)
                             ->required()

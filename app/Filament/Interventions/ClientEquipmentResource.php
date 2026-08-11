@@ -38,7 +38,7 @@ class ClientEquipmentResource extends Resource
                     ->searchable()
                     ->preload()
                     ->required(),
-                TextInput::make('name')
+                TextInput::make('name')->label('Nom')
                     ->label('Nom de l\'équipement')
                     ->required(),
                 TextInput::make('brand')
@@ -59,7 +59,7 @@ class ClientEquipmentResource extends Resource
                     ->label('Client')
                     ->sortable()
                     ->searchable(),
-                TextColumn::make('name')
+                TextColumn::make('name')->label('Nom')
                     ->label('Nom')
                     ->searchable(),
                 TextColumn::make('brand')

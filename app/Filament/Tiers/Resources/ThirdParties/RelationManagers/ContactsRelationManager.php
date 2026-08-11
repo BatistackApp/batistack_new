@@ -38,10 +38,10 @@ class ContactsRelationManager extends RelationManager
                     ->required(),
                 TextInput::make('job_title')
                     ->label('Fonction'),
-                TextInput::make('email')
+                TextInput::make('email')->label('Email')
                     ->email()
                     ->required(),
-                TextInput::make('phone')
+                TextInput::make('phone')->label('Téléphone')
                     ->tel(),
                 TextInput::make('mobile')
                     ->tel(),
@@ -62,7 +62,7 @@ class ContactsRelationManager extends RelationManager
                     ->weight('bold'),
                 TextColumn::make('job_title')
                     ->label('Fonction'),
-                TextColumn::make('email')
+                TextColumn::make('email')->label('Email')
                     ->icon(Phosphor::Envelope),
                 IconColumn::make('is_primary')
                     ->label('Principal')

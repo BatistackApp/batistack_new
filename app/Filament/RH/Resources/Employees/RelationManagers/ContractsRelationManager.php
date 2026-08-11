@@ -40,7 +40,7 @@ class ContractsRelationManager extends RelationManager
                 Section::make('Détails du Contrat')
                     ->columnSpanFull()
                     ->schema([
-                        Select::make('type')
+                        Select::make('type')->label('Type')
                             ->label('Type de contrat')
                             ->options(ContractType::class)
                             ->required()
@@ -50,7 +50,7 @@ class ContractsRelationManager extends RelationManager
                             ->options(fn () => \Spatie\Permission\Models\Role::pluck('name', 'name'))
                             ->searchable()
                             ->createOptionForm([
-                                TextInput::make('name')
+                                TextInput::make('name')->label('Nom')
                                     ->label('Nom du poste/rôle')
                                     ->required()
                                     ->unique(\Spatie\Permission\Models\Role::class, 'name', ignoreRecord: false)
@@ -99,7 +99,7 @@ class ContractsRelationManager extends RelationManager
                 TextColumn::make('job_title')
                     ->label('Poste')
                     ->weight('bold'),
-                TextColumn::make('type')
+                TextColumn::make('type')->label('Type')
                     ->label('Type')
                     ->badge(),
                 TextColumn::make('start_date')
@@ -169,6 +169,19 @@ class ContractsRelationManager extends RelationManager
                         Notification::make()->title('Demande de signature envoyée par email')->success()->send();
                     })
                     ->label('Demander Signature'),
+                \Filament\Tables\Actions\ActionGroup::make([
+                    Action::make('trial_end')
+                        ->label('Rupture Période d\'Essai')
+                        ->icon(Phosphor::FileMinus)
+                        ->color('danger')
+                        ->action(fn (Contract $record, RHDocumentService $service) => $service->download($service->generateTrialPeriodEndLetter($record))),
+                    Action::make('cdd_terminate')
+                        ->label('Avenant Rupture CDD')
+                        ->icon(Phosphor::FileX)
+                        ->color('danger')
+                        ->visible(fn (Contract $record) => $record->type === ContractType::CDD)
+                        ->action(fn (Contract $record, RHDocumentService $service) => $service->download($service->generateCddEarlyTermination($record))),
+                ])->label('Documents de rupture')->icon(Phosphor::Files),
             ]);
     }
 

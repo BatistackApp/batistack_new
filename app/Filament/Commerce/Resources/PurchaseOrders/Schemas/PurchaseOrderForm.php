@@ -15,7 +15,7 @@ class PurchaseOrderForm
                     ->relationship('supplier', 'name')
                     ->required()
                     ->searchable(),
-                \Filament\Forms\Components\Select::make('chantier_id')
+                \Filament\Forms\Components\Select::make('chantier_id')->label('Chantier')
                     ->label('Chantier')
                     ->relationship('chantier', 'reference')
                     ->searchable(),
@@ -23,11 +23,11 @@ class PurchaseOrderForm
                     ->label('Demande d\'achat')
                     ->relationship('request', 'reference')
                     ->searchable(),
-                \Filament\Forms\Components\TextInput::make('reference')
+                \Filament\Forms\Components\TextInput::make('reference')->label('Référence')
                     ->label('Référence')
                     ->required()
                     ->maxLength(255),
-                \Filament\Forms\Components\Select::make('status')
+                \Filament\Forms\Components\Select::make('status')->label('Statut')
                     ->label('Statut')
                     ->options(\App\Enums\Commerce\OrderStatus::class)
                     ->required()

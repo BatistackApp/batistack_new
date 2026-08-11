@@ -4,6 +4,7 @@ use App\Models\Chantiers\Chantier;
 use App\Models\Chantiers\ChantierLog;
 use App\Models\Commerce\CustomerOrder;
 use App\Models\Tiers\ThirdParty;
+use App\Enums\Tiers\ThirdPartyType;
 use App\Models\User;
 use App\Services\Chantiers\ChantierDocumentService;
 use App\Services\Chantiers\ChantierAnalyticService;
@@ -14,7 +15,7 @@ use Spatie\Browsershot\Browsershot;
 use App\Enums\Commerce\OrderStatus;
 
 beforeEach(function () {
-    $this->customer = ThirdParty::factory()->create(['name' => 'Test Customer']);
+    $this->customer = ThirdParty::factory()->create(['name' => 'Test Customer', 'type' => ThirdPartyType::CLIENT]);
     $this->user = User::factory()->create();
     $this->order = CustomerOrder::create([
         'reference' => 'CO-CHANTIER',
@@ -84,10 +85,10 @@ it('generates weekly journal PDF', function () {
         'date' => Carbon::now()->startOfWeek(),
         'weather_morning' => 'sunny',
         'weather_afternoon' => 'sunny',
-        'notes' => 'Test log',
+        'content' => 'Test log',
         'user_id' => App\Models\User::factory()->create()->id
     ]);
 
     $path = $this->service->generateWeeklyJournal($this->chantier, Carbon::now()->startOfWeek());
-    expect($path)->toContain('documents/chantiers/journal/journal_CH-TEST');
+    expect($path)->toContain('documents/chantiers/journals/journal_CH-TEST');
 });

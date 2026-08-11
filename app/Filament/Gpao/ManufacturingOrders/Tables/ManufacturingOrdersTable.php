@@ -24,7 +24,7 @@ class ManufacturingOrdersTable
     {
         return $table
             ->columns([
-                TextColumn::make('reference')
+                TextColumn::make('reference')->label('Référence')
                     ->label('Référence')
                     ->searchable()
                     ->sortable(),
@@ -52,7 +52,7 @@ class ManufacturingOrdersTable
                     ->numeric()
                     ->sortable(),
 
-                TextColumn::make('status')
+                TextColumn::make('status')->label('Statut')
                     ->label('Statut')
                     ->badge()
                     ->sortable(),
@@ -63,7 +63,7 @@ class ManufacturingOrdersTable
                     ->sortable(),
             ])
             ->filters([
-                SelectFilter::make('status')
+                SelectFilter::make('status')->label('Statut')
                     ->label('Statut')
                     ->options(ManufacturingStatus::class),
             ])
@@ -92,14 +92,14 @@ class ManufacturingOrdersTable
                     ->color('fuchsia')
                     ->visible(fn (ManufacturingOrder $record) => $record->status === ManufacturingStatus::QUALITY_CONTROL)
                     ->form([
-                        Radio::make('status')
+                        Radio::make('status')->label('Statut')
                             ->label('Résultat')
                             ->options([
                                 'passed' => 'Validé',
                                 'failed' => 'Refusé',
                             ])
                             ->required(),
-                        Textarea::make('notes')
+                        Textarea::make('notes')->label('Notes')
                             ->label('Notes / Commentaires'),
                     ])
                     ->action(function (array $data, ManufacturingOrder $record) {

@@ -48,6 +48,7 @@ class CustomerInvoice extends Model implements HasTimeline
         'dunning_level',
         'last_dunning_at',
         'stripe_session_id',
+        'billing_key',
     ];
 
     public function client(): BelongsTo

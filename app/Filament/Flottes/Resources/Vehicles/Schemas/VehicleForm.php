@@ -29,7 +29,7 @@ class VehicleForm
                                 Section::make()
                                     ->columns(3)
                                     ->schema([
-                                        TextInput::make('reference')
+                                        TextInput::make('reference')->label('Référence')
                                             ->label('Code Interne')
                                             ->required()
                                             ->unique(ignoreRecord: true)
@@ -41,7 +41,7 @@ class VehicleForm
                                             ->unique(ignoreRecord: true)
                                             ->placeholder('ex: AA-123-BB')
                                             ->maxLength(20),
-                                        Select::make('status')
+                                        Select::make('status')->label('Statut')
                                             ->label('Statut Opérationnel')
                                             ->options(VehicleStatus::class)
                                             ->required()
@@ -60,7 +60,7 @@ class VehicleForm
                                             ->label('Modèle')
                                             ->required()
                                             ->placeholder('ex: Partner'),
-                                        Select::make('type')
+                                        Select::make('type')->label('Type')
                                             ->label('Catégorie d\'actif')
                                             ->options(VehicleType::class)
                                             ->required()

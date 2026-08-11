@@ -51,7 +51,7 @@ class MaintenancesRelationManager extends RelationManager
                             ->options(VatRate::where('is_active', true)->pluck('name', 'id'))
                             ->required()
                             ->native(false),
-                        TextInput::make('type')
+                        TextInput::make('type')->label('Type')
                             ->label('Nature des travaux')
                             ->required()
                             ->placeholder('ex: Vidange complète, Remplacement embrayage'),
@@ -70,7 +70,7 @@ class MaintenancesRelationManager extends RelationManager
                             ->numeric()
                             ->suffix(fn () => $this->getOwnerRecord()->usage_unit === 'hours' ? 'h' : 'km')
                             ->helperText('Permet de réinitialiser le jalon de révision préventive.'),
-                        Textarea::make('description')
+                        Textarea::make('description')->label('Description')
                             ->label('Détail des réparations / pièces changées')
                             ->columnSpanFull(),
                     ]),
@@ -86,7 +86,7 @@ class MaintenancesRelationManager extends RelationManager
                     ->label('Date')
                     ->date('d/m/Y')
                     ->sortable(),
-                TextColumn::make('type')
+                TextColumn::make('type')->label('Type')
                     ->label('Nature des travaux')
                     ->weight('bold'),
                 TextColumn::make('supplier.name')

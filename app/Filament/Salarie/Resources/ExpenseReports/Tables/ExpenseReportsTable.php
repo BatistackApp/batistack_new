@@ -26,11 +26,11 @@ class ExpenseReportsTable
                 TextColumn::make('year')
                     ->label('Année')
                     ->sortable(),
-                TextColumn::make('total_amount')
+                TextColumn::make('total_amount')->label('Montant total')
                     ->label('Montant Total')
                     ->money('EUR')
                     ->sortable(),
-                TextColumn::make('status')
+                TextColumn::make('status')->label('Statut')
                     ->label('Statut')
                     ->badge(),
             ])

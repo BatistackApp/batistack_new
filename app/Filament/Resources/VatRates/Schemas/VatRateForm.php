@@ -17,7 +17,7 @@ class VatRateForm
                 Section::make('Détails du taux de TVA')
                     ->columns(2)
                     ->schema([
-                        TextInput::make('name')
+                        TextInput::make('name')->label('Nom')
                             ->label('Libellé du taux')
                             ->placeholder('ex: TVA Normale')
                             ->required(),

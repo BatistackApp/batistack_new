@@ -16,11 +16,11 @@ class PayrollContributionProfileForm
                     ->label('Code')
                     ->required()
                     ->maxLength(255),
-                TextInput::make('name')
+                TextInput::make('name')->label('Nom')
                     ->label('Nom du profil')
                     ->required()
                     ->maxLength(255),
-                Textarea::make('description')
+                Textarea::make('description')->label('Description')
                     ->label('Description')
                     ->columnSpanFull(),
                 TextInput::make('meal_allowance_amount')

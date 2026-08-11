@@ -25,7 +25,7 @@ class LatestStockMouvementsWidget extends BaseWidget
                     ->limit(10)
             )
             ->columns([
-                Tables\Columns\TextColumn::make('created_at')
+                Tables\Columns\TextColumn::make('created_at')->label('Créé le')
                     ->label('Date')
                     ->dateTime('d/m/Y H:i')
                     ->sortable(),
@@ -34,7 +34,7 @@ class LatestStockMouvementsWidget extends BaseWidget
                     ->searchable(),
                 Tables\Columns\TextColumn::make('stock.warehouse.name')
                     ->label('Entrepôt'),
-                Tables\Columns\BadgeColumn::make('type')
+                Tables\Columns\BadgeColumn::make('type')->label('Type')
                     ->label('Type')
                     ->colors([
                         'success' => StockMouvementType::IN,

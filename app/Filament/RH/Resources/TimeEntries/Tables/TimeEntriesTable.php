@@ -28,7 +28,7 @@ class TimeEntriesTable
     {
         return $table
             ->columns([
-                TextColumn::make('date')
+                TextColumn::make('date')->label('Date')
                     ->label('Date')
                     ->date('d/m/Y')
                     ->sortable(),
@@ -39,7 +39,7 @@ class TimeEntriesTable
                     ->label('Durée')
                     ->suffix(' h')
                     ->weight('bold'),
-                TextColumn::make('status')
+                TextColumn::make('status')->label('Statut')
                     ->label('Statut')
                     ->badge(),
                 IconColumn::make('is_grand_deplacement')
@@ -48,7 +48,7 @@ class TimeEntriesTable
                     ->tooltip(fn ($record) => $record->is_grand_deplacement ? 'Indemnité 96€ appliquée' : null),
             ])
             ->filters([
-                SelectFilter::make('status')
+                SelectFilter::make('status')->label('Statut')
                     ->options(TimeEntryStatus::class),
                 Filter::make('to_validate')
                     ->label('À valider uniquement')
@@ -93,7 +93,7 @@ class TimeEntriesTable
                         ->accessSelectedRecords()
                         ->label('Changer le status')
                         ->schema([
-                            Select::make('status')
+                            Select::make('status')->label('Statut')
                                 ->label('Statut')
                                 ->options(TimeEntryStatus::class),
                         ])

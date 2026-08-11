@@ -18,7 +18,7 @@ class ExpenseAdvanceForm
                     ->required()
                     ->label('Employé'),
 
-                \Filament\Forms\Components\TextInput::make('amount')
+                \Filament\Forms\Components\TextInput::make('amount')->label('Montant')
                     ->numeric()
                     ->minValue(0.01)
                     ->required()
@@ -35,7 +35,7 @@ class ExpenseAdvanceForm
                     ->columnSpanFull()
                     ->label('Motif du déplacement / Dépense'),
 
-                \Filament\Forms\Components\Select::make('status')
+                \Filament\Forms\Components\Select::make('status')->label('Statut')
                     ->options([
                         \App\Enums\RH\ExpenseAdvanceStatus::PENDING->value => \App\Enums\RH\ExpenseAdvanceStatus::PENDING->getLabel(),
                         \App\Enums\RH\ExpenseAdvanceStatus::APPROVED->value => \App\Enums\RH\ExpenseAdvanceStatus::APPROVED->getLabel(),

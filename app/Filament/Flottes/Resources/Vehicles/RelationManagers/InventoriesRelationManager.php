@@ -48,7 +48,7 @@ class InventoriesRelationManager extends RelationManager
                             ->label('Numéro de série / Tag Unique')
                             ->required()
                             ->placeholder('ex: HLT-70-12345'),
-                        TextInput::make('quantity')
+                        TextInput::make('quantity')->label('Quantité')
                             ->label('Quantité')
                             ->numeric()
                             ->required()
@@ -75,7 +75,7 @@ class InventoriesRelationManager extends RelationManager
                     ->fontFamily('mono')
                     ->searchable()
                     ->weight('semibold'),
-                TextColumn::make('quantity')
+                TextColumn::make('quantity')->label('Quantité')
                     ->label('Quantité')
                     ->numeric(),
             ])

@@ -20,20 +20,20 @@ class ExpenseReportInfolist
                 TextEntry::make('year')
                     ->label('Année')
                     ->numeric(),
-                TextEntry::make('status')
+                TextEntry::make('status')->label('Statut')
                     ->label('Statut')
                     ->badge()
                     ->color(fn (\App\Enums\RH\ExpenseReportStatus $state): string => $state->getColor())
                     ->formatStateUsing(fn (\App\Enums\RH\ExpenseReportStatus $state): string => $state->getLabel()),
-                TextEntry::make('total_amount')
+                TextEntry::make('total_amount')->label('Montant total')
                     ->label('Montant Total')
                     ->numeric()
                     ->suffix(' €'),
-                TextEntry::make('created_at')
+                TextEntry::make('created_at')->label('Créé le')
                     ->label('Créé le')
                     ->dateTime()
                     ->placeholder('-'),
-                TextEntry::make('updated_at')
+                TextEntry::make('updated_at')->label('Mis à jour le')
                     ->label('Mis à jour le')
                     ->dateTime()
                     ->placeholder('-'),

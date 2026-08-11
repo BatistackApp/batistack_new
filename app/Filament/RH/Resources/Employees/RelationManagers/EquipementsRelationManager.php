@@ -40,7 +40,7 @@ class EquipementsRelationManager extends RelationManager
                     ->columns(2)
                     ->columnSpanFull()
                     ->schema([
-                        Select::make('type')
+                        Select::make('type')->label('Type')
                             ->label('Catégorie')
                             ->options(EquipementType::class)
                             ->required()
@@ -64,7 +64,7 @@ class EquipementsRelationManager extends RelationManager
                             ->relationship('item', 'name')
                             ->searchable()
                             ->nullable(),
-                        Select::make('status')
+                        Select::make('status')->label('Statut')
                             ->label('Statut')
                             ->options(EquipementStatus::class)
                             ->default(EquipementStatus::AVAILABLE)
@@ -82,7 +82,7 @@ class EquipementsRelationManager extends RelationManager
                             ->label('Échéance / Péremption')
                             ->helperText('Obligatoire pour les EPI (Casques, Harnais, etc.)')
                             ->native(false),
-                        Textarea::make('notes')
+                        Textarea::make('notes')->label('Notes')
                             ->label('Observations (état au remise, etc.)')
                             ->columnSpanFull(),
                     ]),
@@ -94,14 +94,14 @@ class EquipementsRelationManager extends RelationManager
         return $table
             ->recordTitleAttribute('label')
             ->columns([
-                IconColumn::make('type')
+                IconColumn::make('type')->label('Type')
                     ->label('')
                     ->icon(fn ($state) => $state->getIcon()),
                 TextColumn::make('label')
                     ->label('Désignation')
                     ->searchable()
                     ->description(fn ($record) => $record->brand.($record->serial_number ? " | S/N: {$record->serial_number}" : '')),
-                TextColumn::make('status')
+                TextColumn::make('status')->label('Statut')
                     ->label('Statut')
                     ->badge(),
                 TextColumn::make('assigned_at')

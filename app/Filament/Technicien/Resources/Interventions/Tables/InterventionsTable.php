@@ -27,7 +27,7 @@ class InterventionsTable
     {
         return $table
             ->columns([
-                TextColumn::make('reference')
+                TextColumn::make('reference')->label('Référence')
                     ->label('Référence')
                     ->searchable()
                     ->sortable()
@@ -39,12 +39,12 @@ class InterventionsTable
                     ->searchable()
                     ->sortable(),
 
-                TextColumn::make('type')
+                TextColumn::make('type')->label('Type')
                     ->label('Type')
                     ->badge()
                     ->sortable(),
 
-                TextColumn::make('status')
+                TextColumn::make('status')->label('Statut')
                     ->label('Statut')
                     ->badge()
                     ->sortable(),
@@ -62,10 +62,10 @@ class InterventionsTable
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                SelectFilter::make('status')
+                SelectFilter::make('status')->label('Statut')
                     ->label('Statut')
                     ->options(InterventionStatus::class),
-                SelectFilter::make('type')
+                SelectFilter::make('type')->label('Type')
                     ->label('Type')
                     ->options(InterventionType::class),
                 SelectFilter::make('third_party_id')

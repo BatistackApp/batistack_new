@@ -20,7 +20,7 @@ class PayslipInfolist
                             ->label('Période')
                             ->size('lg')
                             ->weight(\Filament\Support\Enums\FontWeight::Bold),
-                        TextEntry::make('status')
+                        TextEntry::make('status')->label('Statut')
                             ->label('Statut')
                             ->badge(),
                         TextEntry::make('payment_date')

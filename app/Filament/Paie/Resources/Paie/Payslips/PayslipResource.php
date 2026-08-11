@@ -95,7 +95,7 @@ class PayslipResource extends Resource
                     ->required()
                     ->numeric()
                     ->helperText('Pré-rempli depuis le contrat en cours de l\'employé.'),
-                Forms\Components\Select::make('status')
+                Forms\Components\Select::make('status')->label('Statut')
                     ->options(PayslipStatus::class)
                     ->required()
                     ->default(PayslipStatus::DRAFT),
@@ -108,7 +108,7 @@ class PayslipResource extends Resource
                         Forms\Components\TextInput::make('label')
                             ->label('Libellé de la prime')
                             ->required(),
-                        Forms\Components\TextInput::make('amount')
+                        Forms\Components\TextInput::make('amount')->label('Montant')
                             ->label('Montant (€)')
                             ->numeric()
                             ->required(),
@@ -139,7 +139,7 @@ class PayslipResource extends Resource
                     ->label('Net Payé')
                     ->money('EUR')
                     ->sortable(),
-                Tables\Columns\TextColumn::make('status')
+                Tables\Columns\TextColumn::make('status')->label('Statut')
                     ->label('Statut')
                     ->badge()
                     ->color(fn (PayslipStatus $state): string => match ($state) {
@@ -365,7 +365,7 @@ class PayslipResource extends Resource
                             ->date('d/m/Y')
                             ->helperText(fn (Model $record) => round($record->employee->currentContract->start_date->diffInMonth(Carbon::parse($record->period.'-01')->endOfMonth())).' mois'),
 
-                        TextEntry::make('status')
+                        TextEntry::make('status')->label('Statut')
                             ->label('Statut')
                             ->badge()
                             ->color(fn (PayslipStatus $state): string => match ($state) {
@@ -402,7 +402,7 @@ class PayslipResource extends Resource
                                 TextEntry::make('label')
                                     ->label('Libellé')
                                     ->weight(FontWeight::SemiBold),
-                                TextEntry::make('amount')
+                                TextEntry::make('amount')->label('Montant')
                                     ->label('Montant')
                                     ->money('EUR')
                                     ->color(fn ($state) => $state < 0 ? 'danger' : 'success'),

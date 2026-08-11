@@ -44,7 +44,7 @@ class WeatherAlertsRelationManager extends RelationManager
                     }),
                 Tables\Columns\TextColumn::make('started_at')->dateTime()->label('Début'),
                 Tables\Columns\TextColumn::make('ended_at')->dateTime()->label('Fin'),
-                Tables\Columns\TextColumn::make('description')->wrap(),
+                Tables\Columns\TextColumn::make('description')->label('Description')->wrap(),
             ])
             ->recordActions([
                 ViewAction::make(),

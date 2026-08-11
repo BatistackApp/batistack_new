@@ -19,8 +19,8 @@ class QualityChecksRelationManager extends RelationManager
     {
         return $schema
             ->schema([
-                Forms\Components\TextInput::make('status'),
-                Forms\Components\Textarea::make('notes'),
+                Forms\Components\TextInput::make('status')->label('Statut'),
+                Forms\Components\Textarea::make('notes')->label('Notes'),
             ]);
     }
 
@@ -32,7 +32,7 @@ class QualityChecksRelationManager extends RelationManager
                 Tables\Columns\TextColumn::make('inspector.name')
                     ->label('Inspecteur')
                     ->sortable(),
-                Tables\Columns\TextColumn::make('status')
+                Tables\Columns\TextColumn::make('status')->label('Statut')
                     ->label('Résultat')
                     ->badge()
                     ->formatStateUsing(fn (string $state): string => match ($state) {
@@ -45,7 +45,7 @@ class QualityChecksRelationManager extends RelationManager
                         'failed' => 'danger',
                         default => 'gray',
                     }),
-                Tables\Columns\TextColumn::make('notes')
+                Tables\Columns\TextColumn::make('notes')->label('Notes')
                     ->label('Notes')
                     ->limit(50),
                 Tables\Columns\TextColumn::make('checked_at')

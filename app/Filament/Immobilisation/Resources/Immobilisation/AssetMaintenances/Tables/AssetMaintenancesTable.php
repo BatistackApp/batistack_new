@@ -22,7 +22,7 @@ class AssetMaintenancesTable
                     ->label('Date')
                     ->date('d/m/Y')
                     ->sortable(),
-                \Filament\Tables\Columns\TextColumn::make('type')
+                \Filament\Tables\Columns\TextColumn::make('type')->label('Type')
                     ->label('Type')
                     ->formatStateUsing(fn ($state) => match($state) {
                         'preventive' => 'Préventif',
@@ -50,7 +50,7 @@ class AssetMaintenancesTable
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                \Filament\Tables\Filters\SelectFilter::make('type')
+                \Filament\Tables\Filters\SelectFilter::make('type')->label('Type')
                     ->options([
                         'preventive' => 'Entretien Préventif',
                         'curative' => 'Réparation Curative',

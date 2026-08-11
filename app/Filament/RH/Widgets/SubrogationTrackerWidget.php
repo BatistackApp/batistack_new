@@ -34,7 +34,7 @@ class SubrogationTrackerWidget extends BaseWidget
                     ->searchable()
                     ->sortable()
                     ->weight('bold'),
-                TextColumn::make('type')
+                TextColumn::make('type')->label('Type')
                     ->label('Type d\'arrêt')
                     ->badge(),
                 TextColumn::make('period')
