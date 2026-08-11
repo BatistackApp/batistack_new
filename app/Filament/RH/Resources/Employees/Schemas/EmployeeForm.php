@@ -136,7 +136,7 @@ class EmployeeForm
                                         SpatieMediaLibraryFileUpload::make('avatar')
                                             ->label('Photo de profil (Sert de base pour la reconnaissance faciale)')
                                             ->collection('avatar')
-                                            ->image()
+                                            ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp'])
                                             ->avatar()
                                             ->imageEditor(),
                                         SpatieMediaLibraryFileUpload::make('id_docs')
