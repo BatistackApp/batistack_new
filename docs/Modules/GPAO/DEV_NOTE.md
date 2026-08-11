@@ -23,7 +23,7 @@ Le module **GPAO** a pour objectif de gérer les opérations de production ou d'
 *   **Traçabilité** : Ajout des champs de `batch_number` et `serial_number` sur les composants consommés (`ManufacturingRequirement`) et les produits finis (`ManufacturingOrder`).
 *   **Gestion des Rebuts (Scrap)** : Nouvelle déclaration de perte intégrée sur l'OF (`ManufacturingScrapService`). Ajustement auto du stock, motif, et affichage du Taux de Rebut Global via un widget Filament.
 *   **mini-GMAO** : Intégration des `Machine` et de leurs tickets d'intervention (`MachineMaintenanceTicket`). Assignation des OFs aux machines pour anticiper l'entretien selon la durée d'utilisation.
-*   **APS (Ordonnancement IA)** : Implémentation du service `ApsSchedulingService` qui planifie automatiquement les OFs ouverts sur les machines en respectant les délais de livraison client (mix de priorité) et la disponibilité du stock. Un bouton a été ajouté au Kanban GPAO.
+*   **APS (Ordonnancement IA)** : Implémentation du service `ApsSchedulingService` qui planifie automatiquement les OF au statut `ManufacturingStatus::PLANNED` sur les machines. Il les trie par `customerOrder->delivery_date` (sans garantie de respect des délais planifiés), puis écarte ceux dont le stock est insuffisant. Un bouton a été ajouté au Kanban GPAO.
 
 ### 4. Interface Utilisateur (Filament)
 *   **Espace Dédié (Panel Switch)** : Création d'un panneau Filament spécifique "Atelier & Production" (`GpaoPanelProvider`).

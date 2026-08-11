@@ -11,6 +11,7 @@ use App\Filament\RH\Resources\Employees\RelationManagers\ContractsRelationManage
 use App\Filament\RH\Resources\Employees\RelationManagers\EquipementsRelationManager;
 use App\Filament\RH\Resources\Employees\RelationManagers\MedicalVisitsRelationManager;
 use App\Filament\RH\Resources\Employees\RelationManagers\QualificationsRelationManager;
+use App\Filament\RH\Resources\Employees\RelationManagers\WageGarnishmentsRelationManager;
 use App\Filament\RH\Resources\Employees\Schemas\EmployeeForm;
 use App\Filament\RH\Resources\Employees\Schemas\EmployeeInfolist;
 use App\Filament\RH\Resources\Employees\Tables\EmployeesTable;
@@ -56,6 +57,7 @@ class EmployeeResource extends Resource
             AbsencesRelationManager::class,
             EquipementsRelationManager::class,
             MedicalVisitsRelationManager::class,
+            WageGarnishmentsRelationManager::class,
         ];
     }
 

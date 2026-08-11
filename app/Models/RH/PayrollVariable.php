@@ -20,6 +20,7 @@ class PayrollVariable extends Model
         'travel_allowances',
         'expense_reports_total',
         'estimated_gross_salary',
+        'satd_deduction',
     ];
 
     protected function casts(): array

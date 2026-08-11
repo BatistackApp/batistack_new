@@ -121,6 +121,28 @@ class PayrollGenerationService
                 // Overtime pay (majoration 25% simple assumption for V1)
                 $estimatedGrossSalary += $overtimeHours * $hourlyRate * 1.25;
 
+                // 8. SATD Deductions
+                $netSalaryEstimate = $estimatedGrossSalary * 0.78; // Approx 78% for deduction calc
+                $satdDeduction = 0;
+                
+                $activeSatds = $employee->wageGarnishments()
+                    ->where('is_active', true)
+                    ->where('start_date', '<=', $endDate)
+                    ->orderBy('start_date', 'asc')
+                    ->get();
+
+                if ($activeSatds->isNotEmpty()) {
+                    $dummyGarnishment = new \App\Models\RH\WageGarnishment(['total_amount_due' => 99999999, 'amount_collected' => 0]);
+                    $maxDeduction = $dummyGarnishment->calculateDeduction($netSalaryEstimate);
+                    
+                    foreach ($activeSatds as $satd) {
+                        if ($satdDeduction >= $maxDeduction) break;
+                        $deduction = $satd->calculateDeduction($netSalaryEstimate);
+                        $actualDeduction = min($deduction, $maxDeduction - $satdDeduction);
+                        $satdDeduction += $actualDeduction;
+                    }
+                }
+
                 // Save Variable
                 PayrollVariable::updateOrCreate(
                     [
@@ -135,6 +157,7 @@ class PayrollGenerationService
                         'travel_allowances' => $travelAllowances,
                         'expense_reports_total' => $expenseReportsTotal,
                         'estimated_gross_salary' => $estimatedGrossSalary,
+                        'satd_deduction' => $satdDeduction,
                     ]
                 );
 
@@ -144,6 +167,48 @@ class PayrollGenerationService
             $export->update(['total_employees' => $totalEmployees]);
 
             return $export;
+        });
+    }
+
+    /**
+     * Valide un export de paie en appliquant définitivement les retenues SATD.
+     */
+    public function validate(PayrollExport $export): void
+    {
+        DB::transaction(function () use ($export) {
+            if (in_array($export->status, [PayrollExportStatus::VALIDATED->value, PayrollExportStatus::EXPORTED->value], true)) {
+                return; // Idempotent
+            }
+
+            foreach ($export->variables as $variable) {
+                if ($variable->satd_deduction > 0) {
+                    $employee = $variable->employee;
+                    $remainingDeduction = $variable->satd_deduction;
+                    
+                    $activeSatds = $employee->wageGarnishments()
+                        ->where('is_active', true)
+                        ->orderBy('start_date', 'asc')
+                        ->get();
+
+                    foreach ($activeSatds as $satd) {
+                        if ($remainingDeduction <= 0) break;
+                        
+                        $due = max(0, $satd->total_amount_due - $satd->amount_collected);
+                        $deducted = min($remainingDeduction, $due);
+                        
+                        if ($deducted > 0) {
+                            $satd->amount_collected += $deducted;
+                            if ($satd->amount_collected >= $satd->total_amount_due) {
+                                $satd->is_active = false;
+                            }
+                            $satd->save();
+                            $remainingDeduction -= $deducted;
+                        }
+                    }
+                }
+            }
+
+            $export->update(['status' => PayrollExportStatus::VALIDATED->value]);
         });
     }
 }
