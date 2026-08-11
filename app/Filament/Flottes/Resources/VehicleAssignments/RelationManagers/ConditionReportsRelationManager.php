@@ -26,7 +26,7 @@ class ConditionReportsRelationManager extends RelationManager
     {
         return $schema
             ->components([
-                Components\Select::make('type')
+                Components\Select::make('type')->label('Type')
                     ->label('Type')
                     ->options(ConditionReportType::class)
                     ->required(),
@@ -56,7 +56,7 @@ class ConditionReportsRelationManager extends RelationManager
         return $table
             ->recordTitleAttribute('id')
             ->columns([
-                Tables\Columns\TextColumn::make('type')
+                Tables\Columns\TextColumn::make('type')->label('Type')
                     ->label('Type')
                     ->badge(),
                 Tables\Columns\TextColumn::make('odometer')

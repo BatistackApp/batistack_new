@@ -23,10 +23,10 @@ class ItemsRelationManager extends RelationManager
             ->recordTitleAttribute('name')
             ->paginated(false)
             ->columns([
-                TextColumn::make('name')
+                TextColumn::make('name')->label('Nom')
                     ->label('Désignation'),
 
-                TextColumn::make('quantity')
+                TextColumn::make('quantity')->label('Quantité')
                     ->label('Qte')
                     ->numeric(),
 

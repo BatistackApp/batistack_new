@@ -46,7 +46,7 @@ class ComponentsRelationManager extends RelationManager
                     ->preload()
                     ->required()
                     ->disableOptionsWhenSelectedInSiblingRepeaterItems(),
-                TextInput::make('quantity')
+                TextInput::make('quantity')->label('Quantité')
                     ->label('Quantité théorique')
                     ->numeric()
                     ->default(1)

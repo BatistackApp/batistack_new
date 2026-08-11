@@ -28,7 +28,7 @@ class CustomerInvoiceInfolist
                                     ->columnSpanFull()
                                     ->columns(4)
                                     ->schema([
-                                        TextEntry::make('reference')
+                                        TextEntry::make('reference')->label('Référence')
                                             ->label('Référence')
                                             ->icon(Phosphor::Hash),
 
@@ -36,7 +36,7 @@ class CustomerInvoiceInfolist
                                             ->label('Client')
                                             ->icon(Phosphor::User),
 
-                                        TextEntry::make('type')
+                                        TextEntry::make('type')->label('Type')
                                             ->label('Type'),
 
                                         TextEntry::make('order.reference')
@@ -101,7 +101,7 @@ class CustomerInvoiceInfolist
                         Grid::make()
                             ->columnSpan(4)
                             ->schema([
-                                ViewEntry::make('status')
+                                ViewEntry::make('status')->label('Statut')
                                     ->columnSpanFull()
                                     ->view('filament.commerce.infolists.invoice_status_card'),
 

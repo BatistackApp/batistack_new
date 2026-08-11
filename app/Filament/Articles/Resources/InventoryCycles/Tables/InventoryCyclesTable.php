@@ -18,10 +18,10 @@ class InventoryCyclesTable
                 TextColumn::make('warehouse.name')
                     ->label('Dépôt')
                     ->searchable(),
-                TextColumn::make('name')
+                TextColumn::make('name')->label('Nom')
                     ->label('Nom du cycle')
                     ->searchable(),
-                TextColumn::make('status')
+                TextColumn::make('status')->label('Statut')
                     ->label('Statut')
                     ->badge()
                     ->searchable(),
@@ -35,12 +35,12 @@ class InventoryCyclesTable
                     ->label('Date d\'approbation')
                     ->dateTime()
                     ->sortable(),
-                TextColumn::make('created_at')
+                TextColumn::make('created_at')->label('Créé le')
                     ->label('Créé le')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('updated_at')
+                TextColumn::make('updated_at')->label('Mis à jour le')
                     ->label('Modifié le')
                     ->dateTime()
                     ->sortable()

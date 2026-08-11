@@ -20,13 +20,13 @@ class UnitsTable
         return $table
             ->emptyStateHeading('Aucune unité définie')
             ->columns([
-                TextColumn::make('name')
+                TextColumn::make('name')->label('Nom')
                     ->label('Nom')
                     ->searchable(),
                 TextColumn::make('symbol')
                     ->label('Symbole')
                     ->badge(),
-                TextColumn::make('type')
+                TextColumn::make('type')->label('Type')
                     ->label('Type')
                     ->badge()
                     ->color(fn (UnitType $state): string => match ($state) {
@@ -38,7 +38,7 @@ class UnitsTable
                     ->label('Active'),
             ])
             ->filters([
-                SelectFilter::make('type')
+                SelectFilter::make('type')->label('Type')
                     ->options(UnitType::class)
                     ->label('Filtrer par grandeur'),
                 TernaryFilter::make('is_active')

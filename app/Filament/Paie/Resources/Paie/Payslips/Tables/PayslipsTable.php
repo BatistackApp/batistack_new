@@ -52,18 +52,18 @@ class PayslipsTable
                 TextColumn::make('employer_cost')
                     ->money()
                     ->sortable(),
-                TextColumn::make('status')
+                TextColumn::make('status')->label('Statut')
                     ->searchable(),
                 TextColumn::make('pdf_path')
                     ->searchable(),
                 TextColumn::make('payment_date')
                     ->date()
                     ->sortable(),
-                TextColumn::make('created_at')
+                TextColumn::make('created_at')->label('Créé le')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('updated_at')
+                TextColumn::make('updated_at')->label('Mis à jour le')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),

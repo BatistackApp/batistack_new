@@ -23,12 +23,12 @@ class CustomerQuotesTable
             )
             ->defaultSort('reference', 'desc')
             ->columns([
-                TextColumn::make('reference')
+                TextColumn::make('reference')->label('Référence')
                     ->label('Numéro')
                     ->searchable()
                     ->sortable(),
 
-                TextColumn::make('status')
+                TextColumn::make('status')->label('Statut')
                     ->label('Statut')
                     ->badge(),
 

@@ -30,17 +30,17 @@ class ThirdPartiesTable
     {
         return $table
             ->columns([
-                TextColumn::make('name')
+                TextColumn::make('name')->label('Nom')
                     ->label('Désignation')
                     ->searchable()
                     ->sortable()
                     ->description(fn (ThirdParty $record) => "SIRET: {$record->siret}"),
 
-                TextColumn::make('type')
+                TextColumn::make('type')->label('Type')
                     ->label('Type')
                     ->badge(),
 
-                TextColumn::make('email')
+                TextColumn::make('email')->label('Email')
                     ->label('Email')
                     ->icon(Phosphor::Envelope),
 
@@ -80,7 +80,7 @@ class ThirdPartiesTable
                     ->icon(fn ($state) => $state === 'Conforme' ? Phosphor::CheckCircle : Phosphor::Warning),
             ])
             ->filters([
-                SelectFilter::make('type')
+                SelectFilter::make('type')->label('Type')
                     ->options(ThirdPartyType::class),
                 TernaryFilter::make('is_active')
                     ->label('Actif'),

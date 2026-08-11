@@ -27,23 +27,23 @@ class ExpenseReportsTable
                     ->label('Année')
                     ->numeric()
                     ->sortable(),
-                TextColumn::make('status')
+                TextColumn::make('status')->label('Statut')
                     ->label('Statut')
                     ->badge()
                     ->color(fn (\App\Enums\RH\ExpenseReportStatus $state): string => $state->getColor())
                     ->formatStateUsing(fn (\App\Enums\RH\ExpenseReportStatus $state): string => $state->getLabel())
                     ->searchable(),
-                TextColumn::make('total_amount')
+                TextColumn::make('total_amount')->label('Montant total')
                     ->label('Montant Total')
                     ->numeric()
                     ->suffix(' €')
                     ->sortable(),
-                TextColumn::make('created_at')
+                TextColumn::make('created_at')->label('Créé le')
                     ->label('Créé le')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('updated_at')
+                TextColumn::make('updated_at')->label('Mis à jour le')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),

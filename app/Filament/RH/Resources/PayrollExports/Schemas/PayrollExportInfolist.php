@@ -15,14 +15,14 @@ class PayrollExportInfolist
                     ->numeric(),
                 TextEntry::make('year')
                     ->numeric(),
-                TextEntry::make('status')
+                TextEntry::make('status')->label('Statut')
                     ->badge(),
                 TextEntry::make('total_employees')
                     ->numeric(),
-                TextEntry::make('created_at')
+                TextEntry::make('created_at')->label('Créé le')
                     ->dateTime()
                     ->placeholder('-'),
-                TextEntry::make('updated_at')
+                TextEntry::make('updated_at')->label('Mis à jour le')
                     ->dateTime()
                     ->placeholder('-'),
             ]);

@@ -18,10 +18,10 @@ class BankAccountsTable
     {
         return $table
             ->columns([
-                TextColumn::make('name')
+                TextColumn::make('name')->label('Nom')
                     ->label('Nom du compte')
                     ->searchable(),
-                TextColumn::make('type')
+                TextColumn::make('type')->label('Type')
                     ->label('Type')
                     ->badge()
                     ->searchable(),
@@ -42,11 +42,11 @@ class BankAccountsTable
                     )
                     ->sortable(),
 
-                TextColumn::make('created_at')
+                TextColumn::make('created_at')->label('Créé le')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('updated_at')
+                TextColumn::make('updated_at')->label('Mis à jour le')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),

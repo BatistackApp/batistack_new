@@ -10,12 +10,12 @@ class CustomerDeliveryNoteForm
     {
         return $schema
             ->components([
-                \Filament\Forms\Components\Select::make('client_id')
+                \Filament\Forms\Components\Select::make('client_id')->label('Client')
                     ->label('Client')
                     ->relationship('client', 'name')
                     ->required()
                     ->searchable(),
-                \Filament\Forms\Components\Select::make('chantier_id')
+                \Filament\Forms\Components\Select::make('chantier_id')->label('Chantier')
                     ->label('Chantier')
                     ->relationship('chantier', 'reference')
                     ->searchable(),
@@ -23,11 +23,11 @@ class CustomerDeliveryNoteForm
                     ->label('Commande Client')
                     ->relationship('order', 'reference')
                     ->searchable(),
-                \Filament\Forms\Components\TextInput::make('reference')
+                \Filament\Forms\Components\TextInput::make('reference')->label('Référence')
                     ->label('Référence')
                     ->required()
                     ->maxLength(255),
-                \Filament\Forms\Components\Select::make('status')
+                \Filament\Forms\Components\Select::make('status')->label('Statut')
                     ->label('Statut')
                     ->options(\App\Enums\Commerce\DeliveryStatus::class)
                     ->required()

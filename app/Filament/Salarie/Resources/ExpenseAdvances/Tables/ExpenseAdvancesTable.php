@@ -15,7 +15,7 @@ class ExpenseAdvancesTable
     {
         return $table
             ->columns([
-                TextColumn::make('amount')
+                TextColumn::make('amount')->label('Montant')
                     ->money('EUR')
                     ->sortable()
                     ->label('Montant'),
@@ -29,7 +29,7 @@ class ExpenseAdvancesTable
                     ->limit(50)
                     ->label('Motif'),
 
-                TextColumn::make('status')
+                TextColumn::make('status')->label('Statut')
                     ->badge()
                     ->label('Statut'),
 
@@ -39,7 +39,7 @@ class ExpenseAdvancesTable
                     ->placeholder('-'),
             ])
             ->filters([
-                SelectFilter::make('status')
+                SelectFilter::make('status')->label('Statut')
                     ->options(ExpenseAdvanceStatus::class)
                     ->label('Statut'),
             ])

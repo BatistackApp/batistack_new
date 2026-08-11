@@ -32,12 +32,12 @@ class ExpectedDeliveriesWidget extends BaseWidget
                     ->date('d/m/Y')
                     ->sortable()
                     ->color(fn ($state) => $state->isPast() ? 'danger' : 'success'),
-                Tables\Columns\TextColumn::make('reference')
+                Tables\Columns\TextColumn::make('reference')->label('Référence')
                     ->label('Référence')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('supplier.name')
                     ->label('Fournisseur'),
-                Tables\Columns\TextColumn::make('status')
+                Tables\Columns\TextColumn::make('status')->label('Statut')
                     ->label('Statut')
                     ->badge()
                     ->colors([

@@ -32,12 +32,12 @@ class MedicalVisitsRelationManager extends RelationManager
     {
         return $schema
             ->components([
-                Select::make('type')->options(MedicalVisiteType::class)->required(),
+                Select::make('type')->label('Type')->options(MedicalVisiteType::class)->required(),
                 DatePicker::make('visit_date')->label('Date de visite')->required()->native(false),
                 DatePicker::make('next_due_date')->label('Prochaine échéance')->required()->native(false),
                 Select::make('aptitude')->options(MedicalAptitude::class)->required(),
                 TextInput::make('practitioner_name')->label('Médecin / Centre'),
-                Textarea::make('notes')->columnSpanFull(),
+                Textarea::make('notes')->label('Notes')->columnSpanFull(),
                 SpatieMediaLibraryFileUpload::make('certificate')->collection('medical_certs')->label('Fiche d\'aptitude (PDF)'),
             ]);
     }
@@ -48,7 +48,7 @@ class MedicalVisitsRelationManager extends RelationManager
             ->recordTitleAttribute('type')
             ->columns([
                 TextColumn::make('visit_date')->label('Date')->date('d/m/Y'),
-                TextColumn::make('type')->badge(),
+                TextColumn::make('type')->label('Type')->badge(),
                 TextColumn::make('aptitude')->badge(),
                 TextColumn::make('next_due_date')
                     ->label('Échéance')

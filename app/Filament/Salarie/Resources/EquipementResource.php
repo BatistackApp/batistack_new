@@ -39,7 +39,7 @@ class EquipementResource extends Resource
                     ->label('Désignation')
                     ->searchable()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('type')
+                Tables\Columns\TextColumn::make('type')->label('Type')
                     ->label('Type')
                     ->searchable()
                     ->sortable(),

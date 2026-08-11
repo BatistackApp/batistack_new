@@ -11,10 +11,10 @@ class MachineForm
     {
         return $schema
             ->components([
-                TextInput::make('name')
+                TextInput::make('name')->label('Nom')
                     ->required(),
-                TextInput::make('reference'),
-                \Filament\Forms\Components\Select::make('status')
+                TextInput::make('reference')->label('Référence'),
+                \Filament\Forms\Components\Select::make('status')->label('Statut')
                     ->options(\App\Enums\Gpao\MachineStatus::class)
                     ->required()
                     ->default(\App\Enums\Gpao\MachineStatus::OPERATIONAL),

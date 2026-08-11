@@ -10,14 +10,14 @@ class ChecklistTemplateForm
     {
         return $schema
             ->components([
-                \Filament\Forms\Components\TextInput::make('name')
+                \Filament\Forms\Components\TextInput::make('name')->label('Nom')
                     ->label('Nom du modèle')
                     ->required()
                     ->maxLength(255),
                 \Filament\Forms\Components\Toggle::make('is_active')
                     ->label('Actif')
                     ->default(true),
-                \Filament\Forms\Components\Textarea::make('description')
+                \Filament\Forms\Components\Textarea::make('description')->label('Description')
                     ->label('Description / Instructions')
                     ->maxLength(65535)
                     ->columnSpanFull(),
@@ -29,7 +29,7 @@ class ChecklistTemplateForm
                             ->label('Question Texte')
                             ->icon('heroicon-m-bars-3-bottom-left')
                             ->schema([
-                                \Filament\Forms\Components\TextInput::make('name')
+                                \Filament\Forms\Components\TextInput::make('name')->label('Nom')
                                     ->label('Identifiant technique (sans espace)')
                                     ->required(),
                                 \Filament\Forms\Components\TextInput::make('label')
@@ -43,7 +43,7 @@ class ChecklistTemplateForm
                             ->label('Case à cocher (Oui/Non)')
                             ->icon('heroicon-m-check-circle')
                             ->schema([
-                                \Filament\Forms\Components\TextInput::make('name')
+                                \Filament\Forms\Components\TextInput::make('name')->label('Nom')
                                     ->label('Identifiant technique (sans espace)')
                                     ->required(),
                                 \Filament\Forms\Components\TextInput::make('label')
@@ -57,7 +57,7 @@ class ChecklistTemplateForm
                             ->label('Prise de photo')
                             ->icon('heroicon-m-camera')
                             ->schema([
-                                \Filament\Forms\Components\TextInput::make('name')
+                                \Filament\Forms\Components\TextInput::make('name')->label('Nom')
                                     ->label('Identifiant technique (sans espace)')
                                     ->required(),
                                 \Filament\Forms\Components\TextInput::make('label')

@@ -30,7 +30,7 @@ class ExpiringContractsWidget extends TableWidget
             ->columns([
                 TextColumn::make('employee.full_name')
                     ->label('Salarié'),
-                TextColumn::make('type')
+                TextColumn::make('type')->label('Type')
                     ->label('Type')
                     ->badge(),
                 TextColumn::make('job_title')

@@ -32,11 +32,11 @@ class TransactionCategoryResource extends Resource
     {
         return $schema
             ->schema([
-                TextInput::make('name')
+                TextInput::make('name')->label('Nom')
                     ->label('Nom de la catégorie')
                     ->required()
                     ->maxLength(255),
-                Select::make('type')
+                Select::make('type')->label('Type')
                     ->label('Type')
                     ->options([
                         'expense' => 'Dépense',
@@ -69,10 +69,10 @@ class TransactionCategoryResource extends Resource
             ->columns([
                 ColorColumn::make('color')
                     ->label('Couleur'),
-                TextColumn::make('name')
+                TextColumn::make('name')->label('Nom')
                     ->label('Nom')
                     ->searchable(),
-                TextColumn::make('type')
+                TextColumn::make('type')->label('Type')
                     ->label('Type')
                     ->formatStateUsing(fn (string $state): string => match ($state) {
                         'expense' => 'Dépense',

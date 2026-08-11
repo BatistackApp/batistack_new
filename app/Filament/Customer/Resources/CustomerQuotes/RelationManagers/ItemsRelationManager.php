@@ -45,7 +45,7 @@ class ItemsRelationManager extends RelationManager
                     ->label('Prix Unitaire HT')
                     ->money('EUR'),
 
-                TextColumn::make('quantity')
+                TextColumn::make('quantity')->label('Quantité')
                     ->label('Qte.')
                     ->numeric(),
 

@@ -22,12 +22,12 @@ class PaymentsTable
         return $table
             ->defaultSort('payment_date', 'desc')
             ->columns([
-                TextColumn::make('reference')
+                TextColumn::make('reference')->label('Référence')
                     ->label('Référence')
                     ->searchable()
                     ->sortable(),
 
-                TextColumn::make('type')
+                TextColumn::make('type')->label('Type')
                     ->label('Type')
                     ->badge(),
 
@@ -35,12 +35,12 @@ class PaymentsTable
                     ->label('Moyen')
                     ->badge(),
 
-                TextColumn::make('amount')
+                TextColumn::make('amount')->label('Montant')
                     ->label('Montant')
                     ->money('EUR')
                     ->sortable(),
 
-                TextColumn::make('status')
+                TextColumn::make('status')->label('Statut')
                     ->label('Statut')
                     ->badge(),
 
@@ -49,16 +49,16 @@ class PaymentsTable
                     ->date('d/m/Y')
                     ->sortable(),
 
-                TextColumn::make('created_at')
+                TextColumn::make('created_at')->label('Créé le')
                     ->label('Enregistré le')
                     ->dateTime('d/m/Y H:i')
                     ->sortable(),
             ])
             ->filters([
-                SelectFilter::make('type')
+                SelectFilter::make('type')->label('Type')
                     ->options(PaymentType::class),
 
-                SelectFilter::make('status')
+                SelectFilter::make('status')->label('Statut')
                     ->options(PaymentStatus::class),
 
                 SelectFilter::make('method')

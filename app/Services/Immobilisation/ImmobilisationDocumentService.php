@@ -8,9 +8,27 @@ use App\Models\Immobilisation\AssetCategory;
 use App\Services\Core\DocumentService;
 use chillerlan\QRCode\QRCode;
 use chillerlan\QRCode\QROptions;
+use App\Models\Immobilisation\AssetTransfer;
 
 class ImmobilisationDocumentService extends DocumentService
 {
+    /**
+     * Génère le bon de transport pour le transfert d'un équipement.
+     */
+    public function generateTransferDocument(AssetTransfer $transfer): string
+    {
+        $transfer->load(['fixedAsset.category', 'fromChantier', 'toChantier', 'requester']);
+
+        return $this->generate(
+            view: 'documents.immobilisations.transfer_document',
+            data: [
+                'transfer' => $transfer,
+            ],
+            filename: 'bon_transport_' . $transfer->id,
+            type: 'immobilisations',
+            position: 'portrait'
+        );
+    }
     /**
      * Génère la fiche individuelle d'une immobilisation avec QR Code.
      */

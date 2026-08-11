@@ -19,7 +19,7 @@ class PayrollExportForm
                 TextInput::make('year')
                     ->required()
                     ->numeric(),
-                Select::make('status')
+                Select::make('status')->label('Statut')
                     ->options(PayrollExportStatus::class)
                     ->default('draft')
                     ->required(),

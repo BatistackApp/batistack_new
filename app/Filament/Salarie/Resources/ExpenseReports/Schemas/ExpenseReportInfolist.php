@@ -20,10 +20,10 @@ class ExpenseReportInfolist
                             ->formatStateUsing(fn ($state) => Carbon::create()->day(1)->month($state)->translatedFormat('F')),
                         TextEntry::make('year')
                             ->label('Année'),
-                        TextEntry::make('status')
+                        TextEntry::make('status')->label('Statut')
                             ->label('Statut')
                             ->badge(),
-                        TextEntry::make('total_amount')
+                        TextEntry::make('total_amount')->label('Montant total')
                             ->label('Montant Total')
                             ->money('EUR'),
                     ])->columns(4),

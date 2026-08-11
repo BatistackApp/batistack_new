@@ -38,7 +38,7 @@ class DestockKitAction extends Action
                     ->searchable()
                     ->required(),
 
-                TextInput::make('quantity')
+                TextInput::make('quantity')->label('Quantité')
                     ->label('Quantité de Kits')
                     ->numeric()
                     ->default(1)

@@ -35,7 +35,7 @@ class LowStockTableWidget extends TableWidget
                     ->limit(40),
                 TextColumn::make('warehouse.name')
                     ->label('Dépôt'),
-                TextColumn::make('quantity')
+                TextColumn::make('quantity')->label('Quantité')
                     ->label('Stock')
                     ->numeric(decimalPlaces: 2)
                     ->color('danger')

@@ -88,12 +88,12 @@ class EmployeeForm
                                 Section::make()
                                     ->columns(2)
                                     ->schema([
-                                        TextInput::make('email')
+                                        TextInput::make('email')->label('Email')
                                             ->label('Email professionnel')
                                             ->required()
                                             ->helperText('Sera utilisé pour la connexion à Batistack.')
                                             ->email(),
-                                        TextInput::make('phone')
+                                        TextInput::make('phone')->label('Téléphone')
                                             ->label('Téléphone')
                                             ->tel(),
                                     ]),
@@ -102,7 +102,7 @@ class EmployeeForm
                         Tabs\Tab::make('Adresse Postal')
                             ->icon(Phosphor::MapPinArea)
                             ->schema([
-                                Textarea::make('address')
+                                Textarea::make('address')->label('Adresse')
                                     ->label('Adresse')
                                     ->rows(2)
                                     ->required(),
@@ -113,7 +113,7 @@ class EmployeeForm
                                             ->label('Code Postal')
                                             ->required()
                                             ->mask('99999'),
-                                        TextInput::make('city')
+                                        TextInput::make('city')->label('Ville')
                                             ->label('Ville')
                                             ->columnSpan(2)
                                             ->required(),

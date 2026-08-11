@@ -24,7 +24,7 @@ class CustomerDeliveryNoteInfolist
                             ->columnSpan(8)
                             ->columns(3)
                             ->schema([
-                                TextEntry::make('reference')
+                                TextEntry::make('reference')->label('Référence')
                                     ->label('Référence')
                                     ->weight(FontWeight::Bold)
                                     ->icon(Phosphor::Hash),
@@ -47,7 +47,7 @@ class CustomerDeliveryNoteInfolist
                                     ->url(fn (CustomerDeliveryNote $record) => route('filament.commerce.resources.customer-orders.view', ['record' => $record->order])),
                             ]),
 
-                        ViewEntry::make('status')
+                        ViewEntry::make('status')->label('Statut')
                             ->view('filament.commerce.delivery_status_card', ['data' => 'OK'])
                             ->columnSpan(4),
                     ]),

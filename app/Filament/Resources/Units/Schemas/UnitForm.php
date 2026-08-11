@@ -19,7 +19,7 @@ class UnitForm
                     ->columnSpanFull()
                     ->columns(2)
                     ->schema([
-                        TextInput::make('name')
+                        TextInput::make('name')->label('Nom')
                             ->label('Nom de l\'unité')
                             ->required(),
 
@@ -28,7 +28,7 @@ class UnitForm
                             ->maxLength(10)
                             ->required(),
 
-                        Select::make('type')
+                        Select::make('type')->label('Type')
                             ->label('Type de mesure')
                             ->options(UnitType::class)
                             ->required(),

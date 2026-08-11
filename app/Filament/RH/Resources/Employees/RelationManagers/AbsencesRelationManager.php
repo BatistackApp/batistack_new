@@ -48,7 +48,7 @@ class AbsencesRelationManager extends RelationManager
                 Section::make('Saisie de l\'absence')
                     ->columnSpanFull()
                     ->schema([
-                        Select::make('type')
+                        Select::make('type')->label('Type')
                             ->label('Nature de l\'absence')
                             ->options(AbsenceType::class)
                             ->required()
@@ -101,7 +101,7 @@ class AbsencesRelationManager extends RelationManager
         return $table
             ->recordTitleAttribute('type')
             ->columns([
-                TextColumn::make('type')
+                TextColumn::make('type')->label('Type')
                     ->label('Type')
                     ->badge(),
                 TextColumn::make('period')

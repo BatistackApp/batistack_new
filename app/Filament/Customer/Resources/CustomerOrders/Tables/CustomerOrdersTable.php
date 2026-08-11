@@ -24,7 +24,7 @@ class CustomerOrdersTable
                     ->newQuery()
             )
             ->columns([
-                TextColumn::make('reference')
+                TextColumn::make('reference')->label('Référence')
                     ->label('Numéro')
                     ->searchable()
                     ->sortable(),
@@ -35,7 +35,7 @@ class CustomerOrdersTable
                     ->searchable()
                     ->sortable(),
 
-                TextColumn::make('status')
+                TextColumn::make('status')->label('Statut')
                     ->label('Statut')
                     ->badge(),
 

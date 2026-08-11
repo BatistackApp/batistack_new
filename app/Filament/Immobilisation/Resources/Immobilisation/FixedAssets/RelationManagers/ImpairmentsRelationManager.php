@@ -24,14 +24,14 @@ class ImpairmentsRelationManager extends RelationManager
         return $table
             ->recordTitleAttribute('reason')
             ->columns([
-                TextColumn::make('date')
+                TextColumn::make('date')->label('Date')
                     ->label('Date')
                     ->date('d/m/Y')
                     ->sortable(),
                 TextColumn::make('reason')
                     ->label('Motif')
                     ->searchable(),
-                TextColumn::make('amount')
+                TextColumn::make('amount')->label('Montant')
                     ->label('Montant de la perte')
                     ->money('EUR')
                     ->sortable()

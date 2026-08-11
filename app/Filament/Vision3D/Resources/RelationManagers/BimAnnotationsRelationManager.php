@@ -26,7 +26,7 @@ class BimAnnotationsRelationManager extends RelationManager
                     ->label('Titre')
                     ->required()
                     ->maxLength(255),
-                Textarea::make('description')
+                Textarea::make('description')->label('Description')
                     ->label('Description')
                     ->maxLength(65535)
                     ->columnSpanFull(),
@@ -62,10 +62,10 @@ class BimAnnotationsRelationManager extends RelationManager
             ->recordTitleAttribute('title')
             ->columns([
                 Tables\Columns\TextColumn::make('title')->label('Titre'),
-                Tables\Columns\TextColumn::make('description')
+                Tables\Columns\TextColumn::make('description')->label('Description')
                     ->label('Description')
                     ->limit(50),
-                Tables\Columns\TextColumn::make('created_at')
+                Tables\Columns\TextColumn::make('created_at')->label('Créé le')
                     ->label('Créé le')
                     ->dateTime('d/m/Y H:i')
                     ->sortable(),

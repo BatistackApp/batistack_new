@@ -23,7 +23,7 @@ class TrafficFinesTable
         return $table
             ->defaultSort('infraction_at', 'desc')
             ->columns([
-                TextColumn::make('reference')
+                TextColumn::make('reference')->label('Référence')
                     ->label('N° Avis / PV')
                     ->searchable()
                     ->fontFamily('mono')
@@ -41,17 +41,17 @@ class TrafficFinesTable
                     ->label('Date d\'infraction')
                     ->dateTime('d/m/Y H:i')
                     ->sortable(),
-                TextColumn::make('amount')
+                TextColumn::make('amount')->label('Montant')
                     ->label('Montant')
                     ->money('EUR')
                     ->color('danger')
                     ->weight('bold'),
-                TextColumn::make('status')
+                TextColumn::make('status')->label('Statut')
                     ->label('Statut')
                     ->badge(),
             ])
             ->filters([
-                SelectFilter::make('status')
+                SelectFilter::make('status')->label('Statut')
                     ->options(FineStatus::class),
                 SelectFilter::make('vehicle_id')
                     ->label('Filtrer par véhicule')

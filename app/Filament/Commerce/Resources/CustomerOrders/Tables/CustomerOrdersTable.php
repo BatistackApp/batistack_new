@@ -24,7 +24,7 @@ class CustomerOrdersTable
         return $table
             ->defaultSort('created_at', 'desc')
             ->columns([
-                TextColumn::make('reference')
+                TextColumn::make('reference')->label('Référence')
                     ->label('Numéro')
                     ->searchable()
                     ->sortable(),
@@ -39,7 +39,7 @@ class CustomerOrdersTable
                     ->searchable()
                     ->sortable(),
 
-                TextColumn::make('status')
+                TextColumn::make('status')->label('Statut')
                     ->label('Statut')
                     ->badge(),
 
@@ -48,16 +48,16 @@ class CustomerOrdersTable
                     ->money('EUR')
                     ->sortable(),
 
-                TextColumn::make('created_at')
+                TextColumn::make('created_at')->label('Créé le')
                     ->label('Date')
                     ->date('d/m/Y')
                     ->sortable(),
             ])
             ->filters([
-                SelectFilter::make('status')
+                SelectFilter::make('status')->label('Statut')
                     ->options(OrderStatus::class),
 
-                SelectFilter::make('client_id')
+                SelectFilter::make('client_id')->label('Client')
                     ->relationship('client', 'name')
                     ->searchable()
                     ->preload(),
@@ -75,7 +75,7 @@ class CustomerOrdersTable
                         ->color('success')
                         ->visible(fn (Model $record) => in_array($record->status, [OrderStatus::CONFIRMED, OrderStatus::PARTIALLY_DELIVERED, OrderStatus::DELIVERED]))
                         ->form([
-                            \Filament\Forms\Components\Select::make('type')
+                            \Filament\Forms\Components\Select::make('type')->label('Type')
                                 ->label('Type de facture')
                                 ->options([
                                     \App\Enums\Commerce\InvoiceType::SIMPLE->value => 'Facture Globale (Solde)',

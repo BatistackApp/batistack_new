@@ -29,13 +29,13 @@ class CustomerOrderForm
                     ->columnSpanFull()
                     ->columns(2)
                     ->schema([
-                        TextInput::make('reference')
+                        TextInput::make('reference')->label('Référence')
                             ->label('Numéro de commande')
                             ->readOnly()
                             ->default(fn (CustomerOrderService $service) => $service->generateReferenceOrder())
                             ->required(),
 
-                        Select::make('client_id')
+                        Select::make('client_id')->label('Client')
                             ->label('Client')
                             ->relationship('client', 'name')
                             ->searchable()
@@ -48,7 +48,7 @@ class CustomerOrderForm
                             ->default(Auth::user()->id)
                             ->required(),
 
-                        Select::make('chantier_id')
+                        Select::make('chantier_id')->label('Chantier')
                             ->label('Chantier')
                             ->relationship('chantier', 'reference')
                             ->searchable()
@@ -60,7 +60,7 @@ class CustomerOrderForm
                             ->searchable()
                             ->preload(),
 
-                        Select::make('status')
+                        Select::make('status')->label('Statut')
                             ->label('Statut')
                             ->options(OrderStatus::class)
                             ->required()

@@ -17,7 +17,7 @@ class CibtpDeclarationForm
                 Section::make('Informations de la déclaration')
                     ->columnSpanFull()
                     ->schema([
-                        Select::make('chantier_id')
+                        Select::make('chantier_id')->label('Chantier')
                             ->label('Chantier')
                             ->relationship('chantier', 'name')
                             ->searchable()
@@ -29,11 +29,11 @@ class CibtpDeclarationForm
                             ->disabled()
                             ->dehydrated(),
 
-                        DatePicker::make('date')
+                        DatePicker::make('date')->label('Date')
                             ->label('Date d\'intempérie')
                             ->required(),
 
-                        Select::make('status')
+                        Select::make('status')->label('Statut')
                             ->label('Statut')
                             ->options([
                                 'draft' => 'Brouillon',

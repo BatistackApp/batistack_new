@@ -26,7 +26,7 @@ class CustomerInvoiceForm
                     ->columnSpanFull()
                     ->columns(4)
                     ->schema([
-                        Select::make('client_id')
+                        Select::make('client_id')->label('Client')
                             ->label('Client')
                             ->relationship('client', 'name')
                             ->searchable()
@@ -49,7 +49,7 @@ class CustomerInvoiceForm
                             ->preload()
                             ->required(),
 
-                        Select::make('type')
+                        Select::make('type')->label('Type')
                             ->label('Type de facture')
                             ->options(InvoiceType::class)
                             ->required()
@@ -96,7 +96,7 @@ class CustomerInvoiceForm
                                     ->prefix('€')
                                     ->readonly(),
 
-                                Textarea::make('notes')
+                                Textarea::make('notes')->label('Notes')
                                     ->label('Remarques')
                                     ->rows(3)
                                     ->columnSpanFull(),

@@ -13,7 +13,7 @@ class AssetCategoryForm
     {
         return $schema
             ->components([
-                TextInput::make('name')
+                TextInput::make('name')->label('Nom')
                     ->label('Désignation')
                     ->required(),
                 TextInput::make('account_code')->label('Code Comptable'),

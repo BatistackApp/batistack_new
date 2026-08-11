@@ -33,16 +33,16 @@ class VehicleInfolist
                                             ->weight('bold')
                                             ->size('lg')
                                             ->fontFamily('mono'),
-                                        TextEntry::make('reference')
+                                        TextEntry::make('reference')->label('Référence')
                                             ->label('Code Interne')
                                             ->fontFamily('mono')
                                             ->copyable(),
                                     ])->columnSpan(2),
                                 Grid::make(1)
                                     ->schema([
-                                        TextEntry::make('type')
+                                        TextEntry::make('type')->label('Type')
                                             ->badge(),
-                                        TextEntry::make('status')
+                                        TextEntry::make('status')->label('Statut')
                                             ->badge(),
                                     ])->columnSpan(1),
                             ]),

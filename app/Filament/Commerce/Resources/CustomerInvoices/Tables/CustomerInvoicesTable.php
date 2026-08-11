@@ -34,7 +34,7 @@ class CustomerInvoicesTable
         return $table
             ->defaultSort('created_at', 'desc')
             ->columns([
-                TextColumn::make('reference')
+                TextColumn::make('reference')->label('Référence')
                     ->label('Numéro')
                     ->searchable()
                     ->sortable(),
@@ -44,11 +44,11 @@ class CustomerInvoicesTable
                     ->searchable()
                     ->sortable(),
 
-                TextColumn::make('type')
+                TextColumn::make('type')->label('Type')
                     ->label('Type')
                     ->badge(),
 
-                TextColumn::make('status')
+                TextColumn::make('status')->label('Statut')
                     ->label('Statut')
                     ->badge(),
 
@@ -71,13 +71,13 @@ class CustomerInvoicesTable
                     ->falseIcon('heroicon-o-check-circle'),
             ])
             ->filters([
-                SelectFilter::make('status')
+                SelectFilter::make('status')->label('Statut')
                     ->options(InvoiceStatus::class),
 
-                SelectFilter::make('type')
+                SelectFilter::make('type')->label('Type')
                     ->options(InvoiceType::class),
 
-                SelectFilter::make('client_id')
+                SelectFilter::make('client_id')->label('Client')
                     ->relationship('client', 'name')
                     ->searchable()
                     ->preload(),
@@ -91,7 +91,7 @@ class CustomerInvoicesTable
                     ->label('Envoyer un relevé client')
                     ->icon('heroicon-o-envelope')
                     ->form([
-                        Select::make('client_id')
+                        Select::make('client_id')->label('Client')
                             ->label('Client')
                             ->options(fn () => ThirdParty::clients()->orderBy('name')->pluck('name', 'id')->toArray())
                             ->searchable()
@@ -102,11 +102,11 @@ class CustomerInvoicesTable
                         DatePicker::make('end_date')
                             ->label('Au')
                             ->native(false),
-                        Select::make('status')
+                        Select::make('status')->label('Statut')
                             ->label('Statut des factures')
                             ->options(InvoiceStatus::class)
                             ->placeholder('Tous les statuts'),
-                        TextInput::make('email')
+                        TextInput::make('email')->label('Email')
                             ->label('Email destinataire')
                             ->email()
                             ->helperText('Laissez vide pour utiliser le contact principal du client.'),

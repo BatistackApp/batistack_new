@@ -25,7 +25,7 @@ class PaymentsRelationManager extends RelationManager
     {
         return $schema
             ->components([
-                TextInput::make('reference')
+                TextInput::make('reference')->label('Référence')
                     ->required()
                     ->maxLength(255),
             ]);

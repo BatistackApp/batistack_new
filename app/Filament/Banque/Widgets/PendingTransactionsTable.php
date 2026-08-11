@@ -24,9 +24,9 @@ class PendingTransactionsTable extends TableWidget
             ->query(fn (): Builder => BankTransaction::query()->where('status', TransactionStatus::PENDING)->latest('date')->limit(5))
             ->columns([
                 TextColumn::make('bankAccount.name')->label('Compte'),
-                TextColumn::make('date')->date('d/m/Y')->sortable(),
-                TextColumn::make('description')->limit(50),
-                TextColumn::make('amount')->numeric()->sortable()->badge()->color(fn ($state) => $state > 0 ? 'success' : 'danger'),
+                TextColumn::make('date')->label('Date')->date('d/m/Y')->sortable(),
+                TextColumn::make('description')->label('Description')->limit(50),
+                TextColumn::make('amount')->label('Montant')->numeric()->sortable()->badge()->color(fn ($state) => $state > 0 ? 'success' : 'danger'),
             ])
             ->recordActions([
                 Action::make('lettrer')

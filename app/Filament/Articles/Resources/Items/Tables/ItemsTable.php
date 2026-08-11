@@ -25,7 +25,7 @@ class ItemsTable
                     ->label('')
                     ->circular(),
 
-                TextColumn::make('reference')
+                TextColumn::make('reference')->label('Référence')
                     ->label('Réf.')
                     ->searchable()
                     ->sortable()
@@ -38,13 +38,13 @@ class ItemsTable
                     ->toggleable(isToggledHiddenByDefault: true)
                     ->fontFamily('mono'),
 
-                TextColumn::make('name')
+                TextColumn::make('name')->label('Nom')
                     ->label('Désignation')
                     ->searchable()
                     ->sortable()
                     ->wrap(),
 
-                TextColumn::make('type')
+                TextColumn::make('type')->label('Type')
                     ->label('Type')
                     ->badge(),
 
@@ -68,7 +68,7 @@ class ItemsTable
                     ->visible(fn ($record) => $record?->type === ItemType::STOCKABLE),
             ])
             ->filters([
-                SelectFilter::make('type')
+                SelectFilter::make('type')->label('Type')
                     ->options(ItemType::class),
             ])
             ->recordActions([

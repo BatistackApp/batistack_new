@@ -40,16 +40,16 @@ class InvoicesRelationManager extends RelationManager
     {
         return $schema
             ->components([
-                TextInput::make('reference')
+                TextInput::make('reference')->label('Référence')
                     ->label('Numéro')
                     ->disabled(),
 
-                Select::make('type')
+                Select::make('type')->label('Type')
                     ->label('Type')
                     ->options(InvoiceType::class)
                     ->required(),
 
-                Select::make('status')
+                Select::make('status')->label('Statut')
                     ->label('Statut')
                     ->options(InvoiceStatus::class)
                     ->required()
@@ -67,16 +67,16 @@ class InvoicesRelationManager extends RelationManager
             ->recordTitleAttribute('reference')
             ->defaultSort('created_at', 'desc')
             ->columns([
-                TextColumn::make('reference')
+                TextColumn::make('reference')->label('Référence')
                     ->label('Numéro')
                     ->searchable()
                     ->sortable(),
 
-                TextColumn::make('type')
+                TextColumn::make('type')->label('Type')
                     ->label('Type')
                     ->badge(),
 
-                TextColumn::make('status')
+                TextColumn::make('status')->label('Statut')
                     ->label('Statut')
                     ->badge(),
 
@@ -91,17 +91,17 @@ class InvoicesRelationManager extends RelationManager
                     ->sortable(),
             ])
             ->filters([
-                SelectFilter::make('status')
+                SelectFilter::make('status')->label('Statut')
                     ->options(InvoiceStatus::class),
 
-                SelectFilter::make('type')
+                SelectFilter::make('type')->label('Type')
                     ->options(InvoiceType::class),
             ])
             ->headerActions([
                 CreateAction::make()
                     ->label('Nouvelle facture')
                     ->schema([
-                        Select::make('type')
+                        Select::make('type')->label('Type')
                             ->label('Type de facture')
                             ->options(InvoiceType::class)
                             ->required()
@@ -170,7 +170,7 @@ class InvoicesRelationManager extends RelationManager
                         ->icon(Phosphor::ArrowsIn)
                         ->visible(fn (CustomerInvoice $record) => $record->status === InvoiceStatus::VALIDATED)
                         ->schema([
-                            TextInput::make('amount')
+                            TextInput::make('amount')->label('Montant')
                                 ->label('Montant de l\'avoir')
                                 ->numeric()
                                 ->required()

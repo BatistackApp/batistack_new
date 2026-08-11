@@ -32,7 +32,7 @@ class AddressesRelationManager extends RelationManager
     {
         return $schema
             ->components([
-                Select::make('type')
+                Select::make('type')->label('Type')
                     ->label('Type d\'adresse')
                     ->options(AddressType::class)
                     ->required()
@@ -41,13 +41,13 @@ class AddressesRelationManager extends RelationManager
                     ->label('Rue / Voie')
                     ->required()
                     ->columnSpanFull(),
-                TextInput::make('zip_code')
+                TextInput::make('zip_code')->label('Code postal')
                     ->label('Code Postal')
                     ->required(),
-                TextInput::make('city')
+                TextInput::make('city')->label('Ville')
                     ->label('Ville')
                     ->required(),
-                TextInput::make('country')
+                TextInput::make('country')->label('Pays')
                     ->label('Pays')
                     ->default('France')
                     ->required(),
@@ -62,7 +62,7 @@ class AddressesRelationManager extends RelationManager
         return $table
             ->recordTitleAttribute('type')
             ->columns([
-                TextColumn::make('type')->badge(),
+                TextColumn::make('type')->label('Type')->badge(),
                 TextColumn::make('full_address')
                     ->label('Adresse complète'),
                 IconColumn::make('is_default')

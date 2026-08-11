@@ -23,7 +23,7 @@ class CustomerOrderInfolist
                             ->columnSpan(8)
                             ->columns(3)
                             ->schema([
-                                TextEntry::make('reference')
+                                TextEntry::make('reference')->label('Référence')
                                     ->label('Référence'),
 
                                 TextEntry::make('client.name')
@@ -35,7 +35,7 @@ class CustomerOrderInfolist
                                     ->icon(Phosphor::HardHat)
                                     ->formatStateUsing(fn (Model $record) => $record->chantier?->reference.' - '.$record->chantier?->name),
 
-                                TextEntry::make('status')
+                                TextEntry::make('status')->label('Statut')
                                     ->columnSpanFull()
                                     ->size(TextSize::Large)
                                     ->label('Etat de la commande')

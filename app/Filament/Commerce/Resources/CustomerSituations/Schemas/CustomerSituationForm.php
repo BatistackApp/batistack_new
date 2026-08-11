@@ -19,7 +19,7 @@ class CustomerSituationForm
                     ->relationship('order', 'reference')
                     ->required()
                     ->searchable(),
-                Select::make('chantier_id')
+                Select::make('chantier_id')->label('Chantier')
                     ->label('Chantier')
                     ->relationship('chantier', 'reference')
                     ->searchable(),
@@ -27,7 +27,7 @@ class CustomerSituationForm
                     ->label('Numéro')
                     ->required()
                     ->numeric(),
-                Select::make('status')
+                Select::make('status')->label('Statut')
                     ->label('Statut')
                     ->options(InvoiceStatus::class)
                     ->required()

@@ -44,7 +44,7 @@ class VehicleAssignmentsTable
                 TextColumn::make('started_at')
                     ->label('Heure de départ')
                     ->dateTime('d/m/Y H:i'),
-                TextColumn::make('status')
+                TextColumn::make('status')->label('Statut')
                     ->label('État')
                     ->badge(),
             ])

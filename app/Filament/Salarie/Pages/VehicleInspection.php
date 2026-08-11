@@ -79,7 +79,7 @@ class VehicleInspection extends Page
                                     };
                                 }),
 
-                            Hidden::make('type')
+                            Hidden::make('type')->label('Type')
                                 ->default(ConditionReportType::CHECK_OUT->value),
                         ]),
 

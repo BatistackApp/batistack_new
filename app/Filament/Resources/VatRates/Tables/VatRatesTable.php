@@ -18,7 +18,7 @@ class VatRatesTable
     {
         return $table
             ->columns([
-                TextColumn::make('name')
+                TextColumn::make('name')->label('Nom')
                     ->label('Nom du taux')
                     ->weight('bold'),
 

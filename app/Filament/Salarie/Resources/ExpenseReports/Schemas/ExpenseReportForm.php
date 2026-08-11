@@ -26,7 +26,7 @@ class ExpenseReportForm
                         TextInput::make('year')
                             ->label('Année')
                             ->required(),
-                        TextInput::make('status')
+                        TextInput::make('status')->label('Statut')
                             ->label('Statut')
                             ->disabled(),
                         Select::make('advance_ids')

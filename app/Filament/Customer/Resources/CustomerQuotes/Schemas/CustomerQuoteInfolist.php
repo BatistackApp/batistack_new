@@ -20,7 +20,7 @@ class CustomerQuoteInfolist
     {
         return $schema
             ->components([
-                ProgressStepper::make('status')
+                ProgressStepper::make('status')->label('Statut')
                     ->hiddenLabel()
                     ->optionsFromEnum(QuoteStatus::class)
                     ->size(Size::Large)
@@ -33,7 +33,7 @@ class CustomerQuoteInfolist
                             ->columnSpan(8)
                             ->columns(3)
                             ->schema([
-                                TextEntry::make('reference')
+                                TextEntry::make('reference')->label('Référence')
                                     ->label('Numéro')
                                     ->icon(Phosphor::Hash),
 

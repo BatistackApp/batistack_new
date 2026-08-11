@@ -27,7 +27,7 @@ class PayslipsTable
                     ->label('Date de paiement')
                     ->date()
                     ->sortable(),
-                TextColumn::make('status')
+                TextColumn::make('status')->label('Statut')
                     ->label('Statut')
                     ->badge(),
             ])

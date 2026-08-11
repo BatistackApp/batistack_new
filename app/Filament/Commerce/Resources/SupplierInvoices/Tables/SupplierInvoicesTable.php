@@ -24,7 +24,7 @@ class SupplierInvoicesTable
     {
         return $table
             ->columns([
-                TextColumn::make('reference')
+                TextColumn::make('reference')->label('Référence')
                     ->label('Numéro')
                     ->searchable()
                     ->sortable(),
@@ -39,7 +39,7 @@ class SupplierInvoicesTable
                     ->searchable()
                     ->sortable(),
 
-                TextColumn::make('status')
+                TextColumn::make('status')->label('Statut')
                     ->label('Statut')
                     ->badge(),
 
@@ -54,7 +54,7 @@ class SupplierInvoicesTable
                     ->sortable(),
             ])
             ->filters([
-                SelectFilter::make('status')
+                SelectFilter::make('status')->label('Statut')
                     ->options(InvoiceStatus::class),
 
                 SelectFilter::make('supplier_id')
