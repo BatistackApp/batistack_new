@@ -45,6 +45,9 @@ class ChantierPanelProvider extends PanelProvider
             ->discoverPages(in: app_path('Filament/Chantier/Pages'), for: 'App\Filament\Chantier\Pages')
             ->discoverWidgets(in: app_path('Filament/Chantier/Widgets'), for: 'App\Filament\Chantier\Widgets')
             ->plugin(\Guava\FilamentKnowledgeBase\Plugins\KnowledgeBaseCompanionPlugin::make()->knowledgeBasePanelId('docs'))
+            ->plugins([
+                \MartinPetricko\FilamentSentryFeedback\FilamentSentryFeedbackPlugin::make(),
+            ])
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,

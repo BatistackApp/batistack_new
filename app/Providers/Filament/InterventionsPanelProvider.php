@@ -41,6 +41,9 @@ class InterventionsPanelProvider extends PanelProvider
             ->discoverPages(in: app_path('Filament/Interventions'), for: 'App\Filament\Interventions')
             ->discoverWidgets(in: app_path('Filament/Interventions'), for: 'App\Filament\Interventions')
             ->plugin(\Guava\FilamentKnowledgeBase\Plugins\KnowledgeBaseCompanionPlugin::make()->knowledgeBasePanelId('docs'))
+            ->plugins([
+                \MartinPetricko\FilamentSentryFeedback\FilamentSentryFeedbackPlugin::make(),
+            ])
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,

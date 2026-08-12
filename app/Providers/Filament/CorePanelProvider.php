@@ -58,6 +58,7 @@ class CorePanelProvider extends PanelProvider
                 DispatchServingFilamentEvent::class,
             ])
             ->plugins([
+                \MartinPetricko\FilamentSentryFeedback\FilamentSentryFeedbackPlugin::make(),
                 FilamentShieldPlugin::make(),
                 FilamentInboxPlugin::make(),
                 FilamentLogViewer::make(),

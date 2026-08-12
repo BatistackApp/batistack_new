@@ -44,6 +44,7 @@ class CommercePanelProvider extends PanelProvider
                 Dashboard::class,
             ])
             ->plugins([
+                \MartinPetricko\FilamentSentryFeedback\FilamentSentryFeedbackPlugin::make(),
                 CalculatorPlugin::make(),
             ])
             ->discoverWidgets(in: app_path('Filament/Commerce/Widgets'), for: 'App\Filament\Commerce\Widgets')
