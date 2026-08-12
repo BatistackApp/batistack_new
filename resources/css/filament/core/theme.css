@@ -1,4 +1,6 @@
 @import '../../../../vendor/filament/filament/resources/css/theme.css';
+@plugin "@tailwindcss/typography";
+@source '../../../../vendor/guava/filament-knowledge-base/resources/**/*.blade.php';
 
 @source '../../../../app/Filament/**/*';
 @source '../../../../resources/views/filament/**/*';
@@ -12,3 +14,5 @@
 .bg-primary {background-color: #6c757d;}
 .bg-secondary {background-color: #343a40;}
 .bg-gray {background-color: #343a40;}
+
+

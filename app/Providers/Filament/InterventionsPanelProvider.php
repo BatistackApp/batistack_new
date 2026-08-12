@@ -20,6 +20,7 @@ use Illuminate\View\Middleware\ShareErrorsFromSession;
 
 class InterventionsPanelProvider extends PanelProvider
 {
+    use \App\Providers\Filament\Traits\HasKnowledgeBaseCompanion;
     public function panel(Panel $panel): Panel
     {
         return $panel
@@ -39,6 +40,7 @@ class InterventionsPanelProvider extends PanelProvider
             ->discoverResources(in: app_path('Filament/Interventions'), for: 'App\Filament\Interventions')
             ->discoverPages(in: app_path('Filament/Interventions'), for: 'App\Filament\Interventions')
             ->discoverWidgets(in: app_path('Filament/Interventions'), for: 'App\Filament\Interventions')
+            ->plugin(\Guava\FilamentKnowledgeBase\Plugins\KnowledgeBaseCompanionPlugin::make()->knowledgeBasePanelId('docs'))
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
@@ -56,3 +58,6 @@ class InterventionsPanelProvider extends PanelProvider
             ]);
     }
 }
+
+
+

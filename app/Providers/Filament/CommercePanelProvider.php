@@ -23,6 +23,7 @@ use Illuminate\View\Middleware\ShareErrorsFromSession;
 
 class CommercePanelProvider extends PanelProvider
 {
+    use \App\Providers\Filament\Traits\HasKnowledgeBaseCompanion;
     public function panel(Panel $panel): Panel
     {
         return $panel
@@ -46,6 +47,7 @@ class CommercePanelProvider extends PanelProvider
                 CalculatorPlugin::make(),
             ])
             ->discoverWidgets(in: app_path('Filament/Commerce/Widgets'), for: 'App\Filament\Commerce\Widgets')
+            ->plugin(\Guava\FilamentKnowledgeBase\Plugins\KnowledgeBaseCompanionPlugin::make()->knowledgeBasePanelId('docs'))
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
@@ -63,3 +65,6 @@ class CommercePanelProvider extends PanelProvider
             ]);
     }
 }
+
+
+

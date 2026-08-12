@@ -20,6 +20,7 @@ use ToneGabes\Filament\Icons\Enums\Phosphor;
 
 class Vision3DPanelProvider extends PanelProvider
 {
+    use \App\Providers\Filament\Traits\HasKnowledgeBaseCompanion;
     public function panel(Panel $panel): Panel
     {
         return $panel
@@ -44,6 +45,7 @@ class Vision3DPanelProvider extends PanelProvider
                 \Filament\View\PanelsRenderHook::HEAD_END,
                 fn (): string => \Illuminate\Support\Facades\Blade::render("@vite('resources/js/app.js')")
             )
+            ->plugin(\Guava\FilamentKnowledgeBase\Plugins\KnowledgeBaseCompanionPlugin::make()->knowledgeBasePanelId('docs'))
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
@@ -61,3 +63,6 @@ class Vision3DPanelProvider extends PanelProvider
             ]);
     }
 }
+
+
+

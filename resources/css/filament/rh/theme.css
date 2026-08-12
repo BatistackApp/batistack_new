@@ -1,6 +1,12 @@
 @import 'tailwindcss';
+@plugin "@tailwindcss/typography";
+@source '../../../../vendor/guava/filament-knowledge-base/resources/**/*.blade.php';
 @import '../../../../vendor/filament/filament/resources/css/theme.css';
+@plugin "@tailwindcss/typography";
+@source '../../../../vendor/guava/filament-knowledge-base/resources/**/*.blade.php';
 
 
 @source '../../../../app/Filament/RH/**/*';
 @source '../../../../resources/views/filament/r-h/**/*';
+
+
