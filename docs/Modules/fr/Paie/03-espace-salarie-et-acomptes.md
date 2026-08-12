@@ -26,7 +26,7 @@ Sur ce portail, l'employé peut :
 ### Le Coffre-Fort Numérique (Digiposte)
 
 En plus de l'espace classique, Batistack est désormais interfacé avec **Digiposte** (La Poste). 
-Dès la fin de l'onboarding, un coffre-fort numérique personnel (CPA) est créé pour l'employé. Lors de la distribution de la paie, le bulletin est déposé **légalement et scellé pour 50 ans** directement dans ce coffre-fort, garantissant une conformité totale avec le Code du Travail.
+Dès la fin de l'onboarding, un coffre-fort numérique personnel (CPA) est créé pour l'employé. Lors de la distribution de la paie, le bulletin est déposé directement dans ce coffre-fort.
 
 > [!NOTE]  
 > **Notifications PWA & Email**

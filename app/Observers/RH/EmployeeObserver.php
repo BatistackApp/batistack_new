@@ -67,7 +67,9 @@ class EmployeeObserver
             }
 
             try {
-                app(\App\Services\Paie\DigiposteService::class)->createOrGetSafe($employee);
+                dispatch(function () use ($employee) {
+                    app(\App\Services\Paie\DigiposteService::class)->createOrGetSafe($employee);
+                })->afterCommit();
             } catch (\Exception $e) {
                 \Illuminate\Support\Facades\Log::error("Impossible de créer le coffre Digiposte: " . $e->getMessage());
             }

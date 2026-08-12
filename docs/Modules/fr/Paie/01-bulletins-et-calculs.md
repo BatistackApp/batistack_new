@@ -15,7 +15,7 @@ Lors de la génération d'un bulletin, le **Moteur de Paie** interroge le reste 
 - Il détecte automatiquement les **Heures Supplémentaires** (qui déclenchent des majorations, ex: +25%).
 - Il applique les primes liées aux conditions de travail (ex: Primes de panier, Grands déplacements) en respectant leurs spécificités (soumises ou non soumises aux cotisations).
 - Il déduit automatiquement les **jours d'absence** (Maladie, Congés Payés) en parfaite synchronisation avec le module RH.
-- **Subrogation et Maintien de Salaire** : En cas d'arrêt longue maladie ou d'accident du travail, le moteur gère automatiquement les règles de la convention collective du Bâtiment (calcul des jours de carence). Si l'entreprise fait le choix de la subrogation, le système réintègre correctement les Indemnités Journalières (IJSS) sur le bulletin, sans les soumettre aux cotisations sociales (hors CSG/CRDS).
+- **Subrogation et Maintien de Salaire** : En cas d'arrêt maladie ou d'accident du travail, le moteur gère automatiquement les règles de la convention collective du Bâtiment (calcul des jours de carence). Si l'entreprise fait le choix de la subrogation, le système réintègre correctement les Indemnités Journalières (IJSS) sur le bulletin, sans les soumettre aux cotisations sociales (hors CSG/CRDS).
 
 ## 2. Le Moteur de Cotisations
 

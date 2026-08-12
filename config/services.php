@@ -61,7 +61,7 @@ return [
         'webhook_secret' => env('STRIPE_WEBHOOK_SECRET'),
     ],
     'digiposte' => [
-        'base_url' => env('DIGIPOSTE_URL', 'https://api.sandbox.digiposte.fr/digiposte/v3'),
+        'base_url' => env('DIGIPOSTE_URL'),
         'api_key' => env('DIGIPOSTE_API_KEY', ''),
         'client_id' => env('DIGIPOSTE_CLIENT_ID', ''),
         'client_secret' => env('DIGIPOSTE_CLIENT_SECRET', ''),

@@ -140,7 +140,8 @@ class PayrollCalculationService
                             $ijExpected = $absence->ij_expected;
                             if (!$ijExpected || $ijExpected == 0) {
                                 // Calcul auto approximatif des IJSS pour la période (50% du salaire journalier)
-                                $overlapCalendarDays = $overlapStart->diffInDays($overlapEnd) + 1;
+                                $indemnifiableStart = $overlapStart->copy()->max($carenceEnd);
+                                $overlapCalendarDays = $indemnifiableStart <= $overlapEnd ? $indemnifiableStart->diffInDays($overlapEnd) + 1 : 0;
                                 $dailySalary = ($hourlyRate * ($contract->weekly_hours ?? 35) * 52 / 12) / 30;
                                 $ijExpected = round($overlapCalendarDays * ($dailySalary * 0.5), 2);
                             }

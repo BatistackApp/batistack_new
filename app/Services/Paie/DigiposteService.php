@@ -17,16 +17,23 @@ class DigiposteService
 
     public function __construct()
     {
-        $this->baseUrl = rtrim(config('services.digiposte.base_url', 'https://api.sandbox.digiposte.fr/digiposte/v3'), '/');
+        $this->baseUrl = rtrim(config('services.digiposte.base_url', ''), '/');
         $this->apiKey = config('services.digiposte.api_key', '');
         $this->clientId = config('services.digiposte.client_id', '');
         $this->clientSecret = config('services.digiposte.client_secret', '');
         $this->partnerId = config('services.digiposte.partner_id', '');
     }
 
+    protected function isConfigured(): bool
+    {
+        return !empty($this->baseUrl);
+    }
+
     public function authenticate(): ?string
     {
-        $response = Http::withHeaders([
+        if (!$this->isConfigured()) return null;
+
+        $response = Http::connectTimeout(3)->timeout(10)->withHeaders([
             'X-Okapi-Key' => $this->apiKey,
             'Authorization' => 'Basic ' . base64_encode("{$this->clientId}:{$this->clientSecret}"),
         ])->asForm()->post("{$this->baseUrl}/token", [
@@ -37,12 +44,18 @@ class DigiposteService
             return $response->json('access_token');
         }
 
+        if ($response->serverError() || $response->status() === 429) {
+            $response->throw();
+        }
+
         Log::error('Digiposte authentication failed', ['response' => $response->body()]);
         return null;
     }
 
     public function createOrGetSafe(Employee $employee): bool
     {
+        if (!$this->isConfigured()) return false;
+
         if ($employee->digiposte_id) {
             return true;
         }
@@ -51,7 +64,7 @@ class DigiposteService
         if (!$token) return false;
 
         // Digiposte B2B API to create an active membership and safe
-        $response = Http::withHeaders([
+        $response = Http::connectTimeout(3)->timeout(10)->withHeaders([
             'X-Okapi-Key' => $this->apiKey,
             'Authorization' => "Bearer {$token}",
         ])->post("{$this->baseUrl}/partner/{$this->partnerId}/memberships", [
@@ -73,13 +86,26 @@ class DigiposteService
             return true;
         }
 
+        if ($response->serverError() || $response->status() === 429) {
+            $response->throw();
+        }
+
         Log::error('Digiposte safe creation failed', ['response' => $response->body()]);
         return false;
     }
 
     public function depositPayslip(Payslip $payslip): bool
     {
+        if (!$this->isConfigured()) return false;
+
         $employee = $payslip->employee;
+
+        if ($employee->refuses_electronic_payslip) {
+            Log::info('Digiposte deposit prevented: Employee refused electronic payslip', ['employee_id' => $employee->id]);
+            $payslip->update(['digiposte_status' => 'failed']);
+            return false;
+        }
+
         if (!$employee->digiposte_id) {
             if (!$this->createOrGetSafe($employee)) {
                 $payslip->update(['digiposte_status' => 'failed']);
@@ -93,23 +119,31 @@ class DigiposteService
             return false;
         }
 
-        if (!$payslip->pdf_path || !file_exists(storage_path('app/public/' . $payslip->pdf_path))) {
-            Log::error('Payslip PDF not found for Digiposte deposit', ['payslip_id' => $payslip->id]);
+        if (!$payslip->pdf_path) {
+            Log::error('Payslip PDF path empty', ['payslip_id' => $payslip->id]);
             $payslip->update(['digiposte_status' => 'failed']);
             return false;
         }
 
-        $response = Http::withHeaders([
+        $disk = \Illuminate\Support\Facades\Storage::disk('public');
+        
+        if (!\Illuminate\Support\Str::startsWith($payslip->pdf_path, 'documents/payslips/') || !$disk->exists($payslip->pdf_path)) {
+            Log::error('Payslip PDF not found or path invalid for Digiposte deposit', ['payslip_id' => $payslip->id]);
+            $payslip->update(['digiposte_status' => 'failed']);
+            return false;
+        }
+
+        $response = Http::connectTimeout(3)->timeout(10)->withHeaders([
             'X-Okapi-Key' => $this->apiKey,
             'Authorization' => "Bearer {$token}",
         ])
-            ->attach('file', file_get_contents(storage_path('app/public/' . $payslip->pdf_path)), 'bulletin.pdf')
+            ->attach('file', $disk->get($payslip->pdf_path), 'bulletin.pdf')
             ->post("{$this->baseUrl}/partner/{$this->partnerId}/memberships/{$employee->digiposte_id}/documents/certified", [
                 'title' => "Bulletin de paie " . $payslip->period,
                 'type' => 'BULL_PAIE',
-                'size' => filesize(storage_path('app/public/' . $payslip->pdf_path)),
+                'size' => $disk->size($payslip->pdf_path),
                 'algo' => 'SHA256',
-                'hash' => hash_file('sha256', storage_path('app/public/' . $payslip->pdf_path)),
+                'hash' => hash('sha256', $disk->get($payslip->pdf_path)),
             ]);
 
         if ($response->successful()) {
@@ -117,6 +151,10 @@ class DigiposteService
                 'digiposte_status' => 'deposited'
             ]);
             return true;
+        }
+
+        if ($response->serverError() || $response->status() === 429) {
+            $response->throw();
         }
 
         Log::error('Digiposte deposit failed', ['response' => $response->body()]);
