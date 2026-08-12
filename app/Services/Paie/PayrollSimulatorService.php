@@ -16,7 +16,7 @@ class PayrollSimulatorService
      * @param Carbon|null $date La date pour laquelle on veut les taux (par défaut: maintenant)
      * @return array Les résultats de la simulation
      */
-    public function simulateFromGross(float $grossSalary, PayrollContributionProfile $profile, ?\Carbon\CarbonInterface $date = null): array
+    public function simulateFromGross(float $grossSalary, PayrollContributionProfile $profile, ?\Carbon\CarbonInterface $date = null, float $ijssBrutes = 0.0): array
     {
         $date = $date ?? now();
         $validRates = $profile->rates()->validAt($date)->get();
@@ -26,7 +26,7 @@ class PayrollSimulatorService
         $fiscalReintegration = 0;
         $csgNonDeductibleAmount = 0;
 
-        // Étape 1 : Pré-calcul de la réintégration fiscale (Prévoyance / Mutuelle part patronale)
+        // Étape 1 : Pré-calcul de la réintégration fiscale
         foreach ($validRates as $rate) {
             if ($rate->is_fiscally_reintegrated && $rate->base_formula === ContributionBaseFormula::GROSS_SALARY) {
                 $fiscalReintegration += round($grossSalary * ($rate->employer_rate / 100), 2);
@@ -46,7 +46,7 @@ class PayrollSimulatorService
             if ($rate->base_formula === ContributionBaseFormula::CSG_BASE) {
                 $base = $csgBase;
             } elseif ($rate->base_formula === ContributionBaseFormula::OPPBTP_BASE) {
-                $base = round($grossSalary * 1.1394, 2); // 13.94% de majoration pour congés
+                $base = round($grossSalary * 1.1394, 2);
             }
 
             $employeeAmount = round($base * ($rate->employee_rate / 100), 2);
@@ -70,8 +70,28 @@ class PayrollSimulatorService
             }
         }
 
+        // CSG sur les IJSS Brutes (6.2% deductible + 0.5% non deduc = 6.7%)
+        if ($ijssBrutes > 0) {
+            $csgDeductibleIjss = round($ijssBrutes * 0.062, 2);
+            $csgNonDeductibleIjss = round($ijssBrutes * 0.005, 2);
+            
+            $lines[] = [
+                'category' => 'csg_crds_ijss',
+                'label' => 'CSG/CRDS sur IJSS',
+                'base' => $ijssBrutes,
+                'employee_rate' => 6.7,
+                'employer_rate' => 0,
+                'employee_amount' => $csgDeductibleIjss + $csgNonDeductibleIjss,
+                'employer_amount' => 0,
+            ];
+
+            $totalEmployeeContributions += ($csgDeductibleIjss + $csgNonDeductibleIjss);
+            $csgNonDeductibleAmount += $csgNonDeductibleIjss;
+        }
+
         // Calculs finaux
-        $netSocial = round($grossSalary - $totalEmployeeContributions, 2);
+        // Le net social inclut les IJSS Brutes car elles sont versées à l'employé
+        $netSocial = round(($grossSalary + $ijssBrutes) - $totalEmployeeContributions, 2);
         
         // Net imposable = Net social + CSG non déductible + réintégration fiscale
         $taxableNet = round($netSocial + $csgNonDeductibleAmount + $fiscalReintegration, 2);
@@ -80,6 +100,7 @@ class PayrollSimulatorService
 
         return [
             'gross_salary' => $grossSalary,
+            'ijss_brutes' => $ijssBrutes,
             'net_social' => $netSocial,
             'taxable_net' => $taxableNet,
             'total_employee_contributions' => $totalEmployeeContributions,

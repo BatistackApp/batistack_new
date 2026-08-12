@@ -50,6 +50,12 @@ class ContractsRelationManager extends RelationManager
                             ->options(ContractType::class)
                             ->required()
                             ->native(false),
+                        Select::make('category')
+                            ->label('Catégorie (Statut)')
+                            ->options(\App\Enums\RH\EmployeeCategory::class)
+                            ->required()
+                            ->default('ouvrier')
+                            ->native(false),
                         Select::make('job_title')
                             ->label('Intitulé du poste')
                             ->options(fn () => Role::pluck('name', 'name'))
@@ -107,6 +113,9 @@ class ContractsRelationManager extends RelationManager
                     ->weight('bold'),
                 TextColumn::make('type')->label('Type')
                     ->label('Type')
+                    ->badge(),
+                TextColumn::make('category')
+                    ->label('Catégorie')
                     ->badge(),
                 TextColumn::make('start_date')
                     ->label('Du')
