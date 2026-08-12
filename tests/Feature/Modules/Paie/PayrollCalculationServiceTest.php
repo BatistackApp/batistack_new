@@ -277,3 +277,48 @@ it('calculates zero carence for work accident', function () {
 
     expect(abs($deduction))->toEqual((float)$maintien);
 });
+
+it('calculates zero carence for etam with more than 12 months seniority', function () {
+    \App\Models\Core\Company::factory()->create();
+    $employee = Employee::factory()->create();
+    $profile = PayrollContributionProfile::factory()->create();
+    \App\Models\Paie\PayrollContributionRate::create([
+        'payroll_contribution_profile_id' => $profile->id,
+        'category' => 'urssaf',
+        'label' => 'URSSAF',
+        'employee_rate' => 10,
+        'employer_rate' => 20,
+        'base_formula' => \App\Enums\Paie\ContributionBaseFormula::GROSS_SALARY,
+        'is_deductible' => true,
+    ]);
+
+    $contract = Contract::withoutEvents(function () use ($employee, $profile) {
+        return Contract::factory()->create([
+            'employee_id' => $employee->id,
+            'category' => \App\Enums\RH\EmployeeCategory::ETAM,
+            'start_date' => now()->subMonths(13), // > 12 mois
+            'weekly_hours' => 35,
+            'hourly_rate' => 15.00,
+            'payroll_contribution_profile_id' => $profile->id,
+        ]);
+    });
+
+    $startDate = now()->startOfMonth()->next(\Carbon\Carbon::MONDAY);
+    $endDate = $startDate->copy()->addDays(4); // 5 jours ouvrés
+
+    $absence = \App\Models\RH\Abscence::factory()->create([
+        'employee_id' => $employee->id,
+        'type' => \App\Enums\RH\AbsenceType::SICK_LEAVE,
+        'start_date' => $startDate,
+        'end_date' => $endDate,
+        'requires_subrogation' => false,
+    ]);
+
+    $service = new PayrollCalculationService();
+    $payslip = $service->calculateForEmployee($employee, now()->format('Y-m'), 151.67, 15.00);
+
+    $deduction = $payslip->custom_bonuses[0]['amount'];
+    $maintien = $payslip->custom_bonuses[1]['amount'];
+
+    expect(abs($deduction))->toEqual((float)$maintien);
+});
