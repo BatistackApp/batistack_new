@@ -68,7 +68,7 @@ class PayrollCalculationService
             ];
         }
 
-        // --- GESTION DES ABSENCES (Issue #148) ---
+        // --- GESTION DES ABSENCES (Issue #148 & #241) ---
         $startOfMonth = \Carbon\Carbon::createFromFormat('Y-m', $period)->startOfMonth();
         $endOfMonth = $startOfMonth->copy()->endOfMonth();
 
@@ -84,17 +84,36 @@ class PayrollCalculationService
             ->get();
 
         $dailyHours = $contract && $contract->weekly_hours ? round($contract->weekly_hours / 5, 2) : 7.0;
+        
+        $employeeCategory = $contract->category->value ?? 'ouvrier';
+        $ijssBrutesTotal = 0.0;
 
         foreach ($absences as $absence) {
             $overlapStart = $absence->start_date->copy()->max($startOfMonth);
             $overlapEnd = $absence->end_date->copy()->min($endOfMonth);
 
+            // Règle de carence CC Bâtiment
+            $carenceDays = 3; // Par défaut
+            $seniorityMonths = $contract->start_date ? $contract->start_date->diffInMonths($absence->start_date) : 0;
+            
+            if ($absence->type === \App\Enums\RH\AbsenceType::WORK_ACCIDENT) {
+                $carenceDays = 0;
+            } elseif (in_array($employeeCategory, ['etam', 'cadre']) && $seniorityMonths >= 12) {
+                $carenceDays = 0;
+            }
+            
+            $carenceEnd = $absence->start_date->copy()->addDays($carenceDays)->startOfDay();
+
             // Calculer les jours ouvrés (lundi à vendredi)
             $workingDays = 0;
+            $maintainedWorkingDays = 0;
             $current = $overlapStart->copy();
             while ($current <= $overlapEnd) {
                 if ($current->isWeekday()) {
                     $workingDays++;
+                    if ($current >= $carenceEnd) {
+                        $maintainedWorkingDays++;
+                    }
                 }
                 $current = $current->addDay();
             }
@@ -111,7 +130,37 @@ class PayrollCalculationService
                     'is_taxable' => true,
                 ];
 
-                if ($absence->is_paid) {
+                // Maintien de salaire (CC Bâtiment)
+                if (in_array($absence->type, [\App\Enums\RH\AbsenceType::SICK_LEAVE, \App\Enums\RH\AbsenceType::WORK_ACCIDENT])) {
+                    if ($maintainedWorkingDays > 0) {
+                        $maintenanceGross = round($maintainedWorkingDays * $dailyHours * $hourlyRate, 2);
+                        
+                        // Gestion IJSS (Subrogation)
+                        if ($absence->requires_subrogation) {
+                            $ijExpected = $absence->ij_expected;
+                            if (!$ijExpected || $ijExpected == 0) {
+                                // Calcul auto approximatif des IJSS pour la période (50% du salaire journalier)
+                                $indemnifiableStart = $overlapStart->copy()->max($carenceEnd);
+                                $overlapCalendarDays = $indemnifiableStart <= $overlapEnd ? $indemnifiableStart->diffInDays($overlapEnd) + 1 : 0;
+                                $dailySalary = ($hourlyRate * ($contract->weekly_hours ?? 35) * 52 / 12) / 30;
+                                $ijExpected = round($overlapCalendarDays * ($dailySalary * 0.5), 2);
+                            }
+                            
+                            $ijssBrutesTotal += $ijExpected;
+                            
+                            // On déduit les IJSS Brutes du maintien brut pour ne pas payer de charges URSSAF dessus
+                            $maintenanceGross -= $ijExpected;
+                            // On empêche un maintien négatif
+                            $maintenanceGross = max(0, $maintenanceGross);
+                        }
+
+                        $customBonuses[] = [
+                            'label' => 'Maintien de salaire conventionnel',
+                            'amount' => $maintenanceGross,
+                            'is_taxable' => true,
+                        ];
+                    }
+                } elseif ($absence->is_paid) {
                     $customBonuses[] = [
                         'label' => 'Indemnité ' . $absence->getType()->getLabel() . $labelSuffix,
                         'amount' => $deductionAmount,
@@ -125,7 +174,7 @@ class PayrollCalculationService
         $expenseReportsAmount = \App\Models\RH\ExpenseReport::where('employee_id', $employee->id)
             ->where('year', $year)
             ->where('month', (int) $month)
-            ->where('status', \App\Enums\RH\ExpenseReportStatus::PAID) // Supposons que PAID existe
+            ->where('status', \App\Enums\RH\ExpenseReportStatus::PAID)
             ->sum('total_amount');
 
         // --- GESTION DES PRIMES MANUELLES ---
@@ -172,7 +221,7 @@ class PayrollCalculationService
         $simulator = new \App\Services\Paie\PayrollSimulatorService();
         $simulationDate = \Carbon\Carbon::createFromFormat('Y-m', $period)->endOfMonth()->startOfDay();
         
-        $simulation = $simulator->simulateFromGross($grossSalary, $profile, $simulationDate);
+        $simulation = $simulator->simulateFromGross($grossSalary, $profile, $simulationDate, $ijssBrutesTotal);
 
         $totalEmployeeContributions = $simulation['total_employee_contributions'];
         $totalEmployerContributions = $simulation['total_employer_contributions'];
@@ -194,6 +243,12 @@ class PayrollCalculationService
         $pasAmount = round($taxableNet * ($pasRate / 100), 2);
 
         $netPayable = round($netSocial - $pasAmount, 2);
+        
+        // Deduction IJSS Nettes: The employer advances the money, so the Net Pay includes the IJSS.
+        // Wait, if the employer advances the money, the employee receives the Net Pay with the IJSS included!
+        // So we DONT deduct IJSS Nettes from the Net Paid.
+        // The CPAM pays the employer to reimburse them.
+        // So the net payable is correct as is (it includes the IJSS Brutes from the simulator minus CSG).
 
         // 4. Acomptes
         $advances = AdvancePayment::where('employee_id', $employee->id)

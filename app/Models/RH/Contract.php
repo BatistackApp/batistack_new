@@ -4,6 +4,7 @@ namespace App\Models\RH;
 
 use App\Enums\Core\SignatureStatus;
 use App\Enums\RH\ContractType;
+use App\Enums\RH\EmployeeCategory;
 use App\Observers\RH\ContractObserver;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Builder;
@@ -21,6 +22,7 @@ class Contract extends Model implements HasMedia
     protected $fillable = [
         'employee_id',
         'type',
+        'category',
         'start_date',
         'end_date',
         'job_title',
@@ -52,6 +54,7 @@ class Contract extends Model implements HasMedia
     {
         return [
             'type' => ContractType::class,
+            'category' => EmployeeCategory::class,
             'start_date' => 'date',
             'end_date' => 'date',
             'hourly_rate' => 'decimal:4',

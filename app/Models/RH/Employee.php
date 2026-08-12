@@ -42,6 +42,8 @@ class Employee extends Model implements HasMedia
         'pas_rate',
         'iban',
         'bic',
+        'digiposte_id',
+        'refuses_electronic_payslip',
     ];
 
     protected function casts(): array
@@ -53,6 +55,7 @@ class Employee extends Model implements HasMedia
             'face_descriptor' => 'array',
             'onboarding_completed' => 'boolean',
             'pas_rate' => 'decimal:4',
+            'refuses_electronic_payslip' => 'boolean',
         ];
     }
 

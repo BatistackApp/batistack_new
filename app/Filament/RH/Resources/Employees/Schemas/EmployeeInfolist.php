@@ -75,6 +75,12 @@ class EmployeeInfolist
                                         TextEntry::make('phone')->label('Téléphone')
                                             ->label('Téléphone')
                                             ->icon(Phosphor::Phone),
+                                        TextEntry::make('digiposte_id')
+                                            ->label('Digiposte ID')
+                                            ->badge()
+                                            ->color('info')
+                                            ->icon('heroicon-o-archive-box')
+                                            ->visible(fn (Employee $record) => filled($record->digiposte_id)),
                                     ]),
                             ]),
 
