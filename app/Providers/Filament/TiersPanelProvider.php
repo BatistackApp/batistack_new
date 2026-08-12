@@ -59,6 +59,7 @@ class TiersPanelProvider extends PanelProvider
                 DispatchServingFilamentEvent::class,
             ])
             ->plugins([
+                \MartinPetricko\FilamentSentryFeedback\FilamentSentryFeedbackPlugin::make(),
                 CalculatorPlugin::make(),
                 TableLayoutTogglePlugin::make()
                     ->setDefaultLayout('list')

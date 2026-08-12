@@ -43,6 +43,7 @@ class DocsPanelProvider extends PanelProvider
                 Authenticate::class,
             ])
             ->plugins([
+                \MartinPetricko\FilamentSentryFeedback\FilamentSentryFeedbackPlugin::make(),
                 KnowledgeBasePlugin::make(base_path('docs/Modules')),
             ]);
     }

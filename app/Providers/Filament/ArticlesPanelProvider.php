@@ -41,6 +41,7 @@ class ArticlesPanelProvider extends PanelProvider
             ->discoverPages(in: app_path('Filament/Articles/Pages'), for: 'App\Filament\Articles\Pages')
             ->discoverWidgets(in: app_path('Filament/Articles/Widgets'), for: 'App\Filament\Articles\Widgets')
             ->plugins([
+                \MartinPetricko\FilamentSentryFeedback\FilamentSentryFeedbackPlugin::make(),
                 CalculatorPlugin::make(),
                 TableLayoutTogglePlugin::make()
                     ->setDefaultLayout('list')

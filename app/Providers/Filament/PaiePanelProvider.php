@@ -42,6 +42,9 @@ class PaiePanelProvider extends PanelProvider
             ])
             ->discoverWidgets(in: app_path('Filament/Paie/Widgets'), for: 'App\Filament\Paie\Widgets')
             ->plugin(\Guava\FilamentKnowledgeBase\Plugins\KnowledgeBaseCompanionPlugin::make()->knowledgeBasePanelId('docs'))
+            ->plugins([
+                \MartinPetricko\FilamentSentryFeedback\FilamentSentryFeedbackPlugin::make(),
+            ])
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,

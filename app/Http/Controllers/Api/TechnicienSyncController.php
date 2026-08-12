@@ -95,6 +95,11 @@ class TechnicienSyncController extends Controller
                     $intervention->save();
                     $processed++;
                 } elseif ($type === 'ADD_MATERIAL') {
+                    if (!isset($payload['name']) || !isset($payload['quantity'])) {
+                        $failed++;
+                        continue;
+                    }
+
                     $unit = \App\Models\Core\Unit::firstOrCreate(['symbol' => 'U'], ['name' => 'Unité', 'type' => \App\Enums\Core\UnitType::UNIT]);
                     $vat = \App\Models\Core\VatRate::firstOrCreate(['rate' => 20], ['name' => 'TVA 20%']);
 

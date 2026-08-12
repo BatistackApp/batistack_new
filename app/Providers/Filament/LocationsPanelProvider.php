@@ -43,6 +43,9 @@ class LocationsPanelProvider extends PanelProvider
                 \App\Filament\Locations\Widgets\RentalCalendarWidget::class,
             ])
             ->plugin(\Guava\FilamentKnowledgeBase\Plugins\KnowledgeBaseCompanionPlugin::make()->knowledgeBasePanelId('docs'))
+            ->plugins([
+                \MartinPetricko\FilamentSentryFeedback\FilamentSentryFeedbackPlugin::make(),
+            ])
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,

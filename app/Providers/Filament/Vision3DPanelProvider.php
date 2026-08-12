@@ -46,6 +46,9 @@ class Vision3DPanelProvider extends PanelProvider
                 fn (): string => \Illuminate\Support\Facades\Blade::render("@vite('resources/js/app.js')")
             )
             ->plugin(\Guava\FilamentKnowledgeBase\Plugins\KnowledgeBaseCompanionPlugin::make()->knowledgeBasePanelId('docs'))
+            ->plugins([
+                \MartinPetricko\FilamentSentryFeedback\FilamentSentryFeedbackPlugin::make(),
+            ])
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,

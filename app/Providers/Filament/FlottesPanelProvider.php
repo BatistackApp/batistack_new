@@ -43,6 +43,9 @@ class FlottesPanelProvider extends PanelProvider
             ])
             ->discoverWidgets(in: app_path('Filament/Flottes/Widgets'), for: 'App\Filament\Flottes\Widgets')
             ->plugin(\Guava\FilamentKnowledgeBase\Plugins\KnowledgeBaseCompanionPlugin::make()->knowledgeBasePanelId('docs'))
+            ->plugins([
+                \MartinPetricko\FilamentSentryFeedback\FilamentSentryFeedbackPlugin::make(),
+            ])
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
