@@ -65,6 +65,12 @@ class EmployeeObserver
             } catch (\Exception $e) {
                 \Illuminate\Support\Facades\Log::error("Impossible de générer le bulletin d'affiliation: " . $e->getMessage());
             }
+
+            try {
+                app(\App\Services\Paie\DigiposteService::class)->createOrGetSafe($employee);
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error("Impossible de créer le coffre Digiposte: " . $e->getMessage());
+            }
         }
     }
 

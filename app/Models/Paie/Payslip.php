@@ -30,6 +30,8 @@ class Payslip extends Model
         'expense_reports_amount',
         'custom_bonuses',
         'meal_allowance_amount',
+        'digiposte_document_id',
+        'digiposte_status',
     ];
 
     protected $casts = [

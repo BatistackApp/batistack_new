@@ -147,6 +147,15 @@ class PayslipResource extends Resource
                         PayslipStatus::VALIDATED => 'info',
                         PayslipStatus::PAID => 'success',
                     }),
+                Tables\Columns\TextColumn::make('digiposte_status')
+                    ->label('Digiposte')
+                    ->badge()
+                    ->color(fn (string $state): string => match ($state) {
+                        'pending' => 'gray',
+                        'deposited' => 'success',
+                        'failed' => 'danger',
+                        default => 'gray',
+                    }),
             ])
             ->filters([
                 //
@@ -244,6 +253,37 @@ class PayslipResource extends Resource
                             Notification::make()
                                 ->title("Distribution lancée pour $count bulletin(s)")
                                 ->body('Les notifications et e-mails sont en cours d\'envoi en arrière-plan.')
+                                ->success()
+                                ->send();
+                        }),
+                    BulkAction::make('distributeDigiposte')
+                        ->label('Distribuer via Digiposte')
+                        ->icon('heroicon-o-archive-box-arrow-down')
+                        ->color('success')
+                        ->requiresConfirmation()
+                        ->modalHeading('Dépôt dans les coffres Digiposte')
+                        ->modalDescription('Cela enverra les bulletins scellés directement dans le coffre-fort numérique de chaque salarié.')
+                        ->modalSubmitActionLabel('Envoyer vers Digiposte')
+                        ->action(function (Collection $records) {
+                            $validRecords = $records->filter(fn ($r) => in_array($r->status, [PayslipStatus::VALIDATED, PayslipStatus::PAID]));
+
+                            if ($validRecords->isEmpty()) {
+                                Notification::make()
+                                    ->title('Aucun bulletin valide')
+                                    ->body('Seuls les bulletins validés ou payés peuvent être déposés.')
+                                    ->warning()
+                                    ->send();
+                                return;
+                            }
+
+                            $count = 0;
+                            foreach ($validRecords as $payslip) {
+                                \App\Jobs\Paie\SendPayslipToDigiposteJob::dispatch($payslip);
+                                $count++;
+                            }
+
+                            Notification::make()
+                                ->title("Dépôt Digiposte lancé pour $count bulletin(s)")
                                 ->success()
                                 ->send();
                         }),

@@ -23,6 +23,11 @@ Sur ce portail, l'employé peut :
 - Retrouver et télécharger l'historique complet de ses **Fiches de Paie** (au format PDF).
 - Être informé en temps réel du versement de son salaire.
 
+### Le Coffre-Fort Numérique (Digiposte)
+
+En plus de l'espace classique, Batistack est désormais interfacé avec **Digiposte** (La Poste). 
+Dès la fin de l'onboarding, un coffre-fort numérique personnel (CPA) est créé pour l'employé. Lors de la distribution de la paie, le bulletin est déposé **légalement et scellé pour 50 ans** directement dans ce coffre-fort, garantissant une conformité totale avec le Code du Travail.
+
 > [!NOTE]  
 > **Notifications PWA & Email**
 > Dès que le service RH "Publie" les bulletins du mois, une tâche automatique se lance en arrière-plan. Chaque salarié reçoit une **notification sur son téléphone** (WebPush) et un email lui confirmant que sa fiche de paie est disponible sur son espace.

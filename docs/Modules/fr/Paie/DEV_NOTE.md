@@ -24,6 +24,7 @@ Le module **Paie** centralise l'édition et le calcul des bulletins de salaire (
     *   `DsnExportService` : Exporte les données au format `.csv` pour la déclaration sociale nominative (DADS/DSN).
     *   `AccountingExportService` : Génère l'OD Comptable (journal de paie en partie double : 641100, 421000, 431000...).
     *   `PayslipPdfService` : Génération du PDF avec cumuls annuels dynamiques.
+*   **Coffre-Fort Numérique** : `DigiposteService` intégré via l'API Okapi (La Poste). Création automatique du coffre-fort (CPA) à la fin de l'onboarding et dépôt légal des bulletins (job asynchrone).
 *   **Clôture** : `PayslipLockService` verrouille les pointages et les bulletins en fin de mois.
 *   **Simulateur** : `PayrollSimulatorService` offre un outil Brut -> Net ou Net -> Brut pour prévoir le coût employeur.
 
@@ -41,7 +42,5 @@ Le module **Paie** centralise l'édition et le calcul des bulletins de salaire (
 ## 🚧 Ce qu'il reste à faire
 *   Le module paie de base est d'ores et déjà entièrement opérationnel, incluant des fonctionnalités comptables avancées.
 
-## 💡 Idées d'amélioration et Nouvelles Fonctionnalités
-*   **Coffre-Fort Numérique Sécurisé (Digiposte / eDoc)** : Intégrer une API pour déposer automatiquement et légalement (pendant 50 ans) les bulletins de salaire dans le coffre-fort numérique (CPA) de chaque employé, remplaçant la simple vue PDF.
 *   **Télétransmission DSN Automatique (API Machine-to-Machine)** : Connexion à l'API URSSAF/Net-Entreprises pour télétransmettre la DSN et récupérer les accusés de réception (CRM) directement depuis l'ERP sans manipuler de fichiers CSV.
 *   **Gestion de la Subrogation et du Maintien de Salaire (IJSS)** : Intégrer les règles de maintien de salaire de la Convention Collective du BTP et déduire/verser les Indemnités Journalières de Sécurité Sociale (IJSS) en cas d'arrêt longue maladie.

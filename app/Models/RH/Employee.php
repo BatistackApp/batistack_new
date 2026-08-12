@@ -42,6 +42,7 @@ class Employee extends Model implements HasMedia
         'pas_rate',
         'iban',
         'bic',
+        'digiposte_id',
     ];
 
     protected function casts(): array
