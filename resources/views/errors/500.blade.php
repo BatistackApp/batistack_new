@@ -9,20 +9,7 @@
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700,800&display=swap" rel="stylesheet" />
     
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: { sans: ['Inter', 'sans-serif'], },
-                    colors: {
-                        batistack: { 50: '#f0f4f8', 100: '#d9e2ec', 500: '#334e68', 600: '#243b53', 700: '#102a43', 800: '#0a192f', 900: '#060f1c', },
-                        accent: { 500: '#f59e0b', }
-                    }
-                }
-            }
-        }
-    </script>
+    @vite('resources/css/app.css')
 </head>
 <body class="bg-batistack-50 text-batistack-700 min-h-screen flex items-center justify-center font-sans">
     
@@ -57,7 +44,7 @@
                 </a>
                 
                 @if(app()->bound('sentry') && app('sentry')->getLastEventId())
-                    <button onclick="Sentry.showReportDialog({ eventId: '{{ app('sentry')->getLastEventId() }}', lang: 'fr' })" class="inline-flex items-center space-x-2 bg-white border border-batistack-200 hover:bg-batistack-50 text-batistack-700 px-6 py-3 rounded-lg font-semibold transition shadow-sm">
+                    <button onclick="Sentry.showReportDialog({ eventId: '{{ app('sentry')->getLastEventId() }}', lang: 'fr' })" class="inline-flex items-center space-x-2 bg-white border border-batistack-100 hover:bg-batistack-50 text-batistack-700 px-6 py-3 rounded-lg font-semibold transition shadow-sm">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-accent-500" viewBox="0 0 20 20" fill="currentColor">
                             <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-2 0c0 .993-.241 1.929-.668 2.754l-1.524-1.525a3.997 3.997 0 00.078-2.183l1.562-1.04L14.04 6.64l-1.503 1.054A3.997 3.997 0 0010.5 7.15V5.3l-2.022-.505-.506 2.023a4.015 4.015 0 00-2.182.078l-1.04-1.562-1.366 1.408 1.054 1.503a3.997 3.997 0 00-.544 2.037l-1.85.463.505 2.022 1.85-.463a4.015 4.015 0 00.078 2.182l-1.562 1.04 1.408 1.366 1.503-1.054a3.997 3.997 0 002.037.544l.463 1.85 2.022-.505-.463-1.85a4.015 4.015 0 002.182-.078l1.04 1.562 1.366-1.408-1.054-1.503a3.997 3.997 0 00.544-2.037l1.85-.463zM9 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" />
                         </svg>
@@ -69,7 +56,7 @@
                         Sentry.init({ dsn: '{{ config('sentry.dsn') }}' });
                     </script>
                 @else
-                    <a href="mailto:support@batistack.fr?subject=Erreur%20500" class="inline-flex items-center space-x-2 bg-white border border-batistack-200 hover:bg-batistack-50 text-batistack-700 px-6 py-3 rounded-lg font-semibold transition shadow-sm">
+                    <a href="mailto:support@batistack.fr?subject=Erreur%20500" class="inline-flex items-center space-x-2 bg-white border border-batistack-100 hover:bg-batistack-50 text-batistack-700 px-6 py-3 rounded-lg font-semibold transition shadow-sm">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-accent-500" viewBox="0 0 20 20" fill="currentColor">
                             <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-2 0c0 .993-.241 1.929-.668 2.754l-1.524-1.525a3.997 3.997 0 00.078-2.183l1.562-1.04L14.04 6.64l-1.503 1.054A3.997 3.997 0 0010.5 7.15V5.3l-2.022-.505-.506 2.023a4.015 4.015 0 00-2.182.078l-1.04-1.562-1.366 1.408 1.054 1.503a3.997 3.997 0 00-.544 2.037l-1.85.463.505 2.022 1.85-.463a4.015 4.015 0 00.078 2.182l-1.562 1.04 1.408 1.366 1.503-1.054a3.997 3.997 0 002.037.544l.463 1.85 2.022-.505-.463-1.85a4.015 4.015 0 002.182-.078l1.04 1.562 1.366-1.408-1.054-1.503a3.997 3.997 0 00.544-2.037l1.85-.463zM9 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" />
                         </svg>

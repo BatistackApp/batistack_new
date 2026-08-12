@@ -9,20 +9,7 @@
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700,800&display=swap" rel="stylesheet" />
     
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: { sans: ['Inter', 'sans-serif'], },
-                    colors: {
-                        batistack: { 50: '#f0f4f8', 100: '#d9e2ec', 500: '#334e68', 600: '#243b53', 700: '#102a43', 800: '#0a192f', 900: '#060f1c', },
-                        accent: { 500: '#f59e0b', }
-                    }
-                }
-            }
-        }
-    </script>
+    @vite('resources/css/app.css')
 </head>
 <body class="bg-batistack-50 text-batistack-700 min-h-screen flex items-center justify-center font-sans">
     
