@@ -1,3 +1,9 @@
+---
+title: DEV NOTE
+icon: heroicon-o-document-text
+order: 99
+---
+
 # 🏗️ Module Immobilisations
 
 ## 📌 Vue d'ensemble du Module

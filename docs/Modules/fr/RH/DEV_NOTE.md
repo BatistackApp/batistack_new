@@ -1,3 +1,9 @@
+---
+title: DEV NOTE
+icon: heroicon-o-document-text
+order: 99
+---
+
 # 👥 Module RH & Pointage
 
 ## 📌 Vue d'ensemble du Module
@@ -10,7 +16,7 @@ Le module **Ressources Humaines (RH)** est l'un des piliers centraux de Batistac
 *   **Temps & Activité** : `TimeEntry` (Pointage), `Abscence` (Congés/Maladie).
 *   **Notes de Frais** : `ExpenseReport`, `ExpenseItem`.
 *   **Conformité & Santé** : `MedicalVisit`, `Qualification` (Habilitations, CACES).
-*   **Paie & Social** : `PayrollExport`, `PayrollVariable`, `CibtpDeclaration`.
+*   **Paie & Social** : `PayrollExport`, `PayrollVariable`, `CibtpDeclaration`, `WageGarnishment` (SATD).
 *   **Enums strictes** : Validation des types (`AbsenceType`, `ContractType`, `CacesSymbol`, `ExpenseItemStatus`, etc.).
 
 ### 2. Logique Métier & Services (`app/Services/RH`)
@@ -18,7 +24,8 @@ Le module **Ressources Humaines (RH)** est l'un des piliers centraux de Batistac
     *   **CIBTP** : `CibtpService` automatise l'export DNA et les Demandes De Congés (DDC).
     *   **Subrogation** : Calcul automatique des Indemnités Journalières lors d'un arrêt, génération de l'attestation de salaire PDF.
     *   **Affiliation** : Génération du bulletin PRO BTP automatique post-onboarding.
-*   **Paie & Temps** : `PayrollGenerationService` consolide les variables de paie en fin de mois (heures de base, heures supplémentaires, absences, primes). Génération d'un export mensuel CSV des heures et de Fiches de Paie Pro Forma (estimatives).
+*   **Paie & Temps** : `PayrollGenerationService` consolide les variables de paie en fin de mois (heures de base, heures supplémentaires, absences, primes). Il gère également le calcul automatique des Saisies sur Salaires (SATD) en respectant les barèmes légaux et le RSA.
+*   **Documents & Contrats** : Refonte complète du modèle de contrat de travail (24 articles légaux). Génération automatisée des lettres de fin de période d'essai (calcul dynamique du préavis) et des avenants de rupture anticipée de CDD via `RHDocumentService`.
 *   **Notes de Frais & OCR** : Workflow complet de soumission. Moteur OCR (`GoogleCloudVisionOcrService`) intégré pour l'extraction automatique des montants et catégorisation depuis les tickets. Support natif des factures PDF multi-pages (Issue #144).
     *   Gestion du moyen de paiement (Carte Personnelle ou Carte Corporate). Les dépenses par carte corpo sont automatiquement exclues du montant à rembourser au salarié (Issue #143).
     *   **Avances sur Frais** : Les salariés peuvent demander des avances budgétaires (`ExpenseAdvance`), qui sont virées via SEPA. Lors de la saisie de la note de frais finale, l'avance est automatiquement déduite du reste à payer (Issue #145).

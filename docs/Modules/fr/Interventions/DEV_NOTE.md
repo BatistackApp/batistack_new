@@ -1,3 +1,9 @@
+---
+title: DEV NOTE
+icon: heroicon-o-document-text
+order: 99
+---
+
 # 🔧 Module Interventions (SAV et Dépannages)
 
 ## 📌 Vue d'ensemble du Module

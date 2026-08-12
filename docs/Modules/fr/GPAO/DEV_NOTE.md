@@ -1,3 +1,9 @@
+---
+title: DEV NOTE
+icon: heroicon-o-document-text
+order: 99
+---
+
 # 🏭 Module GPAO (Gestion de Production Assistée par Ordinateur)
 
 ## 📌 Vue d'ensemble du Module
