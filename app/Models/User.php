@@ -99,6 +99,11 @@ class User extends Authenticatable implements FilamentUser
         return $this->hasOne(Employee::class);
     }
 
+    public function conductedInterviews(): HasMany
+    {
+        return $this->hasMany(\App\Models\RH\Interview::class, 'manager_id');
+    }
+
     public function contact(): HasOne
     {
         return $this->hasOne(Contact::class);

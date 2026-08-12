@@ -18,6 +18,7 @@ Le module **Ressources Humaines (RH)** est l'un des piliers centraux de Batistac
 *   **Conformité & Santé** : `MedicalVisit`, `Qualification` (Habilitations, CACES).
 *   **Paie & Social** : `PayrollExport`, `PayrollVariable`, `CibtpDeclaration`, `WageGarnishment` (SATD).
 *   **Enums strictes** : Validation des types (`AbsenceType`, `ContractType`, `CacesSymbol`, `ExpenseItemStatus`, etc.).
+*   **Évaluations & Entretiens** : `Interview` (Gestion des entretiens annuels et professionnels avec grille dynamique JSON et signatures électroniques).
 
 ### 2. Logique Métier & Services (`app/Services/RH`)
 *   **Gestion Sociale Avancée** :
@@ -30,6 +31,7 @@ Le module **Ressources Humaines (RH)** est l'un des piliers centraux de Batistac
     *   Gestion du moyen de paiement (Carte Personnelle ou Carte Corporate). Les dépenses par carte corpo sont automatiquement exclues du montant à rembourser au salarié (Issue #143).
     *   **Avances sur Frais** : Les salariés peuvent demander des avances budgétaires (`ExpenseAdvance`), qui sont virées via SEPA. Lors de la saisie de la note de frais finale, l'avance est automatiquement déduite du reste à payer (Issue #145).
 *   **Export SEPA** : Génération automatique de fichiers de virement SEPA (pain.001.001.03) pour le remboursement groupé des notes de frais validées et le paiement des avances sur frais (Issue #142).
+*   **Entretiens & Évaluations** : Génération des comptes-rendus d'entretien au format PDF avec intégration automatique des signatures électroniques (via `saade/filament-autograph` et `Spatie\Browsershot`).
 *   **Signature Électronique** : API DocuSeal intégrée pour les contrats.
 
 ### 3. Observers & Événements (`app/Observers/RH`)
@@ -49,7 +51,5 @@ Le module **Ressources Humaines (RH)** est l'un des piliers centraux de Batistac
 ## 🚧 Ce qu'il reste à faire
 *   Le module est fonctionnellement très abouti et couvre tous les besoins RH classiques et avancés. Il est en phase de maintenance/amélioration continue.
 
-## 💡 Idées d'amélioration et Nouvelles Fonctionnalités
-*   **Entretiens Annuels et Évaluations Professionnelles** : Planification et gestion des entretiens obligatoires. Génération du compte-rendu PDF avec grille d'évaluation et signature électronique manager/employé.
 *   **Gestion de la Formation (OPCO)** : Suivi des sessions de formation, des coûts (et remboursements OPCO), avec mise à jour et renouvellement automatiques des Habilitations/CACES des participants.
 *   **Détection d'Anomalies de Pointage** : Algorithme de contrôle croisant les heures de pointage avec les données du module Flottes (trajet du véhicule) pour détecter automatiquement les incohérences ou les heures supplémentaires abusives et lever une alerte RH.
