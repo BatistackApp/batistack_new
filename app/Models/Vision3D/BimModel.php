@@ -15,6 +15,7 @@ class BimModel extends Model
         'format',
         'file_size',
         'version',
+        'parent_id',
         'modelable_id',
         'modelable_type',
     ];
@@ -33,5 +34,21 @@ class BimModel extends Model
     public function annotations()
     {
         return $this->hasMany(BimAnnotation::class);
+    }
+
+    /**
+     * Le modèle parent (version précédente)
+     */
+    public function parent()
+    {
+        return $this->belongsTo(BimModel::class, 'parent_id');
+    }
+
+    /**
+     * Les modèles enfants (versions suivantes)
+     */
+    public function children()
+    {
+        return $this->hasMany(BimModel::class, 'parent_id');
     }
 }

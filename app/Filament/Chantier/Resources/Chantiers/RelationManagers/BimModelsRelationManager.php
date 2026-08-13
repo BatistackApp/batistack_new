@@ -66,7 +66,9 @@ class BimModelsRelationManager extends RelationManager
         return $table
             ->recordTitleAttribute('name')
             ->columns([
-                Tables\Columns\TextColumn::make('name')->label('Nom'),
+                Tables\Columns\TextColumn::make('name')
+                    ->label('Nom')
+                    ->description(fn (BimModel $record) => 'Version '.$record->version.($record->parent_id ? ' (Révision)' : '')),
                 Tables\Columns\TextColumn::make('format')->label('Format')
                     ->badge()
                     ->colors([
@@ -90,6 +92,35 @@ class BimModelsRelationManager extends RelationManager
                     ->label('Visualiser')
                     ->icon('heroicon-o-eye')
                     ->url(fn (BimModel $record): string => BimModelResource::getUrl('view', ['record' => $record], panel: 'vision3d')),
+                Action::make('new_revision')
+                    ->label('Nouvelle Révision')
+                    ->icon('heroicon-o-arrow-up-tray')
+                    ->color('success')
+                    ->form([
+                        FileUpload::make('file_path')
+                            ->label(fn(BimModel $record) => 'Nouveau Fichier IFC (V'.($record->version + 1).')')
+                            ->disk('public')
+                            ->directory('bim_models')
+                            ->preserveFilenames()
+                            ->getUploadedFileNameForStorageUsing(function (TemporaryUploadedFile $file): string {
+                                return (string) str($file->getClientOriginalName())->prepend(now()->timestamp.'_');
+                            })
+                            ->required(),
+                    ])
+                    ->action(function (BimModel $record, array $data) {
+                        $newModel = $record->replicate(['file_size', 'thumbnail_path']);
+                        $newModel->file_path = $data['file_path'];
+                        $newModel->parent_id = $record->id;
+                        $newModel->version = $record->version + 1;
+                        
+                        // Recalculate file size
+                        if (\Storage::disk('public')->exists($data['file_path'])) {
+                            $newModel->file_size = \Storage::disk('public')->size($data['file_path']);
+                        }
+                        
+                        $newModel->save();
+                    })
+                    ->visible(fn (BimModel $record) => $record->format === 'ifc'),
                 EditAction::make(),
                 DeleteAction::make(),
             ])

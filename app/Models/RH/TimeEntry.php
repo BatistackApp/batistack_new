@@ -23,6 +23,7 @@ class TimeEntry extends Model
         'status', 'refusal_reason', 'approved_by_id', 'approved_at',
         'is_grand_deplacement', 'gd_allowance_amount', 'description',
         'travel_hours', 'manufacturing_order_id', 'started_at', 'ended_at',
+        'is_anomaly', 'anomaly_reason', 'anomaly_resolved_at', 'anomaly_resolved_by_id',
     ];
 
     public function employee(): BelongsTo
@@ -38,6 +39,11 @@ class TimeEntry extends Model
     public function approvedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'approved_by_id');
+    }
+
+    public function anomalyResolvedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'anomaly_resolved_by_id');
     }
 
     public function manufacturingOrder(): BelongsTo
@@ -59,6 +65,8 @@ class TimeEntry extends Model
             'travel_hours' => 'decimal:2',
             'started_at' => 'datetime',
             'ended_at' => 'datetime',
+            'is_anomaly' => 'boolean',
+            'anomaly_resolved_at' => 'datetime',
         ];
     }
 
