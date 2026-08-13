@@ -147,11 +147,61 @@
             </svg>
             Quitter AR
         </button>
+        <button type="button" x-show="format === 'ifc'" @click="openClashModal" class="bg-red-800 hover:bg-red-700 text-white px-3 py-1.5 rounded-lg shadow text-sm transition flex items-center gap-1">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+            <span>Clash Detection</span>
+        </button>
     </div>
     
     <!-- Reticule pour le Hit-Test AR -->
     <div x-show="arActive && !arModelPlaced" class="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
         <div class="w-8 h-8 rounded-full border-4 border-white opacity-50"></div>
+    </div>
+
+    <!-- Modale Clash Detection -->
+    <div x-show="showClashModal" class="absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" x-transition x-cloak>
+        <div class="bg-gray-800 p-6 rounded-xl shadow-xl border border-gray-700 w-96 max-w-full relative">
+            <h3 class="text-lg font-bold text-white mb-4">Détection de Collisions (AABB)</h3>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-1">Calque A (Type IFC)</label>
+                    <select x-model="clashLayerA" class="w-full bg-gray-900 border border-gray-600 rounded p-2 text-white text-sm focus:ring-primary-500">
+                        <option value="">Sélectionner un type...</option>
+                        <template x-for="layer in getLayerOptions()" :key="layer.id">
+                            <option :value="layer.id" x-text="layer.name"></option>
+                        </template>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-1">Calque B (Type IFC)</label>
+                    <select x-model="clashLayerB" class="w-full bg-gray-900 border border-gray-600 rounded p-2 text-white text-sm focus:ring-primary-500">
+                        <option value="">Sélectionner un type...</option>
+                        <template x-for="layer in getLayerOptions()" :key="layer.id">
+                            <option :value="layer.id" x-text="layer.name"></option>
+                        </template>
+                    </select>
+                </div>
+                
+                <div class="flex justify-end gap-2 mt-6">
+                    <button @click="showClashModal = false" class="px-4 py-2 text-sm text-gray-300 hover:text-white">Annuler</button>
+                    <button @click="runClashDetection" :disabled="!clashLayerA || !clashLayerB || clashLayerA === clashLayerB" class="px-4 py-2 bg-red-600 hover:bg-red-500 disabled:opacity-50 text-white rounded text-sm font-medium transition">Lancer l'analyse</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toolbar Clash Results -->
+    <div x-show="clashesDetected.length > 0 && !showClashModal" class="absolute top-4 left-1/2 -translate-x-1/2 z-40 bg-gray-900/90 text-white px-4 py-3 rounded-xl shadow-lg border border-red-500/50 backdrop-blur-sm flex items-center gap-4" x-transition x-cloak>
+        <div class="font-bold text-red-400">
+            <span x-text="clashesDetected.length"></span> collisions détectées
+        </div>
+        <div class="flex gap-2">
+            <button @click="clearClashes" class="px-3 py-1.5 text-sm bg-gray-700 hover:bg-gray-600 rounded">Annuler</button>
+            <button @click="saveClashes" class="px-3 py-1.5 text-sm bg-red-600 hover:bg-red-500 rounded font-medium">Sauvegarder les punaises</button>
+        </div>
     </div>
 </div>
 
@@ -197,6 +247,13 @@ document.addEventListener('alpine:init', () => {
         parentModelID: null,
         showDeletedGhosts: true,
         matDeleted: null,
+
+        // Clash Detection State
+        showClashModal: false,
+        clashLayerA: '',
+        clashLayerB: '',
+        clashesDetected: [],
+        clashMeshes: [],
 
         async init() {
             if (!this.url) {
@@ -685,6 +742,154 @@ document.addEventListener('alpine:init', () => {
             if (!this.compareMode || this.parentModelID === null || !this.matDeleted) return;
             
             this.matDeleted.visible = this.showDeletedGhosts;
+        },
+
+        // --- Clash Detection (AABB) ---
+        getLayerOptions() {
+            if (!this.spatialTree || !this.spatialTree.children) return [];
+            return this.extractTypes(this.spatialTree);
+        },
+
+        extractTypes(node, types = new Map()) {
+            if (node.children) {
+                node.children.forEach(c => {
+                    if (c.type) {
+                        types.set(c.type, { id: c.type, name: c.type });
+                    }
+                    this.extractTypes(c, types);
+                });
+            }
+            return Array.from(types.values()).sort((a, b) => a.name.localeCompare(b.name));
+        },
+
+        getElementsOfType(node, typeName, result = []) {
+            if (node.type === typeName) {
+                result.push(node.expressID);
+            }
+            if (node.children) {
+                node.children.forEach(c => this.getElementsOfType(c, typeName, result));
+            }
+            return result;
+        },
+
+        openClashModal() {
+            this.showClashModal = true;
+            this.clashLayerA = '';
+            this.clashLayerB = '';
+        },
+
+        async runClashDetection() {
+            this.showClashModal = false;
+            this.loadingText = 'Analyse des collisions en cours...';
+            this.loading = true;
+
+            // Laisser le temps à l'UI de s'afficher
+            await new Promise(r => setTimeout(r, 100));
+
+            try {
+                const idsA = this.getElementsOfType(this.spatialTree, this.clashLayerA);
+                const idsB = this.getElementsOfType(this.spatialTree, this.clashLayerB);
+
+                if (idsA.length === 0 || idsB.length === 0) {
+                    alert("Aucun élément trouvé pour l'un des calques.");
+                    this.loading = false;
+                    return;
+                }
+
+                const ifcManager = this.viewer.IFC.loader.ifcManager;
+
+                const getBoundingBoxForId = (id) => {
+                    const subset = ifcManager.createSubset({
+                        modelID: this.modelID,
+                        ids: [id],
+                        customID: 'temp-clash-' + id
+                    });
+                    if (subset && subset.geometry) {
+                        subset.geometry.computeBoundingBox();
+                        const box = subset.geometry.boundingBox.clone();
+                        // Appliquer la matrice (souvent identité dans web-ifc mais on assure)
+                        box.applyMatrix4(subset.matrixWorld);
+                        ifcManager.removeSubset(this.modelID, undefined, 'temp-clash-' + id);
+                        return box;
+                    }
+                    return null;
+                };
+
+                const boxesA = [];
+                // Limiter à 300 pour éviter les crashs navigateurs
+                for (let i = 0; i < Math.min(idsA.length, 300); i++) {
+                    const box = getBoundingBoxForId(idsA[i]);
+                    if (box) boxesA.push({ id: idsA[i], box });
+                }
+
+                const boxesB = [];
+                for (let i = 0; i < Math.min(idsB.length, 300); i++) {
+                    const box = getBoundingBoxForId(idsB[i]);
+                    if (box) boxesB.push({ id: idsB[i], box });
+                }
+
+                const clashes = [];
+                for (const a of boxesA) {
+                    for (const b of boxesB) {
+                        if (a.box.intersectsBox(b.box)) {
+                            // Point central
+                            const intersection = a.box.clone().intersect(b.box);
+                            const center = new window.THREE.Vector3();
+                            intersection.getCenter(center);
+                            
+                            clashes.push({
+                                layer1: this.clashLayerA,
+                                layer2: this.clashLayerB,
+                                x: center.x,
+                                y: center.y,
+                                z: center.z
+                            });
+                        }
+                    }
+                }
+
+                this.clashesDetected = clashes;
+
+                // Afficher des sphères violettes pour prévisualiser
+                this.clearClashes(false); // Retirer les anciens visuels
+                
+                const geo = new window.THREE.SphereGeometry(0.8, 16, 16);
+                const mat = new window.THREE.MeshBasicMaterial({ color: 0x8b5cf6, transparent: true, opacity: 0.9 });
+                
+                this.clashesDetected.forEach(clash => {
+                    const mesh = new window.THREE.Mesh(geo, mat);
+                    mesh.position.set(clash.x, clash.y, clash.z);
+                    this.viewer.context.getScene().add(mesh);
+                    this.clashMeshes.push(mesh);
+                });
+
+            } catch (e) {
+                console.error("Erreur Clash:", e);
+                alert("Erreur lors de la détection.");
+            } finally {
+                this.loading = false;
+            }
+        },
+
+        clearClashes(resetData = true) {
+            if (resetData) {
+                this.clashesDetected = [];
+            }
+            if (this.viewer && window.THREE) {
+                this.clashMeshes.forEach(m => this.viewer.context.getScene().remove(m));
+            }
+            this.clashMeshes = [];
+        },
+
+        saveClashes() {
+            if (this.clashesDetected.length === 0) return;
+            this.$wire.mountInfolistAction('saveClashes', { clashes: this.clashesDetected });
+            this.clearClashes(true);
+            
+            // Reload page après 1.5s pour afficher les punaises rouges définitives
+            setTimeout(() => {
+                window.location.reload();
+            }, 1500);
         },
 
         // --- Logique WebXR (AR) ---

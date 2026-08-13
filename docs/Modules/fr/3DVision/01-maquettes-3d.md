@@ -52,3 +52,13 @@ En cliquant sur ce bouton, Batistack analyse géométriquement les deux fichiers
 - **🟢 Vert (Ajouté)** : Les nouveaux éléments apparus dans la V2.
 - **🟠 Orange (Modifié)** : Les éléments dont les propriétés ont changé.
 - **🔴 Rouge Translucide (Supprimé)** : Les anciens éléments (Fantômes) qui n'existent plus dans la V2. Un bouton permet de masquer ces fantômes.
+
+## 4. Détection Automatique de Collisions (Clash Detection)
+
+Vous pouvez repérer automatiquement les conflits géométriques dans vos modèles IFC (par exemple, si une canalisation traverse un mur porteur).
+
+1. Ouvrez votre maquette dans le visualiseur 3D.
+2. Cliquez sur **Clash Detection** en bas à gauche.
+3. Sélectionnez le **Calque A** et le **Calque B** que vous souhaitez comparer (ex: `IfcWall` contre `IfcPipeSegment`).
+4. Cliquez sur **Lancer l'analyse**.
+5. L'algorithme prévisualisera chaque conflit détecté par une sphère colorée. Vous pouvez ensuite cliquer sur **Sauvegarder les punaises** pour convertir ces conflits en annotations `BimAnnotation` que vous pourrez assigner aux sous-traitants concernés.

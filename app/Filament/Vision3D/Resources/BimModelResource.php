@@ -178,6 +178,23 @@ class BimModelResource extends Resource
                                         }
 
                                         return $components;
+                                    }),
+                                Action::make('saveClashes')
+                                    ->action(function (array $arguments, BimModel $record) {
+                                        $clashes = $arguments['clashes'] ?? [];
+                                        foreach ($clashes as $clash) {
+                                            $record->annotations()->create([
+                                                'title' => 'Collision détectée',
+                                                'description' => 'Collision automatique entre ' . $clash['layer1'] . ' et ' . $clash['layer2'],
+                                                'position_x' => $clash['x'],
+                                                'position_y' => $clash['y'],
+                                                'position_z' => $clash['z'],
+                                            ]);
+                                        }
+                                        \Filament\Notifications\Notification::make()
+                                            ->title(count($clashes) . ' collisions sauvegardées avec succès.')
+                                            ->success()
+                                            ->send();
                                     })
                             ])
                             ->columnSpanFull(),

@@ -41,6 +41,7 @@ order: 99
 - **Miniature (Thumbnail) automatique** : Snapshot PNG généré en arrière-plan à l'upload pour illustrer le tableau Filament.
 - **Intégration Réalité Augmentée (AR / WebXR)** : Implémentation du support WebXR avec l'API Hit-Test native. Permet d'afficher un réticule sur les surfaces détectées par la caméra d'un smartphone et de projeter la maquette IFC dans l'environnement réel (échelle 1:1) de manière fluide et autonome par rapport à la boucle de rendu de base.
 - **Comparaison de Révisions BIM (Version Control 3D)** : Possibilité d'uploader une nouvelle version (enfant) d'une maquette IFC existante (parent) et de calculer dynamiquement le différentiel géométrique en 3D dans le navigateur (basé sur le GlobalId). Colorisation automatique (Vert = Ajouté, Orange = Modifié, Rouge fantôme = Supprimé) et toggle UI pour masquer les éléments supprimés.
+- **Détection Automatique de Collisions (Clash Detection)** : Implémentation d'un algorithme rapide de détection des collisions basé sur les boîtes englobantes (AABB). L'utilisateur sélectionne deux calques spécifiques (Types IFC, ex: Murs vs Tuyauterie) à comparer. L'UI prévisualise les intersections détectées avec des sphères violettes et permet la création en lot d'annotations `BimAnnotation` aux points de conflit via une action Filament dédiée.
 
 ---
 
@@ -52,4 +53,5 @@ order: 99
 ---
 
 ## 💡 Idées d'améliorations et Nouvelles Fonctionnalités
-*   **Détection Automatique de Collisions (Clash Detection)** : Scanner la maquette à la recherche d'intersections géométriques illogiques entre les corps d'état (ex: tuyau traversant une poutre) et générer automatiquement des punaises rouges d'alerte.
+*   **Historique complet des révisions BIM** : Pouvoir remonter de V3 à V1.
+*   **Filtres de collisions plus fins** : Permettre de filtrer la détection de collisions par système ou zone spatiale plutôt que simplement par calque entier.

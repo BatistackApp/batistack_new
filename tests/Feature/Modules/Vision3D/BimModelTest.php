@@ -62,3 +62,31 @@ it('can create a revision of a bim model', function () {
         ->and($parent->children)->toHaveCount(1)
         ->and($parent->children->first()->id)->toBe($child->id);
 });
+
+it('can create multiple annotations for clashes', function () {
+    $bimModel = BimModel::create([
+        'name' => 'V1',
+        'file_path' => 'v1.ifc',
+        'format' => 'ifc',
+        'version' => 1,
+    ]);
+
+    $bimModel->annotations()->create([
+        'title' => 'Collision détectée',
+        'description' => 'Collision automatique',
+        'position_x' => 10,
+        'position_y' => 20,
+        'position_z' => 30,
+    ]);
+
+    $bimModel->annotations()->create([
+        'title' => 'Collision détectée 2',
+        'description' => 'Collision automatique',
+        'position_x' => 15,
+        'position_y' => 25,
+        'position_z' => 35,
+    ]);
+
+    expect($bimModel->annotations)->toHaveCount(2);
+    expect($bimModel->annotations->first()->title)->toBe('Collision détectée');
+});
