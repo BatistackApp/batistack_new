@@ -37,3 +37,18 @@ Vous pouvez utiliser votre souris (ou votre doigt sur tablette) pour :
 
 > [!NOTE]  
 > Le temps de chargement initial dépend de la taille (`file_size`) de votre maquette. Les modèles BIM très denses (fichiers IFC complexes) peuvent prendre quelques secondes pour s'afficher.
+
+## 3. Versionnement et Comparaison de Révisions (IFC)
+
+Pour les maquettes au format **IFC**, Batistack permet de gérer les différentes révisions de la maquette (versions successives livrées par le bureau d'études ou l'architecte).
+
+### Uploader une Nouvelle Révision
+Depuis la fiche d'un chantier, dans l'onglet **Maquettes 3D**, cliquez sur le bouton vert **"Nouvelle Révision"** d'un fichier IFC existant (V1). 
+Cela créera automatiquement une version enfant (V2) en copiant les attributs de la V1 et en y rattachant le nouveau fichier.
+
+### Comparaison Visuelle en 3D (Diff)
+Lorsque vous visualisez une maquette ayant une version précédente, un bouton **"Comparer avec V1"** apparaît en bas à gauche de la vue 3D.
+En cliquant sur ce bouton, Batistack analyse géométriquement les deux fichiers et affiche :
+- **🟢 Vert (Ajouté)** : Les nouveaux éléments apparus dans la V2.
+- **🟠 Orange (Modifié)** : Les éléments dont les propriétés ont changé.
+- **🔴 Rouge Translucide (Supprimé)** : Les anciens éléments (Fantômes) qui n'existent plus dans la V2. Un bouton permet de masquer ces fantômes.

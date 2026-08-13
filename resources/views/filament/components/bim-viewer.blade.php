@@ -1,6 +1,7 @@
 @php
     $record = $getRecord();
     $url = \Illuminate\Support\Facades\Storage::disk('public')->url($record->file_path);
+    $parentUrl = $record->parent_id ? \Illuminate\Support\Facades\Storage::disk('public')->url($record->parent->file_path) : null;
     $format = $record->format;
     $annotations = $record->annotations()->with('target')->get()->toArray();
 @endphp
@@ -8,6 +9,7 @@
 <div
     x-data="bimViewer({
         url: '{{ $url }}',
+        parentUrl: '{{ $parentUrl }}',
         format: '{{ strtolower($format) }}',
         annotations: {{ json_encode($annotations) }}
     })"
@@ -121,6 +123,18 @@
             </svg>
             Calques
         </button>
+        <button type="button" x-show="parentUrl && format === 'ifc'" @click="toggleCompare" :class="compareMode ? 'bg-purple-600 hover:bg-purple-500' : 'bg-gray-800 hover:bg-gray-700'" class="text-white px-3 py-1.5 rounded-lg shadow text-sm transition flex items-center gap-1">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+            <span x-text="compareMode ? 'Quitter Comparaison' : 'Comparer avec V1'"></span>
+        </button>
+        <div x-show="compareMode" class="flex gap-2 bg-gray-900/80 p-1 rounded-lg backdrop-blur-sm border border-gray-700 items-center px-3">
+            <label class="flex items-center gap-2 text-xs text-white cursor-pointer">
+                <input type="checkbox" x-model="showDeletedGhosts" @change="updateCompareVisibility" class="rounded bg-gray-800 border-gray-600 text-red-500 focus:ring-red-500">
+                Fantômes (Rouge)
+            </label>
+        </div>
         <button type="button" x-show="arSupported && format === 'ifc' && !arActive" @click="startAR" class="bg-blue-600 text-white px-3 py-1.5 rounded-lg shadow text-sm hover:bg-blue-500 transition flex items-center gap-1">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064" />
@@ -144,8 +158,9 @@
 @once
 <script>
 document.addEventListener('alpine:init', () => {
-    Alpine.data('bimViewer', ({ url, format, annotations }) => ({
+    Alpine.data('bimViewer', ({ url, parentUrl, format, annotations }) => ({
         url,
+        parentUrl,
         format,
         annotations,
         loading: true,
@@ -176,6 +191,12 @@ document.addEventListener('alpine:init', () => {
         xrLocalSpace: null,
         reticle: null,
         modelGroup: null,
+
+        // Compare State
+        compareMode: false,
+        parentModelID: null,
+        showDeletedGhosts: true,
+        matDeleted: null,
 
         async init() {
             if (!this.url) {
@@ -532,6 +553,138 @@ document.addEventListener('alpine:init', () => {
                 this.camera.position.set(x + 10, y + 10, z + 10);
                 this.camera.lookAt(x, y, z);
             }
+        },
+
+        // --- Comparaison de Révisions (Version Control 3D) ---
+        async toggleCompare() {
+            if (!this.viewer || this.format !== 'ifc' || !this.parentUrl) return;
+
+            this.compareMode = !this.compareMode;
+            
+            if (this.compareMode) {
+                if (this.parentModelID !== null) {
+                    this.updateCompareVisibility();
+                    return;
+                }
+                
+                this.loadingText = 'Analyse comparative en cours...';
+                this.loading = true;
+
+                try {
+                    // Charger le modèle parent (V1)
+                    const parentModel = await this.viewer.IFC.loadIfcUrl(this.parentUrl);
+                    this.parentModelID = parentModel.modelID;
+                    
+                    // Masquer le parent par défaut
+                    this.viewer.IFC.loader.ifcManager.removeSubset(this.parentModelID, undefined);
+
+                    // Extraire les arbres spatiaux
+                    const v1Tree = await this.viewer.IFC.getSpatialStructure(this.parentModelID);
+                    const v2Tree = this.spatialTree;
+
+                    const v1Ids = this.getAllIds(v1Tree);
+                    const v2Ids = this.getAllIds(v2Tree);
+
+                    const v1GlobalIds = {};
+                    const v2GlobalIds = {};
+
+                    // Récupérer les propriétés en bloc (peut être lent, on fait au mieux)
+                    for (const id of v1Ids) {
+                        try {
+                            const props = await this.viewer.IFC.getProperties(this.parentModelID, id, false, false);
+                            if (props && props.GlobalId) v1GlobalIds[props.GlobalId.value] = { id, name: props.Name?.value };
+                        } catch(e) {}
+                    }
+                    
+                    for (const id of v2Ids) {
+                        try {
+                            const props = await this.viewer.IFC.getProperties(this.modelID, id, false, false);
+                            if (props && props.GlobalId) v2GlobalIds[props.GlobalId.value] = { id, name: props.Name?.value };
+                        } catch(e) {}
+                    }
+
+                    const addedIds = [];
+                    const modifiedIds = [];
+                    const deletedIds = [];
+
+                    // Comparer V2 par rapport à V1
+                    for (const [globalId, v2Data] of Object.entries(v2GlobalIds)) {
+                        if (!v1GlobalIds[globalId]) {
+                            addedIds.push(v2Data.id);
+                        } else {
+                            if (v1GlobalIds[globalId].name !== v2Data.name) {
+                                modifiedIds.push(v2Data.id);
+                            }
+                        }
+                    }
+
+                    // Comparer V1 par rapport à V2
+                    for (const [globalId, v1Data] of Object.entries(v1GlobalIds)) {
+                        if (!v2GlobalIds[globalId]) {
+                            deletedIds.push(v1Data.id);
+                        }
+                    }
+
+                    const scene = this.viewer.context.getScene();
+
+                    // Matériaux
+                    const matAdded = new window.THREE.MeshLambertMaterial({ color: 0x10b981, transparent: true, opacity: 0.8 }); // Green
+                    const matModified = new window.THREE.MeshLambertMaterial({ color: 0xf59e0b, transparent: true, opacity: 0.8 }); // Orange
+                    this.matDeleted = new window.THREE.MeshLambertMaterial({ color: 0xef4444, transparent: true, opacity: 0.3 }); // Red ghost
+
+                    if (addedIds.length > 0) {
+                        this.viewer.IFC.loader.ifcManager.createSubset({
+                            modelID: this.modelID,
+                            ids: addedIds,
+                            material: matAdded,
+                            scene: scene,
+                            removePrevious: true,
+                            customID: 'added-subset'
+                        });
+                    }
+
+                    if (modifiedIds.length > 0) {
+                        this.viewer.IFC.loader.ifcManager.createSubset({
+                            modelID: this.modelID,
+                            ids: modifiedIds,
+                            material: matModified,
+                            scene: scene,
+                            removePrevious: true,
+                            customID: 'modified-subset'
+                        });
+                    }
+
+                    if (deletedIds.length > 0) {
+                        this.viewer.IFC.loader.ifcManager.createSubset({
+                            modelID: this.parentModelID,
+                            ids: deletedIds,
+                            material: this.matDeleted,
+                            scene: scene,
+                            removePrevious: true,
+                            customID: 'deleted-subset'
+                        });
+                    }
+
+                    this.updateCompareVisibility();
+                } catch (e) {
+                    console.error('Erreur diff:', e);
+                } finally {
+                    this.loading = false;
+                }
+            } else {
+                // Quitter le mode comparaison
+                this.viewer.IFC.loader.ifcManager.removeSubset(this.modelID, undefined, 'added-subset');
+                this.viewer.IFC.loader.ifcManager.removeSubset(this.modelID, undefined, 'modified-subset');
+                if (this.parentModelID !== null) {
+                    this.viewer.IFC.loader.ifcManager.removeSubset(this.parentModelID, undefined, 'deleted-subset');
+                }
+            }
+        },
+
+        updateCompareVisibility() {
+            if (!this.compareMode || this.parentModelID === null || !this.matDeleted) return;
+            
+            this.matDeleted.visible = this.showDeletedGhosts;
         },
 
         // --- Logique WebXR (AR) ---
