@@ -6,10 +6,12 @@ use App\Enums\Core\SignatureStatus;
 use App\Enums\Core\SignatureType;
 use App\Enums\RH\ContractType;
 use App\Models\RH\Contract;
+use App\Services\Core\DocumentService;
 use App\Services\Core\SignatureService;
 use App\Services\RH\RHDocumentService;
 use BackedEnum;
 use Filament\Actions\Action;
+use Filament\Actions\ActionGroup;
 use Filament\Actions\CreateAction;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
@@ -22,7 +24,10 @@ use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
+use Spatie\Permission\Models\Role;
 use ToneGabes\Filament\Icons\Enums\Phosphor;
 
 class ContractsRelationManager extends RelationManager
@@ -45,19 +50,26 @@ class ContractsRelationManager extends RelationManager
                             ->options(ContractType::class)
                             ->required()
                             ->native(false),
+                        Select::make('category')
+                            ->label('Catégorie (Statut)')
+                            ->options(\App\Enums\RH\EmployeeCategory::class)
+                            ->required()
+                            ->default('ouvrier')
+                            ->native(false),
                         Select::make('job_title')
                             ->label('Intitulé du poste')
-                            ->options(fn () => \Spatie\Permission\Models\Role::pluck('name', 'name'))
+                            ->options(fn () => Role::pluck('name', 'name'))
                             ->searchable()
                             ->createOptionForm([
                                 TextInput::make('name')->label('Nom')
                                     ->label('Nom du poste/rôle')
                                     ->required()
-                                    ->unique(\Spatie\Permission\Models\Role::class, 'name', ignoreRecord: false)
+                                    ->unique(Role::class, 'name', ignoreRecord: false),
                             ])
                             ->createOptionUsing(function (array $data) {
-                                \Illuminate\Support\Facades\Gate::authorize('create', \Spatie\Permission\Models\Role::class);
-                                $role = \Spatie\Permission\Models\Role::create(['name' => $data['name'], 'guard_name' => 'web']);
+                                Gate::authorize('create', Role::class);
+                                $role = Role::create(['name' => $data['name'], 'guard_name' => 'web']);
+
                                 return $role->name;
                             })
                             ->required(),
@@ -102,6 +114,9 @@ class ContractsRelationManager extends RelationManager
                 TextColumn::make('type')->label('Type')
                     ->label('Type')
                     ->badge(),
+                TextColumn::make('category')
+                    ->label('Catégorie')
+                    ->badge(),
                 TextColumn::make('start_date')
                     ->label('Du')
                     ->date('d/m/Y'),
@@ -131,9 +146,10 @@ class ContractsRelationManager extends RelationManager
                     ->icon(Phosphor::Printer)
                     ->action(function (Contract $record, RHDocumentService $service) {
                         $relativePath = 'documents/rh/contrat_'.$record->employee->registration_number.'.pdf';
-                        if (!\Illuminate\Support\Facades\Storage::disk(\App\Services\Core\DocumentService::getDisk())->exists($relativePath)) {
+                        if (! Storage::disk(DocumentService::getDisk())->exists($relativePath)) {
                             $relativePath = $service->generateContract($record);
                         }
+
                         return $service->download($relativePath);
                     }),
                 Action::make('request_signature')
@@ -151,12 +167,12 @@ class ContractsRelationManager extends RelationManager
                             return;
                         }
 
-                        $disk = \App\Services\Core\DocumentService::getDisk();
-                        if (!\Illuminate\Support\Facades\Storage::disk($disk)->exists($relativePath)) {
+                        $disk = DocumentService::getDisk();
+                        if (! Storage::disk($disk)->exists($relativePath)) {
                             $relativePath = $documentService->generateContract($record);
                         }
-                        
-                        $absolutePath = \Illuminate\Support\Facades\Storage::disk($disk)->path($relativePath);
+
+                        $absolutePath = Storage::disk($disk)->path($relativePath);
 
                         $signatureService->requestSignature(
                             model: $record,
@@ -169,6 +185,25 @@ class ContractsRelationManager extends RelationManager
                         Notification::make()->title('Demande de signature envoyée par email')->success()->send();
                     })
                     ->label('Demander Signature'),
+                ActionGroup::make([
+                    Action::make('trial_end')
+                        ->label('Rupture Période d\'Essai')
+                        ->icon(Phosphor::FileMinus)
+                        ->color('danger')
+                        ->visible(fn (Contract $record) => $record->trial_end_date && $record->trial_end_date->isFuture())
+                        ->action(fn (Contract $record, RHDocumentService $service) => $service->download($service->generateTrialPeriodEndLetter($record))),
+                    Action::make('cdd_terminate')
+                        ->label('Avenant Rupture CDD')
+                        ->icon(Phosphor::FileX)
+                        ->color('danger')
+                        ->visible(fn (Contract $record) => $record->type === ContractType::CDD)
+                        ->form([
+                            DatePicker::make('termination_date')
+                                ->label('Date de rupture négociée')
+                                ->required(),
+                        ])
+                        ->action(fn (Contract $record, array $data, RHDocumentService $service) => $service->download($service->generateCddEarlyTermination($record, Carbon::parse($data['termination_date'])))),
+                ])->label('Documents de rupture')->icon(Phosphor::Files),
             ]);
     }
 

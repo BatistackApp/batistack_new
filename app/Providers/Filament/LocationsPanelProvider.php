@@ -21,6 +21,7 @@ use Illuminate\View\Middleware\ShareErrorsFromSession;
 
 class LocationsPanelProvider extends PanelProvider
 {
+    use \App\Providers\Filament\Traits\HasKnowledgeBaseCompanion;
     public function panel(Panel $panel): Panel
     {
         return $panel
@@ -41,6 +42,10 @@ class LocationsPanelProvider extends PanelProvider
             ->widgets([
                 \App\Filament\Locations\Widgets\RentalCalendarWidget::class,
             ])
+            ->plugin(\Guava\FilamentKnowledgeBase\Plugins\KnowledgeBaseCompanionPlugin::make()->knowledgeBasePanelId('docs'))
+            ->plugins([
+                \MartinPetricko\FilamentSentryFeedback\FilamentSentryFeedbackPlugin::make(),
+            ])
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
@@ -57,3 +62,6 @@ class LocationsPanelProvider extends PanelProvider
             ]);
     }
 }
+
+
+

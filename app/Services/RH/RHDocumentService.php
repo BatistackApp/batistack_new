@@ -38,6 +38,47 @@ class RHDocumentService extends DocumentService
         );
     }
 
+    public function generateTrialPeriodEndLetter(Contract $contract): string
+    {
+        $contract->load(['employee']);
+
+        $data = [
+            'company' => Company::first(),
+            'contract' => $contract,
+            'employee' => $contract->employee,
+            'title' => 'RUPTURE PÉRIODE D\'ESSAI - '.$contract->employee->full_name,
+            'generated_at' => Carbon::now()->format('d/m/Y H:i'),
+        ];
+
+        return $this->generate(
+            'pdf.rh.trial_end_letter',
+            $data,
+            'rupture_essai_'.$contract->employee->registration_number,
+            'rh/ruptures'
+        );
+    }
+
+    public function generateCddEarlyTermination(Contract $contract, ?Carbon $terminationDate = null): string
+    {
+        $contract->load(['employee']);
+
+        $data = [
+            'company' => Company::first(),
+            'contract' => $contract,
+            'employee' => $contract->employee,
+            'title' => 'AVENANT RUPTURE CDD - '.$contract->employee->full_name,
+            'generated_at' => Carbon::now()->format('d/m/Y H:i'),
+            'termination_date' => $terminationDate,
+        ];
+
+        return $this->generate(
+            'pdf.rh.cdd_termination',
+            $data,
+            'avenant_rupture_cdd_'.$contract->employee->registration_number,
+            'rh/ruptures'
+        );
+    }
+
     /**
      * Génère un récapitulatif des habilitations et visites médicales (Passeport Sécurité).
      */
@@ -212,6 +253,30 @@ class RHDocumentService extends DocumentService
 
         $gdAllowance = $gdDays * 96.00;
 
+        $grossSalary = ($totalHours * $hourlyRate) + ($overtime25 * $hourlyRate * 0.25) + ($overtime50 * $hourlyRate * 0.5) + $gdAllowance;
+        // Approximation du net (environ 78% du brut)
+        $netSalary = $grossSalary * 0.78;
+
+        $satdDeduction = 0;
+        
+        $activeSatds = $employee->wageGarnishments()
+            ->where('is_active', true)
+            ->where('start_date', '<=', Carbon::create($year, $month, 1)->endOfMonth())
+            ->orderBy('start_date', 'asc')
+            ->get();
+
+        if ($activeSatds->isNotEmpty()) {
+            $dummyGarnishment = new \App\Models\RH\WageGarnishment(['total_amount_due' => 99999999, 'amount_collected' => 0]);
+            $maxDeduction = $dummyGarnishment->calculateDeduction($netSalary);
+            
+            foreach ($activeSatds as $satd) {
+                if ($satdDeduction >= $maxDeduction) break;
+                $deduction = $satd->calculateDeduction($netSalary);
+                $actualDeduction = min($deduction, $maxDeduction - $satdDeduction);
+                $satdDeduction += $actualDeduction;
+            }
+        }
+
         $summary = [
             'total_hours' => $totalHours,
             'overtime_25' => $overtime25,
@@ -219,7 +284,10 @@ class RHDocumentService extends DocumentService
             'gd_days' => $gdDays,
             'gd_allowance' => $gdAllowance,
             'hourly_rate' => $hourlyRate,
-            'gross_salary_estimate' => ($totalHours * $hourlyRate) + ($overtime25 * $hourlyRate * 0.25) + ($overtime50 * $hourlyRate * 0.5) + $gdAllowance,
+            'gross_salary_estimate' => $grossSalary,
+            'net_salary_estimate' => $netSalary,
+            'satd_deduction' => $satdDeduction,
+            'net_to_pay' => $netSalary - $satdDeduction,
         ];
 
         $data = [

@@ -27,6 +27,7 @@ use Illuminate\View\Middleware\ShareErrorsFromSession;
 
 class TiersPanelProvider extends PanelProvider
 {
+    use \App\Providers\Filament\Traits\HasKnowledgeBaseCompanion;
     public function panel(Panel $panel): Panel
     {
         return $panel
@@ -45,6 +46,7 @@ class TiersPanelProvider extends PanelProvider
                 Dashboard::class,
             ])
             ->discoverWidgets(in: app_path('Filament/Tiers/Widgets'), for: 'App\Filament\Tiers\Widgets')
+            ->plugin(\Guava\FilamentKnowledgeBase\Plugins\KnowledgeBaseCompanionPlugin::make()->knowledgeBasePanelId('docs'))
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
@@ -57,6 +59,7 @@ class TiersPanelProvider extends PanelProvider
                 DispatchServingFilamentEvent::class,
             ])
             ->plugins([
+                \MartinPetricko\FilamentSentryFeedback\FilamentSentryFeedbackPlugin::make(),
                 CalculatorPlugin::make(),
                 TableLayoutTogglePlugin::make()
                     ->setDefaultLayout('list')
@@ -69,3 +72,6 @@ class TiersPanelProvider extends PanelProvider
             ]);
     }
 }
+
+
+

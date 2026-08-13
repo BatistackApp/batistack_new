@@ -177,6 +177,15 @@ class EmployeeForm
                                             ->maxLength(11)
                                             ->placeholder('AAAA BB CC 123'),
                                     ]),
+                                Section::make('Coffre-Fort Numérique (Digiposte)')
+                                    ->description('Identifiant du coffre-fort numérique de l\'employé pour la distribution des fiches de paie.')
+                                    ->columns(1)
+                                    ->schema([
+                                        TextInput::make('digiposte_id')
+                                            ->label('Identifiant Digiposte')
+                                            ->disabled()
+                                            ->helperText('Généré automatiquement lors de la finalisation de l\'onboarding.'),
+                                    ]),
                             ]),
                     ])->columnSpanFull(),
             ]);

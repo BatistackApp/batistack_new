@@ -60,4 +60,11 @@ return [
         'secret' => env('STRIPE_SECRET'),
         'webhook_secret' => env('STRIPE_WEBHOOK_SECRET'),
     ],
+    'digiposte' => [
+        'base_url' => env('DIGIPOSTE_URL'),
+        'api_key' => env('DIGIPOSTE_API_KEY', ''),
+        'client_id' => env('DIGIPOSTE_CLIENT_ID', ''),
+        'client_secret' => env('DIGIPOSTE_CLIENT_SECRET', ''),
+        'partner_id' => env('DIGIPOSTE_PARTNER_ID', ''),
+    ],
 ];

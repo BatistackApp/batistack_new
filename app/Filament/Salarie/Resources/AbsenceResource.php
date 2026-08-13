@@ -37,13 +37,7 @@ class AbsenceResource extends Resource
         return $schema
             ->schema([
                 Forms\Components\Select::make('type')->label('Type')
-                    ->options([
-                        'Congés payés' => 'Congés payés',
-                        'Maladie' => 'Maladie',
-                        'RTT' => 'RTT',
-                        'Sans solde' => 'Sans solde',
-                        'Autre' => 'Autre',
-                    ])
+                    ->options(\App\Enums\RH\AbsenceType::class)
                     ->required(),
                 Forms\Components\DatePicker::make('start_date')
                     ->label('Date de début')

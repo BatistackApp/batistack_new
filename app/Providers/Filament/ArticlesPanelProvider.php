@@ -22,6 +22,7 @@ use Illuminate\View\Middleware\ShareErrorsFromSession;
 
 class ArticlesPanelProvider extends PanelProvider
 {
+    use \App\Providers\Filament\Traits\HasKnowledgeBaseCompanion;
     public function panel(Panel $panel): Panel
     {
         return $panel
@@ -40,12 +41,14 @@ class ArticlesPanelProvider extends PanelProvider
             ->discoverPages(in: app_path('Filament/Articles/Pages'), for: 'App\Filament\Articles\Pages')
             ->discoverWidgets(in: app_path('Filament/Articles/Widgets'), for: 'App\Filament\Articles\Widgets')
             ->plugins([
+                \MartinPetricko\FilamentSentryFeedback\FilamentSentryFeedbackPlugin::make(),
                 CalculatorPlugin::make(),
                 TableLayoutTogglePlugin::make()
                     ->setDefaultLayout('list')
                     ->displayToggleAction(true),
                 \LaBoiteACode\FilamentDashboardWidgets\FilamentDashboardWidgetsPlugin::make(),
             ])
+            ->plugin(\Guava\FilamentKnowledgeBase\Plugins\KnowledgeBaseCompanionPlugin::make()->knowledgeBasePanelId('docs'))
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
@@ -63,3 +66,6 @@ class ArticlesPanelProvider extends PanelProvider
             ]);
     }
 }
+
+
+
