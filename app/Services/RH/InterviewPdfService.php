@@ -24,9 +24,9 @@ class InterviewPdfService
             ->showBackground()
             ->save($filePath);
 
-        $interview->addMedia($filePath)
+        $media = $interview->addMedia($filePath)
             ->toMediaCollection('interviews');
 
-        return $filePath;
+        return $media->getPath();
     }
 }

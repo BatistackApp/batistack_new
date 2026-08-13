@@ -87,6 +87,13 @@ class Employee extends Model implements HasMedia
         return $this->hasMany(Interview::class);
     }
 
+    public function trainingSessions(): BelongsToMany
+    {
+        return $this->belongsToMany(TrainingSession::class, 'employee_training_session')
+            ->withPivot('status')
+            ->withTimestamps();
+    }
+
     public function qualifications(): HasMany
     {
         return $this->hasMany(Qualification::class);
