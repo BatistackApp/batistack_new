@@ -22,6 +22,9 @@ Schedule::command('commerce:process-dunning')
 
 // Tiers
 
+Schedule::command('tiers:process-email-campaigns')
+    ->everyMinute();
+
 Schedule::command('tiers:verify-vigilance')
     ->weeklyOn(1, '04:00');
 
