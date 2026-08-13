@@ -18,6 +18,7 @@ Découvrez comment tirer le meilleur parti de vos fichiers 3D :
 
 - [Gestion des Maquettes 3D](./01-maquettes-3d.md) : Formats supportés, importation et visualisation.
 - [Annotations et Liaisons métier](./02-annotations-et-liaisons.md) : Comment placer un point d'intérêt sur la maquette et le lier à une tâche de chantier ou une intervention.
+- [Réalité Augmentée (AR)](./03-realite-augmentee.md) : Superposer la maquette sur le terrain avec un smartphone ou une tablette.
 
 > [!TIP]
 > **Pourquoi utiliser la Vision 3D ?**
