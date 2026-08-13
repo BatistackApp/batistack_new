@@ -25,6 +25,7 @@ Le module **Tiers** est le cœur de la relation externe de Batistack. Il central
 *   **Gestion Documentaire** : `TiersDocumentService` centralise les documents obligatoires avec suivi des expirations (notifications automatisées à J-30 et J-7).
 *   **Signature Électronique (Sous-Traitants)** : Intégration avancée de la signature électronique pour les devis et les marchés de sous-traitance afin de contractualiser plus rapidement avec les partenaires externes (Issue #146).
 *   **Portail d'Appels d'Offres Privé** : Publication de consultations pour les sous-traitants qui peuvent soumettre leurs offres chiffrées via leur portail.
+*   **Campagnes d'E-Mailing (CRM)** : Outil de publipostage intégré permettant l'envoi groupé d'emails via une sélection multicritère (Clients, Fournisseurs) avec traitement asynchrone (Job) et suivi d'état des envois (Issue #248).
 
 ### 3. Observers & Événements (`app/Observers/Tiers`)
 *   Multiples Observers (`ThirdPartyObserver`, `ContactObserver`, `AddressObserver`) pour synchroniser les données externes et vérifier la conformité (ex: déclencher une alerte si un Kbis expire).
@@ -44,4 +45,3 @@ Le module **Tiers** est le cœur de la relation externe de Batistack. Il central
 
 ## 💡 Idées d'amélioration et Nouvelles Fonctionnalités
 *   **Collecte Automatique des Documents Légaux** : Connecter l'ERP à une API légale tierce (e-Attestations ou Provigis) pour télécharger et mettre à jour automatiquement les Kbis et attestations URSSAF des sous-traitants, annulant le besoin de relance manuelle.
-*   **Module d'E-Mailing et Campagnes** : Création d'un outil de publipostage intégré pour cibler la base de données Contacts B2B (ex: informations de fermeture annuelle aux sous-traitants, offres de maintenance aux clients).
