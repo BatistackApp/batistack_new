@@ -33,6 +33,8 @@ return new class extends Migration
             $table->foreignId('training_session_id')->constrained('training_sessions')->cascadeOnDelete();
             $table->string('status')->default('inscrit');
             $table->timestamps();
+
+            $table->unique(['employee_id', 'training_session_id']);
         });
     }
 
@@ -41,6 +43,7 @@ return new class extends Migration
      */
     public function down(): void
     {
+        Schema::dropIfExists('employee_training_session');
         Schema::dropIfExists('training_sessions');
     }
 };

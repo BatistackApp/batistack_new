@@ -28,6 +28,7 @@ it('detects anomaly when vehicle duration is too low', function () {
     VehicleAssignment::factory()->create([
         'vehicle_id' => $vehicle->id,
         'employee_id' => $employee->id,
+        'status' => \App\Enums\Flottes\AssignmentStatus::COMPLETED,
         'started_at' => $date->copy()->setHour(8)->setMinute(0),
         'ended_at' => $date->copy()->setHour(10)->setMinute(0),
     ]);
@@ -60,6 +61,7 @@ it('does not detect anomaly if vehicle duration is close enough', function () {
     VehicleAssignment::factory()->create([
         'vehicle_id' => $vehicle->id,
         'employee_id' => $employee->id,
+        'status' => \App\Enums\Flottes\AssignmentStatus::COMPLETED,
         'started_at' => $date->copy()->setHour(8)->setMinute(0),
         'ended_at' => $date->copy()->setHour(15)->setMinute(30),
     ]);

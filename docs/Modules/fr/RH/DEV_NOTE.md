@@ -39,6 +39,7 @@ Le module **Ressources Humaines (RH)** est l'un des piliers centraux de Batistac
 ### 3. Observers & Événements (`app/Observers/RH`)
 *   **Conformité et Alertes** : Observers (`MedicalVisitObserver`, `QualificationObserver`) couplés à des Jobs qui envoient des notifications push et emails avant l'expiration d'une certification ou d'une visite médicale.
 *   **Synergies** : Actions croisées avec les modules Flottes (amendes) et Chantiers (dépassement budgétaire lié aux heures).
+*   **Formations & Habilitations (OPCO)** : Suivi des sessions de formation, des coûts (et remboursements OPCO), avec mise à jour et renouvellement automatiques des Habilitations/CACES des participants.
 
 ### 4. Interface Utilisateur (Filament & Kiosques)
 *   **Panel RH Filament** : Interface de gestion complète des employés, formulaires de saisie, matrice de polyvalence dynamique (validité des habilitations avec code couleur). Intégration d'un Calendrier fusionnant présences et congés.
@@ -49,8 +50,6 @@ Le module **Ressources Humaines (RH)** est l'un des piliers centraux de Batistac
 
 ### 5. Tests
 *   **100% de succès** sur la suite massive de plus de 130 tests PestPHP. Toutes les fonctionnalités de base et avancées (y compris l'analytique et l'OCR) sont couvertes.
-
-*   **Gestion de la Formation (OPCO)** : Suivi des sessions de formation, des coûts (et remboursements OPCO), avec mise à jour et renouvellement automatiques des Habilitations/CACES des participants.
 
 ## 🚧 Ce qu'il reste à faire
 *   Le module est fonctionnellement très abouti et couvre tous les besoins RH classiques et avancés. Il est en phase de maintenance/amélioration continue.

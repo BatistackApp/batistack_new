@@ -13,8 +13,8 @@ return new class extends Migration
     {
         Schema::create('interviews', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('employee_id')->constrained('employees')->cascadeOnDelete();
-            $table->foreignId('manager_id')->constrained('users')->cascadeOnDelete();
+            $table->foreignId('employee_id')->constrained('employees')->restrictOnDelete();
+            $table->foreignId('manager_id')->constrained('users')->restrictOnDelete();
             $table->string('type');
             $table->string('status')->default('planifie');
             $table->dateTime('scheduled_at');

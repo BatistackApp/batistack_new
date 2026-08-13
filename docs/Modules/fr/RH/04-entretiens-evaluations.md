@@ -26,5 +26,5 @@ Le recueil des signatures est réalisé en face à face ou à distance. Le compo
 ### Génération de Compte-Rendu PDF (Browsershot)
 Une fois l'entretien réalisé et signé, un simple clic sur l'action **"Générer PDF"** produit le compte-rendu officiel au format PDF.
 - Rendu parfait assuré par **Tailwind CSS** et le moteur **Puppeteer/Browsershot**.
-- Insertion automatique des logos, de la grille remplie, et des deux signatures en bas de document.
+- Insertion de la grille remplie, et des deux signatures en bas de document.
 - Archivable numériquement pour les inspections du travail.

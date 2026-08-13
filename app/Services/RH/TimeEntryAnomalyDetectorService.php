@@ -5,6 +5,7 @@ namespace App\Services\RH;
 use App\Models\RH\TimeEntry;
 use App\Models\Flottes\VehicleAssignment;
 use App\Enums\RH\TimeEntryType;
+use App\Enums\Flottes\AssignmentStatus;
 use Carbon\Carbon;
 
 class TimeEntryAnomalyDetectorService
@@ -13,45 +14,86 @@ class TimeEntryAnomalyDetectorService
      * Détecte les anomalies de pointage pour une journée donnée.
      *
      * @param Carbon $date
-     * @param int|float $toleranceHours
+     * @param float $toleranceHours
      * @return int Le nombre d'anomalies détectées.
      */
     public function detectForDate(Carbon $date, float $toleranceHours = 1.0): int
     {
+        if ($toleranceHours < 0) {
+            return 0;
+        }
+
         // On récupère les pointages normaux de la journée qui ne sont pas en atelier (sédentaires)
-        // et qui n'ont pas déjà une anomalie non résolue pour éviter de recalculer inutilement.
         $entries = TimeEntry::whereDate('date', $date)
             ->where('type', TimeEntryType::NORMAL->value)
             ->where('is_workshop', false)
             ->where('is_anomaly', false)
             ->get();
 
+        if ($entries->isEmpty()) {
+            return 0;
+        }
+
+        // Charger tous les VehicleAssignment pertinents pour la date, exclure les annulés
+        $allAssignments = VehicleAssignment::with('passengers')
+            ->where('status', '!=', AssignmentStatus::CANCELLED->value)
+            ->whereDate('started_at', '<=', $date)
+            ->where(function($query) use ($date) {
+                 $query->whereNull('ended_at')
+                       ->orWhereDate('ended_at', '>=', $date);
+            })
+            ->get();
+
+        // Grouper les intervalles par employé (conducteur + passagers)
+        $assignmentsByEmployee = [];
+        
+        foreach ($allAssignments as $assignment) {
+            $start = $assignment->started_at < $date->copy()->startOfDay() ? $date->copy()->startOfDay() : $assignment->started_at;
+            $end = (!$assignment->ended_at || $assignment->ended_at > $date->copy()->endOfDay()) ? $date->copy()->endOfDay() : $assignment->ended_at;
+            
+            if ($end > $start) {
+                $interval = ['start' => $start, 'end' => $end];
+                
+                // Conducteur
+                $assignmentsByEmployee[$assignment->employee_id][] = $interval;
+                
+                // Passagers
+                foreach ($assignment->passengers as $passenger) {
+                    $assignmentsByEmployee[$passenger->id][] = $interval;
+                }
+            }
+        }
+
         $anomaliesCount = 0;
 
         foreach ($entries as $entry) {
-            // Calculer la durée totale d'utilisation de véhicules (conducteur ou passager) pour cette journée
-            $assignments = VehicleAssignment::where(function ($query) use ($entry) {
-                    $query->where('employee_id', $entry->employee_id)
-                          ->orWhereHas('passengers', function ($q) use ($entry) {
-                              $q->where('employees.id', $entry->employee_id);
-                          });
-                })
-                ->whereDate('started_at', '<=', $date)
-                ->where(function($query) use ($date) {
-                     $query->whereNull('ended_at')
-                           ->orWhereDate('ended_at', '>=', $date);
-                })
-                ->get();
-                
+            $empId = $entry->employee_id;
+            $intervals = $assignmentsByEmployee[$empId] ?? [];
+            
             $totalVehicleDuration = 0;
             
-            foreach ($assignments as $assignment) {
-                // Calcule le chevauchement pour la journée spécifique
-                $start = $assignment->started_at < $date->copy()->startOfDay() ? $date->copy()->startOfDay() : $assignment->started_at;
-                $end = (!$assignment->ended_at || $assignment->ended_at > $date->copy()->endOfDay()) ? $date->copy()->endOfDay() : $assignment->ended_at;
+            if (!empty($intervals)) {
+                // Trier les intervalles par date de début
+                usort($intervals, fn($a, $b) => $a['start'] <=> $b['start']);
                 
-                if ($end > $start) {
-                    $totalVehicleDuration += $start->diffInMinutes($end) / 60;
+                $merged = [];
+                $current = $intervals[0];
+                
+                for ($i = 1; $i < count($intervals); $i++) {
+                    if ($intervals[$i]['start'] <= $current['end']) {
+                        // Chevauchement ou contigu : on étend la fin
+                        if ($intervals[$i]['end'] > $current['end']) {
+                            $current['end'] = $intervals[$i]['end'];
+                        }
+                    } else {
+                        $merged[] = $current;
+                        $current = $intervals[$i];
+                    }
+                }
+                $merged[] = $current;
+                
+                foreach ($merged as $m) {
+                    $totalVehicleDuration += $m['start']->diffInMinutes($m['end']) / 60;
                 }
             }
             

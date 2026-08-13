@@ -15,32 +15,39 @@ class TrainingSessionService
      */
     public function completeSession(TrainingSession $session): void
     {
-        // On ne fait rien si elle est déjà terminée
-        if ($session->status === TrainingSessionStatus::TERMINEE) {
-            return;
-        }
+        \Illuminate\Support\Facades\DB::transaction(function () use ($session) {
+            $lockedSession = TrainingSession::where('id', $session->id)->lockForUpdate()->first();
 
-        // Si la session donne lieu à une qualification
-        if ($session->qualification_type && $session->validity_months) {
-            $validatedParticipants = $session->participants()
-                ->wherePivot('status', TrainingParticipantStatus::VALIDE->value)
-                ->get();
-
-            foreach ($validatedParticipants as $participant) {
-                Qualification::create([
-                    'employee_id' => $participant->id,
-                    'type' => $session->qualification_type,
-                    'label' => $session->certification_symbol,
-                    'reference_number' => 'TS-' . $session->id . '-' . $participant->id . '-' . date('Ymd'),
-                    'obtained_at' => $session->ended_at,
-                    'expires_at' => $session->ended_at->addMonths($session->validity_months),
-                ]);
+            // On ne fait rien si elle est déjà terminée
+            if (!$lockedSession || $lockedSession->status === TrainingSessionStatus::TERMINEE) {
+                return;
             }
-        }
 
-        // Marque la session comme terminée
-        $session->update([
-            'status' => TrainingSessionStatus::TERMINEE,
-        ]);
+            // Si la session donne lieu à une qualification
+            if ($lockedSession->qualification_type && $lockedSession->validity_months) {
+                $validatedParticipants = $lockedSession->participants()
+                    ->wherePivot('status', TrainingParticipantStatus::VALIDE->value)
+                    ->get();
+
+                foreach ($validatedParticipants as $participant) {
+                    Qualification::create([
+                        'employee_id' => $participant->id,
+                        'type' => $lockedSession->qualification_type,
+                        'label' => $lockedSession->certification_symbol,
+                        'reference_number' => 'TS-' . $lockedSession->id . '-' . $participant->id . '-' . date('Ymd'),
+                        'obtained_at' => $lockedSession->ended_at,
+                        'expires_at' => $lockedSession->ended_at->addMonths($lockedSession->validity_months),
+                    ]);
+                }
+            }
+
+            // Marque la session comme terminée
+            $lockedSession->update([
+                'status' => TrainingSessionStatus::TERMINEE,
+            ]);
+            
+            // Sync status to the passed instance
+            $session->status = TrainingSessionStatus::TERMINEE;
+        });
     }
 }
