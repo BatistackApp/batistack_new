@@ -63,7 +63,7 @@ class VigilanceService
             // On vérifie que chaque fichier ont été transmis
             if (! \Storage::disk('local')->exists('third_parties/'.$thirdParty->id.'/documents/'.$collection.'.pdf')) {
                 $results['compliant'] = false;
-                $results['issues'][$collection] = false;
+                $results['issues'][] = $label;
             }
         }
 

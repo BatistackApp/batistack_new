@@ -39,6 +39,8 @@ order: 99
 - **Cacher temporairement un élément 3D** : Capacité de double cliquer sur un élément puis d'appuyer sur "Suppr" pour le rendre transparent/invisible pendant l'inspection.
 - **Support complet de three-dxf** : Mappage fidèle des couleurs, épaisseurs de traits, et textes des plans AutoCAD 2D.
 - **Miniature (Thumbnail) automatique** : Snapshot PNG généré en arrière-plan à l'upload pour illustrer le tableau Filament.
+- **Intégration Réalité Augmentée (AR / WebXR)** : Implémentation du support WebXR avec l'API Hit-Test native. Permet d'afficher un réticule sur les surfaces détectées par la caméra d'un smartphone et de projeter la maquette IFC dans l'environnement réel (échelle 1:1) de manière fluide et autonome par rapport à la boucle de rendu de base.
+- **Comparaison de Révisions BIM (Version Control 3D)** : Possibilité d'uploader une nouvelle version (enfant) d'une maquette IFC existante (parent) et de calculer dynamiquement le différentiel géométrique en 3D dans le navigateur (basé sur le GlobalId). Colorisation automatique (Vert = Ajouté, Orange = Modifié, Rouge fantôme = Supprimé) et toggle UI pour masquer les éléments supprimés.
 
 ---
 
@@ -50,6 +52,4 @@ order: 99
 ---
 
 ## 💡 Idées d'améliorations et Nouvelles Fonctionnalités
-*   **Intégration Réalité Augmentée (AR / WebXR)** : Permettre au chef de chantier de superposer la maquette 3D sur le monde réel via la caméra de sa tablette (WebXR), facilitant le repérage des réseaux invisibles derrière les murs.
-*   **Comparaison de Révisions BIM (Version Control 3D)** : Permettre l'upload d'une nouvelle version (V2) d'une maquette existante et générer un affichage colorimétrique des changements (Vert = Ajouté, Rouge = Supprimé, Orange = Modifié).
 *   **Détection Automatique de Collisions (Clash Detection)** : Scanner la maquette à la recherche d'intersections géométriques illogiques entre les corps d'état (ex: tuyau traversant une poutre) et générer automatiquement des punaises rouges d'alerte.

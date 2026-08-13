@@ -1,6 +1,7 @@
 @php
     $record = $getRecord();
     $url = \Illuminate\Support\Facades\Storage::disk('public')->url($record->file_path);
+    $parentUrl = $record->parent_id ? \Illuminate\Support\Facades\Storage::disk('public')->url($record->parent->file_path) : null;
     $format = $record->format;
     $annotations = $record->annotations()->with('target')->get()->toArray();
 @endphp
@@ -8,6 +9,7 @@
 <div
     x-data="bimViewer({
         url: '{{ $url }}',
+        parentUrl: '{{ $parentUrl }}',
         format: '{{ strtolower($format) }}',
         annotations: {{ json_encode($annotations) }}
     })"
@@ -121,14 +123,44 @@
             </svg>
             Calques
         </button>
+        <button type="button" x-show="parentUrl && format === 'ifc'" @click="toggleCompare" :class="compareMode ? 'bg-purple-600 hover:bg-purple-500' : 'bg-gray-800 hover:bg-gray-700'" class="text-white px-3 py-1.5 rounded-lg shadow text-sm transition flex items-center gap-1">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+            <span x-text="compareMode ? 'Quitter Comparaison' : 'Comparer avec V1'"></span>
+        </button>
+        <div x-show="compareMode" class="flex gap-2 bg-gray-900/80 p-1 rounded-lg backdrop-blur-sm border border-gray-700 items-center px-3">
+            <label class="flex items-center gap-2 text-xs text-white cursor-pointer">
+                <input type="checkbox" x-model="showDeletedGhosts" @change="updateCompareVisibility" class="rounded bg-gray-800 border-gray-600 text-red-500 focus:ring-red-500">
+                Fantômes (Rouge)
+            </label>
+        </div>
+        <button type="button" x-show="arSupported && format === 'ifc' && !arActive" @click="startAR" class="bg-blue-600 text-white px-3 py-1.5 rounded-lg shadow text-sm hover:bg-blue-500 transition flex items-center gap-1">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064" />
+            </svg>
+            Mode AR
+        </button>
+        <button type="button" x-show="arActive" @click="exitAR" class="bg-red-600 text-white px-3 py-1.5 rounded-lg shadow text-sm hover:bg-red-500 transition flex items-center gap-1">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+            Quitter AR
+        </button>
+    </div>
+    
+    <!-- Reticule pour le Hit-Test AR -->
+    <div x-show="arActive && !arModelPlaced" class="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
+        <div class="w-8 h-8 rounded-full border-4 border-white opacity-50"></div>
     </div>
 </div>
 
 @once
 <script>
 document.addEventListener('alpine:init', () => {
-    Alpine.data('bimViewer', ({ url, format, annotations }) => ({
+    Alpine.data('bimViewer', ({ url, parentUrl, format, annotations }) => ({
         url,
+        parentUrl,
         format,
         annotations,
         loading: true,
@@ -149,11 +181,34 @@ document.addEventListener('alpine:init', () => {
         renderer: null,
         raycaster: null,
         mouse: null,
+        
+        // AR State
+        arSupported: false,
+        arActive: false,
+        arModelPlaced: false,
+        xrSession: null,
+        xrHitTestSource: null,
+        xrLocalSpace: null,
+        reticle: null,
+        modelGroup: null,
+
+        // Compare State
+        compareMode: false,
+        parentModelID: null,
+        showDeletedGhosts: true,
+        matDeleted: null,
 
         async init() {
             if (!this.url) {
                 this.loadingText = 'Aucun modèle disponible.';
                 return;
+            }
+
+            // Vérifier le support WebXR
+            if (navigator.xr) {
+                navigator.xr.isSessionSupported('immersive-ar').then((supported) => {
+                    this.arSupported = supported;
+                });
             }
 
             try {
@@ -206,6 +261,13 @@ document.addEventListener('alpine:init', () => {
                 // Initialiser Raycaster pour le hover
                 this.raycaster = new window.THREE.Raycaster();
                 this.mouse = new window.THREE.Vector2();
+
+                // Préparer un groupe pour l'AR
+                this.modelGroup = new window.THREE.Group();
+                const scene = viewer.context.getScene();
+                // On pourrait déplacer le modèle dans ce groupe, mais web-ifc-viewer
+                // gère les objets à la racine. Pour l'AR, on gèrera la matrice ou le placement 
+                // au moment du hit-test.
 
                 // Evénements
                 container.addEventListener('click', (event) => this.handleIfcClick(event));
@@ -491,6 +553,262 @@ document.addEventListener('alpine:init', () => {
                 this.camera.position.set(x + 10, y + 10, z + 10);
                 this.camera.lookAt(x, y, z);
             }
+        },
+
+        // --- Comparaison de Révisions (Version Control 3D) ---
+        async toggleCompare() {
+            if (!this.viewer || this.format !== 'ifc' || !this.parentUrl) return;
+
+            this.compareMode = !this.compareMode;
+            
+            if (this.compareMode) {
+                if (this.parentModelID !== null) {
+                    this.updateCompareVisibility();
+                    return;
+                }
+                
+                this.loadingText = 'Analyse comparative en cours...';
+                this.loading = true;
+
+                try {
+                    // Charger le modèle parent (V1)
+                    const parentModel = await this.viewer.IFC.loadIfcUrl(this.parentUrl);
+                    this.parentModelID = parentModel.modelID;
+                    
+                    // Masquer le parent par défaut
+                    this.viewer.IFC.loader.ifcManager.removeSubset(this.parentModelID, undefined);
+
+                    // Extraire les arbres spatiaux
+                    const v1Tree = await this.viewer.IFC.getSpatialStructure(this.parentModelID);
+                    const v2Tree = this.spatialTree;
+
+                    const v1Ids = this.getAllIds(v1Tree);
+                    const v2Ids = this.getAllIds(v2Tree);
+
+                    const v1GlobalIds = {};
+                    const v2GlobalIds = {};
+
+                    // Récupérer les propriétés en bloc (peut être lent, on fait au mieux)
+                    for (const id of v1Ids) {
+                        try {
+                            const props = await this.viewer.IFC.getProperties(this.parentModelID, id, false, false);
+                            if (props && props.GlobalId) v1GlobalIds[props.GlobalId.value] = { id, name: props.Name?.value };
+                        } catch(e) {}
+                    }
+                    
+                    for (const id of v2Ids) {
+                        try {
+                            const props = await this.viewer.IFC.getProperties(this.modelID, id, false, false);
+                            if (props && props.GlobalId) v2GlobalIds[props.GlobalId.value] = { id, name: props.Name?.value };
+                        } catch(e) {}
+                    }
+
+                    const addedIds = [];
+                    const modifiedIds = [];
+                    const deletedIds = [];
+
+                    // Comparer V2 par rapport à V1
+                    for (const [globalId, v2Data] of Object.entries(v2GlobalIds)) {
+                        if (!v1GlobalIds[globalId]) {
+                            addedIds.push(v2Data.id);
+                        } else {
+                            if (v1GlobalIds[globalId].name !== v2Data.name) {
+                                modifiedIds.push(v2Data.id);
+                            }
+                        }
+                    }
+
+                    // Comparer V1 par rapport à V2
+                    for (const [globalId, v1Data] of Object.entries(v1GlobalIds)) {
+                        if (!v2GlobalIds[globalId]) {
+                            deletedIds.push(v1Data.id);
+                        }
+                    }
+
+                    const scene = this.viewer.context.getScene();
+
+                    // Matériaux
+                    const matAdded = new window.THREE.MeshLambertMaterial({ color: 0x10b981, transparent: true, opacity: 0.8 }); // Green
+                    const matModified = new window.THREE.MeshLambertMaterial({ color: 0xf59e0b, transparent: true, opacity: 0.8 }); // Orange
+                    this.matDeleted = new window.THREE.MeshLambertMaterial({ color: 0xef4444, transparent: true, opacity: 0.3 }); // Red ghost
+
+                    if (addedIds.length > 0) {
+                        this.viewer.IFC.loader.ifcManager.createSubset({
+                            modelID: this.modelID,
+                            ids: addedIds,
+                            material: matAdded,
+                            scene: scene,
+                            removePrevious: true,
+                            customID: 'added-subset'
+                        });
+                    }
+
+                    if (modifiedIds.length > 0) {
+                        this.viewer.IFC.loader.ifcManager.createSubset({
+                            modelID: this.modelID,
+                            ids: modifiedIds,
+                            material: matModified,
+                            scene: scene,
+                            removePrevious: true,
+                            customID: 'modified-subset'
+                        });
+                    }
+
+                    if (deletedIds.length > 0) {
+                        this.viewer.IFC.loader.ifcManager.createSubset({
+                            modelID: this.parentModelID,
+                            ids: deletedIds,
+                            material: this.matDeleted,
+                            scene: scene,
+                            removePrevious: true,
+                            customID: 'deleted-subset'
+                        });
+                    }
+
+                    this.updateCompareVisibility();
+                } catch (e) {
+                    console.error('Erreur diff:', e);
+                } finally {
+                    this.loading = false;
+                }
+            } else {
+                // Quitter le mode comparaison
+                this.viewer.IFC.loader.ifcManager.removeSubset(this.modelID, undefined, 'added-subset');
+                this.viewer.IFC.loader.ifcManager.removeSubset(this.modelID, undefined, 'modified-subset');
+                if (this.parentModelID !== null) {
+                    this.viewer.IFC.loader.ifcManager.removeSubset(this.parentModelID, undefined, 'deleted-subset');
+                }
+            }
+        },
+
+        updateCompareVisibility() {
+            if (!this.compareMode || this.parentModelID === null || !this.matDeleted) return;
+            
+            this.matDeleted.visible = this.showDeletedGhosts;
+        },
+
+        // --- Logique WebXR (AR) ---
+        async startAR() {
+            if (!navigator.xr) return;
+
+            try {
+                const session = await navigator.xr.requestSession('immersive-ar', { requiredFeatures: ['hit-test'] });
+                session.addEventListener('end', () => this.onXREnd());
+                
+                const renderer = this.viewer.context.getRenderer();
+                renderer.xr.enabled = true;
+                renderer.xr.setReferenceSpaceType('local');
+                await renderer.xr.setSession(session);
+
+                this.xrSession = session;
+                this.arActive = true;
+                this.arModelPlaced = false;
+
+                // Créer un réticule 3D
+                if (!this.reticle) {
+                    const geometry = new window.THREE.RingGeometry(0.15, 0.2, 32).rotateX(-Math.PI / 2);
+                    const material = new window.THREE.MeshBasicMaterial();
+                    this.reticle = new window.THREE.Mesh(geometry, material);
+                    this.reticle.matrixAutoUpdate = false;
+                    this.reticle.visible = false;
+                    this.viewer.context.getScene().add(this.reticle);
+                }
+
+                // Gérer le clic (placement du modèle)
+                const controller = renderer.xr.getController(0);
+                controller.addEventListener('select', () => this.onXRSelect());
+                this.viewer.context.getScene().add(controller);
+
+                // Configurer le Hit-Test
+                session.requestReferenceSpace('viewer').then((referenceSpace) => {
+                    session.requestHitTestSource({ space: referenceSpace }).then((source) => {
+                        this.xrHitTestSource = source;
+                    });
+                });
+
+                session.requestReferenceSpace('local').then((referenceSpace) => {
+                    this.xrLocalSpace = referenceSpace;
+                });
+
+                // Remplacer la boucle d'animation par celle de WebXR
+                renderer.setAnimationLoop((timestamp, frame) => {
+                    if (frame) {
+                        const referenceSpace = this.xrLocalSpace;
+                        if (this.xrHitTestSource && !this.arModelPlaced) {
+                            const hitTestResults = frame.getHitTestResults(this.xrHitTestSource);
+                            if (hitTestResults.length > 0) {
+                                const hit = hitTestResults[0];
+                                const pose = hit.getPose(referenceSpace);
+                                this.reticle.visible = true;
+                                this.reticle.matrix.fromArray(pose.transform.matrix);
+                            } else {
+                                this.reticle.visible = false;
+                            }
+                        }
+                    }
+                    this.viewer.context.render(); // Appeler le rendu interne
+                });
+
+            } catch (err) {
+                console.error("Erreur lancement AR", err);
+                alert("Impossible de démarrer l'AR.");
+            }
+        },
+
+        onXRSelect() {
+            if (this.arModelPlaced || !this.reticle.visible) return;
+            
+            // Placer le modèle à l'endroit du réticule
+            const scene = this.viewer.context.getScene();
+            
+            // Récupérer le mesh IFC (généralement le premier mesh avec géométrie IFC)
+            // On le déplace à la position du réticule
+            // L'API web-ifc-viewer ne donne pas de méthode directe pour translater le modèle entier
+            // Mais on peut translater la scène ou les meshes enfants.
+            scene.children.forEach(child => {
+                // Ignore lights, reticle, etc.
+                if (child.isMesh && child !== this.reticle && !this.annotationMeshes.includes(child)) {
+                    child.position.setFromMatrixPosition(this.reticle.matrix);
+                    child.updateMatrixWorld();
+                }
+            });
+
+            this.arModelPlaced = true;
+            this.reticle.visible = false;
+
+            // Transférer aussi les annotations
+            this.annotationMeshes.forEach(mesh => {
+                mesh.position.add(new window.THREE.Vector3().setFromMatrixPosition(this.reticle.matrix));
+            });
+        },
+
+        exitAR() {
+            if (this.xrSession) {
+                this.xrSession.end();
+            }
+        },
+
+        onXREnd() {
+            this.arActive = false;
+            this.xrSession = null;
+            this.arModelPlaced = false;
+            if (this.reticle) this.reticle.visible = false;
+            
+            const renderer = this.viewer.context.getRenderer();
+            renderer.xr.enabled = false;
+            
+            // Remettre la boucle d'animation normale de web-ifc-viewer
+            renderer.setAnimationLoop(null);
+            
+            // Réinitialiser la position du modèle
+            const scene = this.viewer.context.getScene();
+            scene.children.forEach(child => {
+                if (child.isMesh && child !== this.reticle && !this.annotationMeshes.includes(child)) {
+                    child.position.set(0, 0, 0);
+                    child.updateMatrixWorld();
+                }
+            });
+            this.resetCamera();
         }
     }));
 });

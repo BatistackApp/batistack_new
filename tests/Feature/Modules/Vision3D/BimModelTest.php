@@ -41,3 +41,24 @@ it('can delete bim model and file', function () {
     $this->assertDatabaseMissing('bim_models', ['id' => $bimModel->id]);
     Storage::disk('public')->assertMissing($bimModel->file_path);
 });
+
+it('can create a revision of a bim model', function () {
+    $parent = BimModel::create([
+        'name' => 'V1',
+        'file_path' => 'v1.ifc',
+        'format' => 'ifc',
+        'version' => 1,
+    ]);
+
+    $child = BimModel::create([
+        'name' => 'V2',
+        'file_path' => 'v2.ifc',
+        'format' => 'ifc',
+        'parent_id' => $parent->id,
+        'version' => 2,
+    ]);
+
+    expect($child->parent->id)->toBe($parent->id)
+        ->and($parent->children)->toHaveCount(1)
+        ->and($parent->children->first()->id)->toBe($child->id);
+});
