@@ -46,6 +46,13 @@ class TimeEntriesTable
                     ->label('GD')
                     ->boolean()
                     ->tooltip(fn ($record) => $record->is_grand_deplacement ? 'Indemnité 96€ appliquée' : null),
+                IconColumn::make('is_anomaly')
+                    ->label('Anomalie')
+                    ->boolean()
+                    ->trueIcon('heroicon-o-exclamation-triangle')
+                    ->trueColor('danger')
+                    ->falseIcon('')
+                    ->tooltip(fn ($record) => $record->anomaly_reason),
             ])
             ->filters([
                 SelectFilter::make('status')->label('Statut')
@@ -53,6 +60,9 @@ class TimeEntriesTable
                 Filter::make('to_validate')
                     ->label('À valider uniquement')
                     ->query(fn ($query) => $query->where('status', TimeEntryStatus::SUBMITTED)),
+                Filter::make('anomalies')
+                    ->label('Anomalies non résolues')
+                    ->query(fn ($query) => $query->where('is_anomaly', true)->whereNull('anomaly_resolved_at')),
             ])
             ->recordActions([
                 ActionGroup::make([
@@ -83,6 +93,21 @@ class TimeEntriesTable
                         ->action(function (TimeEntry $record, array $data, TimeEntryService $service) {
                             $service->refuse($record, $data['reason']);
                             Notification::make()->title('Pointage renvoyé pour correction')->warning()->send();
+                        }),
+
+                    // ACTION RÉSOUDRE ANOMALIE
+                    Action::make('resolve_anomaly')
+                        ->label('Résoudre l\'anomalie')
+                        ->icon('heroicon-o-check-badge')
+                        ->color('success')
+                        ->requiresConfirmation()
+                        ->visible(fn ($record) => $record->is_anomaly && !$record->anomaly_resolved_at)
+                        ->action(function (TimeEntry $record) {
+                            $record->update([
+                                'anomaly_resolved_at' => now(),
+                                'anomaly_resolved_by_id' => auth()->id(),
+                            ]);
+                            Notification::make()->title('Anomalie résolue')->success()->send();
                         }),
                 ]),
             ])

@@ -16,7 +16,10 @@ Le module RH s'articule autour de trois grands piliers :
 
 - [Contrats, Documents & Conformité](./01-contrats-et-documents.md) : Édition des contrats (24 articles), génération des lettres de rupture, suivi des visites médicales et des CACES.
 - [Temps & Absences](./02-temps-et-absences.md) : Suivi des pointages via borne biométrique, gestion des congés (CIBTP) et des arrêts maladie (Subrogation).
+- [Temps & Activités](04-temps-activites.md) : Saisie des pointages, frais et validations. Détection automatique des anomalies (croisement horaires / géolocalisation des véhicules de fonction).
 - [Frais & Saisies sur Salaire (SATD)](./03-frais-et-satd.md) : Dématérialisation intelligente des notes de frais via l'IA (OCR multi-pages), gestion des cartes corporate, des avances, et calcul automatique des saisies sur salaire.
+- [Entretiens & Évaluations](./04-entretiens-evaluations.md) : Suivi des entretiens annuels et professionnels, avec grilles d'évaluation dynamiques et génération de compte-rendu PDF.
+- [Formations & OPCO](./05-formations.md) : Organisation des sessions de formation, suivi budgétaire OPCO et renouvellement automatique des qualifications.
 
 > [!TIP]
 > **Le Lien avec la Paie**

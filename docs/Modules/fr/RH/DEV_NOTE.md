@@ -18,23 +18,28 @@ Le module **Ressources Humaines (RH)** est l'un des piliers centraux de Batistac
 *   **Conformité & Santé** : `MedicalVisit`, `Qualification` (Habilitations, CACES).
 *   **Paie & Social** : `PayrollExport`, `PayrollVariable`, `CibtpDeclaration`, `WageGarnishment` (SATD).
 *   **Enums strictes** : Validation des types (`AbsenceType`, `ContractType`, `CacesSymbol`, `ExpenseItemStatus`, etc.).
+*   **Évaluations & Entretiens** : `Interview` (Gestion des entretiens annuels et professionnels avec grille dynamique JSON et signatures électroniques).
+*   **Formations & OPCO** : `TrainingSession` (Gestion des sessions de formation, budget/prise en charge OPCO, et renouvellement automatique des CACES/Qualifications des participants).
 
 ### 2. Logique Métier & Services (`app/Services/RH`)
 *   **Gestion Sociale Avancée** :
     *   **CIBTP** : `CibtpService` automatise l'export DNA et les Demandes De Congés (DDC).
     *   **Subrogation** : Calcul automatique des Indemnités Journalières lors d'un arrêt, génération de l'attestation de salaire PDF.
     *   **Affiliation** : Génération du bulletin PRO BTP automatique post-onboarding.
-*   **Paie & Temps** : `PayrollGenerationService` consolide les variables de paie en fin de mois (heures de base, heures supplémentaires, absences, primes). Il gère également le calcul automatique des Saisies sur Salaires (SATD) en respectant les barèmes légaux et le RSA.
+*   **Paie & Temps** : `PayrollGenerationService` consolide les variables de paie en fin de mois. `TimeEntryAnomalyDetectorService` croise les pointages avec les trajets de véhicules (module Flottes) pour détecter automatiquement les heures supplémentaires suspectes.
 *   **Documents & Contrats** : Refonte complète du modèle de contrat de travail (24 articles légaux). Génération automatisée des lettres de fin de période d'essai (calcul dynamique du préavis) et des avenants de rupture anticipée de CDD via `RHDocumentService`.
 *   **Notes de Frais & OCR** : Workflow complet de soumission. Moteur OCR (`GoogleCloudVisionOcrService`) intégré pour l'extraction automatique des montants et catégorisation depuis les tickets. Support natif des factures PDF multi-pages (Issue #144).
     *   Gestion du moyen de paiement (Carte Personnelle ou Carte Corporate). Les dépenses par carte corpo sont automatiquement exclues du montant à rembourser au salarié (Issue #143).
     *   **Avances sur Frais** : Les salariés peuvent demander des avances budgétaires (`ExpenseAdvance`), qui sont virées via SEPA. Lors de la saisie de la note de frais finale, l'avance est automatiquement déduite du reste à payer (Issue #145).
 *   **Export SEPA** : Génération automatique de fichiers de virement SEPA (pain.001.001.03) pour le remboursement groupé des notes de frais validées et le paiement des avances sur frais (Issue #142).
+*   **Entretiens & Évaluations** : Génération des comptes-rendus d'entretien au format PDF avec intégration automatique des signatures électroniques (via `saade/filament-autograph` et `Spatie\Browsershot`).
+*   **Formations & OPCO** : `TrainingSessionService` gérant la clôture des sessions de formation et le déclenchement automatique du renouvellement des habilitations/CACES des participants ayant validé la formation.
 *   **Signature Électronique** : API DocuSeal intégrée pour les contrats.
 
 ### 3. Observers & Événements (`app/Observers/RH`)
 *   **Conformité et Alertes** : Observers (`MedicalVisitObserver`, `QualificationObserver`) couplés à des Jobs qui envoient des notifications push et emails avant l'expiration d'une certification ou d'une visite médicale.
 *   **Synergies** : Actions croisées avec les modules Flottes (amendes) et Chantiers (dépassement budgétaire lié aux heures).
+*   **Formations & Habilitations (OPCO)** : Suivi des sessions de formation, des coûts (et remboursements OPCO), avec mise à jour et renouvellement automatiques des Habilitations/CACES des participants.
 
 ### 4. Interface Utilisateur (Filament & Kiosques)
 *   **Panel RH Filament** : Interface de gestion complète des employés, formulaires de saisie, matrice de polyvalence dynamique (validité des habilitations avec code couleur). Intégration d'un Calendrier fusionnant présences et congés.
@@ -48,8 +53,3 @@ Le module **Ressources Humaines (RH)** est l'un des piliers centraux de Batistac
 
 ## 🚧 Ce qu'il reste à faire
 *   Le module est fonctionnellement très abouti et couvre tous les besoins RH classiques et avancés. Il est en phase de maintenance/amélioration continue.
-
-## 💡 Idées d'amélioration et Nouvelles Fonctionnalités
-*   **Entretiens Annuels et Évaluations Professionnelles** : Planification et gestion des entretiens obligatoires. Génération du compte-rendu PDF avec grille d'évaluation et signature électronique manager/employé.
-*   **Gestion de la Formation (OPCO)** : Suivi des sessions de formation, des coûts (et remboursements OPCO), avec mise à jour et renouvellement automatiques des Habilitations/CACES des participants.
-*   **Détection d'Anomalies de Pointage** : Algorithme de contrôle croisant les heures de pointage avec les données du module Flottes (trajet du véhicule) pour détecter automatiquement les incohérences ou les heures supplémentaires abusives et lever une alerte RH.
