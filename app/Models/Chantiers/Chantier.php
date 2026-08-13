@@ -59,6 +59,23 @@ class Chantier extends Model implements HasMedia, HasTimeline
             ->where('type', ThirdPartyType::CLIENT);
     }
 
+    public function virtualWarehouse(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(\App\Models\Articles\Warehouse::class, 'chantier_id');
+    }
+
+    public function stocks(): \Illuminate\Database\Eloquent\Relations\HasManyThrough
+    {
+        return $this->hasManyThrough(
+            \App\Models\Articles\Stock::class,
+            \App\Models\Articles\Warehouse::class,
+            'chantier_id', // Foreign key on the environments table...
+            'warehouse_id', // Foreign key on the deployments table...
+            'id', // Local key on the projects table...
+            'id' // Local key on the environments table...
+        );
+    }
+
     public function quote(): BelongsTo
     {
         return $this->belongsTo(\App\Models\Commerce\CustomerQuote::class, 'quote_id');

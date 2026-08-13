@@ -1,0 +1,184 @@
+<?php
+
+namespace App\Services\Articles;
+
+use App\Enums\Articles\StockMouvementSource;
+use App\Enums\Articles\StockMouvementType;
+use App\Models\Articles\Item;
+use App\Models\Articles\Stock;
+use App\Models\Articles\StockMouvement;
+use App\Models\Articles\Warehouse;
+use App\Models\Chantiers\Chantier;
+use Illuminate\Support\Facades\DB;
+use Exception;
+
+class StockLogisticsService
+{
+    /**
+     * Get or create the virtual warehouse for a chantier.
+     */
+    public function getOrCreateVirtualWarehouse(Chantier $chantier): Warehouse
+    {
+        $warehouse = Warehouse::where('chantier_id', $chantier->id)->first();
+        if ($warehouse) {
+            return $warehouse;
+        }
+
+        return Warehouse::create([
+            'name' => 'Chantier: ' . $chantier->name,
+            'location' => $chantier->address . ', ' . $chantier->zip_code . ' ' . $chantier->city,
+            'is_active' => true,
+            'chantier_id' => $chantier->id,
+        ]);
+    }
+
+    /**
+     * Transfer stock from a depot to a virtual chantier warehouse.
+     * 
+     * @throws Exception
+     */
+    public function transferToChantier(Warehouse $source, Chantier $chantier, Item $item, float $quantity, int $userId): void
+    {
+        if ($quantity <= 0) {
+            throw new Exception("La quantité à transférer doit être supérieure à 0.");
+        }
+
+        $sourceStock = $source->stocks()->firstOrCreate(
+            ['item_id' => $item->id],
+            ['quantity' => 0, 'min_threshold' => 0]
+        );
+
+        if ($sourceStock->quantity < $quantity) {
+            throw new Exception("Quantité insuffisante dans l'entrepôt source.");
+        }
+
+        DB::transaction(function () use ($source, $chantier, $item, $quantity, $userId, $sourceStock) {
+            $destination = $this->getOrCreateVirtualWarehouse($chantier);
+
+            // Mouvement de sortie (Dépôt)
+            $sourceStock->decrement('quantity', $quantity);
+            StockMouvement::create([
+                'stock_id' => $sourceStock->id,
+                'user_id' => $userId,
+                'type' => StockMouvementType::OUT,
+                'quantity_before' => $sourceStock->quantity + $quantity,
+                'quantity_delta' => -$quantity,
+                'quantity_after' => $sourceStock->quantity,
+                'description' => "Transfert vers chantier {$chantier->name}",
+                'reference_type' => StockMouvementSource::SITE,
+                'reference_id' => $chantier->id,
+            ]);
+
+            // Mouvement d'entrée (Chantier)
+            $destStock = $destination->stocks()->firstOrCreate(
+                ['item_id' => $item->id],
+                ['quantity' => 0, 'min_threshold' => 0]
+            );
+            $destStock->increment('quantity', $quantity);
+            StockMouvement::create([
+                'stock_id' => $destStock->id,
+                'user_id' => $userId,
+                'type' => StockMouvementType::IN,
+                'quantity_before' => $destStock->quantity - $quantity,
+                'quantity_delta' => $quantity,
+                'quantity_after' => $destStock->quantity,
+                'description' => "Réception depuis l'entrepôt {$source->name}",
+                'reference_type' => StockMouvementSource::INTERNAL,
+                'reference_id' => $source->id,
+            ]);
+        });
+    }
+
+    /**
+     * Consume stock on a chantier site.
+     * 
+     * @throws Exception
+     */
+    public function consumeOnSite(Chantier $chantier, Item $item, float $quantity, int $userId, ?string $description = null): void
+    {
+        if ($quantity <= 0) {
+            throw new Exception("La quantité à consommer doit être supérieure à 0.");
+        }
+
+        $warehouse = Warehouse::where('chantier_id', $chantier->id)->first();
+        if (!$warehouse) {
+            throw new Exception("Aucun stock n'a été transféré vers ce chantier.");
+        }
+
+        $stock = $warehouse->stocks()->where('item_id', $item->id)->first();
+        if (!$stock || $stock->quantity < $quantity) {
+            throw new Exception("Quantité insuffisante sur le chantier.");
+        }
+
+        DB::transaction(function () use ($chantier, $stock, $quantity, $userId, $description) {
+            $stock->decrement('quantity', $quantity);
+            StockMouvement::create([
+                'stock_id' => $stock->id,
+                'user_id' => $userId,
+                'type' => StockMouvementType::OUT,
+                'quantity_before' => $stock->quantity + $quantity,
+                'quantity_delta' => -$quantity,
+                'quantity_after' => $stock->quantity,
+                'description' => $description ?: "Consommation sur chantier",
+                'reference_type' => StockMouvementSource::SITE,
+                'reference_id' => $chantier->id,
+            ]);
+        });
+    }
+
+    /**
+     * Return remaining stock from a chantier to a depot.
+     * 
+     * @throws Exception
+     */
+    public function returnToDepot(Chantier $chantier, Warehouse $destination, Item $item, float $quantity, int $userId): void
+    {
+        if ($quantity <= 0) {
+            throw new Exception("La quantité à retourner doit être supérieure à 0.");
+        }
+
+        $source = Warehouse::where('chantier_id', $chantier->id)->first();
+        if (!$source) {
+            throw new Exception("Le chantier ne possède aucun entrepôt virtuel.");
+        }
+
+        $sourceStock = $source->stocks()->where('item_id', $item->id)->first();
+        if (!$sourceStock || $sourceStock->quantity < $quantity) {
+            throw new Exception("Quantité insuffisante sur le chantier pour ce retour.");
+        }
+
+        DB::transaction(function () use ($sourceStock, $destination, $chantier, $item, $quantity, $userId) {
+            // Mouvement de sortie (Chantier)
+            $sourceStock->decrement('quantity', $quantity);
+            StockMouvement::create([
+                'stock_id' => $sourceStock->id,
+                'user_id' => $userId,
+                'type' => StockMouvementType::OUT,
+                'quantity_before' => $sourceStock->quantity + $quantity,
+                'quantity_delta' => -$quantity,
+                'quantity_after' => $sourceStock->quantity,
+                'description' => "Retour depuis le chantier {$chantier->name}",
+                'reference_type' => StockMouvementSource::RETURN,
+                'reference_id' => $chantier->id,
+            ]);
+
+            // Mouvement d'entrée (Dépôt)
+            $destStock = $destination->stocks()->firstOrCreate(
+                ['item_id' => $item->id],
+                ['quantity' => 0, 'min_threshold' => 0]
+            );
+            $destStock->increment('quantity', $quantity);
+            StockMouvement::create([
+                'stock_id' => $destStock->id,
+                'user_id' => $userId,
+                'type' => StockMouvementType::IN,
+                'quantity_before' => $destStock->quantity - $quantity,
+                'quantity_delta' => $quantity,
+                'quantity_after' => $destStock->quantity,
+                'description' => "Retour matériel du chantier {$chantier->name}",
+                'reference_type' => StockMouvementSource::RETURN,
+                'reference_id' => $chantier->id,
+            ]);
+        });
+    }
+}
