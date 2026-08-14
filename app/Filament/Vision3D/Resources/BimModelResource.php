@@ -215,6 +215,7 @@ class BimModelResource extends Resource
     {
         return [
             RelationManagers\BimAnnotationsRelationManager::class,
+            RelationManagers\BimQuantitiesRelationManager::class,
         ];
     }
 

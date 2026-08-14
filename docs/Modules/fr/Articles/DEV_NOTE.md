@@ -27,6 +27,7 @@ Le module **Articles & Stocks** permet la gestion complète de l'inventaire, du 
 *   **Traçabilité Outillage (NFC/RFID)** : Interconnexion avec le module RH (`Equipements`). Le champ `item_id` sur un équipement RH permet d'associer un bien physique (ex: Perceuse N°123) au catalogue logistique global. Le suivi des prêts est géré via la table `equipement_assignments` et l'interface de scan NFC dédiée côté RH.
 
 *   **Traçabilité des lots et dates de péremption** : Le `StockService` et les mouvements de stock gèrent maintenant les numéros de lots et les dates de péremption pour les articles sensibles. Un job quotidien (`CheckExpiringStocksJob`), planifié à 08:00, alerte les administrateurs des lots approchant de leur date de péremption.
+*   **Extraction BIM vers Commandes (`BomProcurementService`)** : Passerelle Vision 3D → Articles → Achats. Le service calcule le besoin net d'une maquette (besoin brut des `BimQuantity` − stock physique − stock en commande) et génère/met à jour des `PurchaseOrder` brouillons (`PO-BIM-...`) groupés par fournisseur, rattachés au chantier de la maquette.
 
 ### 3. Observers & Événements (`app/Observers/Articles`)
 *   **`StockMouvementObserver`** : L'enregistrement automatique (Audit Log) est en place pour toute entrée/sortie d'inventaire, garantissant l'intégrité de la base.

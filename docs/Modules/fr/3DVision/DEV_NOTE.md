@@ -34,6 +34,27 @@ order: 99
 
 ---
 
+## 🛒 Quantitatifs (BOM) & Génération de Commandes (Issue #278)
+
+**Date** : 15 Août 2026
+
+Passerelle Vision 3D → Articles → Achats pour générer des commandes d'achat depuis les quantitatifs d'une maquette (v1 : saisie manuelle, extraction IFC automatique prévue plus tard).
+
+- **Modèle de données** :
+  - Migration `2026_08_15_100000_create_bim_quantities_table.php` → table `bim_quantities` (`bim_model_id`, `item_id`, `element_name`, `unit`, `quantity_required` `decimal(12,4)`).
+  - Modèle `App\Models\Vision3D\BimQuantity` (relations `bimModel`/`item`, cast `decimal:4`).
+  - Relation `BimModel::quantities()` (hasMany). Factories `BimModelFactory` & `BimQuantityFactory`.
+- **Logique métier** : `App\Services\Articles\BomProcurementService`
+  - `resolveRequirements(BimModel)` : regroupe les `BimQuantity` par article, calcule le besoin net (`besoin brut − stock physique − stock en commande` via `Stock` et `PurchaseOrderItem` sur PO non clôturés), et ne retourne que les ruptures > 0.
+  - `generatePurchaseOrders(BimModel)` : crée/met à jour (`updateOrCreate` sur référence `PO-BIM-{date}-{supplier}`) des `PurchaseOrder` brouillons groupés par fournisseur, rattachés au chantier de la maquette (`resolveChantierId`), et recalcule les totaux HT/TTC. Articles sans fournisseur ignorés avec `Log::warning`.
+- **Interface Filament** :
+  - `BimQuantitiesRelationManager` (onglet « Quantitatifs (BOM) » sur `BimModelResource`) : CRUD des lignes (Select article, élément, unité, quantité requise `minValue(0.01)`).
+  - Action « Générer le bon de commande » sur `ViewBimModel` : modal de récap (vue `filament.pages.bim-procurement-recap`) puis redirection vers le `PurchaseOrderResource` (panel `commerce`).
+- **Tests** : `tests/Feature/Modules/Articles/BomProcurementServiceTest.php` (8 tests : regroupement par article, déduction stock physique/commandé, exclusion des articles couverts, regroupement par fournisseur, totaux HT/TTC, idempotence, articles sans fournisseur).
+- **Non couvert (v1)** : extraction automatique des quantités IFC et génération d'une `PurchaseRequest` (liste de courses).
+
+---
+
 - **Mesure de distances sur la maquette** : Clic point A / Clic point B pour calculer et afficher la distance réelle entre eux.
 - **Système de calques (Layers) IFC / DXF** : Arborescence permettant de cacher/afficher des couches spécifiques (par exemple : cacher les murs, afficher la tuyauterie).
 - **Cacher temporairement un élément 3D** : Capacité de double cliquer sur un élément puis d'appuyer sur "Suppr" pour le rendre transparent/invisible pendant l'inspection.
