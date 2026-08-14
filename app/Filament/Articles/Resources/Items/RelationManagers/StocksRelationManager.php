@@ -3,6 +3,10 @@
 namespace App\Filament\Articles\Resources\Items\RelationManagers;
 
 use App\Enums\Articles\ItemType;
+use App\Enums\Articles\StockMouvementSource;
+use App\Models\Chantiers\Chantier;
+use App\Services\Articles\StockService;
+use Filament\Actions\Action;
 use Filament\Actions\AssociateAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\CreateAction;
@@ -15,18 +19,20 @@ use Filament\Actions\ViewAction;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Infolists\Components\TextEntry;
+use Filament\Notifications\Notification;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Model;
 use ToneGabes\Filament\Icons\Enums\Phosphor;
-use Filament\Actions\Action;
 
 class StocksRelationManager extends RelationManager
 {
     protected static string $relationship = 'stocks';
+
     protected static ?string $title = 'État des stocks par dépôt';
+
     protected static string|null|\BackedEnum $icon = Phosphor::Warehouse;
 
     public static function canViewForRecord(Model $ownerRecord, string $pageClass): bool
@@ -113,6 +119,41 @@ class StocksRelationManager extends RelationManager
                 AssociateAction::make(),
             ])
             ->recordActions([
+                Action::make('mouvementer')
+                    ->label('Mouvementer')
+                    ->icon(Phosphor::ArrowsClockwise)
+                    ->color('primary')
+                    ->form([
+                        Select::make('type')
+                            ->label('Type de mouvement')
+                            ->options([
+                                'in' => 'Entrée',
+                                'out' => 'Sortie',
+                            ])
+                            ->required(),
+                        TextInput::make('quantity')->label('Quantité')
+                            ->numeric()
+                            ->required(),
+                        TextInput::make('batch_number')->label('Numéro de lot')
+                            ->required(fn ($get) => $get('type') === 'in' && $livewire->getOwnerRecord()->is_sensitive),
+                        DatePicker::make('expiration_date')->label('Date de péremption')
+                            ->required(fn ($get) => $get('type') === 'in' && $livewire->getOwnerRecord()->is_sensitive),
+                        Textarea::make('description')->label('Description'),
+                    ])
+                    ->action(function ($record, array $data) {
+                        app(StockService::class)->createMouvement(
+                            $record->item,
+                            $record->warehouse,
+                            $data['type'],
+                            $data['quantity'],
+                            $data['description'],
+                            null,
+                            null,
+                            $data['batch_number'],
+                            $data['expiration_date']
+                        );
+                        Notification::make()->title('Mouvement de stock créé')->success()->send();
+                    }),
                 Action::make('reserve')
                     ->label('Réserver')
                     ->icon(Phosphor::LockKey)
@@ -125,8 +166,8 @@ class StocksRelationManager extends RelationManager
                             ->maxValue(fn ($record) => $record->getAvailableQuantity()),
                     ])
                     ->action(function ($record, array $data) {
-                        app(\App\Services\Articles\StockService::class)->reserve($record->item, $record->warehouse, $data['quantity']);
-                        \Filament\Notifications\Notification::make()->title('Stock réservé')->success()->send();
+                        app(StockService::class)->reserve($record->item, $record->warehouse, $data['quantity']);
+                        Notification::make()->title('Stock réservé')->success()->send();
                     }),
                 Action::make('release')
                     ->label('Libérer')
@@ -140,8 +181,8 @@ class StocksRelationManager extends RelationManager
                             ->maxValue(fn ($record) => $record->reserved_quantity),
                     ])
                     ->action(function ($record, array $data) {
-                        app(\App\Services\Articles\StockService::class)->release($record->item, $record->warehouse, $data['quantity']);
-                        \Filament\Notifications\Notification::make()->title('Stock libéré')->success()->send();
+                        app(StockService::class)->release($record->item, $record->warehouse, $data['quantity']);
+                        Notification::make()->title('Stock libéré')->success()->send();
                     })
                     ->visible(fn ($record) => $record->reserved_quantity > 0),
                 Action::make('consume')
@@ -154,26 +195,28 @@ class StocksRelationManager extends RelationManager
                             ->numeric()
                             ->required()
                             ->maxValue(fn ($record) => $record->reserved_quantity),
-                        \Filament\Forms\Components\Select::make('chantier_id')->label('Chantier')
+                        Select::make('chantier_id')->label('Chantier')
                             ->label('Chantier')
-                            ->options(\App\Models\Chantiers\Chantier::pluck('name', 'id'))
+                            ->options(Chantier::pluck('name', 'id'))
                             ->searchable()
                             ->required(),
                     ])
                     ->action(function ($record, array $data) {
-                        $chantier = \App\Models\Chantiers\Chantier::find($data['chantier_id']);
-                        if (!$chantier) return;
-                        $reason = "Consommation pour le chantier : " . $chantier->name;
+                        $chantier = Chantier::find($data['chantier_id']);
+                        if (! $chantier) {
+                            return;
+                        }
+                        $reason = 'Consommation pour le chantier : '.$chantier->name;
 
-                        app(\App\Services\Articles\StockService::class)->consumeReserved(
+                        app(StockService::class)->consumeReserved(
                             $record->item,
                             $record->warehouse,
                             $data['quantity'],
                             $reason,
-                            \App\Enums\Articles\StockMouvementSource::SITE,
+                            StockMouvementSource::SITE,
                             $chantier->id
                         );
-                        \Filament\Notifications\Notification::make()->title('Stock consommé')->success()->send();
+                        Notification::make()->title('Stock consommé')->success()->send();
                     })
                     ->visible(fn ($record) => $record->reserved_quantity > 0),
                 ViewAction::make(),

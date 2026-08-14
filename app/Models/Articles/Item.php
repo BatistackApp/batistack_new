@@ -5,6 +5,7 @@ namespace App\Models\Articles;
 use App\Enums\Articles\ItemType;
 use App\Models\Core\Unit;
 use App\Models\Core\VatRate;
+use App\Models\Tiers\ThirdParty;
 use App\Observers\Articles\BarcodeObserver;
 use App\Observers\Articles\ItemObserver;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
@@ -13,6 +14,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 
@@ -31,6 +33,7 @@ class Item extends Model implements HasMedia
         'purchase_price',
         'selling_price',
         'is_active',
+        'is_sensitive',
         'unit_id',
         'vat_rate_id',
         'min_stock',
@@ -74,9 +77,14 @@ class Item extends Model implements HasMedia
         return $this->hasMany(Item::class, 'parent_id');
     }
 
+    public function stockMouvements(): HasManyThrough
+    {
+        return $this->hasManyThrough(StockMouvement::class, Stock::class);
+    }
+
     public function supplier(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\Tiers\ThirdParty::class, 'supplier_id');
+        return $this->belongsTo(ThirdParty::class, 'supplier_id');
     }
 
     protected function casts(): array
@@ -86,6 +94,7 @@ class Item extends Model implements HasMedia
             'purchase_price' => 'decimal:4',
             'selling_price' => 'decimal:4',
             'is_active' => 'boolean',
+            'is_sensitive' => 'boolean',
         ];
     }
 
@@ -301,6 +310,7 @@ class Item extends Model implements HasMedia
         if ($this->purchase_price == 0) {
             return 0;
         }
+
         return (($this->selling_price - $this->purchase_price) / $this->purchase_price) * 100;
     }
 
@@ -310,6 +320,7 @@ class Item extends Model implements HasMedia
     public function getPriceTTC(): float
     {
         $vatRate = $this->vatRate ? $this->vatRate->rate / 100 : 0;
+
         return $this->selling_price * (1 + $vatRate);
     }
 
