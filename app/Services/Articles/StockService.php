@@ -2,9 +2,12 @@
 
 namespace App\Services\Articles;
 
+use App\Enums\Articles\StockMouvementSource;
+use App\Enums\Articles\StockMouvementType;
 use App\Exceptions\Articles\ArticlesModuleException;
 use App\Models\Articles\Item;
 use App\Models\Articles\Stock;
+use App\Models\Articles\StockMouvement;
 use App\Models\Articles\Warehouse;
 use DB;
 use Filament\Notifications\Notification;
@@ -14,13 +17,38 @@ use Throwable;
 class StockService
 {
     /**
+     * Crée un mouvement de stock (entrée ou sortie).
+     *
+     * @throws Throwable
+     */
+    public function createMouvement(Item $item, Warehouse $warehouse, string $type, float $quantity, ?string $description, ?StockMouvementSource $source = null, ?int $referenceId = null, ?string $batchNumber = null, ?string $expirationDate = null): void
+    {
+        if ($quantity <= 0) {
+            throw new ArticlesModuleException('La quantité doit être strictement positive.', 400);
+        }
+
+        if ($type === 'in') {
+            $this->entry($item, $warehouse, $quantity, $item->purchase_price, $batchNumber, $expirationDate);
+        } else {
+            $this->exit($item, $warehouse, $quantity, $description, $source, $referenceId, $batchNumber, $expirationDate);
+        }
+    }
+
+    /**
      * Enregistre une entrée en stock et recalcule le PUMP.
      *
      * @throws Throwable
      */
-    public function entry(Item $item, Warehouse $warehouse, float $quantity, float $purchasePrice): void
+    public function entry(Item $item, Warehouse $warehouse, float $quantity, float $purchasePrice, ?string $batchNumber = null, ?string $expirationDate = null): void
     {
-        DB::transaction(function () use ($item, $warehouse, $quantity, $purchasePrice) {
+        if ($item->is_sensitive && (empty($batchNumber) || empty($expirationDate))) {
+            throw new ArticlesModuleException(
+                'Un numéro de lot et une date de péremption sont requis pour un article sensible.',
+                400
+            );
+        }
+
+        DB::transaction(function () use ($item, $warehouse, $quantity, $purchasePrice, $batchNumber, $expirationDate) {
             $currentGlobalStock = $item->stocks()->sum('quantity');
             $oldPump = (float) $item->purchase_price;
 
@@ -38,11 +66,11 @@ class StockService
                 ->lockForUpdate()
                 ->first();
 
-            if (!$stock) {
+            if (! $stock) {
                 $stock = Stock::create([
                     'item_id' => $item->id,
                     'warehouse_id' => $warehouse->id,
-                    'quantity' => 0
+                    'quantity' => 0,
                 ]);
             }
 
@@ -50,23 +78,25 @@ class StockService
             $stock->quantity += $quantity;
             $stock->save();
 
-            \App\Models\Articles\StockMouvement::create([
+            StockMouvement::create([
                 'stock_id' => $stock->id,
                 'user_id' => auth()->id(),
-                'type' => \App\Enums\Articles\StockMouvementType::IN,
-                'reference_type' => \App\Enums\Articles\StockMouvementSource::INTERNAL,
+                'type' => StockMouvementType::IN,
+                'reference_type' => StockMouvementSource::INTERNAL,
                 'reference_id' => null,
                 'quantity_before' => $quantityBefore,
                 'quantity_delta' => $quantity,
                 'quantity_after' => $stock->quantity,
                 'reason' => 'Entrée de stock',
+                'batch_number' => $batchNumber,
+                'expiration_date' => $expirationDate,
             ]);
         });
     }
 
-    public function exit(Item $item, Warehouse $warehouse, float $quantity, string $reason, ?\App\Enums\Articles\StockMouvementSource $source = null, ?int $referenceId = null): void
+    public function exit(Item $item, Warehouse $warehouse, float $quantity, string $reason, ?StockMouvementSource $source = null, ?int $referenceId = null, ?string $batchNumber = null, ?string $expirationDate = null): void
     {
-        DB::transaction(function () use ($item, $warehouse, $quantity, $reason, $source, $referenceId) {
+        DB::transaction(function () use ($item, $warehouse, $quantity, $reason, $source, $referenceId, $batchNumber, $expirationDate) {
             $stock = Stock::where('item_id', $item->id)
                 ->where('warehouse_id', $warehouse->id)
                 ->lockForUpdate()
@@ -84,20 +114,36 @@ class StockService
                 throw $exception;
             }
 
+            if ($item->is_sensitive && empty($batchNumber)) {
+                throw new ArticlesModuleException(
+                    'Un numéro de lot est requis pour une sortie d\'un article sensible.',
+                    400
+                );
+            }
+
+            if ($item->is_sensitive && StockMouvement::getRemainingBatchQuantity($stock->id, $batchNumber) < $quantity) {
+                throw new ArticlesModuleException(
+                    "Quantité insuffisante pour le lot {$batchNumber}.",
+                    400
+                );
+            }
+
             $quantityBefore = $stock->quantity;
             $stock->quantity -= $quantity;
             $stock->save();
 
-            \App\Models\Articles\StockMouvement::create([
+            StockMouvement::create([
                 'stock_id' => $stock->id,
                 'user_id' => auth()->id(),
-                'type' => \App\Enums\Articles\StockMouvementType::OUT,
-                'reference_type' => $source ?? \App\Enums\Articles\StockMouvementSource::INTERNAL,
+                'type' => StockMouvementType::OUT,
+                'reference_type' => $source ?? StockMouvementSource::INTERNAL,
                 'reference_id' => $referenceId,
                 'quantity_before' => $quantityBefore,
                 'quantity_delta' => -$quantity,
                 'quantity_after' => $stock->quantity,
                 'reason' => $reason,
+                'batch_number' => $batchNumber,
+                'expiration_date' => $expirationDate,
             ]);
 
             // Logique d'alerte si stock < seuil
@@ -113,9 +159,10 @@ class StockService
 
     /**
      * Consomme du stock préalablement réservé (diminue le stock physique ET le stock réservé).
+     *
      * @throws Throwable
      */
-    public function consumeReserved(Item $item, Warehouse $warehouse, float $quantity, string $reason, ?\App\Enums\Articles\StockMouvementSource $source = null, ?int $referenceId = null): void
+    public function consumeReserved(Item $item, Warehouse $warehouse, float $quantity, string $reason, ?StockMouvementSource $source = null, ?int $referenceId = null): void
     {
         DB::transaction(function () use ($item, $warehouse, $quantity, $reason, $source, $referenceId) {
             $stock = Stock::where('item_id', $item->id)
@@ -138,16 +185,16 @@ class StockService
             $stock->quantity -= $quantity;
             $stock->save();
 
-            \App\Models\Articles\StockMouvement::create([
+            StockMouvement::create([
                 'stock_id' => $stock->id,
                 'user_id' => auth()->id(),
-                'type' => \App\Enums\Articles\StockMouvementType::OUT,
-                'reference_type' => $source ?? \App\Enums\Articles\StockMouvementSource::INTERNAL,
+                'type' => StockMouvementType::OUT,
+                'reference_type' => $source ?? StockMouvementSource::INTERNAL,
                 'reference_id' => $referenceId,
                 'quantity_before' => $quantityBefore,
                 'quantity_delta' => -$quantity,
                 'quantity_after' => $stock->quantity,
-                'reason' => $reason . ' (Stock Réservé)',
+                'reason' => $reason.' (Stock Réservé)',
             ]);
 
             // Logique d'alerte si stock < seuil
@@ -168,7 +215,7 @@ class StockService
     {
         $stock = Stock::where('item_id', $item->id)->where('warehouse_id', $warehouse->id)->first();
         if (! $stock) {
-            throw new ArticlesModuleException("Stock introuvable.", 404);
+            throw new ArticlesModuleException('Stock introuvable.', 404);
         }
         $stock->reserve($quantity);
     }
@@ -180,13 +227,14 @@ class StockService
     {
         $stock = Stock::where('item_id', $item->id)->where('warehouse_id', $warehouse->id)->first();
         if (! $stock) {
-            throw new ArticlesModuleException("Stock introuvable.", 404);
+            throw new ArticlesModuleException('Stock introuvable.', 404);
         }
         $stock->release($quantity);
     }
 
     /**
      * Transfère du stock entre deux dépôts.
+     *
      * @throws Throwable
      */
     public function transfer(Item $item, Warehouse $from, Warehouse $to, float $quantity): void
@@ -200,6 +248,7 @@ class StockService
     /**
      * Transfère un Kit complet (et ses composants) entre deux dépôts.
      * Si l'un des composants est en rupture, la transaction est annulée.
+     *
      * @throws Throwable
      */
     public function transferKit(Item $kit, Warehouse $from, Warehouse $to, float $kitQuantity): void
@@ -215,8 +264,8 @@ class StockService
             foreach ($kit->components as $composition) {
                 // La quantité requise pour un composant est sa quantité unitaire multipliée par le nombre de kits
                 $requiredQuantity = $composition->quantity * $kitQuantity;
-                
-                // On délègue le transfert du composant. 
+
+                // On délègue le transfert du composant.
                 // En cas de stock insuffisant, $this->exit() lèvera une exception et annulera la transaction.
                 $this->transfer($composition->childItem, $from, $to, $requiredQuantity);
             }

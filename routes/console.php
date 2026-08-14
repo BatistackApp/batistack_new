@@ -1,5 +1,7 @@
 <?php
 
+use App\Jobs\Articles\CheckExpiringStocksJob;
+use App\Jobs\Articles\CheckLowStockJob;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
@@ -18,7 +20,7 @@ Schedule::command('inventory:generate-cycle-counts')->weeklyOn(1, '03:00');
 Schedule::command('commerce:process-dunning')
     ->dailyAt('01:00')
     ->timezone('Europe/Paris')
-    ->onFailure(fn () => logger()->error("Échec de la relance automatique des factures."));
+    ->onFailure(fn () => logger()->error('Échec de la relance automatique des factures.'));
 
 // Tiers
 
@@ -31,6 +33,9 @@ Schedule::command('tiers:verify-vigilance')
 // Articles
 Schedule::command('articles:check-stocks')
     ->dailyAt('07:00');
+
+// Schedule::job(new CheckLowStockJob)->dailyAt('08:00');
+Schedule::job(new CheckExpiringStocksJob)->dailyAt('08:00');
 
 // Météo & CIBTP
 Schedule::command('weather:check-alerts')
@@ -116,9 +121,9 @@ Schedule::command('flottes:remind-assignments')
 Schedule::command('banque:sync-bridge')
     ->dailyAt('04:00')
     ->timezone('Europe/Paris')
-    ->onFailure(fn () => logger()->error("Échec de la synchronisation des comptes bancaires Bridge."));
+    ->onFailure(fn () => logger()->error('Échec de la synchronisation des comptes bancaires Bridge.'));
 
 Schedule::command('app:check-bridge-tokens')
     ->dailyAt('09:00')
     ->timezone('Europe/Paris')
-    ->onFailure(fn () => logger()->error("Échec de la vérification des tokens Bridge API."));
+    ->onFailure(fn () => logger()->error('Échec de la vérification des tokens Bridge API.'));

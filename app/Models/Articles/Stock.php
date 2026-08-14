@@ -2,6 +2,8 @@
 
 namespace App\Models\Articles;
 
+use App\Enums\Articles\StockMouvementSource;
+use App\Exceptions\Articles\ArticlesModuleException;
 use App\Observers\Articles\StockObserver;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Builder;
@@ -149,8 +151,15 @@ class Stock extends Model
     /**
      * Augmenter le stock
      */
-    public function increase(float $quantity, string $description = '', ?\App\Enums\Articles\StockMouvementSource $source = null, ?int $referenceId = null): StockMouvement
+    public function increase(float $quantity, string $description = '', ?StockMouvementSource $source = null, ?int $referenceId = null, ?string $batchNumber = null, ?string $expirationDate = null): StockMouvement
     {
+        if ($this->item->is_sensitive && (empty($batchNumber) || empty($expirationDate))) {
+            throw new ArticlesModuleException(
+                'Un numéro de lot et une date de péremption sont requis pour un article sensible.',
+                400
+            );
+        }
+
         $before = $this->quantity;
         $this->quantity += $quantity;
         $this->save();
@@ -165,13 +174,15 @@ class Stock extends Model
             'description' => $description ?: 'Augmentation manuelle du stock',
             'reference_type' => $source,
             'reference_id' => $referenceId,
+            'batch_number' => $batchNumber,
+            'expiration_date' => $expirationDate,
         ]);
     }
 
     /**
      * Diminuer le stock
      */
-    public function decrease(float $quantity, string $description = '', ?\App\Enums\Articles\StockMouvementSource $source = null, ?int $referenceId = null): StockMouvement
+    public function decrease(float $quantity, string $description = '', ?StockMouvementSource $source = null, ?int $referenceId = null, ?string $batchNumber = null, ?string $expirationDate = null): StockMouvement
     {
         $before = $this->quantity;
         $this->quantity -= $quantity;
@@ -187,6 +198,8 @@ class Stock extends Model
             'description' => $description ?: 'Diminution manuelle du stock',
             'reference_type' => $source,
             'reference_id' => $referenceId,
+            'batch_number' => $batchNumber,
+            'expiration_date' => $expirationDate,
         ]);
     }
 
@@ -196,8 +209,8 @@ class Stock extends Model
     public function reserve(float $quantity): void
     {
         if ($this->getAvailableQuantity() < $quantity) {
-            throw new \App\Exceptions\Articles\ArticlesModuleException(
-                message: "Quantité disponible insuffisante pour réserver.",
+            throw new ArticlesModuleException(
+                message: 'Quantité disponible insuffisante pour réserver.',
                 code: 400
             );
         }
@@ -212,8 +225,8 @@ class Stock extends Model
     public function release(float $quantity): void
     {
         if ($this->reserved_quantity < $quantity) {
-            throw new \App\Exceptions\Articles\ArticlesModuleException(
-                message: "Impossible de libérer plus que la quantité réservée.",
+            throw new ArticlesModuleException(
+                message: 'Impossible de libérer plus que la quantité réservée.',
                 code: 400
             );
         }

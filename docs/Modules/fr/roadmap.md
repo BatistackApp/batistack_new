@@ -13,7 +13,6 @@ Voici un aperçu de la feuille de route des prochains mois, regroupée par modul
 ---
 
 ## 📦 Articles & Stocks (Inventaire)
-- **Transfert direct de Stock vers un Chantier (Logistique)** : Permettre de lier un entrepôt virtuel directement à un chantier pour transférer le stock, suivre la consommation réelle sur place, et gérer les retours au dépôt en fin de travaux.
 - **Traçabilité des Lots et Dates de Péremption (Qualité)** : Gérer les numéros de lots (`batch_number`) et les dates de péremption (`expiration_date`) sur les mouvements de stock pour les matériaux sensibles (chimie, EPI) et alerter avant péremption.
 - **Extraction BIM vers Panier d'Achat (BOM)** : Créer une passerelle avec le module Vision 3D pour extraire les quantitatifs d'une maquette IFC et générer automatiquement une liste de courses ou un bon de commande en déduisant le stock actuel.
 

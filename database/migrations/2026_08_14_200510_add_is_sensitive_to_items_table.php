@@ -11,8 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('warehouses', function (Blueprint $table) {
-            $table->foreignId('chantier_id')->nullable()->unique()->constrained('chantiers')->nullOnDelete();
+        Schema::table('items', function (Blueprint $table) {
+            $table->boolean('is_sensitive')->default(false)->after('is_active');
         });
     }
 
@@ -21,9 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('warehouses', function (Blueprint $table) {
-            $table->dropForeign(['chantier_id']);
-            $table->dropColumn('chantier_id');
+        Schema::table('items', function (Blueprint $table) {
+            $table->dropColumn('is_sensitive');
         });
     }
 };

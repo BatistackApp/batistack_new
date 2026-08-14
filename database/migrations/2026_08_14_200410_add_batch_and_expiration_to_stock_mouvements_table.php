@@ -11,8 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('warehouses', function (Blueprint $table) {
-            $table->foreignId('chantier_id')->nullable()->unique()->constrained('chantiers')->nullOnDelete();
+        Schema::table('stock_mouvements', function (Blueprint $table) {
+            $table->string('batch_number')->nullable()->after('description');
+            $table->date('expiration_date')->nullable()->after('batch_number');
         });
     }
 
@@ -21,9 +22,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('warehouses', function (Blueprint $table) {
-            $table->dropForeign(['chantier_id']);
-            $table->dropColumn('chantier_id');
+        Schema::table('stock_mouvements', function (Blueprint $table) {
+            $table->dropColumn(['batch_number', 'expiration_date']);
         });
     }
 };

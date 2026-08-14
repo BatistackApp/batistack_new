@@ -13,10 +13,10 @@ use App\Filament\Articles\Resources\Items\Schemas\ItemInfolist;
 use App\Filament\Articles\Resources\Items\Tables\ItemsTable;
 use App\Models\Articles\Item;
 use BackedEnum;
-use Illuminate\Database\Eloquent\Model;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Model;
 use ToneGabes\Filament\Icons\Enums\Phosphor;
 use UnitEnum;
 

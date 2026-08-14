@@ -13,7 +13,7 @@ beforeEach(function () {
     config()->set('services.digiposte.client_secret', 'test_secret');
     config()->set('services.digiposte.partner_id', 'test_partner_id');
 
-    $this->service = new DigiposteService();
+    $this->service = new DigiposteService;
 });
 
 it('can authenticate with digiposte', function () {
@@ -67,6 +67,8 @@ it('fails to deposit if pdf is missing', function () {
 });
 
 it('successfully deposits a payslip', function () {
+    Storage::fake('public');
+
     $employee = Employee::factory()->create(['digiposte_id' => 'MAT123']);
     $payslip = Payslip::factory()->create([
         'employee_id' => $employee->id,
@@ -84,6 +86,4 @@ it('successfully deposits a payslip', function () {
 
     expect($result)->toBeTrue();
     expect($payslip->fresh()->digiposte_status)->toBe('deposited');
-
-    Storage::disk('public')->delete('documents/payslips/test.pdf');
 });
