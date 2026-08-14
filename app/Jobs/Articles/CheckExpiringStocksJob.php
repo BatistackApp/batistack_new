@@ -25,9 +25,11 @@ class CheckExpiringStocksJob implements ShouldQueue
             ->whereNotNull('batch_number')
             ->whereNotNull('expiration_date')
             ->whereBetween('expiration_date', [Carbon::today(), Carbon::today()->addDays(30)])
-            ->get();
+            ->get()
+            // Une seule alerte par lot (stock_id + batch_number)
+            ->unique(fn ($mouvement) => $mouvement->stock_id.'|'.$mouvement->batch_number);
 
-        $admins = User::role('admin')->get();
+        $admins = User::admin()->get();
         if ($admins->isEmpty()) {
             return;
         }

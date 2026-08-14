@@ -23,10 +23,14 @@ class StockService
      */
     public function createMouvement(Item $item, Warehouse $warehouse, string $type, float $quantity, ?string $description, ?StockMouvementSource $source = null, ?int $referenceId = null, ?string $batchNumber = null, ?string $expirationDate = null): void
     {
+        if ($quantity <= 0) {
+            throw new ArticlesModuleException('La quantité doit être strictement positive.', 400);
+        }
+
         if ($type === 'in') {
             $this->entry($item, $warehouse, $quantity, $item->purchase_price, $batchNumber, $expirationDate);
         } else {
-            $this->exit($item, $warehouse, $quantity, $description, $source, $referenceId);
+            $this->exit($item, $warehouse, $quantity, $description, $source, $referenceId, $batchNumber, $expirationDate);
         }
     }
 
@@ -37,6 +41,13 @@ class StockService
      */
     public function entry(Item $item, Warehouse $warehouse, float $quantity, float $purchasePrice, ?string $batchNumber = null, ?string $expirationDate = null): void
     {
+        if ($item->is_sensitive && (empty($batchNumber) || empty($expirationDate))) {
+            throw new ArticlesModuleException(
+                'Un numéro de lot et une date de péremption sont requis pour un article sensible.',
+                400
+            );
+        }
+
         DB::transaction(function () use ($item, $warehouse, $quantity, $purchasePrice, $batchNumber, $expirationDate) {
             $currentGlobalStock = $item->stocks()->sum('quantity');
             $oldPump = (float) $item->purchase_price;
@@ -83,9 +94,9 @@ class StockService
         });
     }
 
-    public function exit(Item $item, Warehouse $warehouse, float $quantity, string $reason, ?StockMouvementSource $source = null, ?int $referenceId = null): void
+    public function exit(Item $item, Warehouse $warehouse, float $quantity, string $reason, ?StockMouvementSource $source = null, ?int $referenceId = null, ?string $batchNumber = null, ?string $expirationDate = null): void
     {
-        DB::transaction(function () use ($item, $warehouse, $quantity, $reason, $source, $referenceId) {
+        DB::transaction(function () use ($item, $warehouse, $quantity, $reason, $source, $referenceId, $batchNumber, $expirationDate) {
             $stock = Stock::where('item_id', $item->id)
                 ->where('warehouse_id', $warehouse->id)
                 ->lockForUpdate()
@@ -103,6 +114,20 @@ class StockService
                 throw $exception;
             }
 
+            if ($item->is_sensitive && empty($batchNumber)) {
+                throw new ArticlesModuleException(
+                    'Un numéro de lot est requis pour une sortie d\'un article sensible.',
+                    400
+                );
+            }
+
+            if ($item->is_sensitive && StockMouvement::getRemainingBatchQuantity($stock->id, $batchNumber) < $quantity) {
+                throw new ArticlesModuleException(
+                    "Quantité insuffisante pour le lot {$batchNumber}.",
+                    400
+                );
+            }
+
             $quantityBefore = $stock->quantity;
             $stock->quantity -= $quantity;
             $stock->save();
@@ -117,6 +142,8 @@ class StockService
                 'quantity_delta' => -$quantity,
                 'quantity_after' => $stock->quantity,
                 'reason' => $reason,
+                'batch_number' => $batchNumber,
+                'expiration_date' => $expirationDate,
             ]);
 
             // Logique d'alerte si stock < seuil

@@ -153,6 +153,13 @@ class Stock extends Model
      */
     public function increase(float $quantity, string $description = '', ?StockMouvementSource $source = null, ?int $referenceId = null, ?string $batchNumber = null, ?string $expirationDate = null): StockMouvement
     {
+        if ($this->item->is_sensitive && (empty($batchNumber) || empty($expirationDate))) {
+            throw new ArticlesModuleException(
+                'Un numéro de lot et une date de péremption sont requis pour un article sensible.',
+                400
+            );
+        }
+
         $before = $this->quantity;
         $this->quantity += $quantity;
         $this->save();

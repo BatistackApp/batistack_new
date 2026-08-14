@@ -3,17 +3,17 @@
 namespace App\Filament\Chantier\Resources\Chantiers\ChantierResource\RelationManagers;
 
 use App\Models\Articles\Item;
+use App\Models\Articles\Stock;
 use App\Models\Articles\Warehouse;
 use App\Services\Articles\StockLogisticsService;
+use Exception;
+use Filament\Actions\Action;
 use Filament\Forms;
-use Filament\Forms\Form;
+use Filament\Notifications\Notification;
 use Filament\Resources\RelationManagers\RelationManager;
+use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Filament\Notifications\Notification;
-use Filament\Schemas\Schema;
-use Filament\Schemas\Components as SchemaComponents;
 
 class StocksRelationManager extends RelationManager
 {
@@ -21,7 +21,7 @@ class StocksRelationManager extends RelationManager
 
     protected static ?string $title = 'Stocks sur chantier';
 
-    protected static string | \BackedEnum | null $icon = 'heroicon-o-cube';
+    protected static string|\BackedEnum|null $icon = 'heroicon-o-cube';
 
     public function form(Schema $schema): Schema
     {
@@ -67,7 +67,7 @@ class StocksRelationManager extends RelationManager
                 //
             ])
             ->headerActions([
-                Tables\Actions\Action::make('approvisionner')
+                Action::make('approvisionner')
                     ->label('Approvisionner')
                     ->icon('heroicon-o-arrow-down-tray')
                     ->color('primary')
@@ -76,11 +76,13 @@ class StocksRelationManager extends RelationManager
                             ->label('Depuis le Dépôt')
                             ->options(Warehouse::whereNull('chantier_id')->active()->pluck('name', 'id'))
                             ->searchable()
+                            ->exists('warehouses', 'id')
                             ->required(),
                         Forms\Components\Select::make('item_id')
                             ->label('Article')
                             ->options(Item::pluck('name', 'id'))
                             ->searchable()
+                            ->exists('items', 'id')
                             ->required(),
                         Forms\Components\TextInput::make('quantity')
                             ->label('Quantité')
@@ -93,7 +95,7 @@ class StocksRelationManager extends RelationManager
                         $source = Warehouse::find($data['source_warehouse_id']);
                         $item = Item::find($data['item_id']);
                         $service = app(StockLogisticsService::class);
-                        
+
                         try {
                             $service->transferToChantier($source, $chantier, $item, (float) $data['quantity'], auth()->id());
                             Notification::make()
@@ -109,8 +111,8 @@ class StocksRelationManager extends RelationManager
                         }
                     }),
             ])
-            ->actions([
-                Tables\Actions\Action::make('consommer')
+            ->recordActions([
+                Action::make('consommer')
                     ->label('Consommer')
                     ->icon('heroicon-o-minus-circle')
                     ->color('warning')
@@ -124,10 +126,10 @@ class StocksRelationManager extends RelationManager
                             ->label('Description / Motif')
                             ->maxLength(255),
                     ])
-                    ->action(function (array $data, \App\Models\Articles\Stock $record, $livewire): void {
+                    ->action(function (array $data, Stock $record, $livewire): void {
                         $chantier = $livewire->getOwnerRecord();
                         $service = app(StockLogisticsService::class);
-                        
+
                         try {
                             $service->consumeOnSite($chantier, $record->item, (float) $data['quantity'], auth()->id(), $data['description']);
                             Notification::make()
@@ -142,7 +144,7 @@ class StocksRelationManager extends RelationManager
                                 ->send();
                         }
                     }),
-                Tables\Actions\Action::make('retourner')
+                Action::make('retourner')
                     ->label('Retour Dépôt')
                     ->icon('heroicon-o-arrow-path')
                     ->color('gray')
@@ -151,19 +153,20 @@ class StocksRelationManager extends RelationManager
                             ->label('Vers le Dépôt')
                             ->options(Warehouse::whereNull('chantier_id')->active()->pluck('name', 'id'))
                             ->searchable()
+                            ->exists('warehouses', 'id')
                             ->required(),
                         Forms\Components\TextInput::make('quantity')
                             ->label('Quantité à retourner')
                             ->numeric()
                             ->required()
                             ->minValue(0.01)
-                            ->default(fn (\App\Models\Articles\Stock $record) => $record->quantity),
+                            ->default(fn (Stock $record) => $record->quantity),
                     ])
-                    ->action(function (array $data, \App\Models\Articles\Stock $record, $livewire): void {
+                    ->action(function (array $data, Stock $record, $livewire): void {
                         $chantier = $livewire->getOwnerRecord();
                         $destination = Warehouse::find($data['destination_warehouse_id']);
                         $service = app(StockLogisticsService::class);
-                        
+
                         try {
                             $service->returnToDepot($chantier, $destination, $record->item, (float) $data['quantity'], auth()->id());
                             Notification::make()
@@ -179,7 +182,7 @@ class StocksRelationManager extends RelationManager
                         }
                     }),
             ])
-            ->bulkActions([
+            ->toolbarActions([
                 //
             ]);
     }

@@ -133,11 +133,12 @@ class StocksRelationManager extends RelationManager
                             ->required(),
                         TextInput::make('quantity')->label('Quantité')
                             ->numeric()
-                            ->required(),
+                            ->required()
+                            ->minValue(0.01),
                         TextInput::make('batch_number')->label('Numéro de lot')
-                            ->required(fn ($get) => $get('type') === 'in' && $livewire->getOwnerRecord()->is_sensitive),
+                            ->required(fn ($get, $livewire) => $get('type') === 'in' && $livewire->getOwnerRecord()->is_sensitive),
                         DatePicker::make('expiration_date')->label('Date de péremption')
-                            ->required(fn ($get) => $get('type') === 'in' && $livewire->getOwnerRecord()->is_sensitive),
+                            ->required(fn ($get, $livewire) => $get('type') === 'in' && $livewire->getOwnerRecord()->is_sensitive),
                         Textarea::make('description')->label('Description'),
                     ])
                     ->action(function ($record, array $data) {

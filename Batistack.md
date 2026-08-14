@@ -155,7 +155,7 @@ Chaque étape de développement doit être dans un "canevas" distinct.
 - **Étape 1 :** Définir le contexte métier et logique du module en prenant en compte les modules existants.
 - **Étape 2 :** Définir les migrations, énumérations, modèles Eloquent, usines et seeders propres au module développé.
 - **Étape 3 :** Définir la portée technique du module en s'appuyant sur des exemples concrets.
-- **Étape 4 :** Définir les services dont le module aura besoin dans l'espace de noms `App\Service\{NomDuModule}`.
+- **Étape 4 :** Définir les services dont le module aura besoin dans l'espace de noms `App\Services\{NomDuModule}`.
 - **Étape 5 :** Définir les automatisations du module développé dans l'ordre suivant :
     - Observateurs
     - Tâches (jobs)
