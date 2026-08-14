@@ -16,8 +16,12 @@ class DummyModel extends Model
 {
     protected $table = 'dummy_table';
     protected $guarded = [];
+}
 
-    // Apply the trait to test its logic
+class DummyResource extends \Filament\Resources\Resource
+{
+    protected static ?string $model = DummyModel::class;
+
     use ScopesToAuthenticatedThirdParty;
 }
 
@@ -44,8 +48,16 @@ it('scopes query to authenticated user contact third party', function () {
 
     $this->actingAs($user);
 
-    $results = DummyModel::getEloquentQuery()->get();
+    $contact = \App\Models\Tiers\Contact::where('user_id', auth()->id())->first();
+    dump('User ID: ' . auth()->id());
+    dump('Contact: ' . ($contact ? $contact->id : 'null'));
+    dump('Dummy count: ' . DummyModel::count());
+    dump('All Contacts: ', \App\Models\Tiers\Contact::all()->toArray());
 
+    $results = DummyResource::getEloquentQuery()->get();
+
+    dump('Results: ' . $results->count());
+    
     expect($results->count())->toBe(1);
     expect($results->first()->third_party_id)->toBe($thirdParty->id);
 });
@@ -58,7 +70,7 @@ it('returns empty query if authenticated user has no contact', function () {
 
     $this->actingAs($user);
 
-    $results = DummyModel::getEloquentQuery()->get();
+    $results = DummyResource::getEloquentQuery()->get();
 
     expect($results->count())->toBe(0);
 });

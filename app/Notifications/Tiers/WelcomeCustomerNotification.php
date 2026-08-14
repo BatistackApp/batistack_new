@@ -30,8 +30,10 @@ class WelcomeCustomerNotification extends Notification implements ShouldQueue
             'email' => $notifiable->getEmailForPasswordReset(),
         ], false));
 
+        $companyName = Company::first()?->legal_name ?? config('app.name', 'Batistack');
+
         return (new MailMessage)
-            ->subject('Bienvenue chez '.Company::first()->legal_name)
+            ->subject('Bienvenue chez '.$companyName)
             ->greeting('Bonjour '.$notifiable->name.' !')
             ->line('Nous sommes ravis de vous compter parmi nos nouveaux clients.')
             ->line('Votre compte a été créé avec succès. Pour commencer à utiliser nos services, vous devez définir votre mot de passe en cliquant sur le bouton ci-dessous :')

@@ -7,6 +7,12 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 
 beforeEach(function () {
+    config()->set('services.digiposte.base_url', 'https://api.digiposte.test');
+    config()->set('services.digiposte.api_key', 'test_key');
+    config()->set('services.digiposte.client_id', 'test_client_id');
+    config()->set('services.digiposte.client_secret', 'test_secret');
+    config()->set('services.digiposte.partner_id', 'test_partner_id');
+
     $this->service = new DigiposteService();
 });
 
@@ -64,10 +70,10 @@ it('successfully deposits a payslip', function () {
     $employee = Employee::factory()->create(['digiposte_id' => 'MAT123']);
     $payslip = Payslip::factory()->create([
         'employee_id' => $employee->id,
-        'pdf_path' => 'payslips/test.pdf',
+        'pdf_path' => 'documents/payslips/test.pdf',
     ]);
 
-    Storage::disk('public')->put('payslips/test.pdf', 'dummy content');
+    Storage::disk('public')->put('documents/payslips/test.pdf', 'dummy content');
 
     Http::fake([
         '*token' => Http::response(['access_token' => 'fake_token'], 200),
@@ -79,5 +85,5 @@ it('successfully deposits a payslip', function () {
     expect($result)->toBeTrue();
     expect($payslip->fresh()->digiposte_status)->toBe('deposited');
 
-    Storage::disk('public')->delete('payslips/test.pdf');
+    Storage::disk('public')->delete('documents/payslips/test.pdf');
 });
