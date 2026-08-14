@@ -37,6 +37,14 @@ class BimModel extends Model
     }
 
     /**
+     * Les quantitatifs (BOM) extraits de cette maquette
+     */
+    public function quantities()
+    {
+        return $this->hasMany(BimQuantity::class);
+    }
+
+    /**
      * Le modèle parent (version précédente)
      */
     public function parent()
