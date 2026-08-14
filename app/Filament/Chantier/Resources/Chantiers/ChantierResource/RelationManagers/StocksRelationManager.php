@@ -12,7 +12,8 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Filament\Notifications\Notification;
-use Exception;
+use Filament\Schemas\Schema;
+use Filament\Schemas\Components as SchemaComponents;
 
 class StocksRelationManager extends RelationManager
 {
@@ -20,11 +21,11 @@ class StocksRelationManager extends RelationManager
 
     protected static ?string $title = 'Stocks sur chantier';
 
-    protected static ?string $icon = 'heroicon-o-cube';
+    protected static string | \BackedEnum | null $icon = 'heroicon-o-cube';
 
-    public function form(Form $form): Form
+    public function form(Schema $schema): Schema
     {
-        return $form
+        return $schema
             ->schema([
                 Forms\Components\Select::make('item_id')
                     ->label('Article')

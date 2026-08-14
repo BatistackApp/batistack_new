@@ -128,7 +128,7 @@ it('returns not compliant when a document is missing', function () {
     // Assert: Vérifie que le résultat n'est pas conforme et que le problème est bien identifié
     expect($results['compliant'])->toBeFalse()
         ->and($results['issues'])->toHaveCount(1)
-        ->and($results['issues'])->toHaveKey('decennale_insurance', false);
+        ->and($results['issues'][0])->toBe('Assurance Décennale');
 });
 
 it('returns not compliant when all documents are missing', function () {
@@ -141,8 +141,8 @@ it('returns not compliant when all documents are missing', function () {
     // Assert: Vérifie que le résultat n'est pas conforme et que tous les documents sont listés comme manquants
     expect($results['compliant'])->toBeFalse()
         ->and($results['issues'])->toEqual([
-            'vigilance_attestation' => false,
-            'decennale_insurance' => false,
-            'kbis' => false,
+            'Attestation de Vigilance (URSSAF)',
+            'Assurance Décennale',
+            'Extrait Kbis',
         ]);
 });
