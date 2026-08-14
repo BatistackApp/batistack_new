@@ -204,3 +204,17 @@ test('generatePurchaseOrders() ignore les articles sans fournisseur', function (
 
     expect($pos)->toBeEmpty();
 });
+
+test('generatePurchaseOrders() n\'attache pas de chantier quand la maquette n\'est pas liée à un chantier', function () {
+    BimQuantity::create([
+        'bim_model_id' => $this->bimModel->id,
+        'item_id' => $this->itemA->id,
+        'quantity_required' => 10,
+    ]);
+
+    $this->bimModel->update(['modelable_type' => null, 'modelable_id' => null]);
+
+    $po = $this->service->generatePurchaseOrders($this->bimModel)[0];
+
+    expect($po->chantier_id)->toBeNull();
+});

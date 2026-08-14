@@ -1,7 +1,10 @@
 <?php
 
+use App\Enums\Articles\ItemType;
+use App\Models\Articles\Item;
 use App\Models\Chantiers\Chantier;
 use App\Models\Vision3D\BimModel;
+use App\Models\Vision3D\BimQuantity;
 use App\Services\Vision3D\BimStorageService;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -11,16 +14,16 @@ it('can upload and store bim model', function () {
 
     $chantier = Chantier::factory()->create();
     $file = UploadedFile::fake()->create('test-model.ifc', 1024, 'application/octet-stream');
-    
-    $service = new BimStorageService();
+
+    $service = new BimStorageService;
     $bimModel = $service->storeModel($file, Chantier::class, $chantier->id, 'Maison 3D');
 
     expect($bimModel)->toBeInstanceOf(BimModel::class)
         ->name->toBe('Maison 3D')
         ->format->toBe('ifc');
-    
+
     Storage::disk('public')->assertExists($bimModel->file_path);
-    
+
     expect($chantier->bimModels)->toHaveCount(1);
     expect($chantier->bimModels->first()->id)->toBe($bimModel->id);
 });
@@ -30,8 +33,8 @@ it('can delete bim model and file', function () {
 
     $chantier = Chantier::factory()->create();
     $file = UploadedFile::fake()->create('test-model.ifc', 1024, 'application/octet-stream');
-    
-    $service = new BimStorageService();
+
+    $service = new BimStorageService;
     $bimModel = $service->storeModel($file, Chantier::class, $chantier->id, 'Maison 3D');
 
     Storage::disk('public')->assertExists($bimModel->file_path);
@@ -89,4 +92,22 @@ it('can create multiple annotations for clashes', function () {
 
     expect($bimModel->annotations)->toHaveCount(2);
     expect($bimModel->annotations->first()->title)->toBe('Collision détectée');
+});
+
+it('can have multiple quantities (BOM) linked to items', function () {
+    $bimModel = BimModel::factory()->create();
+    $item = Item::factory()->create(['type' => ItemType::STOCKABLE, 'purchase_price' => 10]);
+
+    $quantity = BimQuantity::create([
+        'bim_model_id' => $bimModel->id,
+        'item_id' => $item->id,
+        'element_name' => 'MUR-01',
+        'unit' => 'm2',
+        'quantity_required' => 12.5,
+    ]);
+
+    expect($bimModel->quantities)->toHaveCount(1)
+        ->and($quantity->bimModel->id)->toBe($bimModel->id)
+        ->and($quantity->item->id)->toBe($item->id)
+        ->and((float) $quantity->quantity_required)->toBe(12.5);
 });
