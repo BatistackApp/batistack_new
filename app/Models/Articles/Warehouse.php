@@ -16,6 +16,7 @@ class Warehouse extends Model
         'location',
         'is_active',
         'vehicle_id',
+        'chantier_id',
     ];
 
     protected function casts(): array
@@ -35,6 +36,15 @@ class Warehouse extends Model
         return $this->belongsTo(\App\Models\Flottes\Vehicle::class);
     }
 
+    public function chantier(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(\App\Models\Chantiers\Chantier::class);
+    }
+
+    public function isVirtualChantier(): bool
+    {
+        return $this->chantier_id !== null;
+    }
     // ============================================
     // SCOPES
     // ============================================

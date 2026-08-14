@@ -255,8 +255,10 @@ it('estimates ijss when not provided', function () {
         ]);
     });
 
-    $startDate = now()->startOfMonth()->next(\Carbon\Carbon::MONDAY);
-    $endDate = $startDate->copy()->addDays(11); // 10 jours ouvrés, 12 jours calendaires
+    \Carbon\Carbon::setTestNow('2026-05-15 12:00:00');
+
+    $startDate = \Carbon\Carbon::parse('2026-05-04'); // Lundi
+    $endDate = \Carbon\Carbon::parse('2026-05-15'); // Vendredi de la semaine suivante (10 jours ouvrés, 12 jours calendaires)
 
     $absence = \App\Models\RH\Abscence::factory()->create([
         'employee_id' => $employee->id,

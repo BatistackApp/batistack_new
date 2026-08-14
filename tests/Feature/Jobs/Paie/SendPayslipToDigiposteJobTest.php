@@ -31,11 +31,11 @@ it('throws exception when deposit returns false', function () {
     });
 
     $job = new SendPayslipToDigiposteJob($payslip);
-    $job->failOnTimeout = false; // Just to make sure we can test fail() call if needed
+    $job->withFakeQueueInteractions();
 
-    // Pest doesn't easily mock the job's $this->fail(), but we know it throws an exception in standard Laravel queue testing
-    // wait, $this->fail() throws an exception or just marks as failed? It throws a ManuallyFailedException
-    expect(fn() => app()->call([$job, 'handle']))->toThrow(\Exception::class, 'Deposit returned false for non-transient error');
+    app()->call([$job, 'handle']);
+
+    $job->assertFailed();
 });
 
 it('bubbles up exceptions for transient errors', function () {

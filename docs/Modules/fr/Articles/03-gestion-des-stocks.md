@@ -29,3 +29,17 @@ Dans Batistack, la sortie de matière s'effectue généralement en deux temps :
 ## 3. Seuils d'alerte
 
 Chaque article dans chaque dépôt peut posséder un **Seuil mini**. Si la *Quantité Disponible* tombe en dessous de ce seuil, l'article passe en état d'alerte, vous indiquant qu'un réassort (commande fournisseur ou production) est nécessaire.
+
+## 4. Traçabilité des lots et dates de péremption
+
+Pour les articles sensibles (chimie, EPI, etc.), Batistack offre une traçabilité complète par lot et date de péremption.
+
+- **Numéro de Lot (`batch_number`)** : À chaque entrée en stock d'un article sensible, vous pouvez associer un numéro de lot. Ce numéro suivra l'article tout au long de son cycle de vie dans votre stock.
+- **Date de Péremption (`expiration_date`)** : En plus du numéro de lot, vous pouvez spécifier une date de péremption.
+
+### Alertes de Péremption
+
+Batistack surveille automatiquement les dates de péremption des lots en stock. Une alerte est générée pour les lots approchant de leur date d'expiration (par défaut, 30 jours avant), vous permettant de gérer proactivement les stocks et d'éviter les pertes.
+
+> [!NOTE]
+> Pour activer la traçabilité pour un article, cochez la case "Article sensible" lors de sa création ou de sa modification.

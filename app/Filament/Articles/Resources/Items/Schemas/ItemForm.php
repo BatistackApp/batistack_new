@@ -97,6 +97,10 @@ class ItemForm
                                             ->label('Visible dans le catalogue')
                                             ->default(true)
                                             ->onColor('success'),
+                                        Toggle::make('is_sensitive')
+                                            ->label('Article sensible')
+                                            ->helperText('Activer la traçabilité par lot et date de péremption.')
+                                            ->onColor('warning'),
                                     ]),
                             ]),
 

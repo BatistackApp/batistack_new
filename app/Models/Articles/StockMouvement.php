@@ -27,6 +27,8 @@ class StockMouvement extends Model
         'description',
         'reference_type',
         'reference_id',
+        'batch_number',
+        'expiration_date',
     ];
 
     protected $casts = [
@@ -35,6 +37,7 @@ class StockMouvement extends Model
         'quantity_before' => 'decimal:4',
         'quantity_delta' => 'decimal:4',
         'quantity_after' => 'decimal:4',
+        'expiration_date' => 'date',
     ];
 
     public function stock(): BelongsTo
@@ -184,5 +187,24 @@ class StockMouvement extends Model
         return static::where('stock_id', $stock->id)
             ->outgoing()
             ->sum('quantity_delta');
+    }
+
+    /**
+     * Statique: Quantité restante d'un lot spécifique
+     */
+    public static function getRemainingBatchQuantity(int $stockId, string $batchNumber): float
+    {
+        $in = static::where('stock_id', $stockId)
+            ->where('batch_number', $batchNumber)
+            ->incoming()
+            ->sum('quantity_delta');
+
+        $out = static::where('stock_id', $stockId)
+            ->where('batch_number', $batchNumber)
+            ->outgoing()
+            ->sum('quantity_delta');
+
+        // Les sorties ont un quantity_delta négatif : on additionne donc.
+        return max(0, $in + $out);
     }
 }
