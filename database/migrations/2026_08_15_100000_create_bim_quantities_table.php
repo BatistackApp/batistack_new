@@ -17,7 +17,7 @@ return new class extends Migration
             $table->foreignId('item_id')->constrained('items')->cascadeOnDelete();
             $table->string('element_name')->nullable();
             $table->string('unit')->nullable();
-            $table->decimal('quantity_required', 12, 4);
+            $table->decimal('quantity_required', 12, 4)->check('quantity_required > 0');
             $table->timestamps();
 
             $table->index(['bim_model_id', 'item_id']);

@@ -39,13 +39,17 @@ class BomProcurementService
 
             $physicalStock = (float) Stock::where('item_id', $item->id)->sum('quantity');
 
+            // Exclut le bon de commande brouillon déjà généré pour cette maquette + ce fournisseur,
+            // afin qu'il puisse être mis à jour sans être compté comme un besoin déjà couvert.
+            $targetReference = $this->orderReference($bimModel, $item->supplier_id);
+
             $pendingOrderStock = (float) PurchaseOrderItem::where('item_id', $item->id)
-                ->whereHas('order', function ($query) {
+                ->whereHas('order', function ($query) use ($targetReference) {
                     $query->whereIn('status', [
                         OrderStatus::DRAFT,
                         OrderStatus::CONFIRMED,
                         OrderStatus::PARTIALLY_DELIVERED,
-                    ]);
+                    ])->where('reference', '!=', $targetReference);
                 })
                 ->sum('quantity');
 
@@ -68,6 +72,8 @@ class BomProcurementService
     /**
      * Génère (ou met à jour) des bons de commande brouillons, groupés par fournisseur,
      * pour les articles en rupture par rapport aux quantitatifs de la maquette.
+     *
+     * @return array{purchase_orders: array<int, PurchaseOrder>, ignored_items: array<int, Item>}
      */
     public function generatePurchaseOrders(BimModel $bimModel): array
     {
@@ -75,12 +81,14 @@ class BomProcurementService
         $chantierId = $this->resolveChantierId($bimModel);
 
         $bySupplier = [];
+        $ignoredItems = [];
 
         foreach ($requirements as $requirement) {
             $item = $requirement['item'];
 
             if (! $item->supplier_id) {
                 Log::warning('BIM: Article en rupture sans fournisseur défini, ignoré.', ['item_id' => $item->id]);
+                $ignoredItems[] = $item;
 
                 continue;
             }
@@ -91,7 +99,7 @@ class BomProcurementService
         $purchaseOrders = [];
 
         foreach ($bySupplier as $supplierId => $missingItems) {
-            $reference = 'PO-BIM-'.date('Ymd').'-'.$supplierId;
+            $reference = $this->orderReference($bimModel, $supplierId);
 
             $po = PurchaseOrder::updateOrCreate(
                 [
@@ -106,9 +114,13 @@ class BomProcurementService
                 ]
             );
 
+            $requiredItemIds = [];
+
             foreach ($missingItems as $missing) {
                 $item = $missing['item'];
                 $qty = $missing['quantity_to_order'];
+
+                $requiredItemIds[] = $item->id;
 
                 $poItem = PurchaseOrderItem::firstOrNew([
                     'purchase_order_id' => $po->id,
@@ -122,6 +134,9 @@ class BomProcurementService
                 $poItem->save();
             }
 
+            // Synchronise les lignes : supprime celles qui ne sont plus nécessaires.
+            $po->items()->whereNotIn('item_id', $requiredItemIds)->delete();
+
             $this->recalculatePoTotals($po);
 
             $purchaseOrders[] = $po;
@@ -129,7 +144,15 @@ class BomProcurementService
             Log::info("BIM: Bon de commande brouillon généré/mis à jour pour le fournisseur {$supplierId}", ['po_id' => $po->id]);
         }
 
-        return $purchaseOrders;
+        return [
+            'purchase_orders' => $purchaseOrders,
+            'ignored_items' => $ignoredItems,
+        ];
+    }
+
+    protected function orderReference(BimModel $bimModel, ?int $supplierId): string
+    {
+        return 'PO-BIM-'.$bimModel->id.'-'.$supplierId;
     }
 
     protected function resolveChantierId(BimModel $bimModel): ?int

@@ -3,8 +3,8 @@
 namespace App\Filament\Vision3D\Resources\RelationManagers;
 
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
 use Filament\Resources\RelationManagers\RelationManager;
-use Filament\Schemas\Components\TextInput;
 use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Table;

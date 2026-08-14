@@ -46,7 +46,7 @@ Un article déjà couvert par le stock n'apparaît pas dans le bon de commande.
 Quelques points à connaître :
 
 - Les commandes sont **groupées par fournisseur** (selon le fournisseur renseigné sur chaque article).
-- Le bon de commande est rattaché au **chantier** porteur de la maquette, avec un prix unitaire basé sur le **prix d'achat** de l'article.
+- Le bon de commande est rattaché au **chantier** porteur de la maquette uniquement lorsqu'un chantier est associé ; dans le cas contraire, il est généré avec `chantier_id = null`. Le prix unitaire est basé sur le **prix d'achat** de l'article.
 - Un article **sans fournisseur** renseigné est ignoré (une alerte est tracée côté technique).
 - Si le stock couvre déjà tout le besoin, aucun bon de commande n'est créé.
 

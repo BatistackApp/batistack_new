@@ -27,16 +27,32 @@ class ViewBimModel extends ViewRecord
                     'requirements' => app(BomProcurementService::class)->resolveRequirements($this->record),
                 ]))
                 ->action(function (BomProcurementService $service) {
-                    $purchaseOrders = $service->generatePurchaseOrders($this->record);
+                    abort_unless($this->canGeneratePurchaseOrders(), 403);
+
+                    $result = $service->generatePurchaseOrders($this->record);
+                    $purchaseOrders = $result['purchase_orders'];
+                    $ignoredItems = $result['ignored_items'];
 
                     if (empty($purchaseOrders)) {
+                        $body = empty($ignoredItems)
+                            ? 'Le stock actuel couvre les quantitatifs de la maquette.'
+                            : 'Le stock couvre les besoins, mais '.count($ignoredItems).' article(s) ont été ignorés car sans fournisseur.';
+
                         Notification::make()
-                            ->title('Aucun besoin à commander')
-                            ->body('Le stock actuel couvre les quantitatifs de la maquette.')
+                            ->title('Aucun bon de commande généré')
+                            ->body($body)
                             ->warning()
                             ->send();
 
                         return;
+                    }
+
+                    if (! empty($ignoredItems)) {
+                        Notification::make()
+                            ->title(count($ignoredItems).' article(s) ignoré(s)')
+                            ->body('Ces articles sont en rupture mais sans fournisseur renseigné.')
+                            ->warning()
+                            ->send();
                     }
 
                     $first = $purchaseOrders[0];
@@ -48,7 +64,17 @@ class ViewBimModel extends ViewRecord
 
                     $this->redirect(PurchaseOrderResource::getUrl('edit', ['record' => $first], panel: 'commerce'));
                 })
-                ->hidden(fn () => $this->record->quantities()->count() === 0),
+                ->hidden(fn () => $this->record->quantities()->count() === 0
+                    || ! $this->canGeneratePurchaseOrders()),
         ];
+    }
+
+    protected function canGeneratePurchaseOrders(): bool
+    {
+        $user = auth()->user();
+
+        return $user !== null
+            && $user->can('Create:PurchaseOrder')
+            && $user->can('Update:PurchaseOrder');
     }
 }

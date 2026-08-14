@@ -18,10 +18,10 @@
                 @foreach ($requirements as $requirement)
                     <tr class="border-b border-gray-100 dark:border-white/5">
                         <td class="px-3 py-2">{{ $requirement['item']->name }}</td>
-                        <td class="px-3 py-2 text-right">{{ number_format($requirement['quantity_required'], 2) }}</td>
-                        <td class="px-3 py-2 text-right">{{ number_format($requirement['physical_stock'], 2) }}</td>
-                        <td class="px-3 py-2 text-right">{{ number_format($requirement['pending_order_stock'], 2) }}</td>
-                        <td class="px-3 py-2 text-right font-semibold">{{ number_format($requirement['quantity_to_order'], 2) }}</td>
+                        <td class="px-3 py-2 text-right">{{ number_format($requirement['quantity_required'], 2, ',', ' ') }}</td>
+                        <td class="px-3 py-2 text-right">{{ number_format($requirement['physical_stock'], 2, ',', ' ') }}</td>
+                        <td class="px-3 py-2 text-right">{{ number_format($requirement['pending_order_stock'], 2, ',', ' ') }}</td>
+                        <td class="px-3 py-2 text-right font-semibold">{{ number_format($requirement['quantity_to_order'], 2, ',', ' ') }}</td>
                     </tr>
                 @endforeach
             </tbody>

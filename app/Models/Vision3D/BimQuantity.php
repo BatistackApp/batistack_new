@@ -6,6 +6,7 @@ use App\Models\Articles\Item;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use InvalidArgumentException;
 
 class BimQuantity extends Model
 {
@@ -22,6 +23,15 @@ class BimQuantity extends Model
     protected $casts = [
         'quantity_required' => 'decimal:4',
     ];
+
+    protected static function booted(): void
+    {
+        static::saving(function (BimQuantity $quantity) {
+            if ($quantity->quantity_required !== null && (float) $quantity->quantity_required <= 0) {
+                throw new InvalidArgumentException('La quantité requise doit être strictement positive.');
+            }
+        });
+    }
 
     public function bimModel(): BelongsTo
     {
