@@ -31,7 +31,29 @@ Dans le BTP, on facture rarement la totalité à la fin. Batistack gère nativem
 - Saisissez un pourcentage d'avancement (ex: "Gros Œuvre achevé à 100%, Second Œuvre à 30%").
 - L'ERP génère la Facture de Situation en calculant automatiquement le reste à payer, en déduisant les acomptes et les situations précédentes.
 
-## 4. Légalisations et Avoirs
+## 4. Les Avenants (Travaux Supplémentaires)
+
+En cours de chantier, le client demande souvent des **travaux supplémentaires (TS)**. Au lieu de rééditer un devis isolé, Batistack propose un **Devis d'Avenant** rattaché à une **commande principale**.
+
+### Comment créer un avenant
+Depuis la **fiche chantier** (bouton **« Créer un avenant »**) ou la **fiche commande**, un avenant est créé automatiquement avec :
+- une référence dédiée (`AV-YYYY-NNN`),
+- le rattachement à la commande principale et au chantier,
+- un statut **Brouillon** pour saisir les lignes.
+
+### Le cycle de l'avenant
+1. **Saisissez les lignes** de travaux supplémentaires (articles ou lignes libres).
+2. **Envoyez l'avenant** au client (demande de signature en ligne, comme un devis classique).
+3. **À l'acceptation**, Batistack :
+   - **ajoute les lignes de l'avenant à la commande principale**,
+   - **rehausse automatiquement le budget total du chantier** (`budget_total_ht`),
+   - bascule l'avenant en statut **Signé**.
+
+> [!TIP]
+> **Intégration aux situations**
+> Comme les lignes de l'avenant deviennent des lignes de la commande, elles sont **automatiquement prises en compte dans les situations de travaux suivantes** (facturation à l'avancement) — sans ressaisie.
+
+## 5. Légalisations et Avoirs
 
 Toute **Facture** émise doit être légalisée. Une fois validée, la facture reçoit un numéro de séquence inaltérable (ex: F-2026-0089). 
 En cas d'erreur de facturation, la loi interdit de supprimer une facture. Vous devrez utiliser le bouton "Créer un Avoir" (Credit Note) pour annuler comptablement la somme.

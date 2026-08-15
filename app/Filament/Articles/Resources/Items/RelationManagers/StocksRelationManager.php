@@ -6,6 +6,7 @@ use App\Enums\Articles\ItemType;
 use App\Enums\Articles\StockMouvementSource;
 use App\Models\Chantiers\Chantier;
 use App\Services\Articles\StockService;
+use Ariefng\FilamentCalculator\Actions\CalculatorAction;
 use Filament\Actions\Action;
 use Filament\Actions\AssociateAction;
 use Filament\Actions\BulkActionGroup;
@@ -16,11 +17,15 @@ use Filament\Actions\DissociateAction;
 use Filament\Actions\DissociateBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
+use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Infolists\Components\RepeatableEntry;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Notifications\Notification;
 use Filament\Resources\RelationManagers\RelationManager;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
@@ -74,7 +79,51 @@ class StocksRelationManager extends RelationManager
     {
         return $schema
             ->components([
-                TextEntry::make('warehouse.name'),
+                Section::make('Dépôt')
+                    ->columnSpanFull()
+                    ->description(fn ($record) => $record->warehouse?->name)
+                    ->schema([
+                        TextEntry::make('quantity')
+                            ->label('Stock physique')
+                            ->state(fn ($record) => number_format((float) $record->quantity, 2, ',', ' ')." {$record->item->unit->symbol}"),
+                        TextEntry::make('reserved_quantity')
+                            ->label('Réservé')
+                            ->state(fn ($record) => number_format((float) $record->reserved_quantity, 2, ',', ' ')." {$record->item->unit->symbol}"),
+                        TextEntry::make('available')
+                            ->label('Disponible')
+                            ->state(fn ($record) => number_format($record->getAvailableQuantity(), 2, ',', ' ')." {$record->item->unit->symbol}"),
+                    ])->columns(3),
+
+                Section::make('Mouvements de stock')
+                    ->columnSpanFull()
+                    ->schema([
+                        RepeatableEntry::make('mouvements')
+                            ->label('Mouvements')
+                            ->schema([
+                                TextEntry::make('type')
+                                    ->label('Type')
+                                    ->badge()
+                                    ->state(fn ($record) => $record->type?->getLabel())
+                                    ->color(fn ($record) => $record->type?->getColor()),
+                                TextEntry::make('quantity_delta')
+                                    ->label('Quantité')
+                                    ->state(fn ($record) => ((float) $record->quantity_delta >= 0 ? '+' : '').number_format((float) $record->quantity_delta, 2, ',', ' ')),
+                                TextEntry::make('batch_number')
+                                    ->label('N° de lot')
+                                    ->placeholder('—'),
+                                TextEntry::make('expiration_date')
+                                    ->label('Péremption')
+                                    ->date('d/m/Y')
+                                    ->placeholder('—'),
+                                TextEntry::make('reason')
+                                    ->label('Motif')
+                                    ->placeholder('—'),
+                                TextEntry::make('created_at')
+                                    ->label('Date')
+                                    ->dateTime('d/m/Y H:i'),
+                            ])
+                            ->columns(3),
+                    ]),
             ]);
     }
 
@@ -134,7 +183,8 @@ class StocksRelationManager extends RelationManager
                         TextInput::make('quantity')->label('Quantité')
                             ->numeric()
                             ->required()
-                            ->minValue(0.01),
+                            ->minValue(0.01)
+                            ->suffixAction(CalculatorAction::make()),
                         TextInput::make('batch_number')->label('Numéro de lot')
                             ->required(fn ($get, $livewire) => $get('type') === 'in' && $livewire->getOwnerRecord()->is_sensitive),
                         DatePicker::make('expiration_date')->label('Date de péremption')

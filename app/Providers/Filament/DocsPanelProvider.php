@@ -16,6 +16,8 @@ use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\AuthenticateSession;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
+use MartinPetricko\FilamentSentryFeedback\FilamentSentryFeedbackPlugin;
+use Vaslv\FilamentAppVersion\AppVersionPlugin;
 
 class DocsPanelProvider extends PanelProvider
 {
@@ -43,7 +45,8 @@ class DocsPanelProvider extends PanelProvider
                 Authenticate::class,
             ])
             ->plugins([
-                \MartinPetricko\FilamentSentryFeedback\FilamentSentryFeedbackPlugin::make(),
+                FilamentSentryFeedbackPlugin::make(),
+                AppVersionPlugin::make(),
                 KnowledgeBasePlugin::make(base_path('docs/Modules')),
             ]);
     }

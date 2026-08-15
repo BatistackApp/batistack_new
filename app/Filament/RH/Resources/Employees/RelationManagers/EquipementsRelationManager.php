@@ -4,13 +4,14 @@ namespace App\Filament\RH\Resources\Employees\RelationManagers;
 
 use App\Enums\RH\EquipementStatus;
 use App\Enums\RH\EquipementType;
-use Filament\Actions\AssociateAction;
+use App\Models\RH\Equipement;
+use App\Services\Core\DocumentService;
+use App\Services\Immobilisation\ImmobilisationDocumentService;
+use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\CreateAction;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
-use Filament\Actions\DissociateAction;
-use Filament\Actions\DissociateBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
@@ -22,6 +23,8 @@ use Filament\Schemas\Schema;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Support\Facades\Storage;
+use Marcelorodrigo\FilamentBarcodeScannerField\Forms\Components\BarcodeInput;
 use ToneGabes\Filament\Icons\Enums\Phosphor;
 
 class EquipementsRelationManager extends RelationManager
@@ -54,7 +57,7 @@ class EquipementsRelationManager extends RelationManager
                         TextInput::make('serial_number')
                             ->label('Numéro de série / Immatriculation')
                             ->unique(ignoreRecord: true),
-                        \Marcelorodrigo\FilamentBarcodeScannerField\Forms\Components\BarcodeInput::make('barcode')
+                        BarcodeInput::make('barcode')
                             ->label('Code-barres / Tag')
                             ->nullable()
                             ->unique(ignoreRecord: true)
@@ -123,6 +126,16 @@ class EquipementsRelationManager extends RelationManager
             ->recordActions([
                 EditAction::make(),
                 DeleteAction::make(),
+                Action::make('print_qr')
+                    ->label('Imprimer QR')
+                    ->icon('heroicon-o-qr-code')
+                    ->color('gray')
+                    ->action(function (Equipement $record) {
+                        $service = new ImmobilisationDocumentService;
+                        $path = $service->generateQrLabel($record);
+
+                        return response()->download(Storage::disk(DocumentService::getDisk())->path($path));
+                    }),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([

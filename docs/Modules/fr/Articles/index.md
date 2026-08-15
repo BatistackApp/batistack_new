@@ -16,10 +16,14 @@ Ce module vous permet de garantir la traçabilité complète de ce qui entre et 
 
 Le module est découpé en plusieurs grandes fonctionnalités, détaillées dans les pages suivantes :
 
-- [Le Catalogue d'Articles](./01-catalogue-articles.md) : Modélisez vos fournitures, composants et services.
+- [Le Catalogue d'Articles](./01-catalogue-articles.md) : Modélisez vos fournitures, composants et services, y compris la **fiche de sécurité (FDS)** de chaque produit.
 - [Les Entrepôts (Dépôts)](./02-entrepots-depots.md) : Cartographiez vos lieux de stockage physique.
 - [La Gestion des Stocks](./03-gestion-des-stocks.md) : Maîtrisez le stock physique, disponible, et les réservations.
 - [Les Inventaires](./04-inventaires.md) : Planifiez et exécutez vos comptages pour régulariser les écarts.
+
+> [!TIP]
+> **Sécurité des produits**
+> L'onglet **« Sécurité & FDS »** de la fiche article (catégorie de danger, pictogrammes CLP, phrases H/P) alimente la **génération automatique du PPSPS** des chantiers. Voir [PPSPS & Sécurité](../Chantiers/06-ppsps.md).
 
 > [!TIP]
 > **Le saviez-vous ?**

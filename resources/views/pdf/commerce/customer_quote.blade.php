@@ -2,9 +2,12 @@
 
 @section('header_right')
     <div class="quote-info">
-        <div class="label" style="font-size: 22px; color: #1e40af; font-weight: bold; margin-bottom: 10px;">DEVIS</div>
+        <div class="label" style="font-size: 22px; color: #1e40af; font-weight: bold; margin-bottom: 10px;">{{ ($is_avenant ?? false) ? 'AVENANT DE TRAVAUX' : 'DEVIS' }}</div>
         <div class="value" style="background-color: #f3f4f6; padding: 8px 12px; border: 1px solid #e2e8f0; font-size: 14px; margin-bottom: 10px;">{{ $quote->reference }}</div>
         <div style="font-size: 10px; text-align: right;">
+            @if(($is_avenant ?? false) && $quote->parentOrder)
+                <div><strong>Commande principale :</strong> {{ $quote->parentOrder->reference }}</div>
+            @endif
             <div><strong>Date :</strong> {{ $quote->created_at->format('d/m/Y') }}</div>
             <div><strong>Valide jusqu'au :</strong> {{ $quote->expires_at->format('d/m/Y') }}</div>
         </div>

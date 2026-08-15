@@ -2,6 +2,7 @@
 
 namespace App\Filament\Vision3D\Resources\RelationManagers;
 
+use Ariefng\FilamentCalculator\Actions\CalculatorAction;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Resources\RelationManagers\RelationManager;
@@ -37,6 +38,7 @@ class BimQuantitiesRelationManager extends RelationManager
                     ->label('Quantité requise')
                     ->numeric()
                     ->minValue(0.01)
+                    ->suffixAction(CalculatorAction::make())
                     ->required(),
             ]);
     }

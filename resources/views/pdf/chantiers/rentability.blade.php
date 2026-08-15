@@ -65,7 +65,7 @@
                 <thead>
                 <tr>
                     <th class="text-left">Catégorie</th>
-                    <th class="text-right">Montant HT</th>
+<th class="text-right">Montant</th>
                     <th class="text-right">% Budget</th>
                 </tr>
                 </thead>
@@ -115,6 +115,35 @@
             </div>
         </section>
     </div>
+
+    <!-- SUIVI BANCAIRE -->
+    <section class="mb-8">
+        <h2 class="text-[10px] font-bold bg-slate-700 text-white p-2 mb-2 uppercase">Suivi Bancaire du Chantier</h2>
+        <table class="text-[10px]">
+            <thead>
+            <tr>
+                <th class="text-left">Indicateur</th>
+                <th class="text-right">Montant HT</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td class="py-2 font-bold">Encaissements (crédits affectés)</td>
+                <td class="text-right text-green-600">{{ number_format($metrics['financials']['bank_income_real'] ?? 0, 2) }} €</td>
+            </tr>
+            <tr>
+                <td class="py-2 font-bold">Décaissements (débits affectés)</td>
+                <td class="text-right text-red-600">{{ number_format($metrics['financials']['bank_expense_real'] ?? 0, 2) }} €</td>
+            </tr>
+            </tbody>
+            <tfoot class="bg-slate-50 font-bold">
+            <tr>
+                <td class="py-2 uppercase">Trésorerie nette</td>
+                <td class="text-right">{{ number_format($metrics['financials']['bank_net_real'] ?? 0, 2) }} €</td>
+            </tr>
+            </tfoot>
+        </table>
+    </section>
 
     <footer class="fixed bottom-0 left-0 w-full p-8 text-[7px] text-slate-400 border-t border-slate-100 flex justify-between">
         <div>Bilan analytique confidentiel - Batistack ERP</div>

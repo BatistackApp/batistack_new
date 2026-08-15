@@ -6,6 +6,7 @@ use App\Enums\Immobilisation\AssetStatus;
 use App\Models\Chantiers\Chantier;
 use App\Models\Immobilisation\FixedAsset;
 use App\Services\Accounting\FecExportService;
+use App\Services\Core\DocumentService;
 use App\Services\Immobilisation\AssetDisposalService;
 use App\Services\Immobilisation\ImmobilisationDocumentService;
 use Filament\Actions\Action;
@@ -25,6 +26,7 @@ use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\Storage;
 
 class FixedAssetsTable
 {
@@ -199,6 +201,16 @@ class FixedAssetsTable
                             $path = $service->generateAssetSheet($record);
 
                             return response()->download($path);
+                        }),
+                    Action::make('print_qr')
+                        ->label('Imprimer QR')
+                        ->icon('heroicon-o-qr-code')
+                        ->color('gray')
+                        ->action(function (FixedAsset $record) {
+                            $service = new ImmobilisationDocumentService;
+                            $path = $service->generateQrLabel($record);
+
+                            return response()->download(Storage::disk(DocumentService::getDisk())->path($path));
                         }),
                     Action::make('dispose')
                         ->label('Céder / Rebut')

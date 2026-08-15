@@ -4,6 +4,7 @@ namespace App\Models\Banque;
 
 use App\Enums\Banque\TransactionStatus;
 use App\Enums\Banque\TransactionType;
+use App\Models\Chantiers\Chantier;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -17,7 +18,7 @@ class BankTransaction extends Model
     {
         static::creating(function ($transaction) {
             if (empty($transaction->external_id)) {
-                $transaction->external_id = 'MANUAL-' . uniqid();
+                $transaction->external_id = 'MANUAL-'.uniqid();
             }
         });
     }
@@ -31,6 +32,7 @@ class BankTransaction extends Model
         'status',
         'external_id',
         'transaction_category_id',
+        'chantier_id',
     ];
 
     protected $casts = [
@@ -53,6 +55,11 @@ class BankTransaction extends Model
     public function reconciliations(): HasMany
     {
         return $this->hasMany(BankReconciliation::class);
+    }
+
+    public function chantier(): BelongsTo
+    {
+        return $this->belongsTo(Chantier::class);
     }
 
     public function scopeIncomes($query)

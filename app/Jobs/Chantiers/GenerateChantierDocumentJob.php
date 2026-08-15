@@ -28,10 +28,13 @@ class GenerateChantierDocumentJob implements ShouldQueue
                 'rentability' => $service->generateRentabilityReport($this->chantier),
                 'journal' => $service->generateWeeklyJournal($this->chantier, now()->startOfWeek()),
                 'os' => $service->generateStartOrder($this->chantier),
+                'ppsps' => $service->generatePpsps($this->chantier),
                 default => throw new Exception('Type de document inconnu.')
             };
         } catch (Exception $e) {
             Log::error("Erreur génération doc {$this->documentType} pour chantier #{$this->chantier->id} : ".$e->getMessage());
+
+            throw $e;
         }
     }
 }

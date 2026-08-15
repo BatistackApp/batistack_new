@@ -6,6 +6,7 @@ use App\Models\RH\Equipement;
 use App\Models\User;
 use App\Notifications\RH\EquipementExpiringNotification;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Str;
 use Log;
 
 class EquipementObserver
@@ -23,6 +24,9 @@ class EquipementObserver
         }
         if (empty($equipement->serial_number)) {
             throw new \Exception('Serial number required');
+        }
+        if (empty($equipement->qr_token)) {
+            $equipement->qr_token = 'EQ-'.strtoupper(Str::random(12));
         }
     }
 

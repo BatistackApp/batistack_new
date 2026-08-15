@@ -14,7 +14,7 @@ Ce module gère l'intégralité du cycle de vie financier de vos projets, depuis
 
 Le module Commerce est le pont entre le terrain (Chantiers) et la comptabilité (Banque). Découvrez son fonctionnement :
 
-- [Le Cycle des Ventes (Clients)](./01-cycle-des-ventes.md) : De la création d'un devis avec signature en ligne jusqu'à la facturation de situation (avancement).
+- [Le Cycle des Ventes (Clients)](./01-cycle-des-ventes.md) : De la création d'un devis avec signature en ligne jusqu'à la facturation de situation (avancement), en passant par les **avenants (travaux supplémentaires)**.
 - [Le Cycle des Achats (Fournisseurs)](./02-cycle-des-achats.md) : Commandes d'achats, bons de réception, et gestion stricte de la sous-traitance.
 - [Paiements et Relances Automatiques](./03-paiements-et-relances.md) : Comment payer et se faire payer (Stripe) et configurer l'envoi automatique des relances d'impayés.
 

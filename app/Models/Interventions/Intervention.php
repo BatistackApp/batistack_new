@@ -6,21 +6,23 @@ use App\Enums\Interventions\InterventionStatus;
 use App\Enums\Interventions\InterventionType;
 use App\Models\Chantiers\Chantier;
 use App\Models\Core\Company;
+use App\Models\Core\Signature;
 use App\Models\Tiers\ThirdParty;
+use App\Observers\Interventions\InterventionObserver;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Database\Eloquent\Attributes\ObservedBy;
-use App\Observers\Interventions\InterventionObserver;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 
 #[ObservedBy([InterventionObserver::class])]
 class Intervention extends Model implements HasMedia
 {
-    use HasFactory, SoftDeletes, InteractsWithMedia;
+    use HasFactory, InteractsWithMedia, SoftDeletes;
 
     protected $fillable = [
         'company_id',
@@ -34,6 +36,7 @@ class Intervention extends Model implements HasMedia
         'completed_at',
         'flat_rate_price',
         'client_equipment_id',
+        'maintenance_contract_id',
     ];
 
     protected $casts = [
@@ -69,13 +72,18 @@ class Intervention extends Model implements HasMedia
         return $this->hasMany(InterventionMaterial::class);
     }
 
-    public function signatures(): \Illuminate\Database\Eloquent\Relations\MorphMany
+    public function signatures(): MorphMany
     {
-        return $this->morphMany(\App\Models\Core\Signature::class, 'signable');
+        return $this->morphMany(Signature::class, 'signable');
     }
 
     public function clientEquipment(): BelongsTo
     {
         return $this->belongsTo(ClientEquipment::class);
+    }
+
+    public function maintenanceContract(): BelongsTo
+    {
+        return $this->belongsTo(MaintenanceContract::class);
     }
 }

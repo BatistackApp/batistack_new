@@ -12,25 +12,24 @@ use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
-
 use Relaticle\ActivityLog\Concerns\InteractsWithTimeline;
 use Relaticle\ActivityLog\Contracts\HasTimeline;
 use Relaticle\ActivityLog\Timeline\TimelineBuilder;
-use Spatie\Activitylog\Support\LogOptions;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
+use Spatie\Activitylog\Support\LogOptions;
 
 #[ObservedBy([CustomerQuoteObserver::class])]
 class CustomerQuote extends Model implements HasTimeline
 {
-    use HasFactory, LogsActivity, InteractsWithTimeline;
+    use HasFactory, InteractsWithTimeline, LogsActivity;
 
     protected $fillable = [
         'client_id',
         'chantier_id',
+        'parent_order_id',
         'reference',
         'status',
         'total_ht',
@@ -38,6 +37,7 @@ class CustomerQuote extends Model implements HasTimeline
         'signed_at',
         'expires_at',
         'responsable_id',
+        'is_avenant',
     ];
 
     public function client(): BelongsTo
@@ -65,6 +65,14 @@ class CustomerQuote extends Model implements HasTimeline
         return $this->hasOne(CustomerOrder::class);
     }
 
+    /**
+     * La commande principale à laquelle un avenant est rattaché.
+     */
+    public function parentOrder(): BelongsTo
+    {
+        return $this->belongsTo(CustomerOrder::class, 'parent_order_id');
+    }
+
     public function signatures(): MorphMany
     {
         return $this->morphMany(Signature::class, 'signable');
@@ -78,6 +86,7 @@ class CustomerQuote extends Model implements HasTimeline
             'total_ttc' => 'decimal:2',
             'signed_at' => 'datetime',
             'expires_at' => 'datetime',
+            'is_avenant' => 'boolean',
         ];
     }
 

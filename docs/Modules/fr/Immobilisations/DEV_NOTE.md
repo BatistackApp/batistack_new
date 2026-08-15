@@ -40,6 +40,14 @@ Le module **Immobilisations** permet la gestion du patrimoine de l'entreprise (m
 *   **Transfert Inter-Chantiers** : Demandes de mouvements avec `AssetTransfer`, génération de Bon de Transport (PDF) et mise à jour de l'imputation analytique de l'actif.
 *   **Audit d'Inventaire** : Interface dédiée de scan PWA (`InventoryAudit`) pour valider la présence physique d'un actif via son QR Code.
 
+### 7. Portail de Déclaration de Casse / Sinistre (PWA Salarié)
+*   **Ticket de casse** : `AssetMaintenanceTicket` (morph `asset` → `FixedAsset` **ou** `Equipement` RH) avec statut (Ouvert / En cours / Résolu / Annulé), gravité, photos (Spatie MediaLibrary) et référence atomique `TK-AAAA-NNNN` (`AssetMaintenanceTicketObserver`).
+*   **QR Codes** : champ `qr_token` unique généré automatiquement sur `FixedAsset` et `Equipement` (observers) + étiquette PDF imprimable (`ImmobilisationDocumentService::generateQrLabel`).
+*   **Service** : `AssetMaintenanceTicketService` (résolution d'actif par code, création de ticket avec passage en maintenance, prise en charge, résolution → création d'un `AssetMaintenance` curatif pour les FixedAssets, annulation, notification interne du dépôt).
+*   **Page Salarié** : `DeclarationCassePage` (scan caméra `BarcodeInput` → détection → formulaire → ticket + notification database aux admins).
+*   **Triage Dépôt** : Resource `AssetMaintenanceTickets` dans le panel Immobilisations (filtres statut/gravité/type, actions workflow).
+*   **Tests** : `AssetMaintenanceTicketTest` (15 tests) + extensions `ImmobilisationDocumentServiceTest`.
+
 ## 🚧 Ce qu'il reste à faire
 *   L'essentiel du module et la connectivité avec la DGFiP (FEC) sont terminés et robustes.
 

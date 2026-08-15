@@ -1,0 +1,116 @@
+<?php
+
+use App\Enums\Chantiers\ChantierReserveStatus;
+use App\Enums\Chantiers\ReserveSeverity;
+use App\Models\Chantiers\Chantier;
+use App\Models\Chantiers\ChantierReserve;
+use App\Models\Chantiers\ChantierTask;
+use App\Models\RH\Employee;
+
+it('génère des références annuelles uniques', function () {
+    $chantier = Chantier::factory()->create();
+
+    $reserveA = ChantierReserve::factory()->create(['chantier_id' => $chantier->id]);
+    $reserveB = ChantierReserve::factory()->create(['chantier_id' => $chantier->id]);
+    $reserveC = ChantierReserve::factory()->create(['chantier_id' => $chantier->id]);
+
+    expect($reserveA->reference)->toStartWith('RS-'.now()->year.'-')
+        ->and(strlen($reserveA->reference))->toBeGreaterThan(8);
+
+    $references = collect([$reserveA->reference, $reserveB->reference, $reserveC->reference]);
+    expect($references->unique()->count())->toBe(3);
+
+    // Suppression d'une référence non terminale puis nouvelle création : la référence reste unique
+    $reserveB->delete();
+    $reserveD = ChantierReserve::factory()->create(['chantier_id' => $chantier->id]);
+
+    $remaining = collect([
+        $reserveA->refresh()->reference,
+        $reserveC->refresh()->reference,
+        $reserveD->reference,
+    ]);
+    expect($remaining->unique()->count())->toBe(3);
+});
+
+it('appartient à un chantier et peut être assignée à un employé', function () {
+    $chantier = Chantier::factory()->create();
+    $employee = Employee::factory()->create();
+    $reserve = ChantierReserve::factory()->create([
+        'chantier_id' => $chantier->id,
+        'assigned_to' => $employee->id,
+        'status' => ChantierReserveStatus::IN_PROGRESS,
+    ]);
+
+    expect($reserve->chantier->id)->toBe($chantier->id)
+        ->and($reserve->assignee->id)->toBe($employee->id)
+        ->and($chantier->reserves->contains($reserve))->toBeTrue();
+});
+
+it('gère le cycle de vie jusqu’à la levée par le client', function () {
+    $chantier = Chantier::factory()->create();
+    $reserve = ChantierReserve::factory()->create([
+        'chantier_id' => $chantier->id,
+        'status' => ChantierReserveStatus::OPEN,
+        'severity' => ReserveSeverity::MAJOR,
+    ]);
+
+    $reserve->update(['status' => ChantierReserveStatus::IN_PROGRESS]);
+    expect($reserve->status)->toBe(ChantierReserveStatus::IN_PROGRESS);
+
+    $reserve->update(['status' => ChantierReserveStatus::RESOLVED, 'resolved_at' => now()]);
+    expect($reserve->status)->toBe(ChantierReserveStatus::RESOLVED)
+        ->and($reserve->resolved_at)->not->toBeNull();
+
+    $reserve->update([
+        'status' => ChantierReserveStatus::LIFTED,
+        'lifted_at' => now(),
+        'lifted_by' => 'M. Dupont (Client)',
+    ]);
+    expect($reserve->status)->toBe(ChantierReserveStatus::LIFTED)
+        ->and($reserve->lifted_by)->toBe('M. Dupont (Client)');
+});
+
+it('expose les réserves levées et résolues pour le PV de réception', function () {
+    $chantier = Chantier::factory()->create();
+
+    ChantierReserve::factory()->create([
+        'chantier_id' => $chantier->id,
+        'status' => ChantierReserveStatus::LIFTED,
+    ]);
+    ChantierReserve::factory()->create([
+        'chantier_id' => $chantier->id,
+        'status' => ChantierReserveStatus::RESOLVED,
+    ]);
+    ChantierReserve::factory()->create([
+        'chantier_id' => $chantier->id,
+        'status' => ChantierReserveStatus::OPEN,
+    ]);
+
+    $forPv = $chantier->reserves()
+        ->whereIn('status', [ChantierReserveStatus::RESOLVED, ChantierReserveStatus::LIFTED])
+        ->get();
+
+    expect($forPv)->toHaveCount(2);
+});
+
+it('peut être rattachée à une tâche de chantier', function () {
+    $chantier = Chantier::factory()->create();
+    $task = ChantierTask::factory()->create();
+    $reserve = ChantierReserve::factory()->create([
+        'chantier_id' => $chantier->id,
+        'chantier_task_id' => $task->id,
+    ]);
+
+    expect($reserve->task->id)->toBe($task->id);
+});
+
+it('enregistre les collections de médias photos et plan', function () {
+    $chantier = Chantier::factory()->create();
+    $reserve = ChantierReserve::factory()->create(['chantier_id' => $chantier->id]);
+
+    $collections = $reserve->getRegisteredMediaCollections();
+
+    expect($collections)->not->toBeEmpty();
+    $names = collect($collections)->pluck('name');
+    expect($names)->toContain('photos', 'plan');
+});

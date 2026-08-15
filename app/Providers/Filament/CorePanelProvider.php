@@ -3,8 +3,9 @@
 namespace App\Providers\Filament;
 
 use AchyutN\FilamentLogViewer\FilamentLogViewer;
-use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
 use App\Http\Middleware\EnsureUserIsAdmin;
+use App\Providers\Filament\Traits\HasKnowledgeBaseCompanion;
+use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
 use Caresome\FilamentAuthDesigner\AuthDesignerPlugin;
 use Croustibat\FilamentJobsMonitor\FilamentJobsMonitorPlugin;
 use Filament\Http\Middleware\Authenticate;
@@ -15,17 +16,24 @@ use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
+use Filament\View\PanelsRenderHook;
 use FilamentInbox\FilamentInboxPlugin;
+use Guava\FilamentKnowledgeBase\Plugins\KnowledgeBaseCompanionPlugin;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
+use Illuminate\Support\Facades\Blade;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
+use LaBoiteACode\FilamentDashboardWidgets\FilamentDashboardWidgetsPlugin;
+use MartinPetricko\FilamentSentryFeedback\FilamentSentryFeedbackPlugin;
+use Vaslv\FilamentAppVersion\AppVersionPlugin;
 
 class CorePanelProvider extends PanelProvider
 {
-    use \App\Providers\Filament\Traits\HasKnowledgeBaseCompanion;
+    use HasKnowledgeBaseCompanion;
+
     public function panel(Panel $panel): Panel
     {
         return $panel
@@ -45,7 +53,11 @@ class CorePanelProvider extends PanelProvider
                 Dashboard::class,
             ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\Filament\Widgets')
-            ->plugin(\Guava\FilamentKnowledgeBase\Plugins\KnowledgeBaseCompanionPlugin::make()->knowledgeBasePanelId('docs'))
+            ->renderHook(
+                PanelsRenderHook::TOPBAR_END,
+                fn (): string => Blade::render('@livewire(\'release-notes-button\')'),
+            )
+            ->plugin(KnowledgeBaseCompanionPlugin::make()->knowledgeBasePanelId('docs'))
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
@@ -58,14 +70,15 @@ class CorePanelProvider extends PanelProvider
                 DispatchServingFilamentEvent::class,
             ])
             ->plugins([
-                \MartinPetricko\FilamentSentryFeedback\FilamentSentryFeedbackPlugin::make(),
+                FilamentSentryFeedbackPlugin::make(),
+                AppVersionPlugin::make(),
                 FilamentShieldPlugin::make(),
                 FilamentInboxPlugin::make(),
                 FilamentLogViewer::make(),
                 AuthDesignerPlugin::make()
                     ->login(),
                 FilamentJobsMonitorPlugin::make(),
-                \LaBoiteACode\FilamentDashboardWidgets\FilamentDashboardWidgetsPlugin::make(),
+                FilamentDashboardWidgetsPlugin::make(),
             ])
             ->databaseNotifications()
             ->authMiddleware([
@@ -74,6 +87,3 @@ class CorePanelProvider extends PanelProvider
             ]);
     }
 }
-
-
-
