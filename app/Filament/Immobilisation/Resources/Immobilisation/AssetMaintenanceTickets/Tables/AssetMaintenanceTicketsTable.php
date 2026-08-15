@@ -32,7 +32,9 @@ class AssetMaintenanceTicketsTable
                     ->state(fn (AssetMaintenanceTicket $record) => $record->asset?->name ?? '—')
                     ->description(fn (AssetMaintenanceTicket $record) => $record->asset ? class_basename($record->asset_type) : '')
                     ->searchable(query: fn ($query, string $search) => $query
-                        ->whereHasMorph('asset', ['App\Models\Immobilisation\FixedAsset', 'App\Models\RH\Equipement'], fn ($q) => $q->where('name', 'like', "%{$search}%")->orWhere('label', 'like', "%{$search}%"))),
+                        ->whereHasMorph('asset', ['App\Models\Immobilisation\FixedAsset', 'App\Models\RH\Equipement'], fn ($q, string $type) => $type === 'App\Models\RH\Equipement'
+                            ? $q->where('label', 'like', "%{$search}%")
+                            : $q->where('name', 'like', "%{$search}%"))),
                 TextColumn::make('chantier.name')
                     ->label('Chantier')
                     ->placeholder('—'),
