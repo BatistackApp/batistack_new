@@ -9,6 +9,7 @@ use App\Models\Articles\Item;
 use App\Models\Chantiers\Chantier;
 use App\Models\Commerce\CustomerOrder;
 use App\Models\Commerce\CustomerQuote;
+use App\Models\Core\Company;
 use App\Models\Core\VatRate;
 use App\Models\Tiers\ThirdParty;
 use App\Models\User;
@@ -17,7 +18,7 @@ use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Queue;
 
 beforeEach(function () {
-    \App\Models\Core\Company::factory()->create();
+    Company::factory()->create();
     $this->quoteService = app(QuoteService::class);
 
     // Création d'un client test
@@ -245,5 +246,29 @@ describe('QuoteService - Avenants (travaux supplémentaires)', function () {
         $this->quoteService->acceptQuote($avenant, $this->responsable);
 
         expect(Chantier::count())->toBe($before);
+    });
+
+    test('refuse un avenant dont la commande parente est incohérente avec le devis', function () {
+        $otherChantier = Chantier::factory()->create(['client_id' => $this->customer->id]);
+        $order = CustomerOrder::factory()->create([
+            'client_id' => $this->customer->id,
+            'chantier_id' => $otherChantier->id,
+            'status' => OrderStatus::CONFIRMED,
+            'responsable_id' => $this->responsable->id,
+        ]);
+
+        $avenant = CustomerQuote::factory()->create([
+            'client_id' => $this->customer->id,
+            'chantier_id' => $this->chantier->id,
+            'parent_order_id' => $order->id,
+            'status' => QuoteStatus::SENT,
+            'responsable_id' => $this->responsable->id,
+            'is_avenant' => true,
+        ]);
+
+        $this->expectException(Exception::class);
+        $this->expectExceptionMessage('La commande principale doit appartenir au même client et au même chantier que l\'avenant.');
+
+        $this->quoteService->acceptQuote($avenant, $this->responsable);
     });
 });
