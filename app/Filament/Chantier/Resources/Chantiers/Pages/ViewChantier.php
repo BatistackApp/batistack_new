@@ -65,6 +65,15 @@ class ViewChantier extends ViewRecord
 
                         return response()->download(Storage::disk(DocumentService::getDisk())->path($path));
                     }),
+                Action::make('print_ppsps')
+                    ->label('PPSPS (Sécurité)')
+                    ->icon(Phosphor::HardHat)
+                    ->color('danger')
+                    ->action(function (Chantier $record, ChantierDocumentService $service) {
+                        $path = $service->generatePpsps($record);
+
+                        return response()->download(Storage::disk(DocumentService::getDisk())->path($path));
+                    }),
             ])
                 ->label('Impressions')
                 ->icon(Phosphor::Printer)

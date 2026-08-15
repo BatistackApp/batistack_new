@@ -2,6 +2,8 @@
 
 namespace App\Models\Articles;
 
+use App\Enums\Articles\GhsPictogram;
+use App\Enums\Articles\HazardCategory;
 use App\Enums\Articles\ItemType;
 use App\Models\Core\Unit;
 use App\Models\Core\VatRate;
@@ -34,6 +36,11 @@ class Item extends Model implements HasMedia
         'selling_price',
         'is_active',
         'is_sensitive',
+        'hazard_category',
+        'ghs_pictograms',
+        'h_phrases',
+        'p_phrases',
+        'fds_updated_at',
         'unit_id',
         'vat_rate_id',
         'min_stock',
@@ -91,6 +98,11 @@ class Item extends Model implements HasMedia
     {
         return [
             'type' => ItemType::class,
+            'hazard_category' => HazardCategory::class,
+            'ghs_pictograms' => 'array',
+            'h_phrases' => 'array',
+            'p_phrases' => 'array',
+            'fds_updated_at' => 'datetime',
             'purchase_price' => 'decimal:4',
             'selling_price' => 'decimal:4',
             'is_active' => 'boolean',
@@ -274,6 +286,28 @@ class Item extends Model implements HasMedia
     public function isStockable(): bool
     {
         return $this->type === ItemType::STOCKABLE;
+    }
+
+    /**
+     * Vérifier si l'article possède une fiche de sécurité / présente un danger.
+     */
+    public function isHazardous(): bool
+    {
+        return $this->hazard_category !== null
+            || ! empty($this->ghs_pictograms)
+            || ! empty($this->h_phrases);
+    }
+
+    /**
+     * Liste des pictogrammes CLP résolus en énum.
+     */
+    public function pictograms(): array
+    {
+        return collect($this->ghs_pictograms ?? [])
+            ->map(fn (string $value) => GhsPictogram::tryFrom($value))
+            ->filter()
+            ->values()
+            ->all();
     }
 
     /**

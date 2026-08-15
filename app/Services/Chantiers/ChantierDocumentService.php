@@ -16,7 +16,10 @@ use Illuminate\Support\Carbon;
  */
 class ChantierDocumentService extends DocumentService
 {
-    public function __construct(protected ChantierAnalyticService $analyticService) {}
+    public function __construct(
+        protected ChantierAnalyticService $analyticService,
+        protected PpspsService $ppspsService,
+    ) {}
 
     /**
      * Génère la Fiche de Lancement de Chantier (Ordre de Service interne).
@@ -230,6 +233,25 @@ class ChantierDocumentService extends DocumentService
             $data,
             'journal_'.$chantier->reference.'_'.$startDate->format('Y_W'),
             'chantiers/journals'
+        );
+    }
+
+    /**
+     * Génère le PPSPS (Plan Particulier de Sécurité et de Protection de la Santé).
+     * Croise les tâches prévues, le matériel alloué et les fiches de sécurité des produits.
+     */
+    public function generatePpsps(Chantier $chantier): string
+    {
+        $data = $this->ppspsService->build($chantier);
+        $data['title'] = 'PPSPS : '.$chantier->name;
+        $data['generated_at'] = Carbon::now()->format('d/m/Y H:i');
+        $data['position'] = 'landscape';
+
+        return $this->generate(
+            'pdf.chantiers.ppsps',
+            $data,
+            'ppsps_'.$chantier->reference,
+            'chantiers/legal'
         );
     }
 }

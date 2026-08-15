@@ -4,10 +4,17 @@ namespace App\Filament\Chantier\Resources\Chantiers\Tables;
 
 use App\Enums\Articles\StockMouvementSource;
 use App\Enums\Chantiers\ChantierStatus;
+use App\Enums\Commerce\InvoiceStatus;
+use App\Enums\Commerce\InvoiceType;
+use App\Enums\Flottes\AssignmentStatus;
 use App\Models\Articles\Item;
 use App\Models\Articles\Stock;
 use App\Models\Articles\Warehouse;
 use App\Models\Chantiers\Chantier;
+use App\Models\Commerce\CustomerInvoice;
+use App\Models\Flottes\Vehicle;
+use App\Models\Flottes\VehicleAssignment;
+use App\Models\RH\Employee;
 use App\Services\Chantiers\ChantierAnalyticService;
 use App\Services\Chantiers\ChantierDocumentService;
 use Filament\Actions\Action;
@@ -16,6 +23,7 @@ use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
+use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
@@ -71,6 +79,11 @@ class ChantiersTable
                         ->icon(Phosphor::ChartPie)
                         ->color('success')
                         ->action(fn (Chantier $record, ChantierDocumentService $service) => $service->download($service->generateRentabilityReport($record))),
+                    Action::make('print_ppsps')
+                        ->label('PPSPS (Sécurité)')
+                        ->icon(Phosphor::HardHat)
+                        ->color('danger')
+                        ->action(fn (Chantier $record, ChantierDocumentService $service) => $service->download($service->generatePpsps($record))),
 
                     Action::make('affect_material')
                         ->label('Affecter Matériel')
@@ -136,18 +149,20 @@ class ChantiersTable
                         ])
                         ->action(function (Chantier $record, array $data) {
                             $quote = $record->quote;
-                            if (!$quote) return;
+                            if (! $quote) {
+                                return;
+                            }
 
                             $percentage = $data['percentage'] / 100;
                             $amountHt = $quote->total_ht * $percentage;
                             $amountTva = $quote->total_tva * $percentage;
 
-                            $invoice = \App\Models\Commerce\CustomerInvoice::create([
+                            $invoice = CustomerInvoice::create([
                                 'client_id' => $record->client_id,
                                 'chantier_id' => $record->id,
-                                'reference' => 'FACT-SIT-' . uniqid(),
-                                'type' => \App\Enums\Commerce\InvoiceType::STANDARD,
-                                'status' => \App\Enums\Commerce\InvoiceStatus::DRAFT,
+                                'reference' => 'FACT-SIT-'.uniqid(),
+                                'type' => InvoiceType::STANDARD,
+                                'status' => InvoiceStatus::DRAFT,
                                 'total_ht' => $amountHt,
                                 'total_tva' => $amountTva,
                                 'total_ttc' => $amountHt + $amountTva,
@@ -168,30 +183,30 @@ class ChantiersTable
                         ->schema([
                             Select::make('vehicle_id')
                                 ->label('Véhicule / Engin')
-                                ->options(\App\Models\Flottes\Vehicle::all()->mapWithKeys(fn($v) => [$v->id => "{$v->brand} {$v->model} ({$v->license_plate})"]))
+                                ->options(Vehicle::all()->mapWithKeys(fn ($v) => [$v->id => "{$v->brand} {$v->model} ({$v->license_plate})"]))
                                 ->required()
                                 ->searchable(),
                             Select::make('employee_id')
                                 ->label('Conducteur (Optionnel)')
-                                ->options(\App\Models\RH\Employee::all()->mapWithKeys(fn($e) => [$e->id => "{$e->first_name} {$e->last_name}"]))
+                                ->options(Employee::all()->mapWithKeys(fn ($e) => [$e->id => "{$e->first_name} {$e->last_name}"]))
                                 ->searchable(),
-                            \Filament\Forms\Components\DatePicker::make('started_at')
+                            DatePicker::make('started_at')
                                 ->label('Date de début')
                                 ->default(now())
                                 ->required(),
-                            \Filament\Forms\Components\DatePicker::make('ended_at')
+                            DatePicker::make('ended_at')
                                 ->label('Date de fin (Prévue)'),
                         ])
                         ->action(function (Chantier $record, array $data) {
-                            \App\Models\Flottes\VehicleAssignment::create([
+                            VehicleAssignment::create([
                                 'vehicle_id' => $data['vehicle_id'],
                                 'chantier_id' => $record->id,
                                 'employee_id' => $data['employee_id'] ?? null,
                                 'started_at' => $data['started_at'],
                                 'ended_at' => $data['ended_at'] ?? null,
-                                'status' => \App\Enums\Flottes\AssignmentStatus::ACTIVE,
-                                'purpose' => 'Affectation Chantier ' . $record->reference,
-                                'start_odometer' => \App\Models\Flottes\Vehicle::find($data['vehicle_id'])->odometer ?? 0,
+                                'status' => AssignmentStatus::ACTIVE,
+                                'purpose' => 'Affectation Chantier '.$record->reference,
+                                'start_odometer' => Vehicle::find($data['vehicle_id'])->odometer ?? 0,
                             ]);
 
                             Notification::make()

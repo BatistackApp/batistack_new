@@ -28,6 +28,7 @@ class GenerateChantierDocumentJob implements ShouldQueue
                 'rentability' => $service->generateRentabilityReport($this->chantier),
                 'journal' => $service->generateWeeklyJournal($this->chantier, now()->startOfWeek()),
                 'os' => $service->generateStartOrder($this->chantier),
+                'ppsps' => $service->generatePpsps($this->chantier),
                 default => throw new Exception('Type de document inconnu.')
             };
         } catch (Exception $e) {

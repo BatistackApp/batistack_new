@@ -2,13 +2,18 @@
 
 namespace App\Filament\Articles\Resources\Items\Schemas;
 
+use App\Enums\Articles\GhsPictogram;
+use App\Enums\Articles\HazardCategory;
 use App\Enums\Articles\ItemType;
 use App\Enums\Tiers\ThirdPartyType;
 use App\Models\Core\Unit;
 use App\Models\Core\VatRate;
 use Ariefng\FilamentCalculator\Actions\CalculatorAction;
+use Filament\Forms\Components\CheckboxList;
+use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
+use Filament\Forms\Components\TagsInput;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
@@ -104,6 +109,42 @@ class ItemForm
                                             ->label('Article sensible')
                                             ->helperText('Activer la traçabilité par lot et date de péremption.')
                                             ->onColor('warning'),
+                                    ]),
+                            ]),
+
+                        // --- SÉCURITÉ & FDS ---
+                        Tabs\Tab::make('Sécurité & FDS')
+                            ->icon(Phosphor::HardHat)
+                            ->schema([
+                                Section::make('Fiche de données de sécurité (FDS)')
+                                    ->description('Renseignez les dangers CLP pour permettre la génération automatique du PPSPS.')
+                                    ->columns(2)
+                                    ->schema([
+                                        Select::make('hazard_category')
+                                            ->label('Catégorie de danger')
+                                            ->options(HazardCategory::class)
+                                            ->placeholder('Aucun danger')
+                                            ->nullable()
+                                            ->native(false),
+                                        DatePicker::make('fds_updated_at')
+                                            ->label('Date de mise à jour de la FDS'),
+                                        CheckboxList::make('ghs_pictograms')
+                                            ->label('Pictogrammes CLP')
+                                            ->options(GhsPictogram::class)
+                                            ->columns(2)
+                                            ->columnSpanFull(),
+                                        TagsInput::make('h_phrases')
+                                            ->label('Phrases de danger (H)')
+                                            ->helperText('Liste libre, ex: H225 Liquide et vapeurs très inflammables')
+                                            ->columnSpanFull(),
+                                        TagsInput::make('p_phrases')
+                                            ->label('Phrases de précaution (P)')
+                                            ->helperText('Liste libre, ex: P210 Tenir à l\'écart de la chaleur')
+                                            ->columnSpanFull(),
+                                        SpatieMediaLibraryFileUpload::make('fds_document')
+                                            ->label('Fiche de données de sécurité (PDF)')
+                                            ->collection('fds_document')
+                                            ->columnSpanFull(),
                                     ]),
                             ]),
 
