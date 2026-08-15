@@ -214,3 +214,54 @@ it('notifies admin users when a ticket is created', function () {
 
     Notification::assertSentTo($admin, AssetMaintenanceTicketNotification::class);
 });
+
+it('exposes the chantier and reporter relations', function () {
+    $chantier = Chantier::factory()->create();
+    $reporter = Employee::factory()->create();
+
+    $ticket = AssetMaintenanceTicket::factory()->forFixedAsset()->create([
+        'chantier_id' => $chantier->id,
+        'reported_by_id' => $reporter->id,
+    ]);
+
+    expect($ticket->chantier->is($chantier))->toBeTrue()
+        ->and($ticket->reportedBy->is($reporter))->toBeTrue();
+});
+
+it('registers a photos media collection', function () {
+    $ticket = AssetMaintenanceTicket::factory()->forFixedAsset()->create();
+
+    expect($ticket->getRegisteredMediaCollections())
+        ->toHaveCount(1)
+        ->and($ticket->getRegisteredMediaCollections()->first()->name)->toBe('photos');
+});
+
+it('keeps an explicit reference on creation', function () {
+    $ticket = AssetMaintenanceTicket::factory()->forFixedAsset()->create(['reference' => 'TK-2026-9999']);
+
+    expect($ticket->reference)->toBe('TK-2026-9999');
+});
+
+it('returns null for a blank lookup code', function () {
+    $service = app(AssetMaintenanceTicketService::class);
+
+    expect($service->resolveByCode(''))->toBeNull()
+        ->and($service->resolveByCode('   '))->toBeNull();
+});
+
+it('restores an assigned equipement to in use', function () {
+    $service = app(AssetMaintenanceTicketService::class);
+
+    $equipement = Equipement::factory()->create([
+        'status' => EquipementStatus::MAINTENANCE,
+    ]);
+
+    $ticket = AssetMaintenanceTicket::factory()->state([
+        'asset_type' => Equipement::class,
+        'asset_id' => $equipement->id,
+    ])->create();
+
+    $service->resolve($ticket);
+
+    expect($equipement->fresh()->status)->toBe(EquipementStatus::IN_USE);
+});

@@ -8,6 +8,7 @@ use App\Models\Immobilisation\FixedAsset;
 use App\Models\RH\Equipement;
 use App\Services\Immobilisation\AssetMaintenanceTicketService;
 use BackedEnum;
+use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
 use Filament\Forms\Components\Textarea;
@@ -66,10 +67,8 @@ class DeclarationCassePage extends Page
                             ->label('Outil détecté')
                             ->disabled()
                             ->dehydrated(false),
-                        TextInput::make('asset_type')
-                            ->hidden(),
-                        TextInput::make('asset_id')
-                            ->hidden(),
+                        Hidden::make('asset_type'),
+                        Hidden::make('asset_id'),
                     ]),
                 Section::make('Déclaration de casse')
                     ->description('Décrivez le sinistre constaté. Le dépôt sera notifié immédiatement.')

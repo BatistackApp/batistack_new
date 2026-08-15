@@ -5,6 +5,7 @@ use App\Enums\Interventions\InterventionType;
 use App\Enums\Interventions\MaintenanceContractFrequency;
 use App\Enums\Interventions\MaintenanceContractStatus;
 use App\Enums\Tiers\ThirdPartyType;
+use App\Models\Chantiers\Chantier;
 use App\Models\Core\Company;
 use App\Models\Interventions\ClientEquipment;
 use App\Models\Interventions\Intervention;
@@ -48,6 +49,12 @@ describe('MaintenanceContract', function () {
         expect($contract->reference)->toMatch('/^MC-\d{4}-\d{4}$/');
     });
 
+    test('keeps an explicit reference on creation', function () {
+        $contract = makeContract(['reference' => 'MC-2026-9999']);
+
+        expect($contract->reference)->toBe('MC-2026-9999');
+    });
+
     test('status badges are enumerable', function () {
         expect(MaintenanceContractStatus::cases())->not->toBeEmpty();
         expect(MaintenanceContractFrequency::MONTHLY->getLabel())->not->toBeEmpty();
@@ -59,6 +66,38 @@ describe('MaintenanceContract', function () {
         expect($contract->thirdParty->is($this->client))->toBeTrue();
         expect($contract->clientEquipment->is($this->equipment))->toBeTrue();
         expect($contract->interventions()->count())->toBe(0);
+    });
+
+    test('exposes the company, chantier and reminders relations', function () {
+        $chantier = Chantier::factory()->create();
+        $contract = makeContract(['chantier_id' => $chantier->id]);
+
+        expect($contract->company->is($this->company))->toBeTrue();
+        expect($contract->chantier->is($chantier))->toBeTrue();
+        expect($contract->reminders()->count())->toBe(0);
+    });
+
+    test('reminders belong to their contract', function () {
+        $contract = makeContract();
+
+        $reminder = MaintenanceContractReminder::create([
+            'contract_id' => $contract->id,
+            'due_date' => $contract->next_due_date?->toDateString() ?? now()->toDateString(),
+            'days_before' => 15,
+            'sent_at' => now(),
+        ]);
+
+        expect($reminder->contract->is($contract))->toBeTrue();
+    });
+
+    test('generated interventions link back to their maintenance contract', function () {
+        $contract = makeContract();
+
+        app(MaintenanceContractService::class)->generateDueInterventions();
+
+        $intervention = Intervention::where('maintenance_contract_id', $contract->id)->first();
+
+        expect($intervention->maintenanceContract->is($contract))->toBeTrue();
     });
 });
 
@@ -158,6 +197,18 @@ describe('MaintenanceContractService', function () {
             'is_primary' => true,
             'email' => 'contact@batistack.fr',
         ]);
+
+        makeContract(['next_due_date' => now()->addDays(10)->toDateString()]);
+
+        app(MaintenanceContractService::class)->notifyUpcoming();
+
+        Notification::assertSentOnDemand(MaintenanceContractReminderNotification::class);
+    });
+
+    test('reminders fall back to the third party email when no contact exists', function () {
+        Notification::fake();
+
+        $this->client->update(['email' => 'client@batistack.fr']);
 
         makeContract(['next_due_date' => now()->addDays(10)->toDateString()]);
 

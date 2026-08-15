@@ -2,9 +2,9 @@
 
 namespace App\Filament\Immobilisation\Resources\Immobilisation\AssetMaintenanceTickets\Schemas;
 
-use Filament\Infolists\Components\ImageEntry;
-use Filament\Infolists\Components\Section;
+use Filament\Infolists\Components\SpatieMediaLibraryImageEntry;
 use Filament\Infolists\Components\TextEntry;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 
 class AssetMaintenanceTicketInfolist
@@ -62,7 +62,7 @@ class AssetMaintenanceTicketInfolist
                     ]),
                 Section::make('Photos')
                     ->schema([
-                        ImageEntry::make('photos')
+                        SpatieMediaLibraryImageEntry::make('photos')
                             ->collection('photos')
                             ->label('Photos')
                             ->height(120),
