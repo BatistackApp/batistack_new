@@ -33,3 +33,31 @@ Le gestionnaire de parc dispose d'un tableau de bord de conformité pour suivre 
 
 Pour les engins de levage et autres matériels réglementés, l'outil suit les dates de **VGP**. 
 Le tableau de bord central affiche les alertes critiques des contrôles à venir ou en retard, permettant de ne jamais passer à côté d'une obligation légale de sécurité.
+
+## 5. Portail de Déclaration de Casse / Sinistre (PWA Salarié)
+
+Un outil cassé ou perdu sur chantier ? Les ouvriers peuvent le déclarer en quelques secondes depuis leur smartphone, directement depuis leur espace Salarié.
+
+> [!TIP]
+> Cette fonctionnalité couvre à la fois les **immobilisations** (Fixed Assets) et le **matériel RH / EPI** (Équipements), identifiés par leurs étiquettes QR.
+
+### 5.1 Déclaration côté Salarié
+
+1. Dans l'espace **Espace Employé** (PWA), ouvrez **« Déclarer une casse »**.
+2. **Scannez le QR code** apposé sur l'outil (ou saisissez son numéro de série) — l'outil est détecté automatiquement.
+3. Renseignez la **gravité** (Faible / Moyenne / Élevée / Critique), le **chantier** concerné (optionnel) et une **description** du sinistre.
+4. Joignez des **photos** du dégât.
+5. Validez : le ticket est créé, l'actif passe en statut **« En maintenance / En réparation »** et le **dépôt est notifié instantanément**.
+
+### 5.2 Traitement côté Dépôt (panel Immobilisations)
+
+Les tickets sont centralisés dans le menu **« Déclarations de casse »** (groupe *Gestion des Actifs*) :
+
+- Chaque ticket est identifié par une **référence unique** (`TK-AAAA-NNNN`).
+- Le dépôt peut **prendre en charge** un ticket, puis le **résoudre**.
+- À la **résolution**, un enregistrement de **maintenance curative** est automatiquement créé sur l'actif (avec coût HT et prestataire si renseignés), et l'actif retrouve son statut d'origine.
+- Un ticket peut aussi être **annulé** (retour au statut actif de l'outil).
+
+### 5.3 Étiquettes QR
+
+Depuis la liste des immobilisations ou le détail d'un salarié (onglet Matériel & EPI), l'action **« Imprimer QR »** génère une étiquette PDF unique à apposer sur l'outil. Le QR code scanné sert aussi bien à l'audit d'inventaire qu'à la déclaration de casse.

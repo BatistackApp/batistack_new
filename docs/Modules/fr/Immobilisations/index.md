@@ -15,7 +15,7 @@ Ce module est conçu pour gérer l'intégralité du cycle de vie de votre patrim
 Le module Immobilisations couvre deux grands axes :
 
 - [Cycle de Vie & Amortissement](./01-cycle-de-vie-et-amortissement.md) : Importation intelligente des factures par OCR, génération des tableaux d'amortissement (linéaire/dégressif) et export comptable FEC.
-- [Suivi Physique & Inventaire](./02-suivi-et-inventaire.md) : Gestion des transferts de matériel entre chantiers, étiquetage par QR Code et réalisation d'audits d'inventaire via smartphone (PWA).
+- [Suivi Physique & Inventaire](./02-suivi-et-inventaire.md) : Gestion des transferts de matériel entre chantiers, étiquetage par QR Code, réalisation d'audits d'inventaire via smartphone (PWA) et **portail de déclaration de casse / sinistre**.
 
 > [!NOTE]
 > **Imputation Analytique**

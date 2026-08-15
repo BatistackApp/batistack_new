@@ -2,13 +2,17 @@
 
 namespace App\Services\Immobilisation;
 
+use App\Enums\Immobilisation\AssetStatus;
+use App\Filament\Immobilisation\Resources\Immobilisation\FixedAssets\FixedAssetResource;
 use App\Models\Chantiers\Chantier;
-use App\Models\Immobilisation\FixedAsset;
 use App\Models\Immobilisation\AssetCategory;
+use App\Models\Immobilisation\AssetTransfer;
+use App\Models\Immobilisation\FixedAsset;
 use App\Services\Core\DocumentService;
 use chillerlan\QRCode\QRCode;
 use chillerlan\QRCode\QROptions;
-use App\Models\Immobilisation\AssetTransfer;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Collection;
 
 class ImmobilisationDocumentService extends DocumentService
 {
@@ -24,11 +28,12 @@ class ImmobilisationDocumentService extends DocumentService
             data: [
                 'transfer' => $transfer,
             ],
-            filename: 'bon_transport_' . $transfer->id,
+            filename: 'bon_transport_'.$transfer->id,
             type: 'immobilisations',
             position: 'portrait'
         );
     }
+
     /**
      * Génère la fiche individuelle d'une immobilisation avec QR Code.
      */
@@ -38,15 +43,15 @@ class ImmobilisationDocumentService extends DocumentService
 
         // Options pour chillerlan/php-qrcode
         $options = new QROptions([
-            'version'      => 5,
-            'outputType'   => QRCode::OUTPUT_IMAGE_PNG,
-            'eccLevel'     => QRCode::ECC_L,
-            'scale'        => 4,
-            'imageBase64'  => true,
+            'version' => 5,
+            'outputType' => QRCode::OUTPUT_IMAGE_PNG,
+            'eccLevel' => QRCode::ECC_L,
+            'scale' => 4,
+            'imageBase64' => true,
         ]);
 
         // On encode l'URL pour la fiche via le Resource
-        $qrCodeData = \App\Filament\Immobilisation\Resources\Immobilisation\FixedAssets\FixedAssetResource::getUrl('view', ['record' => $asset], panel: 'immobilisation');
+        $qrCodeData = FixedAssetResource::getUrl('view', ['record' => $asset], panel: 'immobilisation');
         $qrCodeSvg = (new QRCode($options))->render($qrCodeData);
 
         return $this->generate(
@@ -55,7 +60,7 @@ class ImmobilisationDocumentService extends DocumentService
                 'asset' => $asset,
                 'qrCode' => $qrCodeSvg,
             ],
-            filename: 'fiche_immobilisation_' . $asset->id,
+            filename: 'fiche_immobilisation_'.$asset->id,
             type: 'immobilisations',
         );
     }
@@ -67,7 +72,7 @@ class ImmobilisationDocumentService extends DocumentService
     {
         $categories = AssetCategory::with(['fixedAssets' => function ($query) {
             $query->whereIn('status', [
-                \App\Enums\Immobilisation\AssetStatus::ACTIVE,
+                AssetStatus::ACTIVE,
             ]);
         }, 'fixedAssets.depreciations'])->get();
 
@@ -77,7 +82,7 @@ class ImmobilisationDocumentService extends DocumentService
                 'categories' => $categories,
                 'year' => $year,
             ],
-            filename: 'etat_dotations_' . $year,
+            filename: 'etat_dotations_'.$year,
             type: 'immobilisations',
             position: 'landscape'
         );
@@ -95,7 +100,7 @@ class ImmobilisationDocumentService extends DocumentService
             data: [
                 'asset' => $asset,
             ],
-            filename: 'pv_cession_' . $asset->id,
+            filename: 'pv_cession_'.$asset->id,
             type: 'immobilisations',
             position: 'portrait'
         );
@@ -108,7 +113,7 @@ class ImmobilisationDocumentService extends DocumentService
     {
         $assets = FixedAsset::where('chantier_id', $chantier->id)
             ->whereIn('status', [
-                \App\Enums\Immobilisation\AssetStatus::ACTIVE,
+                AssetStatus::ACTIVE,
             ])
             ->with('category')
             ->get();
@@ -118,9 +123,35 @@ class ImmobilisationDocumentService extends DocumentService
             data: [
                 'chantier' => $chantier,
                 'assets' => $assets,
-                'position' => 'portrait'
+                'position' => 'portrait',
             ],
-            filename: 'fiche_inventaire_chantier_' . $chantier->id,
+            filename: 'fiche_inventaire_chantier_'.$chantier->id,
+            type: 'immobilisations'
+        );
+    }
+
+    /**
+     * Génère une étiquette QR imprimable pour un actif (immobilisation ou équipement RH).
+     */
+    public function generateQrLabel(Model $asset): string
+    {
+        $options = new QROptions([
+            'version' => 5,
+            'outputType' => QRCode::OUTPUT_IMAGE_PNG,
+            'eccLevel' => QRCode::ECC_L,
+            'scale' => 6,
+            'imageBase64' => true,
+        ]);
+
+        $qrCode = (new QRCode($options))->render($asset->qr_token);
+
+        return $this->generate(
+            view: 'documents.immobilisations.qr_label',
+            data: [
+                'asset' => $asset,
+                'qrCode' => $qrCode,
+            ],
+            filename: 'etiquette_qr_'.$asset->getKey(),
             type: 'immobilisations'
         );
     }
@@ -128,19 +159,19 @@ class ImmobilisationDocumentService extends DocumentService
     /**
      * Génère une plaquette PDF contenant les QR Codes des actifs donnés.
      */
-    public function generateQrCodeSheet(\Illuminate\Support\Collection $assets): string
+    public function generateQrCodeSheet(Collection $assets): string
     {
         $options = new QROptions([
-            'version'      => 5,
-            'outputType'   => QRCode::OUTPUT_IMAGE_PNG,
-            'eccLevel'     => QRCode::ECC_L,
-            'scale'        => 3,
-            'imageBase64'  => true,
+            'version' => 5,
+            'outputType' => QRCode::OUTPUT_IMAGE_PNG,
+            'eccLevel' => QRCode::ECC_L,
+            'scale' => 3,
+            'imageBase64' => true,
         ]);
 
         $qrCodes = [];
         foreach ($assets as $asset) {
-            $url = \App\Filament\Immobilisation\Resources\Immobilisation\FixedAssets\FixedAssetResource::getUrl('view', ['record' => $asset], panel: 'immobilisation');
+            $url = FixedAssetResource::getUrl('view', ['record' => $asset], panel: 'immobilisation');
             $qrCodes[$asset->id] = (new QRCode($options))->render($url);
         }
 
@@ -149,9 +180,9 @@ class ImmobilisationDocumentService extends DocumentService
             data: [
                 'assets' => $assets,
                 'qrCodes' => $qrCodes,
-                'position' => 'portrait'
+                'position' => 'portrait',
             ],
-            filename: 'plaquette_qr_codes_' . now()->format('Ymd_His'),
+            filename: 'plaquette_qr_codes_'.now()->format('Ymd_His'),
             type: 'immobilisations'
         );
     }
