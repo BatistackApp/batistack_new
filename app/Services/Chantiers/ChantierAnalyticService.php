@@ -2,10 +2,22 @@
 
 namespace App\Services\Chantiers;
 
+use App\Enums\Articles\StockMouvementSource;
+use App\Enums\Commerce\OrderStatus;
+use App\Enums\Flottes\AssignmentStatus;
 use App\Enums\RH\TimeEntryStatus;
+use App\Models\Articles\StockMouvement;
 use App\Models\Chantiers\Chantier;
 use App\Models\Chantiers\ChantierTask;
+use App\Models\Commerce\PurchaseOrder;
+use App\Models\Flottes\FuelTransaction;
+use App\Models\Flottes\VehicleAssignment;
+use App\Models\Immobilisation\AssetMaintenance;
+use App\Models\Immobilisation\Depreciation;
+use App\Models\Locations\RentalContract;
 use App\Models\RH\Employee;
+use App\Models\RH\EquipementAssignment;
+use App\Services\Locations\RentalCostService;
 
 /**
  * Service Analytique et Financier des Chantiers.
@@ -34,14 +46,15 @@ class ChantierAnalyticService
 
         // 2. Analyse Matériaux (via module Stocks)
         // On récupère les mouvements de sortie (OUT) affectés au chantier (SITE)
-        $materialCost = \App\Models\Articles\StockMouvement::query()
+        $materialCost = StockMouvement::query()
             ->outgoing()
-            ->bySource(\App\Enums\Articles\StockMouvementSource::SITE)
+            ->bySource(StockMouvementSource::SITE)
             ->where('reference_id', $chantier->id)
             ->with('stock.item')
             ->get()
             ->sum(function ($mouvement) {
                 $unitPrice = $mouvement->stock->item->purchase_price ?? 0;
+
                 // quantity_delta est négatif pour une sortie (OUT), on inverse le signe pour le coût
                 return abs($mouvement->quantity_delta) * $unitPrice;
             });
@@ -49,54 +62,65 @@ class ChantierAnalyticService
         $subcontractingCost = 0; // Sera lié au module Facturation Fournisseur
 
         // 3. Analyse des Véhicules (Module Flottes)
-        $fleetAssignmentCost = \App\Models\Flottes\VehicleAssignment::query()
+        $fleetAssignmentCost = VehicleAssignment::query()
             ->where('chantier_id', $chantier->id)
             ->whereIn('status', [
-                \App\Enums\Flottes\AssignmentStatus::ACTIVE,
-                \App\Enums\Flottes\AssignmentStatus::COMPLETED,
+                AssignmentStatus::ACTIVE,
+                AssignmentStatus::COMPLETED,
             ])
             ->get()
             ->sum(fn ($assignment) => $assignment->getCost());
-            
-        $fuelCost = \App\Models\Flottes\FuelTransaction::query()
+
+        $fuelCost = FuelTransaction::query()
             ->where('chantier_id', $chantier->id)
             ->sum('cost_ht');
-            
+
         $fleetCost = $fleetAssignmentCost + $fuelCost;
 
         // 4. Avancement Technique Pondéré
         $progress = $this->calculateWeightedProgress($chantier);
 
         // 5. Amortissements des Immobilisations (Dotations imputées au chantier)
-        $assetDepreciationCost = \App\Models\Immobilisation\Depreciation::query()
+        $assetDepreciationCost = Depreciation::query()
             ->where('chantier_id', $chantier->id)
             ->where('is_passed', true)
             ->sum('amount');
 
         // 6. Réparations et Entretien des Immobilisations sur le chantier
-        $assetMaintenanceCost = \App\Models\Immobilisation\AssetMaintenance::query()
+        $assetMaintenanceCost = AssetMaintenance::query()
             ->where('chantier_id', $chantier->id)
             ->sum('cost_ht');
 
         // 7. Coûts de Location (Module Locations)
-        $rentalCostService = app(\App\Services\Locations\RentalCostService::class);
-        $rentalCost = \App\Models\Locations\RentalContract::query()
+        $rentalCostService = app(RentalCostService::class);
+        $rentalCost = RentalContract::query()
             ->where('chantier_id', $chantier->id)
             ->get()
             ->sum(fn ($contract) => $rentalCostService->getCumulativeCost($contract));
 
         // 8. Coûts d'immobilisation de l'Outillage/Gros Matériel (Module RH)
-        $equipmentCost = \App\Models\RH\EquipementAssignment::query()
+        $equipmentCost = EquipementAssignment::query()
             ->where('chantier_id', $chantier->id)
             ->with('equipement')
             ->get()
             ->sum(fn ($assignment) => $assignment->getImmobilizationCost());
 
         // 9. Achats directs (Commandes fournisseurs pour le chantier)
-        $purchaseCost = \App\Models\Commerce\PurchaseOrder::query()
+        $purchaseCost = PurchaseOrder::query()
             ->where('chantier_id', $chantier->id)
-            ->where('status', '!=', \App\Enums\Commerce\OrderStatus::CANCELLED)
+            ->where('status', '!=', OrderStatus::CANCELLED)
             ->sum('total_ht');
+
+        // 10. Suivi bancaire (Transactions affectées au chantier)
+        $bankIncome = (float) $chantier->bankTransactions()
+            ->incomes()
+            ->sum('amount');
+
+        $bankExpense = (float) abs($chantier->bankTransactions()
+            ->expenses()
+            ->sum('amount'));
+
+        $bankNet = $bankIncome - $bankExpense; // trésorerie nette (encaissements - décaissements)
 
         $totalCost = $laborCost + $materialCost + $subcontractingCost + $fleetCost + $assetDepreciationCost + $assetMaintenanceCost + $rentalCost + $equipmentCost + $purchaseCost;
         $budget = (float) $chantier->budget_total_ht;
@@ -122,6 +146,9 @@ class ChantierAnalyticService
                 'budget_ht' => $budget,
                 'margin_real' => $marginReal,
                 'margin_percent' => $budget > 0 ? ($marginReal / $budget) * 100 : 0,
+                'bank_income_real' => $bankIncome,
+                'bank_expense_real' => $bankExpense,
+                'bank_net_real' => $bankNet,
             ],
             'progress' => $progress,
         ];

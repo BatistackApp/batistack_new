@@ -42,6 +42,12 @@ class BankTransactionForm
                     ->options(TransactionStatus::class)
                     ->default('pending')
                     ->required(),
+                Select::make('chantier_id')
+                    ->label('Chantier')
+                    ->relationship('chantier', 'name')
+                    ->searchable()
+                    ->preload()
+                    ->nullable(),
             ]);
     }
 }

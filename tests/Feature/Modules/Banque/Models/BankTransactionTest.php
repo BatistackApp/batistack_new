@@ -4,6 +4,7 @@ use App\Enums\Banque\TransactionStatus;
 use App\Enums\Banque\TransactionType;
 use App\Models\Banque\BankAccount;
 use App\Models\Banque\BankTransaction;
+use App\Models\Chantiers\Chantier;
 
 it('belongs to a bank account', function () {
     $account = BankAccount::factory()->create();
@@ -33,7 +34,15 @@ it('filters by incomes and expenses', function () {
 it('filters by this month and last six months', function () {
     BankTransaction::factory()->create(['date' => now()]);
     BankTransaction::factory()->create(['date' => now()->subMonths(7)]);
-    
+
     expect(BankTransaction::thisMonth()->count())->toBe(1)
         ->and(BankTransaction::lastSixMonths()->count())->toBe(1);
+});
+
+it('belongs to a chantier', function () {
+    $chantier = Chantier::factory()->create();
+    $transaction = BankTransaction::factory()->create(['chantier_id' => $chantier->id]);
+
+    expect($transaction->chantier->id)->toBe($chantier->id)
+        ->and($chantier->bankTransactions->pluck('id'))->toContain($transaction->id);
 });
