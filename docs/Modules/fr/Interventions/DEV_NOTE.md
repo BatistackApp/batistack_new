@@ -39,7 +39,16 @@ Le module **Interventions** permet la gestion complète du service après-vente 
 *   **Déclaration de panne** : Action intégrée au tableau de bord permettant au client de déclarer une panne directement, créant instantanément une `Intervention` (`SOUMIS`, `REGIE`) sans avoir à contacter le standard.
 *   **Suivi des demandes (`InterventionResource`)** : Espace permettant au client de suivre le statut et l'avancement de ses tickets SAV signalés.
 
-### 6. Tests
+### 6. Contrats d'Entretien Récurrents (Maintenance Préventive)
+*   **Modèles** : `MaintenanceContract` (référence `MC-AAAA-NNNN`, fréquence, prix forfaitaire, échéances, soft deletes) et `MaintenanceContractReminder` (journal de déduplication avec contrainte unique `contract_id + due_date + days_before`).
+*   **Enums** : `MaintenanceContractFrequency` (Mensuelle / Trimestrielle / Semestrielle / Annuelle) et `MaintenanceContractStatus` (Actif / Pause / Terminé / Annulé).
+*   **`MaintenanceContractObserver`** : Génération atomique des références `MC-AAAA-NNNN`.
+*   **`MaintenanceContractService`** : `generateDueInterventions()` (contrats actifs échus, transaction + `lockForUpdate`, avancement de l'échéance, passage en `COMPLETED` si dépassement de la fin), `generateForContract($force)` (action « Générer maintenant »), `computeNextDueDate()` et `notifyUpcoming()` (rappels J-30/J-15/J-7 configurés dans `config/interventions.php`, envoyés à l'e-mail du contact principal via `MaintenanceContractReminderNotification`, dédupliqués par le journal).
+*   **Commandes planifiées** (`routes/console.php`, Europe/Paris, `withoutOverlapping`) : `interventions:generate-maintenance` (06:00) et `interventions:remind-maintenance` (07:00), avec paramètre `--date` pour les tests.
+*   **Interface** : `MaintenanceContractResource` (groupe « Maintenance préventive »), formulaire avec filtrage de l'équipement par client (`third_party_id` live), actions « Générer maintenant », « Pause / Reprendre », « Annuler », et `InterventionsRelationManager` listant les interventions du contrat.
+*   **Tests** : `MaintenanceContractTest` couvre la génération (idempotence, fréquence, fin de contrat, pause), la déduplication des rappels, l'envoi au contact principal et le cycle soft delete de l'observer.
+
+### 7. Tests
 *   Couverture robuste avec PestPHP. L'intégralité de la logique métier (gestion, facturation, maintenance prédictive, optimisation d'itinéraire), du déstockage automatique, de la facturation, des signatures, et des contraintes d'intégrité passe avec succès (100% de réussite). Les composants mineurs et les observers sont également couverts.
 
 ## 🚧 Ce qu'il reste à faire

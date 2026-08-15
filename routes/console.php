@@ -127,3 +127,16 @@ Schedule::command('app:check-bridge-tokens')
     ->dailyAt('09:00')
     ->timezone('Europe/Paris')
     ->onFailure(fn () => logger()->error('Échec de la vérification des tokens Bridge API.'));
+
+// Interventions
+Schedule::command('interventions:generate-maintenance')
+    ->dailyAt('06:00')
+    ->timezone('Europe/Paris')
+    ->withoutOverlapping()
+    ->onFailure(fn () => logger()->error('Échec de la génération des interventions de maintenance.'));
+
+Schedule::command('interventions:remind-maintenance')
+    ->dailyAt('07:00')
+    ->timezone('Europe/Paris')
+    ->withoutOverlapping()
+    ->onFailure(fn () => logger()->error('Échec de l\'envoi des rappels d\'entretien.'));

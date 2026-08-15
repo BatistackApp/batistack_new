@@ -3,7 +3,13 @@
 namespace App\Filament\Interventions\Pages;
 
 use App\Filament\Interventions\InterventionResource;
+use App\Jobs\OptimizeTechnicianRouteJob;
+use App\Models\RH\Employee;
+use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
+use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Select;
+use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ListRecords;
 
 class ListInterventions extends ListRecords
@@ -13,29 +19,29 @@ class ListInterventions extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            \Filament\Actions\Action::make('optimizeRoute')
+            Action::make('optimizeRoute')
                 ->label('Optimiser une tournée')
                 ->icon('heroicon-m-map')
                 ->color('success')
                 ->form([
-                    \Filament\Forms\Components\Select::make('technicien_id')
+                    Select::make('technicien_id')
                         ->label('Technicien')
-                        ->options(\App\Models\RH\Employee::all()->pluck('full_name', 'id'))
+                        ->options(Employee::all()->pluck('full_name', 'id'))
                         ->required()
                         ->searchable(),
-                    \Filament\Forms\Components\DatePicker::make('date')->label('Date')
+                    DatePicker::make('date')->label('Date')
                         ->label('Date')
                         ->required()
                         ->default(now()),
                 ])
                 ->action(function (array $data) {
-                    \App\Jobs\OptimizeTechnicianRouteJob::dispatch(
+                    OptimizeTechnicianRouteJob::dispatch(
                         $data['technicien_id'],
                         $data['date'],
                         auth()->id()
                     );
-                    
-                    \Filament\Notifications\Notification::make()
+
+                    Notification::make()
                         ->info()
                         ->title('Optimisation lancée')
                         ->body('L\'optimisation de la tournée est en cours d\'exécution en arrière-plan. Vous recevrez une notification une fois terminée.')
