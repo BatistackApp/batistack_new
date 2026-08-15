@@ -3,11 +3,21 @@
 namespace App\Observers\Immobilisation;
 
 use App\Models\Immobilisation\FixedAsset;
-
 use App\Services\Immobilisation\DepreciationCalculatorService;
+use Illuminate\Support\Str;
 
 class FixedAssetObserver
 {
+    /**
+     * Handle the FixedAsset "creating" event.
+     */
+    public function creating(FixedAsset $fixedAsset): void
+    {
+        if (empty($fixedAsset->qr_token)) {
+            $fixedAsset->qr_token = 'FA-'.strtoupper(Str::random(12));
+        }
+    }
+
     /**
      * Handle the FixedAsset "created" event.
      */

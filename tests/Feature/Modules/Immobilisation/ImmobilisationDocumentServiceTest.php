@@ -1,15 +1,17 @@
 <?php
 
+use App\Enums\Immobilisation\AssetStatus;
 use App\Models\Chantiers\Chantier;
 use App\Models\Immobilisation\AssetCategory;
 use App\Models\Immobilisation\FixedAsset;
+use App\Models\RH\Equipement;
 use App\Services\Immobilisation\ImmobilisationDocumentService;
 
 it('generates asset sheet path', function () {
     $category = AssetCategory::factory()->create();
     $asset = FixedAsset::factory()->create([
         'asset_category_id' => $category->id,
-        'status' => \App\Enums\Immobilisation\AssetStatus::ACTIVE,
+        'status' => AssetStatus::ACTIVE,
     ]);
 
     $mock = Mockery::mock(ImmobilisationDocumentService::class)->makePartial();
@@ -26,7 +28,7 @@ it('generates inventory checklist path', function () {
     FixedAsset::factory()->count(3)->create([
         'asset_category_id' => $category->id,
         'chantier_id' => $chantier->id,
-        'status' => \App\Enums\Immobilisation\AssetStatus::ACTIVE,
+        'status' => AssetStatus::ACTIVE,
     ]);
 
     $mock = Mockery::mock(ImmobilisationDocumentService::class)->makePartial();
@@ -51,10 +53,45 @@ it('generates qr code sheet path', function () {
     expect($path)->toBe('fake/path/qrcodes.pdf');
 });
 
+it('generates a qr label path for a fixed asset', function () {
+    $asset = FixedAsset::factory()->create();
+
+    $mock = Mockery::mock(ImmobilisationDocumentService::class)->makePartial();
+    $mock->shouldReceive('generate')->once()->andReturn('fake/path/etiquette_qr.pdf');
+
+    $path = $mock->generateQrLabel($asset);
+
+    expect($path)->toBe('fake/path/etiquette_qr.pdf');
+});
+
+it('generates a qr label path for an equipement', function () {
+    $equipement = Equipement::factory()->create();
+
+    $mock = Mockery::mock(ImmobilisationDocumentService::class)->makePartial();
+    $mock->shouldReceive('generate')->once()->andReturn('fake/path/etiquette_qr.pdf');
+
+    $path = $mock->generateQrLabel($equipement);
+
+    expect($path)->toBe('fake/path/etiquette_qr.pdf');
+});
+
+it('renders the qr label view without errors', function () {
+    $asset = FixedAsset::factory()->create();
+
+    $view = view('documents.immobilisations.qr_label', [
+        'asset' => $asset,
+        'qrCode' => '<svg>FakeQR</svg>',
+    ]);
+
+    $html = $view->render();
+    expect($html)->toContain($asset->name)
+        ->and($html)->toContain($asset->serial_number);
+});
+
 it('renders the asset sheet view without errors', function () {
     $asset = FixedAsset::factory()->create();
     $asset->load(['category', 'chantier', 'vehicle', 'depreciations']);
-    
+
     $view = view('documents.immobilisations.asset_sheet', [
         'asset' => $asset,
         'qrCode' => '<svg>FakeQR</svg>',

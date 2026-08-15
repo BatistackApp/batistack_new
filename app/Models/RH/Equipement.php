@@ -5,12 +5,16 @@ namespace App\Models\RH;
 use App\Enums\RH\EquipementStatus;
 use App\Enums\RH\EquipementType;
 use App\Models\Articles\Item;
+use App\Models\Immobilisation\AssetMaintenanceTicket;
 use App\Observers\RH\EquipementObserver;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 #[ObservedBy([EquipementObserver::class])]
 class Equipement extends Model
@@ -25,6 +29,7 @@ class Equipement extends Model
         'model_name',
         'serial_number',
         'barcode',
+        'qr_token',
         'assigned_at',
         'expires_at',
         'last_check_at',
@@ -44,14 +49,19 @@ class Equipement extends Model
         return $this->belongsTo(Item::class);
     }
 
-    public function assignments(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function assignments(): HasMany
     {
         return $this->hasMany(EquipementAssignment::class);
     }
 
-    public function currentAssignment(): \Illuminate\Database\Eloquent\Relations\HasOne
+    public function currentAssignment(): HasOne
     {
         return $this->hasOne(EquipementAssignment::class)->whereNull('returned_at');
+    }
+
+    public function maintenanceTickets(): MorphMany
+    {
+        return $this->morphMany(AssetMaintenanceTicket::class, 'asset');
     }
 
     protected function casts(): array
