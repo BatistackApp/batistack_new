@@ -6,6 +6,7 @@ use App\Enums\Articles\ItemType;
 use App\Enums\Articles\StockMouvementSource;
 use App\Models\Chantiers\Chantier;
 use App\Services\Articles\StockService;
+use Ariefng\FilamentCalculator\Actions\CalculatorAction;
 use Filament\Actions\Action;
 use Filament\Actions\AssociateAction;
 use Filament\Actions\BulkActionGroup;
@@ -182,7 +183,8 @@ class StocksRelationManager extends RelationManager
                         TextInput::make('quantity')->label('Quantité')
                             ->numeric()
                             ->required()
-                            ->minValue(0.01),
+                            ->minValue(0.01)
+                            ->suffixAction(CalculatorAction::make()),
                         TextInput::make('batch_number')->label('Numéro de lot')
                             ->required(fn ($get, $livewire) => $get('type') === 'in' && $livewire->getOwnerRecord()->is_sensitive),
                         DatePicker::make('expiration_date')->label('Date de péremption')

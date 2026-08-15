@@ -6,6 +6,7 @@ use App\Enums\Articles\ItemType;
 use App\Enums\Tiers\ThirdPartyType;
 use App\Models\Core\Unit;
 use App\Models\Core\VatRate;
+use Ariefng\FilamentCalculator\Actions\CalculatorAction;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
 use Filament\Forms\Components\Textarea;
@@ -81,12 +82,14 @@ class ItemForm
                                             ->label(fn (Get $get) => $get('type') === ItemType::WORK->value ? 'Coût de revient estimé' : 'Prix d\'achat / PUMP')
                                             ->numeric()
                                             ->prefix('€')
+                                            ->suffixAction(CalculatorAction::make())
                                             ->disabled(fn (Get $get) => $get('type') === ItemType::WORK->value)
                                             ->helperText('Pour les ouvrages, le coût est calculé dynamiquement.'),
                                         TextInput::make('selling_price')
                                             ->label('Prix de vente HT')
                                             ->numeric()
                                             ->prefix('€')
+                                            ->suffixAction(CalculatorAction::make())
                                             ->required(),
                                         Select::make('vat_rate_id')
                                             ->label('Taux de TVA')
