@@ -1,18 +1,16 @@
 <?php
 
+use App\Enums\Commerce\OrderStatus;
+use App\Enums\Tiers\ThirdPartyType;
 use App\Models\Chantiers\Chantier;
 use App\Models\Chantiers\ChantierLog;
 use App\Models\Commerce\CustomerOrder;
+use App\Models\Core\Company;
 use App\Models\Tiers\ThirdParty;
-use App\Enums\Tiers\ThirdPartyType;
 use App\Models\User;
 use App\Services\Chantiers\ChantierDocumentService;
-use App\Services\Chantiers\ChantierAnalyticService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Storage;
-use Spatie\Browsershot\Browsershot;
-
-use App\Enums\Commerce\OrderStatus;
 
 beforeEach(function () {
     $this->customer = ThirdParty::factory()->create(['name' => 'Test Customer', 'type' => ThirdPartyType::CLIENT]);
@@ -21,9 +19,9 @@ beforeEach(function () {
         'reference' => 'CO-CHANTIER',
         'client_id' => $this->customer->id,
         'responsable_id' => $this->user->id,
-        'status' => OrderStatus::CONFIRMED
+        'status' => OrderStatus::CONFIRMED,
     ]);
-    
+
     $this->chantier = Chantier::create([
         'reference' => 'CH-TEST',
         'name' => 'Chantier Test',
@@ -35,8 +33,8 @@ beforeEach(function () {
         'zip_code' => '75000',
         'city' => 'Paris',
     ]);
-    
-    $this->company = \App\Models\Core\Company::create([
+
+    $this->company = Company::create([
         'legal_name' => 'Test Company',
         'address' => '123 Test Street',
         'zip_code' => '75000',
@@ -45,18 +43,18 @@ beforeEach(function () {
         'email' => 'test@test.com',
         'siret' => '12345678901234',
         'capital' => 10000,
-        'vat_number' => 'FR123456789'
+        'vat_number' => 'FR123456789',
     ]);
-    
+
     $this->service = app(ChantierDocumentService::class);
-    
+
     // Config fake disk
     config(['filesystems.default' => 'local']);
     Storage::fake('local');
-    
-    // We can't easily test Spatie\Browsershot in CI without Node/Puppeteer, 
-    // so we just mock the PDF generation methods to return a path, or 
-    // test the view rendering instead. But ChantierDocumentService uses 
+
+    // We can't easily test Spatie\Browsershot in CI without Node/Puppeteer,
+    // so we just mock the PDF generation methods to return a path, or
+    // test the view rendering instead. But ChantierDocumentService uses
     // \App\Services\Core\DocumentService::generatePdf.
     // Instead of executing, let's mock the `generatePdf` method of DocumentService
     // Actually, ChantierDocumentService extends \App\Services\Core\DocumentService
@@ -86,9 +84,14 @@ it('generates weekly journal PDF', function () {
         'weather_morning' => 'sunny',
         'weather_afternoon' => 'sunny',
         'content' => 'Test log',
-        'user_id' => App\Models\User::factory()->create()->id
+        'user_id' => User::factory()->create()->id,
     ]);
 
     $path = $this->service->generateWeeklyJournal($this->chantier, Carbon::now()->startOfWeek());
     expect($path)->toContain('documents/chantiers/journals/journal_CH-TEST');
+});
+
+it('generates PPSPS PDF', function () {
+    $path = $this->service->generatePpsps($this->chantier);
+    expect($path)->toContain('documents/chantiers/legal/ppsps_CH-TEST.pdf');
 });

@@ -20,6 +20,8 @@ Le module est découpé pour accompagner la vie de votre projet, de sa signature
 - [Le Journal de Chantier](./02-journal-de-chantier.md) : Remontées d'informations quotidiennes du terrain (météo, présents, dictée vocale).
 - [Suivi Analytique & DOE](./03-suivi-analytique-et-doe.md) : Maîtrise des marges (main d'œuvre, matériel) et compilation de la documentation finale.
 - [Qualité & Sécurité (QSE)](./04-qualite-et-securite.md) : Création de checklists dynamiques et signatures électroniques sur chantier.
+- [Levée des Réserves & OPR](./05-levee-des-reserves-opr.md) : Signalement terrain, suivi et levée des réserves jusqu'au PV de Réception.
+- [PPSPS & Sécurité](./06-ppsps.md) : Génération automatique du Plan Particulier de Sécurité (risques déduits des produits).
 
 > [!TIP]
 > **Une application pensée pour le terrain**

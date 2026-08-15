@@ -20,6 +20,18 @@ Au lieu d'attendre la fin de l'année pour que le comptable calcule la rentabili
 > [!NOTE]  
 > Le Dashboard du Directeur de Travaux affiche en direct la *variance* entre le budget prévisionnel (issu du devis) et les coûts réels engagés. L'alerte se déclenche **pendant** le chantier, et non après !
 
+### 1.1 Suivi Bancaire du chantier
+
+Depuis le module **Banque**, chaque transaction bancaire (encaissement ou décaissement) peut être **affectée à un Chantier**. Une fois affectée, elle alimente en temps réel le suivi de rentabilité du chantier :
+
+- **Encaissements (Banque)** : somme des crédits affectés au chantier.
+- **Décaissements (Banque)** : somme des débits affectés au chantier.
+- **Trésorerie nette (Banque)** : encaissements − décaissements.
+
+Ces indicateurs sont visibles sur la fiche chantier (widget *ChantierFinancialOverview*) et dans le **Bilan Analytique PDF**. Ils viennent **en complément** de la marge analytique (budget − coûts), qui reste basée sur les documents (MO, matériaux, flotte, achats...).
+
+Pour affecter une transaction : ouvrez la **Ligne Bancaire** dans le module Banque → champ **Chantier** (recherchable).
+
 ## 2. Le Dossier des Ouvrages Exécutés (DOE)
 
 À la fin d'un chantier, la remise du DOE au client est obligatoire. C'est souvent une corvée administrative de plusieurs jours.

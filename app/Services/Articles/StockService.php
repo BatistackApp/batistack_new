@@ -94,7 +94,7 @@ class StockService
         });
     }
 
-    public function exit(Item $item, Warehouse $warehouse, float $quantity, string $reason, ?StockMouvementSource $source = null, ?int $referenceId = null, ?string $batchNumber = null, ?string $expirationDate = null): void
+    public function exit(Item $item, Warehouse $warehouse, float $quantity, ?string $reason = null, ?StockMouvementSource $source = null, ?int $referenceId = null, ?string $batchNumber = null, ?string $expirationDate = null): void
     {
         DB::transaction(function () use ($item, $warehouse, $quantity, $reason, $source, $referenceId, $batchNumber, $expirationDate) {
             $stock = Stock::where('item_id', $item->id)
@@ -141,7 +141,7 @@ class StockService
                 'quantity_before' => $quantityBefore,
                 'quantity_delta' => -$quantity,
                 'quantity_after' => $stock->quantity,
-                'reason' => $reason,
+                'reason' => $reason ?? 'Sortie de stock',
                 'batch_number' => $batchNumber,
                 'expiration_date' => $expirationDate,
             ]);

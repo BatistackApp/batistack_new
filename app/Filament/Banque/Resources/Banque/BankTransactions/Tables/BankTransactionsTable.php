@@ -3,11 +3,17 @@
 namespace App\Filament\Banque\Resources\Banque\BankTransactions\Tables;
 
 use App\Enums\Banque\TransactionStatus;
+use App\Enums\Commerce\PaymentMethod;
+use App\Enums\Commerce\PaymentStatus;
+use App\Enums\Commerce\PaymentType;
 use App\Models\Banque\BankAccount;
 use App\Models\Banque\BankReconciliation;
 use App\Models\Banque\BankTransaction;
 use App\Models\Commerce\CustomerInvoice;
+use App\Models\Commerce\Payment;
 use App\Models\Commerce\SupplierInvoice;
+use App\Models\RH\ExpenseItem;
+use App\Models\RH\ExpenseReport;
 use App\Services\Banque\ReconciliationService;
 use App\Services\Banque\StatementImportService;
 use Filament\Actions\Action;
@@ -15,13 +21,18 @@ use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\Filter;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\Storage;
 
 class BankTransactionsTable
 {
@@ -58,6 +69,12 @@ class BankTransactionsTable
                     ->color(fn ($record) => $record->category?->color ?? 'gray')
                     ->searchable()
                     ->toggleable(),
+                TextColumn::make('chantier.name')
+                    ->label('Chantier')
+                    ->description(fn ($record) => $record->chantier?->reference)
+                    ->searchable()
+                    ->sortable()
+                    ->toggleable(),
                 TextColumn::make('status')->label('Statut')
                     ->label('Statut')
                     ->badge()
@@ -72,29 +89,34 @@ class BankTransactionsTable
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                \Filament\Tables\Filters\SelectFilter::make('bank_account_id')
+                SelectFilter::make('bank_account_id')
                     ->label('Compte bancaire')
                     ->relationship('bankAccount', 'name')
                     ->searchable()
                     ->preload(),
-                \Filament\Tables\Filters\SelectFilter::make('status')->label('Statut')
+                SelectFilter::make('status')->label('Statut')
                     ->label('Statut')
-                    ->options(\App\Enums\Banque\TransactionStatus::class),
-                \Filament\Tables\Filters\Filter::make('date')->label('Date')
+                    ->options(TransactionStatus::class),
+                SelectFilter::make('chantier_id')
+                    ->label('Chantier')
+                    ->relationship('chantier', 'name')
+                    ->searchable()
+                    ->preload(),
+                Filter::make('date')->label('Date')
                     ->label('Plage de date')
                     ->form([
-                        \Filament\Forms\Components\DatePicker::make('created_from')->label('Du'),
-                        \Filament\Forms\Components\DatePicker::make('created_until')->label('Au'),
+                        DatePicker::make('created_from')->label('Du'),
+                        DatePicker::make('created_until')->label('Au'),
                     ])
-                    ->query(function (\Illuminate\Database\Eloquent\Builder $query, array $data): \Illuminate\Database\Eloquent\Builder {
+                    ->query(function (Builder $query, array $data): Builder {
                         return $query
                             ->when(
                                 $data['created_from'],
-                                fn (\Illuminate\Database\Eloquent\Builder $query, $date): \Illuminate\Database\Eloquent\Builder => $query->whereDate('date', '>=', $date),
+                                fn (Builder $query, $date): Builder => $query->whereDate('date', '>=', $date),
                             )
                             ->when(
                                 $data['created_until'],
-                                fn (\Illuminate\Database\Eloquent\Builder $query, $date): \Illuminate\Database\Eloquent\Builder => $query->whereDate('date', '<=', $date),
+                                fn (Builder $query, $date): Builder => $query->whereDate('date', '<=', $date),
                             );
                     }),
             ])
@@ -109,10 +131,10 @@ class BankTransactionsTable
                         $suggestions = $service->suggestMatches($record);
                         $options = [];
                         foreach ($suggestions as $s) {
-                            if ($s['model'] instanceof \App\Models\RH\ExpenseItem) {
-                                $ref = 'Ticket Corpo ' . $s['model']->merchant . ' du ' . ($s['model']->date ? $s['model']->date->format('d/m') : '');
+                            if ($s['model'] instanceof ExpenseItem) {
+                                $ref = 'Ticket Corpo '.$s['model']->merchant.' du '.($s['model']->date ? $s['model']->date->format('d/m') : '');
                             } else {
-                                $ref = $s['model']->reference ?? ('Note de frais ' . $s['model']->id);
+                                $ref = $s['model']->reference ?? ('Note de frais '.$s['model']->id);
                             }
                             $options[$s['type'].':'.$s['model']->id] = "{$ref} (Score: {$s['score']}%)";
                         }
@@ -129,14 +151,15 @@ class BankTransactionsTable
                         [$type, $id] = explode(':', $data['invoice_id']);
 
                         $allowedTypes = [
-                            \App\Models\Commerce\CustomerInvoice::class,
-                            \App\Models\Commerce\SupplierInvoice::class,
-                            \App\Models\RH\ExpenseReport::class,
-                            \App\Models\RH\ExpenseItem::class,
+                            CustomerInvoice::class,
+                            SupplierInvoice::class,
+                            ExpenseReport::class,
+                            ExpenseItem::class,
                         ];
 
-                        if (!in_array($type, $allowedTypes)) {
+                        if (! in_array($type, $allowedTypes)) {
                             Notification::make()->title('Type de document invalide !')->danger()->send();
+
                             return;
                         }
 
@@ -144,16 +167,16 @@ class BankTransactionsTable
 
                         if ($invoice) {
                             $totalTtc = $invoice->total_ttc ?? $invoice->amount_ttc ?? $invoice->total_amount ?? 0;
-                            $paidAmount = $invoice->morphMany(\App\Models\Banque\BankReconciliation::class, 'reconcilable')->sum('amount_applied');
+                            $paidAmount = $invoice->morphMany(BankReconciliation::class, 'reconcilable')->sum('amount_applied');
                             $invoiceRemaining = $totalTtc - $paidAmount;
-                            
+
                             if (abs($record->amount) > $invoiceRemaining + 0.05) {
                                 Notification::make()
                                     ->title('Opération refusée')
-                                    ->body('Le montant de la transaction (' . number_format(abs($record->amount), 2) . ' €) dépasse le solde restant (' . number_format($invoiceRemaining, 2) . ' €). Veuillez scinder la transaction ou corriger le montant.')
+                                    ->body('Le montant de la transaction ('.number_format(abs($record->amount), 2).' €) dépasse le solde restant ('.number_format($invoiceRemaining, 2).' €). Veuillez scinder la transaction ou corriger le montant.')
                                     ->danger()
                                     ->send();
-                                
+
                                 return; // Block the action
                             }
                             BankReconciliation::create([
@@ -165,23 +188,23 @@ class BankTransactionsTable
 
                             // Générer également le paiement et son allocation, seulement pour les factures (pas RH)
                             if ($invoice instanceof CustomerInvoice || $invoice instanceof SupplierInvoice) {
-                                $paymentType = $invoice instanceof CustomerInvoice 
-                                    ? \App\Enums\Commerce\PaymentType::IN 
-                                    : \App\Enums\Commerce\PaymentType::OUT;
-                                    
-                                $thirdPartyId = $invoice instanceof CustomerInvoice 
-                                    ? $invoice->client_id 
+                                $paymentType = $invoice instanceof CustomerInvoice
+                                    ? PaymentType::IN
+                                    : PaymentType::OUT;
+
+                                $thirdPartyId = $invoice instanceof CustomerInvoice
+                                    ? $invoice->client_id
                                     : $invoice->supplier_id;
 
-                                $payment = \App\Models\Commerce\Payment::create([
+                                $payment = Payment::create([
                                     'third_party_id' => $thirdPartyId,
-                                    'reference' => 'PAY-' . uniqid(),
+                                    'reference' => 'PAY-'.uniqid(),
                                     'type' => $paymentType,
-                                    'method' => \App\Enums\Commerce\PaymentMethod::BANK_TRANSFER,
-                                    'status' => \App\Enums\Commerce\PaymentStatus::COMPLETED,
+                                    'method' => PaymentMethod::BANK_TRANSFER,
+                                    'status' => PaymentStatus::COMPLETED,
                                     'amount' => abs($record->amount),
                                     'payment_date' => $record->date,
-                                    'notes' => 'Lettrage bancaire ' . $record->external_id,
+                                    'notes' => 'Lettrage bancaire '.$record->external_id,
                                 ]);
 
                                 $payment->allocations()->create([
@@ -240,7 +263,7 @@ class BankTransactionsTable
                             ->required(),
                     ])
                     ->action(function (array $data) {
-                        $path = \Illuminate\Support\Facades\Storage::disk('public')->path($data['file']);
+                        $path = Storage::disk('public')->path($data['file']);
                         if (file_exists($path)) {
                             $service = new StatementImportService;
                             $account = BankAccount::find($data['bank_account_id']);

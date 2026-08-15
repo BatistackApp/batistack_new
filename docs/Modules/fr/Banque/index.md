@@ -23,3 +23,7 @@ Le module s'articule autour de trois grands piliers :
 > [!TIP]
 > **Finie la saisie double !**
 > L'objectif principal de ce module est de vous faire gagner du temps. Lorsqu'un client paie une facture, la transaction remonte automatiquement dans l'ERP, et la facture passe en statut "Payée" sans aucune action de votre part !
+
+## 📊 Suivi Analytique par Chantier
+
+Une transaction bancaire (encaissement ou décaissement) peut être **affectée à un Chantier**. Elle alimente alors, en temps réel, le **suivi de rentabilité du chantier** (widget *ChantierFinancialOverview* et **Bilan Analytique PDF**) via le champ **Chantier** de la ligne bancaire. Consultez la [documentation Chantiers](../Chantiers/03-suivi-analytique-et-doe.md) pour le détail.

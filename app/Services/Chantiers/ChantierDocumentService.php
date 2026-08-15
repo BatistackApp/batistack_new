@@ -2,8 +2,10 @@
 
 namespace App\Services\Chantiers;
 
+use App\Enums\Chantiers\ChantierReserveStatus;
 use App\Models\Chantiers\Chantier;
 use App\Models\Core\Company;
+use App\Models\Flottes\VehicleAssignment;
 use App\Services\Core\DocumentService;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Carbon;
@@ -14,7 +16,10 @@ use Illuminate\Support\Carbon;
  */
 class ChantierDocumentService extends DocumentService
 {
-    public function __construct(protected ChantierAnalyticService $analyticService) {}
+    public function __construct(
+        protected ChantierAnalyticService $analyticService,
+        protected PpspsService $ppspsService,
+    ) {}
 
     /**
      * Génère la Fiche de Lancement de Chantier (Ordre de Service interne).
@@ -48,7 +53,7 @@ class ChantierDocumentService extends DocumentService
         $chantierEnd = $chantier->end_date_preview ? $chantier->end_date_preview->format('Y-m-d') : now()->addMonths(1)->format('Y-m-d');
 
         $tasks[] = [
-            'id' => 'chantier_' . $chantier->id,
+            'id' => 'chantier_'.$chantier->id,
             'name' => $chantier->name,
             'start' => $chantierStart,
             'end' => $chantierEnd,
@@ -59,29 +64,29 @@ class ChantierDocumentService extends DocumentService
 
         $phases = $chantier->phases()->with('tasks')->get();
         foreach ($phases as $phase) {
-            $phaseId = 'phase_' . $phase->id;
+            $phaseId = 'phase_'.$phase->id;
             $phaseStart = $phase->start_date ? $phase->start_date->format('Y-m-d') : $chantierStart;
             $phaseEnd = $phase->end_date ? $phase->end_date->format('Y-m-d') : $chantierEnd;
 
             $tasks[] = [
                 'id' => $phaseId,
-                'name' => 'Phase: ' . $phase->label,
+                'name' => 'Phase: '.$phase->label,
                 'start' => $phaseStart,
                 'end' => $phaseEnd,
                 'progress' => 0,
-                'dependencies' => 'chantier_' . $chantier->id,
+                'dependencies' => 'chantier_'.$chantier->id,
                 'custom_class' => 'bar-phase',
             ];
 
             $previousTaskId = null;
             foreach ($phase->tasks as $task) {
-                $taskId = 'task_' . $task->id;
+                $taskId = 'task_'.$task->id;
                 $taskStart = $task->start_date ? $task->start_date->format('Y-m-d') : $phaseStart;
                 $taskEnd = $task->end_date ? $task->end_date->format('Y-m-d') : $phaseEnd;
 
                 $dependencies = $phaseId;
                 if ($previousTaskId) {
-                    $dependencies .= ', ' . $previousTaskId;
+                    $dependencies .= ', '.$previousTaskId;
                 }
 
                 $tasks[] = [
@@ -132,13 +137,13 @@ class ChantierDocumentService extends DocumentService
         }
 
         // 3. Vehicles
-        $vehicleAssignments = \App\Models\Flottes\VehicleAssignment::with(['vehicle', 'employee'])
+        $vehicleAssignments = VehicleAssignment::with(['vehicle', 'employee'])
             ->where('chantier_id', $chantier->id)
             ->get();
-            
+
         foreach ($vehicleAssignments as $assignment) {
             $resources[] = [
-                'name' => $assignment->vehicle->brand . ' ' . $assignment->vehicle->model . ' (' . $assignment->vehicle->license_plate . ')',
+                'name' => $assignment->vehicle->brand.' '.$assignment->vehicle->model.' ('.$assignment->vehicle->license_plate.')',
                 'type' => 'Véhicule',
                 'supplier' => $assignment->employee ? $assignment->employee->full_name : 'Sans conducteur',
                 'status' => $assignment->status?->getLabel() ?? 'Actif',
@@ -158,9 +163,18 @@ class ChantierDocumentService extends DocumentService
     {
         $chantier->load(['client', 'manager']);
 
+        $reserves = $chantier->reserves()
+            ->whereIn('status', [
+                ChantierReserveStatus::RESOLVED,
+                ChantierReserveStatus::LIFTED,
+            ])
+            ->orderBy('created_at')
+            ->get();
+
         $data = [
             'company' => Company::first(),
             'chantier' => $chantier,
+            'reserves' => $reserves,
             'title' => 'PV DE RÉCEPTION : '.$chantier->name,
             'generated_at' => now()->format('d/m/Y H:i'),
         ];
@@ -219,6 +233,25 @@ class ChantierDocumentService extends DocumentService
             $data,
             'journal_'.$chantier->reference.'_'.$startDate->format('Y_W'),
             'chantiers/journals'
+        );
+    }
+
+    /**
+     * Génère le PPSPS (Plan Particulier de Sécurité et de Protection de la Santé).
+     * Croise les tâches prévues, le matériel alloué et les fiches de sécurité des produits.
+     */
+    public function generatePpsps(Chantier $chantier): string
+    {
+        $data = $this->ppspsService->build($chantier);
+        $data['title'] = 'PPSPS : '.$chantier->name;
+        $data['generated_at'] = Carbon::now()->format('d/m/Y H:i');
+        $data['position'] = 'landscape';
+
+        return $this->generate(
+            'pdf.chantiers.ppsps',
+            $data,
+            'ppsps_'.$chantier->reference,
+            'chantiers/legal'
         );
     }
 }

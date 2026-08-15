@@ -2,7 +2,10 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Vision3D\Pages\Dashboard;
 use App\Http\Middleware\EnsureUserIsAdmin;
+use App\Providers\Filament\Traits\HasKnowledgeBaseCompanion;
+use Ariefng\FilamentCalculator\CalculatorPlugin;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -10,17 +13,22 @@ use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
+use Filament\View\PanelsRenderHook;
+use Guava\FilamentKnowledgeBase\Plugins\KnowledgeBaseCompanionPlugin;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
+use Illuminate\Support\Facades\Blade;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
-use ToneGabes\Filament\Icons\Enums\Phosphor;
+use MartinPetricko\FilamentSentryFeedback\FilamentSentryFeedbackPlugin;
+use Vaslv\FilamentAppVersion\AppVersionPlugin;
 
 class Vision3DPanelProvider extends PanelProvider
 {
-    use \App\Providers\Filament\Traits\HasKnowledgeBaseCompanion;
+    use HasKnowledgeBaseCompanion;
+
     public function panel(Panel $panel): Panel
     {
         return $panel
@@ -36,18 +44,20 @@ class Vision3DPanelProvider extends PanelProvider
                 'gray' => Color::Slate,
             ])
             ->pages([
-                \App\Filament\Vision3D\Pages\Dashboard::class,
+                Dashboard::class,
             ])
             ->discoverResources(in: app_path('Filament/Vision3D/Resources'), for: 'App\Filament\Vision3D\Resources')
             ->discoverPages(in: app_path('Filament/Vision3D/Pages'), for: 'App\Filament\Vision3D\Pages')
             ->discoverWidgets(in: app_path('Filament/Vision3D/Widgets'), for: 'App\Filament\Vision3D\Widgets')
             ->renderHook(
-                \Filament\View\PanelsRenderHook::HEAD_END,
-                fn (): string => \Illuminate\Support\Facades\Blade::render("@vite('resources/js/app.js')")
+                PanelsRenderHook::HEAD_END,
+                fn (): string => Blade::render("@vite('resources/js/app.js')")
             )
-            ->plugin(\Guava\FilamentKnowledgeBase\Plugins\KnowledgeBaseCompanionPlugin::make()->knowledgeBasePanelId('docs'))
+            ->plugin(KnowledgeBaseCompanionPlugin::make()->knowledgeBasePanelId('docs'))
             ->plugins([
-                \MartinPetricko\FilamentSentryFeedback\FilamentSentryFeedbackPlugin::make(),
+                FilamentSentryFeedbackPlugin::make(),
+                AppVersionPlugin::make(),
+                CalculatorPlugin::make(),
             ])
             ->middleware([
                 EncryptCookies::class,
@@ -66,6 +76,3 @@ class Vision3DPanelProvider extends PanelProvider
             ]);
     }
 }
-
-
-

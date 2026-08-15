@@ -2,9 +2,8 @@
 
 namespace App\Providers\Filament;
 
-use AchyutN\FilamentLogViewer\FilamentLogViewer;
 use App\Http\Middleware\EnsureUserIsAdmin;
-use App\Services\Core\CompanyService;
+use App\Providers\Filament\Traits\HasKnowledgeBaseCompanion;
 use Ariefng\FilamentCalculator\CalculatorPlugin;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
@@ -14,9 +13,7 @@ use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
-use Filament\Widgets\AccountWidget;
-use Filament\Widgets\FilamentInfoWidget;
-use FilamentInbox\FilamentInboxPlugin;
+use Guava\FilamentKnowledgeBase\Plugins\KnowledgeBaseCompanionPlugin;
 use Hydrat\TableLayoutToggle\TableLayoutTogglePlugin;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
@@ -24,10 +21,13 @@ use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
+use MartinPetricko\FilamentSentryFeedback\FilamentSentryFeedbackPlugin;
+use Vaslv\FilamentAppVersion\AppVersionPlugin;
 
 class TiersPanelProvider extends PanelProvider
 {
-    use \App\Providers\Filament\Traits\HasKnowledgeBaseCompanion;
+    use HasKnowledgeBaseCompanion;
+
     public function panel(Panel $panel): Panel
     {
         return $panel
@@ -46,7 +46,7 @@ class TiersPanelProvider extends PanelProvider
                 Dashboard::class,
             ])
             ->discoverWidgets(in: app_path('Filament/Tiers/Widgets'), for: 'App\Filament\Tiers\Widgets')
-            ->plugin(\Guava\FilamentKnowledgeBase\Plugins\KnowledgeBaseCompanionPlugin::make()->knowledgeBasePanelId('docs'))
+            ->plugin(KnowledgeBaseCompanionPlugin::make()->knowledgeBasePanelId('docs'))
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
@@ -59,7 +59,8 @@ class TiersPanelProvider extends PanelProvider
                 DispatchServingFilamentEvent::class,
             ])
             ->plugins([
-                \MartinPetricko\FilamentSentryFeedback\FilamentSentryFeedbackPlugin::make(),
+                FilamentSentryFeedbackPlugin::make(),
+                AppVersionPlugin::make(),
                 CalculatorPlugin::make(),
                 TableLayoutTogglePlugin::make()
                     ->setDefaultLayout('list')
@@ -72,6 +73,3 @@ class TiersPanelProvider extends PanelProvider
             ]);
     }
 }
-
-
-
