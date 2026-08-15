@@ -27,6 +27,12 @@ class QuoteService
         }
 
         return DB::transaction(function () use ($quote, $responsable) {
+            // Un devis d'avenant est rattaché à une commande existante :
+            // ses lignes viennent enrichir la commande et faire évoluer le budget du chantier.
+            if ($quote->is_avenant) {
+                return $this->acceptAvenant($quote);
+            }
+
             $chantier = $quote->chantier;
             if (! $chantier) {
                 $chantier = Chantier::create([
@@ -100,5 +106,71 @@ class QuoteService
         }
 
         return "DEV-{$year}-".str_pad($sequenceNumber, 3, '0', STR_PAD_LEFT);
+    }
+
+    /**
+     * Génère la référence d'un avenant : AV-YYYY-NNN.
+     */
+    public function generateReferenceAvenant(): string
+    {
+        $year = date('Y');
+        $latest = CustomerQuote::where('reference', 'like', "AV-{$year}-%")
+            ->orderByRaw('LENGTH(reference) DESC')
+            ->orderBy('reference', 'desc')
+            ->first();
+
+        $sequenceNumber = 1;
+        if ($latest) {
+            $parts = explode('-', $latest->reference);
+            if (count($parts) === 3 && is_numeric($parts[2])) {
+                $sequenceNumber = (int) $parts[2] + 1;
+            }
+        }
+
+        return "AV-{$year}-".str_pad($sequenceNumber, 3, '0', STR_PAD_LEFT);
+    }
+
+    /**
+     * Accepte un avenant : enrichit la commande principale de ses lignes
+     * et rehausse le budget du chantier.
+     */
+    protected function acceptAvenant(CustomerQuote $quote): CustomerOrder
+    {
+        $order = CustomerOrder::findOrFail($quote->parent_order_id);
+        $chantier = $order->chantier;
+
+        $quote->load('items');
+
+        $itemsToCreate = $quote->items->map(function ($quoteItem) {
+            return [
+                'item_id' => $quoteItem->item_id,
+                'name' => $quoteItem->name,
+                'quantity' => $quoteItem->quantity,
+                'selling_price' => $quoteItem->selling_price,
+                'vat_rate_id' => $quoteItem->vat_rate_id,
+                'total_ht' => $quoteItem->selling_price * $quoteItem->quantity,
+            ];
+        });
+
+        if ($itemsToCreate->isNotEmpty()) {
+            $order->items()->createMany($itemsToCreate->all());
+        }
+
+        $order->update([
+            'total_ht' => (float) $order->total_ht + (float) $quote->total_ht,
+            'total_ttc' => (float) $order->total_ttc + (float) $quote->total_ttc,
+        ]);
+
+        if ($chantier) {
+            $chantier->increment('budget_total_ht', (float) $quote->total_ht);
+        }
+
+        $quote->update([
+            'status' => QuoteStatus::SIGNED,
+            'signed_at' => now(),
+            'chantier_id' => $order->chantier_id,
+        ]);
+
+        return $order;
     }
 }

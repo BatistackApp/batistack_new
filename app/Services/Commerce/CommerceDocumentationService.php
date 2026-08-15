@@ -23,12 +23,15 @@ class CommerceDocumentationService extends DocumentService
      */
     public function generateQuotePdf(CustomerQuote|Model $quote): string
     {
-        $quote->load(['client', 'chantier', 'items.item', 'items.vatRate']);
+        $quote->load(['client', 'chantier', 'items.item', 'items.vatRate', 'parentOrder']);
+
+        $isAvenant = (bool) $quote->is_avenant;
 
         $data = [
             'company' => Company::first(),
             'quote' => $quote,
-            'title' => 'DEVIS N° '.$quote->reference,
+            'is_avenant' => $isAvenant,
+            'title' => ($isAvenant ? 'AVENANT DE TRAVAUX N° ' : 'DEVIS N° ').$quote->reference,
             'generated_at' => Carbon::now()->format('d/m/Y H:i'),
         ];
 
@@ -182,8 +185,7 @@ class CommerceDocumentationService extends DocumentService
         Carbon|CarbonInterface|null $startDate = null,
         Carbon|CarbonInterface|null $endDate = null,
         ?string $status = null
-    ): string
-    {
+    ): string {
         $client = ThirdParty::findOrFail($clientId);
         $client->load(['customerInvoices', 'payments']);
 

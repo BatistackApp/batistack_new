@@ -4,19 +4,15 @@ namespace App\Filament\Commerce\Resources\CustomerQuotes\Schemas;
 
 use App\Enums\Commerce\QuoteStatus;
 use App\Enums\Tiers\ThirdPartyType;
-use App\Models\Articles\Item;
-use App\Models\Core\VatRate;
 use App\Models\Tiers\ThirdParty;
 use App\Models\User;
 use App\Services\Commerce\QuoteService;
 use Filament\Forms\Components\DatePicker;
-use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
-use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 use Illuminate\Support\Facades\Auth;
 
@@ -55,6 +51,20 @@ class CustomerQuoteForm
                             ->relationship('chantier', 'reference')
                             ->searchable()
                             ->preload(),
+
+                        Toggle::make('is_avenant')
+                            ->label('Devis d\'avenant (travaux supplémentaires)')
+                            ->helperText('Rattache ce devis à une commande principale pour faire évoluer le budget du chantier.')
+                            ->default(false)
+                            ->live(),
+
+                        Select::make('parent_order_id')
+                            ->label('Commande principale')
+                            ->relationship('parentOrder', 'reference')
+                            ->searchable()
+                            ->preload()
+                            ->visible(fn (Get $get) => (bool) $get('is_avenant'))
+                            ->required(fn (Get $get) => (bool) $get('is_avenant')),
 
                         Select::make('status')->label('Statut')
                             ->label('Statut')

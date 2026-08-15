@@ -3,8 +3,13 @@
 namespace App\Filament\Commerce\Resources\CustomerQuotes\Tables;
 
 use App\Enums\Commerce\QuoteStatus;
+use App\Enums\Core\SignatureType;
+use App\Filament\Commerce\Resources\CustomerOrders\CustomerOrderResource;
 use App\Models\Commerce\CustomerQuote;
 use App\Services\Commerce\CommerceDocumentationService;
+use App\Services\Commerce\QuoteService;
+use App\Services\Core\DocumentService;
+use App\Services\Core\SignatureService;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
@@ -12,6 +17,8 @@ use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
+use Filament\Forms\Components\TextInput;
+use Filament\Notifications\Notification;
 use Filament\Support\Enums\Width;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
@@ -42,6 +49,12 @@ class CustomerQuotesTable
                     ->label('Statut')
                     ->badge(),
 
+                TextColumn::make('is_avenant')
+                    ->label('Type')
+                    ->badge()
+                    ->formatStateUsing(fn (bool $state) => $state ? 'Avenant' : 'Devis')
+                    ->color(fn (bool $state) => $state ? 'warning' : 'gray'),
+
                 TextColumn::make('total_ttc')
                     ->label('Montant TTC')
                     ->money('EUR')
@@ -60,6 +73,12 @@ class CustomerQuotesTable
             ->filters([
                 SelectFilter::make('status')->label('Statut')
                     ->options(QuoteStatus::class),
+
+                SelectFilter::make('is_avenant')->label('Type')
+                    ->options([
+                        '0' => 'Devis',
+                        '1' => 'Avenant',
+                    ]),
 
                 SelectFilter::make('client_id')->label('Client')
                     ->relationship('client', 'name')
@@ -89,15 +108,15 @@ class CustomerQuotesTable
                         ->modalSubmitActionLabel('Oui, accepter')
                         ->action(function (CustomerQuote $record) {
                             try {
-                                $order = app(\App\Services\Commerce\QuoteService::class)->acceptQuote($record, auth()->user());
-                                \Filament\Notifications\Notification::make()
+                                $order = app(QuoteService::class)->acceptQuote($record, auth()->user());
+                                Notification::make()
                                     ->success()
                                     ->title('Devis accepté et commande générée')
                                     ->send();
-                                
-                                return redirect(\App\Filament\Commerce\Resources\CustomerOrders\CustomerOrderResource::getUrl('view', ['record' => $order]));
+
+                                return redirect(CustomerOrderResource::getUrl('view', ['record' => $order]));
                             } catch (\Exception $e) {
-                                \Filament\Notifications\Notification::make()
+                                Notification::make()
                                     ->danger()
                                     ->title('Erreur')
                                     ->body($e->getMessage())
@@ -112,25 +131,26 @@ class CustomerQuotesTable
                         ->modalWidth(Width::Container)
                         ->media(function (Model $record) {
                             $path = 'commerce/quotes/devis_'.$record->reference.'.pdf';
-                            $disk = \App\Services\Core\DocumentService::getDisk();
-                            
+                            $disk = DocumentService::getDisk();
+
                             if (! Storage::disk($disk)->exists('documents/'.$path)) {
                                 try {
                                     app(CommerceDocumentationService::class)->generateQuotePdf($record);
                                 } catch (\Exception $e) {
-                                    \Filament\Notifications\Notification::make()
+                                    Notification::make()
                                         ->danger()
                                         ->title('Erreur de génération PDF')
                                         ->body($e->getMessage())
                                         ->send();
+
                                     return '';
                                 }
                             }
-                            
+
                             if ($disk === 's3') {
                                 return Storage::disk($disk)->temporaryUrl('documents/'.$path, now()->addMinutes(5));
                             }
-                            
+
                             return Storage::disk($disk)->url('documents/'.$path);
                         }),
 
@@ -139,11 +159,11 @@ class CustomerQuotesTable
                         ->icon(Phosphor::SealCheck)
                         ->color('info')
                         ->form([
-                            \Filament\Forms\Components\TextInput::make('name')->label('Nom')
+                            TextInput::make('name')->label('Nom')
                                 ->label('Nom du signataire')
                                 ->required()
                                 ->default(fn (CustomerQuote $record) => optional($record->client)->name),
-                            \Filament\Forms\Components\TextInput::make('email')->label('Email')
+                            TextInput::make('email')->label('Email')
                                 ->label('Email du signataire')
                                 ->email()
                                 ->required()
@@ -154,28 +174,28 @@ class CustomerQuotesTable
                         ->action(function (CustomerQuote $record, array $data) {
                             try {
                                 $path = 'commerce/quotes/devis_'.$record->reference.'.pdf';
-                                $disk = \App\Services\Core\DocumentService::getDisk();
+                                $disk = DocumentService::getDisk();
 
                                 // S'assurer que le PDF est généré
                                 if (! Storage::disk($disk)->exists('documents/'.$path)) {
                                     app(CommerceDocumentationService::class)->generateQuotePdf($record);
                                 }
 
-                                app(\App\Services\Core\SignatureService::class)->requestSignature(
+                                app(SignatureService::class)->requestSignature(
                                     $record,
-                                    \App\Enums\Core\SignatureType::EIDAS,
+                                    SignatureType::EIDAS,
                                     $data['email'],
                                     $data['name'],
                                     'documents/'.$path
                                 );
 
-                                \Filament\Notifications\Notification::make()
+                                Notification::make()
                                     ->success()
                                     ->title('Demande envoyée !')
                                     ->body('Le devis a bien été envoyé pour signature.')
                                     ->send();
                             } catch (\Exception $e) {
-                                \Filament\Notifications\Notification::make()
+                                Notification::make()
                                     ->danger()
                                     ->title('Erreur')
                                     ->body($e->getMessage())

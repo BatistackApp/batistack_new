@@ -4,6 +4,7 @@ namespace App\Filament\Chantier\Resources\Chantiers\Pages;
 
 use App\Enums\Commerce\InvoiceStatus;
 use App\Enums\Commerce\InvoiceType;
+use App\Enums\Commerce\QuoteStatus;
 use App\Enums\Core\SignatureType;
 use App\Enums\Flottes\AssignmentStatus;
 use App\Enums\RH\QualificationType;
@@ -13,13 +14,17 @@ use App\Filament\Chantier\Resources\Chantiers\Widgets\ChantierGanttWidget;
 use App\Filament\Chantier\Resources\Chantiers\Widgets\DeployedResourcesWidget;
 use App\Filament\Chantier\Resources\Chantiers\Widgets\LaborDistributionChart;
 use App\Filament\Chantier\Resources\Chantiers\Widgets\ReservesOverviewWidget;
+use App\Filament\Commerce\Resources\CustomerQuotes\CustomerQuoteResource;
 use App\Models\Chantiers\Chantier;
 use App\Models\Commerce\CustomerInvoice;
+use App\Models\Commerce\CustomerOrder;
+use App\Models\Commerce\CustomerQuote;
 use App\Models\Flottes\Vehicle;
 use App\Models\Flottes\VehicleAssignment;
 use App\Services\Chantiers\ChantierAnalyticService;
 use App\Services\Chantiers\ChantierDocumentService;
 use App\Services\Chantiers\DoeDocumentService;
+use App\Services\Commerce\QuoteService;
 use App\Services\Core\DocumentService;
 use App\Services\Core\SignatureService;
 use Filament\Actions\Action;
@@ -216,6 +221,40 @@ class ViewChantier extends ViewRecord
                     }
 
                     return response()->download(Storage::disk($disk)->path($relativePath));
+                }),
+
+            Action::make('create_avenant')
+                ->label('Créer un avenant')
+                ->icon(Phosphor::Plus)
+                ->color('primary')
+                ->schema([
+                    Select::make('order_id')
+                        ->label('Commande principale')
+                        ->options(fn (Chantier $record) => CustomerOrder::where('chantier_id', $record->id)->pluck('reference', 'id'))
+                        ->searchable()
+                        ->required(),
+                ])
+                ->action(function (Chantier $record, array $data) {
+                    $order = CustomerOrder::find($data['order_id']);
+
+                    $quote = CustomerQuote::create([
+                        'client_id' => $record->client_id,
+                        'chantier_id' => $record->id,
+                        'parent_order_id' => $order->id,
+                        'reference' => app(QuoteService::class)->generateReferenceAvenant(),
+                        'status' => QuoteStatus::DRAFT,
+                        'expires_at' => now()->addDays(30),
+                        'responsable_id' => auth()->id(),
+                        'is_avenant' => true,
+                    ]);
+
+                    Notification::make()
+                        ->title('Avenant créé')
+                        ->body("Ajoutez les travaux supplémentaires, puis envoyez l'avenant au client.")
+                        ->success()
+                        ->send();
+
+                    return redirect(CustomerQuoteResource::getUrl('edit', ['record' => $quote]));
                 }),
 
             Action::make('generate_doe')

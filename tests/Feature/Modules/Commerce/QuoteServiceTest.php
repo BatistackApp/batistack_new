@@ -169,3 +169,81 @@ describe('QuoteService - Gestion des montants', function () {
             ->and($order->total_ttc)->toEqual(10200.60); // Utiliser toEqual
     });
 });
+
+describe('QuoteService - Avenants (travaux supplémentaires)', function () {
+
+    test('génère une référence d\'avenant AV-YYYY-NNN', function () {
+        $ref = $this->quoteService->generateReferenceAvenant();
+
+        expect($ref)->toMatch('/^AV-\d{4}-\d{3}$/');
+    });
+
+    test('enrichit la commande principale et rehausse le budget du chantier', function () {
+        $this->chantier->update(['budget_total_ht' => 10000.00]);
+
+        $order = CustomerOrder::factory()->create([
+            'client_id' => $this->customer->id,
+            'chantier_id' => $this->chantier->id,
+            'status' => OrderStatus::CONFIRMED,
+            'total_ht' => 10000.00,
+            'total_ttc' => 12000.00,
+            'responsable_id' => $this->responsable->id,
+        ]);
+
+        $avenant = CustomerQuote::factory()->create([
+            'client_id' => $this->customer->id,
+            'chantier_id' => $this->chantier->id,
+            'parent_order_id' => $order->id,
+            'status' => QuoteStatus::SENT,
+            'total_ht' => 2000.00,
+            'total_ttc' => 2400.00,
+            'responsable_id' => $this->responsable->id,
+            'is_avenant' => true,
+        ]);
+
+        $avenant->items()->create([
+            'item_id' => Item::factory()->create()->id,
+            'name' => 'Travaux supplémentaires',
+            'purchase_price' => 700.00,
+            'quantity' => 2,
+            'selling_price' => 1000.00,
+            'vat_rate_id' => $this->defaultVatRate->id,
+        ]);
+
+        $result = $this->quoteService->acceptQuote($avenant, $this->responsable);
+
+        expect($result->id)->toBe($order->id)
+            ->and($result->refresh()->items)->toHaveCount(1)
+            ->and($result->refresh()->total_ht)->toEqual(12000.00)
+            ->and($this->chantier->refresh()->budget_total_ht)->toEqual(12000.00)
+            ->and($avenant->fresh()->status)->toBe(QuoteStatus::SIGNED);
+    });
+
+    test('ne crée pas de nouveau chantier pour un avenant', function () {
+        $order = CustomerOrder::factory()->create([
+            'client_id' => $this->customer->id,
+            'chantier_id' => $this->chantier->id,
+            'status' => OrderStatus::CONFIRMED,
+            'total_ht' => 5000.00,
+            'total_ttc' => 6000.00,
+            'responsable_id' => $this->responsable->id,
+        ]);
+
+        $before = Chantier::count();
+
+        $avenant = CustomerQuote::factory()->create([
+            'client_id' => $this->customer->id,
+            'chantier_id' => $this->chantier->id,
+            'parent_order_id' => $order->id,
+            'status' => QuoteStatus::DRAFT,
+            'total_ht' => 500.00,
+            'total_ttc' => 600.00,
+            'responsable_id' => $this->responsable->id,
+            'is_avenant' => true,
+        ]);
+
+        $this->quoteService->acceptQuote($avenant, $this->responsable);
+
+        expect(Chantier::count())->toBe($before);
+    });
+});
