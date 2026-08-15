@@ -150,6 +150,11 @@ class Chantier extends Model implements HasMedia, HasTimeline
         return $this->hasMany(BankTransaction::class);
     }
 
+    public function reserves(): HasMany
+    {
+        return $this->hasMany(ChantierReserve::class);
+    }
+
     public function factures(): HasMany
     {
         return $this->hasMany(Facture::class);

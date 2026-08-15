@@ -35,9 +35,36 @@
 
     <div class="mb-10">
         <h2 class="text-sm font-bold bg-slate-100 text-slate-800 p-2 mb-2 uppercase">Liste des réserves ou travaux de finition :</h2>
-        <div class="border border-slate-300 h-48 p-4 bg-slate-50 rounded-lg italic text-slate-400">
-            Mentionnez ici les éventuelles réserves techniques...
-        </div>
+        @if($reserves->isNotEmpty())
+            <table class="text-[10px] w-full">
+                <thead>
+                <tr class="bg-slate-100">
+                    <th class="text-left p-1">Réf.</th>
+                    <th class="text-left p-1">Objet</th>
+                    <th class="text-left p-1">Gravité</th>
+                    <th class="text-left p-1">Statut</th>
+                    <th class="text-left p-1">Assigné à</th>
+                    <th class="text-left p-1">Levée le</th>
+                </tr>
+                </thead>
+                <tbody>
+                @foreach($reserves as $reserve)
+                    <tr class="border-b border-slate-200">
+                        <td class="p-1">{{ $reserve->reference }}</td>
+                        <td class="p-1">{{ $reserve->title }}</td>
+                        <td class="p-1">{{ $reserve->severity?->getLabel() }}</td>
+                        <td class="p-1">{{ $reserve->status?->getLabel() }}</td>
+                        <td class="p-1">{{ $reserve->assignee?->full_name ?? '-' }}</td>
+                        <td class="p-1">{{ $reserve->lifted_at?->format('d/m/Y') ?? '-' }}</td>
+                    </tr>
+                @endforeach
+                </tbody>
+            </table>
+        @else
+            <div class="border border-slate-300 h-24 p-4 bg-slate-50 rounded-lg italic text-slate-400">
+                Aucune réserve en cours de levée.
+            </div>
+        @endif
     </div>
 
     <div class="grid grid-cols-2 gap-10 text-[10px]">

@@ -2,14 +2,20 @@
 
 namespace App\Filament\Chantier\Resources\Chantiers;
 
+use App\Filament\Chantier\Resources\Chantiers\ChantierResource\RelationManagers\StocksRelationManager;
 use App\Filament\Chantier\Resources\Chantiers\Pages\CreateChantier;
 use App\Filament\Chantier\Resources\Chantiers\Pages\EditChantier;
 use App\Filament\Chantier\Resources\Chantiers\Pages\ListChantiers;
 use App\Filament\Chantier\Resources\Chantiers\Pages\ViewChantier;
+use App\Filament\Chantier\Resources\Chantiers\RelationManagers\BimModelsRelationManager;
+use App\Filament\Chantier\Resources\Chantiers\RelationManagers\DoeDocumentsRelationManager;
+use App\Filament\Chantier\Resources\Chantiers\RelationManagers\InvoicesRelationManager;
 use App\Filament\Chantier\Resources\Chantiers\RelationManagers\LogsRelationManager;
 use App\Filament\Chantier\Resources\Chantiers\RelationManagers\MembersRelationManager;
 use App\Filament\Chantier\Resources\Chantiers\RelationManagers\PhasesRelationManager;
+use App\Filament\Chantier\Resources\Chantiers\RelationManagers\ReservesRelationManager;
 use App\Filament\Chantier\Resources\Chantiers\RelationManagers\SubcontractorsRelationManager;
+use App\Filament\Chantier\Resources\Chantiers\RelationManagers\WeatherAlertsRelationManager;
 use App\Filament\Chantier\Resources\Chantiers\Schemas\ChantierForm;
 use App\Filament\Chantier\Resources\Chantiers\Schemas\ChantierInfolist;
 use App\Filament\Chantier\Resources\Chantiers\Tables\ChantiersTable;
@@ -18,6 +24,7 @@ use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Tables\Table;
+use Relaticle\ActivityLog\Filament\RelationManagers\ActivityLogRelationManager;
 use ToneGabes\Filament\Icons\Enums\Phosphor;
 
 class ChantierResource extends Resource
@@ -26,7 +33,8 @@ class ChantierResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Phosphor::HardHat;
 
-    protected static string | \UnitEnum | null $navigationGroup = 'Chantiers';
+    protected static string|\UnitEnum|null $navigationGroup = 'Chantiers';
+
     protected static ?int $navigationSort = 1;
 
     protected static ?string $recordTitleAttribute = 'name';
@@ -53,12 +61,13 @@ class ChantierResource extends Resource
             MembersRelationManager::class,
             SubcontractorsRelationManager::class,
             LogsRelationManager::class,
-            \App\Filament\Chantier\Resources\Chantiers\ChantierResource\RelationManagers\StocksRelationManager::class,
-            \App\Filament\Chantier\Resources\Chantiers\RelationManagers\BimModelsRelationManager::class,
-            \App\Filament\Chantier\Resources\Chantiers\RelationManagers\InvoicesRelationManager::class,
-            \App\Filament\Chantier\Resources\Chantiers\RelationManagers\WeatherAlertsRelationManager::class,
-            \App\Filament\Chantier\Resources\Chantiers\RelationManagers\DoeDocumentsRelationManager::class,
-            \Relaticle\ActivityLog\Filament\RelationManagers\ActivityLogRelationManager::class,
+            StocksRelationManager::class,
+            BimModelsRelationManager::class,
+            InvoicesRelationManager::class,
+            WeatherAlertsRelationManager::class,
+            DoeDocumentsRelationManager::class,
+            ReservesRelationManager::class,
+            ActivityLogRelationManager::class,
         ];
     }
 
