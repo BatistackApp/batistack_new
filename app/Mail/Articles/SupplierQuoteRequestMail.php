@@ -24,6 +24,7 @@ class SupplierQuoteRequestMail extends Mailable implements ShouldQueue
     public function envelope(): Envelope
     {
         $companyName = Company::first()?->name ?? 'Notre Entreprise';
+
         return new Envelope(
             subject: "Demande de prix / Disponibilité - {$companyName} - Réf: {$this->item->reference}",
         );
@@ -35,7 +36,7 @@ class SupplierQuoteRequestMail extends Mailable implements ShouldQueue
     public function content(): Content
     {
         return new Content(
-            view: 'emails.articles.quote_request',
+            markdown: 'emails.articles.quote_request',
             with: [
                 'company' => Company::first(),
             ]
