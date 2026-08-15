@@ -4,6 +4,7 @@ namespace App\Filament\Commerce\Resources\CustomerQuotes\Schemas;
 
 use App\Enums\Commerce\QuoteStatus;
 use App\Enums\Tiers\ThirdPartyType;
+use App\Models\Commerce\CustomerOrder;
 use App\Models\Tiers\ThirdParty;
 use App\Models\User;
 use App\Services\Commerce\QuoteService;
@@ -50,7 +51,8 @@ class CustomerQuoteForm
                             ->label('Chantier')
                             ->relationship('chantier', 'reference')
                             ->searchable()
-                            ->preload(),
+                            ->preload()
+                            ->live(),
 
                         Toggle::make('is_avenant')
                             ->label('Devis d\'avenant (travaux supplémentaires)')
@@ -60,7 +62,16 @@ class CustomerQuoteForm
 
                         Select::make('parent_order_id')
                             ->label('Commande principale')
-                            ->relationship('parentOrder', 'reference')
+                            ->options(function (Get $get) {
+                                $clientId = $get('client_id');
+                                $chantierId = $get('chantier_id');
+
+                                return CustomerOrder::query()
+                                    ->when($clientId, fn ($q) => $q->where('client_id', $clientId))
+                                    ->when($chantierId, fn ($q) => $q->where('chantier_id', $chantierId))
+                                    ->orderBy('reference')
+                                    ->pluck('reference', 'id');
+                            })
                             ->searchable()
                             ->preload()
                             ->visible(fn (Get $get) => (bool) $get('is_avenant'))

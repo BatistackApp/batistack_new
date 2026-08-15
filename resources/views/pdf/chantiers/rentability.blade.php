@@ -65,7 +65,7 @@
                 <thead>
                 <tr>
                     <th class="text-left">Catégorie</th>
-                    <th class="text-right">Montant HT</th>
+<th class="text-right">Montant</th>
                     <th class="text-right">% Budget</th>
                 </tr>
                 </thead>

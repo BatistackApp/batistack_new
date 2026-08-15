@@ -38,7 +38,7 @@ enum RiskType: string implements HasLabel
     public function getEpi(): array
     {
         return match ($this) {
-            self::EXPLOSION => ['Interdiction de tout objet ou outil produisant des étincelles'],
+            self::EXPLOSION => [],
             self::INCENDIE => ['Vêtements de travail non inflammables'],
             self::INTOXICATION => ['Gants de protection', 'Lunettes de protection', 'Protection respiratoire (masque adapté)'],
             self::CORROSION => ['Gants de protection chimique', 'Lunettes étanches', 'Tablier / vêtement de protection'],
@@ -55,7 +55,7 @@ enum RiskType: string implements HasLabel
     public function getCollective(): array
     {
         return match ($this) {
-            self::EXPLOSION => ['Travaux par points chauds soumis à permis de feu', 'Zone dangereuse balisée et signalée'],
+            self::EXPLOSION => ['Interdiction de tout objet ou outil produisant des étincelles', 'Travaux par points chauds soumis à permis de feu', 'Zone dangereuse balisée et signalée'],
             self::INCENDIE => ['Extincteurs à proximité du poste', 'Stockage des produits inflammables séparé et ventilé', 'Interdiction de fumer'],
             self::INTOXICATION => ['Ventilation / aération du poste de travail', 'Interdiction de manger et de boire sur le poste'],
             self::CORROSION => ['Douche de sécurité et rince-œil à proximité', 'Bac de rétention anti-écoulement'],

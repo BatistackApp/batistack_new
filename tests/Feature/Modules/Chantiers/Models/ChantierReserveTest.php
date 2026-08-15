@@ -7,12 +7,29 @@ use App\Models\Chantiers\ChantierReserve;
 use App\Models\Chantiers\ChantierTask;
 use App\Models\RH\Employee;
 
-it('génère automatiquement une référence unique', function () {
+it('génère des références annuelles uniques', function () {
     $chantier = Chantier::factory()->create();
-    $reserve = ChantierReserve::factory()->create(['chantier_id' => $chantier->id]);
 
-    expect($reserve->reference)->toStartWith('RS-'.now()->year.'-')
-        ->and(strlen($reserve->reference))->toBeGreaterThan(8);
+    $reserveA = ChantierReserve::factory()->create(['chantier_id' => $chantier->id]);
+    $reserveB = ChantierReserve::factory()->create(['chantier_id' => $chantier->id]);
+    $reserveC = ChantierReserve::factory()->create(['chantier_id' => $chantier->id]);
+
+    expect($reserveA->reference)->toStartWith('RS-'.now()->year.'-')
+        ->and(strlen($reserveA->reference))->toBeGreaterThan(8);
+
+    $references = collect([$reserveA->reference, $reserveB->reference, $reserveC->reference]);
+    expect($references->unique()->count())->toBe(3);
+
+    // Suppression d'une référence non terminale puis nouvelle création : la référence reste unique
+    $reserveB->delete();
+    $reserveD = ChantierReserve::factory()->create(['chantier_id' => $chantier->id]);
+
+    $remaining = collect([
+        $reserveA->refresh()->reference,
+        $reserveC->refresh()->reference,
+        $reserveD->reference,
+    ]);
+    expect($remaining->unique()->count())->toBe(3);
 });
 
 it('appartient à un chantier et peut être assignée à un employé', function () {

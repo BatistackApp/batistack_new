@@ -63,5 +63,6 @@ class ChantierReserve extends Model implements HasMedia
     {
         $this->addMediaCollection('photos')->useDisk('public');
         $this->addMediaCollection('plan')->singleFile()->useDisk('public');
+        $this->addMediaCollection('signature')->singleFile()->useDisk('public');
     }
 }

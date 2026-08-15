@@ -53,7 +53,10 @@ class ReleaseNotesButton extends Component implements HasActions, HasForms
                         $body = $response->json('body') ?? 'Aucune note de version détaillée disponible.';
 
                         return view('filament.widgets.release-notes-content', [
-                            'content' => Str::markdown($body),
+                            'content' => Str::markdown($body, [
+                                'html_input' => 'strip',
+                                'allow_unsafe_links' => false,
+                            ]),
                         ]);
                     }
                 } catch (\Throwable $e) {

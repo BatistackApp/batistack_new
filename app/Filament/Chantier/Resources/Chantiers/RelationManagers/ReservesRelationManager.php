@@ -159,6 +159,20 @@ class ReservesRelationManager extends RelationManager
                             'lifted_at' => now(),
                             'lifted_by' => $data['lifted_by'],
                         ]);
+
+                        if (! empty($data['signature'])) {
+                            $record->clearMediaCollection('signature');
+                            $signature = $data['signature'];
+                            $contents = $signature;
+                            if (str_starts_with($signature, 'data:image')) {
+                                $contents = base64_decode(substr($signature, strpos($signature, ',') + 1));
+                            }
+
+                            $record->addMediaFromString($contents)
+                                ->usingFileName('signature-'.$record->id.'-'.now()->timestamp.'.png')
+                                ->toMediaCollection('signature');
+                        }
+
                         Notification::make()->title('Réserve levée')->success()->send();
                     }),
                 Tables\Actions\DeleteAction::make(),

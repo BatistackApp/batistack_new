@@ -21,6 +21,7 @@ use App\Models\Commerce\CustomerOrder;
 use App\Models\Commerce\CustomerQuote;
 use App\Models\Flottes\Vehicle;
 use App\Models\Flottes\VehicleAssignment;
+use App\Models\RH\Employee;
 use App\Services\Chantiers\ChantierAnalyticService;
 use App\Services\Chantiers\ChantierDocumentService;
 use App\Services\Chantiers\DoeDocumentService;
@@ -35,7 +36,9 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 use ToneGabes\Filament\Icons\Enums\Phosphor;
 
 class ViewChantier extends ViewRecord
@@ -106,22 +109,39 @@ class ViewChantier extends ViewRecord
                         return;
                     }
 
-                    $percentage = $data['percentage'] / 100;
-                    $amountHt = $quote->total_ht * $percentage;
-                    $amountTva = $quote->total_tva * $percentage;
+                    DB::transaction(function () use ($record, $quote, $data) {
+                        $percentage = $data['percentage'] / 100;
 
-                    $invoice = CustomerInvoice::create([
-                        'client_id' => $record->client_id,
-                        'chantier_id' => $record->id,
-                        'reference' => 'FACT-SIT-'.uniqid(),
-                        'type' => InvoiceType::SITUATION,
-                        'status' => InvoiceStatus::DRAFT,
-                        'total_ht' => $amountHt,
-                        'total_tva' => $amountTva,
-                        'total_ttc' => $amountHt + $amountTva,
-                        'due_date' => now()->addDays(30),
-                        'responsable_id' => auth()->id(),
-                    ]);
+                        $alreadyInvoicedHt = CustomerInvoice::where('chantier_id', $record->id)
+                            ->where('type', InvoiceType::SITUATION)
+                            ->where('status', '!=', InvoiceStatus::CANCELED)
+                            ->sum('total_ht');
+
+                        $remainingHt = (float) $quote->total_ht - (float) $alreadyInvoicedHt;
+                        $requestedHt = (float) $quote->total_ht * $percentage;
+
+                        if ($requestedHt > $remainingHt + 0.01) {
+                            throw ValidationException::withMessages([
+                                'percentage' => 'Le montant demandé dépasse le solde restant du devis ('.round($remainingHt, 2).' € HT).',
+                            ]);
+                        }
+
+                        $amountHt = $requestedHt;
+                        $amountTva = (float) $quote->total_tva * $percentage;
+
+                        CustomerInvoice::create([
+                            'client_id' => $record->client_id,
+                            'chantier_id' => $record->id,
+                            'reference' => 'FACT-SIT-'.uniqid(),
+                            'type' => InvoiceType::SITUATION,
+                            'status' => InvoiceStatus::DRAFT,
+                            'total_ht' => $amountHt,
+                            'total_tva' => $amountTva,
+                            'total_ttc' => $amountHt + $amountTva,
+                            'due_date' => now()->addDays(30),
+                            'responsable_id' => auth()->id(),
+                        ]);
+                    });
 
                     Notification::make()
                         ->title('Facture de situation créée (Brouillon)')
@@ -146,12 +166,14 @@ class ViewChantier extends ViewRecord
                             $chantier = $livewire->getRecord();
                             $employees = $chantier->members()->with(['currentContract', 'qualifications'])->get();
                             foreach ($employees as $emp) {
-                                $job = $emp->currentContract?->job_title ?? 'Non défini';
                                 $hasPermis = $emp->qualifications->contains(function ($q) {
                                     return $q->type === QualificationType::PERMIS && $q->isActive();
                                 });
-                                $status = $hasPermis ? '🚗 Permis OK' : '❌ Pas de permis';
-                                $options[$emp->id] = "{$emp->full_name} | {$job} | {$status}";
+                                if (! $hasPermis) {
+                                    continue;
+                                }
+                                $job = $emp->currentContract?->job_title ?? 'Non défini';
+                                $options[$emp->id] = "{$emp->full_name} | {$job}";
                             }
 
                             return $options;
@@ -165,6 +187,22 @@ class ViewChantier extends ViewRecord
                         ->label('Date de fin (Prévue)'),
                 ])
                 ->action(function (Chantier $record, array $data) {
+                    if (! empty($data['employee_id'])) {
+                        $driver = Employee::with('qualifications')->find($data['employee_id']);
+                        $hasPermis = $driver?->qualifications->contains(function ($q) {
+                            return $q->type === QualificationType::PERMIS && $q->isActive();
+                        });
+                        if (! $hasPermis) {
+                            Notification::make()
+                                ->title('Affectation refusée')
+                                ->body('Le conducteur sélectionné ne dispose pas d\'un permis de conduire actif.')
+                                ->danger()
+                                ->send();
+
+                            return;
+                        }
+                    }
+
                     VehicleAssignment::create([
                         'vehicle_id' => $data['vehicle_id'],
                         'chantier_id' => $record->id,

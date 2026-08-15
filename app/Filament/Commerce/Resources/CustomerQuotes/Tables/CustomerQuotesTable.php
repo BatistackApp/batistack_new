@@ -109,6 +109,17 @@ class CustomerQuotesTable
                         ->action(function (CustomerQuote $record) {
                             try {
                                 $order = app(QuoteService::class)->acceptQuote($record, auth()->user());
+
+                                if ($record->is_avenant) {
+                                    Notification::make()
+                                        ->success()
+                                        ->title('Avenant accepté')
+                                        ->body('Les travaux supplémentaires ont été ajoutés à la commande principale et le budget du chantier a été rehaussé.')
+                                        ->send();
+
+                                    return redirect(CustomerOrderResource::getUrl('view', ['record' => $order]));
+                                }
+
                                 Notification::make()
                                     ->success()
                                     ->title('Devis accepté et commande générée')

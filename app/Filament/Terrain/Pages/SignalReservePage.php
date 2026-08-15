@@ -83,32 +83,44 @@ class SignalReservePage extends Page
     {
         $data = $this->form->getState();
 
-        $reserve = ChantierReserve::create([
-            'chantier_id' => $data['chantier_id'],
-            'title' => $data['title'],
-            'description' => $data['description'] ?? null,
-            'severity' => $data['severity'],
-            'status' => ChantierReserveStatus::OPEN,
-        ]);
+        try {
+            $reserve = ChantierReserve::create([
+                'chantier_id' => $data['chantier_id'],
+                'title' => $data['title'],
+                'description' => $data['description'] ?? null,
+                'severity' => $data['severity'],
+                'status' => ChantierReserveStatus::OPEN,
+            ]);
 
-        if (! empty($data['photos'])) {
-            $reserve->addMediaFromDisk($data['photos'])->toMediaCollection('photos');
+            $this->form->model($reserve);
+            $this->form->saveRelationships();
+
+            ChantierLog::create([
+                'chantier_id' => $reserve->chantier_id,
+                'user_id' => Auth::id(),
+                'date' => now(),
+                'content' => 'Réserve signalée : "'.$reserve->title.'" ('.$reserve->reference.').',
+                'incident_reported' => true,
+            ]);
+
+            Notification::make()
+                ->title('Réserve signalée')
+                ->body('Référence : '.$reserve->reference)
+                ->success()
+                ->send();
+
+            $this->redirect('/terrain');
+        } catch (\Throwable $e) {
+            if (isset($reserve) && $reserve->exists) {
+                $reserve->clearMediaCollection('photos');
+                $reserve->delete();
+            }
+
+            Notification::make()
+                ->title('Erreur')
+                ->body('Le signalement de la réserve a échoué : '.$e->getMessage())
+                ->danger()
+                ->send();
         }
-
-        ChantierLog::create([
-            'chantier_id' => $reserve->chantier_id,
-            'user_id' => Auth::id(),
-            'date' => now(),
-            'content' => 'Réserve signalée : "'.$reserve->title.'" ('.$reserve->reference.').',
-            'incident_reported' => true,
-        ]);
-
-        Notification::make()
-            ->title('Réserve signalée')
-            ->body('Référence : '.$reserve->reference)
-            ->success()
-            ->send();
-
-        $this->redirect('/terrain');
     }
 }

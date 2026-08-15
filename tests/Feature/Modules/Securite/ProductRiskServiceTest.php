@@ -23,8 +23,19 @@ it('déduit le risque de corrosion et ses mesures de prévention', function () {
     $risks = $service->risksForItem($item);
 
     expect($risks)->toContain(RiskType::CORROSION);
-    expect($service->epiForRisks($risks))->not->toBeEmpty();
-    expect($service->collectiveForRisks($risks))->not->toBeEmpty();
+    expect($service->epiForRisks($risks))->toContain('Gants de protection chimique', 'Lunettes étanches');
+    expect($service->collectiveForRisks($risks))->toContain('Douche de sécurité et rince-œil à proximité');
+});
+
+it('classe la consigne des étincelles dans les mesures organisationnelles', function () {
+    $item = Item::factory()->create(['hazard_category' => HazardCategory::EXPLOSIVE]);
+
+    $service = app(ProductRiskService::class);
+    $risks = $service->risksForItem($item);
+
+    expect($risks)->toContain(RiskType::EXPLOSION);
+    expect($service->collectiveForRisks($risks))->toContain('Interdiction de tout objet ou outil produisant des étincelles');
+    expect($service->epiForRisks($risks))->not->toContain('Interdiction de tout objet ou outil produisant des étincelles');
 });
 
 it('déduit l\'union des risques pour plusieurs produits', function () {

@@ -161,7 +161,7 @@ class ChantiersTable
                                 'client_id' => $record->client_id,
                                 'chantier_id' => $record->id,
                                 'reference' => 'FACT-SIT-'.uniqid(),
-                                'type' => InvoiceType::STANDARD,
+                                'type' => InvoiceType::SITUATION,
                                 'status' => InvoiceStatus::DRAFT,
                                 'total_ht' => $amountHt,
                                 'total_tva' => $amountTva,

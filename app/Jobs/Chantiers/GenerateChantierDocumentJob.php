@@ -33,6 +33,8 @@ class GenerateChantierDocumentJob implements ShouldQueue
             };
         } catch (Exception $e) {
             Log::error("Erreur génération doc {$this->documentType} pour chantier #{$this->chantier->id} : ".$e->getMessage());
+
+            throw $e;
         }
     }
 }

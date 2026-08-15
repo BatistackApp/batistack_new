@@ -22,11 +22,13 @@ class QuoteService
      */
     public function acceptQuote(CustomerQuote $quote, User $responsable): CustomerOrder
     {
-        if ($quote->status !== QuoteStatus::SENT && $quote->status !== QuoteStatus::DRAFT) {
-            throw new Exception('Ce devis ne peut pas être accepté dans son état actuel.');
-        }
-
         return DB::transaction(function () use ($quote, $responsable) {
+            $quote = CustomerQuote::whereKey($quote->id)->lockForUpdate()->firstOrFail();
+
+            if ($quote->status !== QuoteStatus::SENT && $quote->status !== QuoteStatus::DRAFT) {
+                throw new Exception('Ce devis ne peut pas être accepté dans son état actuel.');
+            }
+
             // Un devis d'avenant est rattaché à une commande existante :
             // ses lignes viennent enrichir la commande et faire évoluer le budget du chantier.
             if ($quote->is_avenant) {
@@ -113,21 +115,22 @@ class QuoteService
      */
     public function generateReferenceAvenant(): string
     {
-        $year = date('Y');
-        $latest = CustomerQuote::where('reference', 'like', "AV-{$year}-%")
-            ->orderByRaw('LENGTH(reference) DESC')
-            ->orderBy('reference', 'desc')
-            ->first();
+        return DB::transaction(function () {
+            $year = date('Y');
 
-        $sequenceNumber = 1;
-        if ($latest) {
-            $parts = explode('-', $latest->reference);
-            if (count($parts) === 3 && is_numeric($parts[2])) {
-                $sequenceNumber = (int) $parts[2] + 1;
+            $latest = CustomerQuote::where('reference', 'like', "AV-{$year}-%")
+                ->lockForUpdate()
+                ->orderByRaw('LENGTH(reference) DESC')
+                ->orderBy('reference', 'desc')
+                ->first();
+
+            $sequenceNumber = 1;
+            if ($latest && preg_match('/^AV-'.$year.'-(\d+)$/', $latest->reference, $m)) {
+                $sequenceNumber = (int) $m[1] + 1;
             }
-        }
 
-        return "AV-{$year}-".str_pad($sequenceNumber, 3, '0', STR_PAD_LEFT);
+            return "AV-{$year}-".str_pad((string) $sequenceNumber, 3, '0', STR_PAD_LEFT);
+        });
     }
 
     /**
@@ -137,6 +140,14 @@ class QuoteService
     protected function acceptAvenant(CustomerQuote $quote): CustomerOrder
     {
         $order = CustomerOrder::findOrFail($quote->parent_order_id);
+
+        if (
+            ($quote->client_id && $quote->client_id !== $order->client_id)
+            || ($quote->chantier_id && $quote->chantier_id !== $order->chantier_id)
+        ) {
+            throw new Exception('La commande principale doit appartenir au même client et au même chantier que l\'avenant.');
+        }
+
         $chantier = $order->chantier;
 
         $quote->load('items');

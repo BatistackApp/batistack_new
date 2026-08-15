@@ -68,6 +68,7 @@ class ChantierAnalyticService
                 AssignmentStatus::ACTIVE,
                 AssignmentStatus::COMPLETED,
             ])
+            ->with('vehicle')
             ->get()
             ->sum(fn ($assignment) => $assignment->getCost());
 

@@ -6,7 +6,7 @@ order: 6
 
 # 📋 Levée des Réserves & OPR (Snagging)
 
-Lors de la réception des travaux, il est fréquent que le client constate des **défauts** ou des **fini-sions** à corriger. Batistack permet de **signaler ces réserves depuis le terrain**, de **les assigner** et de **suivre leur levée** jusqu'à l'acceptation par le client.
+Lors de la réception des travaux, il est fréquent que le client constate des **défauts** ou des **finitions** à corriger. Batistack permet de **signaler ces réserves depuis le terrain**, de **les assigner** et de **suivre leur levée** jusqu'à l'acceptation par le client.
 
 ## 1. Le cycle de vie d'une réserve
 
