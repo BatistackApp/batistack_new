@@ -21,6 +21,7 @@ use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use MartinPetricko\FilamentSentryFeedback\FilamentSentryFeedbackPlugin;
+use Vaslv\FilamentAppVersion\AppVersionPlugin;
 
 class CustomerPanelProvider extends PanelProvider
 {
@@ -49,6 +50,7 @@ class CustomerPanelProvider extends PanelProvider
             ->plugin(KnowledgeBaseCompanionPlugin::make()->knowledgeBasePanelId('docs'))
             ->plugins([
                 FilamentSentryFeedbackPlugin::make(),
+                AppVersionPlugin::make(),
                 CalculatorPlugin::make(),
             ])
             ->middleware([

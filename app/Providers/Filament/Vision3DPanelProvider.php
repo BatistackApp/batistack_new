@@ -23,6 +23,7 @@ use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use MartinPetricko\FilamentSentryFeedback\FilamentSentryFeedbackPlugin;
+use Vaslv\FilamentAppVersion\AppVersionPlugin;
 
 class Vision3DPanelProvider extends PanelProvider
 {
@@ -55,6 +56,7 @@ class Vision3DPanelProvider extends PanelProvider
             ->plugin(KnowledgeBaseCompanionPlugin::make()->knowledgeBasePanelId('docs'))
             ->plugins([
                 FilamentSentryFeedbackPlugin::make(),
+                AppVersionPlugin::make(),
                 CalculatorPlugin::make(),
             ])
             ->middleware([

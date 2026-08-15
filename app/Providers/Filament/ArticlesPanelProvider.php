@@ -3,15 +3,16 @@
 namespace App\Providers\Filament;
 
 use App\Http\Middleware\EnsureUserIsAdmin;
+use App\Providers\Filament\Traits\HasKnowledgeBaseCompanion;
 use Ariefng\FilamentCalculator\CalculatorPlugin;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
-use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
+use Guava\FilamentKnowledgeBase\Plugins\KnowledgeBaseCompanionPlugin;
 use Hydrat\TableLayoutToggle\TableLayoutTogglePlugin;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
@@ -19,10 +20,14 @@ use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
+use LaBoiteACode\FilamentDashboardWidgets\FilamentDashboardWidgetsPlugin;
+use MartinPetricko\FilamentSentryFeedback\FilamentSentryFeedbackPlugin;
+use Vaslv\FilamentAppVersion\AppVersionPlugin;
 
 class ArticlesPanelProvider extends PanelProvider
 {
-    use \App\Providers\Filament\Traits\HasKnowledgeBaseCompanion;
+    use HasKnowledgeBaseCompanion;
+
     public function panel(Panel $panel): Panel
     {
         return $panel
@@ -41,14 +46,15 @@ class ArticlesPanelProvider extends PanelProvider
             ->discoverPages(in: app_path('Filament/Articles/Pages'), for: 'App\Filament\Articles\Pages')
             ->discoverWidgets(in: app_path('Filament/Articles/Widgets'), for: 'App\Filament\Articles\Widgets')
             ->plugins([
-                \MartinPetricko\FilamentSentryFeedback\FilamentSentryFeedbackPlugin::make(),
+                FilamentSentryFeedbackPlugin::make(),
+                AppVersionPlugin::make(),
                 CalculatorPlugin::make(),
                 TableLayoutTogglePlugin::make()
                     ->setDefaultLayout('list')
                     ->displayToggleAction(true),
-                \LaBoiteACode\FilamentDashboardWidgets\FilamentDashboardWidgetsPlugin::make(),
+                FilamentDashboardWidgetsPlugin::make(),
             ])
-            ->plugin(\Guava\FilamentKnowledgeBase\Plugins\KnowledgeBaseCompanionPlugin::make()->knowledgeBasePanelId('docs'))
+            ->plugin(KnowledgeBaseCompanionPlugin::make()->knowledgeBasePanelId('docs'))
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
@@ -66,6 +72,3 @@ class ArticlesPanelProvider extends PanelProvider
             ]);
     }
 }
-
-
-
