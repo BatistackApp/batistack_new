@@ -2,12 +2,16 @@
 
 namespace Tests\Feature\Modules\Articles\Models;
 
+use App\Enums\Articles\GhsPictogram;
+use App\Enums\Articles\HazardCategory;
 use App\Enums\Articles\ItemType;
 use App\Models\Articles\Item;
 use App\Models\Articles\Stock;
+use App\Models\Articles\Warehouse;
 use App\Models\Core\Company;
 use App\Models\Core\Unit;
 use App\Models\Core\VatRate;
+use App\Models\Tiers\ThirdParty;
 
 beforeEach(function () {
     Company::factory()->create();
@@ -46,9 +50,9 @@ describe('Item - Relations', function () {
     });
 
     test('supplier relation', function () {
-        $supplier = \App\Models\Tiers\ThirdParty::factory()->create();
+        $supplier = ThirdParty::factory()->create();
         $item = Item::factory()->create(['supplier_id' => $supplier->id]);
-        expect($item->supplier)->toBeInstanceOf(\App\Models\Tiers\ThirdParty::class)->and($item->supplier->id)->toBe($supplier->id);
+        expect($item->supplier)->toBeInstanceOf(ThirdParty::class)->and($item->supplier->id)->toBe($supplier->id);
     });
 });
 
@@ -295,19 +299,41 @@ describe('Item - Methods Métier', function () {
 
         expect($item->getPriceTTC())->toBe(120.0);
     });
+
+    test('isHazardous() détecte un produit dangereux', function () {
+        $safe = Item::factory()->create(['hazard_category' => null]);
+        $categ = Item::factory()->create(['hazard_category' => HazardCategory::CORROSIVE]);
+        $picto = Item::factory()->create(['ghs_pictograms' => ['ghs05']]);
+        $phrases = Item::factory()->create(['h_phrases' => ['H314']]);
+
+        expect($safe->isHazardous())->toBeFalse()
+            ->and($categ->isHazardous())->toBeTrue()
+            ->and($picto->isHazardous())->toBeTrue()
+            ->and($phrases->isHazardous())->toBeTrue();
+    });
+
+    test('pictograms() résout les pictogrammes CLP en énum', function () {
+        $item = Item::factory()->create(['ghs_pictograms' => ['ghs01', 'ghs09', 'invalid']]);
+
+        $pictograms = $item->pictograms();
+
+        expect($pictograms)->toHaveCount(2)
+            ->and($pictograms)->toContain(GhsPictogram::GHS01)
+            ->and($pictograms)->toContain(GhsPictogram::GHS09);
+    });
 });
 
-    test('getStockInWarehouse() recupere stock dun depot', function () {
-        $item = Item::factory()->create();
-        $warehouse = \App\Models\Articles\Warehouse::factory()->create();
-        Stock::factory()->create([
-            'item_id' => $item->id,
-            'warehouse_id' => $warehouse->id,
-            'quantity' => 30,
-        ]);
+test('getStockInWarehouse() recupere stock dun depot', function () {
+    $item = Item::factory()->create();
+    $warehouse = Warehouse::factory()->create();
+    Stock::factory()->create([
+        'item_id' => $item->id,
+        'warehouse_id' => $warehouse->id,
+        'quantity' => 30,
+    ]);
 
-        expect($item->getStockInWarehouse($warehouse))->toBe(30.0);
-    });
+    expect($item->getStockInWarehouse($warehouse))->toBe(30.0);
+});
 
 describe('Item - Static Methods', function () {
     test('byReference() récupère par référence', function () {

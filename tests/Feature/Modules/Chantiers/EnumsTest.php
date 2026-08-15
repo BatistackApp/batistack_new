@@ -1,7 +1,10 @@
 <?php
 
+use App\Enums\Chantiers\ChantierReserveStatus;
 use App\Enums\Chantiers\ChantierStatus;
 use App\Enums\Chantiers\DoeDocumentCategory;
+use App\Enums\Chantiers\ReserveSeverity;
+use ToneGabes\Filament\Icons\Enums\Phosphor;
 
 it('verifie les valeurs de lenum ChantierStatus', function () {
     expect(ChantierStatus::STUDY->value)->toBe('study')
@@ -34,4 +37,43 @@ it('verifie les valeurs de lenum DoeDocumentCategory', function () {
         ->and(DoeDocumentCategory::FICHE_TECHNIQUE->getLabel())->toBe('Fiche Technique')
         ->and(DoeDocumentCategory::CONFORMITE->getLabel())->toBe('Conformité')
         ->and(DoeDocumentCategory::AUTRE->getLabel())->toBe('Autre');
+});
+
+it('verifie les valeurs de lenum ChantierReserveStatus', function () {
+    expect(ChantierReserveStatus::OPEN->value)->toBe('open')
+        ->and(ChantierReserveStatus::IN_PROGRESS->value)->toBe('in_progress')
+        ->and(ChantierReserveStatus::RESOLVED->value)->toBe('resolved')
+        ->and(ChantierReserveStatus::LIFTED->value)->toBe('lifted');
+
+    expect(ChantierReserveStatus::OPEN->getLabel())->toBe('Ouverte')
+        ->and(ChantierReserveStatus::IN_PROGRESS->getLabel())->toBe('En cours')
+        ->and(ChantierReserveStatus::RESOLVED->getLabel())->toBe('Résolue')
+        ->and(ChantierReserveStatus::LIFTED->getLabel())->toBe('Levée');
+
+    expect(ChantierReserveStatus::OPEN->getColor())->toBe('danger')
+        ->and(ChantierReserveStatus::IN_PROGRESS->getColor())->toBe('warning')
+        ->and(ChantierReserveStatus::RESOLVED->getColor())->toBe('info')
+        ->and(ChantierReserveStatus::LIFTED->getColor())->toBe('success');
+
+    expect(ChantierReserveStatus::OPEN->getIcon())->toBe(Phosphor::WarningCircle)
+        ->and(ChantierReserveStatus::IN_PROGRESS->getIcon())->toBe(Phosphor::HardHat)
+        ->and(ChantierReserveStatus::RESOLVED->getIcon())->toBe(Phosphor::CheckCircle)
+        ->and(ChantierReserveStatus::LIFTED->getIcon())->toBe(Phosphor::Stamp);
+});
+
+it('verifie les valeurs de lenum ReserveSeverity', function () {
+    expect(ReserveSeverity::INFO->value)->toBe('info')
+        ->and(ReserveSeverity::MINOR->value)->toBe('minor')
+        ->and(ReserveSeverity::MAJOR->value)->toBe('major')
+        ->and(ReserveSeverity::CRITICAL->value)->toBe('critical');
+
+    expect(ReserveSeverity::INFO->getLabel())->toBe('Informatif')
+        ->and(ReserveSeverity::MINOR->getLabel())->toBe('Mineur')
+        ->and(ReserveSeverity::MAJOR->getLabel())->toBe('Majeur')
+        ->and(ReserveSeverity::CRITICAL->getLabel())->toBe('Critique');
+
+    expect(ReserveSeverity::INFO->getColor())->toBe('gray')
+        ->and(ReserveSeverity::MINOR->getColor())->toBe('info')
+        ->and(ReserveSeverity::MAJOR->getColor())->toBe('warning')
+        ->and(ReserveSeverity::CRITICAL->getColor())->toBe('danger');
 });

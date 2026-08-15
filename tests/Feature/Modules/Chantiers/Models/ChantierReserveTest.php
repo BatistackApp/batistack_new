@@ -4,6 +4,7 @@ use App\Enums\Chantiers\ChantierReserveStatus;
 use App\Enums\Chantiers\ReserveSeverity;
 use App\Models\Chantiers\Chantier;
 use App\Models\Chantiers\ChantierReserve;
+use App\Models\Chantiers\ChantierTask;
 use App\Models\RH\Employee;
 
 it('génère automatiquement une référence unique', function () {
@@ -73,4 +74,26 @@ it('expose les réserves levées et résolues pour le PV de réception', functio
         ->get();
 
     expect($forPv)->toHaveCount(2);
+});
+
+it('peut être rattachée à une tâche de chantier', function () {
+    $chantier = Chantier::factory()->create();
+    $task = ChantierTask::factory()->create();
+    $reserve = ChantierReserve::factory()->create([
+        'chantier_id' => $chantier->id,
+        'chantier_task_id' => $task->id,
+    ]);
+
+    expect($reserve->task->id)->toBe($task->id);
+});
+
+it('enregistre les collections de médias photos et plan', function () {
+    $chantier = Chantier::factory()->create();
+    $reserve = ChantierReserve::factory()->create(['chantier_id' => $chantier->id]);
+
+    $collections = $reserve->getRegisteredMediaCollections();
+
+    expect($collections)->not->toBeEmpty();
+    $names = collect($collections)->pluck('name');
+    expect($names)->toContain('photos', 'plan');
 });
