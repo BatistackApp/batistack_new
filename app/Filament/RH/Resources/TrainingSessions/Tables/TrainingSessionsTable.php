@@ -2,12 +2,12 @@
 
 namespace App\Filament\RH\Resources\TrainingSessions\Tables;
 
+use Filament\Actions\Action;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
-use Filament\Tables\Actions\EditAction;
-use Filament\Tables\Actions\DeleteBulkAction;
-use Filament\Tables\Actions\BulkActionGroup;
-use Filament\Tables\Actions\Action;
 use Filament\Tables\Filters\SelectFilter;
 use App\Enums\RH\TrainingSessionStatus;
 use App\Enums\RH\OpcoStatus;
@@ -52,7 +52,7 @@ class TrainingSessionsTable
                 SelectFilter::make('opco_status')
                     ->options(OpcoStatus::class),
             ])
-            ->actions([
+            ->recordActions([
                 EditAction::make(),
                 Action::make('complete_session')
                     ->label('Clôturer la session')
@@ -78,7 +78,7 @@ class TrainingSessionsTable
                     })
                     ->visible(fn (TrainingSession $record) => $record->status !== TrainingSessionStatus::TERMINEE),
             ])
-            ->bulkActions([
+            ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
                 ]),

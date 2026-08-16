@@ -3,21 +3,23 @@
 namespace App\Filament\RH\Widgets;
 
 use App\Models\RH\TimeEntry;
+use Filament\Actions\Action;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget as BaseWidget;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\IconColumn;
-use Filament\Tables\Actions\Action;
 
 class TimeEntryAnomaliesWidget extends BaseWidget
 {
     protected static ?int $sort = 3;
     protected int | string | array $columnSpan = 'full';
+    protected static ?string $heading = 'Anomalie de Pointage';
 
     public function table(Table $table): Table
     {
         return $table
+            ->emptyStateHeading('Aucune Anomalie de Pointage')
             ->query(
                 TimeEntry::query()
                     ->where('is_anomaly', true)
@@ -39,7 +41,7 @@ class TimeEntryAnomaliesWidget extends BaseWidget
                     ->wrap()
                     ->color('danger'),
             ])
-            ->actions([
+            ->recordActions([
                 Action::make('resolve')
                     ->label('Résoudre')
                     ->icon('heroicon-o-check-circle')

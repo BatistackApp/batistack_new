@@ -11,6 +11,7 @@ use App\Models\Interventions\MaintenanceContractReminder;
 use App\Notifications\Interventions\MaintenanceContractReminderNotification;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 
 class MaintenanceContractService
@@ -31,8 +32,15 @@ class MaintenanceContractService
         $count = 0;
 
         foreach ($contracts as $contract) {
-            if ($this->generateForContract($contract, $date)) {
-                $count++;
+            try {
+                if ($this->generateForContract($contract, $date)) {
+                    $count++;
+                }
+            } catch (\Throwable $e) {
+                Log::warning('Échec de la génération d\'une intervention de maintenance', [
+                    'contract_id' => $contract->id,
+                    'error' => $e->getMessage(),
+                ]);
             }
         }
 
@@ -49,16 +57,20 @@ class MaintenanceContractService
     ): bool {
         $date = $date ?: now();
 
-        if ($contract->status !== MaintenanceContractStatus::ACTIVE) {
-            return false;
-        }
-
-        if (! $force && (is_null($contract->next_due_date) || $contract->next_due_date->gt($date))) {
-            return false;
-        }
-
-        return DB::transaction(function () use ($contract) {
+        return DB::transaction(function () use ($contract, $date, $force) {
             $locked = MaintenanceContract::whereKey($contract->getKey())->lockForUpdate()->first();
+
+            if (! $locked) {
+                return false;
+            }
+
+            if ($locked->status !== MaintenanceContractStatus::ACTIVE) {
+                return false;
+            }
+
+            if (! $force && (is_null($locked->next_due_date) || $locked->next_due_date->gt($date))) {
+                return false;
+            }
 
             $intervention = $locked->interventions()->create([
                 'third_party_id' => $locked->third_party_id,
@@ -143,32 +155,32 @@ class MaintenanceContractService
             return false;
         }
 
-        $alreadySent = MaintenanceContractReminder::query()
-            ->where('contract_id', $contract->id)
-            ->whereDate('due_date', $due->toDateString())
-            ->where('days_before', $daysBefore)
-            ->exists();
-
-        if ($alreadySent) {
-            return false;
-        }
-
         $recipient = $this->resolveRecipient($contract);
 
         if (blank($recipient)) {
             return false;
         }
 
-        Notification::route('mail', $recipient)
-            ->notify(new MaintenanceContractReminderNotification($contract));
-
-        MaintenanceContractReminder::firstOrCreate([
+        $reminder = MaintenanceContractReminder::firstOrCreate([
             'contract_id' => $contract->id,
-            'due_date' => $due->toDateString(),
+            'due_date' => $due,
             'days_before' => $daysBefore,
         ], [
             'sent_at' => now(),
         ]);
+
+        if (! $reminder->wasRecentlyCreated) {
+            return false;
+        }
+
+        try {
+            Notification::route('mail', $recipient)
+                ->notify(new MaintenanceContractReminderNotification($contract));
+        } catch (\Throwable $e) {
+            $reminder->delete();
+
+            throw $e;
+        }
 
         return true;
     }

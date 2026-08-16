@@ -14,7 +14,13 @@ class GenerateMaintenanceInterventionsCommand extends Command
 
     public function handle(MaintenanceContractService $service): int
     {
-        $date = $this->option('date') ? CarbonImmutable::parse($this->option('date')) : CarbonImmutable::now();
+        try {
+            $date = $this->option('date') ? CarbonImmutable::parse($this->option('date')) : CarbonImmutable::now();
+        } catch (\Throwable $e) {
+            $this->error("Date invalide pour l'option --date : {$this->option('date')}");
+
+            return self::FAILURE;
+        }
 
         $count = $service->generateDueInterventions($date);
 

@@ -176,6 +176,22 @@ it('resolves an equipement ticket and restores its previous assignment status', 
         ->and(AssetMaintenance::count())->toBe(0);
 });
 
+it('restores an equipement to available from its saved previous status', function () {
+    $service = app(AssetMaintenanceTicketService::class);
+
+    $equipement = Equipement::factory()->create(['status' => EquipementStatus::AVAILABLE]);
+    $reporter = $equipement->employee;
+
+    $ticket = $service->create($equipement, $reporter, []);
+
+    expect($equipement->fresh()->status)->toBe(EquipementStatus::MAINTENANCE)
+        ->and($ticket->previous_asset_status)->toBe(EquipementStatus::AVAILABLE->value);
+
+    $service->resolve($ticket);
+
+    expect($equipement->fresh()->status)->toBe(EquipementStatus::AVAILABLE);
+});
+
 it('rejects resolving a resolved ticket', function () {
     $service = app(AssetMaintenanceTicketService::class);
 
@@ -264,4 +280,33 @@ it('restores an assigned equipement to in use', function () {
     $service->resolve($ticket);
 
     expect($equipement->fresh()->status)->toBe(EquipementStatus::IN_USE);
+});
+
+it('does not fail when the asset was deleted before resolution', function () {
+    $service = app(AssetMaintenanceTicketService::class);
+
+    $ticket = AssetMaintenanceTicket::factory()->forFixedAsset()->create();
+
+    $ticket->update(['asset_id' => $ticket->asset_id + 999999]);
+    $ticket->unsetRelation('asset');
+
+    $service->resolve($ticket);
+
+    expect($ticket->fresh()->status)->toBe(AssetMaintenanceTicketStatus::RESOLVED);
+});
+
+it('keeps the asset in maintenance when another open ticket exists', function () {
+    $service = app(AssetMaintenanceTicketService::class);
+
+    $asset = FixedAsset::factory()->create(['status' => AssetStatus::IN_MAINTENANCE]);
+
+    $ticket = AssetMaintenanceTicket::factory()->forFixedAsset($asset)->create([
+        'previous_asset_status' => AssetStatus::ACTIVE->value,
+    ]);
+
+    AssetMaintenanceTicket::factory()->forFixedAsset($asset)->create();
+
+    $service->resolve($ticket, 100.0);
+
+    expect($asset->fresh()->status)->toBe(AssetStatus::IN_MAINTENANCE);
 });
