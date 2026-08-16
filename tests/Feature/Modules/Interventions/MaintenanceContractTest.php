@@ -15,6 +15,7 @@ use App\Models\Tiers\Contact;
 use App\Models\Tiers\ThirdParty;
 use App\Notifications\Interventions\MaintenanceContractReminderNotification;
 use App\Services\Interventions\MaintenanceContractService;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 
 beforeEach(function () {
@@ -220,6 +221,73 @@ describe('MaintenanceContractService', function () {
         app(MaintenanceContractService::class)->notifyUpcoming();
 
         Notification::assertSentOnDemand(MaintenanceContractReminderNotification::class);
+    });
+
+    test('no reminder is sent when the client has no reachable email', function () {
+        Notification::fake();
+
+        Contact::where('third_party_id', $this->client->id)->delete();
+        $this->client->update(['email' => null]);
+
+        makeContract(['next_due_date' => now()->addDays(10)->toDateString()]);
+
+        $count = app(MaintenanceContractService::class)->notifyUpcoming();
+
+        expect($count)->toBe(0);
+        Notification::assertNothingSent();
+    });
+
+    test('reminder is deleted and the error is rethrown when sending fails', function () {
+        $manager = Mockery::mock('Illuminate\Notifications\NotificationManager')->makePartial();
+        $manager->shouldReceive('send')->andThrow(new \RuntimeException('SMTP indisponible'));
+        Notification::swap($manager);
+
+        $this->client->update(['email' => 'client@batistack.fr']);
+        makeContract(['next_due_date' => now()->addDays(10)->toDateString()]);
+
+        expect(fn () => app(MaintenanceContractService::class)->notifyUpcoming())
+            ->toThrow(\RuntimeException::class, 'SMTP indisponible');
+
+        expect(MaintenanceContractReminder::count())->toBe(0);
+    });
+
+    test('generateForContract returns false when the contract no longer exists', function () {
+        $contract = makeContract();
+        $contract->delete();
+
+        $created = app(MaintenanceContractService::class)->generateForContract($contract);
+
+        expect($created)->toBeFalse();
+    });
+
+    test('generateForContract returns false for non-active contracts', function () {
+        $contract = makeContract(['status' => MaintenanceContractStatus::PAUSED]);
+
+        $created = app(MaintenanceContractService::class)->generateForContract($contract);
+
+        expect($created)->toBeFalse();
+    });
+
+    test('generateForContract returns false when not due and not forced', function () {
+        $contract = makeContract(['next_due_date' => now()->addMonth()->toDateString()]);
+
+        $created = app(MaintenanceContractService::class)->generateForContract($contract);
+
+        expect($created)->toBeFalse();
+    });
+
+    test('generateDueInterventions logs and continues when a contract fails', function () {
+        Log::spy();
+
+        $contract = makeContract();
+
+        $service = Mockery::mock(MaintenanceContractService::class)->makePartial();
+        $service->shouldReceive('generateForContract')->once()->andThrow(new \RuntimeException('boom'));
+
+        $count = $service->generateDueInterventions();
+
+        expect($count)->toBe(0);
+        Log::shouldHaveReceived('warning')->once();
     });
 });
 

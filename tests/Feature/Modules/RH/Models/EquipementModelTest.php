@@ -6,6 +6,7 @@ use App\Enums\RH\EquipementType;
 use App\Models\Core\Company;
 use App\Models\RH\Employee;
 use App\Models\RH\Equipement;
+use App\Models\RH\EquipementAssignment;
 
 beforeEach(function () {
     Company::factory()->create();
@@ -131,6 +132,26 @@ describe('Equipement - Methods', function () {
         ]);
 
         expect($equip->getLabel())->toBe('3M H510 (Casque sécurité)');
+    });
+
+    test('currentAssignment() retourne l\'affectation en cours', function () {
+        $equip = Equipement::factory()->create();
+        $employee = Employee::factory()->create();
+
+        EquipementAssignment::create([
+            'equipement_id' => $equip->id,
+            'employee_id' => $employee->id,
+            'assigned_at' => now()->subDays(30),
+            'returned_at' => now()->subDays(5),
+        ]);
+        $active = EquipementAssignment::create([
+            'equipement_id' => $equip->id,
+            'employee_id' => $employee->id,
+            'assigned_at' => now()->subDays(4),
+            'returned_at' => null,
+        ]);
+
+        expect($equip->currentAssignment->is($active))->toBeTrue();
     });
 });
 

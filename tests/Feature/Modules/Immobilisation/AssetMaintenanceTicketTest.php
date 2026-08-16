@@ -281,3 +281,32 @@ it('restores an assigned equipement to in use', function () {
 
     expect($equipement->fresh()->status)->toBe(EquipementStatus::IN_USE);
 });
+
+it('does not fail when the asset was deleted before resolution', function () {
+    $service = app(AssetMaintenanceTicketService::class);
+
+    $ticket = AssetMaintenanceTicket::factory()->forFixedAsset()->create();
+
+    $ticket->update(['asset_id' => $ticket->asset_id + 999999]);
+    $ticket->unsetRelation('asset');
+
+    $service->resolve($ticket);
+
+    expect($ticket->fresh()->status)->toBe(AssetMaintenanceTicketStatus::RESOLVED);
+});
+
+it('keeps the asset in maintenance when another open ticket exists', function () {
+    $service = app(AssetMaintenanceTicketService::class);
+
+    $asset = FixedAsset::factory()->create(['status' => AssetStatus::IN_MAINTENANCE]);
+
+    $ticket = AssetMaintenanceTicket::factory()->forFixedAsset($asset)->create([
+        'previous_asset_status' => AssetStatus::ACTIVE->value,
+    ]);
+
+    AssetMaintenanceTicket::factory()->forFixedAsset($asset)->create();
+
+    $service->resolve($ticket, 100.0);
+
+    expect($asset->fresh()->status)->toBe(AssetStatus::IN_MAINTENANCE);
+});
