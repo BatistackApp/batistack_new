@@ -39,7 +39,16 @@ Le module **Interventions** permet la gestion complète du service après-vente 
 *   **Déclaration de panne** : Action intégrée au tableau de bord permettant au client de déclarer une panne directement, créant instantanément une `Intervention` (`SOUMIS`, `REGIE`) sans avoir à contacter le standard.
 *   **Suivi des demandes (`InterventionResource`)** : Espace permettant au client de suivre le statut et l'avancement de ses tickets SAV signalés.
 
-### 6. Contrats d'Entretien Récurrents (Maintenance Préventive)
+### 6. Formulaires d'Intervention Dynamiques (Check-lists sur-mesure)
+*   **Modèle** : `InterventionReportTemplate` (`app/Models/Interventions/InterventionReportTemplate.php`) — `name`, `description`, `intervention_type` (enum `InterventionType`), `schema` (JSON : liste de blocs `{type, data}`), `is_active`, relation `interventions()`. Table `intervention_report_templates` (migration `2026_08_16_000000`).
+*   **Schéma** : blocs de champs — `text_input`, `textarea`, `number` (min/max), `checkbox`, `select` (options séparées par saut de ligne), `date`, `file_upload` (disque `public`, dossier `interventions/reports`). Nom technique validé par regex `^[a-z_][a-z0-9_]*$` ; drapeau `required` par bloc.
+*   **Colonnes `interventions`** : `report_template_id` (FK `nullOnDelete`) et `report_data` (JSON, cast `array`) — migration `2026_08_16_000001`. Relation `reportTemplate()` + helper `applicableReportTemplate()` : renvoie le modèle lié s'il est actif, sinon le plus récent modèle **actif** du type de l'intervention, sinon `null`.
+*   **Ressource back-office** : `InterventionReportTemplateResource` (groupe « Configuration », `app/Filament/Interventions/Resources/InterventionReportTemplates/`) — `Schemas/InterventionReportTemplateForm.php` (Builder de blocs), `Tables/InterventionReportTemplatesTable.php` (badge type, compteur de questions, filtre type), pages List/Create/Edit. Policy `InterventionReportTemplatePolicy` (permissions `*:InterventionReportTemplate`, ajoutées au `super_admin` dans `ShieldSeeder`).
+*   **Saisie technicien** : `FillInterventionReportPage` (`app/Filament/Technicien/Pages/`, `$shouldRegisterNavigation = false`, trait `InteractsWithForms`, `statePath('data')`) rendu dynamique des blocs, prefill depuis `report_data`, `submit()` persiste `report_template_id` + `report_data`. Vue `resources/views/filament/technicien/pages/fill-intervention-report-page.blade.php`. Action table « Remplir le rapport » (`InterventionsTable`, visible si un modèle actif existe pour le type, redirect via query-param `intervention_id`).
+*   **Validation à la clôture** : `InterventionManagementService::assertReportComplete()` — vérifie que tous les champs `required` du modèle applicable sont remplis (`report_data`), sinon lance `\DomainException` listant les libellés manquants ; appelée en tête de `completeIntervention()` (le catch de l'action bulk `change_status` affiche le message). `isEmptyValue()` traite `null`/`''`/`[]`/`false`. Sans modèle actif → aucune contrainte.
+*   **Tests** (`tests/Feature/Modules/Interventions/`) : `InterventionReportTemplateTest` (casts, `applicableReportTemplate` — type/lié/inactif/aucun, clôture bloquée/acceptée, checkbox non cochée, bypass inactif/sans modèle) et `FillInterventionReportPageTest` (rendu des 7 blocs, submit persist + lien modèle, rejet champ obligatoire manquant).
+
+### 7. Contrats d'Entretien Récurrents (Maintenance Préventive)
 *   **Modèles** : `MaintenanceContract` (référence `MC-AAAA-NNNN`, fréquence, prix forfaitaire, échéances, soft deletes) et `MaintenanceContractReminder` (journal de déduplication avec contrainte unique `contract_id + due_date + days_before`).
 *   **Enums** : `MaintenanceContractFrequency` (Mensuelle / Trimestrielle / Semestrielle / Annuelle) et `MaintenanceContractStatus` (Actif / Pause / Terminé / Annulé).
 *   **`MaintenanceContractObserver`** : Génération atomique des références `MC-AAAA-NNNN`.
@@ -48,7 +57,7 @@ Le module **Interventions** permet la gestion complète du service après-vente 
 *   **Interface** : `MaintenanceContractResource` (groupe « Maintenance préventive »), formulaire avec filtrage de l'équipement par client (`third_party_id` live), actions « Générer maintenant », « Pause / Reprendre », « Annuler », et `InterventionsRelationManager` listant les interventions du contrat.
 *   **Tests** : `MaintenanceContractTest` couvre la génération (idempotence, fréquence, fin de contrat, pause), la déduplication des rappels, l'envoi au contact principal et le cycle soft delete de l'observer.
 
-### 7. Tests
+### 8. Tests
 *   Couverture robuste avec PestPHP. L'intégralité de la logique métier (gestion, facturation, maintenance prédictive, optimisation d'itinéraire), du déstockage automatique, de la facturation, des signatures, et des contraintes d'intégrité passe avec succès (100% de réussite). Les composants mineurs et les observers sont également couverts.
 
 ## 🚧 Ce qu'il reste à faire

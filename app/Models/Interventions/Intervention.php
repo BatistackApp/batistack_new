@@ -37,6 +37,8 @@ class Intervention extends Model implements HasMedia
         'flat_rate_price',
         'client_equipment_id',
         'maintenance_contract_id',
+        'report_template_id',
+        'report_data',
     ];
 
     protected $casts = [
@@ -45,6 +47,7 @@ class Intervention extends Model implements HasMedia
         'scheduled_at' => 'datetime',
         'completed_at' => 'datetime',
         'flat_rate_price' => 'decimal:2',
+        'report_data' => 'array',
     ];
 
     public function company(): BelongsTo
@@ -85,5 +88,31 @@ class Intervention extends Model implements HasMedia
     public function maintenanceContract(): BelongsTo
     {
         return $this->belongsTo(MaintenanceContract::class);
+    }
+
+    public function reportTemplate(): BelongsTo
+    {
+        return $this->belongsTo(InterventionReportTemplate::class);
+    }
+
+    /**
+     * Renvoie le modèle de rapport applicable : celui lié à l'intervention
+     * (s'il est actif), sinon le plus récent modèle actif du même type.
+     */
+    public function applicableReportTemplate(): ?InterventionReportTemplate
+    {
+        if ($this->report_template_id) {
+            $linked = $this->reportTemplate()->where('is_active', true)->first();
+
+            if ($linked) {
+                return $linked;
+            }
+        }
+
+        return InterventionReportTemplate::query()
+            ->where('intervention_type', $this->type)
+            ->where('is_active', true)
+            ->latest('id')
+            ->first();
     }
 }

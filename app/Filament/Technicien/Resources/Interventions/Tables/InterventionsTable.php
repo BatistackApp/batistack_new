@@ -113,6 +113,17 @@ class InterventionsTable
 
                         return response()->download($path);
                     }),
+                Action::make('fill_report')
+                    ->label('Remplir le rapport')
+                    ->icon('heroicon-o-clipboard-document-list')
+                    ->color('primary')
+                    ->visible(fn (Intervention $record) => \App\Models\Interventions\InterventionReportTemplate::query()
+                        ->where('intervention_type', $record->type)
+                        ->where('is_active', true)
+                        ->exists())
+                    ->action(function (Intervention $record) {
+                        redirect()->to('/technicien/fill-intervention-report?intervention_id='.$record->id);
+                    }),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
