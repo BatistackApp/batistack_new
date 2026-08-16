@@ -8,11 +8,13 @@ use App\Models\Chantiers\Chantier;
 use App\Models\Immobilisation\AssetCategory;
 use App\Models\Immobilisation\AssetTransfer;
 use App\Models\Immobilisation\FixedAsset;
+use App\Models\RH\Equipement;
 use App\Services\Core\DocumentService;
 use chillerlan\QRCode\QRCode;
 use chillerlan\QRCode\QROptions;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 
 class ImmobilisationDocumentService extends DocumentService
 {
@@ -27,10 +29,10 @@ class ImmobilisationDocumentService extends DocumentService
             view: 'documents.immobilisations.transfer_document',
             data: [
                 'transfer' => $transfer,
+                'position' => 'portrait',
             ],
             filename: 'bon_transport_'.$transfer->id,
             type: 'immobilisations',
-            position: 'portrait'
         );
     }
 
@@ -81,10 +83,10 @@ class ImmobilisationDocumentService extends DocumentService
             data: [
                 'categories' => $categories,
                 'year' => $year,
+                'position' => 'landscape',
             ],
             filename: 'etat_dotations_'.$year,
             type: 'immobilisations',
-            position: 'landscape'
         );
     }
 
@@ -99,10 +101,10 @@ class ImmobilisationDocumentService extends DocumentService
             view: 'documents.immobilisations.disposal_certificate',
             data: [
                 'asset' => $asset,
+                'position' => 'portrait',
             ],
             filename: 'pv_cession_'.$asset->id,
             type: 'immobilisations',
-            position: 'portrait'
         );
     }
 
@@ -135,6 +137,11 @@ class ImmobilisationDocumentService extends DocumentService
      */
     public function generateQrLabel(Model $asset): string
     {
+        if (blank($asset->qr_token)) {
+            $prefix = $asset instanceof FixedAsset ? 'FA-' : ($asset instanceof Equipement ? 'EQ-' : 'QR-');
+            $asset->forceFill(['qr_token' => $prefix.strtoupper(Str::random(12))])->save();
+        }
+
         $options = new QROptions([
             'version' => 5,
             'outputType' => QRCode::OUTPUT_IMAGE_PNG,
@@ -151,7 +158,7 @@ class ImmobilisationDocumentService extends DocumentService
                 'asset' => $asset,
                 'qrCode' => $qrCode,
             ],
-            filename: 'etiquette_qr_'.$asset->getKey(),
+            filename: 'etiquette_qr_'.class_basename($asset).'_'.$asset->getKey(),
             type: 'immobilisations'
         );
     }

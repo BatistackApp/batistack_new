@@ -36,6 +36,11 @@ class DeclarationCassePage extends Page
 
     public ?array $data = [];
 
+    public static function canAccess(): bool
+    {
+        return parent::canAccess() && auth()->user()?->salarie !== null;
+    }
+
     public function mount(): void
     {
         $this->form->fill(['severity' => TicketSeverity::MEDIUM->value]);
@@ -46,8 +51,9 @@ class DeclarationCassePage extends Page
         $employee = auth()->user()->salarie;
 
         $chantiersQuery = Chantier::query()
-            ->where('manager_id', $employee->id)
-            ->orWhereHas('members', fn ($q) => $q->where('employees.id', $employee->id))
+            ->where(fn ($q) => $q
+                ->where('manager_id', $employee->id)
+                ->orWhereHas('members', fn ($q) => $q->where('employees.id', $employee->id)))
             ->pluck('name', 'id');
 
         return $schema
@@ -173,11 +179,17 @@ class DeclarationCassePage extends Page
 
     protected function resolveDetectedAsset(array $data): FixedAsset|Equipement|null
     {
-        if (blank($data['asset_type'] ?? null) || blank($data['asset_id'] ?? null)) {
+        $type = $data['asset_type'] ?? null;
+
+        if (! in_array($type, [FixedAsset::class, Equipement::class], true)) {
             return null;
         }
 
-        $asset = ($data['asset_type'])::find($data['asset_id']);
+        if (blank($data['asset_id'] ?? null)) {
+            return null;
+        }
+
+        $asset = $type::find($data['asset_id']);
 
         return $asset instanceof FixedAsset || $asset instanceof Equipement ? $asset : null;
     }

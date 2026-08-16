@@ -36,3 +36,14 @@ it('builds a message when the asset has no serial number', function () {
 
     expect($data['body'])->toBe('Un outil a été déclaré en casse : '.$asset->name.' (N/A).');
 });
+
+it('builds a message when the asset has been deleted', function () {
+    $ticket = AssetMaintenanceTicket::factory()->forFixedAsset()->create();
+
+    $ticket->update(['asset_id' => $ticket->asset_id + 999999]);
+    $ticket->unsetRelation('asset');
+
+    $data = (new AssetMaintenanceTicketNotification($ticket))->toDatabase(new AnonymousNotifiable);
+
+    expect($data['body'])->toBe('Un outil a été déclaré en casse (actif supprimé).');
+});

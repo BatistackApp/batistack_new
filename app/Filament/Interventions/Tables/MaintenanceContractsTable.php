@@ -14,7 +14,6 @@ use Filament\Notifications\Notification;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
-use Illuminate\Support\Carbon;
 
 class MaintenanceContractsTable
 {
@@ -49,7 +48,7 @@ class MaintenanceContractsTable
                     ->label('Prochaine échéance')
                     ->date('d/m/Y')
                     ->sortable()
-                    ->color(fn (?string $state) => $state && Carbon::parse($state)->isPast() ? 'danger' : 'gray'),
+                    ->color(fn ($state) => $state && $state->isPast() ? 'danger' : 'gray'),
 
                 TextColumn::make('status')
                     ->label('Statut')
@@ -80,6 +79,7 @@ class MaintenanceContractsTable
                     ->label('Générer maintenant')
                     ->icon('heroicon-o-bolt')
                     ->color('warning')
+                    ->authorize('update')
                     ->visible(fn (MaintenanceContract $record) => $record->status === MaintenanceContractStatus::ACTIVE)
                     ->requiresConfirmation()
                     ->action(function (MaintenanceContract $record, MaintenanceContractService $service) {
@@ -103,6 +103,7 @@ class MaintenanceContractsTable
                     ->label(fn (MaintenanceContract $record) => $record->status === MaintenanceContractStatus::ACTIVE ? 'Pause' : 'Reprendre')
                     ->icon(fn (MaintenanceContract $record) => $record->status === MaintenanceContractStatus::ACTIVE ? 'heroicon-o-pause' : 'heroicon-o-play')
                     ->color(fn (MaintenanceContract $record) => $record->status === MaintenanceContractStatus::ACTIVE ? 'warning' : 'success')
+                    ->authorize('update')
                     ->visible(fn (MaintenanceContract $record) => in_array($record->status, [MaintenanceContractStatus::ACTIVE, MaintenanceContractStatus::PAUSED]))
                     ->action(function (MaintenanceContract $record) {
                         $record->update([
@@ -112,7 +113,7 @@ class MaintenanceContractsTable
                         ]);
                     }),
                 DeleteAction::make()
-                    ->label('Annuler le contrat'),
+                    ->label('Supprimer le contrat'),
             ]);
     }
 }

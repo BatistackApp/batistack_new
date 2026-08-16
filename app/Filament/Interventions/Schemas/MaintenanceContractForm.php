@@ -29,7 +29,8 @@ class MaintenanceContractForm
                             ->required()
                             ->searchable()
                             ->preload()
-                            ->live(),
+                            ->live()
+                            ->afterStateUpdated(fn (callable $set) => $set('client_equipment_id', null)),
                         Select::make('client_equipment_id')
                             ->label('Équipement client')
                             ->options(fn (callable $get) => ClientEquipment::where('third_party_id', $get('third_party_id'))->pluck('name', 'id'))

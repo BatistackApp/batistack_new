@@ -25,7 +25,6 @@ class FixedAsset extends Model implements HasMedia
         'asset_category_id',
         'name',
         'serial_number',
-        'qr_token',
         'purchase_date',
         'purchase_price',
         'salvage_value',

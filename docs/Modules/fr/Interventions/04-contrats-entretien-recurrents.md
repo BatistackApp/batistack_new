@@ -36,7 +36,7 @@ Chaque contrat reçoit une référence unique `MC-AAAA-NNNN` (ex : `MC-2026-0001
 
 ## ⚙️ Génération automatique
 
-Chaque nuit à **06:00** (heure de Paris), la commande `interventions:generate-maintenance` :
+Chaque matin à **06:00** (heure de Paris), la commande `interventions:generate-maintenance` :
 
 1. Sélectionne les contrats **Actifs** dont la **prochaine échéance est atteinte**.
 2. Crée une intervention **Planifiée** de type **Forfait** (avec le prix du contrat, l'équipement et le client).
@@ -51,7 +51,7 @@ Chaque nuit à **06:00** (heure de Paris), la commande `interventions:generate-m
 
 ## ✉️ Rappels client automatiques
 
-Chaque nuit à **07:00** (heure de Paris), la commande `interventions:remind-maintenance` envoie un e-mail au client aux échéances **J-30, J-15 et J-7** avant la prochaine visite.
+Chaque matin à **07:00** (heure de Paris), la commande `interventions:remind-maintenance` envoie un e-mail au client aux échéances **J-30, J-15 et J-7** avant la prochaine visite.
 
 - Chaque rappel n'est envoyé **qu'une seule fois** par échéance (journal de déduplication).
 - Le destinataire est l'**e-mail du contact principal** du client, sinon l'e-mail du client.

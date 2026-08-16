@@ -75,6 +75,19 @@ it('generates a qr label path for an equipement', function () {
     expect($path)->toBe('fake/path/etiquette_qr.pdf');
 });
 
+it('provisions a qr token when the asset has none before generating a label', function () {
+    $equipement = Equipement::factory()->create();
+    $equipement->forceFill(['qr_token' => null])->save();
+
+    $mock = Mockery::mock(ImmobilisationDocumentService::class)->makePartial();
+    $mock->shouldReceive('generate')->once()->andReturn('fake/path/etiquette_qr.pdf');
+
+    $path = $mock->generateQrLabel($equipement);
+
+    expect($path)->toBe('fake/path/etiquette_qr.pdf')
+        ->and($equipement->fresh()->qr_token)->toStartWith('EQ-');
+});
+
 it('renders the qr label view without errors', function () {
     $asset = FixedAsset::factory()->create();
 

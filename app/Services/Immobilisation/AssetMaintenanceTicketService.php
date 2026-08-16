@@ -4,6 +4,7 @@ namespace App\Services\Immobilisation;
 
 use App\Enums\Immobilisation\AssetMaintenanceTicketStatus;
 use App\Enums\Immobilisation\AssetStatus;
+use App\Enums\Immobilisation\TicketSeverity;
 use App\Enums\RH\EquipementStatus;
 use App\Models\Immobilisation\AssetMaintenanceTicket;
 use App\Models\Immobilisation\FixedAsset;
@@ -24,8 +25,7 @@ class AssetMaintenanceTicketService
         }
 
         $fixedAsset = FixedAsset::query()
-            ->where('qr_token', $code)
-            ->orWhere('serial_number', $code)
+            ->where(fn ($q) => $q->where('qr_token', $code)->orWhere('serial_number', $code))
             ->first();
 
         if ($fixedAsset) {
@@ -33,9 +33,10 @@ class AssetMaintenanceTicketService
         }
 
         return Equipement::query()
-            ->where('qr_token', $code)
-            ->orWhere('serial_number', $code)
-            ->orWhere('barcode', $code)
+            ->where(fn ($q) => $q
+                ->where('qr_token', $code)
+                ->orWhere('serial_number', $code)
+                ->orWhere('barcode', $code))
             ->first();
     }
 
@@ -55,7 +56,8 @@ class AssetMaintenanceTicketService
                 'chantier_id' => $data['chantier_id'] ?? null,
                 'reported_by_id' => $reporter->getKey(),
                 'description' => $data['description'] ?? null,
-                'severity' => $data['severity'] ?? 'medium',
+                'severity' => $data['severity'] ?? TicketSeverity::MEDIUM,
+                'previous_asset_status' => $this->resolvePreviousStatus($asset),
                 'status' => AssetMaintenanceTicketStatus::OPEN,
             ]);
 
@@ -88,7 +90,7 @@ class AssetMaintenanceTicketService
             ]);
 
             $this->convertToMaintenance($ticket);
-            $this->restoreStatus($ticket->asset);
+            $this->restoreStatus($ticket);
         });
     }
 
@@ -102,7 +104,7 @@ class AssetMaintenanceTicketService
         DB::transaction(function () use ($ticket) {
             $ticket->update(['status' => AssetMaintenanceTicketStatus::CANCELED]);
 
-            $this->restoreStatus($ticket->asset);
+            $this->restoreStatus($ticket);
         });
     }
 
@@ -122,13 +124,50 @@ class AssetMaintenanceTicketService
         }
     }
 
-    protected function restoreStatus(Model $asset): void
+    protected function resolvePreviousStatus(Model $asset): ?string
     {
         if ($asset instanceof FixedAsset) {
-            $asset->update(['status' => AssetStatus::ACTIVE]);
-        } elseif ($asset instanceof Equipement) {
+            return $asset->status?->value;
+        }
+
+        if ($asset instanceof Equipement) {
+            return $asset->status?->value;
+        }
+
+        return null;
+    }
+
+    protected function restoreStatus(AssetMaintenanceTicket $ticket): void
+    {
+        $asset = $ticket->asset;
+
+        if (! $asset) {
+            return;
+        }
+
+        $hasOpenTicket = AssetMaintenanceTicket::query()
+            ->where('asset_type', $asset::class)
+            ->where('asset_id', $asset->getKey())
+            ->whereIn('status', [
+                AssetMaintenanceTicketStatus::OPEN,
+                AssetMaintenanceTicketStatus::IN_PROGRESS,
+            ])
+            ->exists();
+
+        if ($hasOpenTicket) {
+            return;
+        }
+
+        $previous = $ticket->previous_asset_status;
+
+        if ($asset instanceof FixedAsset) {
             $asset->update([
-                'status' => $asset->employee_id ? EquipementStatus::IN_USE : EquipementStatus::AVAILABLE,
+                'status' => $previous ? AssetStatus::tryFrom($previous) ?? AssetStatus::ACTIVE : AssetStatus::ACTIVE,
+            ]);
+        } elseif ($asset instanceof Equipement) {
+            $fallback = $asset->employee_id ? EquipementStatus::IN_USE : EquipementStatus::AVAILABLE;
+            $asset->update([
+                'status' => $previous ? EquipementStatus::tryFrom($previous) ?? $fallback : $fallback,
             ]);
         }
     }

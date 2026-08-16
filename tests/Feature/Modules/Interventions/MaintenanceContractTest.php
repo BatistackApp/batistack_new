@@ -15,11 +15,9 @@ use App\Models\Tiers\Contact;
 use App\Models\Tiers\ThirdParty;
 use App\Notifications\Interventions\MaintenanceContractReminderNotification;
 use App\Services\Interventions\MaintenanceContractService;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 
 beforeEach(function () {
-    DB::statement('PRAGMA foreign_keys=OFF;');
     $this->company = Company::factory()->create();
     $this->client = ThirdParty::factory()->create(['type' => ThirdPartyType::CLIENT]);
     $this->equipment = ClientEquipment::factory()->create(['third_party_id' => $this->client->id]);
@@ -66,6 +64,13 @@ describe('MaintenanceContract', function () {
         expect($contract->thirdParty->is($this->client))->toBeTrue();
         expect($contract->clientEquipment->is($this->equipment))->toBeTrue();
         expect($contract->interventions()->count())->toBe(0);
+    });
+
+    test('factory links the equipment to the same third party as the contract', function () {
+        $contract = MaintenanceContract::factory()->create();
+
+        expect($contract->clientEquipment->third_party_id)->toBe($contract->third_party_id)
+            ->and($contract->clientEquipment->company_id)->toBe($contract->company_id);
     });
 
     test('exposes the company, chantier and reminders relations', function () {

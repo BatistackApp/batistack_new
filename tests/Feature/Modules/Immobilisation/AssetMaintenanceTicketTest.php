@@ -176,6 +176,22 @@ it('resolves an equipement ticket and restores its previous assignment status', 
         ->and(AssetMaintenance::count())->toBe(0);
 });
 
+it('restores an equipement to available from its saved previous status', function () {
+    $service = app(AssetMaintenanceTicketService::class);
+
+    $equipement = Equipement::factory()->create(['status' => EquipementStatus::AVAILABLE]);
+    $reporter = $equipement->employee;
+
+    $ticket = $service->create($equipement, $reporter, []);
+
+    expect($equipement->fresh()->status)->toBe(EquipementStatus::MAINTENANCE)
+        ->and($ticket->previous_asset_status)->toBe(EquipementStatus::AVAILABLE->value);
+
+    $service->resolve($ticket);
+
+    expect($equipement->fresh()->status)->toBe(EquipementStatus::AVAILABLE);
+});
+
 it('rejects resolving a resolved ticket', function () {
     $service = app(AssetMaintenanceTicketService::class);
 

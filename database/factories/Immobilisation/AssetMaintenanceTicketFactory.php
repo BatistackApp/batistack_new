@@ -37,11 +37,11 @@ class AssetMaintenanceTicketFactory extends Factory
         ]);
     }
 
-    public function forEquipement(): static
+    public function forEquipement(?Equipement $equipement = null): static
     {
         return $this->state(fn (array $attributes) => [
             'asset_type' => Equipement::class,
-            'asset_id' => Equipement::factory(),
+            'asset_id' => $equipement ?? Equipement::factory(),
         ]);
     }
 }
