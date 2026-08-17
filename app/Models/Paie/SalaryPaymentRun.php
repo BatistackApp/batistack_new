@@ -62,7 +62,7 @@ class SalaryPaymentRun extends Model
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-            ->logOnly(['period', 'total_amount', 'count', 'status', 'bridge_payment_request_id', 'consent_url'])
+            ->logOnly(['period', 'total_amount', 'count', 'status', 'bridge_payment_request_id'])
             ->logOnlyDirty()
             ->dontLogEmptyChanges();
     }

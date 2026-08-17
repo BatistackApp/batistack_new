@@ -132,7 +132,7 @@ Schedule::command('app:check-bridge-tokens')
 Schedule::command('paie:poll-salary-payments')
     ->everyFiveMinutes()
     ->timezone('Europe/Paris')
-    ->withoutOverlapping()
+    ->withoutOverlapping(10)
     ->onFailure(fn () => logger()->error('Échec du polling des paiements de salaires.'));
 
 // Locations - Facturation interne (refacturation aux chantiers)

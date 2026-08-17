@@ -123,6 +123,13 @@ return [
             'handler' => NullHandler::class,
         ],
 
+        'bridge-payments' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/bridge-payments.log'),
+            'level' => 'error',
+            'days' => 14,
+        ],
+
         'emergency' => [
             'path' => storage_path('logs/laravel.log'),
         ],

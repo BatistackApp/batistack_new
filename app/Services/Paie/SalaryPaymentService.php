@@ -26,7 +26,7 @@ class SalaryPaymentService
     /**
      * Crée un run de paiement (bulk) à partir des bulletins sélectionnés.
      *
-     * @throws \RuntimeException Si un bulletin n'est pas payant ou qu'un IBAN bénéficiaire/émetteur manque.
+     * @throws \RuntimeException Si un bulletin n'est pas éligible ou qu'un IBAN bénéficiaire/émetteur manque.
      */
     public function createRun(Collection $payslips, BankAccount $source, User $creator): SalaryPaymentRun
     {
@@ -34,13 +34,20 @@ class SalaryPaymentService
             throw new \RuntimeException("Le compte émetteur n'est pas relié à une banque Bridge (bridge_bank_id manquant).");
         }
 
-        $validated = $payslips->filter(fn (Payslip $p) => $p->net_paid > 0);
+        $eligible = $payslips->filter(
+            fn (Payslip $p) => $p->net_paid > 0 && $p->status === PayslipStatus::VALIDATED
+        );
 
-        if ($validated->isEmpty()) {
+        if ($eligible->isEmpty()) {
             throw new \RuntimeException('Aucun bulletin payant sélectionné.');
         }
 
-        $lines = $validated->map(function (Payslip $payslip) {
+        $periods = $eligible->pluck('period')->unique();
+        if ($periods->count() > 1) {
+            throw new \RuntimeException('Les bulletins sélectionnés doivent appartenir à la même période de paie.');
+        }
+
+        $lines = $eligible->map(function (Payslip $payslip) {
             if (! $payslip->employee?->iban) {
                 throw new \RuntimeException("IBAN manquant pour l'employé {$payslip->employee?->getFullName()}");
             }
@@ -55,7 +62,7 @@ class SalaryPaymentService
         });
 
         $total = $lines->sum('amount');
-        $period = $validated->first()->period;
+        $period = $periods->first();
         $idempotencyKey = $this->buildIdempotencyKey($source, $period, $lines);
 
         return DB::transaction(function () use ($source, $creator, $period, $total, $lines, $idempotencyKey) {
@@ -85,16 +92,106 @@ class SalaryPaymentService
 
     /**
      * Envoie la requête de paiement à Bridge et stocke le consent URL.
+     *
+     * La sortie de PENDING est réservée de façon atomique afin qu'une exécution
+     * concurrente ne puisse pas réinitier le même run.
+     *
+     * @return bool true si une nouvelle demande Bridge a été créée.
      */
-    public function initiateRun(SalaryPaymentRun $run): void
+    public function initiateRun(SalaryPaymentRun $run): bool
     {
-        if ($run->status !== SalaryPaymentStatus::PENDING) {
-            return;
+        $reserved = DB::transaction(function () use ($run) {
+            $locked = SalaryPaymentRun::whereKey($run->id)->lockForUpdate()->first();
+
+            if (! $locked || $locked->status !== SalaryPaymentStatus::PENDING) {
+                return false;
+            }
+
+            // Transition immédiate hors de PENDING : bloque toute réinitiation concurrente.
+            $locked->update(['status' => SalaryPaymentStatus::PROCESSING]);
+
+            return true;
+        });
+
+        if (! $reserved) {
+            return false;
+        }
+
+        $run->refresh();
+
+        // Réconciliation : si une demande Bridge existe déjà (créée lors d'une
+        // tentative précédente avant une erreur de transport), on ne crée pas
+        // de nouvelle demande et on rétablit l'état en attente de validation.
+        if ($run->bridge_payment_request_id) {
+            $this->applyInitiationResult($run, $run->bridge_payment_request_id, $run->consent_url);
+
+            return false;
         }
 
         $source = $run->bankAccount;
+        $result = $this->bridge->initiatePaymentRequest(
+            transactions: $this->buildTransactions($run),
+            user: $this->buildUser($run),
+            providerId: (string) $source->bridge_bank_id,
+            clientReference: $run->idempotency_key,
+        );
 
-        $transactions = $run->lines->map(function (SalaryPaymentLine $line) use ($run) {
+        $this->applyInitiationResult($run, $result['id'], $result['url']);
+
+        return true;
+    }
+
+    /**
+     * Régénère une demande Bridge pour un run déjà en attente de validation
+     * (lien de consentement expiré). Réservé au flux de réinitiation explicite.
+     */
+    public function reinitiateRun(SalaryPaymentRun $run): bool
+    {
+        if ($run->status !== SalaryPaymentStatus::AWAITING_VALIDATION) {
+            throw new \RuntimeException('Le run doit être en attente de validation pour être réinitié.');
+        }
+
+        $source = $run->bankAccount;
+        $result = $this->bridge->initiatePaymentRequest(
+            transactions: $this->buildTransactions($run),
+            user: $this->buildUser($run),
+            providerId: (string) $source->bridge_bank_id,
+            clientReference: $run->idempotency_key,
+        );
+
+        $this->applyInitiationResult($run, $result['id'], $result['url']);
+
+        return true;
+    }
+
+    /**
+     * Interroge Bridge et applique le statut final de la requête de paiement.
+     */
+    public function pollRun(SalaryPaymentRun $run): void
+    {
+        if (! $run->bridge_payment_request_id) {
+            return;
+        }
+
+        $status = $this->bridge->mapStatus($this->bridge->getPaymentRequestStatus($run->bridge_payment_request_id));
+
+        $run->update(['status' => $status]);
+
+        if ($status === SalaryPaymentStatus::SUCCEEDED) {
+            $this->markRunSucceeded($run);
+
+            return;
+        }
+
+        // Mise à jour ligne par ligne pour déclencher les événements et l'audit.
+        foreach ($run->lines as $line) {
+            $line->update(['status' => $status]);
+        }
+    }
+
+    private function buildTransactions(SalaryPaymentRun $run): array
+    {
+        return $run->lines->map(function (SalaryPaymentLine $line) use ($run) {
             $employee = $line->employee;
 
             return [
@@ -110,46 +207,26 @@ class SalaryPaymentService
                 'end_to_end_id' => $line->end_to_end_id,
             ];
         })->values()->all();
+    }
 
-        $result = $this->bridge->initiatePaymentRequest(
-            transactions: $transactions,
-            user: [
-                'first_name' => $run->creator?->name ?? 'ERP',
-                'last_name' => '',
-                'external_reference' => 'company_'.$source->company_id,
-            ],
-            providerId: (string) $source->bridge_bank_id,
-            clientReference: $run->idempotency_key,
-        );
+    private function buildUser(SalaryPaymentRun $run): array
+    {
+        return [
+            'first_name' => $run->creator?->name ?? 'ERP',
+            'last_name' => '',
+            'external_reference' => 'company_'.$run->bankAccount->company_id,
+        ];
+    }
 
+    private function applyInitiationResult(SalaryPaymentRun $run, string $bridgePaymentRequestId, ?string $consentUrl): void
+    {
         $run->update([
-            'bridge_payment_request_id' => $result['id'],
-            'consent_url' => $result['url'],
+            'bridge_payment_request_id' => $bridgePaymentRequestId,
+            'consent_url' => $consentUrl,
             'status' => SalaryPaymentStatus::AWAITING_VALIDATION,
         ]);
 
         $run->lines()->update(['status' => SalaryPaymentStatus::AWAITING_VALIDATION]);
-    }
-
-    /**
-     * Interroge Bridge et applique le statut final de la requête de paiement.
-     */
-    public function pollRun(SalaryPaymentRun $run): void
-    {
-        if (! $run->bridge_payment_request_id) {
-            return;
-        }
-
-        $bridgeStatus = $this->bridge->getPaymentRequestStatus($run->bridge_payment_request_id);
-        $status = $this->bridge->mapStatus($bridgeStatus);
-
-        $run->update(['status' => $status]);
-
-        match ($status) {
-            SalaryPaymentStatus::SUCCEEDED => $this->markRunSucceeded($run),
-            SalaryPaymentStatus::FAILED, SalaryPaymentStatus::CANCELED => $run->lines()->update(['status' => $status]),
-            default => $run->lines()->update(['status' => $status]),
-        };
     }
 
     private function markRunSucceeded(SalaryPaymentRun $run): void

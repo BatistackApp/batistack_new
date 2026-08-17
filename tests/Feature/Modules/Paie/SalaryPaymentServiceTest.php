@@ -4,6 +4,7 @@ use App\Enums\Paie\PayslipStatus;
 use App\Enums\Paie\SalaryPaymentStatus;
 use App\Models\Banque\BankAccount;
 use App\Models\Paie\Payslip;
+use App\Models\Paie\SalaryPaymentRun;
 use App\Models\User;
 use App\Services\Banque\BridgePaymentService;
 use App\Services\Paie\SalaryPaymentService;
@@ -28,7 +29,7 @@ function payablePayslip(array $overrides = []): Payslip
         'period' => '2026-07',
     ], $overrides));
 
-    $payslip->employee()->update([
+    $payslip->employee->update([
         'iban' => 'FR2310096000301695931368H67',
         'first_name' => 'Jean',
         'last_name' => 'Dupont',
@@ -74,7 +75,9 @@ it('produces a deterministic idempotency key for the same batch', function () {
     $a = $service->createRun(collect([$payslip]), $account, $user);
     $b = $service->createRun(collect([$payslip]), $account, $user);
 
-    expect($a->idempotency_key)->toBe($b->idempotency_key);
+    expect($a->idempotency_key)->toBe($b->idempotency_key)
+        ->and(SalaryPaymentRun::count())->toBe(1)
+        ->and($a->is($b))->toBeTrue();
 });
 
 it('throws when the source account is not linked to a Bridge bank', function () {
@@ -87,7 +90,7 @@ it('throws when the source account is not linked to a Bridge bank', function () 
 it('throws when an employee iban is missing', function () {
     $account = bridgeAccount();
     $payslip = payablePayslip();
-    $payslip->employee()->update(['iban' => null]);
+    $payslip->employee->update(['iban' => null]);
 
     app(SalaryPaymentService::class)->createRun(collect([$payslip]), $account, User::factory()->create());
 })->throws(RuntimeException::class, 'IBAN manquant');
@@ -115,6 +118,25 @@ it('initiates a run against Bridge and stores the consent url', function () {
         ->and($run->bridge_payment_request_id)->toBe('req-1')
         ->and($run->consent_url)->toBe('https://consent/initiate')
         ->and($run->lines->first()->status)->toBe(SalaryPaymentStatus::AWAITING_VALIDATION);
+});
+
+it('does not re-initiate an already initiated run', function () {
+    $bridge = bridgeMock();
+    $bridge->shouldReceive('initiatePaymentRequest')->once()->andReturn(['id' => 'req-1', 'url' => 'https://consent/initiate']);
+
+    $account = bridgeAccount();
+    $payslip = payablePayslip();
+    $service = app(SalaryPaymentService::class);
+    $run = $service->createRun(collect([$payslip]), $account, User::factory()->create());
+
+    expect($service->initiateRun($run->fresh()))->toBeTrue();
+
+    $run->refresh();
+    expect($run->status)->toBe(SalaryPaymentStatus::AWAITING_VALIDATION);
+
+    // Le run est sorti de PENDING : toute tentative ultérieure est ignorée
+    // et n'appelle pas de nouveau Bridge (anti-réinitiation).
+    expect($service->initiateRun($run->fresh()))->toBeFalse();
 });
 
 it('marks the run, lines and payslips paid on a successful payment', function () {

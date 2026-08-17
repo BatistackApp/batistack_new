@@ -157,7 +157,7 @@ class BridgeApiService
                         // We default to checking, but we could parse $accData['type'] if Bridge provides it
                         'type' => BankAccountType::CHECKING,
                         'iban' => $accData['iban'] ?? null,
-                        'bridge_bank_id' => $accData['bank_id'] ?? $accData['provider_id'] ?? null,
+                        'bridge_bank_id' => $accData['provider_id'] ?? null,
                         'currency' => $accData['currency_code'] ?? 'EUR',
                         'balance' => $accData['balance'] ?? 0,
                     ]
@@ -192,16 +192,10 @@ class BridgeApiService
         // Fetch Transactions
         $imported = 0;
         $hasMore = true;
-        // In real life, we should get the latest updated_at from DB to use as `since` parameter
-        $latestTx = BankTransaction::where('bank_account_id', $account->id)
-            ->orderBy('updated_at', 'desc')
-            ->first();
 
         $params = [
             'limit' => 100,
         ];
-        // Bridge might use 'since' as an ISO8601 string
-        // If we have a latestTx, we could add `since` but for simplicity here we fetch recent.
 
         $endpoint = "{$this->baseUrl}/aggregation/transactions?account_id={$account->bridge_account_id}";
 

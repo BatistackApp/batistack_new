@@ -406,18 +406,32 @@ class PayslipResource extends Resource
 
                             try {
                                 $run = $salaryService->createRun($validRecords, $source, auth()->user());
-                                InitiateSalaryPaymentRunJob::dispatch($run);
 
-                                Notification::make()
-                                    ->title('Run de paiement créé')
-                                    ->body('L\'initiation est en cours. Ouvrez la validation bancaire depuis le suivi des runs de paiement.')
-                                    ->success()
-                                    ->actions([
-                                        Action::make('view')
-                                            ->label('Suivre le run')
-                                            ->url(SalaryPaymentRunResource::getUrl('index')),
-                                    ])
-                                    ->send();
+                                if ($run->wasRecentlyCreated) {
+                                    InitiateSalaryPaymentRunJob::dispatch($run);
+
+                                    Notification::make()
+                                        ->title('Run de paiement créé')
+                                        ->body('L\'initiation est en cours. Ouvrez la validation bancaire depuis le suivi des runs de paiement.')
+                                        ->success()
+                                        ->actions([
+                                            Action::make('view')
+                                                ->label('Suivre le run')
+                                                ->url(SalaryPaymentRunResource::getUrl('index')),
+                                        ])
+                                        ->send();
+                                } else {
+                                    Notification::make()
+                                        ->title('Un run de paiement existe déjà pour ce lot')
+                                        ->body('Aucune nouvelle initiation n\'a été lancée.')
+                                        ->warning()
+                                        ->actions([
+                                            Action::make('view')
+                                                ->label('Suivre le run')
+                                                ->url(SalaryPaymentRunResource::getUrl('index')),
+                                        ])
+                                        ->send();
+                                }
                             } catch (\Throwable $e) {
                                 Notification::make()
                                     ->title('Erreur lors de la création du run')

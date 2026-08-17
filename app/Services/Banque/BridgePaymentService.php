@@ -3,7 +3,9 @@
 namespace App\Services\Banque;
 
 use App\Enums\Paie\SalaryPaymentStatus;
+use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Interface avec l'API Bridge Payment Initiation (déclenchement de virements SEPA).
@@ -70,11 +72,14 @@ class BridgePaymentService
             $payload['callback_url'] = $callbackUrl ?: $this->callbackUrl;
         }
 
-        $response = Http::withHeaders($this->headers())
+        $response = Http::timeout(15)
+            ->connectTimeout(5)
+            ->withHeaders($this->headers())
             ->post("{$this->baseUrl}/payment-requests", $payload);
 
         if (! $response->successful()) {
-            throw new \Exception('Bridge Payment Request Failed: '.$response->body());
+            $this->logBridgeError('payment-requests', $response);
+            throw new \Exception('Bridge Payment Request Failed (HTTP '.$response->status().').');
         }
 
         return [
@@ -90,11 +95,15 @@ class BridgePaymentService
     {
         $this->assertConfigured();
 
-        $response = Http::withHeaders($this->headers())
+        $response = Http::retry(2, 100, throw: false)
+            ->timeout(15)
+            ->connectTimeout(5)
+            ->withHeaders($this->headers())
             ->get("{$this->baseUrl}/payment-requests/{$paymentRequestId}");
 
         if (! $response->successful()) {
-            throw new \Exception('Bridge Payment Status Failed: '.$response->body());
+            $this->logBridgeError('payment-requests/status', $response);
+            throw new \Exception('Bridge Payment Status Failed (HTTP '.$response->status().').');
         }
 
         return $response->json('status');
@@ -111,8 +120,20 @@ class BridgePaymentService
             'RJCT', 'FAIL', 'CANC' => $bridgeStatus === 'CANC'
                 ? SalaryPaymentStatus::CANCELED
                 : SalaryPaymentStatus::FAILED,
-            default => SalaryPaymentStatus::PENDING,
+            default => SalaryPaymentStatus::PROCESSING,
         };
+    }
+
+    /**
+     * Journalise l'échec HTTP sur un canal dédié, puis lève une exception sans
+     * propager le corps brut (qui peut contenir des données bénéficiaires).
+     */
+    private function logBridgeError(string $context, Response $response): void
+    {
+        Log::channel('bridge-payments')->error('Bridge API error during '.$context, [
+            'status' => $response->status(),
+            'body' => $response->body(),
+        ]);
     }
 
     private function headers(): array

@@ -53,7 +53,7 @@ class SalaryPaymentLine extends Model
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-            ->logOnly(['amount', 'status', 'bridge_payment_request_id', 'consent_url', 'bank_reference', 'error'])
+            ->logOnly(['amount', 'status', 'bridge_payment_request_id', 'bank_reference', 'error'])
             ->logOnlyDirty()
             ->dontLogEmptyChanges();
     }

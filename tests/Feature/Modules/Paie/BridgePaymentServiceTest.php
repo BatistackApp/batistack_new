@@ -79,6 +79,6 @@ it('maps bridge statuses to local statuses', function () {
         ->and($service->mapStatus('ACCP'))->toBe(SalaryPaymentStatus::PROCESSING)
         ->and($service->mapStatus('RJCT'))->toBe(SalaryPaymentStatus::FAILED)
         ->and($service->mapStatus('CANC'))->toBe(SalaryPaymentStatus::CANCELED)
-        ->and($service->mapStatus('PDNG'))->toBe(SalaryPaymentStatus::PENDING)
-        ->and($service->mapStatus(null))->toBe(SalaryPaymentStatus::PENDING);
+        ->and($service->mapStatus('PDNG'))->toBe(SalaryPaymentStatus::PROCESSING)
+        ->and($service->mapStatus(null))->toBe(SalaryPaymentStatus::PROCESSING);
 });

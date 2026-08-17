@@ -4,7 +4,6 @@ namespace App\Filament\Paie\Resources\Paie\SalaryPaymentRuns;
 
 use App\Enums\Paie\SalaryPaymentStatus;
 use App\Filament\Paie\Resources\Paie\SalaryPaymentRuns\Pages\ListSalaryPaymentRuns;
-use App\Jobs\Paie\InitiateSalaryPaymentRunJob;
 use App\Models\Paie\SalaryPaymentRun;
 use App\Services\Paie\SalaryPaymentService;
 use BackedEnum;
@@ -109,13 +108,22 @@ class SalaryPaymentRunResource extends Resource
                         ->requiresConfirmation()
                         ->modalHeading('Relancer l\'initiation du run')
                         ->modalDescription('Le lien de validation ayant probablement expiré, un nouveau lien sera généré auprès de Bridge.')
-                        ->action(function (SalaryPaymentRun $record) {
-                            InitiateSalaryPaymentRunJob::dispatch($record);
-                            Notification::make()
-                                ->title('Initiation relancée')
-                                ->body('Un nouveau lien de validation sera disponible dans quelques instants.')
-                                ->success()
-                                ->send();
+                        ->action(function (SalaryPaymentRun $record, SalaryPaymentService $service) {
+                            try {
+                                $service->reinitiateRun($record);
+                                Notification::make()
+                                    ->title('Initiation relancée')
+                                    ->body('Un nouveau lien de validation a été généré.')
+                                    ->success()
+                                    ->send();
+                            } catch (\Throwable $e) {
+                                Log::error("Échec de la réinitiation du run {$record->id}: ".$e->getMessage());
+                                Notification::make()
+                                    ->title('Échec de la réinitiation')
+                                    ->body($e->getMessage())
+                                    ->danger()
+                                    ->send();
+                            }
                         })
                         ->visible(fn (SalaryPaymentRun $record) => $record->status === SalaryPaymentStatus::AWAITING_VALIDATION),
                 ]),
