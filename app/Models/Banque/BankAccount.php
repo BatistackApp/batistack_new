@@ -22,6 +22,7 @@ class BankAccount extends Model
         'currency',
         'balance',
         'bridge_account_id',
+        'bridge_bank_id',
     ];
 
     protected $casts = [

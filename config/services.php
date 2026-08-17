@@ -49,6 +49,14 @@ return [
         'client_id' => env('BRIDGE_CLIENT_ID'),
         'client_secret' => env('BRIDGE_CLIENT_SECRET'),
         'version' => '2025-01-15',
+        'payments' => [
+            'base_url' => env('BRIDGE_PAYMENTS_BASE_URL', 'https://api.bridgeapi.io/v3/payment'),
+            'client_id' => env('BRIDGE_PAYMENTS_CLIENT_ID'),
+            'client_secret' => env('BRIDGE_PAYMENTS_CLIENT_SECRET'),
+            'version' => env('BRIDGE_PAYMENTS_VERSION', '2025-01-15'),
+            'callback_url' => env('BRIDGE_PAYMENTS_CALLBACK_URL'),
+            'sandbox' => env('BRIDGE_PAYMENTS_SANDBOX', true),
+        ],
     ],
 
     'github' => [
