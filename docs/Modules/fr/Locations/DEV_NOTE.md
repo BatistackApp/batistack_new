@@ -49,6 +49,25 @@ Le module **Locations** permet de gérer l'ensemble des locations de matériel (
 *   Mise à jour de `RentalCostService` pour intégrer les pénalités au coût analytique.
 *   Commande Cron `CheckRentalOveragesCommand` pour notifier les fins imminentes et appliquer les majorations de retard.
 
+### 9. Facturation Interne Automatique (Refacturation)
+*   **Contexte** : Une immobilisation de l'entreprise affectée à un chantier avec un tarif interne génère périodiquement une `InternalRentalInvoice` pour imputer son coût au **budget matériel** du chantier.
+*   **Données** :
+    *   Migration `add_internal_rental_fields_to_fixed_assets_table` : `daily_rate` (decimal nullable) et `internal_rental_period` (enum `Locations\RentalBillingPeriod`, défaut `monthly`) sur `fixed_assets`.
+    *   Table `internal_rental_invoices` : `company_id`, `fixed_asset_id`, `chantier_id`, `period_start`, `period_end`, `days`, `daily_rate`, `amount_ht`, `status` (enum `Locations\InternalRentalInvoiceStatus`), `billing_key` (**unique**, anti-doublon).
+*   **Modèles** : `App\Models\Locations\InternalRentalInvoice` (relations `company`, `fixedAsset`, `chantier`). Relations `internalRentalInvoices()` ajoutées sur `FixedAsset` et `Chantier`.
+*   **Service** : `App\Services\Locations\InternalRentalBillingService` :
+    *   `generateForAsset(FixedAsset, ?Carbon)` : calcule la période (DAILY/WEEKLY/MONTHLY/YEARLY), les jours et le montant (`days × daily_rate`), pose `billing_key = INT-{assetId}-{période}` (idempotent, retourne l'existante si non annulée).
+    *   `generateDueInvoices()` : parcourt les actifs affectés (`chantier_id` non nul) avec `daily_rate` > 0.
+*   **Automatisation** :
+    *   `FixedAssetObserver` (Immobilisation) : dans `created()`/`updated()`, sur affectation (`chantier_id` renseigné), appelle le service Locations → génère la facture immédiate.
+    *   Commande `locations:bill-internal-rentals` (`GenerateInternalRentalInvoicesCommand`) planifiée quotidiennement (03:30, fuseau Europe/Paris) dans `routes/console.php`.
+*   **Analytique Chantier** : `ChantierAnalyticService::getPerformanceMetrics()` expose `internal_rental_cost_real` (somme des `amount_ht` hors `CANCELED`) intégrée au `total_cost_real`.
+*   **Frontend (Filament)** :
+    *   `FixedAssetForm` : section « Refacturation interne » (`daily_rate` + `internal_rental_period`).
+    *   Ressource `InternalRentalInvoiceResource` (panel Locations) : listing + filtre statut/actif.
+    *   Widget `ChantierFinancialOverview` : ajout du poste « + Location interne ».
+*   **Tests** : `tests/Feature/Modules/Locations/InternalRentalBillingTest.php` (10 tests : idempotence, périodes, non-facturation sans chantier/tarif, intégration analytique, génération à l'affectation).
+
 ## 🚧 Ce qu'il reste à faire
 *   Couverture par les tests unitaires / fonctionnels PestPHP pour les modules Locations Sortantes, Comparateur, et Pénalités.
 
