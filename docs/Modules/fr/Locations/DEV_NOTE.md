@@ -68,6 +68,25 @@ Le module **Locations** permet de gérer l'ensemble des locations de matériel (
     *   Widget `ChantierFinancialOverview` : ajout du poste « + Location interne ».
 *   **Tests** : `tests/Feature/Modules/Locations/InternalRentalBillingTest.php` (10 tests : idempotence, périodes, non-facturation sans chantier/tarif, intégration analytique, génération à l'affectation).
 
+### 10. État des Lieux Mobile (Protection Litiges Fournisseurs)
+*   **Contexte** : Permettre au **chef de chantier** de réaliser un état des lieux horodaté (réception/restitution) du matériel loué, pour se protéger contre les litiges fournisseurs. Fonctionne **hors-ligne** (PWA) avec synchronisation.
+*   **Données** :
+    *   Enum `Locations\RentalConditionReportType` : `RECEPTION` / `RESTITUTION`.
+    *   Table `rental_condition_reports` : `rental_contract_id`, `type`, `comment`, `latitude`, `longitude`, `signature_checksum`, `signed_at`, `captured_at` (**posé côté serveur**), `client_key` (**unique**, anti-doublon d'idempotence).
+    *   Media (Spatie) : collection `photos` (multi) et `signature` (single file).
+*   **Modèle** : `App\Models\Locations\RentalConditionReport` (scopes `reception`/`restitution`/`signed`/`byContract`/`withPhotos`, méthodes `sign()`, `isSigned()`, `getPhotoCount()`, `getDisplayName()`). Relation `conditionReports()` sur `RentalContract`.
+*   **Service** : `App\Services\Locations\RentalConditionReportService` :
+    *   `createFromSync(User, payload)` : validation type/`client_key`, vérification que l'utilisateur **gère le chantier** du contrat (`employee.currentContract`), pose `captured_at = now()` côté serveur, signe si signature fournie (checksum SHA-256). **Idempotent** via `client_key`.
+    *   `attachPhoto(RentalConditionReport, base64)` : ajoute un média à la collection `photos`.
+    *   `userManagesContract(User, RentalContract)` : le chef de chantier n'accède qu'aux contrats de ses chantiers.
+*   **API** (`routes/web.php`, groupe `['auth']`) :
+    *   `GET /api/etat-des-lieux/contracts` : contrats des chantiers gérés (hors statut `TERMINATED`).
+    *   `POST /api/etat-des-lieux/sync` : opérations `CREATE_REPORT` + `UPLOAD_PHOTO` (par `report_key` = `client_key`), réponse `{success, processed, failed}`.
+*   **Frontend (Filament)** :
+    *   Page **Terrain** `EtatDesLieuxPage` (`terrain/etat-des-lieux`) + vue Blade `filament.terrain.pages.etat-des-lieux` : liste des contrats, modal réception/restitution avec commentaire, GPS, **photos caméra** (`capture="environment"`), **signature canvas**, stockage hors-ligne **IndexedDB/Dexie** (`batistack_etat_des_lieux_db`) + sync auto.
+    *   `EtatDesLieuxRelationManager` (lecture seule) sur `RentalContractResource` : type, photos, commentaire, horodatage, signature, GPS.
+*   **Tests** : `tests/Feature/Modules/Locations/RentalConditionReportTest.php` (7 tests : idempotence, horodatage serveur, accès limité aux chantiers gérés, type/clé invalide, signature, photo, API end-to-end).
+
 ## 🚧 Ce qu'il reste à faire
 *   Couverture par les tests unitaires / fonctionnels PestPHP pour les modules Locations Sortantes, Comparateur, et Pénalités.
 

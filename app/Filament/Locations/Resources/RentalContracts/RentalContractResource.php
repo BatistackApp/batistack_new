@@ -5,7 +5,10 @@ namespace App\Filament\Locations\Resources\RentalContracts;
 use App\Filament\Locations\Resources\RentalContracts\Pages\CreateRentalContract;
 use App\Filament\Locations\Resources\RentalContracts\Pages\EditRentalContract;
 use App\Filament\Locations\Resources\RentalContracts\Pages\ListRentalContracts;
+use App\Filament\Locations\Resources\RentalContracts\Pages\ViewRentalContract;
+use App\Filament\Locations\Resources\RentalContracts\RelationManagers\EtatDesLieuxRelationManager;
 use App\Filament\Locations\Resources\RentalContracts\Schemas\RentalContractForm;
+use App\Filament\Locations\Resources\RentalContracts\Schemas\RentalContractInfolist;
 use App\Filament\Locations\Resources\RentalContracts\Tables\RentalContractsTable;
 use App\Models\Locations\RentalContract;
 use BackedEnum;
@@ -40,15 +43,15 @@ class RentalContractResource extends Resource
         return RentalContractsTable::configure($table);
     }
 
-    public static function infolist(\Filament\Schemas\Schema $schema): \Filament\Schemas\Schema
+    public static function infolist(Schema $schema): Schema
     {
-        return \App\Filament\Locations\Resources\RentalContracts\Schemas\RentalContractInfolist::configure($schema);
+        return RentalContractInfolist::configure($schema);
     }
 
     public static function getRelations(): array
     {
         return [
-            //
+            EtatDesLieuxRelationManager::class,
         ];
     }
 
@@ -57,7 +60,7 @@ class RentalContractResource extends Resource
         return [
             'index' => ListRentalContracts::route('/'),
             'create' => CreateRentalContract::route('/create'),
-            'view' => \App\Filament\Locations\Resources\RentalContracts\Pages\ViewRentalContract::route('/{record}'),
+            'view' => ViewRentalContract::route('/{record}'),
             'edit' => EditRentalContract::route('/{record}/edit'),
         ];
     }
