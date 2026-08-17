@@ -286,6 +286,67 @@ it('logs and ignores failures when attaching a photo', function () {
     Log::shouldHaveReceived('error')->once();
 });
 
+it('rejects photos with an unsupported or undetectable mime type', function () {
+    Log::spy();
+    $report = RentalConditionReport::factory()->create();
+    $service = app(RentalConditionReportService::class);
+
+    // Base64 valide mais pas une image décodable => MIME null => non autorisé.
+    expect($service->attachPhoto($report, base64_encode('this-is-not-an-image')))->toBeFalse();
+
+    // Chaîne non base64 => décodage échoue => MIME null => non autorisé.
+    expect($service->attachPhoto($report, '!!!not-base64!!!'))->toBeFalse();
+
+    expect($report->getMedia('photos'))->toHaveCount(0);
+    Log::shouldHaveReceived('warning')->twice();
+});
+
+it('attaches a photo provided as a data URL', function () {
+    ['user' => $user, 'contract' => $contract] = makeManagedScenario();
+    $service = app(RentalConditionReportService::class);
+
+    $report = $service->createFromSync($user, [
+        'contract_id' => $contract->id,
+        'type' => RentalConditionReportType::RECEPTION->value,
+        'client_key' => 'ck-photo-data-url',
+    ]);
+
+    $image = imagecreatetruecolor(10, 10);
+    ob_start();
+    imagejpeg($image);
+    $data = ob_get_clean();
+    imagedestroy($image);
+
+    $result = $service->attachPhoto($report, 'data:image/jpeg;base64,'.base64_encode($data));
+
+    expect($result)->toBeTrue()
+        ->and($report->getMedia('photos'))->toHaveCount(1)
+        ->and($report->getFirstMedia('photos')->file_name)->toEndWith('.jpg');
+});
+
+it('attaches a webp photo', function () {
+    ['user' => $user, 'contract' => $contract] = makeManagedScenario();
+    $service = app(RentalConditionReportService::class);
+
+    $report = $service->createFromSync($user, [
+        'contract_id' => $contract->id,
+        'type' => RentalConditionReportType::RECEPTION->value,
+        'client_key' => 'ck-photo-webp',
+    ]);
+
+    $image = imagecreatetruecolor(10, 10);
+    ob_start();
+    imagewebp($image);
+    $data = ob_get_clean();
+    imagedestroy($image);
+
+    $result = $service->attachPhoto($report, 'data:image/webp;base64,'.base64_encode($data));
+
+    expect($result)->toBeTrue()
+        ->and($report->getMedia('photos'))->toHaveCount(1)
+        ->and($report->getFirstMedia('photos')->file_name)->toEndWith('.webp');
+});
+
 it('does not attach a photo to a report of a contract not managed by the user', function () {
     $other = Employee::factory()->create();
     $otherChantier = Chantier::factory()->create(['manager_id' => $other->id]);

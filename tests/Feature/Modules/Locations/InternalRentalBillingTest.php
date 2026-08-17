@@ -9,6 +9,7 @@ use App\Models\Locations\InternalRentalInvoice;
 use App\Services\Chantiers\ChantierAnalyticService;
 use App\Services\Locations\InternalRentalBillingService;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 beforeEach(function () {
     $this->category = AssetCategory::factory()->create();
@@ -223,6 +224,73 @@ it('bills a new invoice for the new chantier on mid-period reassignment', functi
     expect($invoices->count())->toBe(2)
         ->and($invoices->last()->chantier_id)->toBe($otherChantier->id)
         ->and($invoices->first()->chantier_id)->toBe($this->chantier->id);
+
+    Carbon::setTestNow();
+});
+
+it('reissues a canceled invoice for the current period', function () {
+    Carbon::setTestNow(Carbon::create(2026, 8, 15));
+
+    $asset = makeBillableAsset();
+    $invoice = $asset->internalRentalInvoices()->first();
+    $invoice->update(['status' => InternalRentalInvoiceStatus::CANCELED]);
+
+    $reissued = $this->service->generateForAsset($asset);
+
+    expect($reissued->id)->toBe($invoice->id)
+        ->and($reissued->status)->toBe(InternalRentalInvoiceStatus::DRAFT)
+        ->and($asset->internalRentalInvoices()->count())->toBe(1);
+
+    Carbon::setTestNow();
+});
+
+it('resolves the invoice relations to the fixed asset and chantier', function () {
+    Carbon::setTestNow(Carbon::create(2026, 8, 15));
+
+    $asset = makeBillableAsset();
+    $invoice = $this->service->generateForAsset($asset);
+
+    expect($invoice->fixedAsset->is($asset))->toBeTrue()
+        ->and($invoice->chantier->is($this->chantier))->toBeTrue()
+        ->and($this->chantier->internalRentalInvoices()->whereKey($invoice->id)->exists())->toBeTrue()
+        ->and($asset->internalRentalInvoices()->whereKey($invoice->id)->exists())->toBeTrue()
+        ->and($invoice->company())->toBeInstanceOf(BelongsTo::class);
+
+    Carbon::setTestNow();
+});
+
+it('returns null when the billing key races against an existing invoice', function () {
+    Carbon::setTestNow(Carbon::create(2026, 8, 15));
+
+    $asset = makeBillableAsset();
+    $billingKey = 'INT-'.$asset->id.'-'.$this->chantier->id.'-202608';
+
+    // On retire la facture auto de l'observer pour que $existing ne trouve rien,
+    // puis on insère une facture conflictuelle (même billing_key, autre actif)
+    // qui fera échouer le create() sur la contrainte unique.
+    $asset->internalRentalInvoices()->delete();
+    $other = FixedAsset::factory()->create([
+        'asset_category_id' => $this->category->id,
+        'chantier_id' => null,
+        'daily_rate' => 100,
+    ]);
+    InternalRentalInvoice::create([
+        'fixed_asset_id' => $other->id,
+        'chantier_id' => $this->chantier->id,
+        'billing_key' => $billingKey,
+        'period_start' => '2026-08-01',
+        'period_end' => '2026-08-31',
+        'days' => 31,
+        'daily_rate' => 100,
+        'amount_ht' => 3100,
+        'status' => InternalRentalInvoiceStatus::DRAFT,
+    ]);
+
+    // $existing (filtré sur $asset) ne trouve rien, le create() heurte la
+    // contrainte unique billing_key, le catch re-lit (toujours null) et renvoie null.
+    $invoice = $this->service->generateForAsset($asset);
+
+    expect($invoice)->toBeNull();
 
     Carbon::setTestNow();
 });
