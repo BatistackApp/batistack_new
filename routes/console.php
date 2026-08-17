@@ -128,6 +128,13 @@ Schedule::command('app:check-bridge-tokens')
     ->timezone('Europe/Paris')
     ->onFailure(fn () => logger()->error('Échec de la vérification des tokens Bridge API.'));
 
+// Locations - Facturation interne (refacturation aux chantiers)
+Schedule::command('locations:bill-internal-rentals')
+    ->dailyAt('03:30')
+    ->timezone('Europe/Paris')
+    ->withoutOverlapping()
+    ->onFailure(fn () => logger()->error('Échec de la facturation interne des immobilisations.'));
+
 // Interventions
 Schedule::command('interventions:generate-maintenance')
     ->dailyAt('06:00')

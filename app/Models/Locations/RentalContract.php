@@ -43,4 +43,9 @@ class RentalContract extends Model
     {
         return $this->hasMany(RentalContractLine::class);
     }
+
+    public function conditionReports(): HasMany
+    {
+        return $this->hasMany(RentalConditionReport::class);
+    }
 }

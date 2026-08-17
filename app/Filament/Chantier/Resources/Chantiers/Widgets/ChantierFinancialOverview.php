@@ -57,6 +57,9 @@ class ChantierFinancialOverview extends StatsOverviewWidget
         if (($financials['purchase_cost_real'] ?? 0) > 0) {
             $descriptionCosts .= ' + Achats (Revente)';
         }
+        if (($financials['internal_rental_cost_real'] ?? 0) > 0) {
+            $descriptionCosts .= ' + Location interne';
+        }
 
         return [
             Stat::make('Budget Vendu (HT)', number_format($budget, 2, ',', ' ').' €')
