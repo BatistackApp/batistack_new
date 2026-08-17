@@ -28,6 +28,9 @@ Cette version introduit un **Espace Client dédié** permettant une interaction 
 *   **Ajout :** Gestion des "Locations Sortantes" pour facturer la location de votre propre matériel à des tiers.
 *   **Ajout :** Système d'alertes automatiques (J-1) avant la fin d'un contrat et application de pénalités de retard journalières paramétrables.
 
+**Interventions**
+*   **Ajout :** Formulaires d'Intervention Dynamiques (Check-lists sur-mesure) — créez des modèles de rapport par type d'intervention (Régie/Forfait) avec blocs de champs (texte, nombre, case à cocher, liste, date, photo). Le technicien renseigne le rapport depuis son espace, et la clôture est **bloquée** tant que les champs obligatoires ne sont pas complétés.
+
 **Immobilisations & Actifs**
 *   **Ajout :** Module de transfert inter-chantiers pour suivre les mouvements du gros matériel avec génération automatique de **Bons de Transport (PDF)**.
 *   **Ajout :** Interface d'audit d'inventaire optimisée pour le scan mobile (QR Code) afin de valider la présence physique des actifs sur le terrain.
