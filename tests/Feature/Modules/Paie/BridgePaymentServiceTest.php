@@ -3,6 +3,7 @@
 use App\Enums\Paie\SalaryPaymentStatus;
 use App\Services\Banque\BridgePaymentService;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 beforeEach(function () {
     config([
@@ -69,6 +70,22 @@ it('throws on a failed initiation response', function () {
 
     app(BridgePaymentService::class)->initiatePaymentRequest([], ['first_name' => 'A', 'last_name' => 'B'], '6');
 })->throws(Exception::class, 'Bridge Payment Request Failed');
+
+it('sanitizes the error so the response body is not leaked', function () {
+    Http::fake(['*' => Http::response('sensitive-beneficiary-data', 400)]);
+
+    $logger = Mockery::mock();
+    $logger->shouldReceive('error')->once();
+    Log::shouldReceive('channel')->with('bridge-payments')->andReturn($logger);
+
+    try {
+        app(BridgePaymentService::class)->initiatePaymentRequest([], ['first_name' => 'A', 'last_name' => 'B'], '6');
+        $this->fail('Expected an exception to be thrown.');
+    } catch (Throwable $e) {
+        expect($e->getMessage())->not->toContain('sensitive-beneficiary-data')
+            ->and($e->getMessage())->toContain('HTTP 400');
+    }
+});
 
 it('maps bridge statuses to local statuses', function () {
     $service = app(BridgePaymentService::class);
