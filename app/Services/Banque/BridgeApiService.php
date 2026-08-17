@@ -2,18 +2,23 @@
 
 namespace App\Services\Banque;
 
+use App\Enums\Banque\BankAccountType;
 use App\Enums\Banque\TransactionStatus;
 use App\Enums\Banque\TransactionType;
 use App\Models\Banque\BankAccount;
 use App\Models\Banque\BankTransaction;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Http;
 
 class BridgeApiService
 {
     private string $baseUrl;
+
     private string $clientId;
+
     private string $clientSecret;
+
     private string $version;
 
     public function __construct()
@@ -34,8 +39,8 @@ class BridgeApiService
         }
 
         // Cache the token to prevent invalidation by concurrent jobs
-        return \Illuminate\Support\Facades\Cache::remember("bridge_token_{$externalUserId}", 7000, function () use ($externalUserId) {
-            $response = \Illuminate\Support\Facades\Http::withHeaders([
+        return Cache::remember("bridge_token_{$externalUserId}", 7000, function () use ($externalUserId) {
+            $response = Http::withHeaders([
                 'Bridge-Version' => $this->version,
                 'Client-Id' => $this->clientId,
                 'Client-Secret' => $this->clientSecret,
@@ -48,17 +53,17 @@ class BridgeApiService
 
             if ($status === 404 || $status === 400 || $isUnauthorizedUser) {
                 // User might not exist yet, create them
-                $createResponse = \Illuminate\Support\Facades\Http::withHeaders([
+                $createResponse = Http::withHeaders([
                     'Bridge-Version' => $this->version,
                     'Client-Id' => $this->clientId,
                     'Client-Secret' => $this->clientSecret,
                 ])->post("{$this->baseUrl}/aggregation/users", [
                     'external_user_id' => $externalUserId,
                 ]);
-                
+
                 if ($createResponse->successful()) {
                     // Retry fetching token immediately (without cache)
-                    $retryResponse = \Illuminate\Support\Facades\Http::withHeaders([
+                    $retryResponse = Http::withHeaders([
                         'Bridge-Version' => $this->version,
                         'Client-Id' => $this->clientId,
                         'Client-Secret' => $this->clientSecret,
@@ -68,13 +73,13 @@ class BridgeApiService
                     if ($retryResponse->successful()) {
                         return $retryResponse->json('access_token');
                     }
-                    throw new \Exception('Bridge API Authentication Retry Failed: ' . $retryResponse->body());
+                    throw new \Exception('Bridge API Authentication Retry Failed: '.$retryResponse->body());
                 }
-                throw new \Exception('Bridge API User Creation Failed: ' . $createResponse->body());
+                throw new \Exception('Bridge API User Creation Failed: '.$createResponse->body());
             }
 
-            if (!$response->successful()) {
-                throw new \Exception('Bridge API Authentication Failed: ' . $response->body());
+            if (! $response->successful()) {
+                throw new \Exception('Bridge API Authentication Failed: '.$response->body());
             }
 
             return $response->json('access_token');
@@ -84,7 +89,7 @@ class BridgeApiService
     /**
      * Generate a User Management Session URL.
      */
-    public function createManagementSessionUrl(string $externalUserId, string $userEmail, string $callbackUrl = null): string
+    public function createManagementSessionUrl(string $externalUserId, string $userEmail, ?string $callbackUrl = null): string
     {
         $token = $this->getAccessToken($externalUserId);
 
@@ -95,15 +100,15 @@ class BridgeApiService
             $payload['callback_url'] = $callbackUrl;
         }
 
-        $response = \Illuminate\Support\Facades\Http::withToken($token)
+        $response = Http::withToken($token)
             ->withHeaders([
                 'Bridge-Version' => $this->version,
                 'Client-Id' => $this->clientId,
                 'Client-Secret' => $this->clientSecret,
             ])->post("{$this->baseUrl}/aggregation/user-management-sessions", $payload);
 
-        if (!$response->successful()) {
-            throw new \Exception('Bridge API Session Creation Failed: ' . $response->body());
+        if (! $response->successful()) {
+            throw new \Exception('Bridge API Session Creation Failed: '.$response->body());
         }
 
         return $response->json('url');
@@ -114,7 +119,7 @@ class BridgeApiService
      */
     public function syncAccounts(int $companyId): array
     {
-        $externalUserId = 'company_' . $companyId;
+        $externalUserId = 'company_'.$companyId;
         $token = $this->getAccessToken($externalUserId);
 
         $endpoint = "{$this->baseUrl}/aggregation/accounts";
@@ -123,15 +128,15 @@ class BridgeApiService
         $syncedAccounts = [];
 
         while ($hasMore && $endpoint) {
-            $response = \Illuminate\Support\Facades\Http::withToken($token)
+            $response = Http::withToken($token)
                 ->withHeaders([
                     'Bridge-Version' => $this->version,
                     'Client-Id' => $this->clientId,
                     'Client-Secret' => $this->clientSecret,
                 ])->get($endpoint, $params);
 
-            if (!$response->successful()) {
-                throw new \Exception('Bridge API Accounts Fetch Failed: ' . $response->body());
+            if (! $response->successful()) {
+                throw new \Exception('Bridge API Accounts Fetch Failed: '.$response->body());
             }
 
             $accounts = $response->json('resources');
@@ -145,13 +150,14 @@ class BridgeApiService
                 $bankAccount = BankAccount::updateOrCreate(
                     [
                         'company_id' => $companyId,
-                        'bridge_account_id' => $accData['id']
+                        'bridge_account_id' => $accData['id'],
                     ],
                     [
                         'name' => $accData['name'],
                         // We default to checking, but we could parse $accData['type'] if Bridge provides it
-                        'type' => \App\Enums\Banque\BankAccountType::CHECKING,
+                        'type' => BankAccountType::CHECKING,
                         'iban' => $accData['iban'] ?? null,
+                        'bridge_bank_id' => $accData['bank_id'] ?? $accData['provider_id'] ?? null,
                         'currency' => $accData['currency_code'] ?? 'EUR',
                         'balance' => $accData['balance'] ?? 0,
                     ]
@@ -161,7 +167,7 @@ class BridgeApiService
 
             $nextUri = $response->json('pagination.next_uri');
             if ($nextUri) {
-                $endpoint = $this->baseUrl . str_replace('/v3', '', $nextUri);
+                $endpoint = $this->baseUrl.str_replace('/v3', '', $nextUri);
                 $params = [];
             } else {
                 $hasMore = false;
@@ -176,11 +182,11 @@ class BridgeApiService
      */
     public function syncTransactions(BankAccount $account): int
     {
-        if (!$account->bridge_account_id) {
+        if (! $account->bridge_account_id) {
             return 0; // Not a bridge account
         }
 
-        $externalUserId = 'company_' . $account->company_id;
+        $externalUserId = 'company_'.$account->company_id;
         $token = $this->getAccessToken($externalUserId);
 
         // Fetch Transactions
@@ -188,9 +194,9 @@ class BridgeApiService
         $hasMore = true;
         // In real life, we should get the latest updated_at from DB to use as `since` parameter
         $latestTx = BankTransaction::where('bank_account_id', $account->id)
-                                    ->orderBy('updated_at', 'desc')
-                                    ->first();
-        
+            ->orderBy('updated_at', 'desc')
+            ->first();
+
         $params = [
             'limit' => 100,
         ];
@@ -200,15 +206,15 @@ class BridgeApiService
         $endpoint = "{$this->baseUrl}/aggregation/transactions?account_id={$account->bridge_account_id}";
 
         while ($hasMore && $endpoint) {
-            $response = \Illuminate\Support\Facades\Http::withToken($token)
+            $response = Http::withToken($token)
                 ->withHeaders([
                     'Bridge-Version' => $this->version,
                     'Client-Id' => $this->clientId,
                     'Client-Secret' => $this->clientSecret,
                 ])->get($endpoint, $params);
 
-            if (!$response->successful()) {
-                throw new \Exception('Bridge API Transaction Fetch Failed: ' . $response->body());
+            if (! $response->successful()) {
+                throw new \Exception('Bridge API Transaction Fetch Failed: '.$response->body());
             }
 
             $transactions = $response->json('resources');
@@ -223,20 +229,20 @@ class BridgeApiService
                     'amount' => $tx['amount'],
                     'type' => $isCredit ? TransactionType::CREDIT->value : TransactionType::DEBIT->value,
                     'status' => TransactionStatus::PENDING->value,
-                    'external_id' => 'bridge_' . $tx['id'],
+                    'external_id' => 'bridge_'.$tx['id'],
                     'created_at' => now(),
                     'updated_at' => now(),
                 ];
             }
 
-            if (!empty($insertData)) {
+            if (! empty($insertData)) {
                 $affected = BankTransaction::insertOrIgnore($insertData);
                 $imported += $affected;
             }
 
             $nextUri = $response->json('pagination.next_uri');
             if ($nextUri) {
-                $endpoint = $this->baseUrl . str_replace('/v3', '', $nextUri); // Handle relative path safely
+                $endpoint = $this->baseUrl.str_replace('/v3', '', $nextUri); // Handle relative path safely
                 $params = []; // Params are usually included in next_uri
             } else {
                 $hasMore = false;
@@ -252,7 +258,7 @@ class BridgeApiService
      */
     public function checkItemsExpiration(int $companyId): array
     {
-        $externalUserId = 'company_' . $companyId;
+        $externalUserId = 'company_'.$companyId;
         $token = $this->getAccessToken($externalUserId);
 
         $endpoint = "{$this->baseUrl}/aggregation/items";
@@ -262,32 +268,32 @@ class BridgeApiService
         $now = now();
 
         while ($hasMore && $endpoint) {
-            $response = \Illuminate\Support\Facades\Http::withToken($token)
+            $response = Http::withToken($token)
                 ->withHeaders([
                     'Bridge-Version' => $this->version,
                     'Client-Id' => $this->clientId,
                     'Client-Secret' => $this->clientSecret,
                 ])->get($endpoint, $params);
 
-            if (!$response->successful()) {
-                throw new \Exception('Bridge API Items Fetch Failed: ' . $response->body());
+            if (! $response->successful()) {
+                throw new \Exception('Bridge API Items Fetch Failed: '.$response->body());
             }
 
             $items = $response->json('resources');
 
             foreach ($items as $item) {
                 $requiresAction = (isset($item['status']) && $item['status'] === 2);
-                
+
                 // Bridge API v3 items typically use status_validation_expires_at
                 $expiresAt = $item['status_validation_expires_at'] ?? $item['authentication_expires_at'] ?? null;
                 $daysRemaining = null;
                 $expirationDate = null;
-                
+
                 if ($expiresAt) {
                     $expirationDate = Carbon::parse($expiresAt);
                     $daysRemaining = $now->diffInDays($expirationDate, false); // false = allow negative
                 }
-                
+
                 if ($requiresAction || ($daysRemaining !== null && $daysRemaining <= 5)) {
                     $expiringItems[] = [
                         'item_id' => $item['id'],
@@ -300,7 +306,7 @@ class BridgeApiService
 
             $nextUri = $response->json('pagination.next_uri');
             if ($nextUri) {
-                $endpoint = $this->baseUrl . str_replace('/v3', '', $nextUri);
+                $endpoint = $this->baseUrl.str_replace('/v3', '', $nextUri);
                 $params = [];
             } else {
                 $hasMore = false;
