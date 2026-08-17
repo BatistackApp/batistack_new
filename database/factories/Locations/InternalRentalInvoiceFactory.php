@@ -22,6 +22,7 @@ class InternalRentalInvoiceFactory extends Factory
     {
         $fixedAsset = FixedAsset::factory()->create();
         $days = $this->faker->numberBetween(1, 30);
+        $dailyRate = $this->faker->randomFloat(2, 10, 100);
 
         return [
             'fixed_asset_id' => $fixedAsset->id,
@@ -29,8 +30,8 @@ class InternalRentalInvoiceFactory extends Factory
             'period_start' => now()->startOfMonth()->toDateString(),
             'period_end' => now()->endOfMonth()->toDateString(),
             'days' => $days,
-            'daily_rate' => $this->faker->randomFloat(2, 10, 100),
-            'amount_ht' => $days * 50,
+            'daily_rate' => $dailyRate,
+            'amount_ht' => round($dailyRate * $days, 2),
             'status' => InternalRentalInvoiceStatus::DRAFT,
             'billing_key' => 'INT-'.$fixedAsset->id.'-'.now()->format('Ym'),
         ];

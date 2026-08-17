@@ -70,7 +70,7 @@ Pour chaque état des lieux, il peut joindre :
 L'application fonctionne **même sans connexion** : les photos et données sont conservées sur l'appareil et **synchronisées automatiquement** dès que le réseau revient.
 
 > [!IMPORTANT]
-> Pour garantir la valeur juridique des preuves, l'**horodatage** (`captured_at`) est enregistré **côté serveur au moment de la synchronisation**, jamais depuis l'appareil. Chaque état des lieux est horodaté, signé et rattaché au contrat de location.
+> Pour garantir la valeur juridique des preuves, l'**horodatage** (`captured_at`) est **obligatoire** et enregistré **côté serveur au moment de la synchronisation**, jamais depuis l'appareil. La **signature** est **optionnelle** : elle n'est scellée (checksum SHA-256) que si le chef de chantier la fournit. Chaque état des lieux est horodaté, rattaché au contrat de location et, le cas échéant, signé.
 
 ### 5.3. Consultation
 

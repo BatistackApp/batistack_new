@@ -18,6 +18,10 @@ beforeEach(function () {
     $this->service = app(InternalRentalBillingService::class);
 });
 
+afterEach(function () {
+    Carbon::setTestNow(null);
+});
+
 function makeBillableAsset(array $overrides = []): FixedAsset
 {
     return FixedAsset::factory()->create(array_merge([
@@ -201,6 +205,24 @@ it('bills immediately when an asset is affected to a chantier', function () {
     $asset->update(['chantier_id' => $this->chantier->id]);
 
     expect($asset->internalRentalInvoices()->count())->toBe(1);
+
+    Carbon::setTestNow();
+});
+
+it('bills a new invoice for the new chantier on mid-period reassignment', function () {
+    Carbon::setTestNow(Carbon::create(2026, 8, 15));
+    $otherChantier = Chantier::factory()->create();
+
+    $asset = makeBillableAsset();
+    expect($asset->internalRentalInvoices()->count())->toBe(1)
+        ->and($asset->internalRentalInvoices()->first()->chantier_id)->toBe($this->chantier->id);
+
+    $asset->update(['chantier_id' => $otherChantier->id]);
+
+    $invoices = $asset->internalRentalInvoices()->orderBy('id')->get();
+    expect($invoices->count())->toBe(2)
+        ->and($invoices->last()->chantier_id)->toBe($otherChantier->id)
+        ->and($invoices->first()->chantier_id)->toBe($this->chantier->id);
 
     Carbon::setTestNow();
 });

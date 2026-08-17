@@ -10,6 +10,23 @@ use App\Models\RH\Employee;
 use App\Models\Tiers\ThirdParty;
 use App\Models\User;
 use App\Services\Locations\RentalConditionReportService;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
+
+beforeEach(function () {
+    Storage::fake('public');
+});
+
+function validImageBase64(): string
+{
+    $image = imagecreatetruecolor(10, 10);
+    ob_start();
+    imagepng($image);
+    $data = ob_get_clean();
+    imagedestroy($image);
+
+    return base64_encode($data);
+}
 
 function makeManagedScenario(): array
 {
@@ -114,7 +131,7 @@ it('attaches a photo to the report media collection', function () {
         'client_key' => 'ck-photo-1',
     ]);
 
-    $service->attachPhoto($report, base64_encode('fake-image-bytes'));
+    $service->attachPhoto($report, validImageBase64());
 
     expect($report->getMedia('photos'))->toHaveCount(1);
 });
@@ -145,7 +162,7 @@ it('processes sync operations end to end', function () {
                 'type' => 'UPLOAD_PHOTO',
                 'payload' => [
                     'report_key' => 'ck-e2e-1',
-                    'image' => base64_encode('fake-image-bytes'),
+                    'image' => validImageBase64(),
                 ],
             ],
         ],
@@ -258,13 +275,38 @@ it('authorizes a chantier member and denies a user without an employee record', 
 });
 
 it('logs and ignores failures when attaching a photo', function () {
+    Log::spy();
     $report = Mockery::mock(RentalConditionReport::class)->makePartial();
     $report->shouldReceive('addMediaFromBase64')->once()->andThrow(new Exception('invalid image'));
 
     $service = app(RentalConditionReportService::class);
-    $service->attachPhoto($report, 'not-a-valid-image');
+    $result = $service->attachPhoto($report, validImageBase64());
 
-    expect(true)->toBeTrue();
+    expect($result)->toBeFalse();
+    Log::shouldHaveReceived('error')->once();
+});
+
+it('does not attach a photo to a report of a contract not managed by the user', function () {
+    $other = Employee::factory()->create();
+    $otherChantier = Chantier::factory()->create(['manager_id' => $other->id]);
+    $otherContract = RentalContract::factory()->create([
+        'chantier_id' => $otherChantier->id,
+        'supplier_id' => ThirdParty::factory()->state(['type' => ThirdPartyType::SUPPLIER]),
+        'status' => RentalStatus::ACTIVE,
+    ]);
+    RentalConditionReport::factory()->create([
+        'rental_contract_id' => $otherContract->id,
+        'client_key' => 'ck-other',
+    ]);
+
+    ['user' => $user] = makeManagedScenario();
+
+    $this->actingAs($user)->postJson(route('etat-des-lieux.api.sync'), [
+        'operations' => [[
+            'type' => 'UPLOAD_PHOTO',
+            'payload' => ['report_key' => 'ck-other', 'image' => validImageBase64()],
+        ]],
+    ])->assertOk()->assertJson(['success' => true, 'processed' => 0, 'failed' => 1]);
 });
 
 it('exposes report scopes and helper methods', function () {

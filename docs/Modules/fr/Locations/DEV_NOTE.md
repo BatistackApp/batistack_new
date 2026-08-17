@@ -76,7 +76,7 @@ Le module **Locations** permet de gérer l'ensemble des locations de matériel (
     *   Media (Spatie) : collection `photos` (multi) et `signature` (single file).
 *   **Modèle** : `App\Models\Locations\RentalConditionReport` (scopes `reception`/`restitution`/`signed`/`byContract`/`withPhotos`, méthodes `sign()`, `isSigned()`, `getPhotoCount()`, `getDisplayName()`). Relation `conditionReports()` sur `RentalContract`.
 *   **Service** : `App\Services\Locations\RentalConditionReportService` :
-    *   `createFromSync(User, payload)` : validation type/`client_key`, vérification que l'utilisateur **gère le chantier** du contrat (`employee.currentContract`), pose `captured_at = now()` côté serveur, signe si signature fournie (checksum SHA-256). **Idempotent** via `client_key`.
+    *   `createFromSync(User, payload)` : validation type/`client_key`, vérification que l'utilisateur **gère le chantier** du contrat (`employee.currentContract`), pose `captured_at = now()` côté serveur, et signe (checksum SHA-256) **seulement si** une signature est fournie. **Idempotent** via `client_key`.
     *   `attachPhoto(RentalConditionReport, base64)` : ajoute un média à la collection `photos`.
     *   `userManagesContract(User, RentalContract)` : le chef de chantier n'accède qu'aux contrats de ses chantiers.
 *   **API** (`routes/web.php`, groupe `['auth']`) :

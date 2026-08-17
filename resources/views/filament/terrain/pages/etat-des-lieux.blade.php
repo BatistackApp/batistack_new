@@ -62,7 +62,7 @@
                 <div class="space-y-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Commentaire</label>
-                        <textarea x-model="report.comment" rows="2" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600" placeholder="État constaté (ex: rayure, choc..."></textarea>
+                        <textarea x-model="report.comment" rows="2" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600" placeholder="État constaté (ex: rayure, choc...)"></textarea>
                     </div>
 
                     <div class="flex items-center justify-between">

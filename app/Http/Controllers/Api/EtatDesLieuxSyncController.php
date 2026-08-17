@@ -66,8 +66,11 @@ class EtatDesLieuxSyncController extends Controller
                     }
                 } elseif ($type === 'UPLOAD_PHOTO') {
                     $report = RentalConditionReport::where('client_key', $payload['report_key'] ?? '')->first();
-                    if ($report && ! empty($payload['image'])) {
-                        $service->attachPhoto($report, $payload['image'], $payload['filename'] ?? null);
+                    if ($report
+                        && ! empty($payload['image'])
+                        && $service->userManagesContract($user, $report->rental_contract_id)
+                        && $service->attachPhoto($report, $payload['image'], $payload['filename'] ?? null)
+                    ) {
                         $processed++;
                     } else {
                         $failed++;
@@ -91,7 +94,6 @@ class EtatDesLieuxSyncController extends Controller
             return response()->json([
                 'success' => false,
                 'error' => 'Échec de la synchronisation.',
-                'message' => $e->getMessage(),
             ], 500);
         }
     }

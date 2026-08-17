@@ -54,16 +54,66 @@ class RentalConditionReportService
 
     /**
      * Rattache une photo base64 à un rapport d'état des lieux.
+     * Seules les images JPEG, PNG et WebP sont acceptées.
      */
-    public function attachPhoto(RentalConditionReport $report, string $base64, ?string $fileName = null): void
+    public function attachPhoto(RentalConditionReport $report, string $base64, ?string $fileName = null): bool
     {
+        $mime = $this->detectImageMime($base64);
+
+        if (! in_array($mime, ['image/jpeg', 'image/png', 'image/webp'], true)) {
+            Log::warning("Type d'image non autorisé pour l'état des lieux {$report->id}.");
+
+            return false;
+        }
+
         try {
-            $report->addMediaFromBase64($base64)
-                ->usingFileName($fileName ?? 'photo_'.time().'.jpg')
+            $report->addMediaFromBase64($this->rawBase64($base64))
+                ->usingFileName($fileName ?? 'photo_'.time().'.'.$this->extensionForMime($mime))
                 ->toMediaCollection('photos');
+
+            return true;
         } catch (\Throwable $e) {
             Log::error("Échec d'attachement de photo à l'état des lieux {$report->id}: ".$e->getMessage());
+
+            return false;
         }
+    }
+
+    /**
+     * Détecte le type MIME d'une image, qu'elle soit fournie en data-URL
+     * (data:image/...;base64,...) ou en base64 brut.
+     */
+    protected function detectImageMime(string $base64): ?string
+    {
+        if (preg_match('#^data:image/(jpeg|png|webp);base64,#i', $base64, $matches)) {
+            return 'image/'.strtolower($matches[1]);
+        }
+
+        $binary = @base64_decode($base64, true);
+        if ($binary === false) {
+            return null;
+        }
+
+        $info = @getimagesizefromstring($binary);
+
+        return $info['mime'] ?? null;
+    }
+
+    /**
+     * Extrait le contenu base64 brut d'une éventuelle data-URL.
+     */
+    protected function rawBase64(string $base64): string
+    {
+        return preg_replace('#^data:[^;]+;base64,#i', '', $base64);
+    }
+
+    protected function extensionForMime(string $mime): string
+    {
+        return match ($mime) {
+            'image/png' => 'png',
+            'image/webp' => 'webp',
+            default => 'jpg',
+        };
     }
 
     /**

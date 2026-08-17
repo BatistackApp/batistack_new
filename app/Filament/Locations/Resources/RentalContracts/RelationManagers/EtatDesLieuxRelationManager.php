@@ -33,9 +33,7 @@ class EtatDesLieuxRelationManager extends RelationManager
                     ->sortable(),
                 TextColumn::make('type')
                     ->label('Type')
-                    ->badge()
-                    ->state(fn ($record) => $record->type?->getLabel())
-                    ->color(fn ($record) => $record->type === RentalConditionReportType::RECEPTION ? 'success' : 'danger'),
+                    ->badge(),
                 ImageColumn::make('photos')
                     ->label('Photos')
                     ->collection('photos')
@@ -58,16 +56,12 @@ class EtatDesLieuxRelationManager extends RelationManager
                     ->color(fn ($record) => $record->isSigned() ? 'success' : 'gray'),
                 TextColumn::make('latitude')
                     ->label('GPS')
-                    ->state(fn ($record) => $record->latitude ? $record->latitude.', '.$record->longitude : '—')
-                    ->placeholder('—'),
+                    ->state(fn ($record) => $record->latitude !== null ? $record->latitude.', '.$record->longitude : '—'),
             ])
             ->filters([
                 SelectFilter::make('type')
                     ->label('Type')
-                    ->options([
-                        RentalConditionReportType::RECEPTION->value => 'Réception',
-                        RentalConditionReportType::RESTITUTION->value => 'Restitution',
-                    ]),
+                    ->options(RentalConditionReportType::class),
             ])
             ->defaultSort('captured_at', 'desc');
     }

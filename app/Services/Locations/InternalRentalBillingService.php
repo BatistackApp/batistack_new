@@ -7,6 +7,7 @@ use App\Enums\Locations\RentalBillingPeriod;
 use App\Models\Immobilisation\FixedAsset;
 use App\Models\Locations\InternalRentalInvoice;
 use Carbon\Carbon;
+use Illuminate\Database\QueryException;
 
 /**
  * Facturation interne (refacturation) des immobilisations affectées à un chantier.
@@ -30,17 +31,15 @@ class InternalRentalBillingService
         $period = $fixedAsset->internal_rental_period ?? RentalBillingPeriod::MONTHLY;
         [$periodStart, $periodEnd, $periodKey] = $this->resolvePeriod($period, $reference);
 
-        $billingKey = sprintf('INT-%s-%s', $fixedAsset->id, $periodKey);
-
-        $existing = $this->existingInvoice($fixedAsset, $billingKey);
-        if ($existing) {
-            return $existing;
-        }
+        // L'identité de facturation inclut le chantier : une ré-affectation en
+        // cours de période génère une nouvelle facture pour le nouveau chantier
+        // au lieu de réutiliser celle facturée pour le chantier précédent.
+        $billingKey = sprintf('INT-%s-%s-%s', $fixedAsset->id, $fixedAsset->chantier_id, $periodKey);
 
         $days = $periodStart->copy()->startOfDay()->diffInDays($periodEnd->copy()->addDay()->startOfDay());
         $amount = round($days * (float) $fixedAsset->daily_rate, 2);
 
-        return $fixedAsset->internalRentalInvoices()->create([
+        $attributes = [
             'chantier_id' => $fixedAsset->chantier_id,
             'period_start' => $periodStart->toDateString(),
             'period_end' => $periodEnd->toDateString(),
@@ -48,8 +47,30 @@ class InternalRentalBillingService
             'daily_rate' => $fixedAsset->daily_rate,
             'amount_ht' => $amount,
             'status' => InternalRentalInvoiceStatus::DRAFT,
-            'billing_key' => $billingKey,
-        ]);
+        ];
+
+        $existing = $fixedAsset->internalRentalInvoices()
+            ->where('billing_key', $billingKey)
+            ->first();
+
+        if ($existing) {
+            // Une facture annulée est réémise (réactivée) pour la période courante.
+            if ($existing->status === InternalRentalInvoiceStatus::CANCELED) {
+                $existing->update($attributes);
+            }
+
+            return $existing;
+        }
+
+        try {
+            return $fixedAsset->internalRentalInvoices()->create($attributes + ['billing_key' => $billingKey]);
+        } catch (QueryException) {
+            // Course concurrente : la contrainte unique `billing_key` a déjà été
+            // satisfaite, on renvoie la facture insérée par l'autre requête.
+            return $fixedAsset->internalRentalInvoices()
+                ->where('billing_key', $billingKey)
+                ->first();
+        }
     }
 
     /**
@@ -75,14 +96,6 @@ class InternalRentalBillingService
         }
 
         return $invoices;
-    }
-
-    protected function existingInvoice(FixedAsset $fixedAsset, string $billingKey): ?InternalRentalInvoice
-    {
-        return $fixedAsset->internalRentalInvoices()
-            ->where('billing_key', $billingKey)
-            ->where('status', '!=', InternalRentalInvoiceStatus::CANCELED->value)
-            ->first();
     }
 
     /**
