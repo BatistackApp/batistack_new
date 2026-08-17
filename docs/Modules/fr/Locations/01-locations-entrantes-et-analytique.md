@@ -48,3 +48,30 @@ Le panel **Locations** contient la ressource **"Factures internes (Refacturation
 
 > [!TIP]
 > Pour facturer une période passée manquée (ex: au moment de l'activation du tarif), la commande `php artisan locations:bill-internal-rentals` régénère les factures dues pour la période en cours.
+
+## 5. État des Lieux Mobile (Protection Litiges Fournisseurs)
+
+Lorsque vous rendez (ou recevez) du matériel loué, un litige peut naître sur l'état de la machine. Pour vous protéger, le **chef de chantier** peut réaliser un **état des lieux horodaté** directement depuis son mobile (espace **Terrain** → **État des Lieux**).
+
+### 5.1. Comment ça marche
+
+Depuis l'application mobile (PWA), le chef de chantier consulte la liste des **contrats de location** affectés à ses chantiers et, pour chacun, choisit un type d'état des lieux :
+- **Réception** : au moment où le matériel est livré sur le chantier.
+- **Restitution** : au moment où le matériel est rendu au fournisseur.
+
+Pour chaque état des lieux, il peut joindre :
+- Des **photos** prises avec la caméra du téléphone.
+- Un **commentaire** (ex : « rayure sur la pelle, angle avant droit »).
+- La **position GPS**.
+- Une **signature**.
+
+### 5.2. Fonctionnement hors-ligne
+
+L'application fonctionne **même sans connexion** : les photos et données sont conservées sur l'appareil et **synchronisées automatiquement** dès que le réseau revient.
+
+> [!IMPORTANT]
+> Pour garantir la valeur juridique des preuves, l'**horodatage** (`captured_at`) est enregistré **côté serveur au moment de la synchronisation**, jamais depuis l'appareil. Chaque état des lieux est horodaté, signé et rattaché au contrat de location.
+
+### 5.3. Consultation
+
+Depuis le panel **Locations**, l'onglet **« État des lieux »** sur la fiche d'un contrat de location liste tous les états des lieux : type, photos, commentaire, horodatage, statut de signature et position GPS.
