@@ -30,6 +30,6 @@ class InterventionReportTemplate extends Model
 
     public function interventions(): HasMany
     {
-        return $this->hasMany(Intervention::class);
+        return $this->hasMany(Intervention::class, 'report_template_id');
     }
 }

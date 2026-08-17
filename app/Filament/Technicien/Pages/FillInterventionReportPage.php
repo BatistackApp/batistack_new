@@ -2,6 +2,7 @@
 
 namespace App\Filament\Technicien\Pages;
 
+use App\Enums\Core\SignatureStatus;
 use App\Enums\Interventions\InterventionStatus;
 use App\Models\Interventions\Intervention;
 use App\Models\Interventions\InterventionReportTemplate;
@@ -27,7 +28,7 @@ class FillInterventionReportPage extends Page implements HasForms
 
     public ?int $intervention_id = null;
 
-    public Intervention $intervention;
+    public ?Intervention $intervention = null;
 
     public ?InterventionReportTemplate $template = null;
 
@@ -39,7 +40,17 @@ class FillInterventionReportPage extends Page implements HasForms
             abort(404);
         }
 
-        $this->intervention = Intervention::findOrFail($this->intervention_id);
+        $salarieId = auth()->user()?->salarie?->id;
+
+        $this->intervention = Intervention::query()
+            ->whereHas('workers', function ($query) use ($salarieId) {
+                $query->where('employee_id', $salarieId);
+            })
+            ->first();
+
+        if (! $this->intervention) {
+            abort(404);
+        }
 
         $this->template = $this->intervention->applicableReportTemplate();
 
@@ -116,8 +127,6 @@ class FillInterventionReportPage extends Page implements HasForms
                 ->required($required),
             'file_upload' => Components\FileUpload::make($name)
                 ->label($label)
-                ->image()
-                ->imageEditor()
                 ->disk('public')
                 ->directory('interventions/reports')
                 ->required($required),
@@ -141,6 +150,26 @@ class FillInterventionReportPage extends Page implements HasForms
 
     public function submit(): void
     {
+        if (! $this->canClose()) {
+            Notification::make()
+                ->title('Intervention verrouillée')
+                ->body('Le rapport ne peut plus être modifié : l\'intervention n\'est plus en cours.')
+                ->warning()
+                ->send();
+
+            return;
+        }
+
+        if ($this->intervention->signatures()->where('status', SignatureStatus::SIGNED)->exists()) {
+            Notification::make()
+                ->title('Intervention signée')
+                ->body('Le rapport ne peut plus être modifié : l\'intervention a déjà été signée.')
+                ->warning()
+                ->send();
+
+            return;
+        }
+
         if (! $this->template) {
             Notification::make()
                 ->title('Aucun modèle de rapport')
@@ -164,7 +193,7 @@ class FillInterventionReportPage extends Page implements HasForms
             ->success()
             ->send();
 
-        redirect()->to('/technicien/interventions/'.$this->intervention->id.'/edit');
+        $this->redirect('/technicien/interventions/'.$this->intervention->id.'/edit');
     }
 
     public function getInterventionStatusLabel(): string

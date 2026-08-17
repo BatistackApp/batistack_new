@@ -21,8 +21,9 @@
                 {{ $this->form }}
 
                 <div class="mt-6 text-right">
-                    <x-filament::button type="submit">
-                        Enregistrer le rapport
+                    <x-filament::button type="submit" wire:loading.attr="disabled">
+                        <span wire:loading.remove>Enregistrer le rapport</span>
+                        <span wire:loading>Enregistrement…</span>
                     </x-filament::button>
                 </div>
             </form>

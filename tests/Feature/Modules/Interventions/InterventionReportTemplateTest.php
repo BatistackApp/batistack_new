@@ -9,12 +9,10 @@ use App\Models\Tiers\ThirdParty;
 use App\Services\Interventions\InterventionManagementService;
 use App\Services\Interventions\InterventionStockService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\DB;
 
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
-    DB::statement('PRAGMA foreign_keys=OFF;');
     $this->service = new InterventionManagementService;
     $this->company = Company::factory()->create();
     $this->client = ThirdParty::factory()->create();
@@ -64,22 +62,30 @@ describe('InterventionReportTemplate', function () {
         expect($intervention->applicableReportTemplate()?->is($template))->toBeTrue();
     });
 
-    test('applicableReportTemplate prefers the linked active template', function () {
-        $other = makeReportTemplate(requiredSchema());
+    test('applicableReportTemplate prefers the linked template regardless of its active status', function () {
+        $inactive = makeReportTemplate(requiredSchema(), ['is_active' => false, 'name' => 'Ancien']);
+
+        $intervention = makeIntervention(['report_template_id' => $inactive->id]);
+
+        expect($intervention->applicableReportTemplate()?->is($inactive))->toBeTrue();
+    });
+
+    test('applicableReportTemplate uses the linked template even if a newer active template exists', function () {
         $linked = makeReportTemplate(requiredSchema(), ['name' => 'Spécial']);
+        $other = makeReportTemplate(requiredSchema());
 
         $intervention = makeIntervention(['report_template_id' => $linked->id]);
 
         expect($intervention->applicableReportTemplate()?->is($linked))->toBeTrue();
     });
 
-    test('applicableReportTemplate ignores inactive linked templates and falls back by type', function () {
-        $inactive = makeReportTemplate(requiredSchema(), ['is_active' => false, 'name' => 'Ancien']);
-        $active = makeReportTemplate(requiredSchema());
+    test('applicableReportTemplate selects the latest active template of the type when nothing is linked', function () {
+        $older = makeReportTemplate(requiredSchema(), ['name' => 'Ancien']);
+        $newer = makeReportTemplate(requiredSchema(), ['name' => 'Récent']);
 
-        $intervention = makeIntervention(['report_template_id' => $inactive->id]);
+        $intervention = makeIntervention();
 
-        expect($intervention->applicableReportTemplate()?->is($active))->toBeTrue();
+        expect($intervention->applicableReportTemplate()?->is($newer))->toBeTrue();
     });
 
     test('applicableReportTemplate is null when no active template matches', function () {
@@ -91,7 +97,7 @@ describe('InterventionReportTemplate', function () {
 
 describe('Intervention closure validation', function () {
     test('completeIntervention is blocked when a required field is missing', function () {
-        $template = makeReportTemplate(requiredSchema());
+        makeReportTemplate(requiredSchema());
         $intervention = makeIntervention();
 
         expect(fn () => $this->service->completeIntervention($intervention))

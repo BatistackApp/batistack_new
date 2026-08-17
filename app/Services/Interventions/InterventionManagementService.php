@@ -62,7 +62,7 @@ class InterventionManagementService
         }
 
         $required = collect($template->schema)
-            ->filter(fn ($block) => ($block['data']['required'] ?? false) === true)
+            ->filter(fn ($block) => ($block['data']['required'] ?? false) === true && isset($block['data']['name']) && $block['data']['name'] !== '')
             ->mapWithKeys(fn ($block) => [$block['data']['name'] => $block['data']['label'] ?? $block['data']['name']])
             ->all();
 

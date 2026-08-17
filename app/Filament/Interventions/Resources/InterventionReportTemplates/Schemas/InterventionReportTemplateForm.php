@@ -36,6 +36,18 @@ class InterventionReportTemplateForm
                     ->columnSpanFull()
                     ->collapsible()
                     ->reorderableWithButtons()
+                    ->rules([
+                        fn (): \Closure => function (string $attribute, $value, \Closure $fail): void {
+                            $names = collect($value)
+                                ->pluck('data.name')
+                                ->filter(fn ($name) => is_string($name) && $name !== '')
+                                ->values();
+
+                            if ($names->duplicates()->isNotEmpty()) {
+                                $fail('Les identifiants techniques des blocs doivent être uniques.');
+                            }
+                        },
+                    ])
                     ->blocks([
                         Builder\Block::make('text_input')
                             ->label('Texte')

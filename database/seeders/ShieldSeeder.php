@@ -146,9 +146,9 @@ class ShieldSeeder extends Seeder
             return;
         }
 
-        /** @var Model $roleModel */
+        /** @var class-string<Model> $roleModel */
         $roleModel = Utils::getRoleModel();
-        /** @var Model $permissionModel */
+        /** @var class-string<Model> $permissionModel */
         $permissionModel = Utils::getPermissionModel();
 
         $tenancyEnabled = false;
@@ -193,7 +193,7 @@ class ShieldSeeder extends Seeder
             return;
         }
 
-        /** @var Model $permissionModel */
+        /** @var class-string<Model> $permissionModel */
         $permissionModel = Utils::getPermissionModel();
 
         foreach ($permissions as $permission) {

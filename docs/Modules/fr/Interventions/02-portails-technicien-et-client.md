@@ -31,14 +31,14 @@ Dans le groupe **Configuration**, rubrique **Modèles de Rapport d'Intervention*
   - **Case à cocher** (Checkbox)
   - **Liste déroulante** (Select — saisissez une option par ligne)
   - **Date** (DatePicker)
-  - **Photo / Fichier** (FileUpload avec éditeur d'image, stocké sur le disque public)
+  - **Photo / Fichier** (FileUpload acceptant images et documents, stocké sur le disque public)
 - **Actif** : seul un modèle **actif** est proposé aux techniciens.
 
 > [!NOTE]
 > Pour un même type d'intervention, plusieurs modèles peuvent exister ; seul le plus récent modèle **actif** (ou celui explicitement lié à l'intervention) est appliqué.
 
 #### Remplir le rapport (côté technicien)
-- Sur l'intervention concernée, cliquez sur l'action **Remplir le rapport** (disponible lorsqu'un modèle actif correspond au type).
+- Sur l'intervention concernée, cliquez sur l'action **Remplir le rapport** (disponible lorsqu'un modèle actif correspond au type, même pour une intervention déjà terminée ou signée — le formulaire reste consultable, mais l'enregistrement est refusé si l'intervention n'est plus en cours ou déjà signée).
 - La page dédiée affiche dynamiquement les champs définis dans le modèle, pré-remplis s'ils ont déjà été saisis.
 - Enregistrez le rapport : le formulaire est sauvegardé sur l'intervention et le modèle est lié.
 

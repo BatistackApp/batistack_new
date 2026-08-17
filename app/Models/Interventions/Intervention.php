@@ -96,17 +96,14 @@ class Intervention extends Model implements HasMedia
     }
 
     /**
-     * Renvoie le modèle de rapport applicable : celui lié à l'intervention
-     * (s'il est actif), sinon le plus récent modèle actif du même type.
+     * Renvoie le modèle de rapport applicable : celui explicitement lié à
+     * l'intervention (indépendamment de son statut actif), sinon le plus
+     * récent modèle actif du même type.
      */
     public function applicableReportTemplate(): ?InterventionReportTemplate
     {
         if ($this->report_template_id) {
-            $linked = $this->reportTemplate()->where('is_active', true)->first();
-
-            if ($linked) {
-                return $linked;
-            }
+            return $this->reportTemplate()->first();
         }
 
         return InterventionReportTemplate::query()

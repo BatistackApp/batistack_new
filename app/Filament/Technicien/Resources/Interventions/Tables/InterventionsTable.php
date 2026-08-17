@@ -6,12 +6,11 @@ use App\Enums\Core\SignatureType;
 use App\Enums\Interventions\InterventionStatus;
 use App\Enums\Interventions\InterventionType;
 use App\Models\Interventions\Intervention;
+use App\Models\Interventions\InterventionReportTemplate;
 use App\Services\Core\SignatureService;
-use App\Services\Interventions\InterventionBillingService;
 use App\Services\Interventions\InterventionPdfService;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
-use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\TextInput;
@@ -117,13 +116,11 @@ class InterventionsTable
                     ->label('Remplir le rapport')
                     ->icon('heroicon-o-clipboard-document-list')
                     ->color('primary')
-                    ->visible(fn (Intervention $record) => \App\Models\Interventions\InterventionReportTemplate::query()
+                    ->visible(fn (Intervention $record) => InterventionReportTemplate::query()
                         ->where('intervention_type', $record->type)
                         ->where('is_active', true)
                         ->exists())
-                    ->action(function (Intervention $record) {
-                        redirect()->to('/technicien/fill-intervention-report?intervention_id='.$record->id);
-                    }),
+                    ->url(fn (Intervention $record) => '/technicien/fill-intervention-report?intervention_id='.$record->id),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
