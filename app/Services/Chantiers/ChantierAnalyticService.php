@@ -5,6 +5,7 @@ namespace App\Services\Chantiers;
 use App\Enums\Articles\StockMouvementSource;
 use App\Enums\Commerce\OrderStatus;
 use App\Enums\Flottes\AssignmentStatus;
+use App\Enums\Locations\InternalRentalInvoiceStatus;
 use App\Enums\RH\TimeEntryStatus;
 use App\Models\Articles\StockMouvement;
 use App\Models\Chantiers\Chantier;
@@ -14,6 +15,7 @@ use App\Models\Flottes\FuelTransaction;
 use App\Models\Flottes\VehicleAssignment;
 use App\Models\Immobilisation\AssetMaintenance;
 use App\Models\Immobilisation\Depreciation;
+use App\Models\Locations\InternalRentalInvoice;
 use App\Models\Locations\RentalContract;
 use App\Models\RH\Employee;
 use App\Models\RH\EquipementAssignment;
@@ -123,7 +125,13 @@ class ChantierAnalyticService
 
         $bankNet = $bankIncome - $bankExpense; // trésorerie nette (encaissements - décaissements)
 
-        $totalCost = $laborCost + $materialCost + $subcontractingCost + $fleetCost + $assetDepreciationCost + $assetMaintenanceCost + $rentalCost + $equipmentCost + $purchaseCost;
+        // 11. Facturation interne des immobilisations (refacturation au chantier)
+        $internalRentalCost = (float) InternalRentalInvoice::query()
+            ->where('chantier_id', $chantier->id)
+            ->where('status', '!=', InternalRentalInvoiceStatus::CANCELED->value)
+            ->sum('amount_ht');
+
+        $totalCost = $laborCost + $materialCost + $subcontractingCost + $fleetCost + $assetDepreciationCost + $assetMaintenanceCost + $rentalCost + $equipmentCost + $purchaseCost + $internalRentalCost;
         $budget = (float) $chantier->budget_total_ht;
         $marginReal = $budget - $totalCost;
 
@@ -143,6 +151,7 @@ class ChantierAnalyticService
                 'rental_cost_real' => (float) $rentalCost,
                 'equipment_cost_real' => (float) $equipmentCost,
                 'purchase_cost_real' => (float) $purchaseCost,
+                'internal_rental_cost_real' => $internalRentalCost,
                 'total_cost_real' => $totalCost,
                 'budget_ht' => $budget,
                 'margin_real' => $marginReal,

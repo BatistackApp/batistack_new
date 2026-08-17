@@ -4,6 +4,7 @@ namespace App\Observers\Immobilisation;
 
 use App\Models\Immobilisation\FixedAsset;
 use App\Services\Immobilisation\DepreciationCalculatorService;
+use App\Services\Locations\InternalRentalBillingService;
 use Illuminate\Support\Str;
 
 class FixedAssetObserver
@@ -29,6 +30,8 @@ class FixedAssetObserver
         foreach ($schedule as $depreciation) {
             $fixedAsset->depreciations()->create($depreciation);
         }
+
+        $this->billForAffectation($fixedAsset);
     }
 
     /**
@@ -36,7 +39,21 @@ class FixedAssetObserver
      */
     public function updated(FixedAsset $fixedAsset): void
     {
-        //
+        if ($fixedAsset->wasChanged('chantier_id')) {
+            $this->billForAffectation($fixedAsset);
+        }
+    }
+
+    /**
+     * Déclenche la facturation interne lors de l'affectation d'un actif à un chantier.
+     */
+    protected function billForAffectation(FixedAsset $fixedAsset): void
+    {
+        if (! $fixedAsset->chantier_id || ! $fixedAsset->daily_rate) {
+            return;
+        }
+
+        app(InternalRentalBillingService::class)->generateForAsset($fixedAsset);
     }
 
     /**
