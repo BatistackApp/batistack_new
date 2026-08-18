@@ -41,7 +41,7 @@ class TrainingSessionResource extends Resource
     public static function getRelations(): array
     {
         return [
-            \App\Filament\RH\Resources\TrainingSessions\TrainingSessionResource\RelationManagers\ParticipantsRelationManager::class,
+            RelationManagers\ParticipantsRelationManager::class,
         ];
     }
 

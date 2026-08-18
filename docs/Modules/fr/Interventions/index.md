@@ -15,7 +15,7 @@ Ce module est pensé pour les activités de Service Après-Vente (SAV), de maint
 Le module Interventions s'articule autour de trois thématiques principales :
 
 - [Tickets & Facturation](./01-gestion-des-tickets-et-facturation.md) : Apprenez à gérer les interventions (Régie vs Forfait), le déstockage des pièces et la facturation automatique.
-- [Portails Technicien & Client](./02-portails-technicien-et-client.md) : Découvrez l'application simplifiée pour vos équipes terrain (signature électronique) et le portail dédié à vos clients (déclaration de panne).
+- [Portails Technicien & Client](./02-portails-technicien-et-client.md) : Découvrez l'application simplifiée pour vos équipes terrain (signature électronique, check-lists de rapport dynamiques) et le portail dédié à vos clients (déclaration de panne).
 - [Maintenance Prédictive](./03-maintenance-predictive.md) : Anticipez les pannes grâce à l'analyse des historiques et proposez des contrats de maintenance.
 - [Contrats d'Entretien Récurrents](./04-contrats-entretien-recurrents.md) : Automatisez les visites de maintenance préventive (génération automatique + rappels e-mail).
 

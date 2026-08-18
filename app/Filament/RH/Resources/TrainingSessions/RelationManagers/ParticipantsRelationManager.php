@@ -1,13 +1,13 @@
 <?php
 
-namespace App\Filament\RH\Resources\TrainingSessions\TrainingSessionResource\RelationManagers;
+namespace App\Filament\RH\Resources\TrainingSessions\RelationManagers;
 
+use App\Enums\RH\TrainingParticipantStatus;
 use Filament\Forms;
-use Filament\Schemas\Schema;
 use Filament\Resources\RelationManagers\RelationManager;
+use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Table;
-use App\Enums\RH\TrainingParticipantStatus;
 
 class ParticipantsRelationManager extends RelationManager
 {

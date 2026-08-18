@@ -42,7 +42,7 @@ return new class extends Migration
             $table->timestamp('sent_at');
             $table->timestamps();
 
-            $table->unique(['contract_id', 'due_date', 'days_before']);
+            $table->unique(['contract_id', 'due_date', 'days_before'], 'maintenance_contract_reminders_contract_due_days_unique');
         });
     }
 

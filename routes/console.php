@@ -128,6 +128,20 @@ Schedule::command('app:check-bridge-tokens')
     ->timezone('Europe/Paris')
     ->onFailure(fn () => logger()->error('Échec de la vérification des tokens Bridge API.'));
 
+// Paiement des salaires par API bancaire (polling des statuts Bridge)
+Schedule::command('paie:poll-salary-payments')
+    ->everyFiveMinutes()
+    ->timezone('Europe/Paris')
+    ->withoutOverlapping(10)
+    ->onFailure(fn () => logger()->error('Échec du polling des paiements de salaires.'));
+
+// Locations - Facturation interne (refacturation aux chantiers)
+Schedule::command('locations:bill-internal-rentals')
+    ->dailyAt('03:30')
+    ->timezone('Europe/Paris')
+    ->withoutOverlapping()
+    ->onFailure(fn () => logger()->error('Échec de la facturation interne des immobilisations.'));
+
 // Interventions
 Schedule::command('interventions:generate-maintenance')
     ->dailyAt('06:00')

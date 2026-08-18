@@ -7,6 +7,7 @@ use App\Enums\Interventions\MaintenanceContractStatus;
 use App\Models\Interventions\ClientEquipment;
 use App\Models\Tiers\ThirdParty;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -23,13 +24,16 @@ class MaintenanceContractForm
                     ->columns(2)
                     ->columnSpanFull()
                     ->schema([
+                        Hidden::make('company_id')
+                            ->default(fn () => auth()->user()->company_id ?? 1),
                         Select::make('third_party_id')
                             ->label('Client')
                             ->options(ThirdParty::clients()->pluck('name', 'id'))
                             ->required()
                             ->searchable()
                             ->preload()
-                            ->live(),
+                            ->live()
+                            ->afterStateUpdated(fn (callable $set) => $set('client_equipment_id', null)),
                         Select::make('client_equipment_id')
                             ->label('Équipement client')
                             ->options(fn (callable $get) => ClientEquipment::where('third_party_id', $get('third_party_id'))->pluck('name', 'id'))

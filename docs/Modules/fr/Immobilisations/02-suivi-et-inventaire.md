@@ -55,7 +55,7 @@ Les tickets sont centralisés dans le menu **« Déclarations de casse »** (gro
 
 - Chaque ticket est identifié par une **référence unique** (`TK-AAAA-NNNN`).
 - Le dépôt peut **prendre en charge** un ticket, puis le **résoudre**.
-- À la **résolution**, un enregistrement de **maintenance curative** est automatiquement créé sur l'actif (avec coût HT et prestataire si renseignés), et l'actif retrouve son statut d'origine.
+- À la **résolution**, un enregistrement de **maintenance curative** est automatiquement créé sur l'actif (avec coût HT et prestataire si renseignés) pour les **immobilisations** (Fixed Assets), et l'actif retrouve son statut d'origine. Les **équipements RH / EPI** retrouvent leur statut d'origine sans créer d'enregistrement de maintenance.
 - Un ticket peut aussi être **annulé** (retour au statut actif de l'outil).
 
 ### 5.3 Étiquettes QR

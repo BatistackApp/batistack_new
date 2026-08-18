@@ -7,11 +7,18 @@ use App\Filament\Paie\Resources\Paie\Payslips\Pages\CreatePayslip;
 use App\Filament\Paie\Resources\Paie\Payslips\Pages\EditPayslip;
 use App\Filament\Paie\Resources\Paie\Payslips\Pages\ListPayslips;
 use App\Filament\Paie\Resources\Paie\Payslips\Pages\ViewPayslip;
+use App\Filament\Paie\Resources\Paie\SalaryPaymentRuns\SalaryPaymentRunResource;
 use App\Jobs\Paie\DistributePayslipJob;
+use App\Jobs\Paie\InitiateSalaryPaymentRunJob;
+use App\Jobs\Paie\SendPayslipToDigiposteJob;
+use App\Models\Banque\BankAccount;
 use App\Models\Paie\Payslip;
 use App\Models\RH\Employee;
+use App\Services\Paie\AccountingExportService;
+use App\Services\Paie\DsnExportService;
 use App\Services\Paie\PayslipLockService;
 use App\Services\Paie\PayslipPdfService;
+use App\Services\Paie\SalaryPaymentService;
 use App\Services\Paie\SepaExportService;
 use BackedEnum;
 use Carbon\Carbon;
@@ -31,6 +38,7 @@ use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 use Filament\Support\Enums\FontWeight;
+use Illuminate\Support\Number;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -273,12 +281,13 @@ class PayslipResource extends Resource
                                     ->body('Seuls les bulletins validés ou payés peuvent être déposés.')
                                     ->warning()
                                     ->send();
+
                                 return;
                             }
 
                             $count = 0;
                             foreach ($validRecords as $payslip) {
-                                \App\Jobs\Paie\SendPayslipToDigiposteJob::dispatch($payslip);
+                                SendPayslipToDigiposteJob::dispatch($payslip);
                                 $count++;
                             }
 
@@ -291,8 +300,8 @@ class PayslipResource extends Resource
                         ->label('Exporter OD Comptable (CSV)')
                         ->icon('heroicon-o-document-text')
                         ->color('warning')
-                        ->action(function (\Illuminate\Database\Eloquent\Collection $records) {
-                            $validRecords = $records->filter(fn ($r) => in_array($r->status, [\App\Enums\Paie\PayslipStatus::VALIDATED, \App\Enums\Paie\PayslipStatus::PAID]));
+                        ->action(function (Collection $records) {
+                            $validRecords = $records->filter(fn ($r) => in_array($r->status, [PayslipStatus::VALIDATED, PayslipStatus::PAID]));
 
                             if ($validRecords->isEmpty()) {
                                 Notification::make()
@@ -300,20 +309,21 @@ class PayslipResource extends Resource
                                     ->body('L\'export OD ne peut être généré que pour des bulletins validés ou payés.')
                                     ->warning()
                                     ->send();
+
                                 return;
                             }
 
-                            $service = new \App\Services\Paie\AccountingExportService();
+                            $service = new AccountingExportService;
                             $path = $service->generateCsv($validRecords);
 
-                            return response()->download(storage_path('app/public/' . $path));
+                            return response()->download(storage_path('app/public/'.$path));
                         }),
                     BulkAction::make('exportDsn')
                         ->label('Exporter DADS/DSN (CSV)')
                         ->icon('heroicon-o-table-cells')
                         ->color('success')
-                        ->action(function (\Illuminate\Database\Eloquent\Collection $records) {
-                            $validRecords = $records->filter(fn ($r) => in_array($r->status, [\App\Enums\Paie\PayslipStatus::VALIDATED, \App\Enums\Paie\PayslipStatus::PAID]));
+                        ->action(function (Collection $records) {
+                            $validRecords = $records->filter(fn ($r) => in_array($r->status, [PayslipStatus::VALIDATED, PayslipStatus::PAID]));
 
                             if ($validRecords->isEmpty()) {
                                 Notification::make()
@@ -321,13 +331,14 @@ class PayslipResource extends Resource
                                     ->body('L\'export DSN ne peut être généré que pour des bulletins validés ou payés.')
                                     ->warning()
                                     ->send();
+
                                 return;
                             }
 
-                            $service = new \App\Services\Paie\DsnExportService();
+                            $service = new DsnExportService;
                             $path = $service->generateCsv($validRecords);
 
-                            return response()->download(storage_path('app/public/' . $path));
+                            return response()->download(storage_path('app/public/'.$path));
                         }),
                     BulkAction::make('generateSepa')
                         ->label('Générer fichier SEPA')
@@ -360,6 +371,73 @@ class PayslipResource extends Resource
                             } catch (\Exception $e) {
                                 Notification::make()
                                     ->title('Erreur lors de l\'export SEPA')
+                                    ->body($e->getMessage())
+                                    ->danger()
+                                    ->send();
+                            }
+                        }),
+                    BulkAction::make('payByBridge')
+                        ->label('Payer par virement API')
+                        ->icon('heroicon-o-banknotes')
+                        ->color('primary')
+                        ->requiresConfirmation()
+                        ->modalHeading('Paiement par API bancaire (Bridge)')
+                        ->modalDescription('Cette action regroupe les bulletins clôturés sélectionnés en un run de paiement, initie la requête auprès de Bridge puis affiche le lien de validation bancaire.')
+                        ->modalSubmitActionLabel('Créer le run de paiement')
+                        ->form([
+                            Forms\Components\Select::make('source_bank_account_id')
+                                ->label('Compte émetteur (banque connectée)')
+                                ->options(fn () => BankAccount::query()->whereNotNull('bridge_bank_id')->where('currency', 'EUR')->get()->mapWithKeys(fn ($account) => [
+                                    $account->id => $account->name.' — Solde : '.Number::currency((float) $account->balance, 'EUR', 'fr'),
+                                ]))
+                                ->required(),
+                        ])
+                        ->action(function (Collection $records, array $data, SalaryPaymentService $salaryService) {
+                            $source = BankAccount::find($data['source_bank_account_id']);
+
+                            $validRecords = $records->filter(fn ($r) => $r->status === PayslipStatus::VALIDATED && $r->net_paid > 0);
+
+                            if ($validRecords->isEmpty() || ! $source) {
+                                Notification::make()
+                                    ->title('Aucun bulletin payable')
+                                    ->body('Sélectionnez des bulletins clôturés avec un net à payer supérieur à 0 et un compte émetteur.')
+                                    ->warning()
+                                    ->send();
+
+                                return;
+                            }
+
+                            try {
+                                $run = $salaryService->createRun($validRecords, $source, auth()->user());
+
+                                if ($run->wasRecentlyCreated) {
+                                    InitiateSalaryPaymentRunJob::dispatch($run);
+
+                                    Notification::make()
+                                        ->title('Run de paiement créé')
+                                        ->body('L\'initiation est en cours. Ouvrez la validation bancaire depuis le suivi des runs de paiement.')
+                                        ->success()
+                                        ->actions([
+                                            Action::make('view')
+                                                ->label('Suivre le run')
+                                                ->url(SalaryPaymentRunResource::getUrl('index')),
+                                        ])
+                                        ->send();
+                                } else {
+                                    Notification::make()
+                                        ->title('Un run de paiement existe déjà pour ce lot')
+                                        ->body('Aucune nouvelle initiation n\'a été lancée.')
+                                        ->warning()
+                                        ->actions([
+                                            Action::make('view')
+                                                ->label('Suivre le run')
+                                                ->url(SalaryPaymentRunResource::getUrl('index')),
+                                        ])
+                                        ->send();
+                                }
+                            } catch (\Throwable $e) {
+                                Notification::make()
+                                    ->title('Erreur lors de la création du run')
                                     ->body($e->getMessage())
                                     ->danger()
                                     ->send();
@@ -454,7 +532,7 @@ class PayslipResource extends Resource
                             ])
                             ->columns(3),
                     ])
-                    ->visible(fn (Model $record) => !empty($record->custom_bonuses)),
+                    ->visible(fn (Model $record) => ! empty($record->custom_bonuses)),
 
                 Section::make('Détail des cotisations')
                     ->columnSpanFull()

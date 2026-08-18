@@ -56,7 +56,9 @@ class Equipement extends Model
 
     public function currentAssignment(): HasOne
     {
-        return $this->hasOne(EquipementAssignment::class)->whereNull('returned_at');
+        $relation = $this->hasOne(EquipementAssignment::class);
+
+        return $relation->whereNull('returned_at');
     }
 
     public function maintenanceTickets(): MorphMany

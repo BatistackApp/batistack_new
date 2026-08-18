@@ -4,12 +4,17 @@ namespace App\Filament\Immobilisation\Resources\Immobilisation\FixedAssets\Schem
 
 use App\Enums\Immobilisation\AssetStatus;
 use App\Enums\Immobilisation\DepreciationMethod;
+use App\Enums\Locations\RentalBillingPeriod;
+use App\Services\RH\OcrServiceInterface;
 use Filament\Forms\Components\DatePicker;
-
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Set;
+use Filament\Notifications\Notification;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
+use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 
 class FixedAssetForm
 {
@@ -17,31 +22,31 @@ class FixedAssetForm
     {
         return $schema
             ->schema([
-                \Filament\Forms\Components\SpatieMediaLibraryFileUpload::make('invoice_upload')
+                SpatieMediaLibraryFileUpload::make('invoice_upload')
                     ->collection('invoices')
                     ->label('Numérisation OCR (Glissez la facture ici)')
                     ->image()
                     ->helperText('Uniquement des images (JPG, PNG). L\'IA remplira automatiquement les champs.')
                     ->live(onBlur: false)
-                    ->afterStateUpdated(function (\Livewire\Features\SupportFileUploads\TemporaryUploadedFile $state, \Filament\Forms\Set $set) {
+                    ->afterStateUpdated(function (TemporaryUploadedFile $state, Set $set) {
                         if ($state) {
-                            $ocrService = app(\App\Services\RH\OcrServiceInterface::class);
+                            $ocrService = app(OcrServiceInterface::class);
                             $data = $ocrService->extractAssetData($state->getRealPath());
 
-                            if (!empty($data['purchase_price'])) {
+                            if (! empty($data['purchase_price'])) {
                                 $set('purchase_price', $data['purchase_price']);
                             }
-                            if (!empty($data['purchase_date'])) {
+                            if (! empty($data['purchase_date'])) {
                                 $set('purchase_date', $data['purchase_date']);
                             }
-                            if (!empty($data['merchant'])) {
+                            if (! empty($data['merchant'])) {
                                 $set('name', $data['merchant']);
                             }
-                            if (!empty($data['asset_category_id'])) {
+                            if (! empty($data['asset_category_id'])) {
                                 $set('asset_category_id', $data['asset_category_id']);
                             }
 
-                            \Filament\Notifications\Notification::make()
+                            Notification::make()
                                 ->title('Analyse OCR terminée')
                                 ->body('Les données de la facture ont été extraites.')
                                 ->success()
@@ -128,6 +133,20 @@ class FixedAssetForm
                     ->relationship('chantier', 'name')
                     ->searchable()
                     ->preload(),
+                Section::make('Refacturation interne')
+                    ->description('Si l\'actif est affecté à un chantier et qu\'un tarif journalier est défini, une facture interne imputera son coût au budget du chantier.')
+                    ->schema([
+                        TextInput::make('daily_rate')
+                            ->label('Coût journalier interne')
+                            ->numeric()
+                            ->prefix('€')
+                            ->minValue(0)
+                            ->helperText('Tarif HT par jour facturé au chantier lors de l\'affectation.'),
+                        Select::make('internal_rental_period')
+                            ->label('Périodicité de refacturation')
+                            ->options(RentalBillingPeriod::class)
+                            ->default(RentalBillingPeriod::MONTHLY),
+                    ])->columns(2),
             ]);
     }
 }

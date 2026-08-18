@@ -24,7 +24,9 @@ class AssetMaintenanceTicketNotification extends Notification implements ShouldQ
     {
         $asset = $this->ticket->asset;
 
-        $body = "Un outil a été déclaré en casse : {$asset->name} (".($asset->serial_number ?? 'N/A').').';
+        $body = $asset
+            ? "Un outil a été déclaré en casse : {$this->assetLabel($asset)} (".($asset->serial_number ?? 'N/A').').'
+            : 'Un outil a été déclaré en casse (actif supprimé).';
 
         return \Filament\Notifications\Notification::make()
             ->color('danger')
@@ -37,5 +39,14 @@ class AssetMaintenanceTicketNotification extends Notification implements ShouldQ
                     ->url(url('/immobilisations/asset-maintenance-tickets/'.$this->ticket->getKey())),
             ])
             ->getDatabaseMessage();
+    }
+
+    protected function assetLabel(mixed $asset): string
+    {
+        if (method_exists($asset, 'getLabel')) {
+            return (string) $asset->getLabel();
+        }
+
+        return $asset->name ?? '—';
     }
 }

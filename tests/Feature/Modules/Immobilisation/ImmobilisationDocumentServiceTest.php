@@ -3,6 +3,7 @@
 use App\Enums\Immobilisation\AssetStatus;
 use App\Models\Chantiers\Chantier;
 use App\Models\Immobilisation\AssetCategory;
+use App\Models\Immobilisation\AssetTransfer;
 use App\Models\Immobilisation\FixedAsset;
 use App\Models\RH\Equipement;
 use App\Services\Immobilisation\ImmobilisationDocumentService;
@@ -20,6 +21,45 @@ it('generates asset sheet path', function () {
     $path = $mock->generateAssetSheet($asset);
 
     expect($path)->toBe('fake/path/fiche.pdf');
+});
+
+it('generates transfer document path', function () {
+    $chantier = Chantier::factory()->create();
+    $asset = FixedAsset::factory()->create();
+    $transfer = AssetTransfer::create([
+        'fixed_asset_id' => $asset->id,
+        'to_chantier_id' => $chantier->id,
+        'transfer_date' => now()->toDateString(),
+    ]);
+
+    $mock = Mockery::mock(ImmobilisationDocumentService::class)->makePartial();
+    $mock->shouldReceive('generate')->once()->andReturn('fake/path/transfer.pdf');
+
+    $path = $mock->generateTransferDocument($transfer);
+
+    expect($path)->toBe('fake/path/transfer.pdf');
+});
+
+it('generates global depreciation schedule path', function () {
+    AssetCategory::factory()->create();
+
+    $mock = Mockery::mock(ImmobilisationDocumentService::class)->makePartial();
+    $mock->shouldReceive('generate')->once()->andReturn('fake/path/dotations.pdf');
+
+    $path = $mock->generateGlobalDepreciationSchedule(2026);
+
+    expect($path)->toBe('fake/path/dotations.pdf');
+});
+
+it('generates disposal certificate path', function () {
+    $asset = FixedAsset::factory()->create();
+
+    $mock = Mockery::mock(ImmobilisationDocumentService::class)->makePartial();
+    $mock->shouldReceive('generate')->once()->andReturn('fake/path/cession.pdf');
+
+    $path = $mock->generateDisposalCertificate($asset);
+
+    expect($path)->toBe('fake/path/cession.pdf');
 });
 
 it('generates inventory checklist path', function () {
@@ -73,6 +113,19 @@ it('generates a qr label path for an equipement', function () {
     $path = $mock->generateQrLabel($equipement);
 
     expect($path)->toBe('fake/path/etiquette_qr.pdf');
+});
+
+it('provisions a qr token when the asset has none before generating a label', function () {
+    $equipement = Equipement::factory()->create();
+    $equipement->forceFill(['qr_token' => null])->save();
+
+    $mock = Mockery::mock(ImmobilisationDocumentService::class)->makePartial();
+    $mock->shouldReceive('generate')->once()->andReturn('fake/path/etiquette_qr.pdf');
+
+    $path = $mock->generateQrLabel($equipement);
+
+    expect($path)->toBe('fake/path/etiquette_qr.pdf')
+        ->and($equipement->fresh()->qr_token)->toStartWith('EQ-');
 });
 
 it('renders the qr label view without errors', function () {

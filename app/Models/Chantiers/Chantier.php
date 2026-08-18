@@ -12,6 +12,7 @@ use App\Models\Commerce\CustomerInvoice;
 use App\Models\Commerce\CustomerQuote;
 use App\Models\Commerce\Facture;
 use App\Models\Immobilisation\FixedAsset;
+use App\Models\Locations\InternalRentalInvoice;
 use App\Models\Locations\RentalContract;
 use App\Models\RH\CibtpDeclaration;
 use App\Models\RH\Employee;
@@ -133,6 +134,11 @@ class Chantier extends Model implements HasMedia, HasTimeline
     public function fixedAssets(): HasMany
     {
         return $this->hasMany(FixedAsset::class);
+    }
+
+    public function internalRentalInvoices(): HasMany
+    {
+        return $this->hasMany(InternalRentalInvoice::class);
     }
 
     public function rentalContracts(): HasMany

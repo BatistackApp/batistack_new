@@ -215,6 +215,12 @@ return [
         'prefix' => 'view',
         'exclude' => [
             Dashboard::class,
+            \FilamentInbox\Pages\Inbox::class,
+            \FilamentInbox\Pages\ViewMessage::class,
+            \FilamentInbox\Pages\ViewSentMessage::class,
+            \FilamentInbox\Pages\SentMessages::class,
+            \FilamentInbox\Pages\StarredMessages::class,
+            \FilamentInbox\Pages\Trash::class,
         ],
     ],
 

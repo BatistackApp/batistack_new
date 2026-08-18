@@ -22,7 +22,12 @@ class MaintenanceContractFactory extends Factory
         return [
             'company_id' => Company::factory(),
             'third_party_id' => ThirdParty::factory(),
-            'client_equipment_id' => ClientEquipment::factory(),
+            'client_equipment_id' => function (array $definition) {
+                return ClientEquipment::factory()->create([
+                    'company_id' => $definition['company_id'],
+                    'third_party_id' => $definition['third_party_id'],
+                ])->id;
+            },
             'name' => $this->faker->words(3, true),
             'frequency' => MaintenanceContractFrequency::ANNUAL,
             'start_date' => now()->subYear()->toDateString(),

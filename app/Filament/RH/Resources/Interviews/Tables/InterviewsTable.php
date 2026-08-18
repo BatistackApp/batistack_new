@@ -6,10 +6,10 @@ use App\Enums\RH\InterviewStatus;
 use App\Enums\RH\InterviewType;
 use App\Models\RH\Interview;
 use App\Services\RH\InterviewPdfService;
-use Filament\Tables\Actions\Action;
-use Filament\Tables\Actions\BulkActionGroup;
-use Filament\Tables\Actions\DeleteBulkAction;
-use Filament\Tables\Actions\EditAction;
+use Filament\Actions\Action;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
 use Filament\Notifications\Notification;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
@@ -47,7 +47,7 @@ class InterviewsTable
                 SelectFilter::make('type')
                     ->options(InterviewType::class),
             ])
-            ->actions([
+            ->recordActions([
                 EditAction::make(),
                 Action::make('generate_pdf')
                     ->label('Générer PDF')
@@ -75,7 +75,7 @@ class InterviewsTable
                     ->modalHeading('Générer le compte-rendu PDF')
                     ->modalDescription('Êtes-vous sûr de vouloir compiler la grille et générer le document officiel ?'),
             ])
-            ->bulkActions([
+            ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
                 ]),

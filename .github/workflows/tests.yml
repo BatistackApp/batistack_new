@@ -167,6 +167,18 @@ jobs:
               - 'app/Providers/Interventions/**'
               - 'app/Services/Interventions/**'
               - 'tests/Feature/Modules/Interventions/**'
+            Locations:
+              - 'app/Console/Locations/**'
+              - 'app/Enums/Locations/**'
+              - 'app/Events/Locations/**'
+              - 'app/Jobs/Locations/**'
+              - 'app/Mails/Locations/**'
+              - 'app/Models/Locations/**'
+              - 'app/Notifications/Locations/**'
+              - 'app/Observers/Locations/**'
+              - 'app/Providers/Locations/**'
+              - 'app/Services/Locations/**'
+              - 'tests/Feature/Modules/Locations/**'
             Vision3D:
               - 'app/Console/Vision3D/**'
               - 'app/Enums/Vision3D/**'

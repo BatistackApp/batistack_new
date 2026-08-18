@@ -29,6 +29,7 @@ class AssetMaintenanceTicket extends Model implements HasMedia
         'description',
         'severity',
         'status',
+        'previous_asset_status',
         'cost_ht',
         'provider_name',
         'resolved_at',

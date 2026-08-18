@@ -4,9 +4,11 @@ namespace App\Models\Immobilisation;
 
 use App\Enums\Immobilisation\AssetStatus;
 use App\Enums\Immobilisation\DepreciationMethod;
+use App\Enums\Locations\RentalBillingPeriod;
 use App\Models\Chantiers\Chantier;
 use App\Models\Commerce\SupplierInvoice;
 use App\Models\Flottes\Vehicle;
+use App\Models\Locations\InternalRentalInvoice;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -25,9 +27,10 @@ class FixedAsset extends Model implements HasMedia
         'asset_category_id',
         'name',
         'serial_number',
-        'qr_token',
         'purchase_date',
         'purchase_price',
+        'daily_rate',
+        'internal_rental_period',
         'salvage_value',
         'depreciation_method',
         'useful_life_years',
@@ -50,6 +53,8 @@ class FixedAsset extends Model implements HasMedia
             'salvage_value' => 'decimal:2',
             'depreciation_method' => DepreciationMethod::class,
             'status' => AssetStatus::class,
+            'daily_rate' => 'decimal:2',
+            'internal_rental_period' => RentalBillingPeriod::class,
         ];
     }
 
@@ -81,6 +86,11 @@ class FixedAsset extends Model implements HasMedia
     public function chantier(): BelongsTo
     {
         return $this->belongsTo(Chantier::class);
+    }
+
+    public function internalRentalInvoices(): HasMany
+    {
+        return $this->hasMany(InternalRentalInvoice::class);
     }
 
     public function maintenances(): HasMany
