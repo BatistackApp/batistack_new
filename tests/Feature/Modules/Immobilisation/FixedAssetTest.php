@@ -40,3 +40,41 @@ it('can be inventoried to track presence', function () {
 
     expect($asset->fresh()->last_inventoried_at)->not->toBeNull();
 });
+
+it('regenerates the amortization schedule when the duration changes', function () {
+    $asset = FixedAsset::factory()->create([
+        'purchase_price' => 1000,
+        'salvage_value' => 0,
+        'useful_life_years' => 5,
+        'purchase_date' => '2026-01-01',
+        'depreciation_method' => DepreciationMethod::LINEAR,
+    ]);
+
+    expect($asset->depreciations)->toHaveCount(5);
+
+    $asset->update(['useful_life_years' => 2]);
+
+    $fresh = $asset->fresh();
+
+    expect($fresh->depreciations)->toHaveCount(2);
+
+    foreach ($fresh->depreciations as $depreciation) {
+        expect((float) $depreciation->amount)->toBe(500.00);
+    }
+});
+
+it('does not regenerate the schedule when only other fields change', function () {
+    $asset = FixedAsset::factory()->create([
+        'purchase_price' => 1000,
+        'salvage_value' => 0,
+        'useful_life_years' => 5,
+        'purchase_date' => '2026-01-01',
+        'depreciation_method' => DepreciationMethod::LINEAR,
+    ]);
+
+    expect($asset->depreciations)->toHaveCount(5);
+
+    $asset->update(['name' => 'Nouveau nom']);
+
+    expect($asset->fresh()->depreciations)->toHaveCount(5);
+});

@@ -42,6 +42,25 @@ class FixedAssetObserver
         if ($fixedAsset->wasChanged('chantier_id')) {
             $this->billForAffectation($fixedAsset);
         }
+
+        if ($fixedAsset->wasChanged('useful_life_years')) {
+            $this->regenerateSchedule($fixedAsset);
+        }
+    }
+
+    /**
+     * Régénère l'intégralité du tableau d'amortissement à partir de la durée modifiée.
+     */
+    protected function regenerateSchedule(FixedAsset $fixedAsset): void
+    {
+        $fixedAsset->depreciations()->delete();
+
+        $calculator = app(DepreciationCalculatorService::class);
+        $schedule = $calculator->generateSchedule($fixedAsset);
+
+        foreach ($schedule as $depreciation) {
+            $fixedAsset->depreciations()->create($depreciation);
+        }
     }
 
     /**
