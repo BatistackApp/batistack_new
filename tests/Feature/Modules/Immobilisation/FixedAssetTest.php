@@ -2,6 +2,8 @@
 
 use App\Models\Immobilisation\FixedAsset;
 use App\Enums\Immobilisation\DepreciationMethod;
+use App\Enums\Chantiers\ChantierStatus;
+use App\Models\Chantiers\Chantier;
 
 it('generates depreciations automatically when a fixed asset is created', function () {
     $asset = FixedAsset::factory()->create([
@@ -77,4 +79,67 @@ it('does not regenerate the schedule when only other fields change', function ()
     $asset->update(['name' => 'Nouveau nom']);
 
     expect($asset->fresh()->depreciations)->toHaveCount(5);
+});
+
+it('does not create an assignment trace when the asset has no chantier', function () {
+    $asset = FixedAsset::factory()->create();
+
+    expect($asset->assignments)->toHaveCount(0);
+});
+
+it('opens an assignment trace when the asset is affected to a chantier', function () {
+    $asset = FixedAsset::factory()->create();
+    $chantier = Chantier::factory()->create();
+
+    $asset->update(['chantier_id' => $chantier->id]);
+
+    $open = $asset->fresh()->assignments->first();
+    expect($open)->not->toBeNull()
+        ->and($open->chantier_id)->toBe($chantier->id)
+        ->and($open->assigned_at)->not->toBeNull()
+        ->and($open->released_at)->toBeNull();
+});
+
+it('closes the assignment trace when the asset is released', function () {
+    $asset = FixedAsset::factory()->create();
+    $chantier = Chantier::factory()->create();
+    $asset->update(['chantier_id' => $chantier->id]);
+
+    $asset->update(['chantier_id' => null]);
+
+    $trace = $asset->fresh()->assignments->first();
+    expect($trace->released_at)->not->toBeNull();
+});
+
+it('closes the old trace and opens a new one on reassignment', function () {
+    $asset = FixedAsset::factory()->create();
+    $chantierA = Chantier::factory()->create();
+    $chantierB = Chantier::factory()->create();
+
+    $asset->update(['chantier_id' => $chantierA->id]);
+    $asset->update(['chantier_id' => $chantierB->id]);
+
+    $traces = $asset->fresh()->assignments()->orderBy('id')->get();
+    expect($traces)->toHaveCount(2)
+        ->and($traces[0]->chantier_id)->toBe($chantierA->id)
+        ->and($traces[0]->released_at)->not->toBeNull()
+        ->and($traces[1]->chantier_id)->toBe($chantierB->id)
+        ->and($traces[1]->released_at)->toBeNull();
+});
+
+it('releases and traces the assets when a chantier passes to FINISHED', function () {
+    $asset = FixedAsset::factory()->create();
+    $chantier = Chantier::factory()->create(['status' => ChantierStatus::IN_PROGRESS]);
+    $asset->update(['chantier_id' => $chantier->id]);
+
+    expect($asset->fresh()->chantier_id)->toBe($chantier->id);
+
+    $chantier->update(['status' => ChantierStatus::FINISHED]);
+
+    $fresh = $asset->fresh();
+    expect($fresh->chantier_id)->toBeNull();
+
+    $trace = $fresh->assignments->first();
+    expect($trace->released_at)->not->toBeNull()
+        ->and($trace->reason)->toBe('Chantier terminé');
 });

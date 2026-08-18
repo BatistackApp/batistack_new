@@ -23,6 +23,12 @@ class FixedAsset extends Model implements HasMedia
 {
     use HasFactory, InteractsWithMedia;
 
+    /**
+     * Propriété transitoire (non persistée) permettant de transmettre un motif
+     * de libération au niveau de l'observer.
+     */
+    public ?string $release_reason = null;
+
     protected $fillable = [
         'asset_category_id',
         'name',
@@ -81,6 +87,11 @@ class FixedAsset extends Model implements HasMedia
     public function vehicle(): BelongsTo
     {
         return $this->belongsTo(Vehicle::class);
+    }
+
+    public function assignments(): HasMany
+    {
+        return $this->hasMany(FixedAssetAssignment::class);
     }
 
     public function chantier(): BelongsTo

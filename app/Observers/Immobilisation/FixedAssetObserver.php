@@ -5,6 +5,7 @@ namespace App\Observers\Immobilisation;
 use App\Models\Immobilisation\FixedAsset;
 use App\Services\Immobilisation\DepreciationCalculatorService;
 use App\Services\Locations\InternalRentalBillingService;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 
 class FixedAssetObserver
@@ -41,11 +42,45 @@ class FixedAssetObserver
     {
         if ($fixedAsset->wasChanged('chantier_id')) {
             $this->billForAffectation($fixedAsset);
+            $this->trackAssignmentChange($fixedAsset);
         }
 
         if ($fixedAsset->wasChanged('useful_life_years')) {
             $this->regenerateSchedule($fixedAsset);
         }
+    }
+
+    /**
+     * Maintient l'historique des affectations : ferme l'enregistrement en cours
+     * et en ouvre un nouveau si l'immo est affectée à un chantier.
+     */
+    protected function trackAssignmentChange(FixedAsset $fixedAsset): void
+    {
+        $open = $fixedAsset->assignments()
+            ->whereNull('released_at')
+            ->latest('id')
+            ->first();
+
+        $releaseReason = $fixedAsset->release_reason;
+
+        if ($open) {
+            $open->update([
+                'released_at' => now(),
+                'reason' => $releaseReason ?? $open->reason,
+            ]);
+        }
+
+        if ($fixedAsset->chantier_id) {
+            $fixedAsset->assignments()->create([
+                'chantier_id' => $fixedAsset->chantier_id,
+                'assigned_at' => now(),
+                'released_at' => null,
+                'assigned_by' => Auth::id(),
+                'reason' => null,
+            ]);
+        }
+
+        $fixedAsset->release_reason = null;
     }
 
     /**

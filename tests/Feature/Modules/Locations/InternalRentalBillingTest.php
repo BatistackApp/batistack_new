@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\Chantiers\ChantierStatus;
 use App\Enums\Locations\InternalRentalInvoiceStatus;
 use App\Enums\Locations\RentalBillingPeriod;
 use App\Models\Chantiers\Chantier;
@@ -187,6 +188,37 @@ it('excludes canceled invoices from chantier performance metrics', function () {
     $metrics = app(ChantierAnalyticService::class)->getPerformanceMetrics($this->chantier);
 
     expect($metrics['financials']['internal_rental_cost_real'])->toBe(0.0);
+
+    Carbon::setTestNow();
+});
+
+it('cancels internal rental invoices when the chantier passes to FINISHED', function () {
+    Carbon::setTestNow(Carbon::create(2026, 8, 15));
+
+    $asset = makeBillableAsset();
+    $invoice = $asset->internalRentalInvoices()->first();
+    expect($invoice->status)->toBe(InternalRentalInvoiceStatus::DRAFT);
+
+    $this->chantier->update(['status' => ChantierStatus::FINISHED]);
+
+    expect($invoice->fresh()->status)->toBe(InternalRentalInvoiceStatus::CANCELED);
+
+    // Le budget analytique du chantier terminé n'est plus impacté
+    $metrics = app(ChantierAnalyticService::class)->getPerformanceMetrics($this->chantier->fresh());
+    expect($metrics['financials']['internal_rental_cost_real'])->toBe(0.0);
+
+    Carbon::setTestNow();
+});
+
+it('does not cancel internal rental invoices on a status change other than FINISHED', function () {
+    Carbon::setTestNow(Carbon::create(2026, 8, 15));
+
+    $asset = makeBillableAsset();
+    $invoice = $asset->internalRentalInvoices()->first();
+
+    $this->chantier->update(['status' => ChantierStatus::SUSPENDED]);
+
+    expect($invoice->fresh()->status)->toBe(InternalRentalInvoiceStatus::DRAFT);
 
     Carbon::setTestNow();
 });
