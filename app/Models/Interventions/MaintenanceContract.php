@@ -6,6 +6,7 @@ use App\Enums\Interventions\MaintenanceContractFrequency;
 use App\Enums\Interventions\MaintenanceContractStatus;
 use App\Models\Chantiers\Chantier;
 use App\Models\Core\Company;
+use App\Models\Core\Signature;
 use App\Models\Tiers\ThirdParty;
 use App\Observers\Interventions\MaintenanceContractObserver;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
@@ -13,6 +14,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 #[ObservedBy([MaintenanceContractObserver::class])]
@@ -79,5 +81,10 @@ class MaintenanceContract extends Model
     public function reminders(): HasMany
     {
         return $this->hasMany(MaintenanceContractReminder::class, 'contract_id');
+    }
+
+    public function signatures(): MorphMany
+    {
+        return $this->morphMany(Signature::class, 'signable');
     }
 }

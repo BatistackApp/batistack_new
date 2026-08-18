@@ -22,6 +22,9 @@
         .page-break {
             page-break-after: always;
         }
+        .avoid-break {
+            page-break-inside: avoid;
+        }
         .text-blue-batistack {
             color: #002157;
         }

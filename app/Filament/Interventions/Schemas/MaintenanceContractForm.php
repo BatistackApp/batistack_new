@@ -7,6 +7,7 @@ use App\Enums\Interventions\MaintenanceContractStatus;
 use App\Models\Interventions\ClientEquipment;
 use App\Models\Tiers\ThirdParty;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -23,6 +24,8 @@ class MaintenanceContractForm
                     ->columns(2)
                     ->columnSpanFull()
                     ->schema([
+                        Hidden::make('company_id')
+                            ->default(fn () => auth()->user()->company_id ?? 1),
                         Select::make('third_party_id')
                             ->label('Client')
                             ->options(ThirdParty::clients()->pluck('name', 'id'))
