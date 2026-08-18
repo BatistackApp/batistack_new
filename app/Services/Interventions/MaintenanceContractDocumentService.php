@@ -2,7 +2,6 @@
 
 namespace App\Services\Interventions;
 
-use App\Models\Core\Company;
 use App\Models\Interventions\MaintenanceContract;
 use App\Services\Core\DocumentService;
 
@@ -14,10 +13,10 @@ class MaintenanceContractDocumentService extends DocumentService
      */
     public function generateContractPdf(MaintenanceContract $contract): string
     {
-        $contract->load(['thirdParty', 'clientEquipment', 'chantier']);
+        $contract->load(['thirdParty', 'clientEquipment', 'chantier', 'company']);
 
         $data = [
-            'company' => Company::first(),
+            'company' => $contract->company,
             'contract' => $contract,
             'title' => 'CONTRAT D\'ENTRETIEN : '.$contract->reference,
             'generated_at' => now()->format('d/m/Y H:i'),

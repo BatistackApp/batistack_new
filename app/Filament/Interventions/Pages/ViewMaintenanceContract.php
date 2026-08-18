@@ -12,7 +12,6 @@ use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
-use Illuminate\Support\Facades\Storage;
 use ToneGabes\Filament\Icons\Enums\Phosphor;
 
 class ViewMaintenanceContract extends ViewRecord
@@ -35,11 +34,11 @@ class ViewMaintenanceContract extends ViewRecord
 
                         $client = $record->thirdParty;
                         $contact = $client?->getPrimaryContact();
-                        $email = $contact?->email ?? $client?->email;
+                        $email = $contact?->email ?: $client?->email;
                         $name = $contact ? trim("{$contact->first_name} {$contact->last_name}") : ($client?->name ?? 'Client');
 
                         if ($email) {
-                            $signatureService->driver('local')->requestSignature(
+                            $signatureService->requestSignature(
                                 model: $record,
                                 type: SignatureType::AUTOGRAPH,
                                 email: $email,
@@ -65,10 +64,10 @@ class ViewMaintenanceContract extends ViewRecord
                     ->label('Télécharger le contrat PDF')
                     ->icon(Phosphor::FilePdf)
                     ->color('gray')
-                    ->action(function (MaintenanceContract $record, MaintenanceContractDocumentService $service) {
+                    ->action(function (MaintenanceContract $record, MaintenanceContractDocumentService $service, DocumentService $documentService) {
                         $path = $service->generateContractPdf($record);
 
-                        return response()->download(Storage::disk(DocumentService::getDisk())->path($path));
+                        return $documentService->download($path);
                     }),
             ])
                 ->label('Contrat')

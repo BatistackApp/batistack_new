@@ -50,6 +50,7 @@ class ReservesRelationManager extends RelationManager
                 Select::make('assigned_to')
                     ->label('Assigné à')
                     ->options(fn () => $this->getOuvrierMembersOptions())
+                    ->getOptionLabelUsing(fn ($value) => Employee::find($value)?->full_name ?? $value)
                     ->searchable()
                     ->preload()
                     ->nullable(),
@@ -116,6 +117,7 @@ class ReservesRelationManager extends RelationManager
                         Select::make('assigned_to')
                             ->label('Assigné à (ouvrier du chantier)')
                             ->options(fn () => $this->getOuvrierMembersOptions())
+                            ->getOptionLabelUsing(fn ($value) => Employee::find($value)?->full_name ?? $value)
                             ->searchable()
                             ->preload()
                             ->required(),
@@ -191,6 +193,7 @@ class ReservesRelationManager extends RelationManager
     {
         return $this->getOwnerRecord()
             ->members()
+            ->active()
             ->whereHas('currentContract', fn ($q) => $q->where('category', EmployeeCategory::OUVRIER->value))
             ->orderBy('last_name')
             ->get()

@@ -41,7 +41,8 @@ class RemindTomorrowAssignmentsCommand extends Command
 
         // Affichage preview
         foreach ($assignments as $assignment) {
-            $this->line("  • {$assignment->vehicle->license_plate} → {$assignment->employee->getFullName()}");
+            $driverName = $assignment->employee?->getFullName() ?? 'N/A';
+            $this->line("  • {$assignment->vehicle->license_plate} → {$driverName}");
             $this->line("    Début : {$assignment->started_at->format('d/m/Y H:i')}");
             if ($assignment->chantier) {
                 $this->line("    Chantier : {$assignment->chantier->reference}");
@@ -77,7 +78,8 @@ class RemindTomorrowAssignmentsCommand extends Command
                     $sentCount++;
                 }
             } catch (\Exception $e) {
-                $this->error("  ✗ Erreur {$assignment->employee->getFullName()}: {$e->getMessage()}");
+                $driverName = $assignment->employee?->getFullName() ?? 'N/A';
+                $this->error("  ✗ Erreur {$driverName}: {$e->getMessage()}");
             }
             $bar->advance();
         }

@@ -387,7 +387,7 @@ class PayslipResource extends Resource
                         ->form([
                             Forms\Components\Select::make('source_bank_account_id')
                                 ->label('Compte émetteur (banque connectée)')
-                                ->options(fn () => BankAccount::query()->whereNotNull('bridge_bank_id')->get()->mapWithKeys(fn ($account) => [
+                                ->options(fn () => BankAccount::query()->whereNotNull('bridge_bank_id')->where('currency', 'EUR')->get()->mapWithKeys(fn ($account) => [
                                     $account->id => $account->name.' — Solde : '.Number::currency((float) $account->balance, 'EUR', 'fr'),
                                 ]))
                                 ->required(),
