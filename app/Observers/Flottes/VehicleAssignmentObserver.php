@@ -22,7 +22,7 @@ class VehicleAssignmentObserver
 
             Log::info('Véhicule assigné', [
                 'vehicle_reference' => $assignment->vehicle->reference,
-                'employee_name' => $assignment->employee->getFullName(),
+                'employee_name' => $assignment->employee?->getFullName(),
             ]);
         }
     }
