@@ -4,8 +4,13 @@ namespace App\Filament\Chantier\Resources\Chantiers\RelationManagers;
 
 use App\Enums\Chantiers\ChantierReserveStatus;
 use App\Enums\Chantiers\ReserveSeverity;
+use App\Enums\RH\EmployeeCategory;
 use App\Models\Chantiers\ChantierReserve;
 use App\Models\RH\Employee;
+use Filament\Actions\Action;
+use Filament\Actions\CreateAction;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\EditAction;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
@@ -44,8 +49,8 @@ class ReservesRelationManager extends RelationManager
                     ->required(),
                 Select::make('assigned_to')
                     ->label('Assigné à')
-                    ->relationship('assignee', 'first_name')
-                    ->getOptionLabelFromRecordUsing(fn (Employee $record) => $record->full_name)
+                    ->options(fn () => $this->getOuvrierMembersOptions())
+                    ->getOptionLabelUsing(fn ($value) => Employee::find($value)?->full_name ?? $value)
                     ->searchable()
                     ->preload()
                     ->nullable(),
@@ -99,20 +104,20 @@ class ReservesRelationManager extends RelationManager
                     ->options(ReserveSeverity::class),
             ])
             ->headerActions([
-                Tables\Actions\CreateAction::make(),
+                CreateAction::make()->label('Nouvelle réserve'),
             ])
-            ->actions([
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\Action::make('assign')
+            ->recordActions([
+                EditAction::make(),
+                Action::make('assign')
                     ->label('Assigner')
                     ->icon('heroicon-o-user')
                     ->color('warning')
                     ->visible(fn (ChantierReserve $record) => $record->status === ChantierReserveStatus::OPEN)
-                    ->form([
+                    ->schema([
                         Select::make('assigned_to')
-                            ->label('Assigné à (employé)')
-                            ->relationship('assignee', 'first_name')
-                            ->getOptionLabelFromRecordUsing(fn (Employee $record) => $record->full_name)
+                            ->label('Assigné à (ouvrier du chantier)')
+                            ->options(fn () => $this->getOuvrierMembersOptions())
+                            ->getOptionLabelUsing(fn ($value) => Employee::find($value)?->full_name ?? $value)
                             ->searchable()
                             ->preload()
                             ->required(),
@@ -127,7 +132,7 @@ class ReservesRelationManager extends RelationManager
                         ]);
                         Notification::make()->title('Réserve assignée')->success()->send();
                     }),
-                Tables\Actions\Action::make('resolve')
+                Action::make('resolve')
                     ->label('Marquer résolue')
                     ->icon('heroicon-o-check-circle')
                     ->color('success')
@@ -140,9 +145,9 @@ class ReservesRelationManager extends RelationManager
                         ]);
                         Notification::make()->title('Réserve résolue')->success()->send();
                     }),
-                Tables\Actions\Action::make('lift')
+                Action::make('lift')
                     ->label('Levée par le client')
-                    ->icon('heroicon-o-stamp')
+                    ->icon('heroicon-o-document-check')
                     ->color('primary')
                     ->visible(fn (ChantierReserve $record) => $record->status === ChantierReserveStatus::RESOLVED)
                     ->schema([
@@ -175,7 +180,24 @@ class ReservesRelationManager extends RelationManager
 
                         Notification::make()->title('Réserve levée')->success()->send();
                     }),
-                Tables\Actions\DeleteAction::make(),
+                DeleteAction::make(),
             ]);
+    }
+
+    public function isReadOnly(): bool
+    {
+        return false;
+    }
+
+    private function getOuvrierMembersOptions(): array
+    {
+        return $this->getOwnerRecord()
+            ->members()
+            ->active()
+            ->whereHas('currentContract', fn ($q) => $q->where('category', EmployeeCategory::OUVRIER->value))
+            ->orderBy('last_name')
+            ->get()
+            ->mapWithKeys(fn (Employee $employee) => [$employee->id => $employee->full_name])
+            ->all();
     }
 }

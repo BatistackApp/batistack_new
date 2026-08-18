@@ -38,6 +38,7 @@ use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 use Filament\Support\Enums\FontWeight;
+use Illuminate\Support\Number;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -386,7 +387,9 @@ class PayslipResource extends Resource
                         ->form([
                             Forms\Components\Select::make('source_bank_account_id')
                                 ->label('Compte émetteur (banque connectée)')
-                                ->options(fn () => BankAccount::query()->whereNotNull('bridge_bank_id')->get()->pluck('name', 'id'))
+                                ->options(fn () => BankAccount::query()->whereNotNull('bridge_bank_id')->where('currency', 'EUR')->get()->mapWithKeys(fn ($account) => [
+                                    $account->id => $account->name.' — Solde : '.Number::currency((float) $account->balance, 'EUR', 'fr'),
+                                ]))
                                 ->required(),
                         ])
                         ->action(function (Collection $records, array $data, SalaryPaymentService $salaryService) {

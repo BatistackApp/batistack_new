@@ -30,8 +30,12 @@ class SalaryPaymentService
      */
     public function createRun(Collection $payslips, BankAccount $source, User $creator): SalaryPaymentRun
     {
-        if (! $source->bridge_bank_id) {
-            throw new \RuntimeException("Le compte émetteur n'est pas relié à une banque Bridge (bridge_bank_id manquant).");
+if (! $source->bridge_bank_id) {
+            throw new \RuntimeException("Le compte �metteur n'est pas reli� � une banque Bridge (bridge_bank_id manquant).");
+        }
+
+        if ($source->currency !== 'EUR') {
+            throw new \RuntimeException("Le compte �metteur doit �tre en devise EUR pour un paiement Bridge (actuel : {$source->currency}).");
         }
 
         $eligible = $payslips->filter(

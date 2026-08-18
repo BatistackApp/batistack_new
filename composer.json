@@ -13,6 +13,7 @@
         "ext-fileinfo": "*",
         "ext-zip": "*",
         "achyutn/filament-log-viewer": "^2.3",
+        "andreiio/blade-remix-icon": "^3.9",
         "ariefng/filament-calculator": "^1.2",
         "batistackapp/activity-log": "^1.0@alpha",
         "batistackapp/filament-map-picker": "^1.0",

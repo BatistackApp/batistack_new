@@ -83,6 +83,22 @@ describe('MaintenanceContract', function () {
         expect($contract->reminders()->count())->toBe(0);
     });
 
+    test('exposes the signatures morph relation', function () {
+        $contract = makeContract();
+        $user = \App\Models\User::factory()->create();
+
+        $contract->signatures()->create([
+            'user_id' => $user->id,
+            'token' => 'sig-token',
+            'checksum' => 'abc123',
+            'status' => \App\Enums\Core\SignatureStatus::PENDING,
+            'type' => \App\Enums\Core\SignatureType::AUTOGRAPH,
+        ]);
+
+        expect($contract->signatures()->count())->toBe(1);
+        expect($contract->signatures()->first()->signable->is($contract))->toBeTrue();
+    });
+
     test('reminders belong to their contract', function () {
         $contract = makeContract();
 

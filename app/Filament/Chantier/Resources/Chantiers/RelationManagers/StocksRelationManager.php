@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Filament\Chantier\Resources\Chantiers\ChantierResource\RelationManagers;
+namespace App\Filament\Chantier\Resources\Chantiers\RelationManagers;
 
 use App\Models\Articles\Item;
 use App\Models\Articles\Stock;

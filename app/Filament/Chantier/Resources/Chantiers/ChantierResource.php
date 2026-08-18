@@ -2,7 +2,6 @@
 
 namespace App\Filament\Chantier\Resources\Chantiers;
 
-use App\Filament\Chantier\Resources\Chantiers\ChantierResource\RelationManagers\StocksRelationManager;
 use App\Filament\Chantier\Resources\Chantiers\Pages\CreateChantier;
 use App\Filament\Chantier\Resources\Chantiers\Pages\EditChantier;
 use App\Filament\Chantier\Resources\Chantiers\Pages\ListChantiers;
@@ -14,6 +13,7 @@ use App\Filament\Chantier\Resources\Chantiers\RelationManagers\LogsRelationManag
 use App\Filament\Chantier\Resources\Chantiers\RelationManagers\MembersRelationManager;
 use App\Filament\Chantier\Resources\Chantiers\RelationManagers\PhasesRelationManager;
 use App\Filament\Chantier\Resources\Chantiers\RelationManagers\ReservesRelationManager;
+use App\Filament\Chantier\Resources\Chantiers\RelationManagers\StocksRelationManager;
 use App\Filament\Chantier\Resources\Chantiers\RelationManagers\SubcontractorsRelationManager;
 use App\Filament\Chantier\Resources\Chantiers\RelationManagers\WeatherAlertsRelationManager;
 use App\Filament\Chantier\Resources\Chantiers\Schemas\ChantierForm;

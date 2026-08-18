@@ -24,6 +24,8 @@ class FillInterventionReportPage extends Page implements HasForms
 
     protected static bool $shouldRegisterNavigation = false;
 
+    protected static ?string $slug = 'fill-intervention-report';
+
     public ?array $data = [];
 
     public ?int $intervention_id = null;
