@@ -7,6 +7,7 @@ use App\Models\RH\Abscence;
 use App\Models\RH\Employee;
 use App\Models\RH\TimeEntry;
 use App\Services\RH\SafetyRateService;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
@@ -107,4 +108,53 @@ it('returns 12 monthly data points for the chart', function () {
 
     expect($rates)->toHaveCount(12)
         ->and($rates)->each->toHaveKeys(['month', 'tf', 'tg']);
+});
+
+it('uses an inclusive rolling twelve-month window derived from the end date', function () {
+    Carbon::setTestNow(Carbon::create(2026, 8, 18, 12, 0, 0));
+
+    $rates = app(SafetyRateService::class)->rollingYear();
+
+    expect($rates['to']->toDateString())->toBe('2026-08-18')
+        ->and($rates['from']->toDateString())->toBe('2025-08-19');
+
+    Carbon::setTestNow();
+});
+
+it('counts absences overlapping the period, limiting days lost to the intersection', function () {
+    Carbon::setTestNow(Carbon::create(2026, 8, 18, 12, 0, 0));
+    $employee = Employee::factory()->create();
+    safetyHours($employee, 1000, now()->subMonth()->format('Y-m-d'));
+
+    $from = now()->subYear()->addDay()->startOfDay(); // 2025-08-19
+    $to = now()->endOfDay(); // 2026-08-18
+
+    // Arrêt commencé avant $from mais chevauchant la période
+    safetyAccident($employee, '2025-08-15', '2025-08-22');
+
+    $rates = app(SafetyRateService::class)->compute($from, $to);
+
+    expect($rates['accidentCount'])->toBe(1)
+        ->and($rates['daysLost'])->toBe(4); // 19→22 inclus
+
+    Carbon::setTestNow();
+});
+
+it('limits days lost when an absence extends beyond the period end', function () {
+    Carbon::setTestNow(Carbon::create(2026, 8, 18, 12, 0, 0));
+    $employee = Employee::factory()->create();
+    safetyHours($employee, 1000, now()->subMonth()->format('Y-m-d'));
+
+    $from = now()->subYear()->addDay()->startOfDay(); // 2025-08-19
+    $to = now()->endOfDay(); // 2026-08-18
+
+    // Arrêt qui se prolonge après la fin de la période
+    safetyAccident($employee, '2026-08-15', '2026-08-25');
+
+    $rates = app(SafetyRateService::class)->compute($from, $to);
+
+    expect($rates['accidentCount'])->toBe(1)
+        ->and($rates['daysLost'])->toBe(4); // 15→18 inclus
+
+    Carbon::setTestNow();
 });

@@ -65,6 +65,25 @@ it('regenerates the amortization schedule when the duration changes', function (
     }
 });
 
+it('preserves passed depreciations when the duration changes', function () {
+    $asset = FixedAsset::factory()->create([
+        'purchase_price' => 1000,
+        'salvage_value' => 0,
+        'useful_life_years' => 5,
+        'purchase_date' => '2026-01-01',
+        'depreciation_method' => DepreciationMethod::LINEAR,
+    ]);
+
+    $first = $asset->depreciations->first();
+    $first->update(['is_passed' => true]);
+    $passedIds = $asset->fresh()->depreciations->where('is_passed', true)->pluck('id');
+
+    $asset->update(['useful_life_years' => 3]);
+
+    $freshPassed = $asset->fresh()->depreciations->where('is_passed', true)->pluck('id');
+    expect($freshPassed)->toEqual($passedIds->values());
+});
+
 it('does not regenerate the schedule when only other fields change', function () {
     $asset = FixedAsset::factory()->create([
         'purchase_price' => 1000,
@@ -74,11 +93,14 @@ it('does not regenerate the schedule when only other fields change', function ()
         'depreciation_method' => DepreciationMethod::LINEAR,
     ]);
 
+    $ids = $asset->depreciations->pluck('id')->sort()->values();
     expect($asset->depreciations)->toHaveCount(5);
 
     $asset->update(['name' => 'Nouveau nom']);
 
-    expect($asset->fresh()->depreciations)->toHaveCount(5);
+    $fresh = $asset->fresh();
+    expect($fresh->depreciations)->toHaveCount(5)
+        ->and($fresh->depreciations->pluck('id')->sort()->values())->toEqual($ids);
 });
 
 it('does not create an assignment trace when the asset has no chantier', function () {
@@ -142,4 +164,16 @@ it('releases and traces the assets when a chantier passes to FINISHED', function
     $trace = $fresh->assignments->first();
     expect($trace->released_at)->not->toBeNull()
         ->and($trace->reason)->toBe('Chantier terminé');
+});
+
+it('opens an assignment trace when an asset is created with a chantier', function () {
+    $chantier = Chantier::factory()->create();
+
+    $asset = FixedAsset::factory()->create(['chantier_id' => $chantier->id]);
+
+    $open = $asset->fresh()->assignments->first();
+    expect($open)->not->toBeNull()
+        ->and($open->chantier_id)->toBe($chantier->id)
+        ->and($open->assigned_at)->not->toBeNull()
+        ->and($open->released_at)->toBeNull();
 });

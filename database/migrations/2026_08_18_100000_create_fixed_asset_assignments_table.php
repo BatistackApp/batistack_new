@@ -12,7 +12,7 @@ return new class extends Migration
         Schema::create('fixed_asset_assignments', function (Blueprint $table) {
             $table->id();
             $table->foreignId('fixed_asset_id')->constrained('fixed_assets')->cascadeOnDelete();
-            $table->foreignId('chantier_id')->constrained('chantiers')->cascadeOnDelete();
+            $table->foreignId('chantier_id')->constrained('chantiers')->restrictOnDelete();
             $table->dateTime('assigned_at');
             $table->dateTime('released_at')->nullable();
             $table->foreignId('assigned_by')->nullable()->constrained('users')->nullOnDelete();

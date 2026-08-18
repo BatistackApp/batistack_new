@@ -89,6 +89,9 @@ class FixedAsset extends Model implements HasMedia
         return $this->belongsTo(Vehicle::class);
     }
 
+    /**
+     * @return HasMany<FixedAssetAssignment, $this>
+     */
     public function assignments(): HasMany
     {
         return $this->hasMany(FixedAssetAssignment::class);

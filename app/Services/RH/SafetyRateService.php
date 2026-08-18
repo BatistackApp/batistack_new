@@ -18,7 +18,7 @@ class SafetyRateService
     public function rollingYear(): array
     {
         $to = now()->endOfDay();
-        $from = now()->subMonths(12)->startOfMonth();
+        $from = $to->copy()->subYear()->addDay()->startOfDay();
 
         return $this->compute($from, $to);
     }
@@ -37,11 +37,12 @@ class SafetyRateService
 
         $accidents = Abscence::query()
             ->where('type', AbsenceType::WORK_ACCIDENT)
-            ->whereBetween('start_date', [$from->copy()->startOfDay(), $to->copy()->endOfDay()])
+            ->whereDate('start_date', '<=', $to)
+            ->whereDate('end_date', '>=', $from)
             ->get();
 
         $accidentCount = $accidents->count();
-        $daysLost = $accidents->sum(fn (Abscence $a) => $this->daysLost($a));
+        $daysLost = $accidents->sum(fn (Abscence $a) => $this->daysLostInRange($a, $from, $to));
 
         $tf = $hoursWorked > 0 ? round(($accidentCount * 1_000_000) / $hoursWorked, 2) : 0.0;
         $tg = $hoursWorked > 0 ? round(($daysLost * 1_000) / $hoursWorked, 2) : 0.0;
@@ -70,6 +71,29 @@ class SafetyRateService
         }
 
         return max(0, $start->diffInDays($end) + 1);
+    }
+
+    /**
+     * Nombre de jours d'arrêt compris dans l'intersection de l'arrêt avec la
+     * période demandée [$from, $to] (bornes incluses).
+     */
+    public function daysLostInRange(Abscence $absence, CarbonInterface $from, CarbonInterface $to): int
+    {
+        $start = $absence->start_date;
+        $end = $absence->end_date;
+
+        if (!$start || !$end) {
+            return 0;
+        }
+
+        $overlapStart = $start->max($from);
+        $overlapEnd = $end->min($to);
+
+        if ($overlapEnd->lt($overlapStart)) {
+            return 0;
+        }
+
+        return $overlapStart->diffInDays($overlapEnd) + 1;
     }
 
     /**
