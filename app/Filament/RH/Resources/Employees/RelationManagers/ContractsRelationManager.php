@@ -172,14 +172,12 @@ class ContractsRelationManager extends RelationManager
                             $relativePath = $documentService->generateContract($record);
                         }
 
-                        $absolutePath = Storage::disk($disk)->path($relativePath);
-
                         $signatureService->requestSignature(
                             model: $record,
                             type: SignatureType::AUTOGRAPH,
                             email: $email,
                             name: $name,
-                            documentPath: $absolutePath,
+                            documentPath: $relativePath,
                         );
 
                         Notification::make()->title('Demande de signature envoyée par email')->success()->send();
