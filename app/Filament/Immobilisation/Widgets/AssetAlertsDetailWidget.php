@@ -5,7 +5,7 @@ namespace App\Filament\Immobilisation\Widgets;
 use App\Models\Immobilisation\FixedAsset;
 use LaBoiteACode\FilamentDashboardWidgets\Widgets\DetailListWidget;
 use LaBoiteACode\FilamentDashboardWidgets\Data\Detail;
-use App\Filament\Immobilisation\Resources\FixedAssetResource;
+use App\Filament\Immobilisation\Resources\Immobilisation\FixedAssets\FixedAssetResource;
 
 class AssetAlertsDetailWidget extends DetailListWidget
 {

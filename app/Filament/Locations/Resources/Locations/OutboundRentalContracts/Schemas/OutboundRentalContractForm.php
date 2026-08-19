@@ -12,7 +12,7 @@ class OutboundRentalContractForm
     {
         return $schema
             ->components([
-                \Filament\Forms\Components\Section::make('Informations de Base')->schema([
+                \Filament\Schemas\Components\Section::make('Informations de Base')->schema([
                     \Filament\Forms\Components\Select::make('company_id')
                         ->relationship('company', 'legal_name')
                         ->label('Société')
@@ -49,7 +49,7 @@ class OutboundRentalContractForm
                         ->default('monthly'),
                 ])->columns(2),
 
-                \Filament\Forms\Components\Section::make('Dates et Pénalités')->schema([
+                \Filament\Schemas\Components\Section::make('Dates et Pénalités')->schema([
                     \Filament\Forms\Components\DatePicker::make('start_date')
                         ->required()
                         ->default(now()),
@@ -64,7 +64,7 @@ class OutboundRentalContractForm
                         ->prefix('€'),
                 ])->columns(2),
                 
-                \Filament\Forms\Components\Section::make('Équipements Loués')->schema([
+                \Filament\Schemas\Components\Section::make('Équipements Loués')->schema([
                     \Filament\Forms\Components\Repeater::make('lines')
                         ->relationship()
                         ->schema([

@@ -14,7 +14,7 @@ class AssetTransferForm
     {
         return $schema
             ->components([
-                \Filament\Forms\Components\Section::make('Informations du transfert')
+                \Filament\Schemas\Components\Section::make('Informations du transfert')
                     ->schema([
                         \Filament\Forms\Components\Select::make('fixed_asset_id')
                             ->label('Immobilisation')
@@ -23,7 +23,7 @@ class AssetTransferForm
                             ->preload()
                             ->required()
                             ->reactive()
-                            ->afterStateUpdated(function (\Filament\Forms\Set $set, $state) {
+                            ->afterStateUpdated(function (\Filament\Schemas\Components\Utilities\Set $set, $state) {
                                 if ($state) {
                                     $asset = \App\Models\Immobilisation\FixedAsset::find($state);
                                     if ($asset) {
