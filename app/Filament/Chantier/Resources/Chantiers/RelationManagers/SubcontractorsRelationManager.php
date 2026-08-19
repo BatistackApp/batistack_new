@@ -52,10 +52,13 @@ class SubcontractorsRelationManager extends RelationManager
                     ->label('Ajouter un sous-traitant')
                     ->recordSelectOptionsQuery(fn ($query) => $query
                         ->where('type', ThirdPartyType::SUBCONTRACTOR)
-                        ->whereNotIn('legal_status', [
-                            LegalStatus::REDRESSEMENT_JUDICIAIRE->value,
-                            LegalStatus::LIQUIDATION_JUDICIAIRE->value,
-                        ])),
+                        ->where(function ($q) {
+                            $q->whereNull('legal_status')
+                                ->orWhereNotIn('legal_status', [
+                                    LegalStatus::REDRESSEMENT_JUDICIAIRE->value,
+                                    LegalStatus::LIQUIDATION_JUDICIAIRE->value,
+                                ]);
+                        })),
             ])
             ->recordActions([
                 DetachAction::make()->label('Retirer'),

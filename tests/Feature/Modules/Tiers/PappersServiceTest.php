@@ -182,3 +182,35 @@ it('detects a cessation as legal_status when there is no collective procedure', 
 
     expect($thirdParty->refresh()->legal_status)->toBe(LegalStatus::CESSATION);
 });
+
+it('treats an absent procedure field as no procedure (sain) when active', function () {
+    $thirdParty = ThirdParty::factory()->create(['siren' => '555666777']);
+
+    Http::fake([
+        'recherche-entreprises.api.gouv.fr/*' => Http::response([
+            'results' => [
+                ['etat_administratif' => 'A'],
+            ],
+        ], 200),
+    ]);
+
+    app(PappersService::class)->syncFinancialData($thirdParty);
+
+    expect($thirdParty->refresh()->legal_status)->toBe(LegalStatus::SAIN);
+});
+
+it('keeps legal_status unverified for an unknown procedure value', function () {
+    $thirdParty = ThirdParty::factory()->create(['siren' => '666777888']);
+
+    Http::fake([
+        'recherche-entreprises.api.gouv.fr/*' => Http::response([
+            'results' => [
+                ['etat_administratif' => 'A', 'procedures_collectives' => 'Statut inconnu'],
+            ],
+        ], 200),
+    ]);
+
+    app(PappersService::class)->syncFinancialData($thirdParty);
+
+    expect($thirdParty->refresh()->legal_status)->toBeNull();
+});

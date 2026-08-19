@@ -73,24 +73,32 @@ class PappersService
      * Détermine le statut juridique granulaire (Sain / Sauvegarde / Redressement /
      * Liquidation / Cessation) à partir des procédures collectives et de l'état administratif.
      */
-    protected function determineLegalStatus(array $financialData): LegalStatus
+    protected function determineLegalStatus(array $financialData): ?LegalStatus
     {
-        $procedures = $financialData['procedures_collectives'] ?? 'Non';
-        $etat = $financialData['etat_administratif'] ?? 'Actif';
+        $procedures = $financialData['procedures_collectives'] ?? null;
+        $etat = $financialData['etat_administratif'] ?? null;
 
+        // Cessation via l'état administratif (source INSEE fiable).
+        if ($etat === 'C') {
+            return LegalStatus::CESSATION;
+        }
+
+        // Procédure collective explicitement reconnue.
         if (is_string($procedures) && ! in_array($procedures, ['Non', 'Oui', ''], true)) {
             return match (true) {
                 str_contains($procedures, 'Liquidation') => LegalStatus::LIQUIDATION_JUDICIAIRE,
                 str_contains($procedures, 'Redressement') => LegalStatus::REDRESSEMENT_JUDICIAIRE,
                 str_contains($procedures, 'Sauvegarde') => LegalStatus::SAUVEGARDE,
-                default => LegalStatus::SAUVEGARDE,
+                default => null,
             };
         }
 
-        if ($etat === 'C') {
-            return LegalStatus::CESSATION;
+        // Entreprise active et sans procédure : sain.
+        if ($etat === 'A' && in_array($procedures, ['Non', ''], true)) {
+            return LegalStatus::SAIN;
         }
 
-        return LegalStatus::SAIN;
+        // Champ absent ou valeur inexploitable : statut non vérifié.
+        return null;
     }
 }
