@@ -14,7 +14,7 @@ Ce module est la mémoire de votre entreprise concernant vos relations externes.
 
 Le module Tiers centralise la gestion de vos contacts B2B et B2C :
 
-- [Référentiel CRM & Conformité](./01-referentiel-crm-et-conformite.md) : Découvrez comment Batistack s'interface avec les bases de l'État pour auto-remplir les fiches d'entreprises, vérifier leur solvabilité et collecter les documents légaux.
+- [Référentiel CRM & Conformité](./01-referentiel-crm-et-conformite.md) : Découvrez comment Batistack s'interface avec les bases de l'État pour auto-remplir les fiches d'entreprises, vérifier leur solvabilité, bloquer la contractualisation avec les entreprises à risque et collecter les documents légaux.
 - [Portails B2B & Sous-Traitants](./02-portails-b2b-et-sous-traitants.md) : Explorez le portail dédié à vos sous-traitants pour la gestion des appels d'offres, des signatures de contrats et du dépôt de leurs factures.
 
 > [!TIP]

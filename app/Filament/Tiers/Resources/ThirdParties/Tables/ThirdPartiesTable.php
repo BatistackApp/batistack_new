@@ -55,20 +55,12 @@ class ThirdPartiesTable
                     ->formatStateUsing(fn ($state) => $state !== null ? $state.'/100' : 'N/A')
                     ->sortable(),
 
-                TextColumn::make('financial_status')
+                TextColumn::make('legal_status')
                     ->label('Santé Financière')
                     ->badge()
-                    ->color(fn ($state) => match ($state) {
-                        'Sain' => 'success',
-                        'Procédure Collective' => 'warning',
-                        'Cessation', 'Liquidation' => 'danger',
-                        default => 'gray',
-                    })
-                    ->icon(fn ($state) => match ($state) {
-                        'Sain' => Phosphor::CheckCircle,
-                        'Cessation', 'Liquidation' => Phosphor::XCircle,
-                        default => Phosphor::Warning,
-                    })
+                    ->formatStateUsing(fn ($state) => $state ? $state->getLabel() : 'Non vérifié')
+                    ->color(fn ($state) => $state ? $state->getColor() : 'gray')
+                    ->icon(fn ($state) => $state ? $state->getIcon() : Phosphor::Warning)
                     ->sortable()
                     ->toggleable(),
 
