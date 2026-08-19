@@ -7,6 +7,7 @@ use App\Enums\Commerce\DeliveryStatus;
 use App\Enums\Commerce\InvoiceStatus;
 use App\Enums\Commerce\OrderStatus;
 use App\Enums\Commerce\QuoteStatus;
+use App\Enums\Tiers\LegalStatus;
 use App\Models\Articles\Item;
 use App\Models\Chantiers\Chantier;
 use App\Models\Commerce\PurchaseOrder;
@@ -56,6 +57,36 @@ describe('PurchaseService - convertRequestToOrder', function () {
             ->and($order->supplier_id)->toBe($this->supplier->id)
             ->and($order->status)->toBe(OrderStatus::CONFIRMED)
             ->and($order->reference)->toBe('BC-2026-001');
+    });
+
+    test('bloque la conversion pour un fournisseur en liquidation', function () {
+        $supplier = ThirdParty::factory()->state([
+            'type' => 'supplier',
+            'legal_status' => LegalStatus::LIQUIDATION_JUDICIAIRE,
+        ])->create();
+
+        $request = PurchaseRequest::factory()->create([
+            'supplier_id' => $supplier->id,
+            'status' => QuoteStatus::SENT,
+        ]);
+
+        $this->service->convertRequestToOrder($request);
+    })->throws(\DomainException::class);
+
+    test('ne bloque pas un fournisseur sain', function () {
+        $supplier = ThirdParty::factory()->state([
+            'type' => 'supplier',
+            'legal_status' => LegalStatus::SAIN,
+        ])->create();
+
+        $request = PurchaseRequest::factory()->create([
+            'supplier_id' => $supplier->id,
+            'status' => QuoteStatus::SENT,
+        ]);
+
+        $order = $this->service->convertRequestToOrder($request);
+
+        expect($order)->toBeInstanceOf(PurchaseOrder::class);
     });
 
     test('marque la demande comme signée', function () {

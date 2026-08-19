@@ -11,6 +11,15 @@ Vous retrouverez ici la liste exhaustive des nouveautés, améliorations et corr
 
 ---
 
+## 📌 Version 0.33.0 (Août 2026)
+
+### 🌟 Meilleure Feature : Score de Solvabilité / Risque Financier (Issue #294)
+Batistack interroge désormais l'API publique ouverte `recherche-entreprises.api.gouv.fr` pour afficher le **statut juridique** de vos tiers et **bloquer la contractualisation** avec les entreprises à risque.
+*   **Statut juridique granulaire** : Sauvegarde, Redressement judiciaire, Liquidation judiciaire, Cessation ou Sain (badge coloré sur la fiche et dans la liste des Tiers).
+*   **Garde-fou de contractualisation** : blocage dur (notification rouge) pour les entreprises en redressement ou liquidation lors de la génération d'un contrat de sous-traitance, de la création d'un bon de commande ou de l'affectation d'un sous-traitant à un chantier. Avertissement (orange) pour les situations à surveiller (sauvegarde, cessation, statut non vérifié).
+
+---
+
 ## 📌 Version 0.32.0 (Août 2026)
 
 ### 🌟 Meilleure Feature : Portail Client SAV & Maintenance

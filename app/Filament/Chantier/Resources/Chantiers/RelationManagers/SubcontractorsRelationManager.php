@@ -2,6 +2,7 @@
 
 namespace App\Filament\Chantier\Resources\Chantiers\RelationManagers;
 
+use App\Enums\Tiers\LegalStatus;
 use App\Enums\Tiers\ThirdPartyType;
 use App\Models\Tiers\ThirdParty;
 use App\Services\Tiers\VigilanceService;
@@ -39,11 +40,25 @@ class SubcontractorsRelationManager extends RelationManager
                     ->getStateUsing(fn (ThirdParty $record) => app(VigilanceService::class)->scanCompliance($record)['compliant'] ? 'À jour' : 'Expiré')
                     ->badge()
                     ->color(fn ($state) => $state === 'À jour' ? 'success' : 'danger'),
+                TextColumn::make('legal_status')
+                    ->label('Santé Financière')
+                    ->badge()
+                    ->formatStateUsing(fn ($state) => $state ? $state->getLabel() : 'Non vérifié')
+                    ->color(fn ($state) => $state ? $state->getColor() : 'gray')
+                    ->icon(fn ($state) => $state ? $state->getIcon() : Phosphor::Warning),
             ])
             ->headerActions([
                 AttachAction::make()
                     ->label('Ajouter un sous-traitant')
-                    ->recordSelectOptionsQuery(fn ($query) => $query->where('type', ThirdPartyType::SUBCONTRACTOR)),
+                    ->recordSelectOptionsQuery(fn ($query) => $query
+                        ->where('type', ThirdPartyType::SUBCONTRACTOR)
+                        ->where(function ($q) {
+                            $q->whereNull('legal_status')
+                                ->orWhereNotIn('legal_status', [
+                                    LegalStatus::REDRESSEMENT_JUDICIAIRE->value,
+                                    LegalStatus::LIQUIDATION_JUDICIAIRE->value,
+                                ]);
+                        })),
             ])
             ->recordActions([
                 DetachAction::make()->label('Retirer'),

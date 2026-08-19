@@ -5,6 +5,7 @@ namespace App\Filament\Tiers\Resources\ThirdParties\Actions;
 use App\Enums\Tiers\ThirdPartyType;
 use App\Models\Tiers\ThirdParty;
 use App\Models\Tiers\ThirdPartyDocument;
+use App\Services\Tiers\ContractingGuardService;
 use App\Services\Tiers\TiersDocumentService;
 use Filament\Actions\Action;
 use Filament\Schemas\Schema;
@@ -21,6 +22,27 @@ class GenerateContractAction
             ->icon(Phosphor::FileText)
             ->visible(fn (ThirdParty $record) => $record->type === ThirdPartyType::SUBCONTRACTOR)
             ->action(function (ThirdParty $record, TiersDocumentService $service) {
+                $guard = app(ContractingGuardService::class);
+                $check = $guard->check($record);
+
+                if ($check['blocked']) {
+                    \Filament\Notifications\Notification::make()
+                        ->title('Contrat bloqué')
+                        ->body($check['reason'])
+                        ->danger()
+                        ->send();
+
+                    return;
+                }
+
+                if ($check['warned']) {
+                    \Filament\Notifications\Notification::make()
+                        ->title('Avertissement')
+                        ->body($check['reason'])
+                        ->warning()
+                        ->send();
+                }
+
                 $relativePath = $service->generateContract($record);
                 $absolutePath = \Illuminate\Support\Facades\Storage::disk('public')->path($relativePath);
 
