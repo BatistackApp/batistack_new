@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\Tiers\LegalStatus;
 use App\Models\Tiers\ThirdParty;
 use App\Services\Tiers\PappersService;
 use Illuminate\Support\Facades\Http;
@@ -116,4 +117,68 @@ it('catches exception and returns false', function () {
     $result = $service->syncFinancialData($thirdParty);
 
     expect($result)->toBeFalse();
+});
+
+it('detects a sauvegarde as legal_status', function () {
+    $thirdParty = ThirdParty::factory()->create(['siren' => '111222333']);
+
+    Http::fake([
+        'recherche-entreprises.api.gouv.fr/*' => Http::response([
+            'results' => [
+                ['etat_administratif' => 'A', 'procedures_collectives' => 'Sauvegarde'],
+            ],
+        ], 200),
+    ]);
+
+    app(PappersService::class)->syncFinancialData($thirdParty);
+
+    expect($thirdParty->refresh()->legal_status)->toBe(LegalStatus::SAUVEGARDE);
+});
+
+it('detects a redressement judiciaire as legal_status', function () {
+    $thirdParty = ThirdParty::factory()->create(['siren' => '222333444']);
+
+    Http::fake([
+        'recherche-entreprises.api.gouv.fr/*' => Http::response([
+            'results' => [
+                ['etat_administratif' => 'A', 'procedures_collectives' => 'Redressement judiciaire'],
+            ],
+        ], 200),
+    ]);
+
+    app(PappersService::class)->syncFinancialData($thirdParty);
+
+    expect($thirdParty->refresh()->legal_status)->toBe(LegalStatus::REDRESSEMENT_JUDICIAIRE);
+});
+
+it('detects a liquidation judiciaire as legal_status', function () {
+    $thirdParty = ThirdParty::factory()->create(['siren' => '333444555']);
+
+    Http::fake([
+        'recherche-entreprises.api.gouv.fr/*' => Http::response([
+            'results' => [
+                ['etat_administratif' => 'A', 'procedures_collectives' => 'Liquidation judiciaire'],
+            ],
+        ], 200),
+    ]);
+
+    app(PappersService::class)->syncFinancialData($thirdParty);
+
+    expect($thirdParty->refresh()->legal_status)->toBe(LegalStatus::LIQUIDATION_JUDICIAIRE);
+});
+
+it('detects a cessation as legal_status when there is no collective procedure', function () {
+    $thirdParty = ThirdParty::factory()->create(['siren' => '444555666']);
+
+    Http::fake([
+        'recherche-entreprises.api.gouv.fr/*' => Http::response([
+            'results' => [
+                ['etat_administratif' => 'C', 'procedures_collectives' => 'Non'],
+            ],
+        ], 200),
+    ]);
+
+    app(PappersService::class)->syncFinancialData($thirdParty);
+
+    expect($thirdParty->refresh()->legal_status)->toBe(LegalStatus::CESSATION);
 });

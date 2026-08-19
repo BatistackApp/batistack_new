@@ -7,6 +7,7 @@ use App\Models\Chantiers\Chantier;
 use App\Models\Commerce\CustomerInvoice;
 use App\Models\Commerce\SupplierInvoice;
 use App\Models\Tiers\ThirdParty;
+use App\Services\Tiers\ContractingGuardService;
 use Filament\Infolists\Components\IconEntry;
 use Filament\Infolists\Components\RepeatableEntry;
 use Filament\Infolists\Components\TextEntry;
@@ -150,6 +151,15 @@ class ThirdPartyInfolist
                             ->schema([
                                 Grid::make()
                                     ->schema([
+                                        TextEntry::make('legal_status')
+                                            ->label('Statut Juridique')
+                                            ->badge()
+                                            ->formatStateUsing(fn (ThirdParty $record) => $record->legal_status ? $record->legal_status->getLabel() : 'Non vérifié')
+                                            ->color(fn (ThirdParty $record) => $record->legal_status ? $record->legal_status->getColor() : 'gray')
+                                            ->icon(fn (ThirdParty $record) => $record->legal_status ? $record->legal_status->getIcon() : Phosphor::Warning)
+                                            ->hint(fn (ThirdParty $record) => app(ContractingGuardService::class)->reason($record) ?? 'Aucune restriction')
+                                            ->hintColor(fn (ThirdParty $record) => app(ContractingGuardService::class)->blocked($record) ? 'danger' : (app(ContractingGuardService::class)->warned($record) ? 'warning' : 'success')),
+
                                         IconEntry::make('financial_status')
                                             ->label('Etat Financier')
                                             ->icon(function (ThirdParty $record) {

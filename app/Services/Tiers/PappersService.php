@@ -2,6 +2,7 @@
 
 namespace App\Services\Tiers;
 
+use App\Enums\Tiers\LegalStatus;
 use App\Models\Tiers\ThirdParty;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -52,6 +53,7 @@ class PappersService
 
                 $thirdParty->update([
                     'financial_status' => $status,
+                    'legal_status' => $this->determineLegalStatus($financialData),
                     'financial_data' => $financialData,
                     'last_financial_sync_at' => Carbon::now(),
                 ]);
@@ -65,5 +67,30 @@ class PappersService
         }
 
         return false;
+    }
+
+    /**
+     * Détermine le statut juridique granulaire (Sain / Sauvegarde / Redressement /
+     * Liquidation / Cessation) à partir des procédures collectives et de l'état administratif.
+     */
+    protected function determineLegalStatus(array $financialData): LegalStatus
+    {
+        $procedures = $financialData['procedures_collectives'] ?? 'Non';
+        $etat = $financialData['etat_administratif'] ?? 'Actif';
+
+        if (is_string($procedures) && ! in_array($procedures, ['Non', 'Oui', ''], true)) {
+            return match (true) {
+                str_contains($procedures, 'Liquidation') => LegalStatus::LIQUIDATION_JUDICIAIRE,
+                str_contains($procedures, 'Redressement') => LegalStatus::REDRESSEMENT_JUDICIAIRE,
+                str_contains($procedures, 'Sauvegarde') => LegalStatus::SAUVEGARDE,
+                default => LegalStatus::SAUVEGARDE,
+            };
+        }
+
+        if ($etat === 'C') {
+            return LegalStatus::CESSATION;
+        }
+
+        return LegalStatus::SAIN;
     }
 }

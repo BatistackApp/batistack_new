@@ -2,6 +2,7 @@
 
 namespace App\Models\Tiers;
 
+use App\Enums\Tiers\LegalStatus;
 use App\Enums\Tiers\ThirdPartyType;
 use App\Models\Chantiers\Chantier;
 use App\Models\Commerce\CustomerQuote;
@@ -42,6 +43,7 @@ class ThirdParty extends Model implements HasMedia
         'bic',
         'supplier_score',
         'financial_status',
+        'legal_status',
         'financial_data',
         'last_financial_sync_at',
     ];
@@ -56,6 +58,7 @@ class ThirdParty extends Model implements HasMedia
             'credit_limit' => 'decimal:2',
             'compliant_status' => 'array',
             'financial_data' => 'array',
+            'legal_status' => LegalStatus::class,
             'supplier_score' => 'integer',
         ];
     }

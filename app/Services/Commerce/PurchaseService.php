@@ -11,6 +11,8 @@ use App\Models\Commerce\PurchaseRequest;
 use App\Models\Commerce\ReceiptNote;
 use App\Models\Commerce\SupplierCreditNote;
 use App\Models\Commerce\SupplierInvoice;
+use App\Models\Tiers\ThirdParty;
+use App\Services\Tiers\ContractingGuardService;
 use DB;
 
 class PurchaseService
@@ -22,6 +24,13 @@ class PurchaseService
      */
     public function convertRequestToOrder(PurchaseRequest $request): PurchaseOrder
     {
+        $guard = app(ContractingGuardService::class);
+        $supplier = ThirdParty::find($request->supplier_id);
+
+        if ($supplier && $guard->blocked($supplier)) {
+            throw new \DomainException($guard->reason($supplier));
+        }
+
         return DB::transaction(function () use ($request) {
             $request->update(['status' => QuoteStatus::SIGNED]);
 
