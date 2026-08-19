@@ -21,7 +21,7 @@ Le module **Banque** gère la trésorerie de l'entreprise. Il permet de connecte
 *   **Synchronisation et Import** : `StatementImportService` supporte l'import manuel (CSV/QIF).
 *   **Moteur d'Intelligence** : 
     *   `TransactionCategorizationService` : Catégorise automatiquement les lignes selon le libellé.
-    *   `ReconciliationService` : Moteur de suggestion intelligent qui attribue un score de pertinence pour matcher une transaction avec une Facture ou un Ticket de Frais (Carte Corporate) (Issue #143).
+    *   `ReconciliationService` : Moteur de suggestion intelligent qui attribue un score de pertinence pour matcher une transaction avec une Facture, un Ticket de Frais (Carte Corporate, Issue #143) ou une Fiche de Paie (**Appariement RH**, Issues #123, #220).
 *   **Trésorerie** : `CashFlowForecastService` (Moteur pour calculer et projeter les flux de trésorerie).
 *   **Export SEPA** : Génération de fichiers de virement SEPA pour le paiement groupé des notes de frais validées et **des factures fournisseurs** (Issue #142, #218).
 
@@ -43,8 +43,7 @@ Le module **Banque** gère la trésorerie de l'entreprise. Il permet de connecte
 *   **Vérification des Tokens Bridge (DSP2)** : Commande (`CheckBridgeTokensCommand`) planifiée quotidiennement pour vérifier l'expiration des tokens bancaires Open Banking et notifier l'administrateur financier de se réauthentifier 5 jours avant l'échéance. (Issue #217)
 
 ## 🚧 Ce qu'il reste à faire
-*   Le module est fondamentalement complet, bien que les fonctionnalités ci-dessous puissent être implémentées.
+*   Le module est fondamentalement complet. Le **module « Comptabilité » complet** reste à construire (génération des écritures comptables et exports standards pour l'expert-comptable).
 
 ## 💡 Idées d'amélioration et Nouvelles Fonctionnalités
-*   **Lettrage Automatique des Paies (Appariement RH)** : Interconnecter le moteur de rapprochement avec le module RH pour lettrer automatiquement les flux "Salaires" avec les fiches de paie générées.
-*   **Module "Comptabilité" complet** : (Mis en attente) Prévoir à terme la création d'un module dédié pour générer les écritures comptables et les exports standards (FEC, Sage, Cegid, etc.) destinés à l'expert-comptable.
+*   **Module "Comptabilité" complet** : (en attente) Générer les écritures comptables depuis les transactions bancaires et produire les exports standards (FEC complet, Sage, Cegid). Seuls des exports partiels existent aujourd'hui : FEC des amortissements (`FecExportService`) et écritures de paie en OD (`AccountingExportService`) — aucun n'est raccordé au module Banque.

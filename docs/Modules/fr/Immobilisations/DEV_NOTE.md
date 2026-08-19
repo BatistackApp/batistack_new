@@ -18,6 +18,7 @@ Le module **Immobilisations** permet la gestion du patrimoine de l'entreprise (m
 
 ### 2. Logique Métier & Services (`app/Services/Immobilisation`)
 *   **Comptabilité** : `DepreciationCalculatorService` pour le calcul automatisé des dotations avec gestion du prorata temporis. Recalcul dynamique en cas de dépréciation exceptionnelle (lissage de la VNC). `AssetDisposalService` pour le calcul de la plus-value/moins-value de cession.
+*   **Subventions d'Investissement (Issue #138)** : Champs `grant_amount` / `grant_name` sur `FixedAsset` avec suivi de la reprise de subvention au même rythme que l'amortissement (Norme PCG) intégré au tableau d'amortissement (`DepreciationCalculatorService::applyGrantToSchedule`).
 *   **Imputation Analytique** : Consolidation automatique des coûts d'amortissement et des factures de réparation directement dans la marge brute du chantier concerné.
 *   **Génération de Documents** : `ImmobilisationDocumentService` générant des plaquettes PDF avec **QR Codes** pour l'étiquetage physique et l'inventaire rapide via smartphone.
 *   **Export FEC** : Service d'export générant un fichier TXT respectant les 18 colonnes de la DGFiP avec déduction des comptes (28...).
@@ -49,7 +50,7 @@ Le module **Immobilisations** permet la gestion du patrimoine de l'entreprise (m
 *   **Tests** : `AssetMaintenanceTicketTest` (15 tests) + extensions `ImmobilisationDocumentServiceTest`.
 
 ## 🚧 Ce qu'il reste à faire
-*   L'essentiel du module et la connectivité avec la DGFiP (FEC) sont terminés et robustes.
+*   **OCR (Issue #137)** : `OcrServiceInterface` n'est **pas lié** au service concret `GoogleCloudVisionOcrService` dans le conteneur → `app(OcrServiceInterface::class)` (`FixedAssetForm.php:33`) lève une erreur à l'upload d'une facture. Ajouter le binding (service provider).
 
 ## 💡 Idées d'amélioration et Nouvelles Fonctionnalités
-*   *Aucune idée d'amélioration pour le moment.*
+*   **Subventions (Issue #138)** : Option de déduction de la subvention de la **base amortissable** (`baseValue`) en plus de la reprise proportionnelle actuellement implémentée (méthode alternative à la norme PCG).
