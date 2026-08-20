@@ -59,9 +59,8 @@ Le cœur regorge de services essentiels déjà implémentés et fonctionnels :
 
 ## 🚧 Ce qu'il reste à faire
 *   Le module Core sert de socle pour l'ensemble du système. Sa maintenance se fait en continu à mesure que les autres modules évoluent.
-*   **Dashboard** : Personnalisation avancée du Dashboard de base (Widgets, KPI transverses).
+*   **Dashboard (Issue #185)** : Les widgets avancés (`laboiteacode`) sont implémentés et affichés sur le Dashboard par défaut (via `discoverWidgets`), mais **aucune page Dashboard personnalisée** n'existe (le panel utilise le `Dashboard::class` par défaut). Une page dédiée permettrait une disposition optimisée (KPIs en haut, listes d'alertes en pleine largeur).
 
 ## 💡 Idées d'amélioration et Nouvelles Fonctionnalités
 *   **Gestion Documentaire Complète** : Interface d'arborescence GED pour visualiser et classer facilement tous les PDF générés par le `DocumentService`.
-*   **Workflow Approbations Multiples** : Permettre d'avoir plusieurs signataires sur un même document via le `SignatureService`.
-*   **Refonte du Dashboard (Widgets Avancés)** : Intégrer le package `laboiteacode/filament-dashboard-widgets` pour ajouter des widgets professionnels sur le panel Core (Suivi des limites d'APIs externes, tendance des signatures numériques sur 30 jours, jauge de progression de l'onboarding et logs des dernières activités critiques).
+*   **Workflow Approbations Multiples** : Permettre d'avoir plusieurs signataires sur un même document via le `SignatureService` (actuellement **un seul** signataire : `Signature.user_id`, `SignatureProviderInterface` à email unique, `DocusealProvider` avec un seul `submitter`).

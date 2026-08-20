@@ -52,4 +52,5 @@ Le module **Ressources Humaines (RH)** est l'un des piliers centraux de Batistac
 *   **100% de succès** sur la suite massive de plus de 130 tests PestPHP. Toutes les fonctionnalités de base et avancées (y compris l'analytique et l'OCR) sont couvertes.
 
 ## 🚧 Ce qu'il reste à faire
+*   **Dashboard RH (Issue #196)** : `PendingHrActionsDetailWidget.php:11` importe `App\Filament\RH\Resources\AbscenceResource`, **classe inexistante** (les absences sont gérées via le RelationManager d'`EmployeeResource`, pas via une ressource autonome) → crash du widget quand une absence est en attente. Corriger l'import/URL (pointer vers `EmployeeResource` ou le RM dédié).
 *   Le module est fonctionnellement très abouti et couvre tous les besoins RH classiques et avancés. Il est en phase de maintenance/amélioration continue.
