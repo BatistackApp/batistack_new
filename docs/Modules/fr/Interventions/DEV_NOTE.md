@@ -29,6 +29,7 @@ Le module **Interventions** permet la gestion complète du service après-vente 
 ### 4. Interface Utilisateur (Filament)
 *   **Espace Administrateur** : Panel complet pour la gestion, l'édition, le suivi du déstockage et la génération de factures (via PanelSwitch).
 *   **Espace Technicien SAV** : Panel dédié et sécurisé (`/technicien`) protégé par le middleware `EnsureUserIsTechnician`. L'interface est simplifiée, restreinte aux interventions assignées ("Planifiée" ou supérieur). Les données financières y sont masquées en lecture seule.
+*   **Application Mobile Technicien (PWA / Offline, Issue #151)** : Page `OfflineInterventions` (slug `interventions-offline`) utilisant **Dexie (IndexedDB)** avec file d'attente de sync (statuts, matériaux, photos, GPS), détection `navigator.onLine` et API `/api/technicien/sync` (`TechnicienSyncController`). PWA : `public/manifest.json`, `public/sw.js` (workbox-precaching).
 *   **Signature Client** : Intégration du composant de signature électronique (`filament-autograph`) directement en action sur la table. Toute modification ultérieure invalide automatiquement la signature (génération d'un Token UUID pour scellement cryptographique).
 *   **QR Code Matériel** : Intégration d'un scanner permettant d'ajouter rapidement des pièces détachées directement depuis le camion via un smartphone.
 *   **Dashboard SAV (Widgets Avancés)** : Intégration de `laboiteacode/filament-dashboard-widgets` pour afficher la rentabilité du SAV (Variance), le respect des SLA (Goal), l'entonnoir des interventions (Funnel) et les alertes urgentes (Detail List).
@@ -61,7 +62,8 @@ Le module **Interventions** permet la gestion complète du service après-vente 
 *   Couverture robuste avec PestPHP. L'intégralité de la logique métier (gestion, facturation, maintenance prédictive, optimisation d'itinéraire), du déstockage automatique, de la facturation, des signatures, et des contraintes d'intégrité passe avec succès (100% de réussite). Les composants mineurs et les observers sont également couverts.
 
 ## 🚧 Ce qu'il reste à faire
-*   Le socle initial du module est terminé et opérationnel, y compris avec les signatures cryptographiques et le portail client SAV.
+*   **Tracking GPS des camions (Issue #152)** : La capture GPS existe dans la page offline (`captureGPS()` → opération `UPDATE_GPS` en file) mais le handler serveur **jette les données** (`TechnicienSyncController::updateGPS`, lignes 132-134) : aucune colonne `latitude`/`longitude` sur `Intervention`, aucun modèle de position véhicule. Le socle du module est terminé et opérationnel, y compris avec les signatures cryptographiques et le portail client SAV.
 
 ## 💡 Idées d'amélioration et Nouvelles Fonctionnalités
+*   *(Aucune idée d'amélioration pour le moment.)*
 
