@@ -1,13 +1,16 @@
 <?php
 
 use App\Enums\Articles\ItemType;
+use App\Enums\Articles\StockMouvementSource;
 use App\Enums\Core\UnitType;
 use App\Enums\Gpao\ManufacturingStatus;
 use App\Models\Articles\Item;
+use App\Models\Articles\Warehouse;
 use App\Models\Core\Unit;
+use App\Models\Core\VatRate;
 use App\Models\Gpao\ManufacturingOrder;
 use App\Models\User;
-use App\Services\Articles\InventoryService;
+use App\Services\Articles\StockService;
 use App\Services\Gpao\ManufacturingScrapService;
 
 beforeEach(function () {
@@ -17,8 +20,8 @@ beforeEach(function () {
         'name' => 'Unit',
         'type' => UnitType::UNIT,
     ]);
-    
-    $vat = \App\Models\Core\VatRate::create(['name' => 'TVA', 'rate' => 20]);
+
+    $vat = VatRate::create(['name' => 'TVA', 'rate' => 20]);
 
     $this->item = Item::create([
         'reference' => 'IT-SCRAP',
@@ -37,18 +40,22 @@ beforeEach(function () {
 
     $this->user = User::factory()->create();
 
-    $this->inventoryServiceMock = Mockery::mock(InventoryService::class);
-    $this->service = new ManufacturingScrapService($this->inventoryServiceMock);
+    $this->warehouse = Warehouse::create([
+        'name' => 'Dépôt Test',
+    ]);
+
+    $this->stockServiceMock = Mockery::mock(StockService::class);
+    $this->service = new ManufacturingScrapService($this->stockServiceMock);
 });
 
 it('declares scrap successfully and decreases stock', function () {
     $quantity = 2.5;
-    
-    // On s'attend à ce que le service d'inventaire décrémente le stock
-    $this->inventoryServiceMock
-        ->shouldReceive('decreaseStock')
+
+    // On s'attend à ce que le service de stock sorte la quantité rebutée
+    $this->stockServiceMock
+        ->shouldReceive('exit')
         ->once()
-        ->with($this->item, $quantity, Mockery::type('string'));
+        ->with($this->item, Mockery::type(Warehouse::class), $quantity, Mockery::type('string'), StockMouvementSource::SCRAP, Mockery::type('int'));
 
     $scrap = $this->service->declareScrap(
         $this->order,
@@ -69,7 +76,7 @@ it('declares scrap successfully and decreases stock', function () {
 });
 
 it('throws exception if quantity is negative', function () {
-    $this->inventoryServiceMock->shouldNotReceive('decreaseStock');
+    $this->stockServiceMock->shouldNotReceive('exit');
 
     expect(fn () => $this->service->declareScrap(
         $this->order,
@@ -80,7 +87,7 @@ it('throws exception if quantity is negative', function () {
 });
 
 it('throws exception if quantity is zero', function () {
-    $this->inventoryServiceMock->shouldNotReceive('decreaseStock');
+    $this->stockServiceMock->shouldNotReceive('exit');
 
     expect(fn () => $this->service->declareScrap(
         $this->order,
