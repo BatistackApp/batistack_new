@@ -5,6 +5,7 @@ use App\Enums\Articles\StockMouvementSource;
 use App\Enums\Core\UnitType;
 use App\Enums\Gpao\ManufacturingStatus;
 use App\Models\Articles\Item;
+use App\Models\Articles\Stock;
 use App\Models\Articles\Warehouse;
 use App\Models\Core\Unit;
 use App\Models\Core\VatRate;
@@ -42,20 +43,35 @@ beforeEach(function () {
 
     $this->warehouse = Warehouse::create([
         'name' => 'Dépôt Test',
+        'is_active' => true,
     ]);
 
     $this->stockServiceMock = Mockery::mock(StockService::class);
     $this->service = new ManufacturingScrapService($this->stockServiceMock);
 });
 
-it('declares scrap successfully and decreases stock', function () {
+it('declares scrap successfully and decreases stock in the resolved warehouse', function () {
     $quantity = 2.5;
 
-    // On s'attend à ce que le service de stock sorte la quantité rebutée
+    Stock::create([
+        'item_id' => $this->item->id,
+        'warehouse_id' => $this->warehouse->id,
+        'quantity' => 100,
+    ]);
+
+    // On s'attend à ce que le service de stock sorte la quantité rebutée depuis le dépôt exact résolu
     $this->stockServiceMock
         ->shouldReceive('exit')
         ->once()
-        ->with($this->item, Mockery::type(Warehouse::class), $quantity, Mockery::type('string'), StockMouvementSource::SCRAP, Mockery::type('int'));
+        ->withArgs(function (Item $item, Warehouse $warehouse, float $qty, string $reason, $source, int $refId) use ($quantity) {
+            expect($item->is($this->item))->toBeTrue();
+            expect($warehouse->is($this->warehouse))->toBeTrue();
+            expect($qty)->toEqual($quantity);
+            expect($source)->toBe(StockMouvementSource::SCRAP);
+            expect($refId)->toBeInt();
+
+            return true;
+        });
 
     $scrap = $this->service->declareScrap(
         $this->order,
@@ -73,6 +89,45 @@ it('declares scrap successfully and decreases stock', function () {
     expect($scrap->reported_by_id)->toEqual($this->user->id);
     expect($scrap->manufacturing_order_id)->toEqual($this->order->id);
     expect($scrap->item_id)->toEqual($this->item->id);
+});
+
+it('resolves the active warehouse that actually has available stock among several', function () {
+    $quantity = 5;
+
+    $warehouseWithStock = Warehouse::create([
+        'name' => 'Dépôt avec stock',
+        'is_active' => true,
+    ]);
+    Stock::create([
+        'item_id' => $this->item->id,
+        'warehouse_id' => $warehouseWithStock->id,
+        'quantity' => 50,
+    ]);
+
+    $warehouseWithoutStock = Warehouse::create([
+        'name' => 'Dépôt sans stock',
+        'is_active' => true,
+    ]);
+    Stock::create([
+        'item_id' => $this->item->id,
+        'warehouse_id' => $warehouseWithoutStock->id,
+        'quantity' => 0,
+    ]);
+
+    $this->stockServiceMock
+        ->shouldReceive('exit')
+        ->once()
+        ->withArgs(function (Item $item, Warehouse $warehouse, float $qty, string $reason, $source, int $refId) use ($quantity, $warehouseWithStock) {
+            expect($item->is($this->item))->toBeTrue();
+            expect($warehouse->is($warehouseWithStock))->toBeTrue();
+            expect($qty)->toEqual($quantity);
+            expect($source)->toBe(StockMouvementSource::SCRAP);
+            expect($refId)->toBeInt();
+
+            return true;
+        });
+
+    $this->service->declareScrap($this->order, $this->item, $quantity, 'machine_breakdown');
 });
 
 it('throws exception if quantity is negative', function () {

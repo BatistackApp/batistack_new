@@ -49,8 +49,5 @@ Le module **Immobilisations** permet la gestion du patrimoine de l'entreprise (m
 *   **Triage Dépôt** : Resource `AssetMaintenanceTickets` dans le panel Immobilisations (filtres statut/gravité/type, actions workflow).
 *   **Tests** : `AssetMaintenanceTicketTest` (15 tests) + extensions `ImmobilisationDocumentServiceTest`.
 
-## 🚧 Ce qu'il reste à faire
-*   **OCR (Issue #137)** : `OcrServiceInterface` n'est **pas lié** au service concret `GoogleCloudVisionOcrService` dans le conteneur → `app(OcrServiceInterface::class)` (`FixedAssetForm.php:33`) lève une erreur à l'upload d'une facture. Ajouter le binding (service provider).
-
 ## 💡 Idées d'amélioration et Nouvelles Fonctionnalités
 *   **Subventions (Issue #138)** : Option de déduction de la subvention de la **base amortissable** (`baseValue`) en plus de la reprise proportionnelle actuellement implémentée (méthode alternative à la norme PCG).

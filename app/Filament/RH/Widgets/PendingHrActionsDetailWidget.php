@@ -38,9 +38,9 @@ class PendingHrActionsDetailWidget extends DetailListWidget
                 ->url(ExpenseReportResource::getUrl('edit', ['record' => $report]));
         }
 
-        // 2. Absences à approuver (is_paid is null)
+        // 2. Absences à approuver (non payées)
         $absences = Abscence::with('employee')
-            ->whereNull('is_paid')
+            ->where('is_paid', false)
             ->orderBy('start_date', 'asc')
             ->get();
 

@@ -2,9 +2,17 @@
 
 namespace App\Services\RH;
 
+use App\Models\Core\Setting;
+use App\Models\Immobilisation\AssetCategory;
+use Carbon\Carbon;
+use Google\Cloud\Vision\V1\AnnotateFileRequest;
+use Google\Cloud\Vision\V1\BatchAnnotateFilesRequest;
 use Google\Cloud\Vision\V1\Client\ImageAnnotatorClient;
-use Illuminate\Support\Facades\Log;
+use Google\Cloud\Vision\V1\Feature;
+use Google\Cloud\Vision\V1\Feature\Type;
+use Google\Cloud\Vision\V1\InputConfig;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 
 class GoogleCloudVisionOcrService implements OcrServiceInterface
 {
@@ -44,22 +52,23 @@ class GoogleCloudVisionOcrService implements OcrServiceInterface
 
     protected function getText(string $filePath): string
     {
-        $ocrEnabled = \App\Models\Core\Setting::getValue('ocr_enabled', false);
-        $apiKey = \App\Models\Core\Setting::getValue('google_vision_api_key');
-        
-        if (!$ocrEnabled || !$apiKey) {
-            Log::warning('OCR désactivé ou clé manquante. Utilisation du texte de mock.');
-            return "BRICOMAN\n24,50\n20,42\n4,08\n15/06/2023\nMatériel Informatique\nOutillage";
+        $ocrEnabled = Setting::getValue('ocr_enabled', false);
+        $apiKey = Setting::getValue('google_vision_api_key');
+
+        if (! $ocrEnabled || ! $apiKey) {
+            Log::warning('OCR désactivé ou clé manquante. Extraction vide.');
+
+            return '';
         }
 
         // Cache optimization based on file hash to prevent double billing for same image
         $fileHash = md5_file($filePath);
-        $cacheKey = 'ocr_text_' . $fileHash;
+        $cacheKey = 'ocr_text_'.$fileHash;
 
         return Cache::remember($cacheKey, now()->addDays(7), function () use ($apiKey, $filePath) {
             try {
                 $clientConfig = [];
-                
+
                 if (str_starts_with(trim($apiKey), '{')) {
                     $clientConfig['credentials'] = json_decode($apiKey, true);
                 } else {
@@ -73,27 +82,27 @@ class GoogleCloudVisionOcrService implements OcrServiceInterface
 
                 if ($mimeType === 'application/pdf') {
                     // PDF Document Text Detection
-                    $feature = (new \Google\Cloud\Vision\V1\Feature())->setType(\Google\Cloud\Vision\V1\Feature\Type::DOCUMENT_TEXT_DETECTION);
-                    $inputConfig = (new \Google\Cloud\Vision\V1\InputConfig())
+                    $feature = (new Feature)->setType(Type::DOCUMENT_TEXT_DETECTION);
+                    $inputConfig = (new InputConfig)
                         ->setMimeType('application/pdf')
                         ->setContent($fileContent);
 
-                    $request = (new \Google\Cloud\Vision\V1\AnnotateFileRequest())
+                    $request = (new AnnotateFileRequest)
                         ->setInputConfig($inputConfig)
                         ->setFeatures([$feature])
                         ->setPages([1, 2, 3, 4, 5]);
 
-                    $batchRequest = (new \Google\Cloud\Vision\V1\BatchAnnotateFilesRequest())
+                    $batchRequest = (new BatchAnnotateFilesRequest)
                         ->setRequests([$request]);
 
                     $response = $imageAnnotator->batchAnnotateFiles($batchRequest);
                     $responses = $response->getResponses();
-                    
+
                     if (count($responses) > 0) {
                         $fileResponse = $responses[0];
                         foreach ($fileResponse->getResponses() as $pageResponse) {
                             if ($pageResponse->getFullTextAnnotation()) {
-                                $text .= $pageResponse->getFullTextAnnotation()->getText() . "\n";
+                                $text .= $pageResponse->getFullTextAnnotation()->getText()."\n";
                             }
                         }
                     }
@@ -108,7 +117,8 @@ class GoogleCloudVisionOcrService implements OcrServiceInterface
 
                 return $text;
             } catch (\Exception $e) {
-                Log::error('OCR Error: ' . $e->getMessage());
+                Log::error('OCR Error: '.$e->getMessage());
+
                 return '';
             }
         });
@@ -123,26 +133,26 @@ class GoogleCloudVisionOcrService implements OcrServiceInterface
     {
         $lines = explode("\n", $text);
 
-        $merchant = $lines[0] ?? null; 
+        $merchant = $lines[0] ?? null;
 
         preg_match('/\b(\d{2}[\/\.-]\d{2}[\/\.-]\d{4})\b/', $text, $dateMatches);
         $date = null;
-        if (!empty($dateMatches[1])) {
+        if (! empty($dateMatches[1])) {
             try {
-                $date = \Carbon\Carbon::parse(str_replace(['.', '-'], '/', $dateMatches[1]))->format('Y-m-d');
+                $date = Carbon::parse(str_replace(['.', '-'], '/', $dateMatches[1]))->format('Y-m-d');
             } catch (\Exception $e) {
             }
         }
 
         preg_match_all('/\b\d+[.,]\d{2}\b/', $text, $amountMatches);
         $amounts = [];
-        if (!empty($amountMatches[0])) {
+        if (! empty($amountMatches[0])) {
             foreach ($amountMatches[0] as $match) {
                 $amounts[] = (float) str_replace(',', '.', $match);
             }
         }
 
-        rsort($amounts); 
+        rsort($amounts);
         $amount_ttc = $amounts[0] ?? null;
         $amount_ht = null;
         $vat_amount = null;
@@ -160,7 +170,7 @@ class GoogleCloudVisionOcrService implements OcrServiceInterface
 
         $textUpper = strtoupper($text);
         $category = 'Autre';
-        
+
         $fuelKeywords = ['CARBURANT', 'ESSENCE', 'GASOIL', 'DIESEL', 'SP95', 'SP98', 'TOTAL', 'ESSO', 'SHELL', 'AVIA', 'STATION'];
         $tollKeywords = ['PEAGE', 'PÉAGE', 'AUTOROUTE', 'VINCI', 'SANEF', 'APRR', 'AREA'];
         $parkingKeywords = ['PARKING', 'STATIONNEMENT', 'INDIGO', 'Q-PARK', 'EFFIA', 'HORODATEUR'];
@@ -189,23 +199,23 @@ class GoogleCloudVisionOcrService implements OcrServiceInterface
     private function parseAssetText(string $text): array
     {
         $baseData = $this->parseText($text);
-        
+
         // On assets, we usually want the HT price as purchase_price
         $purchasePrice = $baseData['amount_ht'] ?? $baseData['amount_ttc'];
 
         // Try to match Asset Categories from the database
         $categoryId = null;
         try {
-            $categories = \App\Models\Immobilisation\AssetCategory::all();
+            $categories = AssetCategory::all();
             $textUpper = strtoupper($text);
             $words = preg_split('/\W+/', $textUpper);
-            
+
             foreach ($categories as $cat) {
                 // simple heuristic: if category name words match the text
                 $catNameUpper = strtoupper($cat->name);
-                $catWords = array_filter(preg_split('/\W+/', $catNameUpper), fn($w) => strlen($w) > 3);
-                
-                if (!empty($catWords) && count(array_intersect($catWords, $words)) > 0) {
+                $catWords = array_filter(preg_split('/\W+/', $catNameUpper), fn ($w) => strlen($w) > 3);
+
+                if (! empty($catWords) && count(array_intersect($catWords, $words)) > 0) {
                     $categoryId = $cat->id;
                     break;
                 }

@@ -35,12 +35,23 @@ it('declares scrap and records a real stock movement without mock', function () 
 
     $warehouse = Warehouse::create([
         'name' => 'Dépôt Test',
+        'is_active' => true,
     ]);
 
     $stock = Stock::create([
         'item_id' => $item->id,
         'warehouse_id' => $warehouse->id,
         'quantity' => 100,
+    ]);
+
+    $emptyWarehouse = Warehouse::create([
+        'name' => 'Dépôt sans stock',
+        'is_active' => true,
+    ]);
+    Stock::create([
+        'item_id' => $item->id,
+        'warehouse_id' => $emptyWarehouse->id,
+        'quantity' => 0,
     ]);
 
     $order = ManufacturingOrder::create([
@@ -62,17 +73,23 @@ it('declares scrap and records a real stock movement without mock', function () 
     expect($scrap->id)->not->toBeNull();
     expect((float) $scrap->quantity)->toEqual($quantity);
 
-    // Le stock physique a bien été décrémenté
+    // Le stock physique a bien été décrémenté, et uniquement sur le dépôt disposant du stock
     $stock->refresh();
+    $emptyWarehouse->refresh();
     expect((float) $stock->quantity)->toEqual(93.0);
+    expect((float) $emptyWarehouse->getStockForItem($item))->toEqual(0.0);
 
     // Un mouvement de stock OUT a été créé avec la source SCRAP et la référence du rebut
-    $movement = $item->stocks()->first()->mouvements()->latest()->first();
+    $movement = $item->stocks()->where('warehouse_id', $warehouse->id)->first()->mouvements()->latest()->first();
     expect($movement)->not->toBeNull();
     expect($movement->type)->toBe(StockMouvementType::OUT);
     expect($movement->reference_type)->toBe(StockMouvementSource::SCRAP);
     expect($movement->reference_id)->toBe($scrap->id);
     expect((float) $movement->quantity_delta)->toEqual(-$quantity);
+
+    // Aucun mouvement de stock sur le dépôt sans stock
+    $emptyWarehouseStock = $item->stocks()->where('warehouse_id', $emptyWarehouse->id)->first();
+    expect($emptyWarehouseStock->mouvements()->count())->toBe(0);
 });
 
 it('throws a clear exception when no warehouse is available', function () {

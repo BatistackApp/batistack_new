@@ -39,7 +39,7 @@ Voici un aperçu de la feuille de route des prochains mois, regroupée par modul
 
 ## 🏭 Production & Logistique (GPAO, Locations)
 - **Connexion IoT (Machines Ateliers)** : Remontée directe des temps de cycle et des quantités produites depuis les machines numériques (OPC-UA) vers l'ERP.
-- **Géolocalisation du Gros Matériel (GPS)** : Pour les engins lourds loués ou en propre, remonter leur position en temps réel sur la carte du chantier via API.
+- **Géolocalisation du Gros Matériel (GPS)** : Pour les engins lourds **en propre**, remonter leur position en temps réel sur la carte du chantier via API.
 
 ## 🚜 Location (Gestion du Matériel)
 - **Suivi Géolocalisé du matériel loué** : Remonter la position du gros matériel équipé de capteurs GPS (via API externe) sur la fiche `RentalContract`.

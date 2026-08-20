@@ -34,11 +34,10 @@ Le module **Commerce** couvre l'intégralité du cycle de vente et d'achat de l'
 *   **Workflows automatisés** : Ajout de boutons d'action rapide dans les tableaux pour transformer les documents sans friction.
 *   **Lecteur de Code-barres** : Intégration du scan de code-barres dans les formulaires des Commandes Clients et Factures Fournisseurs pour identifier et insérer rapidement des lignes d'articles.
 *   **Signature Électronique Intégrée** : Bouton d'envoi de devis intégrant une demande de signature numérique (via `LocalSignatureProvider`). Le client reçoit un email, signe sur le portail public, et le devis passe automatiquement en statut `ACCEPTED` déclenchant la suite du processus (création chantier/commande).
-*   **Refonte du Dashboard Commercial** : Les widgets avancés (`laboiteacode`) sont développés (CA avec variance, entonnoir de conversion paramétrable, progression des objectifs mensuels, alertes d'impayés) mais **leur câblage sur le Dashboard n'est pas terminé** (voir « Ce qu'il reste à faire »).
+*   **Refonte du Dashboard Commercial** : Les widgets avancés (`laboiteacode`) sont développés (CA avec variance, entonnoir de conversion paramétrable, progression des objectifs mensuels, alertes d'impayés) et **câblés sur le Dashboard** via `getWidgets()` (7 widgets).
 
 ### 5. Tests
 *   Validation complète du module avec 100% de succès sur la gigantesque suite de tests PestPHP (incluant les nouvelles fonctionnalités : rapports PDF, allocations de paiements, annulations, dé-lettrages et paiements Stripe en ligne avec webhooks). Le cycle de vie complet est garanti sans faille logicielle.
 
 ## 🚧 Ce qu'il reste à faire
-*   **Dashboard Commercial (Issue #189)** : Les 7 widgets développés (`app/Filament/Commerce/Widgets/`) ne sont pas enregistrés sur le Dashboard ; la page référence en outre un `RevenueStatsWidget` inexistant (`app/Filament/Commerce/Pages/Dashboard.php:5`). Câbler `getWidgets()` et corriger l'import.
 *   Peaufiner potentiellement certains détails cosmétiques des exports PDF selon les retours utilisateurs finaux.

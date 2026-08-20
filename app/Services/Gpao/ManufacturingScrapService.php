@@ -5,6 +5,7 @@ namespace App\Services\Gpao;
 use App\Enums\Articles\StockMouvementSource;
 use App\Exceptions\Articles\ArticlesModuleException;
 use App\Models\Articles\Item;
+use App\Models\Articles\Stock;
 use App\Models\Articles\Warehouse;
 use App\Models\Gpao\ManufacturingOrder;
 use App\Models\Gpao\ManufacturingScrap;
@@ -26,10 +27,10 @@ class ManufacturingScrapService
             throw new \InvalidArgumentException('Quantity must be strictly positive.');
         }
 
-        $warehouse ??= Warehouse::first();
+        $warehouse ??= $this->resolveWarehouseWithAvailability($item, $quantity);
 
         if (! $warehouse) {
-            throw new ArticlesModuleException('Aucun dépôt disponible pour la sortie de stock du rebut.', 400);
+            throw new ArticlesModuleException('Aucun dépôt actif avec du stock disponible pour la sortie de stock du rebut.', 400);
         }
 
         return DB::transaction(function () use ($order, $item, $quantity, $reason, $notes, $reportedById, $warehouse) {
@@ -55,5 +56,19 @@ class ManufacturingScrapService
 
             return $scrap;
         });
+    }
+
+    /**
+     * Résout un dépôt actif disposant d'une disponibilité effective pour l'article.
+     */
+    protected function resolveWarehouseWithAvailability(Item $item, float $quantity): ?Warehouse
+    {
+        $stock = Stock::query()
+            ->byItem($item)
+            ->whereHas('warehouse', fn ($query) => $query->active())
+            ->get()
+            ->first(fn (Stock $stock) => $stock->getAvailableQuantity() >= $quantity);
+
+        return $stock?->warehouse;
     }
 }

@@ -11,6 +11,9 @@ Vous retrouverez ici la liste exhaustive des nouveautés, améliorations et corr
 
 ---
 
+> [!NOTE]
+> **Historique partiel** : ce journal détaille les versions jusqu'à la **v0.33.0**. Les versions suivantes (v0.34.0 → v0.38.0) sont suivies via les notes de release GitHub.
+
 ## 📌 Version 0.33.0 (Août 2026)
 
 ### 🌟 Meilleure Feature : Score de Solvabilité / Risque Financier (Issue #294)
