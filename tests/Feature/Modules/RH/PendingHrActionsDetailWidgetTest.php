@@ -60,6 +60,15 @@ it('renders the pending HR actions widget with an unpaid absence', function () {
         'is_paid' => false,
     ]);
 
+    // Une absence payée ne doit pas apparaître dans les actions en attente
+    Abscence::factory()->create([
+        'employee_id' => $employee->id,
+        'type' => AbsenceType::SICK_LEAVE,
+        'start_date' => Carbon::now()->addDays(2)->startOfDay(),
+        'end_date' => Carbon::now()->addDays(3)->endOfDay(),
+        'is_paid' => true,
+    ]);
+
     Livewire::test(PendingHrActionsDetailWidget::class)->assertOk();
 
     $details = widgetDetails(new PendingHrActionsDetailWidget);

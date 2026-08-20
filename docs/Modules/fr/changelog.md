@@ -7,7 +7,7 @@ order: 1000
 # 🆕 Changelog & Notes de Version
 
 Bienvenue dans le journal des modifications (Changelog) de Batistack.
-Vous retrouverez ici la liste exhaustive des nouveautés, améliorations et corrections apportées à votre ERP au fil du temps.
+Vous retrouverez ici les nouveautés, améliorations et corrections apportées à votre ERP et documentées au fil des versions (voir la note « Historique partiel » ci-dessous).
 
 ---
 

@@ -22,14 +22,18 @@ class ArticlesModuleException extends Exception
 
     public function render(Request $request): Response|JsonResponse
     {
+        $status = ($this->getCode() >= 400 && $this->getCode() <= 599)
+            ? $this->getCode()
+            : Response::HTTP_INTERNAL_SERVER_ERROR;
+
         if ($request->expectsJson()) {
             return new JsonResponse([
                 'message' => $this->getMessage(),
                 'code' => $this->getCode(),
-            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+            ], $status);
         }
 
-        return new Response($this->getMessage(), Response::HTTP_INTERNAL_SERVER_ERROR);
+        return new Response($this->getMessage(), $status);
     }
 
     public function __construct(string $message = '', int $code = 0, ?Throwable $previous = null)

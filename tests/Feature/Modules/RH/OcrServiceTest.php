@@ -133,6 +133,7 @@ it('returns an empty extraction when the Vision client throws', function () {
 
     $client = Mockery::mock();
     $client->shouldReceive('documentTextDetection')->andThrow(new Exception('Vision API failure'));
+    $client->shouldReceive('close');
 
     $service = new FakeOcrClientService;
     $service->client = $client;

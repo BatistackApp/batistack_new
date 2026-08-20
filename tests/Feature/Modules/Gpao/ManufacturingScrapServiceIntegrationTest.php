@@ -14,6 +14,7 @@ use App\Models\Core\VatRate;
 use App\Models\Gpao\ManufacturingOrder;
 use App\Models\User;
 use App\Services\Gpao\ManufacturingScrapService;
+use Illuminate\Http\Request;
 
 it('declares scrap and records a real stock movement without mock', function () {
     $unit = Unit::create([
@@ -121,4 +122,40 @@ it('throws a clear exception when no warehouse is available', function () {
 
     expect(fn () => $service->declareScrap($order, $item, 1, 'machine_breakdown'))
         ->toThrow(ArticlesModuleException::class, 'Aucun dépôt');
+});
+
+it('renders the no-warehouse exception as a 400 HTTP response', function () {
+    $unit = Unit::create([
+        'code' => 'U',
+        'symbol' => 'U',
+        'name' => 'Unit',
+        'type' => UnitType::UNIT,
+    ]);
+
+    $vat = VatRate::create(['name' => 'TVA', 'rate' => 20]);
+
+    $item = Item::create([
+        'reference' => 'IT-SCRAP-RENDER',
+        'name' => 'Item Scrap Render',
+        'type' => ItemType::STOCKABLE,
+        'unit_id' => $unit->id,
+        'vat_rate_id' => $vat->id,
+    ]);
+
+    $order = ManufacturingOrder::create([
+        'reference' => 'OF-SCRAP-RENDER',
+        'item_id' => $item->id,
+        'quantity_planned' => 10,
+        'status' => ManufacturingStatus::DRAFT,
+    ]);
+
+    $service = app(ManufacturingScrapService::class);
+
+    try {
+        $service->declareScrap($order, $item, 1, 'machine_breakdown');
+        $this->fail('Expected ArticlesModuleException to be thrown.');
+    } catch (ArticlesModuleException $exception) {
+        $response = $exception->render(Request::create('/'));
+        expect($response->getStatusCode())->toBe(400);
+    }
 });

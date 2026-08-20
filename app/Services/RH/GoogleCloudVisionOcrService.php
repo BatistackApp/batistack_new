@@ -62,10 +62,12 @@ class GoogleCloudVisionOcrService implements OcrServiceInterface
         }
 
         // Cache optimization based on file hash to prevent double billing for same image
-        $fileHash = md5_file($filePath);
+        $fileHash = hash_file('sha256', $filePath);
         $cacheKey = 'ocr_text_'.$fileHash;
 
         return Cache::remember($cacheKey, now()->addDays(7), function () use ($apiKey, $filePath) {
+            $imageAnnotator = null;
+
             try {
                 $clientConfig = [];
 
@@ -113,13 +115,15 @@ class GoogleCloudVisionOcrService implements OcrServiceInterface
                     $text = $annotation ? $annotation->getText() : '';
                 }
 
-                $imageAnnotator->close();
-
                 return $text;
-            } catch (\Exception $e) {
+            } catch (\Throwable $e) {
                 Log::error('OCR Error: '.$e->getMessage());
 
                 return '';
+            } finally {
+                if ($imageAnnotator !== null) {
+                    $imageAnnotator->close();
+                }
             }
         });
     }
