@@ -7,9 +7,12 @@ order: 1000
 # 🆕 Changelog & Notes de Version
 
 Bienvenue dans le journal des modifications (Changelog) de Batistack.
-Vous retrouverez ici la liste exhaustive des nouveautés, améliorations et corrections apportées à votre ERP au fil du temps.
+Vous retrouverez ici les nouveautés, améliorations et corrections apportées à votre ERP et documentées au fil des versions (voir la note « Historique partiel » ci-dessous).
 
 ---
+
+> [!NOTE]
+> **Historique partiel** : ce journal détaille les versions jusqu'à la **v0.33.0**. Les versions suivantes (v0.34.0 → v0.38.0) sont suivies via les notes de release GitHub.
 
 ## 📌 Version 0.33.0 (Août 2026)
 

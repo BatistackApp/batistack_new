@@ -55,24 +55,30 @@ Passerelle Vision 3D → Articles → Achats pour générer des commandes d'acha
 
 ---
 
-- **Mesure de distances sur la maquette** : Clic point A / Clic point B pour calculer et afficher la distance réelle entre eux.
-- **Système de calques (Layers) IFC / DXF** : Arborescence permettant de cacher/afficher des couches spécifiques (par exemple : cacher les murs, afficher la tuyauterie).
-- **Cacher temporairement un élément 3D** : Capacité de double cliquer sur un élément puis d'appuyer sur "Suppr" pour le rendre transparent/invisible pendant l'inspection.
-- **Support complet de three-dxf** : Mappage fidèle des couleurs, épaisseurs de traits, et textes des plans AutoCAD 2D.
-- **Miniature (Thumbnail) automatique** : Snapshot PNG généré en arrière-plan à l'upload pour illustrer le tableau Filament.
-- **Intégration Réalité Augmentée (AR / WebXR)** : Implémentation du support WebXR avec l'API Hit-Test native. Permet d'afficher un réticule sur les surfaces détectées par la caméra d'un smartphone et de projeter la maquette IFC dans l'environnement réel (échelle 1:1) de manière fluide et autonome par rapport à la boucle de rendu de base.
-- **Comparaison de Révisions BIM (Version Control 3D)** : Possibilité d'uploader une nouvelle version (enfant) d'une maquette IFC existante (parent) et de calculer dynamiquement le différentiel géométrique en 3D dans le navigateur (basé sur le GlobalId). Colorisation automatique (Vert = Ajouté, Orange = Modifié, Rouge fantôme = Supprimé) et toggle UI pour masquer les éléments supprimés.
-- **Détection Automatique de Collisions (Clash Detection)** : Implémentation d'un algorithme rapide de détection des collisions basé sur les boîtes englobantes (AABB). L'utilisateur sélectionne deux calques spécifiques (Types IFC, ex: Murs vs Tuyauterie) à comparer. L'UI prévisualise les intersections détectées avec des sphères violettes et permet la création en lot d'annotations `BimAnnotation` aux points de conflit via une action Filament dédiée.
+## 🎯 Viewer 3D Avancé (Août 2026 — Issues #155, #156, #157, #159, #161, #249, #250, #251)
+
+- **Mesure de distances sur la maquette (IFC)** (#155) : Clic point A / Clic point B pour calculer et afficher la distance réelle entre eux (boutons actifs en format IFC, Escape = annuler, Suppr = supprimer une mesure).
+- **Système de calques (Layers) IFC** (#156) : Arborescence spatiale IFC permettant de cacher/afficher des couches spécifiques (cacher les murs, afficher la tuyauterie). *(Pas encore géré pour les DXF.)*
+- **Cacher temporairement un élément 3D** (#157) : Double-clic sur un élément de la maquette IFC pour le masquer pendant l'inspection, avec bouton de restauration globale. *(La combinaison "Suppr" prévue à l'origine n'est pas implémentée.)*
+- **Miniature (Thumbnail) automatique** (#159) : Infrastructure en place (`GenerateBimThumbnailJob` + vue headless + colonne `thumbnail_path`) mais **pas encore branchée de bout en bout** (le job n'est pas déclenché à l'upload, pas de colonne image dans le tableau).
+- **Camera Focus au Clic** (#161) : Action "focus" sur chaque punaise du tableau → événement Livewire `focus-annotation` propagé à AlpineJS → la caméra zoome et se centre sur l'annotation (IFC et DXF).
+- **Réalité Augmentée AR / WebXR** (#249) : Session `immersive-ar` avec l'API Hit-Test native — réticule sur les surfaces détectées par la caméra du smartphone, placement de la maquette IFC à l'échelle 1:1, boucle de rendu XR dédiée.
+- **Comparaison de Révisions BIM (Version Control 3D)** (#250) : Upload d'une nouvelle version (enfant, `parent_id` + `version`) et calcul dynamique du différentiel géométrique dans le navigateur basé sur le GlobalId — colorisation automatique (Vert = Ajouté, Orange = Modifié, Rouge fantôme = Supprimé) et toggle UI pour masquer les éléments supprimés.
+- **Détection Automatique de Collisions (Clash Detection)** (#251) : Algorithme basé sur les boîtes englobantes (AABB). Sélection de deux types IFC (ex : Murs vs Tuyauterie), prévisualisation des intersections avec des sphères violettes et création en lot d'annotations `BimAnnotation` via l'action Filament `saveClashes`.
 
 ---
 
 ## ⏳ Ce qu'il reste à faire (Next Steps)
 
-- **Camera Focus au Clic** : Implémenter une fonction dans le Viewer 3D permettant de "Zoomer" ou de déplacer la caméra directement sur une punaise (annotation) cliquée depuis le tableau Filament (via un événement Livewire propagé à AlpineJS).
 - **Optimisation des chargements de gros fichiers IFC** : Le moteur `web-ifc` peut être gourmand. Il faudra éventuellement configurer un web worker (Multithreading) si de très gros modèles sont uploadés pour ne pas figer l'interface le temps du parsing géométrique.
+- **Finaliser la miniature automatique** : Déclencher `GenerateBimThumbnailJob` à l'upload, ajouter `thumbnail_path` au `$fillable` du modèle et afficher une vignette dans le tableau `BimModelResource`.
+- **Étendre les calques aux DXF** : Ajouter le parsing et la visibilité des calques DXF (aujourd'hui limités aux types IFC).
+- **Cacher un élément via la touche "Suppr"** : Compléter le double-clic par la combinaison prévue à l'origine (#157).
+- **Mesure de distances en DXF** : Étendre la mesure point A → point B aux plans AutoCAD (actuellement réservée aux IFC).
+- **Support complet de three-dxf** : Mappage fidèle des couleurs, épaisseurs de traits et textes des plans AutoCAD 2D (le rendu DXF actuel repose sur `dxf-viewer`).
 
 ---
 
 ## 💡 Idées d'améliorations et Nouvelles Fonctionnalités
-*   **Historique complet des révisions BIM** : Pouvoir remonter de V3 à V1.
+*   **Historique complet des révisions BIM** : La comparaison V1 est en place ; pouvoir naviguer dans tout l'historique (V3 → V2 → V1) et comparer deux versions arbitraires.
 *   **Filtres de collisions plus fins** : Permettre de filtrer la détection de collisions par système ou zone spatiale plutôt que simplement par calque entier.

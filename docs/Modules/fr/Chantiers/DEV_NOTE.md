@@ -44,9 +44,13 @@ Le module **Chantiers** est le cœur de la gestion de projets BTP de l'ERP. Il p
 *   **Remplissage et soumission** : Page dédiée `FillChecklistPage` convertissant les modèles JSON en formulaires natifs Filament.
 *   **Signature électronique** : Intégration de `saade/filament-autograph` pour la validation sur le terrain.
 
+### 7. Génération PPSPS & Levée des Réserves (Issues #282, #281)
+*   **PPSPS (Sécurité)** : `PpspsService` compile le Plan Particulier de Sécurité et de Protection de la Santé (tâches, matériel alloué, fiches de sécurité produits) et génère le PDF via `ChantierDocumentService::generatePpsps()` (vue `pdf/chantiers/ppsps.blade.php`, 7 sections). Actions UI sur la liste et la vue du chantier + job asynchrone.
+*   **Levée des Réserves / OPR (Snagging)** : `ChantierReserve` (statut, sévérité, assignation, échéance) géré via `ReservesRelationManager` (titre « Réserves / OPR ») avec workflow complet : création, assignation, résolution, **levée par le client avec signature électronique** (`SignaturePad`), photos/plan joints.
+
 ## 🚧 Ce qu'il reste à faire
-*   Le socle est complet. Des optimisations d'UX (ergonomie sur mobile pour les conducteurs de travaux) peuvent être affinées.
-*   **Portail Sous-Traitants (Vérification)** : Vérifier que le `SubcontractorPanel` permet bien aux sous-traitants d'interagir spécifiquement avec les tâches de chantier qui leur sont assignées et d'uploader leurs factures de situation liées à l'avancement.
+*   Le socle est complet. Les optimisations d'UX (ergonomie mobile pour les conducteurs de travaux) peuvent être affinées.
+*   **Pointage Matériel IoT (Issue #127)** : Le coût d'immobilisation du matériel est imputé au chantier, mais le **tracking physique** d'entrée/sortie du gros matériel (capteurs IoT ou QR Codes) n'est pas implémenté.
 
 ## 💡 Idées d'amélioration et Nouvelles Fonctionnalités
-*   **BIM (Building Information Modeling)** : Intégration en cours (voir module Vision 3D).
+*   **Ergonomie mobile des chantiers** : Affiner l'expérience des conducteurs de travaux sur mobile (formulaires, navigation, hors-ligne PWA).

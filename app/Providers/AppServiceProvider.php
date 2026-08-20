@@ -2,6 +2,14 @@
 
 namespace App\Providers;
 
+use App\Models\Banque\BankReconciliation;
+use App\Models\Immobilisation\FixedAsset;
+use App\Models\Locations\RentalContract;
+use App\Observers\Banque\BankReconciliationObserver;
+use App\Observers\Immobilisation\FixedAssetObserver;
+use App\Observers\Locations\RentalContractObserver;
+use App\Services\RH\GoogleCloudVisionOcrService;
+use App\Services\RH\OcrServiceInterface;
 use BezhanSalleh\PanelSwitch\PanelSwitch;
 use Carbon\CarbonImmutable;
 use Filament\Support\Facades\FilamentView;
@@ -9,6 +17,7 @@ use Filament\View\PanelsRenderHook;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 use ToneGabes\Filament\Icons\Enums\Phosphor;
@@ -20,7 +29,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->bind(OcrServiceInterface::class, GoogleCloudVisionOcrService::class);
     }
 
     /**
@@ -30,12 +39,12 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->configureDefaults();
 
-        \App\Models\Banque\BankReconciliation::observe(\App\Observers\Banque\BankReconciliationObserver::class);
-        \App\Models\Immobilisation\FixedAsset::observe(\App\Observers\Immobilisation\FixedAssetObserver::class);
-        \App\Models\Locations\RentalContract::observe(\App\Observers\Locations\RentalContractObserver::class);
+        BankReconciliation::observe(BankReconciliationObserver::class);
+        FixedAsset::observe(FixedAssetObserver::class);
+        RentalContract::observe(RentalContractObserver::class);
 
         if (app()->isProduction() || env('FORCE_HTTPS', false)) {
-            \Illuminate\Support\Facades\URL::forceScheme('https');
+            URL::forceScheme('https');
             request()->server->set('HTTPS', 'on');
         }
 
