@@ -21,8 +21,8 @@ Le module **Locations** permet de gérer l'ensemble des locations de matériel (
 *   **Scoring Fournisseurs (Issue #140)** : `RentalContractObserver::updateSupplierScore()` recalcule automatiquement `ThirdParty.supplier_score` (0-100) à partir de la moyenne des notes des contrats de location terminés (échelle 1-5 ×20).
 
 ### 3. Observers & Événements (`app/Observers/Locations`)
-*   **Automatisation (Cron)** : `ProcessRecurringRentalsCommand` (`locations:process-billing`) génère les factures périodiques — **⚠️ non planifiée dans `routes/console.php` et ne filtre pas les contrats échus** (elle facture tous les contrats actifs) (voir « Ce qu'il reste à faire »).
-*   **Alertes** : `RentalExpirationAlertJob` (échéance J-3) — **⚠️ jamais dispatché et ne fait que logger** (`Log::info` + TODO, aucune notification envoyée).
+*   **Automatisation (Cron)** : `ProcessRecurringRentalsCommand` (`locations:process-billing`) génère les factures périodiques **uniquement pour les contrats arrivant à échéance** (filtre sur `next_billing_date`) — **✅ planifiée dans `routes/console.php` (02:00)** et met à jour `next_billing_date` après facturation.
+*   **Alertes** : `RentalExpirationAlertJob` (échéance J-3) — **✅ dispatché quotidiennement (06:00)** avec notification **Filament DatabaseNotification + Email** au manager du chantier.
 *   **`RentalContractObserver`** : Assure la cohérence des statuts et le scoring fournisseur (#140).
 
 ### 4. Interface Utilisateur (Filament)
@@ -46,9 +46,10 @@ Le module **Locations** permet de gérer l'ensemble des locations de matériel (
 *   Intégration via `HintAction` dans le `RentalContractForm`.
 
 ### 8. Dépassements et Pénalités
-*   Ajout de `daily_penalty_rate` et `expected_end_date` sur `RentalContract`.
-*   Mise à jour de `RentalCostService` pour intégrer les pénalités au coût analytique.
-*   Commande Cron `CheckRentalOveragesCommand` pour notifier les fins imminentes et appliquer les majorations de retard — **⚠️ non planifiée et se limite à des logs/TODO** (ni notification ni pénalité réellement envoyées).
+*   Ajout de `daily_penalty_rate`, `expected_end_date`, `penalty_amount` et `next_billing_date` sur `RentalContract`.
+*   Nouveau statut **`OVERDUE`** (`RentalStatus::OVERDUE`) pour les contrats en dépassement.
+*   `CheckRentalOveragesCommand` : **✅ planifiée (07:00)** — calcule les pénalités (`daily_penalty_rate` × jours de retard), met à jour `penalty_amount`, passe le statut à `OVERDUE`, envoie notifications **Filament DatabaseNotification + Email** au manager du chantier et au fournisseur.
+*   Alerte J-1 (contrats finissant demain) : notification `RentalExpirationAlert` (1 jour).
 
 ### 9. Facturation Interne Automatique (Refacturation)
 *   **Contexte** : Une immobilisation de l'entreprise affectée à un chantier avec un tarif interne génère périodiquement une `InternalRentalInvoice` pour imputer son coût au **budget matériel** du chantier.
@@ -89,11 +90,8 @@ Le module **Locations** permet de gérer l'ensemble des locations de matériel (
 *   **Tests** : `tests/Feature/Modules/Locations/RentalConditionReportTest.php` (7 tests : idempotence, horodatage serveur, accès limité aux chantiers gérés, type/clé invalide, signature, photo, API end-to-end).
 
 ## 🚧 Ce qu'il reste à faire
-*   **Automatisations incomplètes** (ne pas confondre simple planification et implémentation manquante) :
-    *   `ProcessRecurringRentalsCommand` (`locations:process-billing`) : **à planifier** dans `routes/console.php` **et à faire évoluer pour ne traiter que les contrats échus** (elle facture actuellement tous les contrats actifs).
-    *   `RentalExpirationAlertJob` (alerte J-3) : **nécessite un dispatch effectif** et l'**envoi réel d'une notification** au responsable (actuellement `Log::info` + TODO).
-    *   `CheckRentalOveragesCommand` (`rentals:check-overages`) : **à planifier** et **à implémenter** — envoi des notifications et **application effective des pénalités** (actuellement simples `info`/`warn` + TODO).
 *   Couverture par les tests unitaires / fonctionnels PestPHP pour les modules Locations Sortantes (#236), Comparateur (#237), et Pénalités (#238).
+*   Tests d'intégration pour les 3 nouvelles automatisations Locations (facturation récurrente, alerte J-3, dépassements/pénalités).
 
 ## 💡 Idées d'amélioration et Nouvelles Fonctionnalités
 *   **Suivi Géolocalisé** : Si du gros équipement (ex: pelles, grues) est loué avec des capteurs GPS, pouvoir remonter leur position via une API externe directement sur la fiche d'information du `RentalContract`.
