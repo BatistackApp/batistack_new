@@ -75,3 +75,38 @@ it('calcule la prochaine date de facturation annuelle', function () {
     $nextDate = $yearlyContract->calculateNextBillingDate(Carbon::parse('2026-08-21'));
     expect($nextDate->format('Y-m-d'))->toBe('2027-08-21');
 });
+
+it('retourne 0 quand il n\'y a aucun contrat à facturer', function () {
+    $this->contract->update(['next_billing_date' => Carbon::tomorrow()]);
+    
+    $result = \Illuminate\Support\Facades\Artisan::call('locations:process-billing');
+    
+    expect($result)->toBe(0);
+});
+
+it('génère une facture pour les contrats échus', function () {
+    $invoice = \App\Models\Commerce\SupplierInvoice::factory()->create([
+        'amount_ttc' => 1200,
+    ]);
+    
+    $this->mock(\App\Services\Locations\RentalBillingService::class, function ($mock) use ($invoice) {
+        $mock->shouldReceive('generateDraftInvoice')->once()->andReturn($invoice);
+    });
+    
+    $result = \Illuminate\Support\Facades\Artisan::call('locations:process-billing');
+    
+    expect($result)->toBe(1);
+    
+    $this->contract->refresh();
+    expect($this->contract->next_billing_date->format('Y-m-d'))->toBe('2026-09-21');
+});
+
+it('gère les erreurs de facturation sans interrompre le traitement', function () {
+    $this->mock(\App\Services\Locations\RentalBillingService::class, function ($mock) {
+        $mock->shouldReceive('generateDraftInvoice')->once()->andThrow(new \RuntimeException('Erreur de test'));
+    });
+    
+    $result = \Illuminate\Support\Facades\Artisan::call('locations:process-billing');
+    
+    expect($result)->toBe(0);
+});

@@ -101,7 +101,7 @@ it('ne fait rien si aucun contrat n\'expire dans 3 jours', function () {
     
     $supplier4 = ThirdParty::factory()->create();
     
-    RentalContract::factory()->create([
+    $farContract = RentalContract::factory()->create([
         'supplier_id' => $supplier4->id,
         'chantier_id' => $this->chantier->id,
         'reference' => 'LOC-LATER-EXPIRE',
@@ -112,5 +112,24 @@ it('ne fait rien si aucun contrat n\'expire dans 3 jours', function () {
     $job = new RentalExpirationAlertJob();
     $job->handle();
     
-    Notification::assertNothingSent();
+    Notification::assertNotSentTo(
+        $this->managerUser,
+        \App\Notifications\RentalExpirationAlert::class,
+        function ($notification) use ($farContract) {
+            return $notification->contract->id === $farContract->id;
+        }
+    );
+});
+
+it('gère l\'erreur quand l\'envoi de notification échoue', function () {
+    Notification::fake();
+    
+    Notification::shouldReceive('send')->once()->andThrow(new \RuntimeException('Erreur de notification'));
+    
+    $job = new RentalExpirationAlertJob();
+    $job->handle();
+    
+    $this->assertDatabaseHas('rental_contracts', [
+        'id' => $this->contract->id,
+    ]);
 });

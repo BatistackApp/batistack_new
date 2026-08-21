@@ -56,3 +56,34 @@ it('RentalOverageAlert a le bon tableau pour database', function () {
     expect($array['penalty_amount'])->toBe(250.0);
     expect($array['total_penalty_amount'])->toBe(500.0);
 });
+
+it('RentalOverageAlert a le bon contenu mail', function () {
+    $notification = new RentalOverageAlert($this->contract, 3, 150.0, 450.0);
+    
+    $mail = $notification->toMail(new \App\Models\User(['name' => 'Test Manager']));
+    
+    expect($mail->subject)->toContain('ALERTE DÉPASSEMENT LOCATION')
+        ->and($mail->subject)->toContain($this->contract->reference);
+    
+    $rendered = (string) $mail->render();
+    $this->assertStringContainsString('3 jour(s)', $rendered);
+    $this->assertStringContainsString('150', $rendered);
+    $this->assertStringContainsString('450', $rendered);
+    $this->assertStringContainsString($this->contract->reference, $rendered);
+});
+
+it('RentalOverageAlert utilise les canaux database et mail', function () {
+    $notification = new RentalOverageAlert($this->contract, 1, 50.0, 50.0);
+    
+    $channels = $notification->via(new \App\Models\User());
+    
+    expect($channels)->toBe(['database', 'mail']);
+});
+
+it('RentalExpirationAlert utilise les canaux database et mail', function () {
+    $notification = new \App\Notifications\RentalExpirationAlert($this->contract, 3);
+    
+    $channels = $notification->via(new \App\Models\User());
+    
+    expect($channels)->toBe(['database', 'mail']);
+});
