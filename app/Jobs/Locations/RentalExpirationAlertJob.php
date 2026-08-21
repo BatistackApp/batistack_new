@@ -4,6 +4,7 @@ namespace App\Jobs\Locations;
 
 use App\Enums\Locations\RentalStatus;
 use App\Models\Locations\RentalContract;
+use App\Notifications\RentalExpirationAlert;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -15,29 +16,27 @@ class RentalExpirationAlertJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public function __construct()
-    {
-        //
-    }
-
-    /**
-     * Parcourt les contrats de location bientÃ´t expirÃ©s et notifie les responsables.
-     */
     public function handle(): void
     {
-        // RÃ©cupÃ©rer les contrats actifs dont la date de fin est dans 3 jours
         $expiringContracts = RentalContract::query()
             ->where('status', RentalStatus::ACTIVE)
             ->whereNotNull('end_date')
             ->whereDate('end_date', today()->addDays(3))
-            ->with(['chantier.manager'])
+            ->with(['chantier.manager.user'])
             ->get();
 
         foreach ($expiringContracts as $contract) {
-            $manager = $contract->chantier?->manager;
-            if ($manager) {
-                // TODO: Envoi de notification au manager via Filament (DatabaseNotification) ou Email
-                Log::info("Le contrat de location {$contract->reference} se termine dans 3 jours. Notification au manager {$manager->email}");
+            $managerUser = $contract->chantier?->manager?->user;
+
+            if ($managerUser) {
+                try {
+                    $managerUser->notify(new RentalExpirationAlert($contract, 3));
+                    Log::info("Notification échéance J-3 envoyée pour le contrat {$contract->reference} au manager {$managerUser->email}");
+                } catch (\Exception $e) {
+                    Log::error("Échec notification échéance J-3 pour le contrat {$contract->reference}: {$e->getMessage()}");
+                }
+            } else {
+                Log::warning("Aucun manager/user pour le chantier du contrat {$contract->reference} (échéance J-3)");
             }
         }
     }

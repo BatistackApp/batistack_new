@@ -5,56 +5,54 @@ namespace App\Console\Commands\Locations;
 use App\Enums\Locations\RentalStatus;
 use App\Models\Locations\RentalContract;
 use App\Services\Locations\RentalBillingService;
+use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 
 class ProcessRecurringRentalsCommand extends Command
 {
-    /**
-     * The name and signature of the console command.
-     *
-     * @var string
-     */
     protected $signature = 'locations:process-billing';
 
-    /**
-     * The console command description.
-     *
-     * @var string
-     */
-    protected $description = 'Traite les contrats de location et gÃ©nÃ¨re les factures rÃ©currentes si nÃ©cessaire.';
+    protected $description = 'Traite les contrats de location arrivant à échéance et génère les factures récurrentes.';
 
-    /**
-     * Execute the console command.
-     */
-    public function handle(RentalBillingService $billingService)
+    public function handle(RentalBillingService $billingService): int
     {
-        $this->info('DÃ©marrage du traitement de la facturation rÃ©currente des locations...');
+        $this->info('Démarrage du traitement de la facturation récurrente des locations...');
 
-        // Dans un cas rÃ©el, on vÃ©rifie si la date d'anniversaire est atteinte 
-        // par rapport Ã  la pÃ©riode de facturation. Ici pour simplifier, on sÃ©lectionne les actifs
-        // On pourrait ajouter un champ `last_billed_at` ou `next_billing_date` sur RentalContract
-        
+        $today = Carbon::today();
+
         $contracts = RentalContract::query()
             ->where('status', RentalStatus::ACTIVE)
+            ->whereNotNull('next_billing_date')
+            ->whereDate('next_billing_date', '<=', $today)
             ->get();
 
+        if ($contracts->isEmpty()) {
+            $this->info('Aucun contrat à facturer aujourd\'hui.');
+
+            return 0;
+        }
+
         $count = 0;
+
         foreach ($contracts as $contract) {
-            // Simplification: on gÃ©nÃ¨re si c'est le jour J de la facturation
-            // Pour le TP, on gÃ©nÃ¨re toujours (Ã  affiner dans une V2)
-            // if (today()->isSameDay($contract->next_billing_date)) { ... }
-            
             try {
                 $invoice = $billingService->generateDraftInvoice($contract);
-                $this->line("Facture gÃ©nÃ©rÃ©e pour le contrat {$contract->reference}: {$invoice->uuid}");
+
+                $contract->update([
+                    'next_billing_date' => $contract->calculateNextBillingDate(),
+                ]);
+
+                $this->line("Facture générée pour le contrat {$contract->reference}: {$invoice->uuid} (prochaine échéance: {$contract->next_billing_date->format('d/m/Y')})");
                 $count++;
             } catch (\Exception $e) {
-                Log::error("Erreur de facturation pour le contrat {$contract->reference}: " . $e->getMessage());
-                $this->error("Erreur sur {$contract->reference}");
+                Log::error("Erreur de facturation pour le contrat {$contract->reference}: ".$e->getMessage());
+                $this->error("Erreur sur {$contract->reference}: {$e->getMessage()}");
             }
         }
 
-        $this->info("Traitement terminÃ©. {$count} factures gÃ©nÃ©rÃ©es.");
+        $this->info("Traitement terminé. {$count} facture(s) générée(s).");
+
+        return $count;
     }
 }
