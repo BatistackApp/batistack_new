@@ -4,6 +4,7 @@ namespace App\Filament\Locations\Resources\RentalContracts\Schemas;
 
 use App\Enums\Locations\RentalBillingPeriod;
 use App\Enums\Locations\RentalStatus;
+use Filament\Actions\Action;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
@@ -29,25 +30,25 @@ class RentalContractForm
                                     ->required()
                                     ->label('Fournisseur')
                                     ->hintAction(
-                                        \Filament\Forms\Components\Actions\Action::make('comparator')
+                                        Action::make('comparator')
                                             ->label('Comparer les prix')
                                             ->icon('heroicon-m-calculator')
                                             ->url(fn () => \App\Filament\Locations\Pages\Locations\SupplierPriceComparator::getUrl(), shouldOpenInNewTab: true)
                                     ),
-                                
+
                                 Select::make('chantier_id')->label('Chantier')
                                     ->relationship('chantier', 'name')
                                     ->searchable()
                                     ->preload()
                                     ->required()
                                     ->label('Chantier d\'imputation'),
-                                
+
                                 TextInput::make('reference')->label('Référence')
                                     ->required()
                                     ->unique(ignoreRecord: true)
                                     ->label('Référence')
                                     ->maxLength(255),
-                                
+
                                 TextInput::make('name')->label('Nom')
                                     ->required()
                                     ->maxLength(255)
@@ -62,17 +63,17 @@ class RentalContractForm
                                         TextInput::make('name')->label('Nom')
                                             ->required()
                                             ->label('Désignation de l\'article'),
-                                        
+
                                         TextInput::make('description')->label('Description')
                                             ->label('Description')
                                             ->nullable(),
-                                            
+
                                         TextInput::make('quantity')->label('Quantité')
                                             ->required()
                                             ->numeric()
                                             ->default(1)
                                             ->label('Quantité'),
-                                            
+
                                         TextInput::make('unit_price_ht')
                                             ->required()
                                             ->numeric()
@@ -85,7 +86,7 @@ class RentalContractForm
                             ]),
                     ])
                     ->columnSpan(['lg' => 2]),
-                
+
                 Group::make()
                     ->schema([
                         Section::make('Période et Statut')
@@ -95,20 +96,20 @@ class RentalContractForm
                                     ->default(RentalStatus::DRAFT)
                                     ->label('Statut')
                                     ->required(),
-                                    
+
                                 DatePicker::make('start_date')
                                     ->label('Date de début')
                                     ->required(),
-                                    
+
                                 DatePicker::make('expected_end_date')
                                     ->label('Date de fin prévue')
                                     ->nullable(),
-                                    
+
                                 DatePicker::make('end_date')
                                     ->label('Date de fin réelle (restitution)')
                                     ->nullable(),
                             ]),
-                            
+
                         Section::make('Facturation & Coûts')
                             ->schema([
                                 Select::make('billing_period')
@@ -116,14 +117,14 @@ class RentalContractForm
                                     ->default(RentalBillingPeriod::MONTHLY)
                                     ->required()
                                     ->label('Période de facturation'),
-                                    
+
                                 TextInput::make('daily_cost_ht')
                                     ->required()
                                     ->numeric()
                                     ->label('Coût journalier HT (pour Analytique)')
                                     ->suffix('€')
                                     ->helperText('Ce montant sera imputé chaque jour sur le chantier.'),
-                                    
+
                                 TextInput::make('daily_penalty_rate')
                                     ->numeric()
                                     ->label('Majoration / Pénalité de retard (par jour)')
