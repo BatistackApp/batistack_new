@@ -31,7 +31,7 @@ class RentalExpirationAlertJob implements ShouldQueue
             if ($managerUser) {
                 try {
                     $managerUser->notify(new RentalExpirationAlert($contract, 3));
-                    Log::info("Notification échéance J-3 envoyée pour le contrat {$contract->reference} au manager {$managerUser->email}");
+                    Log::info("Notification échéance J-3 envoyée pour le contrat {$contract->reference} au manager {$managerUser->id}");
                 } catch (\Exception $e) {
                     Log::error("Échec notification échéance J-3 pour le contrat {$contract->reference}: {$e->getMessage()}");
                 }

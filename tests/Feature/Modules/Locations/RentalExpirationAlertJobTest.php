@@ -13,11 +13,10 @@ use Carbon\Carbon;
 beforeEach(function () {
     Notification::fake();
     
-    // Créer un seul manager pour tous les tests
     $this->managerUser = User::factory()->create(['email' => 'manager-' . uniqid() . '@test.com', 'name' => 'Manager Test']);
     $this->manager = Employee::factory()->create(['user_id' => $this->managerUser->id]);
     
-    $this->chantier = Chantier::factory()->create(['manager_id' => $this->managerUser->id]);
+    $this->chantier = Chantier::factory()->create(['manager_id' => $this->manager->id]);
     
     $this->supplier = ThirdParty::factory()->create();
     
@@ -99,6 +98,8 @@ it('n\'envoie pas de notification si pas de manager sur le chantier', function (
 it('ne fait rien si aucun contrat n\'expire dans 3 jours', function () {
     Notification::fake();
     
+    $this->contract->update(['end_date' => Carbon::today()->addDays(10)]);
+    
     $supplier4 = ThirdParty::factory()->create();
     
     $farContract = RentalContract::factory()->create([
@@ -109,16 +110,12 @@ it('ne fait rien si aucun contrat n\'expire dans 3 jours', function () {
         'end_date' => Carbon::today()->addDays(10),
     ]);
     
+    Notification::fake([\App\Notifications\RentalExpirationAlert::class]);
+    
     $job = new RentalExpirationAlertJob();
     $job->handle();
     
-    Notification::assertNotSentTo(
-        $this->managerUser,
-        \App\Notifications\RentalExpirationAlert::class,
-        function ($notification) use ($farContract) {
-            return $notification->contract->id === $farContract->id;
-        }
-    );
+    Notification::assertNothingSent();
 });
 
 it('gère l\'erreur quand l\'envoi de notification échoue', function () {

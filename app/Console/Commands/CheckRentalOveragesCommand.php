@@ -22,7 +22,7 @@ class CheckRentalOveragesCommand extends Command
         // 1. J-1 : Alerte pour contrats finissant demain (mais pas encore en dépassement)
         $endingTomorrow = RentalContract::with(['chantier.manager.user', 'supplier'])
             ->where('status', RentalStatus::ACTIVE)
-            ->whereDate('expected_end_date', $tomorrow)
+            ->whereDate('end_date', $tomorrow)
             ->get();
 
         foreach ($endingTomorrow as $contract) {
@@ -31,7 +31,7 @@ class CheckRentalOveragesCommand extends Command
 
         // 2. J+X : Contrats en dépassement (expected_end_date < aujourd'hui)
         $overdueContracts = RentalContract::with(['chantier.manager.user', 'supplier'])
-            ->where('status', RentalStatus::ACTIVE)
+            ->whereIn('status', [RentalStatus::ACTIVE, RentalStatus::OVERDUE])
             ->whereDate('expected_end_date', '<', today())
             ->whereNotNull('daily_penalty_rate')
             ->where('daily_penalty_rate', '>', 0)
@@ -49,7 +49,7 @@ class CheckRentalOveragesCommand extends Command
         $managerUser = $contract->chantier?->manager?->user;
 
         if ($managerUser) {
-            $managerUser->notify(new RentalExpirationAlert($contract, 1));
+            $managerUser->notify(new RentalExpirationAlert($contract, abs($contract->end_date->diffInDays(today()))));
             $this->info("Alerte J-1 envoyée pour le contrat {$contract->reference}");
         } else {
             $this->warn("Pas de manager pour le contrat {$contract->reference} (alerte J-1)");
@@ -58,14 +58,11 @@ class CheckRentalOveragesCommand extends Command
 
     private function applyOveragePenalty(RentalContract $contract): void
     {
-        $daysOverdue = $contract->expected_end_date->diffInDays(today(), false);
-        $penalty = $contract->daily_penalty_rate * $daysOverdue;
-
-        // Mise à jour du montant de pénalité cumulé
-        $newPenaltyAmount = $contract->penalty_amount + $penalty;
+        $daysOverdue = abs($contract->expected_end_date->diffInDays(today()));
+        $totalPenalty = $contract->daily_penalty_rate * $daysOverdue;
 
         $contract->update([
-            'penalty_amount' => $newPenaltyAmount,
+            'penalty_amount' => $totalPenalty,
             'status' => RentalStatus::OVERDUE,
         ]);
 
@@ -74,12 +71,12 @@ class CheckRentalOveragesCommand extends Command
         $supplierUser = $contract->supplier?->contact?->user;
 
         if ($managerUser) {
-            $managerUser->notify(new RentalOverageAlert($contract, $daysOverdue, $penalty, $newPenaltyAmount));
-            $this->info("Pénalité de {$penalty} € appliquée (total: {$newPenaltyAmount} €) pour {$contract->reference} — manager notifié");
+            $managerUser->notify(new RentalOverageAlert($contract, $daysOverdue, $totalPenalty, $totalPenalty));
+            $this->info("Pénalité de {$totalPenalty} € appliquée pour {$contract->reference} — manager notifié");
         }
 
         if ($supplierUser) {
-            $supplierUser->notify(new RentalOverageAlert($contract, $daysOverdue, $penalty, $newPenaltyAmount));
+            $supplierUser->notify(new RentalOverageAlert($contract, $daysOverdue, $totalPenalty, $totalPenalty));
             $this->info("Fournisseur notifié pour {$contract->reference}");
         }
     }

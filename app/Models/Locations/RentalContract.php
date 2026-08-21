@@ -62,9 +62,9 @@ class RentalContract extends Model
         return match ($this->billing_period->value) {
             'daily' => Carbon::parse($from)->addDay(),
             'weekly' => Carbon::parse($from)->addWeek(),
-            'monthly' => Carbon::parse($from)->addMonth(),
-            'yearly' => Carbon::parse($from)->addYear(),
-            default => Carbon::parse($from)->addMonth(),
+            'monthly' => Carbon::parse($from)->addMonthNoOverflow(),
+            'yearly' => Carbon::parse($from)->addYearNoOverflow(),
+            default => Carbon::parse($from)->addMonthNoOverflow(),
         };
     }
 }

@@ -48,8 +48,8 @@ Le module **Locations** permet de gérer l'ensemble des locations de matériel (
 ### 8. Dépassements et Pénalités
 *   Ajout de `daily_penalty_rate`, `expected_end_date`, `penalty_amount` et `next_billing_date` sur `RentalContract`.
 *   Nouveau statut **`OVERDUE`** (`RentalStatus::OVERDUE`) pour les contrats en dépassement.
-*   `CheckRentalOveragesCommand` : **✅ planifiée (07:00)** — calcule les pénalités (`daily_penalty_rate` × jours de retard), met à jour `penalty_amount`, passe le statut à `OVERDUE`, envoie notifications **Filament DatabaseNotification + Email** au manager du chantier et au fournisseur.
-*   Alerte J-1 (contrats finissant demain) : notification `RentalExpirationAlert` (1 jour).
+*   `CheckRentalOveragesCommand` : **✅ planifiée (07:00)** — calcule les pénalités (`daily_penalty_rate` × jours de retard), met à jour `penalty_amount`, passe le statut à `OVERDUE`, envoie notifications **Filament DatabaseNotification + Email** au manager du chantier et au fournisseur. Traite les contrats `ACTIVE` et `OVERDUE` pour un cumul idempotent.
+*   Alerte J-1 (contrats finissant demain) : notification `RentalExpirationAlert` basée sur `end_date`.
 
 ### 9. Facturation Interne Automatique (Refacturation)
 *   **Contexte** : Une immobilisation de l'entreprise affectée à un chantier avec un tarif interne génère périodiquement une `InternalRentalInvoice` pour imputer son coût au **budget matériel** du chantier.

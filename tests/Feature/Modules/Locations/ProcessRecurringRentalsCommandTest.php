@@ -76,6 +76,30 @@ it('calcule la prochaine date de facturation annuelle', function () {
     expect($nextDate->format('Y-m-d'))->toBe('2027-08-21');
 });
 
+it('gère correctement les fins de mois pour monthly (addMonthNoOverflow)', function () {
+    $contractJan31 = RentalContract::factory()->create([
+        'supplier_id' => $this->supplier->id,
+        'chantier_id' => $this->chantier->id,
+        'billing_period' => RentalBillingPeriod::MONTHLY,
+        'next_billing_date' => Carbon::parse('2026-01-31'),
+    ]);
+    
+    $nextDate = $contractJan31->calculateNextBillingDate(Carbon::parse('2026-01-31'));
+    expect($nextDate->format('Y-m-d'))->toBe('2026-02-28');
+});
+
+it('gère correctement les fins de mois pour yearly (addYearNoOverflow)', function () {
+    $contractFeb29 = RentalContract::factory()->create([
+        'supplier_id' => $this->supplier->id,
+        'chantier_id' => $this->chantier->id,
+        'billing_period' => RentalBillingPeriod::YEARLY,
+        'next_billing_date' => Carbon::parse('2024-02-29'),
+    ]);
+    
+    $nextDate = $contractFeb29->calculateNextBillingDate(Carbon::parse('2024-02-29'));
+    expect($nextDate->format('Y-m-d'))->toBe('2025-02-28');
+});
+
 it('retourne 0 quand il n\'y a aucun contrat à facturer', function () {
     $this->contract->update(['next_billing_date' => Carbon::tomorrow()]);
     

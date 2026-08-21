@@ -18,7 +18,7 @@ function createTestEnvironment(): array
     
     $managerUser = User::factory()->create(['email' => 'manager-' . uniqid() . '@test.com', 'name' => 'Manager Test']);
     $manager = Employee::factory()->create(['user_id' => $managerUser->id]);
-    $chantier = Chantier::factory()->create(['manager_id' => $managerUser->id]);
+    $chantier = Chantier::factory()->create(['manager_id' => $manager->id]);
     
     $supplier = ThirdParty::factory()->create(['name' => 'Fournisseur Test']);
     $contact = Contact::factory()->create([
@@ -85,7 +85,7 @@ it('envoie une notification au manager pour les pénalités de dépassement', fu
     );
 });
 
-it('envoie une alerte J-1 pour les contrats finissant demain', function () {
+it('envoie une alerte J-1 pour les contrats finissant demain via end_date', function () {
     Notification::fake();
     
     $env = createTestEnvironment();
@@ -95,6 +95,7 @@ it('envoie une alerte J-1 pour les contrats finissant demain', function () {
         'chantier_id' => $env['chantier']->id,
         'reference' => 'LOC-ENDING-002',
         'status' => RentalStatus::ACTIVE,
+        'end_date' => Carbon::tomorrow(),
         'expected_end_date' => Carbon::tomorrow(),
         'daily_penalty_rate' => 30,
     ]);
@@ -124,14 +125,60 @@ it('cumule les pénalités sur plusieurs jours', function () {
         'status' => RentalStatus::ACTIVE,
         'expected_end_date' => Carbon::today()->subDays(5),
         'daily_penalty_rate' => 40,
-        'penalty_amount' => 200,
+        'penalty_amount' => 0,
     ]);
     
     Artisan::call('rentals:check-overages');
     
     $oldContract->refresh();
-    expect((float) $oldContract->penalty_amount)->toBe(400.0);
+    expect((float) $oldContract->penalty_amount)->toBe(200.0);
     expect($oldContract->status)->toBe(RentalStatus::OVERDUE);
+});
+
+it('est idempotent : exécuter deux fois le même jour n\'augmente pas la pénalité', function () {
+    Notification::fake();
+    
+    $env = createTestEnvironment();
+    
+    $contract = RentalContract::factory()->create([
+        'supplier_id' => $env['supplier']->id,
+        'chantier_id' => $env['chantier']->id,
+        'reference' => 'LOC-IDEMPOTENT',
+        'status' => RentalStatus::ACTIVE,
+        'expected_end_date' => Carbon::today()->subDays(2),
+        'daily_penalty_rate' => 100,
+        'penalty_amount' => 0,
+    ]);
+    
+    Artisan::call('rentals:check-overages');
+    $contract->refresh();
+    expect((float) $contract->penalty_amount)->toBe(200.0);
+    
+    Artisan::call('rentals:check-overages');
+    $contract->refresh();
+    expect((float) $contract->penalty_amount)->toBe(200.0);
+});
+
+it('traite les contrats déjà OVERDUE pour recalculer les pénalités', function () {
+    Notification::fake();
+    
+    $env = createTestEnvironment();
+    
+    $contract = RentalContract::factory()->create([
+        'supplier_id' => $env['supplier']->id,
+        'chantier_id' => $env['chantier']->id,
+        'reference' => 'LOC-ALREADY-OVERDUE',
+        'status' => RentalStatus::OVERDUE,
+        'expected_end_date' => Carbon::today()->subDays(3),
+        'daily_penalty_rate' => 50,
+        'penalty_amount' => 100,
+    ]);
+    
+    Artisan::call('rentals:check-overages');
+    
+    $contract->refresh();
+    expect((float) $contract->penalty_amount)->toBe(150.0);
+    expect($contract->status)->toBe(RentalStatus::OVERDUE);
 });
 
 it('ne fait rien si pas de daily_penalty_rate', function () {
@@ -196,6 +243,7 @@ it('n\'envoie pas d\'alerte J-1 quand il n\'y a pas de manager', function () {
         'chantier_id' => $chantierNoManager->id,
         'reference' => 'LOC-NO-MGR-END',
         'status' => RentalStatus::ACTIVE,
+        'end_date' => Carbon::tomorrow(),
         'expected_end_date' => Carbon::tomorrow(),
         'daily_penalty_rate' => 30,
     ]);
@@ -203,8 +251,11 @@ it('n\'envoie pas d\'alerte J-1 quand il n\'y a pas de manager', function () {
     Artisan::call('rentals:check-overages');
     
     Notification::assertNotSentTo(
-        $env['managerUser'],
-        \App\Notifications\RentalExpirationAlert::class
+        User::all(),
+        \App\Notifications\RentalExpirationAlert::class,
+        function ($notification) use ($contract) {
+            return $notification->contract->id === $contract->id;
+        }
     );
 });
 
@@ -232,8 +283,11 @@ it('applique les pénalités sans notifier le manager quand il n\'y en a pas', f
         ->and((float) $contract->penalty_amount)->toBe(75.0);
     
     Notification::assertNotSentTo(
-        $env['managerUser'],
-        \App\Notifications\RentalOverageAlert::class
+        User::all(),
+        \App\Notifications\RentalOverageAlert::class,
+        function ($notification) use ($contract) {
+            return $notification->contract->id === $contract->id;
+        }
     );
 });
 
@@ -255,15 +309,15 @@ it('notifie correctement les contrats avec pénalités cumulées', function () {
     Artisan::call('rentals:check-overages');
     
     $contract->refresh();
-    expect((float) $contract->penalty_amount)->toBe(70.0)
+    expect((float) $contract->penalty_amount)->toBe(60.0)
         ->and($contract->status)->toBe(RentalStatus::OVERDUE);
     
     Notification::assertSentTo(
         $env['managerUser'],
         \App\Notifications\RentalOverageAlert::class,
-        function ($notification) use ($contract) {
+        function ($notification) {
             expect($notification->penaltyAmount)->toBe(60.0)
-                ->and($notification->totalPenaltyAmount)->toBe(70.0);
+                ->and($notification->totalPenaltyAmount)->toBe(60.0);
             return true;
         }
     );
