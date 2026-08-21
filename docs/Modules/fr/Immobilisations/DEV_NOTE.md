@@ -30,7 +30,7 @@ Le module **Immobilisations** permet la gestion du patrimoine de l'entreprise (m
 ### 4. Interface Utilisateur (Filament)
 *   **Panel Dédié** : Provider `ImmobilisationPanelProvider` accessible sur `/immobilisation`.
 *   **Ressources (CRUD)** : `AssetCategoryResource` et `FixedAssetResource` (incluant les tables et formulaires V5).
-*   **Numérisation des Factures (OCR)** : Auto-complétion intelligente du formulaire de création (`FixedAssetForm`) via `GoogleCloudVisionOcrService` (qui détecte la date, le prix HT, le nom et déduit la catégorie). Le document (image de la facture) est sauvegardé via Spatie MediaLibrary. Optimisation des requêtes par un cache md5 du fichier.
+*   **Numérisation des Factures (OCR)** : Auto-complétion intelligente du formulaire de création (`FixedAssetForm`) via `GoogleCloudVisionOcrService` (qui détecte la date, le prix HT, le nom et déduit la catégorie). L'interface `OcrServiceInterface` est liée au service concret dans le conteneur (`AppServiceProvider`). Le document (image de la facture) est sauvegardé via Spatie MediaLibrary. Optimisation des requêtes par un cache du fichier (empreinte **SHA-256**). Si l'OCR est désactivé ou la clé API manquante, l'extraction retourne une valeur **vide** (aucune donnée inventée).
 *   **Alertes et Dashboards Avancés** : Intégration de tableaux de bord responsifs via `laboiteacode/filament-dashboard-widgets` avec indicateurs de Valeur Nette Comptable (Variance VNC globale), de la répartition des actifs (Camembert), d'un objectif de conformité VGP, et d'une liste ciblée des alertes de rentabilité et VGP.
 *   **Traductions & Filtres** : Interface intégralement traduite avec filtres de recherche avancés.
 

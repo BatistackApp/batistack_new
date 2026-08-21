@@ -4,26 +4,6 @@ use App\Models\Core\Setting;
 use App\Models\Immobilisation\AssetCategory;
 use App\Services\RH\GoogleCloudVisionOcrService;
 
-class FakeOcrParseService extends GoogleCloudVisionOcrService
-{
-    public ?string $forcedText = null;
-
-    protected function getText(string $filePath): string
-    {
-        return $this->forcedText ?? '';
-    }
-}
-
-class FakeOcrClientService extends GoogleCloudVisionOcrService
-{
-    public mixed $client = null;
-
-    protected function createClient(array $clientConfig)
-    {
-        return $this->client;
-    }
-}
-
 it('returns an empty extraction when credentials are not set', function () {
     // Ensure env is unset for test
     putenv('GOOGLE_CLOUD_PROJECT=');
@@ -61,7 +41,15 @@ it('returns an empty asset extraction when credentials are not set', function ()
 });
 
 it('parses receipt fields from extracted text', function () {
-    $service = new FakeOcrParseService;
+    $service = new class extends GoogleCloudVisionOcrService
+    {
+        public ?string $forcedText = null;
+
+        protected function getText(string $filePath): string
+        {
+            return $this->forcedText ?? '';
+        }
+    };
     $service->forcedText = "BRICOMAN\n24,50\n20,42\n4,08\n15/06/2023\nOutillage";
 
     $data = $service->extractData('dummy.jpg');
@@ -73,7 +61,15 @@ it('parses receipt fields from extracted text', function () {
 });
 
 it('categorizes extracted text by merchant keywords', function (string $text, string $expected) {
-    $service = new FakeOcrParseService;
+    $service = new class extends GoogleCloudVisionOcrService
+    {
+        public ?string $forcedText = null;
+
+        protected function getText(string $filePath): string
+        {
+            return $this->forcedText ?? '';
+        }
+    };
     $service->forcedText = $text;
 
     $data = $service->extractData('dummy.jpg');
@@ -90,7 +86,15 @@ it('categorizes extracted text by merchant keywords', function (string $text, st
 it('extracts asset data and matches an asset category', function () {
     $category = AssetCategory::factory()->create(['name' => 'Outillage']);
 
-    $service = new FakeOcrParseService;
+    $service = new class extends GoogleCloudVisionOcrService
+    {
+        public ?string $forcedText = null;
+
+        protected function getText(string $filePath): string
+        {
+            return $this->forcedText ?? '';
+        }
+    };
     $service->forcedText = "BRICOMAN\n24,50\n20,42\n4,08\n15/06/2023\nOutillage";
 
     $data = $service->extractAssetData('dummy.jpg');
@@ -114,8 +118,20 @@ it('returns the text extracted by the Vision client when OCR is enabled', functi
     $client->shouldReceive('documentTextDetection')->andReturn($response);
     $client->shouldReceive('close');
 
-    $service = new FakeOcrClientService;
-    $service->client = $client;
+    $service = new class($client) extends GoogleCloudVisionOcrService
+    {
+        public mixed $client = null;
+
+        public function __construct($client)
+        {
+            $this->client = $client;
+        }
+
+        protected function createClient(array $clientConfig)
+        {
+            return $this->client;
+        }
+    };
 
     $temp = tempnam(sys_get_temp_dir(), 'ocr').'.jpg';
     file_put_contents($temp, 'fake image bytes');
@@ -135,8 +151,20 @@ it('returns an empty extraction when the Vision client throws', function () {
     $client->shouldReceive('documentTextDetection')->andThrow(new Exception('Vision API failure'));
     $client->shouldReceive('close');
 
-    $service = new FakeOcrClientService;
-    $service->client = $client;
+    $service = new class($client) extends GoogleCloudVisionOcrService
+    {
+        public mixed $client = null;
+
+        public function __construct($client)
+        {
+            $this->client = $client;
+        }
+
+        protected function createClient(array $clientConfig)
+        {
+            return $this->client;
+        }
+    };
 
     $temp = tempnam(sys_get_temp_dir(), 'ocr').'.jpg';
     file_put_contents($temp, 'fake image bytes');
