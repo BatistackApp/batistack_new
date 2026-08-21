@@ -2,6 +2,7 @@
 
 use App\Jobs\Articles\CheckExpiringStocksJob;
 use App\Jobs\Articles\CheckLowStockJob;
+use App\Jobs\Locations\RentalExpirationAlertJob;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
@@ -141,6 +142,26 @@ Schedule::command('locations:bill-internal-rentals')
     ->timezone('Europe/Paris')
     ->withoutOverlapping()
     ->onFailure(fn () => logger()->error('Échec de la facturation interne des immobilisations.'));
+
+// Locations - Facturation récurrente (échéances)
+Schedule::command('locations:process-billing')
+    ->dailyAt('02:00')
+    ->timezone('Europe/Paris')
+    ->withoutOverlapping()
+    ->onFailure(fn () => logger()->error('Échec facturation récurrente locations.'));
+
+// Locations - Alerte échéance J-3
+Schedule::job(new RentalExpirationAlertJob)
+    ->dailyAt('06:00')
+    ->timezone('Europe/Paris')
+    ->onFailure(fn () => logger()->error('Échec alerte échéance locations.'));
+
+// Locations - Vérification dépassements & pénalités
+Schedule::command('rentals:check-overages')
+    ->dailyAt('07:00')
+    ->timezone('Europe/Paris')
+    ->withoutOverlapping()
+    ->onFailure(fn () => logger()->error('Échec vérification dépassements locations.'));
 
 // Interventions
 Schedule::command('interventions:generate-maintenance')
