@@ -27,7 +27,7 @@ Le module **GPAO** a pour objectif de gérer les opérations de production ou d'
 
 ### 4. Nouveautés Récentes (Issues 229, 230, 231, 232)
 *   **Traçabilité** : Ajout des champs de `batch_number` et `serial_number` sur les composants consommés (`ManufacturingRequirement`) et les produits finis (`ManufacturingOrder`).
-*   **Gestion des Rebuts (Scrap)** : Déclaration de perte intégrée sur l'OF (`ManufacturingScrapService`) avec motif, ajustement du stock via `StockService::exit` (source `StockMouvementSource::SCRAP`). Le widget Taux de Rebut Global (`ScrapRateWidget`) est orphelin (voir « Ce qu'il reste à faire »).
+*   **Gestion des Rebuts (Scrap)** : Déclaration de perte intégrée sur l'OF (`ManufacturingScrapService`) avec motif, ajustement du stock via `StockService::exit` (source `StockMouvementSource::SCRAP`). Sans dépôt explicite, le service **résout automatiquement un dépôt actif disposant d'une disponibilité effective** pour l'article (sinon exception HTTP 400). Le widget Taux de Rebut Global (`ScrapRateWidget`) est orphelin (voir « Ce qu'il reste à faire »).
 *   **mini-GMAO** : Intégration des `Machine` et de leurs tickets d'intervention (`MachineMaintenanceTicket`). Assignation des OFs aux machines pour anticiper l'entretien selon la durée d'utilisation.
 *   **APS (Ordonnancement IA)** : Implémentation du service `ApsSchedulingService` qui planifie automatiquement les OF au statut `ManufacturingStatus::PLANNED` sur les machines. Il les trie par `customerOrder->delivery_date` (sans garantie de respect des délais planifiés), puis écarte ceux dont le stock est insuffisant. Un bouton a été ajouté au Kanban GPAO.
 

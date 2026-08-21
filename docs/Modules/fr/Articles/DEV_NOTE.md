@@ -14,7 +14,7 @@ Le module **Articles & Stocks** permet la gestion complète de l'inventaire, du 
 ### 1. Modèles de Données & Enums (`app/Models/Articles` & `app/Enums/Articles`)
 *   **`Item` & `ItemComposition`** : Référentiel des articles. Gère les nomenclatures (recettes/compositions) permettant de créer des ouvrages complexes à partir d'articles de base.
 *   **`Warehouse` & `Stock`** : Gestion multi-entrepôts. Affectation des stocks à des entrepôts physiques ou à des stocks virtuels (VUL/Camionnettes).
-*   **`StockMouvement`** : Traçabilité complète des mouvements de stock. Utilise les Enums `StockMouvementType` (Entrée, Sortie, Transfert) et `StockMouvementSource` (Achat, Chantier, SAV).
+*   **`StockMouvement`** : Traçabilité complète des mouvements de stock. Utilise les Enums `StockMouvementType` (Entrée, Sortie, Transfert) et `StockMouvementSource` (Achat, Chantier, SAV, **Rebut Production/SCRAP**, etc.).
 
 ### 2. Logique Métier, Services & Commandes (`app/Services/Articles` & `app/Console/Commands`)
 *   **`StockService`** : Logique robuste pour la gestion des mouvements de stock. Vérifie les disponibilités, gère les transferts entre entrepôts et déclenche les alertes de seuil.

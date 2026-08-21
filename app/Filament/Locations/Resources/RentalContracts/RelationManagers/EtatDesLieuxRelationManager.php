@@ -36,7 +36,7 @@ class EtatDesLieuxRelationManager extends RelationManager
                     ->badge(),
                 ImageColumn::make('photos')
                     ->label('Photos')
-                    ->collection('photos')
+                    ->state(fn ($record) => $record->getMedia('photos')->map(fn ($media) => $media->getUrl())->values()->all())
                     ->circular()
                     ->stacked()
                     ->limit(3),

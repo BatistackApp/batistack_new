@@ -6,6 +6,7 @@ use App\Enums\Locations\RentalBillingPeriod;
 use App\Enums\Locations\RentalStatus;
 use App\Models\Chantiers\Chantier;
 use App\Models\Tiers\ThirdParty;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -22,10 +23,12 @@ class RentalContract extends Model
         'start_date' => 'date',
         'end_date' => 'date',
         'expected_end_date' => 'date',
+        'next_billing_date' => 'date',
         'status' => RentalStatus::class,
         'billing_period' => RentalBillingPeriod::class,
         'daily_cost_ht' => 'decimal:2',
         'daily_penalty_rate' => 'decimal:2',
+        'penalty_amount' => 'decimal:2',
         'supplier_score' => 'integer',
     ];
 
@@ -47,5 +50,21 @@ class RentalContract extends Model
     public function conditionReports(): HasMany
     {
         return $this->hasMany(RentalConditionReport::class);
+    }
+
+    /**
+     * Calcule la prochaine date de facturation selon la période de facturation.
+     */
+    public function calculateNextBillingDate(?Carbon $from = null): Carbon
+    {
+        $from = $from ?? $this->next_billing_date ?? $this->start_date;
+
+        return match ($this->billing_period->value) {
+            'daily' => Carbon::parse($from)->addDay(),
+            'weekly' => Carbon::parse($from)->addWeek(),
+            'monthly' => Carbon::parse($from)->addMonthNoOverflow(),
+            'yearly' => Carbon::parse($from)->addYearNoOverflow(),
+            default => Carbon::parse($from)->addMonthNoOverflow(),
+        };
     }
 }
