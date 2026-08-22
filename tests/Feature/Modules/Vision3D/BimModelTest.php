@@ -135,6 +135,39 @@ it('dispatches GenerateBimThumbnailJob when file_path changes on an ifc model', 
     Queue::assertPushed(GenerateBimThumbnailJob::class);
 });
 
+it('resets thumbnail_path when file_path changes on a model that already has one', function () {
+    $model = BimModel::create([
+        'name' => 'V1',
+        'file_path' => 'v1.ifc',
+        'format' => 'ifc',
+        'version' => 1,
+        'thumbnail_path' => 'bim-thumbnails/old.png',
+    ]);
+
+    Queue::fake([GenerateBimThumbnailJob::class]);
+
+    $model->update(['file_path' => 'v2.ifc']);
+
+    $model->refresh();
+    expect($model->thumbnail_path)->toBeNull();
+    Queue::assertPushed(GenerateBimThumbnailJob::class);
+});
+
+it('does not dispatch thumbnail job when file_path was not changed', function () {
+    $model = BimModel::create([
+        'name' => 'V1',
+        'file_path' => 'v1.ifc',
+        'format' => 'ifc',
+        'version' => 1,
+    ]);
+
+    Queue::fake([GenerateBimThumbnailJob::class]);
+
+    $model->update(['name' => 'V1 updated']);
+
+    Queue::assertNothingPushed();
+});
+
 it('does not dispatch GenerateBimThumbnailJob for obj or stl formats', function () {
     Queue::fake([GenerateBimThumbnailJob::class]);
 
