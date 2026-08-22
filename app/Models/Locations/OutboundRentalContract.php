@@ -23,6 +23,7 @@ class OutboundRentalContract extends Model
         'expected_end_date',
         'actual_end_date',
         'daily_penalty_rate',
+        'last_invoice_id',
     ];
 
     protected $casts = [
