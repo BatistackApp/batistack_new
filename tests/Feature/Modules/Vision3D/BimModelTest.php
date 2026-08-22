@@ -7,7 +7,12 @@ use App\Models\Vision3D\BimModel;
 use App\Models\Vision3D\BimQuantity;
 use App\Services\Vision3D\BimStorageService;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
+
+beforeEach(function () {
+    Queue::fake();
+});
 
 it('can upload and store bim model', function () {
     Storage::fake('public');

@@ -60,7 +60,7 @@ Passerelle Vision 3D → Articles → Achats pour générer des commandes d'acha
 - **Mesure de distances sur la maquette (IFC)** (#155) : Clic point A / Clic point B pour calculer et afficher la distance réelle entre eux (boutons actifs en format IFC, Escape = annuler, Suppr = supprimer une mesure).
 - **Système de calques (Layers) IFC** (#156) : Arborescence spatiale IFC permettant de cacher/afficher des couches spécifiques (cacher les murs, afficher la tuyauterie). *(Pas encore géré pour les DXF.)*
 - **Cacher temporairement un élément 3D** (#157) : Double-clic sur un élément de la maquette IFC pour le masquer pendant l'inspection, avec bouton de restauration globale. *(La combinaison "Suppr" prévue à l'origine n'est pas implémentée.)*
-- **Miniature (Thumbnail) automatique** (#159) : Infrastructure en place (`GenerateBimThumbnailJob` + vue headless + colonne `thumbnail_path`) mais **pas encore branchée de bout en bout** (le job n'est pas déclenché à l'upload, pas de colonne image dans le tableau).
+- **Miniature (Thumbnail) automatique** (#159) : Infrastructure en place (`GenerateBimThumbnailJob` + vue headless + colonne `thumbnail_path`). L'observer `BimModelObserver` déclenche le job à la création et à la modification du fichier. La vignette est affichée dans le tableau `BimModelResource` (Issue #315).
 - **Camera Focus au Clic** (#161) : Action "focus" sur chaque punaise du tableau → événement Livewire `focus-annotation` propagé à AlpineJS → la caméra zoome et se centre sur l'annotation (IFC et DXF).
 - **Réalité Augmentée AR / WebXR** (#249) : Session `immersive-ar` avec l'API Hit-Test native — réticule sur les surfaces détectées par la caméra du smartphone, placement de la maquette IFC à l'échelle 1:1, boucle de rendu XR dédiée.
 - **Comparaison de Révisions BIM (Version Control 3D)** (#250) : Upload d'une nouvelle version (enfant, `parent_id` + `version`) et calcul dynamique du différentiel géométrique dans le navigateur basé sur le GlobalId — colorisation automatique (Vert = Ajouté, Orange = Modifié, Rouge fantôme = Supprimé) et toggle UI pour masquer les éléments supprimés.
@@ -71,7 +71,6 @@ Passerelle Vision 3D → Articles → Achats pour générer des commandes d'acha
 ## ⏳ Ce qu'il reste à faire (Next Steps)
 
 - **Optimisation des chargements de gros fichiers IFC** : Le moteur `web-ifc` peut être gourmand. Il faudra éventuellement configurer un web worker (Multithreading) si de très gros modèles sont uploadés pour ne pas figer l'interface le temps du parsing géométrique.
-- **Finaliser la miniature automatique** : Déclencher `GenerateBimThumbnailJob` à l'upload, ajouter `thumbnail_path` au `$fillable` du modèle et afficher une vignette dans le tableau `BimModelResource`.
 - **Étendre les calques aux DXF** : Ajouter le parsing et la visibilité des calques DXF (aujourd'hui limités aux types IFC).
 - **Cacher un élément via la touche "Suppr"** : Compléter le double-clic par la combinaison prévue à l'origine (#157).
 - **Mesure de distances en DXF** : Étendre la mesure point A → point B aux plans AutoCAD (actuellement réservée aux IFC).
