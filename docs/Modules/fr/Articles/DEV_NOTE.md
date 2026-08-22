@@ -45,7 +45,7 @@ Le module **Articles & Stocks** permet la gestion complète de l'inventaire, du 
 
 ### 5. Tests
 *   100% de succès sur la suite de tests (plus de 130 tests). Couverture complète de la logique métier (calcul du PUMP, prévention des stocks négatifs, seuils d'alerte, transfert de kits, gestion de la récursion infinie pour les compositions, **tests complets de la réservation de stock et blocage des sorties sur stock réservé**, traçabilité des lots/péremption) via `InventoryServiceTest`, `ItemServiceTest`, `StockServiceTest`, `StockBatchTracingTest`, `StockLogisticsTest`, `BomProcurementServiceTest` et `CycleCountingTest`.
-*   **Couverture d'Interface** : Les actions Filament d'impression d'étiquettes PDF et de génération d'inventaires ne disposent pas encore de tests dédiés (pas de `ItemLabelsTest`).
+*   **Couverture d'Interface** : `ItemLabelsTest` (10 tests : formats A4/Dymo, copies, QR code, fallback barcode/reference, format invalide, collection vide, attributs article).
 
 ## 🚧 Ce qu'il reste à faire
 *   Le module est complet dans sa version actuelle (toutes les issues fermées #214, #215, #216, #276, #277, #278 sont implémentées).

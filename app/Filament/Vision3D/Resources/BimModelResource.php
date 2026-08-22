@@ -16,6 +16,7 @@ use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Filament\Tables\Columns\ImageColumn;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 
@@ -77,6 +78,15 @@ class BimModelResource extends Resource
     {
         return $table
             ->columns([
+                ImageColumn::make('thumbnail_path')
+                    ->label('Aperçu')
+                    ->state(fn ($record) => $record->thumbnail_path
+                        ? Storage::disk('public')->url($record->thumbnail_path)
+                        : null)
+                    ->circular()
+                    ->stacked()
+                    ->limit(1),
+
                 Tables\Columns\TextColumn::make('name')->label('Nom')
                     ->label('Nom')
                     ->searchable()

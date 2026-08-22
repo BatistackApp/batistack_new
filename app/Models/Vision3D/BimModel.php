@@ -2,9 +2,12 @@
 
 namespace App\Models\Vision3D;
 
+use App\Observers\Vision3D\BimModelObserver;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+#[ObservedBy([BimModelObserver::class])]
 class BimModel extends Model
 {
     use HasFactory;
@@ -14,6 +17,7 @@ class BimModel extends Model
         'file_path',
         'format',
         'file_size',
+        'thumbnail_path',
         'version',
         'parent_id',
         'modelable_id',

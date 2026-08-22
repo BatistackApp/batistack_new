@@ -8,6 +8,7 @@ use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
+use App\Filament\RH\Pages\SecuriteDashboard;
 use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
@@ -46,6 +47,7 @@ class RHPanelProvider extends PanelProvider
             ->discoverPages(in: app_path('Filament/RH/Pages'), for: 'App\Filament\RH\Pages')
             ->pages([
                 Dashboard::class,
+                SecuriteDashboard::class,
             ])
             ->discoverWidgets(in: app_path('Filament/RH/Widgets'), for: 'App\Filament\RH\Widgets')
             ->plugins([
