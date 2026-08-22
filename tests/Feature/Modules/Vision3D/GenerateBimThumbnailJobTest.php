@@ -2,25 +2,104 @@
 
 use App\Jobs\GenerateBimThumbnailJob;
 use App\Models\Vision3D\BimModel;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Queue;
+use Illuminate\Support\Facades\Storage;
 
-it('dispatches the GenerateBimThumbnailJob', function () {
+afterEach(function () {
+    \Mockery::close();
+});
+
+it('generates a thumbnail successfully', function () {
+    Storage::fake('public');
     Queue::fake();
 
-    $bimModel = BimModel::create([
-        'name' => 'Test Model',
+    $model = BimModel::create([
+        'name' => 'Test',
         'file_path' => 'models/test.ifc',
         'format' => 'ifc',
-        'file_size' => 2048,
         'version' => 1,
-        'modelable_id' => 1,
-        'modelable_type' => 'App\Models\Articles\Item',
     ]);
 
-    GenerateBimThumbnailJob::dispatch($bimModel);
+    $job = \Mockery::mock(GenerateBimThumbnailJob::class)->makePartial()->shouldAllowMockingProtectedMethods();
+    $job->bimModel = $model;
+    $job->filePath = $model->file_path;
+    $job->shouldReceive('renderScreenshot')->once();
+    $job->handle();
 
-    Queue::assertPushed(GenerateBimThumbnailJob::class, function ($job) use ($bimModel) {
-        return $job->bimModel->id === $bimModel->id;
-    });
+    $model->refresh();
+    expect($model->thumbnail_path)->not->toBeNull()
+        ->and($model->thumbnail_path)->toContain('bim-thumbnails/' . $model->id . '_');
+});
+
+it('skips update when model no longer exists', function () {
+    Queue::fake();
+
+    $model = BimModel::create([
+        'name' => 'Test',
+        'file_path' => 'models/test.ifc',
+        'format' => 'ifc',
+        'version' => 1,
+    ]);
+
+    $job = new GenerateBimThumbnailJob($model);
+    $model->delete();
+
+    $job->handle();
+
+    $this->assertTrue(true);
+});
+
+it('skips update when file_path changed since job was queued', function () {
+    Queue::fake();
+
+    $model = BimModel::create([
+        'name' => 'Test',
+        'file_path' => 'models/test.ifc',
+        'format' => 'ifc',
+        'version' => 1,
+    ]);
+
+    $job = new GenerateBimThumbnailJob($model);
+    $model->update(['file_path' => 'models/test-v2.ifc']);
+
+    $job->handle();
+
+    $model->refresh();
+    expect($model->thumbnail_path)->toBeNull();
+});
+
+it('stores the thumbnail in the correct directory', function () {
+    Storage::fake('public');
+    Queue::fake();
+
+    $model = BimModel::create([
+        'name' => 'Test',
+        'file_path' => 'models/test.ifc',
+        'format' => 'ifc',
+        'version' => 1,
+    ]);
+
+    $job = \Mockery::mock(GenerateBimThumbnailJob::class)->makePartial()->shouldAllowMockingProtectedMethods();
+    $job->bimModel = $model;
+    $job->filePath = $model->file_path;
+    $job->shouldReceive('renderScreenshot')->once();
+    $job->handle();
+
+    Storage::disk('public')->assertExists('bim-thumbnails');
+});
+
+it('captures filePath at construction time', function () {
+    Queue::fake();
+
+    $model = BimModel::create([
+        'name' => 'Test',
+        'file_path' => 'models/test.ifc',
+        'format' => 'ifc',
+        'version' => 1,
+    ]);
+
+    $job = new GenerateBimThumbnailJob($model);
+
+    expect($job->filePath)->toBe('models/test.ifc')
+        ->and($job->bimModel->id)->toBe($model->id);
 });

@@ -13,38 +13,46 @@ class GenerateBimThumbnailJob implements ShouldQueue
 {
     use Queueable;
 
-    public $bimModel;
+    public BimModel $bimModel;
 
-    /**
-     * Create a new job instance.
-     */
+    public string $filePath;
+
     public function __construct(BimModel $bimModel)
     {
         $this->bimModel = $bimModel;
+        $this->filePath = $bimModel->file_path;
     }
 
-    /**
-     * Execute the job.
-     */
     public function handle(): void
     {
-        $url = route('bim-viewer.headless', ['id' => $this->bimModel->id]);
-        $filename = 'bim-thumbnails/' . $this->bimModel->id . '_' . Str::random(8) . '.png';
-        
-        if (!Storage::disk('public')->exists('bim-thumbnails')) {
+        $model = BimModel::find($this->bimModel->id);
+
+        if (! $model || $model->file_path !== $this->filePath) {
+            return;
+        }
+
+        $url = route('bim-viewer.headless', ['id' => $model->id]);
+        $filename = 'bim-thumbnails/' . $model->id . '_' . Str::random(8) . '.png';
+
+        if (! Storage::disk('public')->exists('bim-thumbnails')) {
             Storage::disk('public')->makeDirectory('bim-thumbnails');
         }
-        
+
         $fullPath = Storage::disk('public')->path($filename);
 
-        Browsershot::url($url)
-            ->waitUntilNetworkIdle()
-            ->setDelay(8000) // Wait extra for WebGL loading
-            ->windowSize(800, 600)
-            ->save($fullPath);
+        $this->renderScreenshot($url, $fullPath);
 
-        $this->bimModel->update([
+        $model->update([
             'thumbnail_path' => $filename,
         ]);
+    }
+
+    protected function renderScreenshot(string $url, string $fullPath): void
+    {
+        Browsershot::url($url)
+            ->waitUntilNetworkIdle()
+            ->setDelay(8000)
+            ->windowSize(800, 600)
+            ->save($fullPath);
     }
 }
