@@ -40,14 +40,19 @@ class GenerateBimThumbnailJob implements ShouldQueue
 
         $fullPath = Storage::disk('public')->path($filename);
 
+        $this->renderScreenshot($url, $fullPath);
+
+        $model->update([
+            'thumbnail_path' => $filename,
+        ]);
+    }
+
+    protected function renderScreenshot(string $url, string $fullPath): void
+    {
         Browsershot::url($url)
             ->waitUntilNetworkIdle()
             ->setDelay(8000)
             ->windowSize(800, 600)
             ->save($fullPath);
-
-        $model->update([
-            'thumbnail_path' => $filename,
-        ]);
     }
 }
