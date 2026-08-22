@@ -25,6 +25,10 @@ class BimModelObserver
             return;
         }
 
-        GenerateBimThumbnailJob::dispatch($model);
+        if ($model->thumbnail_path) {
+            $model->updateQuietly(['thumbnail_path' => null]);
+        }
+
+        GenerateBimThumbnailJob::dispatch($model->fresh());
     }
 }

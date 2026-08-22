@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\Articles\ItemType;
+use App\Jobs\GenerateBimThumbnailJob;
 use App\Models\Articles\Item;
 use App\Models\Chantiers\Chantier;
 use App\Models\Vision3D\BimModel;
@@ -31,6 +32,8 @@ it('can upload and store bim model', function () {
 
     expect($chantier->bimModels)->toHaveCount(1);
     expect($chantier->bimModels->first()->id)->toBe($bimModel->id);
+
+    Queue::assertPushed(GenerateBimThumbnailJob::class);
 });
 
 it('can delete bim model and file', function () {
@@ -115,4 +118,39 @@ it('can have multiple quantities (BOM) linked to items', function () {
         ->and($quantity->bimModel->id)->toBe($bimModel->id)
         ->and($quantity->item->id)->toBe($item->id)
         ->and((float) $quantity->quantity_required)->toBe(12.5);
+});
+
+it('dispatches GenerateBimThumbnailJob when file_path changes on an ifc model', function () {
+    $model = BimModel::create([
+        'name' => 'V1',
+        'file_path' => 'v1.ifc',
+        'format' => 'ifc',
+        'version' => 1,
+    ]);
+
+    Queue::fake([GenerateBimThumbnailJob::class]);
+
+    $model->update(['file_path' => 'v2.ifc']);
+
+    Queue::assertPushed(GenerateBimThumbnailJob::class);
+});
+
+it('does not dispatch GenerateBimThumbnailJob for obj or stl formats', function () {
+    Queue::fake([GenerateBimThumbnailJob::class]);
+
+    BimModel::create([
+        'name' => 'Obj',
+        'file_path' => 'model.obj',
+        'format' => 'obj',
+        'version' => 1,
+    ]);
+
+    BimModel::create([
+        'name' => 'Stl',
+        'file_path' => 'model.stl',
+        'format' => 'stl',
+        'version' => 1,
+    ]);
+
+    Queue::assertNothingPushed();
 });

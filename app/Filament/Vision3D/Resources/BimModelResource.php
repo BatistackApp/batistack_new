@@ -83,7 +83,6 @@ class BimModelResource extends Resource
                     ->state(fn ($record) => $record->thumbnail_path
                         ? Storage::disk('public')->url($record->thumbnail_path)
                         : null)
-                    ->placeholder(fn ($record) => $record->format === 'ifc' ? 'heroicon-o-cube' : 'heroicon-o-document')
                     ->circular()
                     ->stacked()
                     ->limit(1),
