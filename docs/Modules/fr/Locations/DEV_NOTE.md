@@ -90,8 +90,13 @@ Le module **Locations** permet de gérer l'ensemble des locations de matériel (
 *   **Tests** : `tests/Feature/Modules/Locations/RentalConditionReportTest.php` (7 tests : idempotence, horodatage serveur, accès limité aux chantiers gérés, type/clé invalide, signature, photo, API end-to-end).
 
 ## 🚧 Ce qu'il reste à faire
-*   Couverture par les tests unitaires / fonctionnels PestPHP pour les modules Locations Sortantes (#236), Comparateur (#237), et Pénalités (#238).
 *   Tests d'intégration pour les 3 nouvelles automatisations Locations (facturation récurrente, alerte J-3, dépassements/pénalités).
+
+## ✅ Tests ajoutés (#340)
+*   **Pénalités** : `RentalCostServiceTest.php` (10 tests : getActiveDays, getPenaltyDays, getCumulativeCost, edge cases).
+*   **Comparateur** : `SupplierPriceComparatorTest.php` (8 tests : modèle, calcul mensuel/semaine/jours, rejet rate manquant, tri, filtre catégorie).
+*   **Locations Sortantes** : `OutboundRentalObserverTest.php` (5 tests), `OutboundRentalLineObserverTest.php` (4 tests), `OutboundRentalBillingTest.php` (9 tests), `OutboundRentalLifecycleTest.php` (3 tests).
+*   **Bug corrigé** : `$fillable` de `OutboundRentalContract` manquait `last_invoice_id` ; observer `OutboundRentalLineObserver` utilisait un asset caché obsolète lors du changement de `fixed_asset_id`.
 
 ## 💡 Idées d'amélioration et Nouvelles Fonctionnalités
 *   **Suivi Géolocalisé** : Si du gros équipement (ex: pelles, grues) est loué avec des capteurs GPS, pouvoir remonter leur position via une API externe directement sur la fiche d'information du `RentalContract`.

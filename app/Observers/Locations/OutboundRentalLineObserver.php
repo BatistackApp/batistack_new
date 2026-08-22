@@ -28,8 +28,8 @@ class OutboundRentalLineObserver
             if ($oldAssetId) {
                 \App\Models\Immobilisation\FixedAsset::find($oldAssetId)?->update(['status' => \App\Enums\Immobilisation\AssetStatus::ACTIVE]);
             }
-            if ($outboundRentalLine->contract && $outboundRentalLine->contract->status === 'active' && $outboundRentalLine->fixedAsset) {
-                $outboundRentalLine->fixedAsset->update(['status' => \App\Enums\Immobilisation\AssetStatus::RENTED]);
+            if ($outboundRentalLine->contract && $outboundRentalLine->contract->status === 'active') {
+                \App\Models\Immobilisation\FixedAsset::find($outboundRentalLine->fixed_asset_id)?->update(['status' => \App\Enums\Immobilisation\AssetStatus::RENTED]);
             }
         }
     }
