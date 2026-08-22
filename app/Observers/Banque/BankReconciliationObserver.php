@@ -2,16 +2,26 @@
 
 namespace App\Observers\Banque;
 
+use App\Enums\Accounting\JournalType;
 use App\Enums\Commerce\InvoiceStatus;
+use App\Models\Accounting\EcritureComptable;
 use App\Models\Banque\BankReconciliation;
 use App\Models\Commerce\CustomerInvoice;
 use App\Models\Commerce\SupplierInvoice;
+use App\Services\Accounting\AccountingPlanService;
+use App\Services\Accounting\EcritureComptableService;
 
 class BankReconciliationObserver
 {
+    public function __construct(
+        private AccountingPlanService $accountingPlanService = new AccountingPlanService(),
+        private EcritureComptableService $ecritureService = new EcritureComptableService(),
+    ) {}
+
     public function created(BankReconciliation $reconciliation): void
     {
         $this->updateInvoiceStatus($reconciliation);
+        $this->generateAccountingEntries($reconciliation);
     }
 
     public function updated(BankReconciliation $reconciliation): void
@@ -22,6 +32,89 @@ class BankReconciliationObserver
     public function deleted(BankReconciliation $reconciliation): void
     {
         $this->updateInvoiceStatus($reconciliation);
+        $this->reverseAccountingEntries($reconciliation);
+    }
+
+    private function generateAccountingEntries(BankReconciliation $reconciliation): void
+    {
+        $transaction = $reconciliation->bankTransaction;
+        $invoice = $reconciliation->reconcilable;
+        $amount = (float) $reconciliation->amount_applied;
+
+        if ($amount <= 0) {
+            return;
+        }
+
+        $numeroPiece = $this->ecritureService->generateNumeroPiece(JournalType::BANQUE);
+        $date = $transaction->date->toDateString();
+        $libelle = 'Lettrage ' . $invoice->reference ?? $invoice->number ?? 'N/A';
+
+        if ($transaction->type === \App\Enums\Banque\TransactionType::DEBIT) {
+            // Payment to supplier
+            $compteCharge = $this->accountingPlanService->getChargeAccount();
+            $compteBanque = $this->accountingPlanService->getBankAccount();
+
+            $this->ecritureService->createBalancedPair(
+                [
+                    'date_ecriture' => $date,
+                    'date_piece' => $date,
+                    'journal_type' => JournalType::BANQUE,
+                    'numero_piece' => $numeroPiece,
+                    'compte_numero' => $compteCharge,
+                    'libelle' => $libelle,
+                    'chantier_id' => $transaction->chantier_id,
+                    'reconcilable_type' => get_class($reconciliation),
+                    'reconcilable_id' => $reconciliation->id,
+                ],
+                [
+                    'date_ecriture' => $date,
+                    'date_piece' => $date,
+                    'journal_type' => JournalType::BANQUE,
+                    'numero_piece' => $numeroPiece,
+                    'compte_numero' => $compteBanque,
+                    'libelle' => $libelle,
+                    'chantier_id' => $transaction->chantier_id,
+                    'reconcilable_type' => get_class($reconciliation),
+                    'reconcilable_id' => $reconciliation->id,
+                ]
+            );
+        } else {
+            // Payment from client
+            $compteBanque = $this->accountingPlanService->getBankAccount();
+            $compteClient = $this->accountingPlanService->getClientAccount();
+
+            $this->ecritureService->createBalancedPair(
+                [
+                    'date_ecriture' => $date,
+                    'date_piece' => $date,
+                    'journal_type' => JournalType::BANQUE,
+                    'numero_piece' => $numeroPiece,
+                    'compte_numero' => $compteBanque,
+                    'libelle' => $libelle,
+                    'chantier_id' => $transaction->chantier_id,
+                    'reconcilable_type' => get_class($reconciliation),
+                    'reconcilable_id' => $reconciliation->id,
+                ],
+                [
+                    'date_ecriture' => $date,
+                    'date_piece' => $date,
+                    'journal_type' => JournalType::BANQUE,
+                    'numero_piece' => $numeroPiece,
+                    'compte_numero' => $compteClient,
+                    'libelle' => $libelle,
+                    'chantier_id' => $transaction->chantier_id,
+                    'reconcilable_type' => get_class($reconciliation),
+                    'reconcilable_id' => $reconciliation->id,
+                ]
+            );
+        }
+    }
+
+    private function reverseAccountingEntries(BankReconciliation $reconciliation): void
+    {
+        EcritureComptable::where('reconcilable_type', get_class($reconciliation))
+            ->where('reconcilable_id', $reconciliation->id)
+            ->delete();
     }
 
     private function updateInvoiceStatus(BankReconciliation $reconciliation): void

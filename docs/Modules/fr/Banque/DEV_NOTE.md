@@ -43,7 +43,7 @@ Le module **Banque** gère la trésorerie de l'entreprise. Il permet de connecte
 *   **Vérification des Tokens Bridge (DSP2)** : Commande (`CheckBridgeTokensCommand`) planifiée quotidiennement pour vérifier l'expiration des tokens bancaires Open Banking et notifier l'administrateur financier de se réauthentifier 5 jours avant l'échéance. (Issue #217)
 
 ## 🚧 Ce qu'il reste à faire
-*   Le module est fondamentalement complet. Le **module « Comptabilité » complet** reste à construire (génération des écritures comptables et exports standards pour l'expert-comptable).
+*   Le module est fondamentalement complet.
 
 ## 💡 Idées d'amélioration et Nouvelles Fonctionnalités
-*   **Module "Comptabilité" complet** : (en attente) Générer les écritures comptables depuis les transactions bancaires et produire les exports standards (FEC complet, Sage, Cegid). Seuls des exports partiels existent aujourd'hui : FEC des amortissements (`FecExportService`) et écritures de paie en OD (`AccountingExportService`) — aucun n'est raccordé au module Banque.
+*   **Module « Comptabilité » complet** : ✅ **Livré** (Issue #325, branche `feature/accounting-module`). Le `BankReconciliationObserver` génère désormais automatiquement des écritures comptables équilibrées (débit/crédit) lors du lettrage bancaire. L'annulation du lettrage supprime les écritures associées. Voir `docs/Modules/fr/Accounting/DEV_NOTE.md` pour le détail complet.
