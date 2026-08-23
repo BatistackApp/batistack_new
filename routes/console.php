@@ -31,12 +31,18 @@ Schedule::command('tiers:process-email-campaigns')
 Schedule::command('tiers:verify-vigilance')
     ->weeklyOn(1, '04:00');
 
+Schedule::command('tiers:refresh-legal-status --limit=50 --days=30')
+    ->dailyAt('04:30')
+    ->timezone('Europe/Paris')
+    ->withoutOverlapping()
+    ->onFailure(fn () => logger()->error('Échec du rafraîchissement périodique du statut juridique des tiers.'));
+
 // Articles
 Schedule::command('articles:check-stocks')
     ->dailyAt('07:00');
 
 // Schedule::job(new CheckLowStockJob)->dailyAt('08:00');
-Schedule::job(new CheckExpiringStocksJob)->dailyAt('08:00');
+// Schedule::job(new CheckExpiringStocksJob)->dailyAt('08:00');
 
 // Météo & CIBTP
 Schedule::command('weather:check-alerts')
@@ -67,7 +73,7 @@ Schedule::command('rh:check-trial-periods --days=15 --send')
     ->onFailure(fn () => logger()->error('Échec du scan des périodes d\'essai.'));
 
 // Vérifier les équipements (EPI) expirés ou en maintenance (quotidien à 8h)
-Schedule::command('rh:check-equipement --send')
+Schedule::command('rh:check-equipment --send')
     ->dailyAt('08:00')
     ->timezone('Europe/Paris')
     ->onFailure(fn () => logger()->error('Échec du scan des équipements RH.'));
