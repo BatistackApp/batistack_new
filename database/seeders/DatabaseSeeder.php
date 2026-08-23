@@ -60,5 +60,10 @@ class DatabaseSeeder extends Seeder
             'hourly_rate' => 20.00,
             'weekly_hours' => 35.00,
         ]);
+
+        // Seed demo data if DEMO_SEED=true
+        if (env('DEMO_SEED', false)) {
+            $this->call(DemoSeeder::class);
+        }
     }
 }

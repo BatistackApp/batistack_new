@@ -58,7 +58,7 @@
         "opcodesio/log-viewer": "^3.24",
         "openplain/filament-tree-view": "^0.5.5",
         "picqer/php-barcode-generator": "^3.2",
-        "predis/predis": "^3.5",
+        "predis/predis": "^3.6",
         "qalainau/filament-inbox": "^1.0",
         "saade/filament-autograph": "^4.1",
         "sentry/sentry-laravel": "^4.27",
