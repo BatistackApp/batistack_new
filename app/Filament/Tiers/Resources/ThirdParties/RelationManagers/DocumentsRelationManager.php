@@ -4,6 +4,10 @@ namespace App\Filament\Tiers\Resources\ThirdParties\RelationManagers;
 
 use App\Enums\Core\SignatureStatus;
 use App\Enums\Core\SignatureType;
+use App\Enums\Tiers\ThirdPartyDocumentStatus;
+use App\Enums\Tiers\ThirdPartyDocumentType;
+use App\Enums\Tiers\ThirdPartyType;
+use App\Jobs\Tiers\CollectLegalDocumentsJob;
 use App\Models\Tiers\ThirdPartyDocument;
 use App\Services\Core\SignatureService;
 use Filament\Actions\Action;
@@ -37,14 +41,14 @@ class DocumentsRelationManager extends RelationManager
         return $schema
             ->components([
                 Select::make('type')->label('Type')
-                    ->options(\App\Enums\Tiers\ThirdPartyDocumentType::class)
+                    ->options(ThirdPartyDocumentType::class)
                     ->required(),
                 DatePicker::make('expiration_date')
                     ->label('Date d\'expiration')
                     ->required(),
                 Select::make('status')->label('Statut')
-                    ->options(\App\Enums\Tiers\ThirdPartyDocumentStatus::class)
-                    ->default(\App\Enums\Tiers\ThirdPartyDocumentStatus::VALID)
+                    ->options(ThirdPartyDocumentStatus::class)
+                    ->default(ThirdPartyDocumentStatus::VALID)
                     ->required(),
                 SpatieMediaLibraryFileUpload::make('document')
                     ->label('Fichier PDF/Image')
@@ -73,6 +77,24 @@ class DocumentsRelationManager extends RelationManager
                 //
             ])
             ->headerActions([
+                Action::make('collect_legal_documents')
+                    ->label('Collecter les documents légaux')
+                    ->icon(Phosphor::DownloadSimple)
+                    ->color('info')
+                    ->visible(function () {
+                        $thirdParty = $this->getOwnerRecord();
+
+                        return $thirdParty->siren && in_array($thirdParty->type, [ThirdPartyType::SUBCONTRACTOR, ThirdPartyType::CLIENT]);
+                    })
+                    ->action(function () {
+                        $thirdParty = $this->getOwnerRecord();
+                        CollectLegalDocumentsJob::dispatch($thirdParty);
+
+                        Notification::make()
+                            ->success()
+                            ->title('Collecte des documents légaux lancée en arrière-plan')
+                            ->send();
+                    }),
                 CreateAction::make(),
             ])
             ->recordActions([
@@ -80,23 +102,24 @@ class DocumentsRelationManager extends RelationManager
                     ->label('Demander Signature')
                     ->icon(Phosphor::PenNib)
                     ->color('info')
-                    ->visible(fn (ThirdPartyDocument $record) => $record->type === \App\Enums\Tiers\ThirdPartyDocumentType::CONTRAT_SOUS_TRAITANCE &&
+                    ->visible(fn (ThirdPartyDocument $record) => $record->type === ThirdPartyDocumentType::CONTRAT_SOUS_TRAITANCE &&
                         $record->signatures()->where('status', SignatureStatus::PENDING)->doesntExist() &&
                         $record->signatures()->where('status', SignatureStatus::SIGNED)->doesntExist()
                     )
-                    ->action(function (ThirdPartyDocument $record, \App\Services\Core\SignatureService $service) {
+                    ->action(function (ThirdPartyDocument $record, SignatureService $service) {
                         $email = $record->thirdParty->email;
                         $name = $record->thirdParty->name;
                         $path = $record->getFirstMedia('third_party_documents')?->getPath();
 
-                        if (!$email) {
+                        if (! $email) {
                             Notification::make()->title('Erreur : Le tiers n\'a pas d\'adresse email')->danger()->send();
+
                             return;
                         }
 
                         $service->requestSignature(
                             model: $record,
-                            type: \App\Enums\Core\SignatureType::AUTOGRAPH,
+                            type: SignatureType::AUTOGRAPH,
                             email: $email,
                             name: $name,
                             documentPath: $path
@@ -110,6 +133,7 @@ class DocumentsRelationManager extends RelationManager
                     ->visible(fn (ThirdPartyDocument $record) => $record->signatures()->where('status', SignatureStatus::SIGNED)->exists())
                     ->modalContent(function (ThirdPartyDocument $record) {
                         $signature = $record->signatures()->where('status', SignatureStatus::SIGNED)->first();
+
                         return view('filament.tiers.signature-modal', ['signature' => $signature]);
                     })
                     ->modalSubmitAction(false)

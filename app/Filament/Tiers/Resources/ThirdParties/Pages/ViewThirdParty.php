@@ -9,6 +9,7 @@ use App\Filament\Tiers\Resources\ThirdParties\Actions\SyncFinancialAction;
 use App\Filament\Tiers\Resources\ThirdParties\Actions\SynchronizeSirenAction;
 use App\Filament\Tiers\Resources\ThirdParties\Actions\VigilanceTransfertAction;
 use App\Filament\Tiers\Resources\ThirdParties\ThirdPartyResource;
+use App\Jobs\Tiers\CollectLegalDocumentsJob;
 use App\Jobs\Tiers\VerifyGloabVigilanceJob;
 use App\Models\Tiers\ThirdParty;
 use Filament\Actions\Action;
@@ -42,6 +43,19 @@ class ViewThirdParty extends ViewRecord
                         Notification::make()
                             ->success()
                             ->title('Vérification de conformité lançé en arrière plan')
+                            ->send();
+                    }),
+                Action::make('collect_documents')
+                    ->label('Collecter les documents légaux')
+                    ->icon(Phosphor::DownloadSimple)
+                    ->color('info')
+                    ->visible(fn (ThirdParty $record) => $record->siren && in_array($record->type, [ThirdPartyType::SUBCONTRACTOR, ThirdPartyType::CLIENT]))
+                    ->action(function (ThirdParty $record) {
+                        CollectLegalDocumentsJob::dispatch($record);
+
+                        Notification::make()
+                            ->success()
+                            ->title('Collecte des documents légaux lancée en arrière-plan')
                             ->send();
                     }),
                 GenerateContractAction::make(),

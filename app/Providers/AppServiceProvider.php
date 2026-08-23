@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Contracts\Tiers\LegalDocumentProviderInterface;
 use App\Models\Banque\BankReconciliation;
 use App\Models\Immobilisation\FixedAsset;
 use App\Models\Locations\RentalContract;
@@ -10,6 +11,7 @@ use App\Observers\Immobilisation\FixedAssetObserver;
 use App\Observers\Locations\RentalContractObserver;
 use App\Services\RH\GoogleCloudVisionOcrService;
 use App\Services\RH\OcrServiceInterface;
+use App\Services\Tiers\Providers\ApiEntrepriseProvider;
 use BezhanSalleh\PanelSwitch\PanelSwitch;
 use Carbon\CarbonImmutable;
 use Filament\Support\Facades\FilamentView;
@@ -30,6 +32,7 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->bind(OcrServiceInterface::class, GoogleCloudVisionOcrService::class);
+        $this->app->bind(LegalDocumentProviderInterface::class, ApiEntrepriseProvider::class);
     }
 
     /**

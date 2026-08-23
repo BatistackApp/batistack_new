@@ -179,7 +179,11 @@ class PayslipResource extends Resource
                     }),
             ])
             ->filters([
-                //
+                Tables\Filters\SelectFilter::make('period')
+                    ->label('Période')
+                    ->options(fn () => Payslip::query()->distinct()->pluck('period', 'period')->sort()->reverse()->toArray())
+                    ->searchable()
+                    ->preload(),
             ])
             ->recordActions([
                 ActionGroup::make([

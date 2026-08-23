@@ -8,7 +8,7 @@ use App\Filament\Paie\Resources\Paie\DsnSubmissions\Pages\ViewDsnSubmission;
 use App\Models\Paie\DsnSubmission;
 use BackedEnum;
 use Filament\Infolists\Components\RepeatableEntry;
-use Filament\Infolists\Components\Section;
+use Filament\Schemas\Components\Section;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\Resource;
 use Filament\Support\Enums\FontWeight;
@@ -145,6 +145,7 @@ class DsnSubmissionResource extends Resource
                             ->money('EUR'),
                     ]),
                 Section::make('Détail des bulletins')
+                    ->columnSpanFull()
                     ->schema([
                         RepeatableEntry::make('lines')
                             ->label('')
