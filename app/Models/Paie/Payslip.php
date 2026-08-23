@@ -32,6 +32,10 @@ class Payslip extends Model
         'meal_allowance_amount',
         'digiposte_document_id',
         'digiposte_status',
+        'dsn_status',
+        'dsn_submitted_at',
+        'dsn_exported_at',
+        'dsn_error_message',
     ];
 
     protected $casts = [
@@ -53,6 +57,8 @@ class Payslip extends Model
         'meal_allowance_amount' => 'decimal:2',
         'custom_bonuses' => 'array',
         'status' => \App\Enums\Paie\PayslipStatus::class,
+        'dsn_submitted_at' => 'datetime',
+        'dsn_exported_at' => 'datetime',
     ];
 
     public function employee()
@@ -68,5 +74,12 @@ class Payslip extends Model
     public function advances()
     {
         return $this->hasMany(AdvancePayment::class);
+    }
+
+    public function dsnSubmissions()
+    {
+        return $this->belongsToMany(DsnSubmission::class, 'dsn_submission_lines')
+            ->withPivot('status', 'error_message')
+            ->withTimestamps();
     }
 }

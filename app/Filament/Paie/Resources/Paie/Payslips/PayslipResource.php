@@ -2,6 +2,7 @@
 
 namespace App\Filament\Paie\Resources\Paie\Payslips;
 
+use App\Enums\Paie\DsnStatus;
 use App\Enums\Paie\PayslipStatus;
 use App\Filament\Paie\Resources\Paie\Payslips\Pages\CreatePayslip;
 use App\Filament\Paie\Resources\Paie\Payslips\Pages\EditPayslip;
@@ -14,6 +15,7 @@ use App\Jobs\Paie\SendPayslipToDigiposteJob;
 use App\Models\Banque\BankAccount;
 use App\Models\Paie\Payslip;
 use App\Models\RH\Employee;
+use App\Notifications\Paie\DsnExportedNotification;
 use App\Services\Paie\AccountingExportService;
 use App\Services\Paie\DsnExportService;
 use App\Services\Paie\PayslipLockService;
@@ -162,6 +164,17 @@ class PayslipResource extends Resource
                         'pending' => 'gray',
                         'deposited' => 'success',
                         'failed' => 'danger',
+                        default => 'gray',
+                    }),
+                Tables\Columns\TextColumn::make('dsn_status')
+                    ->label('DSN')
+                    ->badge()
+                    ->color(fn (?string $state): string => match ($state) {
+                        'ready' => 'info',
+                        'exported' => 'warning',
+                        'submitted' => 'primary',
+                        'accepted' => 'success',
+                        'rejected' => 'danger',
                         default => 'gray',
                     }),
             ])
@@ -322,6 +335,10 @@ class PayslipResource extends Resource
                         ->label('Exporter DADS/DSN (CSV)')
                         ->icon('heroicon-o-table-cells')
                         ->color('success')
+                        ->requiresConfirmation()
+                        ->modalHeading('Export DSN pour expert-comptable')
+                        ->modalDescription('Génère le fichier CSV et enregistre la soumission DSN. Le fichier sera prêt au téléchargement.')
+                        ->modalSubmitActionLabel('Générer l\'export')
                         ->action(function (Collection $records) {
                             $validRecords = $records->filter(fn ($r) => in_array($r->status, [PayslipStatus::VALIDATED, PayslipStatus::PAID]));
 
@@ -335,10 +352,46 @@ class PayslipResource extends Resource
                                 return;
                             }
 
+                            $period = $validRecords->first()->period;
+                            $companyId = $validRecords->first()->employee->company_id ?? 1;
+
                             $service = new DsnExportService;
-                            $path = $service->generateCsv($validRecords);
+                            $submission = $service->generateForAccountant($validRecords, $period, $companyId, auth()->id());
+
+                            auth()->user()->notify(new DsnExportedNotification($submission));
+
+                            $path = $submission->exported_file_path;
 
                             return response()->download(storage_path('app/public/'.$path));
+                        }),
+                    BulkAction::make('markDsnReady')
+                        ->label('Marquer DSN prête')
+                        ->icon('heroicon-o-check-circle')
+                        ->color('info')
+                        ->requiresConfirmation()
+                        ->modalHeading('Marquer les bulletins comme prêts pour la DSN')
+                        ->modalDescription('Cela marquera les bulletins sélectionnés comme prêts pour l\'export DSN.')
+                        ->modalSubmitActionLabel('Marquer comme prêts')
+                        ->action(function (Collection $records) {
+                            $validRecords = $records->filter(fn ($r) => in_array($r->status, [PayslipStatus::VALIDATED, PayslipStatus::PAID]));
+
+                            if ($validRecords->isEmpty()) {
+                                Notification::make()
+                                    ->title('Aucun bulletin valide')
+                                    ->body('Seuls les bulletins validés ou payés peuvent être marqués comme prêts.')
+                                    ->warning()
+                                    ->send();
+
+                                return;
+                            }
+
+                            $service = new DsnExportService;
+                            $service->markAsReady($validRecords);
+
+                            Notification::make()
+                                ->title("{$validRecords->count()} bulletin(s) marqué(s) comme prêts pour la DSN")
+                                ->success()
+                                ->send();
                         }),
                     BulkAction::make('generateSepa')
                         ->label('Générer fichier SEPA')

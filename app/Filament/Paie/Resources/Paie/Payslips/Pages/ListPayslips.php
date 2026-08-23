@@ -69,6 +69,10 @@ class ListPayslips extends ListRecords
                 ->label('Export DADS/DSN du mois')
                 ->icon('heroicon-o-table-cells')
                 ->color('success')
+                ->requiresConfirmation()
+                ->modalHeading('Export DSN pour expert-comptable')
+                ->modalDescription('Génère le fichier CSV et enregistre la soumission DSN pour la période sélectionnée.')
+                ->modalSubmitActionLabel('Générer l\'export')
                 ->schema([
                     TextInput::make('period')
                         ->label('Période (YYYY-MM)')
@@ -89,8 +93,16 @@ class ListPayslips extends ListRecords
                         return;
                     }
 
+                    $companyId = $payslips->first()->employee->company_id ?? 1;
+
                     $service = new \App\Services\Paie\DsnExportService();
-                    $path = $service->generateCsv($payslips);
+                    $submission = $service->generateForAccountant($payslips, $data['period'], $companyId, auth()->id());
+
+                    \App\Notifications\Paie\DsnExportedNotification::class;
+
+                    auth()->user()->notify(new \App\Notifications\Paie\DsnExportedNotification($submission));
+
+                    $path = $submission->exported_file_path;
 
                     return response()->download(storage_path('app/public/' . $path));
                 }),
