@@ -6,10 +6,27 @@ flag_management:
     carryforward: true
 
 flags:
+  Accounting:
+    paths:
+      - 'app/Enums/Accounting/**'
+      - 'app/Models/Accounting/**'
+      - 'app/Services/Accounting/**'
+      - 'app/Observers/Banque/**'
+      - 'app/Filament/Banque/Resources/Accounting/**'
+      - 'tests/Feature/Modules/Accounting/**'
+    carryforward: true
   Articles:
     paths:
       - 'app/Filament/Articles/**'
       - 'tests/Feature/Modules/Articles/**'
+    carryforward: true
+  Banque:
+    paths:
+      - 'app/Models/Banque/**'
+      - 'app/Services/Banque/**'
+      - 'app/Observers/Banque/**'
+      - 'app/Filament/Banque/**'
+      - 'tests/Feature/Modules/Banque/**'
     carryforward: true
   Chantiers:
     paths:
