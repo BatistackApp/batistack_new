@@ -1,0 +1,17 @@
+{
+    "_hash": "bc67ddef813bf162fed447cbd2b07991112b9c4d4a2a52b48386a2f85a64ef89",
+    "patches": {
+        "bezhansalleh/filament-panel-switch": [
+            {
+                "package": "bezhansalleh/filament-panel-switch",
+                "description": "Fix undefined array key when panel is filtered by access control",
+                "url": "patches/filament-panel-switch-unregistered-panel.patch",
+                "sha256": "855a88945e128dbbac4b340c2b40ccc08c42175f71dc2883bb5ac21c7795c26a",
+                "depth": 1,
+                "extra": {
+                    "provenance": "root"
+                }
+            }
+        ]
+    }
+}

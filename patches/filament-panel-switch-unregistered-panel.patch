@@ -1,0 +1,11 @@
+--- a/vendor/bezhansalleh/filament-panel-switch/src/PanelSwitch.php
++++ b/vendor/bezhansalleh/filament-panel-switch/src/PanelSwitch.php
+@@ -249,7 +249,7 @@
+                      = ->only();
+ 
+                     return collect()
+-                        ->map(fn (string ) => [])
++                        ->map(fn (string ) => ->get())
+                         ->filter();
+                 },
+                 default: fn () => 

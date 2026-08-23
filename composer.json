@@ -78,6 +78,7 @@
         "zvizvi/user-fields": "^0.0.4"
     },
     "require-dev": {
+        "cweagans/composer-patches": "*",
         "fakerphp/faker": "^1.24",
         "laravel/pail": "^1.2.5",
         "laravel/pao": "^1.0.6",
@@ -150,6 +151,11 @@
     "extra": {
         "laravel": {
             "dont-discover": []
+        },
+        "patches": {
+            "bezhansalleh/filament-panel-switch": {
+                "Fix undefined array key when panel is filtered by access control": "patches/filament-panel-switch-unregistered-panel.patch"
+            }
         }
     },
     "config": {
@@ -158,7 +164,8 @@
         "sort-packages": true,
         "allow-plugins": {
             "pestphp/pest-plugin": true,
-            "php-http/discovery": true
+            "php-http/discovery": true,
+            "cweagans/composer-patches": true
         }
     },
     "minimum-stability": "stable",
