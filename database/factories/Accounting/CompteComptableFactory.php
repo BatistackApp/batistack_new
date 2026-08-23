@@ -10,7 +10,8 @@ class CompteComptableFactory extends Factory
     protected $model = CompteComptable::class;
 
     private array $classePrefixes = [
-        1 => ['10', '11', '12', '13', '15', '20', '21', '22', '23', '26', '27', '28', '29'],
+        1 => ['10', '11', '12', '13', '15'],
+        2 => ['20', '21', '22', '23', '26', '27', '28', '29'],
         3 => ['31', '32', '34'],
         4 => ['40', '41', '42', '43', '44', '45'],
         5 => ['51', '52', '53', '54', '58'],
@@ -23,7 +24,7 @@ class CompteComptableFactory extends Factory
     {
         $classe = $this->faker->randomElement(array_keys($this->classePrefixes));
         $prefix = $this->faker->randomElement($this->classePrefixes[$classe]);
-        $suffix = str_pad($this->faker->numberBetween(0, 9999), 6 - strlen($prefix), '0', STR_PAD_LEFT);
+        $suffix = str_pad((string) $this->faker->numberBetween(0, 9999), 6 - strlen($prefix), '0', STR_PAD_LEFT);
 
         return [
             'numero' => $prefix . $suffix,
@@ -36,7 +37,10 @@ class CompteComptableFactory extends Factory
 
     public function classe1(): static
     {
-        return $this->state(fn () => ['classe' => 1, 'numero' => '21' . str_pad((string) $this->faker->numberBetween(0, 999), 4, '0')]);
+        $prefix = $this->faker->randomElement($this->classePrefixes[1]);
+        $suffix = str_pad((string) $this->faker->numberBetween(0, 9999), 6 - strlen($prefix), '0', STR_PAD_LEFT);
+
+        return $this->state(fn () => ['classe' => 1, 'numero' => $prefix . $suffix]);
     }
 
     public function classe3(): static
@@ -47,6 +51,14 @@ class CompteComptableFactory extends Factory
     public function classe4(): static
     {
         return $this->state(fn () => ['classe' => 4, 'numero' => '411' . str_pad((string) $this->faker->numberBetween(0, 999), 3, '0')]);
+    }
+
+    public function classe5(): static
+    {
+        $prefix = $this->faker->randomElement($this->classePrefixes[5]);
+        $suffix = str_pad((string) $this->faker->numberBetween(0, 9999), 6 - strlen($prefix), '0', STR_PAD_LEFT);
+
+        return $this->state(fn () => ['classe' => 5, 'numero' => $prefix . $suffix]);
     }
 
     public function classe6(): static

@@ -100,11 +100,13 @@ test('PCG seeder creates expected accounts', function () {
     expect($total)->toBeGreaterThan(100);
 
     $classe1 = CompteComptable::deClasse(1)->count();
+    $classe2 = CompteComptable::deClasse(2)->count();
     $classe4 = CompteComptable::deClasse(4)->count();
     $classe6 = CompteComptable::deClasse(6)->count();
     $classe7 = CompteComptable::deClasse(7)->count();
 
-    expect($classe1)->toBeGreaterThan(10);
+    expect($classe1)->toBeGreaterThan(5);
+    expect($classe2)->toBeGreaterThan(10);
     expect($classe4)->toBeGreaterThan(10);
     expect($classe6)->toBeGreaterThan(10);
     expect($classe7)->toBeGreaterThan(3);

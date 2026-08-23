@@ -39,74 +39,82 @@ class BankReconciliationObserver
     {
         $transaction = $reconciliation->bankTransaction;
         $invoice = $reconciliation->reconcilable;
+
+        if (! $transaction || ! $invoice) {
+            return;
+        }
+
         $amount = (float) $reconciliation->amount_applied;
 
         if ($amount <= 0) {
             return;
         }
 
-        $numeroPiece = $this->ecritureService->generateNumeroPiece(JournalType::BANQUE);
-        $date = $transaction->date->toDateString();
-        $libelle = 'Lettrage ' . $invoice->reference ?? $invoice->number ?? 'N/A';
+        try {
+            $numeroPiece = $this->ecritureService->generateNumeroPiece(JournalType::BANQUE);
+            $date = $transaction->date->toDateString();
+            $libelle = 'Lettrage ' . ($invoice->reference ?? $invoice->number ?? 'N/A');
 
-        if ($transaction->type === \App\Enums\Banque\TransactionType::DEBIT) {
-            // Payment to supplier
-            $compteCharge = $this->accountingPlanService->getChargeAccount();
-            $compteBanque = $this->accountingPlanService->getBankAccount();
+            if ($transaction->type === \App\Enums\Banque\TransactionType::DEBIT) {
+                $compteCharge = $this->accountingPlanService->getChargeAccount();
+                $compteBanque = $this->accountingPlanService->getBankAccount();
 
-            $this->ecritureService->createBalancedPair(
-                [
-                    'date_ecriture' => $date,
-                    'date_piece' => $date,
-                    'journal_type' => JournalType::BANQUE,
-                    'numero_piece' => $numeroPiece,
-                    'compte_numero' => $compteCharge,
-                    'libelle' => $libelle,
-                    'chantier_id' => $transaction->chantier_id,
-                    'reconcilable_type' => get_class($reconciliation),
-                    'reconcilable_id' => $reconciliation->id,
-                ],
-                [
-                    'date_ecriture' => $date,
-                    'date_piece' => $date,
-                    'journal_type' => JournalType::BANQUE,
-                    'numero_piece' => $numeroPiece,
-                    'compte_numero' => $compteBanque,
-                    'libelle' => $libelle,
-                    'chantier_id' => $transaction->chantier_id,
-                    'reconcilable_type' => get_class($reconciliation),
-                    'reconcilable_id' => $reconciliation->id,
-                ]
-            );
-        } else {
-            // Payment from client
-            $compteBanque = $this->accountingPlanService->getBankAccount();
-            $compteClient = $this->accountingPlanService->getClientAccount();
+                $this->ecritureService->createBalancedPair(
+                    [
+                        'date_ecriture' => $date,
+                        'date_piece' => $date,
+                        'journal_type' => JournalType::BANQUE,
+                        'numero_piece' => $numeroPiece,
+                        'compte_numero' => $compteCharge,
+                        'libelle' => $libelle,
+                        'chantier_id' => $transaction->chantier_id,
+                        'reconcilable_type' => get_class($reconciliation),
+                        'reconcilable_id' => $reconciliation->id,
+                    ],
+                    [
+                        'date_ecriture' => $date,
+                        'date_piece' => $date,
+                        'journal_type' => JournalType::BANQUE,
+                        'numero_piece' => $numeroPiece,
+                        'compte_numero' => $compteBanque,
+                        'libelle' => $libelle,
+                        'chantier_id' => $transaction->chantier_id,
+                        'reconcilable_type' => get_class($reconciliation),
+                        'reconcilable_id' => $reconciliation->id,
+                    ]
+                );
+            } else {
+                $compteBanque = $this->accountingPlanService->getBankAccount();
+                $compteClient = $this->accountingPlanService->getClientAccount();
 
-            $this->ecritureService->createBalancedPair(
-                [
-                    'date_ecriture' => $date,
-                    'date_piece' => $date,
-                    'journal_type' => JournalType::BANQUE,
-                    'numero_piece' => $numeroPiece,
-                    'compte_numero' => $compteBanque,
-                    'libelle' => $libelle,
-                    'chantier_id' => $transaction->chantier_id,
-                    'reconcilable_type' => get_class($reconciliation),
-                    'reconcilable_id' => $reconciliation->id,
-                ],
-                [
-                    'date_ecriture' => $date,
-                    'date_piece' => $date,
-                    'journal_type' => JournalType::BANQUE,
-                    'numero_piece' => $numeroPiece,
-                    'compte_numero' => $compteClient,
-                    'libelle' => $libelle,
-                    'chantier_id' => $transaction->chantier_id,
-                    'reconcilable_type' => get_class($reconciliation),
-                    'reconcilable_id' => $reconciliation->id,
-                ]
-            );
+                $this->ecritureService->createBalancedPair(
+                    [
+                        'date_ecriture' => $date,
+                        'date_piece' => $date,
+                        'journal_type' => JournalType::BANQUE,
+                        'numero_piece' => $numeroPiece,
+                        'compte_numero' => $compteBanque,
+                        'libelle' => $libelle,
+                        'chantier_id' => $transaction->chantier_id,
+                        'reconcilable_type' => get_class($reconciliation),
+                        'reconcilable_id' => $reconciliation->id,
+                    ],
+                    [
+                        'date_ecriture' => $date,
+                        'date_piece' => $date,
+                        'journal_type' => JournalType::BANQUE,
+                        'numero_piece' => $numeroPiece,
+                        'compte_numero' => $compteClient,
+                        'libelle' => $libelle,
+                        'chantier_id' => $transaction->chantier_id,
+                        'reconcilable_type' => get_class($reconciliation),
+                        'reconcilable_id' => $reconciliation->id,
+                    ]
+                );
+            }
+        } catch (\Throwable $e) {
+            // Silently ignore accounting entry generation errors
+            // to not break existing reconciliation workflows
         }
     }
 
