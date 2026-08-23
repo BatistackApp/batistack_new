@@ -191,6 +191,19 @@ jobs:
               - 'app/Providers/Vision3D/**'
               - 'app/Services/Vision3D/**'
               - 'tests/Feature/Modules/Vision3D/**'
+            Accounting:
+              - 'app/Console/Accounting/**'
+              - 'app/Enums/Accounting/**'
+              - 'app/Events/Accounting/**'
+              - 'app/Jobs/Accounting/**'
+              - 'app/Mails/Accounting/**'
+              - 'app/Models/Accounting/**'
+              - 'app/Notifications/Accounting/**'
+              - 'app/Observers/Accounting/**'
+              - 'app/Providers/Accounting/**'
+              - 'app/Services/Accounting/**'
+              - 'database/seeders/Accounting/**'
+              - 'tests/Feature/Modules/Accounting/**'
 
   test-modules:
     runs-on: ubuntu-latest
