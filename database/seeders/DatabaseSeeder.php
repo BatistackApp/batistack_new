@@ -7,6 +7,7 @@ use App\Models\RH\Contract;
 use App\Models\RH\Employee;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use App\Models\User;
+use Database\Seeders\Accounting\PcgSeeder;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Artisan;
 
@@ -27,6 +28,7 @@ class DatabaseSeeder extends Seeder
         ]);
 
         $this->call(ShieldSeeder::class);
+        $this->call(PcgSeeder::class);
 
         $admin = User::where('email', 'admin@admin.com')->first();
         if ($admin) {
