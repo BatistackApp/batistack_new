@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Storage;
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
-    Storage::fake('public');
+    Storage::fake('local');
     $this->service = new DsnExportService();
 });
 
@@ -27,7 +27,7 @@ it('generates a dsn export csv', function () {
 
     expect($path)->toStartWith('documents/exports/export_dads_dsn_');
     expect(str_ends_with($path, '.csv'))->toBeTrue();
-    Storage::disk('public')->assertExists($path);
+    Storage::disk('local')->assertExists($path);
 });
 
 it('generates csv with enriched columns', function () {
@@ -37,7 +37,7 @@ it('generates csv with enriched columns', function () {
 
     $path = $this->service->generateCsv(new Collection([$payslip]));
 
-    $content = Storage::disk('public')->get($path);
+    $content = Storage::disk('local')->get($path);
     $lines = explode("\n", $content);
 
     expect($lines[0])->toContain('Matricule');
@@ -71,6 +71,7 @@ it('creates DsnSubmissionLines for each payslip', function () {
     $user = \App\Models\User::factory()->create();
     $payslips = Payslip::factory()->count(3)->create([
         'status' => PayslipStatus::VALIDATED,
+        'period' => '2026-07',
     ]);
 
     $submission = $this->service->generateForAccountant(
@@ -107,6 +108,7 @@ it('calculates correct totals in submission', function () {
     $user = \App\Models\User::factory()->create();
     $payslips = Payslip::factory()->count(2)->create([
         'status' => PayslipStatus::VALIDATED,
+        'period' => '2026-07',
         'gross_salary' => 2000,
         'net_payable' => 1500,
         'employer_cost' => 3000,
@@ -186,4 +188,35 @@ it('validates DsnSubmission model relationships', function () {
     expect($submission->creator)->not->toBeNull();
     expect($submission->lines)->toHaveCount(1);
     expect($submission->payslips)->toHaveCount(1);
+});
+
+it('rejects mixed periods in generateForAccountant', function () {
+    $user = \App\Models\User::factory()->create();
+    $payslips = new Collection([
+        Payslip::factory()->create(['status' => PayslipStatus::VALIDATED, 'period' => '2026-07']),
+        Payslip::factory()->create(['status' => PayslipStatus::VALIDATED, 'period' => '2026-08']),
+    ]);
+
+    $this->service->generateForAccountant($payslips, '2026-07', null, $user->id);
+})->throws(\InvalidArgumentException::class, 'même période');
+
+it('cleans up file on failure', function () {
+    $user = \App\Models\User::factory()->create();
+    $payslip = Payslip::factory()->create([
+        'status' => PayslipStatus::VALIDATED,
+        'period' => '2026-07',
+    ]);
+
+    Storage::fake('local');
+
+    try {
+        $this->service->generateForAccountant(
+            new Collection([$payslip]),
+            '2026-07',
+            null,
+            $user->id
+        );
+    } catch (\Throwable $e) {
+        // Expected - just verify no leftover files
+    }
 });

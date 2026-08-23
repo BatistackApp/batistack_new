@@ -23,7 +23,7 @@ Le module **Paie** centralise l'édition et le calcul des bulletins de salaire (
     *   **Gestion des Absences & Subrogation (CC Bâtiment)** : Gère automatiquement les délais de carence spécifiques (ex: 3j pour Ouvrier, 0j pour AT ou ETAM/Cadres avec ancienneté) pour calculer le Maintien de Salaire Conventionnel. Gère l'intégration des IJSS Brutes soumises uniquement à la CSG/CRDS en cas de subrogation.
 *   **Exports & Compatibilité** :
     *   `SepaExportService` : Génère le fichier de virement bancaire groupé (`pain.001.001.03`).
-    *   `DsnExportService` : Exporte les données au format `.csv` pour la déclaration sociale nominative (DADS/DSN). Enrichi avec colonnes supplémentaires (Date_Naissance, SIRET). Intègre un suivi complet via `DsnSubmission` (statut, dates, totaux). Méthode `generateForAccountant()` qui crée l'enregistrement de suivi et notifie l'utilisateur.
+    *   `DsnExportService` : Exporte les données au format `.csv` pour la déclaration sociale nominative (DADS/DSN). Enrichi avec colonnes supplémentaires (Date_Naissance, SIRET). Intègre un suivi complet via `DsnSubmission` (statut, dates, totaux). Méthode `generateForAccountant()` qui crée l'enregistrement de suivi. L'appelant (actions Filament) envoie la notification après l'appel.
     *   `AccountingExportService` : Génère l'OD Comptable (journal de paie en partie double : 641100, 421000, 431000...).
     *   `PayslipPdfService` : Génération du PDF avec cumuls annuels dynamiques.
 *   **Coffre-Fort Numérique** : `DigiposteService` intégré via l'API Okapi (La Poste). Création automatique du coffre-fort (CPA) à la fin de l'onboarding et dépôt légal des bulletins (job asynchrone).

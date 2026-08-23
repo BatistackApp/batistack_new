@@ -10,6 +10,7 @@ use App\Models\Paie\Payslip;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Carbon\Carbon;
 
 class DsnExportService
@@ -19,7 +20,7 @@ class DsnExportService
      */
     public function generateCsv(Collection $payslips): string
     {
-        $filename = 'export_dads_dsn_' . Carbon::now()->format('Y_m_d_His') . '.csv';
+        $filename = 'export_dads_dsn_' . Carbon::now()->format('Y_m_d_His') . '_' . Str::random(8) . '.csv';
 
         $csvData = [];
         $csvData[] = [
@@ -77,7 +78,7 @@ class DsnExportService
         fclose($output);
 
         $path = 'documents/exports/' . $filename;
-        Storage::disk('public')->put($path, $content);
+        Storage::disk('local')->put($path, $content);
 
         return $path;
     }
@@ -87,38 +88,53 @@ class DsnExportService
      */
     public function generateForAccountant(Collection $payslips, string $period, ?int $companyId, int $userId): DsnSubmission
     {
+        $periods = $payslips->pluck('period')->unique();
+        if ($periods->count() > 1) {
+            throw new \InvalidArgumentException('Tous les bulletins doivent appartenir à la même période.');
+        }
+
+        $companyIds = $payslips->pluck('employee.company_id')->unique()->values();
+        if ($companyIds->count() > 1) {
+            throw new \InvalidArgumentException('Tous les bulletins doivent appartenir à la même société.');
+        }
+
         $path = $this->generateCsv($payslips);
 
-        return DB::transaction(function () use ($payslips, $period, $companyId, $userId, $path) {
-            $submission = DsnSubmission::create([
-                'company_id' => $companyId,
-                'period' => $period,
-                'status' => DsnSubmissionStatus::EXPORTED,
-                'export_type' => 'csv_expert',
-                'exported_at' => now(),
-                'exported_file_path' => $path,
-                'payslips_count' => $payslips->count(),
-                'total_gross' => $payslips->sum('gross_salary'),
-                'total_net' => $payslips->sum('net_payable'),
-                'total_employer_cost' => $payslips->sum('employer_cost'),
-                'created_by' => $userId,
-            ]);
-
-            foreach ($payslips as $payslip) {
-                DsnSubmissionLine::create([
-                    'dsn_submission_id' => $submission->id,
-                    'payslip_id' => $payslip->id,
-                    'status' => 'exported',
+        try {
+            return DB::transaction(function () use ($payslips, $period, $companyId, $userId, $path) {
+                $submission = DsnSubmission::create([
+                    'company_id' => $companyId,
+                    'period' => $period,
+                    'status' => DsnSubmissionStatus::EXPORTED,
+                    'export_type' => 'csv_expert',
+                    'exported_at' => now(),
+                    'exported_file_path' => $path,
+                    'payslips_count' => $payslips->count(),
+                    'total_gross' => $payslips->sum('gross_salary'),
+                    'total_net' => $payslips->sum('net_payable'),
+                    'total_employer_cost' => $payslips->sum('employer_cost'),
+                    'created_by' => $userId,
                 ]);
 
-                $payslip->update([
-                    'dsn_status' => DsnStatus::EXPORTED->value,
-                    'dsn_exported_at' => now(),
-                ]);
-            }
+                foreach ($payslips as $payslip) {
+                    DsnSubmissionLine::create([
+                        'dsn_submission_id' => $submission->id,
+                        'payslip_id' => $payslip->id,
+                        'status' => 'exported',
+                    ]);
 
-            return $submission;
-        });
+                    $payslip->update([
+                        'dsn_status' => DsnStatus::EXPORTED->value,
+                        'dsn_exported_at' => now(),
+                    ]);
+                }
+
+                return $submission;
+            });
+        } catch (\Throwable $e) {
+            Storage::disk('local')->delete($path);
+            throw $e;
+        }
     }
 
     /**

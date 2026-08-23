@@ -9,6 +9,7 @@ use Filament\Actions\CreateAction;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ListRecords;
+use Illuminate\Support\Facades\Storage;
 
 class ListPayslips extends ListRecords
 {
@@ -98,13 +99,9 @@ class ListPayslips extends ListRecords
                     $service = new \App\Services\Paie\DsnExportService();
                     $submission = $service->generateForAccountant($payslips, $data['period'], $companyId, auth()->id());
 
-                    \App\Notifications\Paie\DsnExportedNotification::class;
-
                     auth()->user()->notify(new \App\Notifications\Paie\DsnExportedNotification($submission));
 
-                    $path = $submission->exported_file_path;
-
-                    return response()->download(storage_path('app/public/' . $path));
+                    return Storage::disk('local')->download($submission->exported_file_path);
                 }),
             CreateAction::make(),
         ];

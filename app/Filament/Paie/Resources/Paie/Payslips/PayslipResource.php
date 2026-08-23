@@ -360,9 +360,7 @@ class PayslipResource extends Resource
 
                             auth()->user()->notify(new DsnExportedNotification($submission));
 
-                            $path = $submission->exported_file_path;
-
-                            return response()->download(storage_path('app/public/'.$path));
+                            return Storage::disk('local')->download($submission->exported_file_path);
                         }),
                     BulkAction::make('markDsnReady')
                         ->label('Marquer DSN prête')

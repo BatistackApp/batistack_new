@@ -4,8 +4,10 @@ namespace App\Filament\Paie\Resources\Paie\DsnSubmissions;
 
 use App\Enums\Paie\DsnSubmissionStatus;
 use App\Filament\Paie\Resources\Paie\DsnSubmissions\Pages\ListDsnSubmissions;
+use App\Filament\Paie\Resources\Paie\DsnSubmissions\Pages\ViewDsnSubmission;
 use App\Models\Paie\DsnSubmission;
 use BackedEnum;
+use Filament\Infolists\Components\RepeatableEntry;
 use Filament\Infolists\Components\Section;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\Resource;
@@ -144,7 +146,7 @@ class DsnSubmissionResource extends Resource
                     ]),
                 Section::make('Détail des bulletins')
                     ->schema([
-                        TextEntry::make('lines')
+                        RepeatableEntry::make('lines')
                             ->label('')
                             ->schema([
                                 TextEntry::make('payslip.employee.last_name')
@@ -182,6 +184,7 @@ class DsnSubmissionResource extends Resource
     {
         return [
             'index' => ListDsnSubmissions::route('/'),
+            'view' => ViewDsnSubmission::route('/{record}'),
         ];
     }
 }
