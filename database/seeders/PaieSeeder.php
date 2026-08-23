@@ -34,7 +34,7 @@ class PaieSeeder extends Seeder
                     'employee_id' => $employee->id,
                     'period' => $period,
                     'base_hours' => $baseHours,
-                    'overtime_hours' => rand(0, 15),
+                    'overtime_hours' => 0,
                     'overtime_amount' => 0,
                     'gd_allowance_amount' => rand(0, 5) > 3 ? rand(20, 80) : 0,
                     'expense_reports_amount' => 0,

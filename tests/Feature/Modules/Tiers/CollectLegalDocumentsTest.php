@@ -9,6 +9,7 @@ use App\Models\Tiers\ThirdParty;
 use App\Models\Tiers\ThirdPartyDocument;
 use App\Notifications\Tiers\DocumentExpiredNotification;
 use App\Notifications\Tiers\DocumentExpiringNotification;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Queue;
 
@@ -211,6 +212,9 @@ it('skips collection for supplier type', function () {
 it('dispatches expiring notification at j-30', function () {
     Notification::fake([DocumentExpiringNotification::class]);
 
+    $now = Carbon::create(2026, 8, 23, 0, 0, 0);
+    Carbon::setTestNow($now);
+
     $thirdParty = ThirdParty::factory()->create([
         'type' => ThirdPartyType::SUBCONTRACTOR,
         'email' => 'test@example.com',
@@ -220,10 +224,12 @@ it('dispatches expiring notification at j-30', function () {
         'third_party_id' => $thirdParty->id,
         'type' => ThirdPartyDocumentType::URSSAF,
         'status' => ThirdPartyDocumentStatus::VALID,
-        'expiration_date' => now()->addDays(30),
+        'expiration_date' => $now->copy()->addDays(30),
     ]);
 
     Artisan::call('app:check-third-party-documents');
+
+    Carbon::setTestNow();
 
     Notification::assertSentTimes(DocumentExpiringNotification::class, 1);
 });

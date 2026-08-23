@@ -66,6 +66,10 @@ class BanqueSeeder extends Seeder
                 ? rand(500, 15000) / 100
                 : -(rand(100, 8000) / 100);
 
+            $filteredCategories = $categories->filter(
+                fn ($cat) => $cat->type === $type->value
+            );
+
             BankTransaction::create([
                 'bank_account_id' => $mainAccount->id,
                 'external_id' => uniqid('TX-'),
@@ -74,7 +78,9 @@ class BanqueSeeder extends Seeder
                 'amount' => $amount,
                 'type' => $type->value,
                 'status' => collect(TransactionStatus::cases())->random()->value,
-                'transaction_category_id' => $categories[array_rand($categories)]->id,
+                'transaction_category_id' => $filteredCategories->isNotEmpty()
+                    ? $filteredCategories->random()->id
+                    : $categories->random()->id,
             ]);
         }
     }

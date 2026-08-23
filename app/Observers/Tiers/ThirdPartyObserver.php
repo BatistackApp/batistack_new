@@ -2,6 +2,7 @@
 
 namespace App\Observers\Tiers;
 
+use App\Enums\Tiers\ThirdPartyDocumentStatus;
 use App\Enums\Tiers\ThirdPartyType;
 use App\Jobs\Tiers\CollectLegalDocumentsJob;
 use App\Jobs\Tiers\SynchronizeSirenJob;
@@ -40,8 +41,9 @@ class ThirdPartyObserver
             SynchronizeSirenJob::dispatch($thirdParty);
         }
 
-        if ($thirdParty->wasChanged('siren') && $thirdParty->siren && ! $thirdParty->last_legal_sync_at
+        if ($thirdParty->wasChanged('siren') && $thirdParty->siren
             && in_array($thirdParty->type, [ThirdPartyType::SUBCONTRACTOR, ThirdPartyType::CLIENT])) {
+            $thirdParty->documents()->update(['status' => ThirdPartyDocumentStatus::EXPIRED]);
             CollectLegalDocumentsJob::dispatch($thirdParty);
         }
     }

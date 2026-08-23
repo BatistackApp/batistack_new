@@ -61,7 +61,7 @@ return [
 
     'api_entreprise' => [
         'token' => env('API_ENTREPRISE_TOKEN', ''),
-        'base_url' => env('API_ENTREPRISE_BASE_URL', 'https://api.entreprise.api.gouv.fr'),
+        'base_url' => env('API_ENTREPRISE_BASE_URL', 'https://entreprise.api.gouv.fr'),
     ],
 
     'github' => [

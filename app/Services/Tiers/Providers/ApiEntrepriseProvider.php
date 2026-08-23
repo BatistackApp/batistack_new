@@ -15,14 +15,14 @@ class ApiEntrepriseProvider implements LegalDocumentProviderInterface
 
     public function __construct()
     {
-        $this->baseUrl = config('services.api_entreprise.base_url', 'https://api.entreprise.api.gouv.fr');
+        $this->baseUrl = config('services.api_entreprise.base_url', 'https://entreprise.api.gouv.fr');
         $this->token = config('services.api_entreprise.token', '');
     }
 
     public function fetchAttestationUrssaf(string $siren): ?array
     {
         if (empty($this->token)) {
-            Log::warning('ApiEntrepriseProvider: API Entrepise token not configured.');
+            Log::warning('ApiEntrepriseProvider: API Entreprise token not configured.');
 
             return null;
         }
@@ -32,10 +32,14 @@ class ApiEntrepriseProvider implements LegalDocumentProviderInterface
         try {
             $response = Http::withToken($this->token)
                 ->timeout(15)
-                ->get("{$this->baseUrl}/v4/urssaf/unites_legales/{$siren}/attestation_vigilance");
+                ->get("{$this->baseUrl}/v4/urssaf/unites_legales/{$siren}/attestation_vigilance", [
+                    'recipient' => config('app.name', 'Batistack'),
+                    'context' => 'collecte_documents_legaux',
+                    'object' => 'attestation_vigilance',
+                ]);
 
             if ($response->successful()) {
-                $data = $response->json();
+                $data = $response->json('data', []);
 
                 $documentUrl = $data['document_url'] ?? null;
                 if (! $documentUrl) {
@@ -53,8 +57,8 @@ class ApiEntrepriseProvider implements LegalDocumentProviderInterface
 
                 return [
                     'file_content' => $pdfResponse->body(),
-                    'validity_start_date' => $data['validity_start_date'] ?? null,
-                    'validity_end_date' => $data['validity_end_date'] ?? null,
+                    'validity_start_date' => $data['date_debut_validite'] ?? null,
+                    'validity_end_date' => $data['date_fin_validite'] ?? null,
                     'entity_status' => $data['entity_status'] ?? 'unknown',
                 ];
             }
@@ -84,7 +88,7 @@ class ApiEntrepriseProvider implements LegalDocumentProviderInterface
     public function fetchAttestationRne(string $siren): ?array
     {
         if (empty($this->token)) {
-            Log::warning('ApiEntrepriseProvider: API Entrepise token not configured.');
+            Log::warning('ApiEntrepriseProvider: API Entreprise token not configured.');
 
             return null;
         }
@@ -94,10 +98,14 @@ class ApiEntrepriseProvider implements LegalDocumentProviderInterface
         try {
             $response = Http::withToken($this->token)
                 ->timeout(15)
-                ->get("{$this->baseUrl}/v4/inpi/rne/attestation_immatriculation/{$siren}");
+                ->get("{$this->baseUrl}/v4/inpi/rne/attestation_immatriculation/{$siren}", [
+                    'recipient' => config('app.name', 'Batistack'),
+                    'context' => 'collecte_documents_legaux',
+                    'object' => 'attestation_immatriculation',
+                ]);
 
             if ($response->successful()) {
-                $data = $response->json();
+                $data = $response->json('data', []);
 
                 $documentUrl = $data['document_url'] ?? null;
                 if (! $documentUrl) {
@@ -113,11 +121,13 @@ class ApiEntrepriseProvider implements LegalDocumentProviderInterface
                     return null;
                 }
 
+                $identite = $data['identite_entreprise'] ?? [];
+
                 return [
                     'file_content' => $pdfResponse->body(),
-                    'denomination' => $data['denomination'] ?? null,
-                    'forme_juridique' => $data['forme_juridique'] ?? null,
-                    'date_immatriculation' => $data['date_immatriculation'] ?? null,
+                    'denomination' => $identite['denomination'] ?? null,
+                    'forme_juridique' => $identite['forme_juridique'] ?? null,
+                    'date_immatriculation' => $data['date_immatriculation_rne'] ?? null,
                 ];
             }
 

@@ -33,6 +33,12 @@ class CollectLegalDocumentsCommand extends Command
                 return self::FAILURE;
             }
 
+            if (! in_array($thirdParty->type, [ThirdPartyType::SUBCONTRACTOR, ThirdPartyType::CLIENT])) {
+                $this->error("Le tiers \"{$thirdParty->name}\" (type: {$thirdParty->type->value}) n'est pas éligible à la collecte.");
+
+                return self::FAILURE;
+            }
+
             CollectLegalDocumentsJob::dispatch($thirdParty);
             $this->info("Collecte lancée pour le tiers \"{$thirdParty->name}\" (SIREN: {$siren}).");
 

@@ -20,7 +20,7 @@ class CollectLegalDocumentsJob implements ShouldQueue
 
     public int $tries = 3;
 
-    public int $timeout = 60;
+    public int $timeout = 120;
 
     public function __construct(public ThirdParty $thirdParty) {}
 
@@ -60,6 +60,7 @@ class CollectLegalDocumentsJob implements ShouldQueue
                 ]
             );
 
+            $document->clearMediaCollection('third_party_documents');
             $filename = "attestation_urssaf_{$this->thirdParty->siren}_".now()->format('Ymd_His').'.pdf';
             $document->addMediaFromBase64(base64_encode($result['file_content']))
                 ->usingName($filename)
@@ -90,6 +91,7 @@ class CollectLegalDocumentsJob implements ShouldQueue
                 ]
             );
 
+            $document->clearMediaCollection('third_party_documents');
             $filename = "attestation_rne_{$this->thirdParty->siren}_".now()->format('Ymd_His').'.pdf';
             $document->addMediaFromBase64(base64_encode($result['file_content']))
                 ->usingName($filename)

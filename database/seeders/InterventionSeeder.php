@@ -27,20 +27,20 @@ class InterventionSeeder extends Seeder
             $equipments[] = ClientEquipment::create([
                 'company_id' => $company->id,
                 'third_party_id' => $client->id,
-                'name' => 'Équipement client ' . ($e + 1),
+                'name' => 'Équipement client '.($e + 1),
             ]);
         }
 
         // Contrats de maintenance
         for ($i = 0; $i < 3; $i++) {
-            $client = $clients->random();
+            $equipment = $equipments[array_rand($equipments)];
             MaintenanceContract::create([
                 'company_id' => $company->id,
-                'reference' => 'CM-' . now()->year . '-' . str_pad($i + 1, 3, '0', STR_PAD_LEFT),
-                'third_party_id' => $client->id,
-                'client_equipment_id' => $equipments[array_rand($equipments)]->id,
+                'reference' => 'CM-'.now()->year.'-'.str_pad($i + 1, 3, '0', STR_PAD_LEFT),
+                'third_party_id' => $equipment->third_party_id,
+                'client_equipment_id' => $equipment->id,
                 'chantier_id' => null,
-                'name' => 'Contrat maintenance ' . ($i + 1) . ' - ' . $client->name,
+                'name' => 'Contrat maintenance '.($i + 1),
                 'frequency' => MaintenanceContractFrequency::ANNUAL,
                 'start_date' => now()->subYear()->toDateString(),
                 'next_due_date' => now()->addDays(rand(15, 90))->toDateString(),
@@ -56,7 +56,7 @@ class InterventionSeeder extends Seeder
             $client = $clients->random();
             Intervention::create([
                 'company_id' => $company->id,
-                'reference' => 'INT-' . now()->year . '-' . str_pad($i + 1, 4, '0', STR_PAD_LEFT),
+                'reference' => 'INT-'.now()->year.'-'.str_pad($i + 1, 4, '0', STR_PAD_LEFT),
                 'type' => $types[array_rand($types)],
                 'status' => $statuses[array_rand($statuses)],
                 'third_party_id' => $client->id,

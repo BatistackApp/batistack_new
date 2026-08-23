@@ -4,11 +4,13 @@ namespace App\Console\Commands;
 
 use App\Enums\Tiers\ThirdPartyDocumentStatus;
 use App\Models\Tiers\ThirdPartyDocument;
+use App\Models\User;
 use App\Notifications\Tiers\DocumentExpiredNotification;
 use App\Notifications\Tiers\DocumentExpiringNotification;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
+use Illuminate\Notifications\AnonymousNotifiable;
 use Illuminate\Support\Facades\Notification;
 
 #[Signature('app:check-third-party-documents')]
@@ -32,18 +34,11 @@ class CheckThirdPartyDocuments extends Command
                 $document->update(['status' => ThirdPartyDocumentStatus::EXPIRED]);
                 $this->info("Document {$document->id} (Tiers {$document->third_party_id}) est expiré.");
 
-                Notification::route('mail', $document->thirdParty->email)
-                    ->notify(new DocumentExpiredNotification($document));
+                $this->sendNotification($document, new DocumentExpiredNotification($document));
                 $expiredCount++;
-            } elseif ($daysUntilExpiration <= 7) {
+            } elseif ($daysUntilExpiration == 7 || $daysUntilExpiration == 30) {
                 $this->info("Alerte J-{$daysUntilExpiration} pour Document {$document->id}.");
-                Notification::route('mail', $document->thirdParty->email)
-                    ->notify(new DocumentExpiringNotification($document, $daysUntilExpiration));
-                $expiringCount++;
-            } elseif ($daysUntilExpiration <= 30) {
-                $this->info("Alerte J-{$daysUntilExpiration} pour Document {$document->id}.");
-                Notification::route('mail', $document->thirdParty->email)
-                    ->notify(new DocumentExpiringNotification($document, $daysUntilExpiration));
+                $this->sendNotification($document, new DocumentExpiringNotification($document, $daysUntilExpiration));
                 $expiringCount++;
             }
         }
@@ -51,5 +46,30 @@ class CheckThirdPartyDocuments extends Command
         $this->info("Vérification terminée : {$expiredCount} expiré(s), {$expiringCount} bientôt expirant(s).");
 
         return self::SUCCESS;
+    }
+
+    protected function sendNotification($document, $notification): void
+    {
+        $thirdParty = $document->thirdParty;
+        $contact = $thirdParty->primaryContact;
+
+        if ($contact) {
+            $contact->notify($notification);
+
+            return;
+        }
+
+        if ($thirdParty->email) {
+            $notifiable = new AnonymousNotifiable;
+            $notifiable->route('mail', $thirdParty->email);
+            Notification::send($notifiable, $notification);
+
+            return;
+        }
+
+        $admins = User::where('is_admin', true)->get();
+        if ($admins->isNotEmpty()) {
+            Notification::send($admins, $notification);
+        }
     }
 }
