@@ -9,6 +9,7 @@ use Filament\Actions\CreateAction;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ListRecords;
+use Illuminate\Support\Facades\Storage;
 
 class ListPayslips extends ListRecords
 {
@@ -69,6 +70,10 @@ class ListPayslips extends ListRecords
                 ->label('Export DADS/DSN du mois')
                 ->icon('heroicon-o-table-cells')
                 ->color('success')
+                ->requiresConfirmation()
+                ->modalHeading('Export DSN pour expert-comptable')
+                ->modalDescription('Génère le fichier CSV et enregistre la soumission DSN pour la période sélectionnée.')
+                ->modalSubmitActionLabel('Générer l\'export')
                 ->schema([
                     TextInput::make('period')
                         ->label('Période (YYYY-MM)')
@@ -89,10 +94,14 @@ class ListPayslips extends ListRecords
                         return;
                     }
 
-                    $service = new \App\Services\Paie\DsnExportService();
-                    $path = $service->generateCsv($payslips);
+                    $companyId = $payslips->first()->employee->company_id ?? 1;
 
-                    return response()->download(storage_path('app/public/' . $path));
+                    $service = new \App\Services\Paie\DsnExportService();
+                    $submission = $service->generateForAccountant($payslips, $data['period'], $companyId, auth()->id());
+
+                    auth()->user()->notify(new \App\Notifications\Paie\DsnExportedNotification($submission));
+
+                    return Storage::disk('local')->download($submission->exported_file_path);
                 }),
             CreateAction::make(),
         ];
