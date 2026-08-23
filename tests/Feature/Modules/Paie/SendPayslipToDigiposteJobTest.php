@@ -6,14 +6,29 @@ use App\Services\Paie\DigiposteService;
 use Illuminate\Http\Client\RequestException;
 use Mockery\MockInterface;
 
-it('dispatches job and deposits payslip', function () {
-    $payslip = \Mockery::mock(Payslip::class);
-    
+it('calls digiposte service to deposit payslip', function () {
+    $payslip = Payslip::factory()->create();
+
     $this->mock(DigiposteService::class, function (MockInterface $mock) use ($payslip) {
         $mock->shouldReceive('depositPayslip')
-             ->once()
-             ->with($payslip)
-             ->andReturn(true);
+            ->once()
+            ->withArgs(function ($arg) use ($payslip) {
+                return $arg->id === $payslip->id;
+            })
+            ->andReturn(true);
+    });
+
+    SendPayslipToDigiposteJob::dispatch($payslip);
+});
+
+it('dispatches job and deposits payslip', function () {
+    $payslip = \Mockery::mock(Payslip::class);
+
+    $this->mock(DigiposteService::class, function (MockInterface $mock) use ($payslip) {
+        $mock->shouldReceive('depositPayslip')
+            ->once()
+            ->with($payslip)
+            ->andReturn(true);
     });
 
     $job = new SendPayslipToDigiposteJob($payslip);
@@ -22,12 +37,12 @@ it('dispatches job and deposits payslip', function () {
 
 it('throws exception when deposit returns false', function () {
     $payslip = \Mockery::mock(Payslip::class);
-    
+
     $this->mock(DigiposteService::class, function (MockInterface $mock) use ($payslip) {
         $mock->shouldReceive('depositPayslip')
-             ->once()
-             ->with($payslip)
-             ->andReturn(false);
+            ->once()
+            ->with($payslip)
+            ->andReturn(false);
     });
 
     $job = new SendPayslipToDigiposteJob($payslip);
@@ -40,12 +55,12 @@ it('throws exception when deposit returns false', function () {
 
 it('bubbles up exceptions for transient errors', function () {
     $payslip = \Mockery::mock(Payslip::class);
-    
+
     $this->mock(DigiposteService::class, function (MockInterface $mock) use ($payslip) {
         $mock->shouldReceive('depositPayslip')
-             ->once()
-             ->with($payslip)
-             ->andThrow(new \Exception('Transient HTTP Error'));
+            ->once()
+            ->with($payslip)
+            ->andThrow(new \Exception('Transient HTTP Error'));
     });
 
     $job = new SendPayslipToDigiposteJob($payslip);
