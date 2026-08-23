@@ -26,7 +26,7 @@ class DocumentExpiringNotification extends BaseNotification implements ShouldQue
 
     public function toMail(object $notifiable): MailMessage
     {
-        $type = $this->document->type->label();
+        $type = $this->document->type->getLabel();
         $tiersName = $this->document->thirdParty->name;
 
         return (new MailMessage)
@@ -42,8 +42,8 @@ class DocumentExpiringNotification extends BaseNotification implements ShouldQue
     {
         return Notification::make()
             ->warning()
-            ->title("Document expirant : {$this->document->type->label()}")
-            ->body("Le document \"{$this->document->type->label()}\" de \"{$this->document->thirdParty->name}\" expire dans {$this->daysRemaining} jours.")
+            ->title("Document expirant : {$this->document->type->getLabel()}")
+            ->body("Le document \"{$this->document->type->getLabel()}\" de \"{$this->document->thirdParty->name}\" expire dans {$this->daysRemaining} jours.")
             ->actions([
                 Action::make('manage')
                     ->label('Gérer le tiers')
@@ -57,7 +57,7 @@ class DocumentExpiringNotification extends BaseNotification implements ShouldQue
         return [
             'third_party_document_id' => $this->document->id,
             'third_party_id' => $this->document->third_party_id,
-            'title' => "Document expirant : {$this->document->type->label()}",
+            'title' => "Document expirant : {$this->document->type->getLabel()}",
             'message' => "Expire dans {$this->daysRemaining} jours ({$this->document->expiration_date->format('d/m/Y')}).",
             'days_remaining' => $this->daysRemaining,
         ];

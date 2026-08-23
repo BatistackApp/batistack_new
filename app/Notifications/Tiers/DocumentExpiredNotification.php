@@ -25,7 +25,7 @@ class DocumentExpiredNotification extends BaseNotification implements ShouldQueu
 
     public function toMail(object $notifiable): MailMessage
     {
-        $type = $this->document->type->label();
+        $type = $this->document->type->getLabel();
         $tiersName = $this->document->thirdParty->name;
 
         return (new MailMessage)
@@ -41,7 +41,7 @@ class DocumentExpiredNotification extends BaseNotification implements ShouldQueu
     {
         return Notification::make()
             ->danger()
-            ->title("Document expiré : {$this->document->type->label()}")
+            ->title("Document expiré : {$this->document->type->getLabel()}")
             ->body("Le document \"{$this->document->type->label()}\" de \"{$this->document->thirdParty->name}\" est expiré depuis le ".$this->document->expiration_date->format('d/m/Y').'.')
             ->actions([
                 Action::make('manage')
@@ -56,7 +56,7 @@ class DocumentExpiredNotification extends BaseNotification implements ShouldQueu
         return [
             'third_party_document_id' => $this->document->id,
             'third_party_id' => $this->document->third_party_id,
-            'title' => "Document expiré : {$this->document->type->label()}",
+            'title' => "Document expiré : {$this->document->type->getLabel()}",
             'message' => "Expiré le {$this->document->expiration_date->format('d/m/Y')}.",
         ];
     }

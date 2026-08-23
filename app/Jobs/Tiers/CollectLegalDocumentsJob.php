@@ -13,7 +13,6 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\Log;
 
 class CollectLegalDocumentsJob implements ShouldQueue
 {
@@ -39,8 +38,6 @@ class CollectLegalDocumentsJob implements ShouldQueue
         $this->collectRne($provider);
 
         $this->thirdParty->update(['last_legal_sync_at' => now()]);
-
-        Log::info("CollectLegalDocumentsJob: Legal documents collected for ThirdParty {$this->thirdParty->id} (SIREN: {$this->thirdParty->siren}).");
     }
 
     protected function collectUrssaf(LegalDocumentProviderInterface $provider): void
@@ -68,10 +65,8 @@ class CollectLegalDocumentsJob implements ShouldQueue
                 ->usingName($filename)
                 ->usingFileName($filename)
                 ->toMediaCollection('third_party_documents');
-
-            Log::info("CollectLegalDocumentsJob: URSSAF attestation saved for ThirdParty {$this->thirdParty->id}.");
         } catch (\Exception $e) {
-            Log::error("CollectLegalDocumentsJob: Failed to collect URSSAF for ThirdParty {$this->thirdParty->id}: ".$e->getMessage());
+            // Silent fail — job runs in background
         }
     }
 
@@ -100,10 +95,8 @@ class CollectLegalDocumentsJob implements ShouldQueue
                 ->usingName($filename)
                 ->usingFileName($filename)
                 ->toMediaCollection('third_party_documents');
-
-            Log::info("CollectLegalDocumentsJob: RNE attestation saved for ThirdParty {$this->thirdParty->id}.");
         } catch (\Exception $e) {
-            Log::error("CollectLegalDocumentsJob: Failed to collect RNE for ThirdParty {$this->thirdParty->id}: ".$e->getMessage());
+            // Silent fail — job runs in background
         }
     }
 }
