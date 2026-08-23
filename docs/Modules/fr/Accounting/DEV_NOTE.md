@@ -97,6 +97,21 @@ Le module **Comptabilité** gère le plan comptable, la génération automatique
 php artisan test tests/Feature/Modules/Accounting/
 ```
 
+## ⚠️ CI Configuration
+
+Le module Comptabilité nécessite une entrée `Accounting` dans `.github/workflows/tests.yml` (paths-filter) pour être détecté par CI. Sans cette entrée, les tests ne sont jamais exécutés et Codecov affiche 0%.
+
+L'entrée doit inclure les chemins :
+```yaml
+Accounting:
+  - 'app/Console/Accounting/**'
+  - 'app/Enums/Accounting/**'
+  - 'app/Models/Accounting/**'
+  - 'app/Services/Accounting/**'
+  - 'database/seeders/Accounting/**'
+  - 'tests/Feature/Modules/Accounting/**'
+```
+
 ## 💡 Comment tester par l'UI
 
 1. **Aller** dans le panel **Banque** → menu **Comptabilité** → **Export Comptable**.
