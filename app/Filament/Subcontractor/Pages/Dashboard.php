@@ -3,6 +3,7 @@
 namespace App\Filament\Subcontractor\Pages;
 
 use App\Filament\Subcontractor\Widgets\SubcontractorDashboardWidget;
+use App\Filament\Subcontractor\Widgets\UpcomingDeadlinesWidget;
 use Filament\Pages\Dashboard as BaseDashboard;
 use Filament\Widgets\Widget;
 
@@ -24,6 +25,7 @@ class Dashboard extends BaseDashboard
     {
         return [
             SubcontractorDashboardWidget::class,
+            UpcomingDeadlinesWidget::class,
         ];
     }
 }
