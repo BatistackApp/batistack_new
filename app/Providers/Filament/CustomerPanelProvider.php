@@ -2,6 +2,7 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Customer\Widgets\CustomerDashboardWidget;
 use App\Http\Middleware\EnsureUserIsCustomer;
 use App\Providers\Filament\Traits\HasKnowledgeBaseCompanion;
 use Ariefng\FilamentCalculator\CalculatorPlugin;
@@ -9,7 +10,6 @@ use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
-use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
@@ -44,9 +44,12 @@ class CustomerPanelProvider extends PanelProvider
             ->discoverResources(in: app_path('Filament/Customer/Resources'), for: 'App\Filament\Customer\Resources')
             ->discoverPages(in: app_path('Filament/Customer/Pages'), for: 'App\Filament\Customer\Pages')
             ->pages([
-                Dashboard::class,
+                \App\Filament\Customer\Pages\Dashboard::class,
             ])
             ->discoverWidgets(in: app_path('Filament/Customer/Widgets'), for: 'App\Filament\Customer\Widgets')
+            ->widgets([
+                CustomerDashboardWidget::class,
+            ])
             ->plugin(KnowledgeBaseCompanionPlugin::make()->knowledgeBasePanelId('docs'))
             ->plugins([
                 FilamentSentryFeedbackPlugin::make(),
