@@ -41,7 +41,7 @@ class BanqueSeeder extends Seeder
         ]);
 
         // Catégories de transactions
-        $categories = [
+        $categories = collect([
             TransactionCategory::create(['name' => 'Salaires', 'color' => '#EF4444', 'type' => 'debit']),
             TransactionCategory::create(['name' => 'Fournisseurs', 'color' => '#F97316', 'type' => 'debit']),
             TransactionCategory::create(['name' => 'Loyer', 'color' => '#EAB308', 'type' => 'debit']),
@@ -49,7 +49,7 @@ class BanqueSeeder extends Seeder
             TransactionCategory::create(['name' => 'Carburant', 'color' => '#22C55E', 'type' => 'debit']),
             TransactionCategory::create(['name' => 'Clients', 'color' => '#3B82F6', 'type' => 'credit']),
             TransactionCategory::create(['name' => 'Subventions', 'color' => '#8B5CF6', 'type' => 'credit']),
-        ];
+        ]);
 
         // Transactions historiques (6 derniers mois)
         $descriptions = [

@@ -53,21 +53,6 @@ class AppServiceProvider extends ServiceProvider
 
         PanelSwitch::configureUsing(function (PanelSwitch $panelSwitch) {
             $panelSwitch
-                ->panels([
-                    'core',
-                    'tiers',
-                    'chantier',
-                    'interventions',
-                    'articles',
-                    'commerce',
-                    'banque',
-                    'rh',
-                    'paie',
-                    'flottes',
-                    'immobilisation',
-                    'locations',
-                    'gpao',
-                ])
                 ->modalHeading('Espaces')
                 ->slideOver()
                 ->icons([
