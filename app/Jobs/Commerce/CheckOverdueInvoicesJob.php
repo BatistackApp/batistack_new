@@ -5,6 +5,7 @@ namespace App\Jobs\Commerce;
 use App\Enums\Commerce\InvoiceStatus;
 use App\Models\Commerce\CustomerInvoice;
 use App\Notifications\Commerce\PaymentReminderNotification;
+use App\Notifications\Customer\RelanceNotification;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -98,6 +99,9 @@ class CheckOverdueInvoicesJob implements ShouldQueue
         try {
             $contact->notify(
                 new PaymentReminderNotification($invoice, $level, $daysLate)
+            );
+            $contact->notify(
+                new RelanceNotification($invoice, $level, $daysLate)
             );
 
             // 3. Logging du rappel
