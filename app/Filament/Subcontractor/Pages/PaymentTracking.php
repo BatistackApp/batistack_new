@@ -5,6 +5,7 @@ namespace App\Filament\Subcontractor\Pages;
 use App\Enums\Commerce\InvoiceStatus;
 use App\Models\Commerce\SubcontractorSituation;
 use App\Models\Tiers\ThirdParty;
+use Carbon\Carbon;
 use Filament\Actions\Action;
 use Filament\Forms\Components\DatePicker;
 use Filament\Pages\Page;
@@ -106,7 +107,7 @@ class PaymentTracking extends Page implements Tables\Contracts\HasTable
                     ->query(function ($query, array $data): void {
                         $query
                             ->when($data['created_after'], fn ($q, $date) => $q->where('created_at', '>=', $date))
-                            ->when($data['created_before'], fn ($q, $date) => $q->where('created_at', '<=', $date));
+                            ->when($data['created_before'], fn ($q, $date) => $q->where('created_at', '<=', Carbon::parse($date)->endOfDay()));
                     }),
             ])
             ->actions([

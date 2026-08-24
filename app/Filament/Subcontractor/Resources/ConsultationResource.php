@@ -5,7 +5,6 @@ namespace App\Filament\Subcontractor\Resources;
 use App\Filament\Subcontractor\Resources\ConsultationResource\Pages;
 use App\Models\Tiers\Consultation;
 use App\Models\Tiers\ConsultationOffer;
-use App\Models\Tiers\ThirdParty;
 use Filament\Actions\Action;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\Textarea;
@@ -77,8 +76,19 @@ class ConsultationResource extends Resource
                             ->maxLength(1000),
                     ])
                     ->action(function (Consultation $record, array $data) {
-                        // Normally, the user has a linked ThirdParty ID. We assume auth()->user()->third_party_id exists or we take the first Subcontractor for demo.
-                        $thirdPartyId = auth()->user()->contact->third_party_id ?? ThirdParty::subcontractors()->first()->id;
+                        $user = auth()->user();
+
+                        if (! $user || ! $user->contact || ! $user->contact->thirdParty || $user->contact->thirdParty->type !== 'SUBCONTRACTOR') {
+                            Notification::make()
+                                ->title('Identité invalide')
+                                ->body('Impossible de soumettre une offre sans être identifié comme sous-traitant.')
+                                ->danger()
+                                ->send();
+
+                            return;
+                        }
+
+                        $thirdPartyId = $user->contact->third_party_id;
 
                         ConsultationOffer::updateOrCreate(
                             ['consultation_id' => $record->id, 'third_party_id' => $thirdPartyId],

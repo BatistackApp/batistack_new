@@ -7,7 +7,7 @@
                 </div>
                 <div>
                     <div class="text-sm text-gray-500 dark:text-gray-400">Total facturé (HT)</div>
-                    <div class="text-xl font-bold text-gray-950 dark:white">{{ number_format($tableData['total_facture'], 2, ',', ' ') }} €</div>
+                    <div class="text-xl font-bold text-gray-950 dark:text-white">{{ number_format($tableData['total_facture'], 2, ',', ' ') }} €</div>
                 </div>
             </div>
         </div>
@@ -19,7 +19,7 @@
                 </div>
                 <div>
                     <div class="text-sm text-gray-500 dark:text-gray-400">Retenues de garantie</div>
-                    <div class="text-xl font-bold text-gray-950 dark:white">{{ number_format($tableData['retenues_garantie'], 2, ',', ' ') }} €</div>
+                    <div class="text-xl font-bold text-gray-950 dark:text-white">{{ number_format($tableData['retenues_garantie'], 2, ',', ' ') }} €</div>
                 </div>
             </div>
         </div>
@@ -31,7 +31,7 @@
                 </div>
                 <div>
                     <div class="text-sm text-gray-500 dark:text-gray-400">Total payé</div>
-                    <div class="text-xl font-bold text-gray-950 dark:white">{{ number_format($tableData['total_paye'], 2, ',', ' ') }} €</div>
+                    <div class="text-xl font-bold text-gray-950 dark:text-white">{{ number_format($tableData['total_paye'], 2, ',', ' ') }} €</div>
                 </div>
             </div>
         </div>

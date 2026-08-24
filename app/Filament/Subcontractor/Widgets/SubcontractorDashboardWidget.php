@@ -35,11 +35,11 @@ class SubcontractorDashboardWidget extends StatsOverviewWidget
             ->count();
 
         $pendingInvoices = SubcontractorSituation::where('subcontractor_id', $thirdParty->id)
-            ->whereIn('status', [InvoiceStatus::DRAFT, InvoiceStatus::VALIDATED])
+            ->whereIn('status', [InvoiceStatus::DRAFT, InvoiceStatus::SUBMITTED, InvoiceStatus::VALIDATED])
             ->count();
 
         $pendingAmount = SubcontractorSituation::where('subcontractor_id', $thirdParty->id)
-            ->whereIn('status', [InvoiceStatus::DRAFT, InvoiceStatus::VALIDATED])
+            ->whereIn('status', [InvoiceStatus::DRAFT, InvoiceStatus::SUBMITTED, InvoiceStatus::VALIDATED])
             ->sum('total_ht');
 
         $upcomingTasks = ChantierTask::whereHas('allocations', function ($query) use ($thirdParty) {
@@ -47,6 +47,7 @@ class SubcontractorDashboardWidget extends StatsOverviewWidget
                 ->where('allocatable_id', $thirdParty->id);
         })
             ->where('end_date', '>=', now())
+            ->where('is_completed', false)
             ->orderBy('end_date', 'asc')
             ->count();
 

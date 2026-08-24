@@ -3,6 +3,7 @@
 namespace App\Filament\Subcontractor\Resources;
 
 use App\Enums\Chantiers\ChantierStatus;
+use App\Enums\Commerce\OrderStatus;
 use App\Filament\Subcontractor\Resources\ChantierAssignmentsResource\Pages;
 use App\Models\Chantiers\Chantier;
 use App\Models\Commerce\PurchaseOrder;
@@ -97,6 +98,7 @@ class ChantierAssignmentsResource extends Resource
 
                         $orderTotal = PurchaseOrder::where('chantier_id', $record->id)
                             ->where('supplier_id', $subcontractorId)
+                            ->where('status', '!=', OrderStatus::CANCELLED)
                             ->sum('total_ht');
 
                         if ($orderTotal <= 0) {
