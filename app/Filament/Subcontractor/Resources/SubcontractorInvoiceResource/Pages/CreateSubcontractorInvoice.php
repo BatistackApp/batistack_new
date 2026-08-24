@@ -4,7 +4,6 @@ namespace App\Filament\Subcontractor\Resources\SubcontractorInvoiceResource\Page
 
 use App\Enums\Commerce\InvoiceStatus;
 use App\Filament\Subcontractor\Resources\SubcontractorInvoiceResource;
-use Filament\Actions;
 use Filament\Resources\Pages\CreateRecord;
 
 class CreateSubcontractorInvoice extends CreateRecord
@@ -18,7 +17,7 @@ class CreateSubcontractorInvoice extends CreateRecord
             $data['subcontractor_id'] = $user->contact->thirdParty->id;
         }
         $data['status'] = InvoiceStatus::DRAFT;
-        
+
         return $data;
     }
 }

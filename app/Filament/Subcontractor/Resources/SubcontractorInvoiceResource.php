@@ -6,21 +6,25 @@ use App\Enums\Commerce\InvoiceStatus;
 use App\Filament\Subcontractor\Resources\SubcontractorInvoiceResource\Pages;
 use App\Models\Chantiers\Chantier;
 use App\Models\Commerce\SubcontractorSituation;
-use Filament\Schemas\Schema;
-use Filament\Resources\Resource;
-use Filament\Tables;
-use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
+use App\Models\Tiers\ThirdParty;
+use Filament\Actions\Action;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\EditAction;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
 use Filament\Forms\Components\TextInput;
+use Filament\Resources\Resource;
+use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class SubcontractorInvoiceResource extends Resource
 {
     protected static ?string $model = SubcontractorSituation::class;
 
     protected static ?string $modelLabel = 'Facture de situation';
+
     protected static ?string $pluralModelLabel = 'Factures de situation';
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-document-text';
@@ -28,8 +32,8 @@ class SubcontractorInvoiceResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         $user = auth()->user();
-        
-        if (!$user || !$user->contact || !$user->contact->thirdParty) {
+
+        if (! $user || ! $user->contact || ! $user->contact->thirdParty) {
             return parent::getEloquentQuery()->where('id', 0);
         }
 
@@ -48,11 +52,14 @@ class SubcontractorInvoiceResource extends Resource
                 Select::make('chantier_id')->label('Chantier')
                     ->label('Chantier concerné')
                     ->options(function () use ($subcontractorId) {
-                        if (!$subcontractorId) return [];
+                        if (! $subcontractorId) {
+                            return [];
+                        }
+
                         // Find chantiers where subcontractor is allocated
                         return Chantier::whereHas('phases.tasks.allocations', function ($q) use ($subcontractorId) {
-                            $q->where('allocatable_type', \App\Models\Tiers\ThirdParty::class)
-                              ->where('allocatable_id', $subcontractorId);
+                            $q->where('allocatable_type', ThirdParty::class)
+                                ->where('allocatable_id', $subcontractorId);
                         })->pluck('reference', 'id');
                     })
                     ->required()
@@ -98,7 +105,7 @@ class SubcontractorInvoiceResource extends Resource
                     ->sortable(),
                 TextColumn::make('progress_percentage')
                     ->label('Avancement')
-                    ->formatStateUsing(fn ($state) => $state . ' %'),
+                    ->formatStateUsing(fn ($state) => $state.' %'),
                 TextColumn::make('total_ht')
                     ->label('Montant HT')
                     ->money('EUR'),
@@ -114,11 +121,11 @@ class SubcontractorInvoiceResource extends Resource
                 //
             ])
             ->actions([
-                Tables\Actions\EditAction::make()
+                EditAction::make()
                     ->visible(fn (SubcontractorSituation $record) => $record->status === InvoiceStatus::DRAFT),
-                Tables\Actions\DeleteAction::make()
+                DeleteAction::make()
                     ->visible(fn (SubcontractorSituation $record) => $record->status === InvoiceStatus::DRAFT),
-                Tables\Actions\Action::make('download')
+                Action::make('download')
                     ->label('Télécharger')
                     ->icon('heroicon-o-arrow-down-tray')
                     ->action(function (SubcontractorSituation $record) {
@@ -139,6 +146,11 @@ class SubcontractorInvoiceResource extends Resource
         return [
             //
         ];
+    }
+
+    public static function canAccess(): bool
+    {
+        return true;
     }
 
     public static function getPages(): array

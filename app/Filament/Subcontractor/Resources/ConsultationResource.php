@@ -93,6 +93,11 @@ class ConsultationResource extends Resource
             ]);
     }
 
+    public static function canAccess(): bool
+    {
+        return true;
+    }
+
     public static function getPages(): array
     {
         return [
