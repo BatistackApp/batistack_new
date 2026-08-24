@@ -38,6 +38,7 @@ class ThirdParty extends Model implements HasMedia
         'payment_terms_days',
         'credit_limit',
         'last_siren_sync_at',
+        'last_legal_sync_at',
         'compliant_status',
         'iban',
         'bic',

@@ -19,6 +19,7 @@ use App\Models\Commerce\PurchaseRequest;
 use App\Models\Commerce\ReceiptNote;
 use App\Models\Commerce\SupplierInvoice;
 use App\Models\Core\VatRate;
+use App\Models\RH\Employee;
 use App\Models\Tiers\ThirdParty;
 use Illuminate\Database\Seeder;
 
@@ -26,96 +27,107 @@ class CommerceSeeder extends Seeder
 {
     public function run(): void
     {
-        // Référentiels
-        $client = ThirdParty::where('type', ThirdPartyType::CLIENT)->first() ?? ThirdParty::factory()->state(['type' => 'client'])->create();
-        $supplier = ThirdParty::where('type', ThirdPartyType::SUPPLIER)->first() ?? ThirdParty::factory()->state(['type' => 'supplier'])->create();
-        $chantier = Chantier::first() ?? Chantier::factory()->create(['client_id' => $client->id]);
-        $vat20 = VatRate::where('rate', 20)->first();
-        $material = Item::where('type', 'stockable')->first() ?? Item::factory()->state(['type' => 'stockable', 'name' => 'Béton'])->create();
+        $clients = ThirdParty::where('type', ThirdPartyType::CLIENT)->get();
+        $suppliers = ThirdParty::where('type', ThirdPartyType::SUPPLIER)->get();
+        $chantiers = Chantier::all();
+        $employee = Employee::first();
+        $responsableId = $employee?->user_id ?? 1;
+
+        if ($clients->isEmpty() || $suppliers->isEmpty()) {
+            return;
+        }
 
         /* =========================================================
-         * 1. CYCLE DE VENTE COMPLET (Client)
-         * Devis -> Commande -> BL -> Facture
+         * 1. CYCLES DE VENTE (3 devis → commandes → BL → factures)
          * ========================================================= */
+        for ($i = 0; $i < 3; $i++) {
+            $client = $clients->random();
+            $chantier = $chantiers->isNotEmpty() ? $chantiers->random() : null;
+            $totalHt = rand(1500, 25000) / 100;
+            $weeksAgo = rand(1, 6);
 
-        $quote = CustomerQuote::create([
-            'client_id' => $client->id,
-            'chantier_id' => $chantier->id,
-            'reference' => 'DEV-2026-001',
-            'status' => QuoteStatus::SIGNED,
-            'total_ht' => 1500.00,
-            'signed_at' => now()->subWeeks(3),
-            'responsable_id' => 1,
-        ]);
+            $quote = CustomerQuote::create([
+                'client_id' => $client->id,
+                'chantier_id' => $chantier?->id,
+                'reference' => 'DEV-' . now()->year . '-' . str_pad($i + 1, 3, '0', STR_PAD_LEFT),
+                'status' => QuoteStatus::SIGNED,
+                'total_ht' => $totalHt,
+                'signed_at' => now()->subWeeks($weeksAgo),
+                'responsable_id' => $responsableId,
+            ]);
 
-        $order = CustomerOrder::create([
-            'client_id' => $client->id,
-            'chantier_id' => $chantier->id,
-            'customer_quote_id' => $quote->id,
-            'reference' => 'CMD-2026-001',
-            'status' => OrderStatus::DELIVERED,
-            'total_ht' => 1500.00,
-            'responsable_id' => 1,
-        ]);
+            $order = CustomerOrder::create([
+                'client_id' => $client->id,
+                'chantier_id' => $chantier?->id,
+                'customer_quote_id' => $quote->id,
+                'reference' => 'CMD-' . now()->year . '-' . str_pad($i + 1, 3, '0', STR_PAD_LEFT),
+                'status' => OrderStatus::DELIVERED,
+                'total_ht' => $totalHt,
+                'responsable_id' => $responsableId,
+            ]);
 
-        $delivery = CustomerDeliveryNote::create([
-            'client_id' => $client->id,
-            'chantier_id' => $chantier->id,
-            'customer_order_id' => $order->id,
-            'reference' => 'BL-2026-001',
-            'status' => DeliveryStatus::DELIVERED,
-            'delivery_date' => now()->subDays(5),
-            'responsable_id' => 1,
-        ]);
+            CustomerDeliveryNote::create([
+                'client_id' => $client->id,
+                'chantier_id' => $chantier?->id,
+                'customer_order_id' => $order->id,
+                'reference' => 'BL-' . now()->year . '-' . str_pad($i + 1, 3, '0', STR_PAD_LEFT),
+                'status' => DeliveryStatus::DELIVERED,
+                'delivery_date' => now()->subDays(rand(1, 10)),
+                'responsable_id' => $responsableId,
+            ]);
 
-        $invoice = CustomerInvoice::create([
-            'client_id' => $client->id,
-            'chantier_id' => $chantier->id,
-            'customer_order_id' => $order->id,
-            'reference' => 'FACT-2026-001',
-            'type' => InvoiceType::SIMPLE,
-            'status' => InvoiceStatus::VALIDATED,
-            'total_ht' => 1500.00,
-            'responsable_id' => 1,
-        ]);
-
+            CustomerInvoice::create([
+                'client_id' => $client->id,
+                'chantier_id' => $chantier?->id,
+                'customer_order_id' => $order->id,
+                'reference' => 'FACT-' . now()->year . '-' . str_pad($i + 1, 3, '0', STR_PAD_LEFT),
+                'type' => InvoiceType::SIMPLE,
+                'status' => InvoiceStatus::VALIDATED,
+                'total_ht' => $totalHt,
+                'responsable_id' => $responsableId,
+            ]);
+        }
 
         /* =========================================================
-         * 2. CYCLE D'ACHAT COMPLET (Fournisseur)
-         * Demande de Prix -> Commande -> Bon de Réception -> Facture
+         * 2. CYCLES D'ACHAT (3 demandes → commandes → réceptions → factures)
          * ========================================================= */
+        for ($i = 0; $i < 3; $i++) {
+            $supplier = $suppliers->random();
+            $chantier = $chantiers->isNotEmpty() ? $chantiers->random() : null;
+            $totalHt = rand(500, 8000) / 100;
 
-        $purchaseRequest = PurchaseRequest::create([
-            'supplier_id' => $supplier->id,
-            'chantier_id' => $chantier->id,
-            'reference' => 'RFQ-2026-001',
-            'status' => QuoteStatus::SIGNED,
-        ]);
+            $purchaseRequest = PurchaseRequest::create([
+                'supplier_id' => $supplier->id,
+                'chantier_id' => $chantier?->id,
+                'reference' => 'RFQ-' . now()->year . '-' . str_pad($i + 1, 3, '0', STR_PAD_LEFT),
+                'status' => QuoteStatus::SIGNED,
+            ]);
 
-        $purchaseOrder = PurchaseOrder::create([
-            'supplier_id' => $supplier->id,
-            'chantier_id' => $chantier->id,
-            'purchase_request_id' => $purchaseRequest->id,
-            'reference' => 'BC-2026-001',
-            'status' => OrderStatus::DELIVERED,
-            'total_ht' => 500.00,
-            'ordered_at' => now()->subWeeks(2),
-        ]);
+            $purchaseOrder = PurchaseOrder::create([
+                'supplier_id' => $supplier->id,
+                'chantier_id' => $chantier?->id,
+                'purchase_request_id' => $purchaseRequest->id,
+                'reference' => 'BC-' . now()->year . '-' . str_pad($i + 1, 3, '0', STR_PAD_LEFT),
+                'status' => OrderStatus::DELIVERED,
+                'total_ht' => $totalHt,
+                'ordered_at' => now()->subWeeks(rand(1, 4)),
+            ]);
 
-        $receiptNote = ReceiptNote::create([
-            'purchase_order_id' => $purchaseOrder->id,
-            'reference' => 'BR-FOURN-998',
-            'status' => DeliveryStatus::DELIVERED,
-            'received_at' => now()->subDays(2),
-        ]);
+            ReceiptNote::create([
+                'purchase_order_id' => $purchaseOrder->id,
+                'reference' => 'BR-' . now()->year . '-' . str_pad($i + 1, 3, '0', STR_PAD_LEFT),
+                'status' => DeliveryStatus::DELIVERED,
+                'received_at' => now()->subDays(rand(1, 7)),
+            ]);
 
-        $supplierInvoice = SupplierInvoice::create([
-            'supplier_id' => $supplier->id,
-            'purchase_order_id' => $purchaseOrder->id,
-            'reference' => 'F-FOURN-10029',
-            'amount_ht' => 500.00,
-            'amount_ttc' => 600.00,
-            'status' => InvoiceStatus::VALIDATED, // Bon à payer
-        ]);
+            SupplierInvoice::create([
+                'supplier_id' => $supplier->id,
+                'purchase_order_id' => $purchaseOrder->id,
+                'reference' => 'F-FOURN-' . str_pad(10000 + $i, 5, '0', STR_PAD_LEFT),
+                'amount_ht' => $totalHt,
+                'amount_ttc' => round($totalHt * 1.2, 2),
+                'status' => InvoiceStatus::VALIDATED,
+            ]);
+        }
     }
 }

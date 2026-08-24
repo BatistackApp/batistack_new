@@ -7,6 +7,7 @@ use App\Models\RH\Contract;
 use App\Models\RH\Employee;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use App\Models\User;
+use Database\Seeders\Accounting\PcgSeeder;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Artisan;
 
@@ -27,6 +28,7 @@ class DatabaseSeeder extends Seeder
         ]);
 
         $this->call(ShieldSeeder::class);
+        $this->call(PcgSeeder::class);
 
         $admin = User::where('email', 'admin@admin.com')->first();
         if ($admin) {
@@ -58,5 +60,10 @@ class DatabaseSeeder extends Seeder
             'hourly_rate' => 20.00,
             'weekly_hours' => 35.00,
         ]);
+
+        // Seed demo data if DEMO_SEED=true
+        if (env('DEMO_SEED', false)) {
+            $this->call(DemoSeeder::class);
+        }
     }
 }
