@@ -161,7 +161,7 @@ class SituationService
             'progress_percentage' => $progressPercentage,
             'total_ht' => $totalHt - $retenueGarantie,
             'retenue_garantie_amount' => $retenueGarantie,
-            'status' => InvoiceStatus::VALIDATED,
+            'status' => InvoiceStatus::SUBMITTED,
         ]);
     }
 }

@@ -8,6 +8,7 @@ use Filament\Support\Contracts\HasLabel;
 enum InvoiceStatus: string implements HasColor, HasLabel
 {
     case DRAFT = 'draft';
+    case SUBMITTED = 'submitted';
     case VALIDATED = 'validated';
     case LITIGE = 'litige';
     case PAYMENT_IN_PROGRESS = 'payment_in_progress';
@@ -22,6 +23,7 @@ enum InvoiceStatus: string implements HasColor, HasLabel
     {
         return match ($this) {
             self::DRAFT => 'Brouillon',
+            self::SUBMITTED => 'Soumise',
             self::VALIDATED => 'Validée / BAP',
             self::LITIGE => 'En litige',
             self::PAYMENT_IN_PROGRESS => 'Paiement en cours',
@@ -37,6 +39,7 @@ enum InvoiceStatus: string implements HasColor, HasLabel
     {
         return match ($this) {
             self::DRAFT => 'gray',
+            self::SUBMITTED => 'info',
             self::VALIDATED => 'primary',
             self::LITIGE => 'danger',
             self::PAYMENT_IN_PROGRESS => 'info',

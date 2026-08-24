@@ -5,6 +5,8 @@ namespace App\Filament\Subcontractor\Resources;
 use App\Enums\Chantiers\ChantierStatus;
 use App\Filament\Subcontractor\Resources\ChantierAssignmentsResource\Pages;
 use App\Models\Chantiers\Chantier;
+use App\Models\Commerce\PurchaseOrder;
+use App\Models\Commerce\SubcontractorSituation;
 use App\Services\Chantiers\ChantierAnalyticService;
 use Filament\Actions\ViewAction;
 use Filament\Resources\Resource;
@@ -86,6 +88,33 @@ class ChantierAssignmentsResource extends Resource
                         $state >= 100 => 'success',
                         $state > 0 => 'warning',
                         default => 'danger',
+                    }),
+                Tables\Columns\TextColumn::make('financial_progress')
+                    ->label('Progression financière')
+                    ->getStateUsing(function (Chantier $record) {
+                        $user = auth()->user();
+                        $subcontractorId = $user->contact->thirdParty->id;
+
+                        $orderTotal = PurchaseOrder::where('chantier_id', $record->id)
+                            ->where('supplier_id', $subcontractorId)
+                            ->sum('total_ht');
+
+                        if ($orderTotal <= 0) {
+                            return 0;
+                        }
+
+                        $invoicedTotal = SubcontractorSituation::where('chantier_id', $record->id)
+                            ->where('subcontractor_id', $subcontractorId)
+                            ->sum('total_ht');
+
+                        return (int) min(round(($invoicedTotal / $orderTotal) * 100), 100);
+                    })
+                    ->badge()
+                    ->formatStateUsing(fn ($state) => $state.' %')
+                    ->color(fn (int $state): string => match (true) {
+                        $state >= 100 => 'success',
+                        $state > 0 => 'info',
+                        default => 'gray',
                     }),
             ])
             ->defaultSort('created_at', 'desc')
