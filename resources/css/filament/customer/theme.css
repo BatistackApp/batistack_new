@@ -4,16 +4,7 @@
 
 @source '../../../../app/Filament/Customer/**/*';
 @source '../../../../resources/views/filament/customer/**/*';
-
-/* @source inline — ensures dynamic status badge classes survive purging */
-@source inline(
-  bg-gray-50 text-gray-700 ring-gray-600/20 bg-gray-500/10 text-gray-400 ring-gray-500/30
-  bg-success-50 text-success-700 ring-success-600/20 bg-success-500/10 text-success-400 ring-success-500/30
-  bg-warning-50 text-warning-700 ring-warning-600/20 bg-warning-500/10 text-warning-400 ring-warning-500/30
-  bg-danger-50 text-danger-700 ring-danger-600/20 bg-danger-500/10 text-danger-400 ring-danger-500/30
-  bg-info-50 text-info-700 ring-info-600/20 bg-info-500/10 text-info-400 ring-info-500/30
-  bg-primary-50 text-primary-700 ring-primary-600/20 bg-primary-500/10 text-primary-400 ring-primary-500/30
-);
+@source '../../../../resources/views/filament/customer/safelist.blade.php';
 
 .bg-danger {background-color: #dc2626;}
 .bg-success {background-color: #28a745;}
