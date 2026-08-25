@@ -18,10 +18,11 @@ class CustomerInvoicesTable
             ->defaultSort('created_at', 'desc')
             ->query(
                 CustomerInvoice::where('client_id', auth()->user()->contact->third_party_id)
-                    ->whereIn('status', array_diff(
-                        InvoiceStatus::cases(),
-                        [InvoiceStatus::DRAFT, InvoiceStatus::CANCELED]
-                    ))
+                    ->whereIn('status', collect(InvoiceStatus::cases())
+                        ->reject(fn (InvoiceStatus $s) => in_array($s, [InvoiceStatus::DRAFT, InvoiceStatus::CANCELED]))
+                        ->map(fn (InvoiceStatus $s) => $s->value)
+                        ->all()
+                    )
                     ->newQuery()
             )
             ->columns([
@@ -34,7 +35,7 @@ class CustomerInvoicesTable
                 TextColumn::make('type')
                     ->label('Type')
                     ->badge()
-                    ->formatStateUsing(fn ($state) => $state->getLabel()),
+                    ->formatStateUsing(fn (InvoiceType $state) => $state->getLabel()),
 
                 TextColumn::make('total_ht')
                     ->label('Montant HT')
@@ -68,7 +69,7 @@ class CustomerInvoicesTable
                 TextColumn::make('status')
                     ->label('Statut')
                     ->badge()
-                    ->color(fn ($state): string => $state->getColor()),
+                    ->color(fn (InvoiceStatus $state): string => $state->getColor()),
             ])
             ->filters([
                 SelectFilter::make('status')

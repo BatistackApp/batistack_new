@@ -100,10 +100,11 @@ class CustomerFinancialDashboard extends Page implements HasSchemas
         }
 
         $invoices = CustomerInvoice::where('client_id', $thirdParty->id)
-            ->whereIn('status', array_values(array_diff(
-                InvoiceStatus::cases(),
-                [InvoiceStatus::DRAFT, InvoiceStatus::CANCELED]
-            )))
+            ->whereIn('status', collect(InvoiceStatus::cases())
+                ->reject(fn (InvoiceStatus $s) => in_array($s, [InvoiceStatus::DRAFT, InvoiceStatus::CANCELED]))
+                ->map(fn (InvoiceStatus $s) => $s->value)
+                ->all()
+            )
             ->get();
 
         $this->stats = [
@@ -118,10 +119,11 @@ class CustomerFinancialDashboard extends Page implements HasSchemas
             ->toArray();
 
         $this->recentInvoices = CustomerInvoice::where('client_id', $thirdParty->id)
-            ->whereIn('status', array_values(array_diff(
-                InvoiceStatus::cases(),
-                [InvoiceStatus::DRAFT, InvoiceStatus::CANCELED]
-            )))
+            ->whereIn('status', collect(InvoiceStatus::cases())
+                ->reject(fn (InvoiceStatus $s) => in_array($s, [InvoiceStatus::DRAFT, InvoiceStatus::CANCELED]))
+                ->map(fn (InvoiceStatus $s) => $s->value)
+                ->all()
+            )
             ->latest('created_at')
             ->limit(5)
             ->get()

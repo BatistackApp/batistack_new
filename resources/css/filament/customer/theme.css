@@ -1,8 +1,16 @@
-@import '../../../../vendor/filament/filament/resources/css/theme.css';
+@import 'tailwindcss';
 @plugin "@tailwindcss/typography";
-@source '../../../../vendor/guava/filament-knowledge-base/resources/**/*.blade.php';
+@import '../../../../vendor/filament/filament/resources/css/theme.css';
 
 @source '../../../../app/Filament/Customer/**/*';
 @source '../../../../resources/views/filament/customer/**/*';
 
-
+.bg-danger {background-color: #dc2626;}
+.bg-success {background-color: #28a745;}
+.bg-warning {background-color: #f0ad4e;}
+.bg-info {background-color: #17a2b8;}
+.bg-light {background-color: #f8f9fa;}
+.bg-dark {background-color: #343a40;}
+.bg-primary {background-color: #6c757d;}
+.bg-secondary {background-color: #343a40;}
+.bg-gray {background-color: #343a40;}

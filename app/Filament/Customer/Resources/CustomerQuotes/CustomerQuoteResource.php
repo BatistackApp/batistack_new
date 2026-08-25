@@ -12,6 +12,7 @@ use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Model;
 use ToneGabes\Filament\Icons\Enums\Phosphor;
 use UnitEnum;
 
@@ -59,6 +60,11 @@ class CustomerQuoteResource extends Resource
     }
 
     public static function canAccess(): bool
+    {
+        return true;
+    }
+
+    public static function canView(Model $record): bool
     {
         return true;
     }
