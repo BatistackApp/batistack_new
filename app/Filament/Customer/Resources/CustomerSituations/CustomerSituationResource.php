@@ -2,6 +2,7 @@
 
 namespace App\Filament\Customer\Resources\CustomerSituations;
 
+use App\Filament\Customer\Concerns\ScopesToAuthenticatedThirdParty;
 use App\Filament\Customer\Resources\CustomerSituations\Pages\ListCustomerSituations;
 use App\Filament\Customer\Resources\CustomerSituations\Pages\ViewCustomerSituation;
 use App\Filament\Customer\Resources\CustomerSituations\Tables\CustomerSituationsTable;
@@ -14,6 +15,8 @@ use ToneGabes\Filament\Icons\Enums\Phosphor;
 
 class CustomerSituationResource extends Resource
 {
+    use ScopesToAuthenticatedThirdParty;
+
     protected static ?string $model = CustomerSituation::class;
 
     protected static string|null|BackedEnum $navigationIcon = Phosphor::ChartLineDown;

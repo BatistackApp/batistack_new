@@ -15,7 +15,6 @@ class CustomerCreditNotesTable
             ->defaultSort('created_at', 'desc')
             ->query(
                 CustomerCreditNote::where('client_id', auth()->user()->contact->third_party_id)
-                    ->newQuery()
             )
             ->columns([
                 TextColumn::make('reference')

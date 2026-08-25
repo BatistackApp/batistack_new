@@ -5,6 +5,7 @@ namespace App\Filament\Customer\Widgets;
 use App\Enums\Commerce\InvoiceStatus;
 use App\Models\Commerce\CustomerInvoice;
 use App\Models\Commerce\CustomerOrder;
+use App\Models\Commerce\CustomerQuote;
 use App\Models\Tiers\ThirdParty;
 use Filament\Widgets\StatsOverviewWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
@@ -38,7 +39,7 @@ class CustomerDashboardWidget extends StatsOverviewWidget
 
         $soldeDue = max(0, $totalFacture - $totalPaye);
 
-        $devisEnAttente = CustomerOrder::where('client_id', $thirdParty->id)
+        $devisEnAttente = CustomerQuote::where('client_id', $thirdParty->id)
             ->where('status', 'sent')
             ->count();
 

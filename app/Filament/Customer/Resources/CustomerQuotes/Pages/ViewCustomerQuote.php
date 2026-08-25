@@ -112,6 +112,8 @@ class ViewCustomerQuote extends ViewRecord
                 ->action(function (Model $record, array $data) {
                     $record->update([
                         'status' => QuoteStatus::REJECTED,
+                        'counter_amount' => $data['counter_amount'],
+                        'counter_message' => $data['counter_message'] ?? null,
                     ]);
 
                     Notification::make()

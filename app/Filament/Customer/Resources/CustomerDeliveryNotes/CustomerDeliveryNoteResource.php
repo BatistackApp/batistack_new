@@ -2,6 +2,7 @@
 
 namespace App\Filament\Customer\Resources\CustomerDeliveryNotes;
 
+use App\Filament\Customer\Concerns\ScopesToAuthenticatedThirdParty;
 use App\Filament\Customer\Resources\CustomerDeliveryNotes\Pages\ListCustomerDeliveryNotes;
 use App\Filament\Customer\Resources\CustomerDeliveryNotes\Pages\ViewCustomerDeliveryNote;
 use App\Filament\Customer\Resources\CustomerDeliveryNotes\RelationManagers\ItemsRelationManager;
@@ -18,6 +19,8 @@ use UnitEnum;
 
 class CustomerDeliveryNoteResource extends Resource
 {
+    use ScopesToAuthenticatedThirdParty;
+
     protected static ?string $model = CustomerDeliveryNote::class;
 
     protected static string|BackedEnum|null $navigationIcon = Phosphor::Truck;

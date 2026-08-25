@@ -124,7 +124,7 @@ class DocumentPortal extends Page
                 $documents->push([
                     'type' => 'Avoir',
                     'reference' => $creditNote->reference,
-                    'chantier' => 'Facture '.$creditNote->invoice?->reference ?? '—',
+                    'chantier' => 'Facture '.($creditNote->invoice?->reference ?? '—'),
                     'date' => $creditNote->created_at,
                     'status' => 'Émis',
                     'status_color' => 'gray',

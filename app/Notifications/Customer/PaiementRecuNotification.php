@@ -26,7 +26,7 @@ class PaiementRecuNotification extends Notification implements ShouldQueue
             ->greeting('Paiement enregistré')
             ->line("Nous avons bien reçu le paiement de la facture n°{$this->invoice->reference}.")
             ->line('**Montant payé** : '.number_format($this->invoice->total_ttc, 2, ',', ' ').' € TTC')
-            ->line('**Date** : '.now()->format('d/m/Y'))
+            ->line('**Date** : '.$this->getPaymentDate())
             ->action('Voir la facture', url("/customer/customer-invoices/{$this->invoice->id}"))
             ->line('Merci pour votre règlement.');
     }
@@ -43,5 +43,19 @@ class PaiementRecuNotification extends Notification implements ShouldQueue
     public function toArray($notifiable): array
     {
         return [];
+    }
+
+    private function getPaymentDate(): string
+    {
+        $latestAllocation = $this->invoice->allocations()
+            ->with('payment')
+            ->latest()
+            ->first();
+
+        if ($latestAllocation?->payment?->payment_date) {
+            return $latestAllocation->payment->payment_date->format('d/m/Y');
+        }
+
+        return now()->format('d/m/Y');
     }
 }

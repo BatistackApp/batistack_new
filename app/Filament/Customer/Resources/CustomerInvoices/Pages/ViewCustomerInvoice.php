@@ -9,6 +9,7 @@ use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use ToneGabes\Filament\Icons\Enums\Phosphor;
 
 class ViewCustomerInvoice extends ViewRecord
@@ -41,19 +42,21 @@ class ViewCustomerInvoice extends ViewRecord
         ];
     }
 
-    private function downloadPdf(): void
+    private function downloadPdf(): ?BinaryFileResponse
     {
         try {
             $service = app(CommerceDocumentationService::class);
             $path = $service->generateInvoicePdf($this->record);
 
-            response()->download(storage_path("app/{$path}"))->send();
+            return response()->download(storage_path("app/{$path}"));
         } catch (\Exception $e) {
             Notification::make()
                 ->danger()
                 ->title('Erreur lors de la génération du PDF')
                 ->body($e->getMessage())
                 ->send();
+
+            return null;
         }
     }
 }

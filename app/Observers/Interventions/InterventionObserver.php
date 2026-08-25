@@ -52,14 +52,20 @@ class InterventionObserver
      */
     public function updated(Intervention $intervention): void
     {
-        if ($intervention->isDirty('status') && $intervention->status === InterventionStatus::TERMINEE) {
-            if ($intervention->thirdParty) {
-                $contact = $intervention->thirdParty->primaryContact;
-                if ($contact) {
-                    $contact->notify(new InterventionTermineeNotification($intervention));
-                }
-            }
+        if (! $intervention->isDirty('status') || ! $intervention->thirdParty) {
+            return;
         }
+
+        $contact = $intervention->thirdParty->primaryContact;
+        if (! $contact) {
+            return;
+        }
+
+        match ($intervention->status) {
+            InterventionStatus::PLANIFIEE => $contact->notify(new InterventionPlanifieeNotification($intervention)),
+            InterventionStatus::TERMINEE => $contact->notify(new InterventionTermineeNotification($intervention)),
+            default => null,
+        };
     }
 
     /**

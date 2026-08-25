@@ -1,0 +1,128 @@
+<?php
+
+use App\Models\Chantiers\Chantier;
+use App\Models\Core\Company;
+use App\Models\Interventions\Intervention;
+use App\Models\Tiers\Contact;
+use App\Models\Tiers\ThirdParty;
+use App\Notifications\Customer\InterventionPlanifieeNotification;
+
+beforeEach(function () {
+    Company::factory()->create();
+    $this->customer = ThirdParty::factory()->create();
+    $this->contact = Contact::factory()->create([
+        'third_party_id' => $this->customer->id,
+        'is_primary' => true,
+    ]);
+
+    $this->chantier = Chantier::factory()->create(['client_id' => $this->customer->id]);
+
+    $this->intervention = Intervention::factory()->create([
+        'third_party_id' => $this->customer->id,
+        'chantier_id' => $this->chantier->id,
+        'reference' => 'INT-2026-0001',
+        'description' => 'Diagnostic fuite toiture',
+        'scheduled_at' => now()->addDays(3),
+    ]);
+});
+
+test('notification uses mail and database channels', function () {
+    $notification = new InterventionPlanifieeNotification($this->intervention);
+
+    expect($notification->via($this->contact))->toBe(['mail', 'database']);
+});
+
+test('mail notification has correct subject', function () {
+    $notification = new InterventionPlanifieeNotification($this->intervention);
+
+    $mail = $notification->toMail($this->contact);
+
+    expect($mail->subject)->toBe('Intervention planifiée : INT-2026-0001');
+});
+
+test('mail notification has correct greeting', function () {
+    $notification = new InterventionPlanifieeNotification($this->intervention);
+
+    $mail = $notification->toMail($this->contact);
+
+    expect($mail->greeting)->toBe('Nouvelle intervention planifiée');
+});
+
+test('mail notification contains reference', function () {
+    $notification = new InterventionPlanifieeNotification($this->intervention);
+
+    $mail = $notification->toMail($this->contact);
+
+    $hasRef = collect($mail->introLines)->contains(fn ($line) => str_contains($line, 'INT-2026-0001'));
+    expect($hasRef)->toBeTrue();
+});
+
+test('mail notification contains type label', function () {
+    $notification = new InterventionPlanifieeNotification($this->intervention);
+
+    $mail = $notification->toMail($this->contact);
+
+    $hasType = collect($mail->introLines)->contains(fn ($line) => str_contains($line, 'Type'));
+    expect($hasType)->toBeTrue();
+});
+
+test('mail notification contains chantier reference', function () {
+    $notification = new InterventionPlanifieeNotification($this->intervention);
+
+    $mail = $notification->toMail($this->contact);
+
+    $hasChantier = collect($mail->introLines)->contains(fn ($line) => str_contains($line, 'Chantier'));
+    expect($hasChantier)->toBeTrue();
+});
+
+test('mail notification contains scheduled date', function () {
+    $notification = new InterventionPlanifieeNotification($this->intervention);
+
+    $mail = $notification->toMail($this->contact);
+
+    $hasDate = collect($mail->introLines)->contains(
+        fn ($line) => str_contains($line, $this->intervention->scheduled_at->format('d/m/Y'))
+    );
+    expect($hasDate)->toBeTrue();
+});
+
+test('mail notification contains description', function () {
+    $notification = new InterventionPlanifieeNotification($this->intervention);
+
+    $mail = $notification->toMail($this->contact);
+
+    $hasDesc = collect($mail->introLines)->contains(fn ($line) => str_contains($line, 'Diagnostic fuite toiture'));
+    expect($hasDesc)->toBeTrue();
+});
+
+test('mail notification has correct action url', function () {
+    $notification = new InterventionPlanifieeNotification($this->intervention);
+
+    $mail = $notification->toMail($this->contact);
+
+    expect($mail->actionUrl)->toContain("/customer/interventions/{$this->intervention->id}");
+    expect($mail->actionText)->toBe('Voir les détails');
+});
+
+test('database notification has correct title', function () {
+    $notification = new InterventionPlanifieeNotification($this->intervention);
+
+    $databaseData = $notification->toDatabase($this->contact);
+
+    expect($databaseData['title'])->toContain('INT-2026-0001');
+    expect($databaseData['title'])->toContain('planifiée');
+});
+
+test('database notification body contains scheduled date', function () {
+    $notification = new InterventionPlanifieeNotification($this->intervention);
+
+    $databaseData = $notification->toDatabase($this->contact);
+
+    expect($databaseData['body'])->toContain($this->intervention->scheduled_at->format('d/m/Y'));
+});
+
+test('toArray returns empty array', function () {
+    $notification = new InterventionPlanifieeNotification($this->intervention);
+
+    expect($notification->toArray($this->contact))->toBe([]);
+});

@@ -2,6 +2,7 @@
 
 namespace App\Filament\Customer\Resources\CustomerOrders;
 
+use App\Filament\Customer\Concerns\ScopesToAuthenticatedThirdParty;
 use App\Filament\Customer\Resources\CustomerOrders\Pages\ListCustomerOrders;
 use App\Filament\Customer\Resources\CustomerOrders\Pages\ViewCustomerOrder;
 use App\Filament\Customer\Resources\CustomerOrders\RelationManagers\ItemsRelationManager;
@@ -17,6 +18,8 @@ use ToneGabes\Filament\Icons\Enums\Phosphor;
 
 class CustomerOrderResource extends Resource
 {
+    use ScopesToAuthenticatedThirdParty;
+
     protected static ?string $model = CustomerOrder::class;
 
     protected static string|BackedEnum|null $navigationIcon = Phosphor::ShoppingBag;

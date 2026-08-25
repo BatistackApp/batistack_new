@@ -23,7 +23,6 @@ class CustomerInvoicesTable
                         ->map(fn (InvoiceStatus $s) => $s->value)
                         ->all()
                     )
-                    ->newQuery()
             )
             ->columns([
                 TextColumn::make('reference')

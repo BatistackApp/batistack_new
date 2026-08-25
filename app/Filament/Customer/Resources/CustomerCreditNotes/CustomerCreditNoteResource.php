@@ -2,6 +2,7 @@
 
 namespace App\Filament\Customer\Resources\CustomerCreditNotes;
 
+use App\Filament\Customer\Concerns\ScopesToAuthenticatedThirdParty;
 use App\Filament\Customer\Resources\CustomerCreditNotes\Pages\ListCustomerCreditNotes;
 use App\Filament\Customer\Resources\CustomerCreditNotes\Pages\ViewCustomerCreditNote;
 use App\Filament\Customer\Resources\CustomerCreditNotes\Tables\CustomerCreditNotesTable;
@@ -14,6 +15,8 @@ use ToneGabes\Filament\Icons\Enums\Phosphor;
 
 class CustomerCreditNoteResource extends Resource
 {
+    use ScopesToAuthenticatedThirdParty;
+
     protected static ?string $model = CustomerCreditNote::class;
 
     protected static string|null|BackedEnum $navigationIcon = Phosphor::CurrencyCircleDollar;

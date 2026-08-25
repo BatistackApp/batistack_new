@@ -2,6 +2,7 @@
 
 namespace App\Filament\Customer\Resources\CustomerQuotes;
 
+use App\Filament\Customer\Concerns\ScopesToAuthenticatedThirdParty;
 use App\Filament\Customer\Resources\CustomerQuotes\Pages\ListCustomerQuotes;
 use App\Filament\Customer\Resources\CustomerQuotes\Pages\ViewCustomerQuote;
 use App\Filament\Customer\Resources\CustomerQuotes\RelationManagers\ItemsRelationManager;
@@ -18,6 +19,8 @@ use UnitEnum;
 
 class CustomerQuoteResource extends Resource
 {
+    use ScopesToAuthenticatedThirdParty;
+
     protected static ?string $model = CustomerQuote::class;
 
     protected static string|BackedEnum|null $navigationIcon = Phosphor::File;
