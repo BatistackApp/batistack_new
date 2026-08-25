@@ -2,6 +2,7 @@
 
 namespace App\Filament\Customer\Pages;
 
+use App\Filament\Customer\Widgets\CustomerActivityWidget;
 use App\Filament\Customer\Widgets\CustomerDashboardWidget;
 use Filament\Pages\Dashboard as BaseDashboard;
 use Filament\Widgets\Widget;
@@ -24,6 +25,7 @@ class Dashboard extends BaseDashboard
     {
         return [
             CustomerDashboardWidget::class,
+            CustomerActivityWidget::class,
         ];
     }
 }

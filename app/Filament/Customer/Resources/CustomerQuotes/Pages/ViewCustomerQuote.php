@@ -10,6 +10,7 @@ use App\Services\Core\SignatureService;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Forms\Components\Checkbox;
+use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
@@ -91,6 +92,35 @@ class ViewCustomerQuote extends ViewRecord
                     $record->update(['status' => QuoteStatus::REJECTED]);
                 })
                 ->icon(Phosphor::X),
+
+            Action::make('counterProposition')
+                ->label('Contre-proposition')
+                ->color('warning')
+                ->visible(fn (Model $record) => $record->status === QuoteStatus::SENT)
+                ->schema([
+                    TextInput::make('counter_amount')
+                        ->label('Montant proposé (€ HT)')
+                        ->numeric()
+                        ->required()
+                        ->minValue(1)
+                        ->prefix('€'),
+                    Textarea::make('counter_message')
+                        ->label('Message / Justification')
+                        ->maxLength(1000)
+                        ->rows(3),
+                ])
+                ->action(function (Model $record, array $data) {
+                    $record->update([
+                        'status' => QuoteStatus::REJECTED,
+                    ]);
+
+                    Notification::make()
+                        ->success()
+                        ->title('Contre-proposition envoyée')
+                        ->body('Votre contre-proposition de '.number_format($data['counter_amount'], 2, ',', ' ').' € a été transmise à notre équipe pour révision.')
+                        ->send();
+                })
+                ->icon(Phosphor::ArrowsCounterClockwise),
 
             ActionGroup::make([
                 Action::make('printQuote')
