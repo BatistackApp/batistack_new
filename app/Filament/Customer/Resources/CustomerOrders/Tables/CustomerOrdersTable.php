@@ -4,9 +4,6 @@ namespace App\Filament\Customer\Resources\CustomerOrders\Tables;
 
 use App\Enums\Commerce\OrderStatus;
 use App\Models\Commerce\CustomerOrder;
-use Filament\Actions\BulkActionGroup;
-use Filament\Actions\DeleteBulkAction;
-use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;

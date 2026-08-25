@@ -57,4 +57,9 @@ class CustomerDeliveryNoteResource extends Resource
             'view' => ViewCustomerDeliveryNote::route('/{record}'),
         ];
     }
+
+    public static function canAccess(): bool
+    {
+        return true;
+    }
 }

@@ -15,7 +15,7 @@ class CustomerSituationResource extends Resource
 {
     protected static ?string $model = CustomerSituation::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Phosphor::ChartLineDown;
+    protected static string|null|BackedEnum $navigationIcon = Phosphor::ChartLineDown;
 
     protected static ?string $navigationLabel = 'Situations d\'avancement';
 
@@ -45,5 +45,10 @@ class CustomerSituationResource extends Resource
             'index' => ListCustomerSituations::route('/'),
             'view' => ViewCustomerSituation::route('/{record}'),
         ];
+    }
+
+    public static function canAccess(): bool
+    {
+        return true;
     }
 }

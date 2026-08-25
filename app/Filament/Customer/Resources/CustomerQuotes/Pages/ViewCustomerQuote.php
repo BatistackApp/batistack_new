@@ -15,7 +15,6 @@ use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
 use Filament\Schemas\Components\Grid;
 use Illuminate\Contracts\Support\Htmlable;
-use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Log;
 use Saade\FilamentAutograph\Forms\Components\SignaturePad;
@@ -24,6 +23,7 @@ use ToneGabes\Filament\Icons\Enums\Phosphor;
 class ViewCustomerQuote extends ViewRecord
 {
     protected static string $resource = CustomerQuoteResource::class;
+
     protected static ?string $breadcrumb = 'Devis';
 
     protected function getHeaderActions(): array
@@ -105,5 +105,4 @@ class ViewCustomerQuote extends ViewRecord
     {
         return 'Devis N°'.$this->record->reference;
     }
-
 }

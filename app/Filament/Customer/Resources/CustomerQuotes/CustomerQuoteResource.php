@@ -22,10 +22,14 @@ class CustomerQuoteResource extends Resource
     protected static string|BackedEnum|null $navigationIcon = Phosphor::File;
 
     protected static ?string $navigationLabel = 'Mes Devis';
+
     protected static ?string $modelLabel = 'Devis';
+
     protected static ?string $pluralModelLabel = 'Devis';
+
     protected static ?int $navigationSort = 1;
-    protected static string | UnitEnum | null $navigationGroup = 'Mes Achats et Prestations';
+
+    protected static string|UnitEnum|null $navigationGroup = 'Mes Achats et Prestations';
 
     protected static ?string $recordTitleAttribute = 'reference';
 
@@ -52,5 +56,10 @@ class CustomerQuoteResource extends Resource
             'index' => ListCustomerQuotes::route('/'),
             'view' => ViewCustomerQuote::route('/{record}'),
         ];
+    }
+
+    public static function canAccess(): bool
+    {
+        return true;
     }
 }

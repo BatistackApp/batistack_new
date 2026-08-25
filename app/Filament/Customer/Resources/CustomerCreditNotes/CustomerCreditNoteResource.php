@@ -46,4 +46,9 @@ class CustomerCreditNoteResource extends Resource
             'view' => ViewCustomerCreditNote::route('/{record}'),
         ];
     }
+
+    public static function canAccess(): bool
+    {
+        return true;
+    }
 }

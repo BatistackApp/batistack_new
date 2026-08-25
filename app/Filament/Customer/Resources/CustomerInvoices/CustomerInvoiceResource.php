@@ -53,4 +53,9 @@ class CustomerInvoiceResource extends Resource
             'view' => ViewCustomerInvoice::route('/{record}'),
         ];
     }
+
+    public static function canAccess(): bool
+    {
+        return true;
+    }
 }

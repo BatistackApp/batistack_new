@@ -5,7 +5,6 @@ namespace App\Filament\Customer\Resources\CustomerOrders;
 use App\Filament\Customer\Resources\CustomerOrders\Pages\ListCustomerOrders;
 use App\Filament\Customer\Resources\CustomerOrders\Pages\ViewCustomerOrder;
 use App\Filament\Customer\Resources\CustomerOrders\RelationManagers\ItemsRelationManager;
-use App\Filament\Customer\Resources\CustomerOrders\Schemas\CustomerOrderForm;
 use App\Filament\Customer\Resources\CustomerOrders\Schemas\CustomerOrderInfolist;
 use App\Filament\Customer\Resources\CustomerOrders\Tables\CustomerOrdersTable;
 use App\Models\Commerce\CustomerOrder;
@@ -20,6 +19,7 @@ class CustomerOrderResource extends Resource
     protected static ?string $model = CustomerOrder::class;
 
     protected static string|BackedEnum|null $navigationIcon = Phosphor::ShoppingBag;
+
     protected static ?string $navigationLabel = 'Mes Commandes';
 
     protected static ?string $modelLabel = 'Commande';
@@ -55,5 +55,10 @@ class CustomerOrderResource extends Resource
             'index' => ListCustomerOrders::route('/'),
             'view' => ViewCustomerOrder::route('/{record}'),
         ];
+    }
+
+    public static function canAccess(): bool
+    {
+        return true;
     }
 }
