@@ -49,10 +49,15 @@ class GenerateBimThumbnailJob implements ShouldQueue
 
     protected function renderScreenshot(string $url, string $fullPath): void
     {
-        Browsershot::url($url)
+        $browsershot = Browsershot::url($url)
             ->waitUntilNetworkIdle()
             ->setDelay(8000)
-            ->windowSize(800, 600)
-            ->save($fullPath);
+            ->windowSize(800, 600);
+
+        if (env('CI')) {
+            $browsershot->addChromiumArguments(['--no-sandbox']);
+        }
+
+        $browsershot->save($fullPath);
     }
 }
