@@ -2,6 +2,9 @@
 
 use App\Enums\Articles\InventoryCycleLineStatus;
 use App\Enums\Articles\InventoryCycleStatus;
+use App\Enums\Articles\StockMouvementSource;
+use App\Enums\Articles\StockMouvementType;
+use App\Exceptions\Articles\ArticlesModuleException;
 use App\Models\Articles\InventoryCycle;
 use App\Models\Articles\Item;
 use App\Models\Articles\Stock;
@@ -12,7 +15,7 @@ use App\Services\Articles\CycleCountingService;
 beforeEach(function () {
     $this->warehouse = Warehouse::factory()->create();
     $this->service = app(CycleCountingService::class);
-    
+
     // Seed 15 items with stock
     for ($i = 0; $i < 15; $i++) {
         $item = Item::factory()->create();
@@ -30,12 +33,12 @@ it('can generate random cycle count', function () {
     expect($cycle)->toBeInstanceOf(InventoryCycle::class)
         ->and($cycle->status)->toBe(InventoryCycleStatus::PENDING)
         ->and($cycle->lines)->toHaveCount(5)
-        ->and((float)$cycle->lines->first()->theoretical_quantity)->toEqual(100.0);
+        ->and((float) $cycle->lines->first()->theoretical_quantity)->toEqual(100.0);
 });
 
 it('can submit and approve cycle count', function () {
     $cycle = $this->service->generateCycle($this->warehouse, 2);
-    
+
     // Simulate counting
     $line1 = $cycle->lines[0];
     $line1->update(['counted_quantity' => 95, 'status' => InventoryCycleLineStatus::COUNTED]); // 5 missing
@@ -57,32 +60,32 @@ it('can submit and approve cycle count', function () {
         ->and($line2->item->getStockInWarehouse($this->warehouse))->toBe(105.0);
 
     // Get the stock instances
-    $stock1 = \App\Models\Articles\Stock::where('item_id', $line1->item_id)->where('warehouse_id', $this->warehouse->id)->first();
-    $stock2 = \App\Models\Articles\Stock::where('item_id', $line2->item_id)->where('warehouse_id', $this->warehouse->id)->first();
+    $stock1 = Stock::where('item_id', $line1->item_id)->where('warehouse_id', $this->warehouse->id)->first();
+    $stock2 = Stock::where('item_id', $line2->item_id)->where('warehouse_id', $this->warehouse->id)->first();
 
     // Assert StockMouvement created
     $this->assertDatabaseHas('stock_mouvements', [
         'stock_id' => $stock1->id,
         'quantity_delta' => -5,
-        'type' => \App\Enums\Articles\StockMouvementType::OUT->value,
-        'reference_type' => \App\Enums\Articles\StockMouvementSource::INVENTORY->value,
+        'type' => StockMouvementType::OUT->value,
+        'reference_type' => StockMouvementSource::INVENTORY->value,
     ]);
 
     $this->assertDatabaseHas('stock_mouvements', [
         'stock_id' => $stock2->id,
         'quantity_delta' => 5,
-        'type' => \App\Enums\Articles\StockMouvementType::IN->value,
-        'reference_type' => \App\Enums\Articles\StockMouvementSource::INVENTORY->value,
+        'type' => StockMouvementType::IN->value,
+        'reference_type' => StockMouvementSource::INVENTORY->value,
     ]);
 });
 
 it('cannot submit or approve with uncounted lines', function () {
     $cycle = $this->service->generateCycle($this->warehouse, 2);
-    
+
     // Only count one line
     $line1 = $cycle->lines[0];
     $line1->update(['counted_quantity' => 100, 'status' => InventoryCycleLineStatus::COUNTED]);
 
     expect(fn () => $this->service->submitForReview($cycle))
-        ->toThrow(\App\Exceptions\Articles\ArticlesModuleException::class, "Toutes les lignes doivent être comptées avant soumission.");
+        ->toThrow(ArticlesModuleException::class, 'Toutes les lignes doivent être comptées avant soumission.');
 });

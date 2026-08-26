@@ -2,11 +2,11 @@
 
 namespace App\Filament\Widgets;
 
-use Filament\Widgets\StatsOverviewWidget;
-use App\Models\Chantiers\Chantier;
 use App\Enums\Chantiers\ChantierStatus;
+use App\Models\Chantiers\Chantier;
 use App\Models\Commerce\CustomerInvoice;
 use App\Models\RH\TimeEntry;
+use Filament\Widgets\StatsOverviewWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 
 class StatsOverview extends StatsOverviewWidget
@@ -23,18 +23,18 @@ class StatsOverview extends StatsOverviewWidget
                 ->description('Actuellement actifs')
                 ->descriptionIcon('heroicon-m-building-office')
                 ->color('primary'),
-                
-            Stat::make('Chiffre d\'Affaires (Mois)', number_format((float) $revenue, 2, ',', ' ') . ' €')
+
+            Stat::make('Chiffre d\'Affaires (Mois)', number_format((float) $revenue, 2, ',', ' ').' €')
                 ->description('Factures encaissées ce mois-ci')
                 ->descriptionIcon('heroicon-m-arrow-trending-up')
                 ->color('success'),
-                
-            Stat::make('Factures en Retard', number_format((float) $overdue, 2, ',', ' ') . ' €')
+
+            Stat::make('Factures en Retard', number_format((float) $overdue, 2, ',', ' ').' €')
                 ->description('Impayés à surveiller')
                 ->descriptionIcon('heroicon-m-exclamation-triangle')
                 ->color($overdue > 0 ? 'danger' : 'success'),
-                
-            Stat::make('Heures Pointées (Semaine)', number_format((float) $hours, 2, ',', ' ') . ' h')
+
+            Stat::make('Heures Pointées (Semaine)', number_format((float) $hours, 2, ',', ' ').' h')
                 ->description('Total équipe sur 7 jours')
                 ->descriptionIcon('heroicon-m-clock')
                 ->color('gray'),

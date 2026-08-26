@@ -2,8 +2,9 @@
 
 namespace App\Models\RH;
 
-use Illuminate\Database\Eloquent\Model;
+use App\Enums\RH\ExpenseReportStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
@@ -21,7 +22,7 @@ class ExpenseReport extends Model
     ];
 
     protected $casts = [
-        'status' => \App\Enums\RH\ExpenseReportStatus::class,
+        'status' => ExpenseReportStatus::class,
     ];
 
     public function employee(): BelongsTo

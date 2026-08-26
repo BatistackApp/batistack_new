@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Log;
 class RoutingOptimizationService
 {
     protected string $apiKey;
+
     protected string $distanceMatrixUrl = 'https://maps.googleapis.com/maps/api/distancematrix/json';
 
     public function __construct()
@@ -22,9 +23,9 @@ class RoutingOptimizationService
      * Prend une liste de véhicules (avec leur position de départ, ex: dépôt)
      * et une liste de chantiers (destinations).
      *
-     * @param Collection $vehicles Collection de modèles Vehicle
-     * @param Collection $chantiers Collection de modèles Chantier
-     * @param string $depotAddress L'adresse de départ par défaut si le véhicule n'a pas de position
+     * @param  Collection  $vehicles  Collection de modèles Vehicle
+     * @param  Collection  $chantiers  Collection de modèles Chantier
+     * @param  string  $depotAddress  L'adresse de départ par défaut si le véhicule n'a pas de position
      * @return array Tableau associatif structuré des affectations optimisées
      */
     public function optimizeAssignments(Collection $vehicles, Collection $chantiers, string $depotAddress = 'Siège Social'): array
@@ -35,18 +36,19 @@ class RoutingOptimizationService
 
         if (empty($this->apiKey)) {
             Log::warning("La clé API Google Maps est manquante. Utilisation d'un algorithme de simulation aléatoire.");
+
             return $this->simulateOptimization($vehicles, $chantiers);
         }
 
         // Préparer les origines (Véhicules)
         $origins = $vehicles->map(function ($vehicle) use ($depotAddress) {
             // Dans un cas réel, on utiliserait la position GPS ou l'adresse du dépôt
-            return $depotAddress; 
+            return $depotAddress;
         })->toArray();
 
         // Préparer les destinations (Chantiers)
         $destinations = $chantiers->map(function ($chantier) {
-            return $chantier->address . ', ' . $chantier->city . ', ' . $chantier->postal_code;
+            return $chantier->address.', '.$chantier->city.', '.$chantier->postal_code;
         })->toArray();
 
         // Limite de l'API Google Maps Distance Matrix (max 25 origines/destinations par requête standard)
@@ -64,18 +66,18 @@ class RoutingOptimizationService
 
             if ($response->successful()) {
                 $data = $response->json();
-                
+
                 if (($data['status'] ?? '') !== 'OK') {
-                    throw new Exception("Erreur de l'API Google Maps : " . ($data['error_message'] ?? $data['status']));
+                    throw new Exception("Erreur de l'API Google Maps : ".($data['error_message'] ?? $data['status']));
                 }
 
                 return $this->processDistanceMatrix($data, $vehicles, $chantiers);
             }
 
-            throw new Exception("Erreur HTTP lors de l'appel à Google Maps Distance Matrix: " . $response->body());
-            
+            throw new Exception("Erreur HTTP lors de l'appel à Google Maps Distance Matrix: ".$response->body());
         } catch (Exception $e) {
-            Log::error("Erreur RoutingOptimizationService: " . $e->getMessage());
+            Log::error('Erreur RoutingOptimizationService: '.$e->getMessage());
+
             // Fallback en cas d'erreur API
             return $this->simulateOptimization($vehicles, $chantiers);
         }
@@ -93,12 +95,12 @@ class RoutingOptimizationService
 
         foreach ($data['rows'] as $originIndex => $row) {
             $vehicle = $vehicles->values()->get($originIndex);
-            
+
             // Si on a déjà utilisé tous les véhicules, on arrête
             if (! isset($unassignedVehicles[$vehicle->id])) {
                 continue;
             }
-            
+
             $bestDistance = PHP_INT_MAX;
             $bestChantierIndex = null;
             $bestDuration = 0;
@@ -110,7 +112,7 @@ class RoutingOptimizationService
 
                 if (($element['status'] ?? '') === 'OK') {
                     $distanceValue = $element['distance']['value']; // mètres
-                    
+
                     if ($distanceValue < $bestDistance) {
                         $bestDistance = $distanceValue;
                         $bestChantierIndex = $destIndex;
@@ -121,7 +123,7 @@ class RoutingOptimizationService
 
             if ($bestChantierIndex !== null) {
                 $chantier = $chantiers->values()->get($bestChantierIndex);
-                
+
                 $assignments[] = [
                     'vehicle_id' => $vehicle->id,
                     'vehicle_name' => $vehicle->getDisplayName(),
@@ -151,7 +153,7 @@ class RoutingOptimizationService
         foreach ($vehicles->values() as $index => $vehicle) {
             // Assigne circulairement un chantier à chaque véhicule
             $chantier = $chantierValues->get($index % $chantierValues->count());
-            
+
             $assignments[] = [
                 'vehicle_id' => $vehicle->id,
                 'vehicle_name' => $vehicle->getDisplayName(),

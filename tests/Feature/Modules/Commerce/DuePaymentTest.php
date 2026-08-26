@@ -4,8 +4,10 @@ namespace Tests\Feature\Modules\Commerce;
 
 use App\Enums\Commerce\InvoiceStatus;
 use App\Models\Commerce\CustomerInvoice;
+use App\Models\Commerce\Payment;
 use App\Models\Commerce\SupplierInvoice;
 use App\Models\Core\Company;
+use App\Models\Core\VatRate;
 use App\Models\Tiers\ThirdParty;
 use App\Services\Commerce\DuePaymentService;
 use Illuminate\Support\Carbon;
@@ -19,9 +21,9 @@ beforeEach(function () {
 
     $this->customer = ThirdParty::factory()->state(['type' => 'client'])->create();
     $this->supplier = ThirdParty::factory()->state(['type' => 'supplier'])->create();
-    
+
     // Create a 0% VAT rate for penalties
-    \App\Models\Core\VatRate::create([
+    VatRate::create([
         'name' => 'TVA 0%',
         'rate' => 0,
         'is_default' => false,
@@ -223,7 +225,7 @@ describe('DuePaymentService - getClientBalance', function () {
             'total_ttc' => 1000.00,
         ]);
 
-        $payment = \App\Models\Commerce\Payment::factory()->create([
+        $payment = Payment::factory()->create([
             'third_party_id' => $this->customer->id,
             'amount' => 600.00,
             'payment_date' => now(),
@@ -481,7 +483,7 @@ describe('DuePaymentService - applyPenalties', function () {
         ]);
 
         // Créer un paiement partiel de 700€
-        $payment = \App\Models\Commerce\Payment::factory()->create([
+        $payment = Payment::factory()->create([
             'third_party_id' => $this->customer->id,
             'amount' => 700.00,
             'payment_date' => now(),
@@ -509,11 +511,11 @@ describe('DuePaymentService - applyPenalties', function () {
         $penaltiesItem = $invoice->items()->where('name', 'Pénalités de retard')->first();
         expect($penaltiesItem)->not->toBeNull()
             ->and($penaltiesItem->total_ht)->toEqual(50.00); // 10% de 500€ = 50€
-            
+
         $feeItem = $invoice->items()->where('name', 'LIKE', '%Indemnité forfaitaire de recouvrement%')->first();
         expect($feeItem)->not->toBeNull()
             ->and($feeItem->total_ht)->toEqual(40.00);
-            
+
         // Total = 1200 + 50 + 40 = 1290
         expect($invoice->total_ttc)->toEqual(1290.00);
     });

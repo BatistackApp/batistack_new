@@ -1,12 +1,13 @@
 <?php
 
+use App\Models\Core\Setting;
 use App\Services\RH\GoogleCloudVisionOcrService;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Storage;
-use Google\Cloud\Vision\V1\BatchAnnotateFilesResponse;
 use Google\Cloud\Vision\V1\AnnotateFileResponse;
 use Google\Cloud\Vision\V1\AnnotateImageResponse;
+use Google\Cloud\Vision\V1\BatchAnnotateFilesResponse;
 use Google\Cloud\Vision\V1\TextAnnotation;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Storage;
 
 class TestableOcrService extends GoogleCloudVisionOcrService
 {
@@ -20,8 +21,8 @@ class TestableOcrService extends GoogleCloudVisionOcrService
 
 test('extractData handles multi-page PDF using batchAnnotateFiles', function () {
     // 1. Setup mock Settings to enable OCR
-    \App\Models\Core\Setting::factory()->create(['key' => 'ocr_enabled', 'value' => '1', 'type' => 'boolean']);
-    \App\Models\Core\Setting::factory()->create(['key' => 'google_vision_api_key', 'value' => 'fake-key', 'type' => 'text']);
+    Setting::factory()->create(['key' => 'ocr_enabled', 'value' => '1', 'type' => 'boolean']);
+    Setting::factory()->create(['key' => 'google_vision_api_key', 'value' => 'fake-key', 'type' => 'text']);
 
     // 2. Create a fake PDF file
     Storage::fake('local');
@@ -48,15 +49,25 @@ test('extractData handles multi-page PDF using batchAnnotateFiles', function () 
     $mockBatchResponse->shouldReceive('getResponses')->andReturn([$mockFileResponse]);
 
     // 4. Use an anonymous class to bypass final class Mockery limitations
-    $mockClient = new class($mockBatchResponse) {
+    $mockClient = new class($mockBatchResponse)
+    {
         private $response;
-        public function __construct($response) { $this->response = $response; }
-        public function batchAnnotateFiles($request) { return $this->response; }
+
+        public function __construct($response)
+        {
+            $this->response = $response;
+        }
+
+        public function batchAnnotateFiles($request)
+        {
+            return $this->response;
+        }
+
         public function close() {}
     };
 
     // 5. Inject client into service
-    $service = new TestableOcrService();
+    $service = new TestableOcrService;
     $service->mockClient = $mockClient;
 
     // 6. Clear cache to force OCR
@@ -75,8 +86,8 @@ test('extractData handles multi-page PDF using batchAnnotateFiles', function () 
 });
 
 test('extractData handles image using documentTextDetection', function () {
-    \App\Models\Core\Setting::factory()->create(['key' => 'ocr_enabled', 'value' => '1', 'type' => 'boolean']);
-    \App\Models\Core\Setting::factory()->create(['key' => 'google_vision_api_key', 'value' => 'fake-key', 'type' => 'text']);
+    Setting::factory()->create(['key' => 'ocr_enabled', 'value' => '1', 'type' => 'boolean']);
+    Setting::factory()->create(['key' => 'google_vision_api_key', 'value' => 'fake-key', 'type' => 'text']);
 
     // Create a fake JPG file
     Storage::fake('local');
@@ -89,14 +100,24 @@ test('extractData handles image using documentTextDetection', function () {
     $mockResponse = Mockery::mock(AnnotateImageResponse::class);
     $mockResponse->shouldReceive('getFullTextAnnotation')->andReturn($mockTextAnnotation);
 
-    $mockClient = new class($mockResponse) {
+    $mockClient = new class($mockResponse)
+    {
         private $response;
-        public function __construct($response) { $this->response = $response; }
-        public function documentTextDetection($request) { return $this->response; }
+
+        public function __construct($response)
+        {
+            $this->response = $response;
+        }
+
+        public function documentTextDetection($request)
+        {
+            return $this->response;
+        }
+
         public function close() {}
     };
 
-    $service = new TestableOcrService();
+    $service = new TestableOcrService;
     $service->mockClient = $mockClient;
 
     Cache::clear();

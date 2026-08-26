@@ -32,5 +32,8 @@ class ChantierPhase extends Model
         return $this->belongsTo(Chantier::class);
     }
 
-    public function tasks(): HasMany { return $this->hasMany(ChantierTask::class)->orderBy('order'); }
+    public function tasks(): HasMany
+    {
+        return $this->hasMany(ChantierTask::class)->orderBy('order');
+    }
 }

@@ -5,15 +5,15 @@ use App\Enums\Commerce\QuoteStatus;
 use App\Jobs\Commerce\CheckExpiredQuotesJob;
 use App\Jobs\Commerce\CheckOverdueInvoicesJob;
 use App\Jobs\Commerce\SendCustomerInvoiceEmailJob;
+use App\Mail\Commerce\CustomerInvoiceMail;
 use App\Models\Commerce\CustomerInvoice;
 use App\Models\Commerce\CustomerQuote;
+use App\Models\Core\Company;
 use App\Models\Tiers\Contact;
 use App\Models\Tiers\ThirdParty;
 use App\Models\User;
-use App\Notifications\Commerce\InvoiceGeneratedNotification;
 use App\Notifications\Commerce\PaymentReminderNotification;
 use App\Notifications\Commerce\QuoteExpiredNotification;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Queue;
 
@@ -22,7 +22,7 @@ beforeEach(function () {
 
     $this->user = User::factory()->create();
     $this->actingAs($this->user);
-    \App\Models\Core\Company::factory()->create();
+    Company::factory()->create();
     $this->customer = ThirdParty::factory()->state(['type' => 'client'])->create();
     Contact::factory()->create([
         'third_party_id' => $this->customer->id,
@@ -49,7 +49,7 @@ describe('SendCustomerInvoiceEmailJob - Envoi asynchrone de factures', function 
         $job = new SendCustomerInvoiceEmailJob($invoice);
         app()->call([$job, 'handle']);
 
-        Mail::assertQueued(\App\Mail\Commerce\CustomerInvoiceMail::class);
+        Mail::assertQueued(CustomerInvoiceMail::class);
         expect($invoice->fresh()->sent_at)->not->toBeNull();
     });
 

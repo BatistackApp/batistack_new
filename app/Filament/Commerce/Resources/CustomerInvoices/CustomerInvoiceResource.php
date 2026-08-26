@@ -15,8 +15,8 @@ use App\Models\Commerce\CustomerInvoice;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
-use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use Relaticle\ActivityLog\Filament\RelationManagers\ActivityLogRelationManager;
 use ToneGabes\Filament\Icons\Enums\Phosphor;
 use UnitEnum;
 
@@ -25,10 +25,15 @@ class CustomerInvoiceResource extends Resource
     protected static ?string $model = CustomerInvoice::class;
 
     protected static string|BackedEnum|null $navigationIcon = Phosphor::Receipt;
+
     protected static ?string $navigationLabel = 'Factures client';
-    protected static string | UnitEnum | null $navigationGroup = 'Ventes';
+
+    protected static string|UnitEnum|null $navigationGroup = 'Ventes';
+
     protected static ?string $modelLabel = 'Facture';
+
     protected static ?string $pluralModelLabel = 'Factures';
+
     protected static ?int $navigationSort = 4;
 
     protected static ?string $recordTitleAttribute = 'reference';
@@ -53,7 +58,7 @@ class CustomerInvoiceResource extends Resource
         return [
             ItemsRelationManager::class,
             PaymentsRelationManager::class,
-            \Relaticle\ActivityLog\Filament\RelationManagers\ActivityLogRelationManager::class,
+            ActivityLogRelationManager::class,
         ];
     }
 

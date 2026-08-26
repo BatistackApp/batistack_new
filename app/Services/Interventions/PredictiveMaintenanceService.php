@@ -2,13 +2,14 @@
 
 namespace App\Services\Interventions;
 
-use App\Models\Interventions\ClientEquipment;
-use App\Models\Interventions\Intervention;
+use App\Enums\Commerce\QuoteStatus;
+use App\Enums\Interventions\InterventionStatus;
+use App\Enums\Interventions\InterventionType;
 use App\Models\Commerce\CustomerQuote;
 use App\Models\Commerce\CustomerQuoteItem;
-use App\Enums\Commerce\QuoteStatus;
-use App\Enums\Interventions\InterventionType;
-use App\Enums\Interventions\InterventionStatus;
+use App\Models\Core\VatRate;
+use App\Models\Interventions\ClientEquipment;
+use App\Models\User;
 use Illuminate\Support\Collection;
 
 class PredictiveMaintenanceService
@@ -17,16 +18,16 @@ class PredictiveMaintenanceService
      * Analyse les équipements et retourne ceux qui risquent de tomber en panne
      * dans les $days prochains jours.
      *
-     * @param int $days Nombre de jours d'anticipation
+     * @param  int  $days  Nombre de jours d'anticipation
      * @return Collection Collection d'équipements avec leurs données prédictives
      */
     public function getEquipmentsAtRisk(int $days = 30): Collection
     {
         $equipments = ClientEquipment::with(['interventions' => function ($query) {
             $query->where('type', InterventionType::REGIE)
-                  ->where('status', InterventionStatus::TERMINEE)
-                  ->whereNotNull('completed_at')
-                  ->orderBy('completed_at', 'desc');
+                ->where('status', InterventionStatus::TERMINEE)
+                ->whereNotNull('completed_at')
+                ->orderBy('completed_at', 'desc');
         }])->get();
 
         $riskyEquipments = collect();
@@ -46,9 +47,6 @@ class PredictiveMaintenanceService
 
     /**
      * Calcule le MTBF et prédit la prochaine panne pour un équipement donné.
-     *
-     * @param ClientEquipment $equipment
-     * @return array|null
      */
     public function predictNextFailure(ClientEquipment $equipment): ?array
     {
@@ -108,17 +106,14 @@ class PredictiveMaintenanceService
 
     /**
      * Génère un brouillon de devis de maintenance pour l'équipement donné.
-     *
-     * @param ClientEquipment $equipment
-     * @return CustomerQuote
      */
     public function generateMaintenanceQuote(ClientEquipment $equipment): CustomerQuote
     {
         $quote = CustomerQuote::create([
             'client_id' => $equipment->third_party_id,
-            'responsable_id' => auth()->id() ?? \App\Models\User::first()->id ?? 1,
+            'responsable_id' => auth()->id() ?? User::first()->id ?? 1,
             'status' => QuoteStatus::DRAFT,
-            'reference' => 'DEV-MAINT-' . strtoupper(uniqid()),
+            'reference' => 'DEV-MAINT-'.strtoupper(uniqid()),
             'valid_until' => now()->addDays(30),
             'date' => now(),
             'description' => "Proposition de contrat de maintenance préventive pour l'équipement : {$equipment->name} (SN: {$equipment->serial_number})",
@@ -131,7 +126,7 @@ class PredictiveMaintenanceService
             'quantity' => 1,
             'selling_price' => 250.00, // Prix suggéré
             'purchase_price' => 0.00,
-            'vat_rate_id' => \App\Models\Core\VatRate::first()->id ?? 1,
+            'vat_rate_id' => VatRate::first()->id ?? 1,
         ]);
 
         return $quote;

@@ -56,6 +56,7 @@ class CategoryObserver
 
     /**
      * Empêcher suppression si utilisée
+     *
      * @throws Exception
      */
     public function deleting(Category $category): bool
@@ -91,6 +92,7 @@ class CategoryObserver
 
     /**
      * Valider le nom de la catégorie
+     *
      * @throws Exception
      */
     private function validateName(Category $category): void

@@ -11,7 +11,7 @@ use ToneGabes\Filament\Icons\Enums\Phosphor;
 class QualificationExpiringNotification extends Notification
 {
     use Queueable;
-    
+
     public function __construct(
         protected Qualification $qualification,
         protected bool $isExpired = false

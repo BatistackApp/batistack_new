@@ -2,7 +2,10 @@
 
 namespace Database\Factories\Locations;
 
+use App\Models\Chantiers\Chantier;
+use App\Models\Core\Company;
 use App\Models\Locations\OutboundRentalContract;
+use App\Models\Tiers\ThirdParty;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -18,10 +21,10 @@ class OutboundRentalContractFactory extends Factory
     public function definition(): array
     {
         return [
-            'company_id' => \App\Models\Core\Company::factory(),
-            'third_party_id' => \App\Models\Tiers\ThirdParty::factory(),
-            'chantier_id' => \App\Models\Chantiers\Chantier::factory(),
-            'reference' => 'OUT-' . $this->faker->unique()->numberBetween(1000, 9999),
+            'company_id' => Company::factory(),
+            'third_party_id' => ThirdParty::factory(),
+            'chantier_id' => Chantier::factory(),
+            'reference' => 'OUT-'.$this->faker->unique()->numberBetween(1000, 9999),
             'status' => 'draft',
             'billing_period' => 'monthly',
             'start_date' => now(),

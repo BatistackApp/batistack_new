@@ -2,10 +2,10 @@
 
 namespace App\Services\Tiers;
 
-use App\Models\Tiers\ThirdParty;
 use App\Models\Commerce\ReceiptNote;
-use Illuminate\Support\Facades\Log;
+use App\Models\Tiers\ThirdParty;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Log;
 
 class SupplierScoringService
 {
@@ -36,13 +36,13 @@ class SupplierScoringService
 
         foreach ($receipts as $receipt) {
             $order = $receipt->order;
-            
+
             // Calcul délais (sur 50 points par réception)
             if ($order->expected_delivery_date && $receipt->received_at) {
                 $validReceiptsForDelivery++;
                 $expected = Carbon::parse($order->expected_delivery_date)->startOfDay();
                 $received = Carbon::parse($receipt->received_at)->startOfDay();
-                
+
                 if ($received->lessThanOrEqualTo($expected)) {
                     $deliveryScoreSum += 50;
                 } else {
@@ -51,40 +51,40 @@ class SupplierScoringService
                     $deliveryScoreSum += $points;
                 }
             }
-            
+
             // Calcul qualité (sur 30 points par réception)
             if ($receipt->quality_rating !== null) {
                 $validReceiptsForQuality++;
                 $qualityPoints = ($receipt->quality_rating / 5) * 30;
                 $qualityScoreSum += $qualityPoints;
             }
-            
+
             if ($receipt->has_litigation) {
                 $litigationCount++;
             }
         }
-        
+
         $finalScore = 0;
-        
+
         if ($validReceiptsForDelivery > 0) {
             $finalScore += ($deliveryScoreSum / $validReceiptsForDelivery);
         } else {
             $finalScore += 50;
         }
-        
+
         if ($validReceiptsForQuality > 0) {
             $finalScore += ($qualityScoreSum / $validReceiptsForQuality);
         } else {
             $finalScore += 30;
         }
-        
+
         $litigationPenalty = min(20, $litigationCount * 10);
         $finalScore += (20 - $litigationPenalty);
 
         $supplier->updateQuietly([
-            'supplier_score' => (int) round($finalScore)
+            'supplier_score' => (int) round($finalScore),
         ]);
-        
-        Log::info("Calcul du score fournisseur {$supplier->name} (ID: {$supplier->id}) : " . round($finalScore) . "/100");
+
+        Log::info("Calcul du score fournisseur {$supplier->name} (ID: {$supplier->id}) : ".round($finalScore).'/100');
     }
 }

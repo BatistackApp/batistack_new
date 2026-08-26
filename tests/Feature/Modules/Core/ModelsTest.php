@@ -1,11 +1,17 @@
 <?php
 
+use App\Enums\Core\SignatureStatus;
+use App\Enums\Core\SignatureType;
+use App\Enums\Tiers\ThirdPartyDocumentStatus;
+use App\Enums\Tiers\ThirdPartyDocumentType;
 use App\Models\Core\Company;
 use App\Models\Core\Setting;
 use App\Models\Core\Signature;
 use App\Models\Core\Unit;
 use App\Models\Core\VatRate;
+use App\Models\Tiers\ThirdParty;
 use App\Models\Tiers\ThirdPartyDocument;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
@@ -22,17 +28,17 @@ it('can create a setting using factory', function () {
 
 it('can create a signature using factory and test relation', function () {
     $document = ThirdPartyDocument::create([
-        'type' => \App\Enums\Tiers\ThirdPartyDocumentType::CONTRAT_SOUS_TRAITANCE,
-        'status' => \App\Enums\Tiers\ThirdPartyDocumentStatus::VALID,
-        'third_party_id' => \App\Models\Tiers\ThirdParty::factory()->create()->id,
+        'type' => ThirdPartyDocumentType::CONTRAT_SOUS_TRAITANCE,
+        'status' => ThirdPartyDocumentStatus::VALID,
+        'third_party_id' => ThirdParty::factory()->create()->id,
     ]);
 
     $signature = Signature::create([
         'signable_type' => $document->getMorphClass(),
         'signable_id' => $document->id,
-        'user_id' => \App\Models\User::factory()->create()->id,
-        'type' => \App\Enums\Core\SignatureType::AUTOGRAPH,
-        'status' => \App\Enums\Core\SignatureStatus::PENDING,
+        'user_id' => User::factory()->create()->id,
+        'type' => SignatureType::AUTOGRAPH,
+        'status' => SignatureStatus::PENDING,
         'token' => Str::uuid()->toString(),
         'checksum' => hash('sha256', 'test'),
         'metadata' => ['user_agent' => 'Test'],

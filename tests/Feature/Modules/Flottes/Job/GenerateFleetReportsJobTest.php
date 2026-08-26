@@ -21,7 +21,7 @@ describe('GenerateFleetReportsJob', function () {
         $serviceMock = Mockery::mock(FleetDocumentService::class);
         $serviceMock->shouldReceive('generateVehicleFiche')
             ->once()
-            ->with(Mockery::on(fn($v) => $v->id === $vehicle->id))
+            ->with(Mockery::on(fn ($v) => $v->id === $vehicle->id))
             ->andReturn('fiche data');
 
         $serviceMock->shouldReceive('generateMaintenanceReport')
@@ -44,13 +44,13 @@ describe('GenerateFleetReportsJob', function () {
             ->with('Génération rapports flotte complétée')
             ->once();
 
-        $job = new GenerateFleetReportsJob();
+        $job = new GenerateFleetReportsJob;
         $job->handle($serviceMock);
 
-        $path = "fleet_reports/{$vehicle->reference}/" . now()->format('Y-m-d');
-        
+        $path = "fleet_reports/{$vehicle->reference}/".now()->format('Y-m-d');
+
         $files = Storage::disk($disk)->files($path);
-        
+
         expect($files)->toHaveCount(4);
     });
 
@@ -67,7 +67,7 @@ describe('GenerateFleetReportsJob', function () {
 
         Log::shouldReceive('info')->once();
 
-        $job = new GenerateFleetReportsJob();
+        $job = new GenerateFleetReportsJob;
         $job->handle($serviceMock);
     });
 });

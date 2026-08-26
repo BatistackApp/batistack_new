@@ -2,6 +2,8 @@
 
 namespace Database\Factories\Locations;
 
+use App\Models\Immobilisation\FixedAsset;
+use App\Models\Locations\OutboundRentalContract;
 use App\Models\Locations\OutboundRentalLine;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -18,8 +20,8 @@ class OutboundRentalLineFactory extends Factory
     public function definition(): array
     {
         return [
-            'outbound_rental_contract_id' => \App\Models\Locations\OutboundRentalContract::factory(),
-            'fixed_asset_id' => \App\Models\Immobilisation\FixedAsset::factory(),
+            'outbound_rental_contract_id' => OutboundRentalContract::factory(),
+            'fixed_asset_id' => FixedAsset::factory(),
             'daily_rate' => $this->faker->randomFloat(2, 10, 500),
         ];
     }

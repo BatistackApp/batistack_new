@@ -2,13 +2,10 @@
 
 namespace App\Models\Commerce;
 
-use App\Enums\Commerce\DeliveryStatus;
 use App\Models\Articles\Item;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class CustomerDeliveryNoteItem extends Model
 {
@@ -45,7 +42,6 @@ class CustomerDeliveryNoteItem extends Model
     {
         return $this->orderItem->item->stocks()?->first()->quantity ?? 'N/A';
     }
-
 
     protected function casts(): array
     {

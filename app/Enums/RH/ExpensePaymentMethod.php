@@ -11,7 +11,7 @@ enum ExpensePaymentMethod: string implements HasLabel
 
     public function getLabel(): string
     {
-        return match($this) {
+        return match ($this) {
             self::PERSONAL_CARD => 'Carte Personnelle',
             self::CORPORATE_CARD => 'Carte Corporate',
         };

@@ -27,25 +27,25 @@ describe('CheckVehicleMaintenanceMilestonesJob', function () {
         $vehicleFine = Vehicle::factory()->create(['status' => VehicleStatus::AVAILABLE, 'reference' => 'CC-333-CC']);
 
         $serviceMock = Mockery::mock(VehicleAlertService::class);
-        
+
         $serviceMock->shouldReceive('needsMaintenance')
-            ->with(Mockery::on(fn($v) => $v->id === $vehicleDue->id), 20000.00)
+            ->with(Mockery::on(fn ($v) => $v->id === $vehicleDue->id), 20000.00)
             ->andReturn(true);
-            
+
         $serviceMock->shouldReceive('needsMaintenance')
-            ->with(Mockery::on(fn($v) => $v->id !== $vehicleDue->id), 20000.00)
+            ->with(Mockery::on(fn ($v) => $v->id !== $vehicleDue->id), 20000.00)
             ->andReturn(false);
 
         $serviceMock->shouldReceive('getKilometersUntilMaintenance')
-            ->with(Mockery::on(fn($v) => $v->id === $vehicleDue->id), 20000.00)
+            ->with(Mockery::on(fn ($v) => $v->id === $vehicleDue->id), 20000.00)
             ->andReturn(-500); // Exceeded by 500
-            
+
         $serviceMock->shouldReceive('getKilometersUntilMaintenance')
-            ->with(Mockery::on(fn($v) => $v->id === $vehicleImminent->id), 20000.00)
+            ->with(Mockery::on(fn ($v) => $v->id === $vehicleImminent->id), 20000.00)
             ->andReturn(1500); // Within 2000km threshold
 
         $serviceMock->shouldReceive('getKilometersUntilMaintenance')
-            ->with(Mockery::on(fn($v) => $v->id === $vehicleFine->id), 20000.00)
+            ->with(Mockery::on(fn ($v) => $v->id === $vehicleFine->id), 20000.00)
             ->andReturn(10000); // Safe distance
 
         Log::shouldReceive('info')
@@ -60,14 +60,14 @@ describe('CheckVehicleMaintenanceMilestonesJob', function () {
             ->with('Scan kilométrique : 1 véhicule(s) nécessitent révision')
             ->once();
 
-        $job = new CheckVehicleMaintenanceMilestonesJob();
+        $job = new CheckVehicleMaintenanceMilestonesJob;
         $job->handle($serviceMock);
 
         Notification::assertSentTo(
             [$admin],
             MilestoneMaintenanceNotification::class,
             function ($notification) use ($vehicleDue) {
-                return (fn() => $this->vehicle->id)->call($notification) === $vehicleDue->id;
+                return (fn () => $this->vehicle->id)->call($notification) === $vehicleDue->id;
             }
         );
 

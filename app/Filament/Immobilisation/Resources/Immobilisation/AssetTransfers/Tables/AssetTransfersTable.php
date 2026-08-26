@@ -2,6 +2,10 @@
 
 namespace App\Filament\Immobilisation\Resources\Immobilisation\AssetTransfers\Tables;
 
+use App\Models\Immobilisation\AssetTransfer;
+use App\Services\Immobilisation\ImmobilisationDocumentService;
+use Filament\Actions\Action;
+use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -46,29 +50,30 @@ class AssetTransfersTable
                 //
             ])
             ->recordActions([
-                \Filament\Actions\ActionGroup::make([
+                ActionGroup::make([
                     ViewAction::make(),
                     EditAction::make(),
-                    \Filament\Actions\Action::make('print_transfer')
+                    Action::make('print_transfer')
                         ->label('Bon de transport')
                         ->icon('heroicon-o-document-arrow-down')
                         ->color('gray')
-                        ->action(function (\App\Models\Immobilisation\AssetTransfer $record) {
-                            $service = new \App\Services\Immobilisation\ImmobilisationDocumentService();
+                        ->action(function (AssetTransfer $record) {
+                            $service = new ImmobilisationDocumentService;
                             $path = $service->generateTransferDocument($record);
+
                             return response()->download($path);
                         }),
-                    \Filament\Actions\Action::make('mark_completed')
+                    Action::make('mark_completed')
                         ->label('Marquer comme réceptionné')
                         ->icon('heroicon-o-check-circle')
                         ->color('success')
                         ->requiresConfirmation()
-                        ->visible(fn (\App\Models\Immobilisation\AssetTransfer $record) => $record->status !== 'completed' && $record->status !== 'cancelled')
-                        ->action(function (\App\Models\Immobilisation\AssetTransfer $record) {
+                        ->visible(fn (AssetTransfer $record) => $record->status !== 'completed' && $record->status !== 'cancelled')
+                        ->action(function (AssetTransfer $record) {
                             $record->update(['status' => 'completed']);
                             $record->fixedAsset->update(['chantier_id' => $record->to_chantier_id]);
                         }),
-                ])
+                ]),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([

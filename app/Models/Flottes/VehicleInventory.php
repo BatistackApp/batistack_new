@@ -91,6 +91,7 @@ class VehicleInventory extends Model
     public function getTotalValue(): float
     {
         $unitPrice = $this->item->unit_price ?? 0;
+
         return (float) $unitPrice * (float) $this->quantity;
     }
 
@@ -102,6 +103,7 @@ class VehicleInventory extends Model
     public function getQuantityLabel(): string
     {
         $unit = $this->item->unit ?? 'unité';
+
         return "{$this->quantity} {$unit}";
     }
 

@@ -2,8 +2,13 @@
 
 namespace App\Filament\RH\Resources\ExpenseReports\Pages;
 
+use App\Enums\RH\ExpenseReportStatus;
 use App\Filament\RH\Resources\ExpenseReports\ExpenseReportResource;
+use App\Services\RH\ExpenseWorkflowService;
+use Filament\Actions\Action;
 use Filament\Actions\EditAction;
+use Filament\Forms\Components\Textarea;
+use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
 
 class ViewExpenseReport extends ViewRecord
@@ -13,52 +18,52 @@ class ViewExpenseReport extends ViewRecord
     protected function getHeaderActions(): array
     {
         return [
-            \Filament\Actions\Action::make('submit')
+            Action::make('submit')
                 ->label('Soumettre')
                 ->color('primary')
                 ->icon('heroicon-o-paper-airplane')
                 ->action(function ($record) {
-                    app(\App\Services\RH\ExpenseWorkflowService::class)->submit($record);
-                    \Filament\Notifications\Notification::make()->success()->title('Note soumise avec succès')->send();
+                    app(ExpenseWorkflowService::class)->submit($record);
+                    Notification::make()->success()->title('Note soumise avec succès')->send();
                 })
-                ->visible(fn ($record) => $record->status === \App\Enums\RH\ExpenseReportStatus::DRAFT),
-                
-            \Filament\Actions\Action::make('validate')
+                ->visible(fn ($record) => $record->status === ExpenseReportStatus::DRAFT),
+
+            Action::make('validate')
                 ->label('Valider (Manager)')
                 ->color('success')
                 ->icon('heroicon-o-check-circle')
                 ->action(function ($record) {
                     try {
-                        app(\App\Services\RH\ExpenseWorkflowService::class)->validate($record);
-                        \Filament\Notifications\Notification::make()->success()->title('Note validée')->send();
+                        app(ExpenseWorkflowService::class)->validate($record);
+                        Notification::make()->success()->title('Note validée')->send();
                     } catch (\Exception $e) {
-                        \Filament\Notifications\Notification::make()->danger()->title('Erreur')->body($e->getMessage())->send();
+                        Notification::make()->danger()->title('Erreur')->body($e->getMessage())->send();
                     }
                 })
-                ->visible(fn ($record) => $record->status === \App\Enums\RH\ExpenseReportStatus::SUBMITTED),
-                
-            \Filament\Actions\Action::make('reject')
+                ->visible(fn ($record) => $record->status === ExpenseReportStatus::SUBMITTED),
+
+            Action::make('reject')
                 ->label('Refuser')
                 ->color('danger')
                 ->icon('heroicon-o-x-circle')
                 ->form([
-                    \Filament\Forms\Components\Textarea::make('reason')->label('Motif')->required(),
+                    Textarea::make('reason')->label('Motif')->required(),
                 ])
                 ->action(function ($record, array $data) {
-                    app(\App\Services\RH\ExpenseWorkflowService::class)->reject($record, $data['reason']);
-                    \Filament\Notifications\Notification::make()->success()->title('Note refusée')->send();
+                    app(ExpenseWorkflowService::class)->reject($record, $data['reason']);
+                    Notification::make()->success()->title('Note refusée')->send();
                 })
-                ->visible(fn ($record) => $record->status === \App\Enums\RH\ExpenseReportStatus::SUBMITTED),
-                
-            \Filament\Actions\Action::make('pay')
+                ->visible(fn ($record) => $record->status === ExpenseReportStatus::SUBMITTED),
+
+            Action::make('pay')
                 ->label('Marquer Payée')
                 ->color('success')
                 ->icon('heroicon-o-currency-euro')
                 ->action(function ($record) {
-                    app(\App\Services\RH\ExpenseWorkflowService::class)->pay($record);
-                    \Filament\Notifications\Notification::make()->success()->title('Note payée')->send();
+                    app(ExpenseWorkflowService::class)->pay($record);
+                    Notification::make()->success()->title('Note payée')->send();
                 })
-                ->visible(fn ($record) => $record->status === \App\Enums\RH\ExpenseReportStatus::VALIDATED),
+                ->visible(fn ($record) => $record->status === ExpenseReportStatus::VALIDATED),
 
             EditAction::make(),
         ];

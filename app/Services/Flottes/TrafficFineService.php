@@ -6,7 +6,6 @@ use App\Enums\Flottes\FineStatus;
 use App\Models\Flottes\TrafficFine;
 use App\Models\Flottes\Vehicle;
 use App\Models\Flottes\VehicleAssignment;
-use Carbon\Carbon;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Collection;
 

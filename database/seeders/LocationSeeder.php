@@ -39,8 +39,8 @@ class LocationSeeder extends Seeder
             $contract = RentalContract::create([
                 'supplier_id' => $suppliers->random()->id,
                 'chantier_id' => $chantiers->random()->id,
-                'reference' => 'LOC-' . (10000 + $i),
-                'name' => 'Location ' . collect($categories)->random(),
+                'reference' => 'LOC-'.(10000 + $i),
+                'name' => 'Location '.collect($categories)->random(),
                 'start_date' => now()->subDays(rand(10, 90)),
                 'end_date' => rand(0, 100) > 30 ? now()->addDays(rand(15, 90)) : null,
                 'status' => collect(RentalStatus::cases())->random(),
@@ -53,7 +53,7 @@ class LocationSeeder extends Seeder
             for ($l = 0; $l < $lineCount; $l++) {
                 RentalContractLine::create([
                     'rental_contract_id' => $contract->id,
-                    'name' => 'Équipement ' . ($l + 1),
+                    'name' => 'Équipement '.($l + 1),
                     'description' => 'Description de l\'équipement loué',
                     'quantity' => rand(1, 3),
                     'unit_price_ht' => rand(20, 200) / 100,

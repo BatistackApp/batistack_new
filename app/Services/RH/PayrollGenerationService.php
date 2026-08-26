@@ -2,27 +2,23 @@
 
 namespace App\Services\RH;
 
+use App\Enums\RH\ExpenseReportStatus;
 use App\Enums\RH\PayrollExportStatus;
+use App\Enums\RH\TimeEntryStatus;
 use App\Models\RH\Abscence;
-use App\Models\RH\Contract;
 use App\Models\RH\Employee;
 use App\Models\RH\ExpenseReport;
 use App\Models\RH\PayrollExport;
 use App\Models\RH\PayrollVariable;
 use App\Models\RH\TimeEntry;
+use App\Models\RH\WageGarnishment;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
-use App\Enums\RH\TimeEntryStatus;
-use App\Enums\RH\ExpenseReportStatus;
 
 class PayrollGenerationService
 {
     /**
      * Generate payroll variables for a specific month and year.
-     *
-     * @param int $month
-     * @param int $year
-     * @return PayrollExport
      */
     public function generate(int $month, int $year): PayrollExport
     {
@@ -58,7 +54,9 @@ class PayrollGenerationService
                     ->latest('start_date')
                     ->first();
 
-                if (!$contract) continue;
+                if (! $contract) {
+                    continue;
+                }
 
                 // 1. Base Hours (weekly_hours * 52 / 12) -> Simplified as weekly * 4.333
                 $baseHours = round(($contract->weekly_hours ?? 35) * 4.3333, 2);
@@ -70,7 +68,7 @@ class PayrollGenerationService
                     ->get();
 
                 $workedHours = $timeEntries->sum('hours') + $timeEntries->sum('travel_hours');
-                
+
                 // 3. Overtime
                 $overtimeHours = max(0, $workedHours - $baseHours);
 
@@ -81,7 +79,7 @@ class PayrollGenerationService
                             ->orWhereBetween('end_date', [$startDate, $endDate])
                             ->orWhere(function ($q) use ($startDate, $endDate) {
                                 $q->where('start_date', '<', $startDate)
-                                  ->where('end_date', '>', $endDate);
+                                    ->where('end_date', '>', $endDate);
                             });
                     })->get();
 
@@ -90,7 +88,7 @@ class PayrollGenerationService
                 foreach ($absences as $absence) {
                     $start = max($startDate, Carbon::parse($absence->start_date));
                     $end = min($endDate, Carbon::parse($absence->end_date));
-                    
+
                     if ($start <= $end) {
                         // Count weekdays
                         $days = 0;
@@ -124,7 +122,7 @@ class PayrollGenerationService
                 // 8. SATD Deductions
                 $netSalaryEstimate = $estimatedGrossSalary * 0.78; // Approx 78% for deduction calc
                 $satdDeduction = 0;
-                
+
                 $activeSatds = $employee->wageGarnishments()
                     ->where('is_active', true)
                     ->where('start_date', '<=', $endDate)
@@ -132,11 +130,13 @@ class PayrollGenerationService
                     ->get();
 
                 if ($activeSatds->isNotEmpty()) {
-                    $dummyGarnishment = new \App\Models\RH\WageGarnishment(['total_amount_due' => 99999999, 'amount_collected' => 0]);
+                    $dummyGarnishment = new WageGarnishment(['total_amount_due' => 99999999, 'amount_collected' => 0]);
                     $maxDeduction = $dummyGarnishment->calculateDeduction($netSalaryEstimate);
-                    
+
                     foreach ($activeSatds as $satd) {
-                        if ($satdDeduction >= $maxDeduction) break;
+                        if ($satdDeduction >= $maxDeduction) {
+                            break;
+                        }
                         $deduction = $satd->calculateDeduction($netSalaryEstimate);
                         $actualDeduction = min($deduction, $maxDeduction - $satdDeduction);
                         $satdDeduction += $actualDeduction;
@@ -184,18 +184,20 @@ class PayrollGenerationService
                 if ($variable->satd_deduction > 0) {
                     $employee = $variable->employee;
                     $remainingDeduction = $variable->satd_deduction;
-                    
+
                     $activeSatds = $employee->wageGarnishments()
                         ->where('is_active', true)
                         ->orderBy('start_date', 'asc')
                         ->get();
 
                     foreach ($activeSatds as $satd) {
-                        if ($remainingDeduction <= 0) break;
-                        
+                        if ($remainingDeduction <= 0) {
+                            break;
+                        }
+
                         $due = max(0, $satd->total_amount_due - $satd->amount_collected);
                         $deducted = min($remainingDeduction, $due);
-                        
+
                         if ($deducted > 0) {
                             $satd->amount_collected += $deducted;
                             if ($satd->amount_collected >= $satd->total_amount_due) {

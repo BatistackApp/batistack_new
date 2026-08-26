@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[ObservedBy([ChantierTaskObserver::class])]
 class ChantierTask extends Model
@@ -30,7 +31,7 @@ class ChantierTask extends Model
         return $this->belongsTo(ChantierPhase::class, 'chantier_phase_id');
     }
 
-    public function allocations(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function allocations(): HasMany
     {
         return $this->hasMany(ResourceAllocation::class, 'chantier_task_id');
     }

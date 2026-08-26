@@ -26,6 +26,7 @@ class EnsureUserIsTechnician
 
         if (! $employee || ! $employee->is_active) {
             auth()->logout();
+
             return redirect()->route('filament.technicien.auth.login')
                 ->with('error', 'Votre compte n\'est pas relié à une fiche employé active.');
         }
@@ -33,6 +34,7 @@ class EnsureUserIsTechnician
         // Vérifier l'accès technicien
         if (! $user->access_technique) {
             auth()->logout();
+
             return redirect()->route('filament.technicien.auth.login')
                 ->with('error', 'Vous n\'avez pas les droits d\'accès à l\'Espace Technicien SAV.');
         }

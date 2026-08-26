@@ -2,8 +2,11 @@
 
 namespace App\Models\Tiers;
 
-use Illuminate\Database\Eloquent\Model;
+use App\Enums\Tiers\ThirdPartyDocumentStatus;
+use App\Enums\Tiers\ThirdPartyDocumentType;
+use App\Models\Core\Signature;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
@@ -24,8 +27,8 @@ class ThirdPartyDocument extends Model implements HasMedia
     protected function casts(): array
     {
         return [
-            'type' => \App\Enums\Tiers\ThirdPartyDocumentType::class,
-            'status' => \App\Enums\Tiers\ThirdPartyDocumentStatus::class,
+            'type' => ThirdPartyDocumentType::class,
+            'status' => ThirdPartyDocumentStatus::class,
             'expiration_date' => 'date',
             'signed_at' => 'datetime',
         ];
@@ -38,6 +41,6 @@ class ThirdPartyDocument extends Model implements HasMedia
 
     public function signatures()
     {
-        return $this->morphMany(\App\Models\Core\Signature::class, 'signable');
+        return $this->morphMany(Signature::class, 'signable');
     }
 }

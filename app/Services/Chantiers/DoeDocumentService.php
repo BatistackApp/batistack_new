@@ -2,8 +2,10 @@
 
 namespace App\Services\Chantiers;
 
+use App\Models\Articles\Item;
 use App\Models\Chantiers\Chantier;
 use App\Models\Chantiers\DoeDocument;
+use App\Models\Commerce\CustomerOrderItem;
 use App\Models\Core\Company;
 use App\Services\Core\DocumentService;
 use Carbon\Carbon;
@@ -34,14 +36,14 @@ class DoeDocumentService extends DocumentService
             ->get();
 
         // 1.b Récupération des fiches techniques des articles utilisés sur le chantier
-        $itemIds = \App\Models\Commerce\CustomerOrderItem::query()
+        $itemIds = CustomerOrderItem::query()
             ->whereHas('order', function ($query) use ($chantier) {
                 $query->where('chantier_id', $chantier->id);
             })
             ->pluck('item_id')
             ->unique();
 
-        $itemsWithSheets = \App\Models\Articles\Item::whereIn('id', $itemIds)->with('media')->get()
+        $itemsWithSheets = Item::whereIn('id', $itemIds)->with('media')->get()
             ->filter(fn ($item) => $item->hasMedia('technical_sheet'))
             ->values();
 
@@ -70,7 +72,7 @@ class DoeDocumentService extends DocumentService
 
         // 4. Parcourir et ajouter chaque document média au ZIP organisé par dossier (catégorie)
         $tempFiles = [];
-        
+
         foreach ($documents as $index => $doc) {
             $media = $doc->getFirstMedia('attachment');
             if ($media) {
@@ -112,7 +114,7 @@ class DoeDocumentService extends DocumentService
         }
 
         $zip->close();
-        
+
         // Clean up temp files
         foreach ($tempFiles as $tempFile) {
             if (file_exists($tempFile)) {

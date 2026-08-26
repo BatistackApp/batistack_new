@@ -4,9 +4,8 @@ namespace App\Services\Locations;
 
 use App\Enums\Commerce\InvoiceStatus;
 use App\Models\Commerce\SupplierInvoice;
-use App\Models\Locations\RentalContract;
 use App\Models\Core\VatRate;
-use Illuminate\Support\Str;
+use App\Models\Locations\RentalContract;
 
 class RentalBillingService
 {
@@ -15,18 +14,18 @@ class RentalBillingService
      */
     public function generateDraftInvoice(RentalContract $contract): SupplierInvoice
     {
-        $invoice = new SupplierInvoice();
+        $invoice = new SupplierInvoice;
         $invoice->supplier_id = $contract->supplier_id;
-        $invoice->reference = "LOC-{$contract->reference}-" . now()->format('Ymd');
-        
+        $invoice->reference = "LOC-{$contract->reference}-".now()->format('Ymd');
+
         // Facture en DRAFT (Brouillon) pour validation manuelle
         $invoice->status = InvoiceStatus::DRAFT;
-        
+
         $invoice->due_date = today()->addDays(30);
 
         // Calcul des montants d'aprÃ¨s les lignes du contrat
         $totalHt = $contract->lines()->sum('total_price_ht');
-        
+
         // Si aucune ligne, on utilise le coÃ»t journalier pour un cycle (ex: mensuel)
         if ($totalHt == 0) {
             $daysInCycle = match ($contract->billing_period->value) {
@@ -41,7 +40,7 @@ class RentalBillingService
 
         $invoice->amount_ht = $totalHt;
         $invoice->amount_ttc = $totalHt * 1.20;
-        
+
         // Validation automatique si le montant TTC est infÃ©rieur au seuil dÃ©fini
         $autoValidateThreshold = config('locations.auto_validate_threshold', 500); // 500 euros par dÃ©faut
         if ($invoice->amount_ttc <= $autoValidateThreshold) {

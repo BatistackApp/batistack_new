@@ -4,6 +4,7 @@ namespace App\Models\Commerce;
 
 use App\Enums\Commerce\OrderStatus;
 use App\Models\Chantiers\Chantier;
+use App\Models\Gpao\ManufacturingOrder;
 use App\Models\Tiers\ThirdParty;
 use App\Models\User;
 use App\Observers\Commerce\CustomerOrderObserver;
@@ -61,7 +62,7 @@ class CustomerOrder extends Model
 
     public function manufacturingOrders(): HasMany
     {
-        return $this->hasMany(\App\Models\Gpao\ManufacturingOrder::class);
+        return $this->hasMany(ManufacturingOrder::class);
     }
 
     public function invoices(): HasMany

@@ -2,10 +2,10 @@
 
 namespace App\Filament\Commerce\Widgets;
 
-use App\Models\Commerce\CustomerInvoice;
 use App\Enums\Commerce\InvoiceStatus;
-use LaBoiteACode\FilamentDashboardWidgets\Widgets\VarianceWidget;
+use App\Models\Commerce\CustomerInvoice;
 use LaBoiteACode\FilamentDashboardWidgets\Data\VarianceItem;
+use LaBoiteACode\FilamentDashboardWidgets\Widgets\VarianceWidget;
 
 class MonthlyRevenueVarianceWidget extends VarianceWidget
 {
@@ -33,8 +33,8 @@ class MonthlyRevenueVarianceWidget extends VarianceWidget
         return [
             VarianceItem::make('CA Facturé (HT)', (float) $currentRevenue)
                 ->previous((float) $previousRevenue)
-                ->formatUsing(fn ($value) => number_format($value, 2, ',', ' ') . ' €')
-                ->changeFormatUsing(fn ($change) => ($change > 0 ? '+' : '') . number_format($change, 2, ',', ' ') . ' €')
+                ->formatUsing(fn ($value) => number_format($value, 2, ',', ' ').' €')
+                ->changeFormatUsing(fn ($change) => ($change > 0 ? '+' : '').number_format($change, 2, ',', ' ').' €')
                 ->icon('heroicon-o-currency-euro'),
         ];
     }

@@ -9,6 +9,8 @@ use App\Jobs\Commerce\SendCustomerStatementEmailJob;
 use App\Models\Commerce\CustomerInvoice;
 use App\Models\Tiers\ThirdParty;
 use App\Services\Commerce\CommerceDocumentationService;
+use App\Services\Commerce\CustomerOrderService;
+use App\Services\Commerce\InvoiceLegalizationService;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkAction;
@@ -18,6 +20,7 @@ use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Tables\Columns\IconColumn;
@@ -157,7 +160,7 @@ class CustomerInvoicesTable
                         ->modalSubmitActionLabel('Oui, sceller la facture')
                         ->action(function (CustomerInvoice $record) {
                             try {
-                                app(\App\Services\Commerce\InvoiceLegalizationService::class)->legalizeCustomerInvoice($record);
+                                app(InvoiceLegalizationService::class)->legalizeCustomerInvoice($record);
                                 Notification::make()->success()->title('Facture scellée avec succès !')->send();
                             } catch (\Exception $e) {
                                 Notification::make()->danger()->title('Erreur de validation')->body($e->getMessage())->send();
@@ -170,20 +173,20 @@ class CustomerInvoicesTable
                         ->color('danger')
                         ->visible(fn (CustomerInvoice $record) => in_array($record->status, [InvoiceStatus::VALIDATED, InvoiceStatus::PAID]))
                         ->form([
-                            \Filament\Forms\Components\TextInput::make('amount_ht')
+                            TextInput::make('amount_ht')
                                 ->label('Montant HT de l\'Avoir')
                                 ->numeric()
                                 ->required(),
-                            \Filament\Forms\Components\Textarea::make('reason')
+                            Textarea::make('reason')
                                 ->label('Motif')
                                 ->required(),
                         ])
                         ->action(function (array $data, CustomerInvoice $record) {
                             try {
-                                $creditNote = app(\App\Services\Commerce\CustomerOrderService::class)->createCreditNote(
-                                    $record, 
-                                    $data['amount_ht'], 
-                                    $data['reason'], 
+                                $creditNote = app(CustomerOrderService::class)->createCreditNote(
+                                    $record,
+                                    $data['amount_ht'],
+                                    $data['reason'],
                                     auth()->user()
                                 );
                                 Notification::make()->success()->title('Avoir généré')->send();
@@ -208,6 +211,7 @@ class CustomerInvoicesTable
                             foreach ($records as $invoice) {
                                 if (! in_array($invoice->status, [InvoiceStatus::VALIDATED, InvoiceStatus::PARTIALLY_PAID, InvoiceStatus::PAID], true)) {
                                     $skipped++;
+
                                     continue;
                                 }
 

@@ -3,6 +3,7 @@
 namespace Tests\Feature\Modules\Flottes;
 
 use App\Enums\Flottes\FleetExpenseType;
+use App\Models\Core\VatRate;
 use App\Models\Flottes\FleetExpense;
 use App\Models\Flottes\FuelTransaction;
 use App\Models\Flottes\Vehicle;
@@ -13,13 +14,13 @@ use Illuminate\Support\Facades\File;
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
-    \App\Models\Core\VatRate::factory()->create([
+    VatRate::factory()->create([
         'name' => 'Taux Normal 20%',
         'rate' => 20.00,
         'is_default' => true,
     ]);
 
-    $this->service = new ExpenseImportService();
+    $this->service = new ExpenseImportService;
     $this->vehicle = Vehicle::factory()->create([
         'license_plate' => 'AB-123-CD',
         'odometer' => 50000,
@@ -28,7 +29,7 @@ beforeEach(function () {
 
 it('imports fuel transaction correctly', function () {
     $csvContent = "Plaque;Date;Montant;Type;Volume;Kms\nAB-123-CD;2023-01-01 12:00:00;50.50;Gasoil;30.5;50100";
-    $filePath = sys_get_temp_dir() . '/test_fuel.csv';
+    $filePath = sys_get_temp_dir().'/test_fuel.csv';
     File::put($filePath, $csvContent);
 
     $mapping = [
@@ -60,7 +61,7 @@ it('imports fuel transaction correctly', function () {
 
 it('imports toll expense correctly', function () {
     $csvContent = "Plaque;Date;Montant;Type\nAB-123-CD;2023-01-02 14:00:00;15.20;Peage Ulys";
-    $filePath = sys_get_temp_dir() . '/test_toll.csv';
+    $filePath = sys_get_temp_dir().'/test_toll.csv';
     File::put($filePath, $csvContent);
 
     $mapping = [
@@ -87,7 +88,7 @@ it('imports toll expense correctly', function () {
 it('records errors for invalid data without breaking the whole import', function () {
     // AB-999-ZZ does not exist
     $csvContent = "Plaque;Date;Montant;Type\nAB-123-CD;2023-01-02 14:00:00;15.20;Peage Ulys\nAB-999-ZZ;2023-01-03;10.00;Parking";
-    $filePath = sys_get_temp_dir() . '/test_mixed.csv';
+    $filePath = sys_get_temp_dir().'/test_mixed.csv';
     File::put($filePath, $csvContent);
 
     $mapping = [

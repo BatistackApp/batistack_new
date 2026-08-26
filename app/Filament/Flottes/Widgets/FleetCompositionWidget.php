@@ -2,11 +2,11 @@
 
 namespace App\Filament\Flottes\Widgets;
 
-use App\Models\Flottes\Vehicle;
 use App\Enums\Flottes\VehicleStatus;
-use LaBoiteACode\FilamentDashboardWidgets\Widgets\CompositionWidget;
+use App\Models\Flottes\Vehicle;
 use LaBoiteACode\FilamentDashboardWidgets\Data\Composition;
 use LaBoiteACode\FilamentDashboardWidgets\Data\CompositionSlice;
+use LaBoiteACode\FilamentDashboardWidgets\Widgets\CompositionWidget;
 
 class FleetCompositionWidget extends CompositionWidget
 {

@@ -7,7 +7,7 @@ use Filament\Support\Contracts\HasDescription;
 use Filament\Support\Contracts\HasLabel;
 use Illuminate\Contracts\Support\Htmlable;
 
-enum ContractType: string implements HasColor, HasLabel, HasDescription
+enum ContractType: string implements HasColor, HasDescription, HasLabel
 {
     case CDI = 'cdi';
     case CDD = 'cdd';

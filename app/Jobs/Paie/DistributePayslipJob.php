@@ -22,14 +22,14 @@ class DistributePayslipJob implements ShouldQueue
         $employee = $this->payslip->employee;
         $user = $employee?->user;
 
-        if (!$employee || !$user) {
+        if (! $employee || ! $user) {
             return;
         }
 
         // 1. Envoyer la notification Push / Filament Database
         Notification::make()
             ->title('Nouveau bulletin de salaire')
-            ->body('Votre bulletin de salaire pour la période ' . $this->payslip->period . ' est disponible.')
+            ->body('Votre bulletin de salaire pour la période '.$this->payslip->period.' est disponible.')
             ->success()
             ->sendToDatabase($user);
 

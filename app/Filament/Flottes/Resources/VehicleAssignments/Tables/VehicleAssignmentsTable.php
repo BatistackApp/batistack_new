@@ -5,6 +5,7 @@ namespace App\Filament\Flottes\Resources\VehicleAssignments\Tables;
 use App\Enums\Flottes\AssignmentStatus;
 use App\Enums\Flottes\ConditionReportType;
 use App\Models\Flottes\VehicleAssignment;
+use App\Services\Core\DocumentService;
 use App\Services\Flottes\FleetDocumentService;
 use App\Services\Flottes\VehicleConditionService;
 use Filament\Actions\Action;
@@ -20,6 +21,7 @@ use Filament\Notifications\Notification;
 use Filament\Schemas\Components\Grid;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Support\Facades\Storage;
 use ToneGabes\Filament\Icons\Enums\Phosphor;
 
 class VehicleAssignmentsTable
@@ -148,9 +150,9 @@ class VehicleAssignmentsTable
                         ->color('info')
                         ->action(function (VehicleAssignment $record, FleetDocumentService $service) {
                             $path = $service->generateAssignmentForm($record);
-                            $disk = \App\Services\Core\DocumentService::getDisk();
+                            $disk = DocumentService::getDisk();
 
-                            return \Illuminate\Support\Facades\Storage::disk($disk)->download($path);
+                            return Storage::disk($disk)->download($path);
                         }),
                 ]),
             ])

@@ -23,6 +23,7 @@ class VatRateResource extends Resource
     protected static string|null|\UnitEnum $navigationGroup = 'Référentiels';
 
     protected static ?string $modelLabel = 'Taux Tva';
+
     protected static ?string $pluralModelLabel = 'Taux Tva';
 
     protected static ?string $recordTitleAttribute = 'name';

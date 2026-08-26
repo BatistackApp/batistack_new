@@ -37,7 +37,7 @@ class SettingsTable
                     ->formatStateUsing(function (string $state, Setting $record): string {
                         return match ($record->type) {
                             'boolean' => $state ? 'Activé' : 'Désactivé',
-                            'color' => '<div class="flex items-center gap-2"><div style="width: 1rem; height: 1rem; border-radius: 9999px; background-color: ' . $state . '"></div>' . $state . '</div>',
+                            'color' => '<div class="flex items-center gap-2"><div style="width: 1rem; height: 1rem; border-radius: 9999px; background-color: '.$state.'"></div>'.$state.'</div>',
                             'json' => '{ JSON... }',
                             default => $state,
                         };

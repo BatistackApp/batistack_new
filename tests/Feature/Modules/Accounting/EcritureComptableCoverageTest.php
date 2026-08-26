@@ -9,7 +9,7 @@ use Database\Seeders\Accounting\PcgSeeder;
 
 beforeEach(function () {
     $this->seed(PcgSeeder::class);
-    $this->service = new EcritureComptableService();
+    $this->service = new EcritureComptableService;
 });
 
 test('EcritureComptable createEntry via service', function () {
@@ -31,7 +31,7 @@ test('EcritureComptable createEntry via service', function () {
 });
 
 test('EcritureComptableService createBalancedPair throws on zero amount', function () {
-    $this->expectException(\InvalidArgumentException::class);
+    $this->expectException(InvalidArgumentException::class);
 
     $compte = CompteComptable::where('classe', 6)->first();
     $compte2 = CompteComptable::where('classe', 5)->first();
@@ -43,7 +43,7 @@ test('EcritureComptableService createBalancedPair throws on zero amount', functi
 });
 
 test('EcritureComptableService lettrer throws on empty collection', function () {
-    $this->expectException(\InvalidArgumentException::class);
+    $this->expectException(InvalidArgumentException::class);
 
     $this->service->lettrer(collect(), 'LT-EMPTY');
 });

@@ -2,7 +2,9 @@
 
 namespace App\Models\RH;
 
+use App\Enums\RH\TimeEntryStatus;
 use App\Models\Chantiers\Chantier;
+use App\Models\Chantiers\ResourceAllocation;
 use App\Models\User;
 use App\Observers\RH\EmployeeObserver;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
@@ -12,7 +14,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Notifications\Notifiable;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
@@ -70,10 +72,10 @@ class Employee extends Model implements HasMedia
             'start_date' => 'max',
         ], function ($query) {
             $query->where('start_date', '<=', now())
-                  ->where(function ($q) {
-                      $q->whereNull('end_date')
+                ->where(function ($q) {
+                    $q->whereNull('end_date')
                         ->orWhere('end_date', '>=', now());
-                  });
+                });
         });
     }
 
@@ -114,9 +116,9 @@ class Employee extends Model implements HasMedia
         return $this->hasMany(ExpenseReport::class);
     }
 
-    public function resourceAllocations(): \Illuminate\Database\Eloquent\Relations\MorphMany
+    public function resourceAllocations(): MorphMany
     {
-        return $this->morphMany(\App\Models\Chantiers\ResourceAllocation::class, 'allocatable');
+        return $this->morphMany(ResourceAllocation::class, 'allocatable');
     }
 
     public function absences(): HasMany
@@ -203,7 +205,7 @@ class Employee extends Model implements HasMedia
 
     public function isInactive(): bool
     {
-        return !$this->is_active;
+        return ! $this->is_active;
     }
 
     public function getFullName(): string
@@ -218,7 +220,7 @@ class Employee extends Model implements HasMedia
 
     public function getAge(): ?int
     {
-        if (!$this->birth_date) {
+        if (! $this->birth_date) {
             return null;
         }
 
@@ -245,7 +247,7 @@ class Employee extends Model implements HasMedia
     public function getHoursWorkedThisMonth(): float
     {
         return $this->timeEntries()
-            ->where('status', \App\Enums\RH\TimeEntryStatus::APPROVED)
+            ->where('status', TimeEntryStatus::APPROVED)
             ->whereYear('date', now()->year)
             ->whereMonth('date', now()->month)
             ->sum('hours') ?? 0;
@@ -273,7 +275,8 @@ class Employee extends Model implements HasMedia
     {
         // Check if last medical visit is older than 1 year
         $lastVisit = $this->medicalVisits()->latest()->first();
-        return !$lastVisit || $lastVisit->created_at < now()->subYear();
+
+        return ! $lastVisit || $lastVisit->created_at < now()->subYear();
     }
 
     public function getEquipementCount(): int

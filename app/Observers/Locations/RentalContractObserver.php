@@ -30,13 +30,13 @@ class RentalContractObserver
 
     private function updateSupplierScore(RentalContract $contract): void
     {
-        if (!$contract->supplier_id) {
+        if (! $contract->supplier_id) {
             return;
         }
-        
+
         $supplier = $contract->supplier;
 
-        if (!$supplier) {
+        if (! $supplier) {
             return;
         }
 

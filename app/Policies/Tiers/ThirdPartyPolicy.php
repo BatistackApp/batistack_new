@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace App\Policies\Tiers;
 
-use Illuminate\Foundation\Auth\User as AuthUser;
 use App\Models\Tiers\ThirdParty;
 use Illuminate\Auth\Access\HandlesAuthorization;
+use Illuminate\Foundation\Auth\User as AuthUser;
 
 class ThirdPartyPolicy
 {
     use HandlesAuthorization;
-    
+
     public function viewAny(AuthUser $authUser): bool
     {
         return $authUser->can('ViewAny:ThirdParty');
@@ -71,5 +71,4 @@ class ThirdPartyPolicy
     {
         return $authUser->can('Reorder:ThirdParty');
     }
-
 }

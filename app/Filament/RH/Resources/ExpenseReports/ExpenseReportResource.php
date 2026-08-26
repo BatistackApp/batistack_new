@@ -6,6 +6,7 @@ use App\Filament\RH\Resources\ExpenseReports\Pages\CreateExpenseReport;
 use App\Filament\RH\Resources\ExpenseReports\Pages\EditExpenseReport;
 use App\Filament\RH\Resources\ExpenseReports\Pages\ListExpenseReports;
 use App\Filament\RH\Resources\ExpenseReports\Pages\ViewExpenseReport;
+use App\Filament\RH\Resources\ExpenseReports\RelationManagers\ItemsRelationManager;
 use App\Filament\RH\Resources\ExpenseReports\Schemas\ExpenseReportForm;
 use App\Filament\RH\Resources\ExpenseReports\Schemas\ExpenseReportInfolist;
 use App\Filament\RH\Resources\ExpenseReports\Tables\ExpenseReportsTable;
@@ -21,6 +22,7 @@ class ExpenseReportResource extends Resource
     protected static ?string $model = ExpenseReport::class;
 
     protected static ?string $modelLabel = 'Note de frais';
+
     protected static ?string $pluralModelLabel = 'Notes de frais';
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
@@ -47,7 +49,7 @@ class ExpenseReportResource extends Resource
     public static function getRelations(): array
     {
         return [
-            \App\Filament\RH\Resources\ExpenseReports\RelationManagers\ItemsRelationManager::class,
+            ItemsRelationManager::class,
         ];
     }
 

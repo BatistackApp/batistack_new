@@ -9,7 +9,8 @@ use LaBoiteACode\FilamentDashboardWidgets\Widgets\GoalProgressWidget;
 class DatabaseQualityGoalWidget extends GoalProgressWidget
 {
     protected static ?int $sort = 2;
-    protected int | string | array $columnSpan = 1;
+
+    protected int|string|array $columnSpan = 1;
 
     public function getHeading(): string
     {
@@ -21,13 +22,13 @@ class DatabaseQualityGoalWidget extends GoalProgressWidget
         $professionalThirdParties = ThirdParty::active()
             ->whereNotNull('siren')
             ->get();
-            
+
         $totalPro = $professionalThirdParties->count();
         $completeCount = 0;
 
         foreach ($professionalThirdParties as $tp) {
             // Un profil complet a un SIRET, un numéro de TVA et un email
-            if (!empty($tp->siret) && !empty($tp->vat_number) && !empty($tp->email)) {
+            if (! empty($tp->siret) && ! empty($tp->vat_number) && ! empty($tp->email)) {
                 $completeCount++;
             }
         }

@@ -2,12 +2,13 @@
 
 namespace Database\Factories\RH;
 
-use App\Models\RH\ExpenseReport;
 use App\Enums\RH\ExpenseReportStatus;
+use App\Models\RH\Employee;
+use App\Models\RH\ExpenseReport;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\RH\ExpenseReport>
+ * @extends Factory<ExpenseReport>
  */
 class ExpenseReportFactory extends Factory
 {
@@ -21,7 +22,7 @@ class ExpenseReportFactory extends Factory
     public function definition(): array
     {
         return [
-            'employee_id' => \App\Models\RH\Employee::factory(),
+            'employee_id' => Employee::factory(),
             'month' => $this->faker->month,
             'year' => $this->faker->year,
             'status' => ExpenseReportStatus::DRAFT,

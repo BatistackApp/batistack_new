@@ -5,7 +5,10 @@ namespace App\Models\Tiers;
 use App\Enums\Tiers\LegalStatus;
 use App\Enums\Tiers\ThirdPartyType;
 use App\Models\Chantiers\Chantier;
+use App\Models\Commerce\CustomerInvoice;
 use App\Models\Commerce\CustomerQuote;
+use App\Models\Commerce\Payment;
+use App\Models\Interventions\ClientEquipment;
 use App\Observers\Tiers\ThirdPartyObserver;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Builder;
@@ -101,17 +104,17 @@ class ThirdParty extends Model implements HasMedia
 
     public function customerInvoices(): HasMany
     {
-        return $this->hasMany(\App\Models\Commerce\CustomerInvoice::class, 'client_id');
+        return $this->hasMany(CustomerInvoice::class, 'client_id');
     }
 
     public function payments(): HasMany
     {
-        return $this->hasMany(\App\Models\Commerce\Payment::class, 'third_party_id');
+        return $this->hasMany(Payment::class, 'third_party_id');
     }
 
     public function clientEquipments(): HasMany
     {
-        return $this->hasMany(\App\Models\Interventions\ClientEquipment::class);
+        return $this->hasMany(ClientEquipment::class);
     }
 
     public function getComplianceStatusLabelAttribute(): string

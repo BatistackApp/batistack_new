@@ -2,25 +2,29 @@
 
 namespace App\Filament\Flottes\Pages;
 
-use App\Enums\Flottes\AssignmentStatus;
 use App\Enums\Chantiers\ChantierStatus;
+use App\Enums\Flottes\AssignmentStatus;
 use App\Models\Chantiers\Chantier;
 use App\Models\Flottes\Vehicle;
 use App\Models\Flottes\VehicleAssignment;
 use App\Services\Flottes\RoutingOptimizationService;
-use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 
 class RoutingOptimization extends Page
 {
     protected static string|null|\BackedEnum $navigationIcon = 'heroicon-o-map';
+
     protected static string|null|\UnitEnum $navigationGroup = 'Exploitation';
+
     protected static ?string $title = 'Optimisation des Trajets';
+
     protected static ?int $navigationSort = 3;
+
     protected string $view = 'filament.flottes.pages.routing-optimization';
 
     public array $suggestions = [];
+
     public bool $isGenerating = false;
 
     public function generateSuggestions(RoutingOptimizationService $routingService)
@@ -41,6 +45,7 @@ class RoutingOptimization extends Page
                 ->body('Il n\'y a pas assez de véhicules disponibles ou de chantiers actifs pour optimiser les trajets.')
                 ->warning()
                 ->send();
+
             return;
         }
 
@@ -49,7 +54,7 @@ class RoutingOptimization extends Page
 
             Notification::make()
                 ->title('Optimisation réussie')
-                ->body(count($this->suggestions) . ' suggestions ont été générées.')
+                ->body(count($this->suggestions).' suggestions ont été générées.')
                 ->success()
                 ->send();
         } catch (\Exception $e) {

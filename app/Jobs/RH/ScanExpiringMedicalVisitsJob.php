@@ -27,6 +27,7 @@ class ScanExpiringMedicalVisitsJob implements ShouldQueue
 
         if ($visits->isEmpty()) {
             Log::info('ScanExpiringMedicalVisitsJob: No medical visits due in 30 days');
+
             return;
         }
 

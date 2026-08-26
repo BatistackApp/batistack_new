@@ -2,7 +2,6 @@
 
 namespace App\Filament\Locations\Resources\RentalContracts\Tables;
 
-use App\Enums\Locations\RentalBillingPeriod;
 use App\Enums\Locations\RentalStatus;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;

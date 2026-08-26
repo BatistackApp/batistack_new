@@ -70,6 +70,7 @@ class ItemService
     /**
      * Crée une variante pour un article parent.
      * Format de référence : {PARENT_REF}_{SUFFIXE}
+     *
      * @throws Throwable
      */
     public function createVariant(Item $parent, string $suffix, array $attributes): Item
@@ -85,6 +86,7 @@ class ItemService
     /**
      * Prépare les données pour le module Commerce (Devis).
      * Retourne le prix global "Pertes Incluses" pour le client.
+     *
      * @throws ArticlesModuleException
      */
     public function getPricingForClient(Item $item): float

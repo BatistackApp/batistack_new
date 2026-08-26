@@ -2,10 +2,8 @@
 
 namespace App\Services\Accounting;
 
-use App\Models\Accounting\CompteComptable;
 use App\Models\Accounting\EcritureComptable;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 
 class FecExportService
 {
@@ -75,8 +73,8 @@ class FecExportService
 
         $content = implode("\r\n", $lines);
 
-        $filename = $siren . 'FEC' . $year . '1231.txt';
-        $relativePath = 'exports/fec/' . $filename;
+        $filename = $siren.'FEC'.$year.'1231.txt';
+        $relativePath = 'exports/fec/'.$filename;
 
         Storage::disk('local')->put($relativePath, $content);
 

@@ -11,13 +11,13 @@ use Illuminate\Database\Eloquent\Collection;
 it('generates sepa xml for supplier invoices', function () {
     // 1. Arrange
     $company = Company::factory()->create([
-        'legal_name' => 'Mon Entreprise SAS'
+        'legal_name' => 'Mon Entreprise SAS',
     ]);
-    
+
     $bankAccount = BankAccount::factory()->create([
         'company_id' => $company->id,
         'iban' => 'FR7612345678901234567890123',
-        'bic' => 'TESTFRPP'
+        'bic' => 'TESTFRPP',
     ]);
 
     $supplier = ThirdParty::factory()->create([
@@ -35,7 +35,7 @@ it('generates sepa xml for supplier invoices', function () {
     ]);
 
     $invoices = new Collection([$invoice]);
-    $service = new SepaExportService();
+    $service = new SepaExportService;
 
     // 2. Act
     $xml = $service->generateForSupplierInvoices($invoices);
@@ -53,11 +53,11 @@ it('throws exception if company bank account is missing', function () {
     $company = Company::factory()->create();
     BankAccount::query()->delete();
 
-    $invoices = new Collection();
-    $service = new SepaExportService();
+    $invoices = new Collection;
+    $service = new SepaExportService;
 
     expect(fn () => $service->generateForSupplierInvoices($invoices))
-        ->toThrow(\Exception::class, "Le compte en banque principal de l'entreprise (ou son IBAN/BIC) n'est pas configuré.");
+        ->toThrow(Exception::class, "Le compte en banque principal de l'entreprise (ou son IBAN/BIC) n'est pas configuré.");
 });
 
 it('throws exception if supplier is missing iban', function () {
@@ -68,8 +68,8 @@ it('throws exception if supplier is missing iban', function () {
     $invoice = SupplierInvoice::factory()->create(['supplier_id' => $supplier->id, 'amount_ttc' => 100]);
 
     $invoices = new Collection([$invoice]);
-    $service = new SepaExportService();
+    $service = new SepaExportService;
 
     expect(fn () => $service->generateForSupplierInvoices($invoices))
-        ->toThrow(\Exception::class, "Le fournisseur SANS IBAN n'a pas d'IBAN ou de BIC renseigné sur sa fiche.");
+        ->toThrow(Exception::class, "Le fournisseur SANS IBAN n'a pas d'IBAN ou de BIC renseigné sur sa fiche.");
 });

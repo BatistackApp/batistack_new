@@ -9,7 +9,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class CustomerOrderItem extends Model
 {
@@ -43,7 +42,7 @@ class CustomerOrderItem extends Model
     /**
      * Un article de commande peut avoir plusieurs lignes de livraison.
      */
-    public function deliveryNoteItems(): hasMany
+    public function deliveryNoteItems(): HasMany
     {
         return $this->hasMany(CustomerDeliveryNoteItem::class);
     }

@@ -3,13 +3,18 @@
 namespace App\Filament\Commerce\Resources\SupplierInvoices\Schemas;
 
 use App\Enums\Commerce\InvoiceStatus;
+use App\Models\Articles\Item;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Notifications\Notification;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
+use Marcelorodrigo\FilamentBarcodeScannerField\Forms\Components\BarcodeInput;
 
 class SupplierInvoiceForm
 {
@@ -62,13 +67,13 @@ class SupplierInvoiceForm
                             ->relationship()
                             ->columns(4)
                             ->schema([
-                                \Marcelorodrigo\FilamentBarcodeScannerField\Forms\Components\BarcodeInput::make('barcode')
+                                BarcodeInput::make('barcode')
                                     ->label('Scanner')
                                     ->columnSpan(4)
                                     ->live()
-                                    ->afterStateUpdated(function (\Filament\Schemas\Components\Utilities\Get $get, \Filament\Schemas\Components\Utilities\Set $set, $state) {
+                                    ->afterStateUpdated(function (Get $get, Set $set, $state) {
                                         if ($state) {
-                                            $item = \App\Models\Articles\Item::where('barcode', $state)->first();
+                                            $item = Item::where('barcode', $state)->first();
                                             if ($item) {
                                                 $set('item_id', $item->id);
                                                 $set('name', $item->name);
@@ -77,20 +82,20 @@ class SupplierInvoiceForm
                                                 $set('quantity', $quantity);
                                                 $set('subtotal_ht', number_format($quantity * (float) $item->purchase_price, 2, '.', ''));
                                             } else {
-                                                \Filament\Notifications\Notification::make()->danger()->title('Article introuvable')->send();
+                                                Notification::make()->danger()->title('Article introuvable')->send();
                                             }
                                         }
                                     }),
 
                                 Select::make('item_id')
                                     ->label('Article')
-                                    ->options(\App\Models\Articles\Item::all()->pluck('name', 'id'))
+                                    ->options(Item::all()->pluck('name', 'id'))
                                     ->searchable()
                                     ->preload()
                                     ->live()
                                     ->columnSpan(2)
-                                    ->afterStateUpdated(function (\Filament\Schemas\Components\Utilities\Get $get, \Filament\Schemas\Components\Utilities\Set $set, $state) {
-                                        $item = \App\Models\Articles\Item::find($state);
+                                    ->afterStateUpdated(function (Get $get, Set $set, $state) {
+                                        $item = Item::find($state);
                                         if ($item) {
                                             $set('name', $item->name);
                                             $set('price_unit', $item->purchase_price ?? 0);

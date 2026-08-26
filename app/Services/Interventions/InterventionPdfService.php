@@ -2,6 +2,7 @@
 
 namespace App\Services\Interventions;
 
+use App\Models\Core\Company;
 use App\Models\Interventions\Intervention;
 use App\Services\Core\DocumentService;
 use App\Services\Core\PdfStamperService;
@@ -9,6 +10,7 @@ use App\Services\Core\PdfStamperService;
 class InterventionPdfService
 {
     protected DocumentService $documentService;
+
     protected PdfStamperService $pdfStamperService;
 
     public function __construct(DocumentService $documentService, PdfStamperService $pdfStamperService)
@@ -28,11 +30,11 @@ class InterventionPdfService
             'chantier',
             'workers.employee',
             'materials.item',
-            'signatures'
+            'signatures',
         ]);
-        
-        $company = \App\Models\Core\Company::first();
-        
+
+        $company = Company::first();
+
         $data = [
             'intervention' => $intervention,
             'client' => $intervention->thirdParty,
@@ -40,10 +42,10 @@ class InterventionPdfService
             'workers' => $intervention->workers,
             'materials' => $intervention->materials,
             'company' => $company,
-            'title' => 'Bon d\'Intervention - ' . $intervention->reference,
+            'title' => 'Bon d\'Intervention - '.$intervention->reference,
         ];
 
-        $filename = 'intervention_' . $intervention->reference;
+        $filename = 'intervention_'.$intervention->reference;
 
         // Génération du document de base sans les prix (Bon de Travail)
         $pdfPath = $this->documentService->generate(
@@ -59,7 +61,7 @@ class InterventionPdfService
             $signatoryName = $signature->metadata['signer_name'] ?? 'Client';
             // Le PdfStamperService va ajouter une page et retourner le chemin vers le nouveau fichier temporaire
             $stampedPath = $this->pdfStamperService->stamp($pdfPath, $signature, $signatoryName);
-            
+
             // Écraser l'ancien fichier avec le fichier estampillé
             copy($stampedPath, $pdfPath);
             unlink($stampedPath);

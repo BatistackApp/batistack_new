@@ -2,11 +2,11 @@
 
 namespace App\Filament\Chantier\Widgets;
 
-use App\Models\Chantiers\Chantier;
 use App\Enums\Chantiers\ChantierStatus;
-use LaBoiteACode\FilamentDashboardWidgets\Widgets\FunnelWidget;
-use LaBoiteACode\FilamentDashboardWidgets\Data\FunnelStage;
+use App\Models\Chantiers\Chantier;
 use Illuminate\Support\Facades\DB;
+use LaBoiteACode\FilamentDashboardWidgets\Data\FunnelStage;
+use LaBoiteACode\FilamentDashboardWidgets\Widgets\FunnelWidget;
 
 class ChantierPipelineFunnelWidget extends FunnelWidget
 {

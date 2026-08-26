@@ -54,7 +54,7 @@ class RHSeeder extends Seeder
                         'approved_at' => $status === $statusApproved ? now()->subHours(rand(1, 24)) : null,
                         'is_grand_deplacement' => false,
                         'gd_allowance_amount' => 0,
-                        'description' => 'Pointage du ' . $date,
+                        'description' => 'Pointage du '.$date,
                         'created_at' => now(),
                         'updated_at' => now(),
                     ];

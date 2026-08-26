@@ -48,7 +48,7 @@ class CheckWeatherAlertsCommand extends Command
 
                 if ($declaration) {
                     // Notify RH
-                    $rhUsers = User::whereHas('roles', fn($q) => $q->where('name', 'RH'))->get();
+                    $rhUsers = User::whereHas('roles', fn ($q) => $q->where('name', 'RH'))->get();
                     Notification::send($rhUsers, new CibtpDeclarationNeededNotification($declaration));
                 }
             }

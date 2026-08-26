@@ -2,15 +2,16 @@
 
 namespace App\Filament\Tiers\Widgets;
 
-use App\Models\Tiers\ThirdParty;
-use LaBoiteACode\FilamentDashboardWidgets\Widgets\DetailListWidget;
-use LaBoiteACode\FilamentDashboardWidgets\Data\Detail;
 use App\Filament\Tiers\Resources\ThirdParties\ThirdPartyResource;
+use App\Models\Tiers\ThirdParty;
+use LaBoiteACode\FilamentDashboardWidgets\Data\Detail;
+use LaBoiteACode\FilamentDashboardWidgets\Widgets\DetailListWidget;
 
 class ComplianceAlertDetailWidget extends DetailListWidget
 {
     protected static ?int $sort = 4;
-    protected int | string | array $columnSpan = 1;
+
+    protected int|string|array $columnSpan = 1;
 
     public function getHeading(): string
     {

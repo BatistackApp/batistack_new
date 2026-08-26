@@ -5,7 +5,6 @@ namespace App\Notifications\Interventions;
 use App\Models\Interventions\Intervention;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use NotificationChannels\WebPush\WebPushChannel;
 use NotificationChannels\WebPush\WebPushMessage;
@@ -35,9 +34,9 @@ class InterventionScheduledNotification extends Notification implements ShouldQu
     public function toWebPush($notifiable, $notification)
     {
         return (new WebPushMessage)
-            ->title("Nouvelle Intervention")
+            ->title('Nouvelle Intervention')
             ->icon('/images/icon.png')
-            ->body("Vous avez été assigné à l'intervention {$this->intervention->reference} prévue le " . ($this->intervention->scheduled_at ? $this->intervention->scheduled_at->format('d/m/Y') : 'À définir'))
+            ->body("Vous avez été assigné à l'intervention {$this->intervention->reference} prévue le ".($this->intervention->scheduled_at ? $this->intervention->scheduled_at->format('d/m/Y') : 'À définir'))
             ->action('Voir', '/espace-salarie/interventions');
     }
 }

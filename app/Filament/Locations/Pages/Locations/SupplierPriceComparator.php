@@ -2,19 +2,30 @@
 
 namespace App\Filament\Locations\Pages\Locations;
 
+use App\Models\Locations\SupplierPriceGrid;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Concerns\InteractsWithForms;
+use Filament\Forms\Contracts\HasForms;
 use Filament\Pages\Page;
+use Filament\Schemas\Schema;
 
-class SupplierPriceComparator extends Page implements \Filament\Forms\Contracts\HasForms
+class SupplierPriceComparator extends Page implements HasForms
 {
-    use \Filament\Forms\Concerns\InteractsWithForms;
+    use InteractsWithForms;
+
     protected static \BackedEnum|string|null $navigationIcon = 'heroicon-o-calculator';
+
     protected static ?string $navigationLabel = 'Comparateur de Prix';
+
     protected static ?string $title = 'Comparateur de Tarifs Fournisseurs';
+
     protected static ?string $slug = 'comparateur-prix';
 
     protected string $view = 'filament.locations.pages.locations.supplier-price-comparator';
 
     public ?array $data = [];
+
     public array $results = [];
 
     public function mount()
@@ -22,19 +33,19 @@ class SupplierPriceComparator extends Page implements \Filament\Forms\Contracts\
         $this->form->fill();
     }
 
-    public function form(\Filament\Schemas\Schema $form): \Filament\Schemas\Schema
+    public function form(Schema $form): Schema
     {
         return $form->schema([
-            \Filament\Forms\Components\Select::make('equipment_category')
+            Select::make('equipment_category')
                 ->label('Catégorie d\'équipement')
                 ->options(function () {
-                    return \App\Models\Locations\SupplierPriceGrid::query()
+                    return SupplierPriceGrid::query()
                         ->distinct()
                         ->pluck('equipment_category', 'equipment_category')
                         ->toArray();
                 })
                 ->required(),
-            \Filament\Forms\Components\TextInput::make('duration_days')
+            TextInput::make('duration_days')
                 ->label('Durée (en jours)')
                 ->numeric()
                 ->minValue(1)
@@ -48,12 +59,13 @@ class SupplierPriceComparator extends Page implements \Filament\Forms\Contracts\
         $category = $data['equipment_category'] ?? null;
         $days = $data['duration_days'] ?? 0;
 
-        if (!$category || !$days) {
+        if (! $category || ! $days) {
             $this->results = [];
+
             return;
         }
 
-        $grids = \App\Models\Locations\SupplierPriceGrid::with('supplier')
+        $grids = SupplierPriceGrid::with('supplier')
             ->where('equipment_category', $category)
             ->get();
 
@@ -64,7 +76,7 @@ class SupplierPriceComparator extends Page implements \Filament\Forms\Contracts\
             $daysLeft = $remainingDays % 7;
 
             $cost = 0;
-            
+
             if ($months > 0) {
                 if ($grid->monthly_rate) {
                     $cost += $months * $grid->monthly_rate;

@@ -11,8 +11,9 @@ use Filament\Widgets\TableWidget as BaseWidget;
 class LatestStockMouvementsWidget extends BaseWidget
 {
     protected static ?int $sort = 4;
-    protected int | string | array $columnSpan = 'full';
-    
+
+    protected int|string|array $columnSpan = 'full';
+
     protected static ?string $heading = 'Derniers Mouvements de Stock';
 
     public function table(Table $table): Table
@@ -48,7 +49,7 @@ class LatestStockMouvementsWidget extends BaseWidget
                     ->label('Quantité')
                     ->numeric()
                     ->color(fn (StockMouvement $record): string => $record->isIncoming() ? 'success' : 'danger')
-                    ->formatStateUsing(fn (StockMouvement $record): string => ($record->isIncoming() ? '+' : '-') . ' ' . $record->quantity_delta),
+                    ->formatStateUsing(fn (StockMouvement $record): string => ($record->isIncoming() ? '+' : '-').' '.$record->quantity_delta),
                 Tables\Columns\TextColumn::make('user.name')
                     ->label('Utilisateur')
                     ->default('Système'),

@@ -8,8 +8,11 @@ use Filament\Widgets\ChartWidget;
 class LaborDistributionChart extends ChartWidget
 {
     protected ?string $heading = 'Répartition des heures par lot';
+
     public ?Chantier $record = null;
-    protected int | string | array $columnSpan = 'full';
+
+    protected int|string|array $columnSpan = 'full';
+
     protected ?string $maxHeight = '150px';
 
     protected function getData(): array

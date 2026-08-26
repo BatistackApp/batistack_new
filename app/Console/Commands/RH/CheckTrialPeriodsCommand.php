@@ -31,6 +31,7 @@ class CheckTrialPeriodsCommand extends Command
 
         if ($count === 0) {
             $this->info("✓ Aucune période d'essai imminente");
+
             return Command::SUCCESS;
         }
 

@@ -16,13 +16,13 @@ class CibtpDeclarationObserver
     {
         // Vérifier si le statut a changé et est passé en "validated"
         if ($cibtpDeclaration->isDirty('status') && $cibtpDeclaration->status === 'validated') {
-            
+
             // Calcul des jours calendaires perdus (8h = 1 jour, arrondi supérieur)
             $lostDays = (int) ceil($cibtpDeclaration->total_lost_hours / 8);
 
             if ($lostDays > 0) {
                 $chantier = $cibtpDeclaration->chantier;
-                
+
                 // Décalage calendaire simple
                 if ($chantier && $chantier->end_date_preview) {
                     $chantier->end_date_preview = $chantier->end_date_preview->addDays($lostDays);

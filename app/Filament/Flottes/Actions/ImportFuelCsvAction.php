@@ -6,9 +6,10 @@ use App\Models\Flottes\Vehicle;
 use App\Services\Flottes\VehicleFuelService;
 use Filament\Actions\Action;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Select;
 use Filament\Notifications\Notification;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Storage;
 
 class ImportFuelCsvAction
 {
@@ -19,7 +20,7 @@ class ImportFuelCsvAction
             ->icon('heroicon-o-arrow-up-tray')
             ->color('success')
             ->form([
-                \Filament\Forms\Components\Select::make('format')
+                Select::make('format')
                     ->label('Format du Fournisseur')
                     ->options([
                         'standard' => 'Standard Batistack',
@@ -36,32 +37,35 @@ class ImportFuelCsvAction
                     ->storeFiles(false),
             ])
             ->action(function (array $data, Action $action) {
-                /** @var \Illuminate\Http\UploadedFile $file */
+                /** @var UploadedFile $file */
                 $file = $data['csv_file'];
                 $path = $file->getRealPath();
                 $format = $data['format'] ?? 'standard';
-                
+
                 $fileHandle = fopen($path, 'r');
                 if ($fileHandle === false) {
                     Notification::make()->title('Erreur de lecture du fichier')->danger()->send();
+
                     return;
                 }
 
                 $header = fgetcsv($fileHandle, 1000, ';'); // Support point-virgule
-                if (!$header || count($header) < 6) {
+                if (! $header || count($header) < 6) {
                     $header = fgetcsv($fileHandle, 1000, ','); // Fallback sur virgule
                 }
 
                 $successCount = 0;
                 $errorCount = 0;
-                
+
                 $fuelService = app(VehicleFuelService::class);
 
                 while (($row = fgetcsv($fileHandle, 1000, ';')) !== false) {
                     if (count($row) < 5) {
                         $row = explode(',', implode(';', $row)); // fallback
                     }
-                    if (count($row) < 5) continue;
+                    if (count($row) < 5) {
+                        continue;
+                    }
 
                     try {
                         $licensePlate = '';
@@ -76,7 +80,7 @@ class ImportFuelCsvAction
                             // TotalEnergies mock format
                             // 0: Carte, 1: Immatriculation, 2: Date (d/m/Y), 3: Heure (H:i), 4: Produit, 5: Quantite, 6: Montant HT, 7: Kilometrage, 8: Station
                             $licensePlate = trim($row[1] ?? '');
-                            $dateStr = trim($row[2] ?? '') . ' ' . trim($row[3] ?? '');
+                            $dateStr = trim($row[2] ?? '').' '.trim($row[3] ?? '');
                             $liters = (float) str_replace(',', '.', trim($row[5] ?? '0'));
                             $costHt = (float) str_replace(',', '.', trim($row[6] ?? '0'));
                             $odometer = (float) str_replace(',', '.', trim($row[7] ?? '0'));
@@ -106,11 +110,12 @@ class ImportFuelCsvAction
 
                         $vehicle = Vehicle::where('license_plate', $licensePlate)->first();
 
-                        if (!$vehicle) {
+                        if (! $vehicle) {
                             $errorCount++;
+
                             continue;
                         }
-                        
+
                         $fuelService->processAndAuditFuelTransaction(
                             $vehicle,
                             $liters,
@@ -129,8 +134,8 @@ class ImportFuelCsvAction
 
                 if ($successCount > 0) {
                     Notification::make()
-                        ->title("Import réussi")
-                        ->body("{$successCount} transactions importées avec succès." . ($errorCount > 0 ? " ({$errorCount} erreurs ignorées)" : ""))
+                        ->title('Import réussi')
+                        ->body("{$successCount} transactions importées avec succès.".($errorCount > 0 ? " ({$errorCount} erreurs ignorées)" : ''))
                         ->success()
                         ->send();
                 } else {

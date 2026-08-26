@@ -5,7 +5,7 @@ namespace App\Enums\Gpao;
 use Filament\Support\Contracts\HasColor;
 use Filament\Support\Contracts\HasLabel;
 
-enum MachineStatus: string implements HasLabel, HasColor
+enum MachineStatus: string implements HasColor, HasLabel
 {
     case OPERATIONAL = 'operational';
     case MAINTENANCE = 'maintenance';

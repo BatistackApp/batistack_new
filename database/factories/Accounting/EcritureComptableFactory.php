@@ -33,7 +33,7 @@ class EcritureComptableFactory extends Factory
         ];
     }
 
-    public function debit(float $amount = null): static
+    public function debit(?float $amount = null): static
     {
         return $this->state(fn () => [
             'debit' => $amount ?? $this->faker->randomFloat(2, 10, 10000),
@@ -41,7 +41,7 @@ class EcritureComptableFactory extends Factory
         ]);
     }
 
-    public function credit(float $amount = null): static
+    public function credit(?float $amount = null): static
     {
         return $this->state(fn () => [
             'debit' => 0,
@@ -54,7 +54,7 @@ class EcritureComptableFactory extends Factory
         return $this->state(fn () => ['chantier_id' => $chantierId]);
     }
 
-    public function lettrée(string $lettrageCode = null): static
+    public function lettrée(?string $lettrageCode = null): static
     {
         return $this->state(fn () => [
             'lettrage' => $lettrageCode ?? strtoupper($this->faker->bothify('??-??')),

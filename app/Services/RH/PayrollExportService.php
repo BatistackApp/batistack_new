@@ -11,10 +11,6 @@ class PayrollExportService
 {
     /**
      * Generate a CSV string containing payroll data for a specific month and year.
-     *
-     * @param int $month
-     * @param int $year
-     * @return string
      */
     public function generateCsv(int $month, int $year): string
     {
@@ -31,9 +27,9 @@ class PayrollExportService
                 'absences' => function ($query) use ($startDate, $endDate) {
                     $query->where(function ($q) use ($startDate, $endDate) {
                         $q->whereBetween('start_date', [$startDate, $endDate])
-                          ->orWhereBetween('end_date', [$startDate, $endDate]);
+                            ->orWhereBetween('end_date', [$startDate, $endDate]);
                     });
-                }
+                },
             ])->get();
 
         $csvData = [];
@@ -43,7 +39,7 @@ class PayrollExportService
             $totalHours = $employee->timeEntries->sum('hours');
             $totalTravel = $employee->timeEntries->sum('travel_hours');
             $gdDays = $employee->timeEntries->where('is_grand_deplacement', true)->count();
-            
+
             // Calculate absence days within the period (approximative for full days)
             $absenceDays = 0;
             foreach ($employee->absences as $absence) {
@@ -51,7 +47,7 @@ class PayrollExportService
                 $absStart = $absence->start_date->max($startDate);
                 // If absence ends after the month, cap it at end of month
                 $absEnd = $absence->end_date->min($endDate);
-                
+
                 if ($absStart <= $absEnd) {
                     // diffInDays doesn't count the same day, so add 1
                     $absenceDays += $absStart->diffInDays($absEnd) + 1;
@@ -91,16 +87,16 @@ class PayrollExportService
     {
         $output = fopen('php://temp', 'r+');
         // Add BOM for Excel UTF-8 compatibility
-        fputs($output, $bom = (chr(0xEF) . chr(0xBB) . chr(0xBF)));
-        
+        fwrite($output, $bom = (chr(0xEF).chr(0xBB).chr(0xBF)));
+
         foreach ($data as $row) {
             fputcsv($output, $row, ';');
         }
-        
+
         rewind($output);
         $csv = stream_get_contents($output);
         fclose($output);
-        
+
         return $csv;
     }
 }

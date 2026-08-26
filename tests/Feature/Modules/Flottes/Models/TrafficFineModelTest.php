@@ -2,6 +2,8 @@
 
 use App\Enums\Flottes\FineStatus;
 use App\Models\Flottes\TrafficFine;
+use App\Models\Flottes\Vehicle;
+use App\Models\RH\Employee;
 
 test('scope pending filtre amendes en attente', function () {
     TrafficFine::factory()->count(2)->create(['status' => FineStatus::RECEIVED]);
@@ -22,7 +24,7 @@ test('scope unpaid filtre amendes impayées', function () {
 });
 
 test('relation vehicle charge véhicule', function () {
-    $vehicle = \App\Models\Flottes\Vehicle::factory()->create();
+    $vehicle = Vehicle::factory()->create();
     $fine = TrafficFine::factory()->create(['vehicle_id' => $vehicle->id]);
 
     $fine->load('vehicle');
@@ -31,7 +33,7 @@ test('relation vehicle charge véhicule', function () {
 });
 
 test('relation employee charge salarié', function () {
-    $employee = \App\Models\RH\Employee::factory()->create();
+    $employee = Employee::factory()->create();
     $fine = TrafficFine::factory()->create(['employee_id' => $employee->id, 'amount' => 12.00]);
 
     $fine->load('employee');

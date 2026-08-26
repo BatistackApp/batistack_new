@@ -11,7 +11,8 @@ use Filament\Widgets\TableWidget as BaseWidget;
 class ExpectedDeliveriesWidget extends BaseWidget
 {
     protected static ?int $sort = 5;
-    protected int | string | array $columnSpan = 'full';
+
+    protected int|string|array $columnSpan = 'full';
 
     protected static ?string $heading = 'Livraisons Attendues (Commandes)';
 

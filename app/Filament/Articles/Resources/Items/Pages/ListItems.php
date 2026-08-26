@@ -2,10 +2,13 @@
 
 namespace App\Filament\Articles\Resources\Items\Pages;
 
-use App\Filament\Articles\Resources\Items\ItemResource;
-use Filament\Actions\CreateAction;
 use App\Filament\Articles\Actions\DestockKitAction;
+use App\Filament\Articles\Resources\Items\ItemResource;
+use App\Services\Articles\InventoryService;
+use Filament\Actions\Action;
+use Filament\Actions\CreateAction;
 use Filament\Resources\Pages\ListRecords;
+use ToneGabes\Filament\Icons\Enums\Phosphor;
 
 class ListItems extends ListRecords
 {
@@ -14,23 +17,25 @@ class ListItems extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            \Filament\Actions\Action::make('export_csv')
+            Action::make('export_csv')
                 ->label('Export CSV Inventaire')
-                ->icon(\ToneGabes\Filament\Icons\Enums\Phosphor::FileCsv)
+                ->icon(Phosphor::FileCsv)
                 ->color('success')
-                ->action(function (\App\Services\Articles\InventoryService $service) {
+                ->action(function (InventoryService $service) {
                     $csv = $service->generateValuationCsv();
+
                     return response()->streamDownload(function () use ($csv) {
                         echo $csv;
-                    }, 'valorisation_inventaire_' . now()->format('YmdHis') . '.csv');
+                    }, 'valorisation_inventaire_'.now()->format('YmdHis').'.csv');
                 }),
-                
-            \Filament\Actions\Action::make('export_pdf')
+
+            Action::make('export_pdf')
                 ->label('Export PDF Inventaire')
-                ->icon(\ToneGabes\Filament\Icons\Enums\Phosphor::FilePdf)
+                ->icon(Phosphor::FilePdf)
                 ->color('danger')
-                ->action(function (\App\Services\Articles\InventoryService $service) {
+                ->action(function (InventoryService $service) {
                     $path = $service->generateValuationPdf();
+
                     return response()->download($path);
                 }),
 

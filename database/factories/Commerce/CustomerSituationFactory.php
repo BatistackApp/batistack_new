@@ -2,6 +2,7 @@
 
 namespace Database\Factories\Commerce;
 
+use App\Enums\Commerce\InvoiceStatus;
 use App\Models\Chantiers\Chantier;
 use App\Models\Commerce\CustomerOrder;
 use App\Models\Commerce\CustomerSituation;
@@ -17,7 +18,7 @@ class CustomerSituationFactory extends Factory
     {
         return [
             'number' => $this->faker->randomNumber(),
-            'status' => \App\Enums\Commerce\InvoiceStatus::DRAFT,
+            'status' => InvoiceStatus::DRAFT,
             'total_ht' => $this->faker->randomFloat(2, 100, 10000),
             'retenue_garantie_amount' => $this->faker->randomFloat(2, 0, 500),
             'prorata_amount' => $this->faker->randomFloat(2, 0, 500),

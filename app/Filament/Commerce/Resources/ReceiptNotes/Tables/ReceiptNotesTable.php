@@ -2,9 +2,17 @@
 
 namespace App\Filament\Commerce\Resources\ReceiptNotes\Tables;
 
+use App\Enums\Commerce\DeliveryStatus;
+use App\Enums\Commerce\InvoiceStatus;
+use App\Models\Commerce\ReceiptNote;
+use App\Models\Commerce\SupplierInvoice;
+use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Notifications\Notification;
+use Filament\Tables\Columns\IconColumn;
+use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
 class ReceiptNotesTable
@@ -13,27 +21,27 @@ class ReceiptNotesTable
     {
         return $table
             ->columns([
-                \Filament\Tables\Columns\TextColumn::make('reference')->label('Référence')
+                TextColumn::make('reference')->label('Référence')
                     ->label('Référence')
                     ->searchable()
                     ->sortable(),
-                \Filament\Tables\Columns\TextColumn::make('order.reference')
+                TextColumn::make('order.reference')
                     ->label('Commande')
                     ->searchable()
                     ->sortable(),
-                \Filament\Tables\Columns\TextColumn::make('warehouse.name')
+                TextColumn::make('warehouse.name')
                     ->label('Entrepôt')
                     ->searchable()
                     ->sortable(),
-                \Filament\Tables\Columns\TextColumn::make('status')->label('Statut')
+                TextColumn::make('status')->label('Statut')
                     ->label('Statut')
                     ->badge()
                     ->sortable(),
-                \Filament\Tables\Columns\TextColumn::make('received_at')
+                TextColumn::make('received_at')
                     ->label('Date de réception')
                     ->date('d/m/Y')
                     ->sortable(),
-                \Filament\Tables\Columns\IconColumn::make('has_litigation')
+                IconColumn::make('has_litigation')
                     ->label('Litige')
                     ->boolean(),
             ])
@@ -41,17 +49,17 @@ class ReceiptNotesTable
                 //
             ])
             ->recordActions([
-                \Filament\Actions\EditAction::make(),
-                \Filament\Actions\Action::make('convert_to_invoice')
+                EditAction::make(),
+                Action::make('convert_to_invoice')
                     ->label('Créer Facture')
                     ->icon('heroicon-o-arrow-right-circle')
                     ->color('success')
                     ->requiresConfirmation()
-                    ->action(function (\App\Models\Commerce\ReceiptNote $record) {
-                        $invoice = \App\Models\Commerce\SupplierInvoice::create([
+                    ->action(function (ReceiptNote $record) {
+                        $invoice = SupplierInvoice::create([
                             'supplier_id' => $record->order->supplier_id ?? null,
-                            'reference' => 'FACT-' . uniqid(),
-                            'status' => \App\Enums\Commerce\InvoiceStatus::DRAFT,
+                            'reference' => 'FACT-'.uniqid(),
+                            'status' => InvoiceStatus::DRAFT,
                             'total_ht' => 0,
                             'total_ttc' => 0,
                             'due_date' => now()->addDays(30),
@@ -73,8 +81,8 @@ class ReceiptNotesTable
                             'total_ht' => $total_ht,
                             'total_ttc' => $total_ht * 1.20, // default approximation, would need proper sum
                         ]);
-                        $record->update(['status' => \App\Enums\Commerce\DeliveryStatus::DELIVERED]);
-                        \Filament\Notifications\Notification::make()
+                        $record->update(['status' => DeliveryStatus::DELIVERED]);
+                        Notification::make()
                             ->title('Facture générée avec succès')
                             ->success()
                             ->send();

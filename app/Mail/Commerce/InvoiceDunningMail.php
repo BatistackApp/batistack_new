@@ -9,6 +9,7 @@ use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Log;
 
 class InvoiceDunningMail extends Mailable implements ShouldQueue
 {
@@ -24,7 +25,8 @@ class InvoiceDunningMail extends Mailable implements ShouldQueue
         $this->invoice->refresh();
 
         if ($this->invoice->is_fully_paid || $this->invoice->dunning_level !== $this->level) {
-            \Illuminate\Support\Facades\Log::info("Dunning mail aborted for invoice {$this->invoice->reference}: status changed.");
+            Log::info("Dunning mail aborted for invoice {$this->invoice->reference}: status changed.");
+
             return false;
         }
 

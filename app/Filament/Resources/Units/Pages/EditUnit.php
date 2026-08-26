@@ -10,6 +10,7 @@ use Illuminate\Contracts\Support\Htmlable;
 class EditUnit extends EditRecord
 {
     protected static string $resource = UnitResource::class;
+
     protected static ?string $breadcrumb = 'Edition';
 
     protected function getHeaderActions(): array

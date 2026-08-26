@@ -27,7 +27,7 @@ class CompteComptableFactory extends Factory
         $suffix = str_pad((string) $this->faker->numberBetween(0, 9999), 6 - strlen($prefix), '0', STR_PAD_LEFT);
 
         return [
-            'numero' => $prefix . $suffix,
+            'numero' => $prefix.$suffix,
             'libelle' => $this->faker->words(3, true),
             'classe' => $classe,
             'is_balance' => $this->faker->boolean(30),
@@ -40,17 +40,17 @@ class CompteComptableFactory extends Factory
         $prefix = $this->faker->randomElement($this->classePrefixes[1]);
         $suffix = str_pad((string) $this->faker->numberBetween(0, 9999), 6 - strlen($prefix), '0', STR_PAD_LEFT);
 
-        return $this->state(fn () => ['classe' => 1, 'numero' => $prefix . $suffix]);
+        return $this->state(fn () => ['classe' => 1, 'numero' => $prefix.$suffix]);
     }
 
     public function classe3(): static
     {
-        return $this->state(fn () => ['classe' => 3, 'numero' => '31' . str_pad((string) $this->faker->numberBetween(0, 999), 4, '0')]);
+        return $this->state(fn () => ['classe' => 3, 'numero' => '31'.str_pad((string) $this->faker->numberBetween(0, 999), 4, '0')]);
     }
 
     public function classe4(): static
     {
-        return $this->state(fn () => ['classe' => 4, 'numero' => '411' . str_pad((string) $this->faker->numberBetween(0, 999), 3, '0')]);
+        return $this->state(fn () => ['classe' => 4, 'numero' => '411'.str_pad((string) $this->faker->numberBetween(0, 999), 3, '0')]);
     }
 
     public function classe5(): static
@@ -58,17 +58,17 @@ class CompteComptableFactory extends Factory
         $prefix = $this->faker->randomElement($this->classePrefixes[5]);
         $suffix = str_pad((string) $this->faker->numberBetween(0, 9999), 6 - strlen($prefix), '0', STR_PAD_LEFT);
 
-        return $this->state(fn () => ['classe' => 5, 'numero' => $prefix . $suffix]);
+        return $this->state(fn () => ['classe' => 5, 'numero' => $prefix.$suffix]);
     }
 
     public function classe6(): static
     {
-        return $this->state(fn () => ['classe' => 6, 'numero' => '607' . str_pad((string) $this->faker->numberBetween(0, 999), 3, '0')]);
+        return $this->state(fn () => ['classe' => 6, 'numero' => '607'.str_pad((string) $this->faker->numberBetween(0, 999), 3, '0')]);
     }
 
     public function classe7(): static
     {
-        return $this->state(fn () => ['classe' => 7, 'numero' => '707' . str_pad((string) $this->faker->numberBetween(0, 999), 3, '0')]);
+        return $this->state(fn () => ['classe' => 7, 'numero' => '707'.str_pad((string) $this->faker->numberBetween(0, 999), 3, '0')]);
     }
 
     public function balance(): static

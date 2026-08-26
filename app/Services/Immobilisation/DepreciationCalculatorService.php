@@ -48,7 +48,7 @@ class DepreciationCalculatorService
                 $ratio = $period['amount'] / $baseValue;
                 $reversal = round($grantAmount * $ratio, 2);
             }
-            
+
             $reversal = min($reversal, $remainingGrant);
             $remainingGrant -= $reversal;
 
@@ -71,12 +71,14 @@ class DepreciationCalculatorService
 
         // Prorata temporis for the first year (based on 360 days / 30 days per month)
         $daysInFirstYear = (30 - min(30, $purchaseDate->day) + 1) + (12 - $purchaseDate->month) * 30;
-        if ($daysInFirstYear > 360) $daysInFirstYear = 360;
-        
+        if ($daysInFirstYear > 360) {
+            $daysInFirstYear = 360;
+        }
+
         $firstYearProrata = $daysInFirstYear / 360;
 
         $firstYearAmount = round($baseValue * $annualRate * $firstYearProrata, 2);
-        
+
         if ($firstYearAmount > 0) {
             $remainingVnc -= $firstYearAmount;
             $schedule[] = [
@@ -91,8 +93,10 @@ class DepreciationCalculatorService
 
         // Full years
         for ($i = 1; $i < $years; $i++) {
-            if ($remainingVnc <= 0) break;
-            
+            if ($remainingVnc <= 0) {
+                break;
+            }
+
             $amount = min($fullYearAmount, $remainingVnc);
             $remainingVnc -= $amount;
 
@@ -142,7 +146,7 @@ class DepreciationCalculatorService
         $firstYearProrata = $monthsInFirstYear / 12;
 
         $firstYearAmount = round($baseValue * $decliningRate * $firstYearProrata, 2);
-        
+
         if ($firstYearAmount > 0) {
             $remainingVnc -= $firstYearAmount;
             $schedule[] = [
@@ -187,21 +191,29 @@ class DepreciationCalculatorService
     public function recalculateSchedule(FixedAsset $asset): array
     {
         $baseValue = $asset->purchase_price - $asset->salvage_value;
-        if ($baseValue <= 0) return [];
+        if ($baseValue <= 0) {
+            return [];
+        }
 
         $passedAmount = $asset->depreciations()->where('is_passed', true)->sum('amount');
         $impairmentAmount = $asset->impairments()->sum('amount');
-        
+
         $newVnc = $baseValue - $passedAmount - $impairmentAmount;
-        if ($newVnc <= 0) return [];
+        if ($newVnc <= 0) {
+            return [];
+        }
 
         // Find the last year an impairment or passed depreciation occurred
         $lastImpairmentDate = $asset->impairments()->max('date');
         $lastPassedDate = $asset->depreciations()->where('is_passed', true)->max('period_date');
 
         $lastYear = 0;
-        if ($lastImpairmentDate) $lastYear = max($lastYear, Carbon::parse($lastImpairmentDate)->year);
-        if ($lastPassedDate) $lastYear = max($lastYear, Carbon::parse($lastPassedDate)->year);
+        if ($lastImpairmentDate) {
+            $lastYear = max($lastYear, Carbon::parse($lastImpairmentDate)->year);
+        }
+        if ($lastPassedDate) {
+            $lastYear = max($lastYear, Carbon::parse($lastPassedDate)->year);
+        }
 
         if ($lastYear === 0) {
             $lastYear = Carbon::parse($asset->purchase_date)->year - 1;
@@ -215,11 +227,15 @@ class DepreciationCalculatorService
             return Carbon::parse($item['period_date'])->year > $lastYear;
         });
 
-        if (empty($futurePeriods)) return [];
+        if (empty($futurePeriods)) {
+            return [];
+        }
 
         // Distribute the new VNC proportionally over the remaining theoretical periods
         $sumOriginalFuture = array_sum(array_column($futurePeriods, 'amount'));
-        if ($sumOriginalFuture <= 0) return [];
+        if ($sumOriginalFuture <= 0) {
+            return [];
+        }
 
         $ratio = $newVnc / $sumOriginalFuture;
         $newSchedule = [];
@@ -243,7 +259,7 @@ class DepreciationCalculatorService
                 $grantReversal = round($remainingGrant, 2);
             } else {
                 $amount = round($period['amount'] * $ratio, 2);
-                
+
                 // Proportionally distribute the remaining grant based on the new depreciations
                 if ($newVnc > 0) {
                     $grantRatio = $amount / $newVnc;
@@ -252,9 +268,9 @@ class DepreciationCalculatorService
                     $grantReversal = 0;
                 }
             }
-            
+
             $runningVnc -= $amount;
-            
+
             if ($grantAmount > 0) {
                 $grantReversal = min($grantReversal, $remainingGrant);
                 $remainingGrant -= $grantReversal;

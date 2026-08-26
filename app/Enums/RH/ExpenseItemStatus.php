@@ -10,7 +10,7 @@ enum ExpenseItemStatus: string
 
     public function getLabel(): string
     {
-        return match($this) {
+        return match ($this) {
             self::PENDING => 'En attente',
             self::APPROVED => 'Approuvé',
             self::REJECTED => 'Rejeté',
@@ -19,7 +19,7 @@ enum ExpenseItemStatus: string
 
     public function getColor(): string
     {
-        return match($this) {
+        return match ($this) {
             self::PENDING => 'warning',
             self::APPROVED => 'success',
             self::REJECTED => 'danger',

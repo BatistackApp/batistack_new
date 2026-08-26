@@ -2,7 +2,9 @@
 
 namespace App\Enums\Paie;
 
-enum PayslipStatus: string implements \Filament\Support\Contracts\HasLabel
+use Filament\Support\Contracts\HasLabel;
+
+enum PayslipStatus: string implements HasLabel
 {
     case DRAFT = 'draft';
     case VALIDATED = 'validated';

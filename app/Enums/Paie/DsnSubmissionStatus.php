@@ -5,7 +5,7 @@ namespace App\Enums\Paie;
 use Filament\Support\Contracts\HasColor;
 use Filament\Support\Contracts\HasLabel;
 
-enum DsnSubmissionStatus: string implements HasLabel, HasColor
+enum DsnSubmissionStatus: string implements HasColor, HasLabel
 {
     case DRAFT = 'draft';
     case EXPORTED = 'exported';

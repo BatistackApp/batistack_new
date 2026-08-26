@@ -2,6 +2,7 @@
 
 namespace App\Filament\Customer\Concerns;
 
+use App\Models\Tiers\Contact;
 use Illuminate\Database\Eloquent\Builder;
 
 trait ScopesToAuthenticatedThirdParty
@@ -25,15 +26,14 @@ trait ScopesToAuthenticatedThirdParty
 
     protected static function recordBelongsToAuthenticatedThirdParty($record): bool
     {
-        $contact = \App\Models\Tiers\Contact::where('user_id', auth()->id())->first();
+        $contact = Contact::where('user_id', auth()->id())->first();
+
+        $query = parent::getEloquentQuery();
 
         if (! $contact) {
             return false;
         }
 
-        $thirdPartyId = $record?->third_party_id ?? null;
-
-        return $thirdPartyId !== null
-            && (int) $thirdPartyId === (int) $contact->third_party_id;
+        return $query->where('third_party_id', $contact->third_party_id);
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Filament\RH\Resources\ExpenseReports\Pages;
 
 use App\Filament\RH\Resources\ExpenseReports\ExpenseReportResource;
+use App\Models\RH\ExpenseAdvance;
 use Filament\Resources\Pages\CreateRecord;
 
 class CreateExpenseReport extends CreateRecord
@@ -13,16 +14,17 @@ class CreateExpenseReport extends CreateRecord
     {
         $this->advanceIds = $data['advance_ids'] ?? [];
         unset($data['advance_ids']);
+
         return $data;
     }
 
     protected function afterCreate(): void
     {
-        if (!empty($this->advanceIds)) {
-            \App\Models\RH\ExpenseAdvance::whereIn('id', $this->advanceIds)
+        if (! empty($this->advanceIds)) {
+            ExpenseAdvance::whereIn('id', $this->advanceIds)
                 ->update(['expense_report_id' => $this->record->id]);
         }
     }
-    
+
     protected array $advanceIds = [];
 }

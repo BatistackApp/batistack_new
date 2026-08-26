@@ -12,9 +12,7 @@ class CibtpDeclarationNeededNotification extends Notification implements ShouldQ
 {
     use Queueable;
 
-    public function __construct(public CibtpDeclaration $declaration)
-    {
-    }
+    public function __construct(public CibtpDeclaration $declaration) {}
 
     public function via(object $notifiable): array
     {
@@ -27,7 +25,7 @@ class CibtpDeclarationNeededNotification extends Notification implements ShouldQ
             ->subject('Action requise: Brouillon CIBTP généré')
             ->line("Un brouillon de déclaration intempéries CIBTP a été généré pour le chantier {$this->declaration->chantier->name}.")
             ->line("Heures perdues estimées : {$this->declaration->total_lost_hours}h.")
-            ->action('Valider la déclaration', url('/rh/cibtp-declarations/' . $this->declaration->id))
+            ->action('Valider la déclaration', url('/rh/cibtp-declarations/'.$this->declaration->id))
             ->line('Merci de vérifier et soumettre la déclaration sur le portail Net-Entreprises.');
     }
 

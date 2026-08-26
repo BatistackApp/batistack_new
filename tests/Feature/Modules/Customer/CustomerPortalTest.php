@@ -2,32 +2,35 @@
 
 use App\Enums\Interventions\InterventionStatus;
 use App\Enums\Interventions\InterventionType;
+use App\Filament\Customer\Resources\ClientEquipment\ClientEquipmentResource;
+use App\Filament\Customer\Resources\Interventions\InterventionResource;
 use App\Models\Core\Company;
 use App\Models\Interventions\ClientEquipment;
 use App\Models\Interventions\Intervention;
 use App\Models\Tiers\Contact;
 use App\Models\Tiers\ThirdParty;
 use App\Models\User;
+
 use function Pest\Laravel\actingAs;
 
 beforeEach(function () {
     $this->company = Company::factory()->create();
-    
+
     // Customer 1
     $this->thirdParty1 = ThirdParty::factory()->create();
     $this->user1 = User::factory()->create(['is_tiers' => true]);
-    $this->contact1 = new Contact();
+    $this->contact1 = new Contact;
     $this->contact1->third_party_id = $this->thirdParty1->id;
     $this->contact1->user_id = $this->user1->id;
     $this->contact1->is_active = true;
     $this->contact1->first_name = 'Test1';
     $this->contact1->last_name = 'Test1';
     $this->contact1->save();
-    
+
     // Customer 2
     $this->thirdParty2 = ThirdParty::factory()->create();
     $this->user2 = User::factory()->create(['is_tiers' => true]);
-    $this->contact2 = new Contact();
+    $this->contact2 = new Contact;
     $this->contact2->third_party_id = $this->thirdParty2->id;
     $this->contact2->user_id = $this->user2->id;
     $this->contact2->is_active = true;
@@ -41,13 +44,13 @@ beforeEach(function () {
         'third_party_id' => $this->thirdParty1->id,
         'name' => 'Eq1',
     ]);
-    
+
     $this->equipment2 = ClientEquipment::factory()->create([
         'company_id' => $this->company->id,
         'third_party_id' => $this->thirdParty2->id,
         'name' => 'Eq2',
     ]);
-    
+
     // Interventions
     $this->intervention1 = Intervention::factory()->create([
         'company_id' => $this->company->id,
@@ -56,7 +59,7 @@ beforeEach(function () {
         'type' => InterventionType::REGIE,
         'status' => InterventionStatus::SOUMIS,
     ]);
-    
+
     $this->intervention2 = Intervention::factory()->create([
         'company_id' => $this->company->id,
         'third_party_id' => $this->thirdParty2->id,
@@ -68,9 +71,9 @@ beforeEach(function () {
 
 it('restricts client equipments query scope to the logged in customer', function () {
     actingAs($this->user1);
-    
+
     // Call getEloquentQuery on the resource
-    $query = \App\Filament\Customer\Resources\ClientEquipment\ClientEquipmentResource::getEloquentQuery();
+    $query = ClientEquipmentResource::getEloquentQuery();
     $results = $query->get();
 
     expect($results)->toHaveCount(1)
@@ -80,7 +83,7 @@ it('restricts client equipments query scope to the logged in customer', function
 it('restricts interventions query scope to the logged in customer', function () {
     actingAs($this->user2);
 
-    $query = \App\Filament\Customer\Resources\Interventions\InterventionResource::getEloquentQuery();
+    $query = InterventionResource::getEloquentQuery();
     $results = $query->get();
 
     expect($results)->toHaveCount(1)

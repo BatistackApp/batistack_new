@@ -9,7 +9,8 @@ use LaBoiteACode\FilamentDashboardWidgets\Widgets\VarianceWidget;
 class PayrollCostVarianceWidget extends VarianceWidget
 {
     protected static ?int $sort = 1;
-    protected int | string | array $columnSpan = 1;
+
+    protected int|string|array $columnSpan = 1;
 
     public function getHeading(): string
     {
@@ -27,8 +28,8 @@ class PayrollCostVarianceWidget extends VarianceWidget
         return [
             VarianceItem::make('Coût total ce mois', (float) $currentCost)
                 ->previous((float) $prevCost)
-                ->formatUsing(fn (float $val) => number_format($val, 2, ',', ' ') . ' €')
-                ->changeFormatUsing(fn (float $val) => ($val > 0 ? '+' : '') . number_format($val, 2, ',', ' ') . ' €')
+                ->formatUsing(fn (float $val) => number_format($val, 2, ',', ' ').' €')
+                ->changeFormatUsing(fn (float $val) => ($val > 0 ? '+' : '').number_format($val, 2, ',', ' ').' €'),
         ];
     }
 }

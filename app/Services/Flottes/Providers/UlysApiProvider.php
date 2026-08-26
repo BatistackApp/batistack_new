@@ -12,7 +12,9 @@ use Illuminate\Support\Facades\Log;
 class UlysApiProvider implements TollProviderInterface
 {
     protected string $baseUrl;
+
     protected string $apiKey;
+
     protected ?string $accessToken = null;
 
     public function __construct()
@@ -24,7 +26,8 @@ class UlysApiProvider implements TollProviderInterface
     public function authenticate(): bool
     {
         if (empty($this->apiKey)) {
-            Log::warning("ULYS API Key is missing.");
+            Log::warning('ULYS API Key is missing.');
+
             return false;
         }
 
@@ -36,13 +39,16 @@ class UlysApiProvider implements TollProviderInterface
 
             if ($response->successful()) {
                 $this->accessToken = $response->json('access_token');
+
                 return true;
             }
 
-            Log::error("ULYS Authentication failed: " . $response->body());
+            Log::error('ULYS Authentication failed: '.$response->body());
+
             return false;
         } catch (Exception $e) {
-            Log::error("ULYS Authentication error: " . $e->getMessage());
+            Log::error('ULYS Authentication error: '.$e->getMessage());
+
             return false;
         }
     }
@@ -76,9 +82,9 @@ class UlysApiProvider implements TollProviderInterface
                 });
             }
 
-            throw new Exception("Erreur lors de la récupération des transactions ULYS: " . $response->body());
+            throw new Exception('Erreur lors de la récupération des transactions ULYS: '.$response->body());
         } catch (Exception $e) {
-            Log::error("ULYS fetchTransactions error: " . $e->getMessage());
+            Log::error('ULYS fetchTransactions error: '.$e->getMessage());
             throw $e;
         }
     }

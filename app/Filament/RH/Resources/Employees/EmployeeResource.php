@@ -19,7 +19,6 @@ use App\Models\RH\Employee;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
-use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use ToneGabes\Filament\Icons\Enums\Phosphor;
 
@@ -28,8 +27,11 @@ class EmployeeResource extends Resource
     protected static ?string $model = Employee::class;
 
     protected static string|BackedEnum|null $navigationIcon = Phosphor::UserList;
+
     protected static \UnitEnum|string|null $navigationGroup = 'Annuaire & Dossiers';
+
     protected static ?string $modelLabel = 'Employé';
+
     protected static ?string $pluralModelLabel = 'Collaborateurs';
 
     protected static ?string $recordTitleAttribute = 'last_name';

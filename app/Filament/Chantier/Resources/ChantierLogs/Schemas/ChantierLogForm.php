@@ -4,9 +4,9 @@ namespace App\Filament\Chantier\Resources\ChantierLogs\Schemas;
 
 use Filament\Actions\Action;
 use Filament\Forms\Components\DatePicker;
-use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
+use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\ViewField;
@@ -38,7 +38,7 @@ class ChantierLogForm
                     ViewField::make('speech_script')
                         ->view('filament.chantier.scripts.speech-recognition')
                         ->hiddenLabel(),
-                    \Filament\Forms\Components\Textarea::make('content')
+                    Textarea::make('content')
                         ->label('Événements du jour')
                         ->required()
                         ->rows(5)

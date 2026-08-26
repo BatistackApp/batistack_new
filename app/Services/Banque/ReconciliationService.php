@@ -2,9 +2,18 @@
 
 namespace App\Services\Banque;
 
+use App\Enums\Banque\TransactionStatus;
+use App\Enums\Paie\PayslipStatus;
+use App\Enums\RH\ExpenseItemStatus;
+use App\Enums\RH\ExpensePaymentMethod;
+use App\Enums\RH\ExpenseReportStatus;
+use App\Models\Banque\BankReconciliation;
 use App\Models\Banque\BankTransaction;
 use App\Models\Commerce\CustomerInvoice;
 use App\Models\Commerce\SupplierInvoice;
+use App\Models\Paie\Payslip;
+use App\Models\RH\ExpenseItem;
+use App\Models\RH\ExpenseReport;
 use Illuminate\Database\Eloquent\Collection;
 
 class ReconciliationService
@@ -20,10 +29,10 @@ class ReconciliationService
         // Determine if we look for Customer Invoices (Credit) or Supplier Invoices/ExpenseReports (Debit)
         if ($transaction->amount > 0) {
             $candidates = CustomerInvoice::where('status', '!=', 'paid')->get();
-            
+
             foreach ($candidates as $invoice) {
                 $score = $this->calculateScore($transaction, $invoice, $invoice->client->name ?? '');
-                
+
                 if ($score > 0) {
                     $suggestions[] = [
                         'model' => $invoice,
@@ -34,10 +43,10 @@ class ReconciliationService
             }
         } else {
             $candidates = SupplierInvoice::where('status', '!=', 'paid')->get();
-            
+
             foreach ($candidates as $invoice) {
                 $score = $this->calculateScore($transaction, $invoice, $invoice->supplier->name ?? '');
-                
+
                 if ($score > 0) {
                     $suggestions[] = [
                         'model' => $invoice,
@@ -48,57 +57,57 @@ class ReconciliationService
             }
 
             // Also check for ExpenseReports
-            $expenseReports = \App\Models\RH\ExpenseReport::where('status', \App\Enums\RH\ExpenseReportStatus::VALIDATED)->get();
-            
+            $expenseReports = ExpenseReport::where('status', ExpenseReportStatus::VALIDATED)->get();
+
             foreach ($expenseReports as $report) {
-                $score = $this->calculateScore($transaction, $report, $report->employee->first_name . ' ' . $report->employee->last_name);
-                
+                $score = $this->calculateScore($transaction, $report, $report->employee->first_name.' '.$report->employee->last_name);
+
                 if ($score > 0) {
                     $suggestions[] = [
                         'model' => $report,
-                        'type' => \App\Models\RH\ExpenseReport::class,
+                        'type' => ExpenseReport::class,
                         'score' => $score,
                     ];
                 }
             }
 
             // Also check for Corporate Card ExpenseItems (tickets individuels)
-            $expenseItems = \App\Models\RH\ExpenseItem::where('payment_method', \App\Enums\RH\ExpensePaymentMethod::CORPORATE_CARD->value)
-                ->where('status', '!=', \App\Enums\RH\ExpenseItemStatus::REJECTED)
+            $expenseItems = ExpenseItem::where('payment_method', ExpensePaymentMethod::CORPORATE_CARD->value)
+                ->where('status', '!=', ExpenseItemStatus::REJECTED)
                 ->get();
 
             // Filter out those already reconciled
-            $reconciledItemIds = \App\Models\Banque\BankReconciliation::where('reconcilable_type', \App\Models\RH\ExpenseItem::class)
+            $reconciledItemIds = BankReconciliation::where('reconcilable_type', ExpenseItem::class)
                 ->pluck('reconcilable_id')
                 ->toArray();
-            
+
             foreach ($expenseItems as $item) {
                 if (in_array($item->id, $reconciledItemIds)) {
                     continue;
                 }
 
                 $score = $this->calculateExpenseItemScore($transaction, $item);
-                
+
                 if ($score > 0) {
                     $suggestions[] = [
                         'model' => $item,
-                        'type' => \App\Models\RH\ExpenseItem::class,
+                        'type' => ExpenseItem::class,
                         'score' => $score,
                     ];
                 }
             }
 
             // Also check for Payslips
-            $payslips = \App\Models\Paie\Payslip::where('status', '!=', \App\Enums\Paie\PayslipStatus::PAID)->with('employee')->get();
-            
+            $payslips = Payslip::where('status', '!=', PayslipStatus::PAID)->with('employee')->get();
+
             foreach ($payslips as $payslip) {
                 if ($payslip->employee) {
-                    $score = $this->calculateScore($transaction, $payslip, $payslip->employee->first_name . ' ' . $payslip->employee->last_name);
-                    
+                    $score = $this->calculateScore($transaction, $payslip, $payslip->employee->first_name.' '.$payslip->employee->last_name);
+
                     if ($score > 0) {
                         $suggestions[] = [
                             'model' => $payslip,
-                            'type' => \App\Models\Paie\Payslip::class,
+                            'type' => Payslip::class,
                             'score' => $score,
                         ];
                     }
@@ -107,7 +116,7 @@ class ReconciliationService
         }
 
         // Sort suggestions by highest score first
-        usort($suggestions, fn($a, $b) => $b['score'] <=> $a['score']);
+        usort($suggestions, fn ($a, $b) => $b['score'] <=> $a['score']);
 
         return $suggestions;
     }
@@ -121,7 +130,7 @@ class ReconciliationService
         $successCount = 0;
 
         foreach ($transactions as $transaction) {
-            if ($transaction->status !== \App\Enums\Banque\TransactionStatus::PENDING) {
+            if ($transaction->status !== TransactionStatus::PENDING) {
                 continue;
             }
 
@@ -129,16 +138,16 @@ class ReconciliationService
 
             if (count($suggestions) > 0) {
                 $bestMatch = $suggestions[0];
-                
+
                 if ($bestMatch['score'] >= $threshold) {
-                    \App\Models\Banque\BankReconciliation::create([
+                    BankReconciliation::create([
                         'bank_transaction_id' => $transaction->id,
                         'reconcilable_type' => $bestMatch['type'],
                         'reconcilable_id' => $bestMatch['model']->id,
                         'amount_applied' => abs($transaction->amount),
                     ]);
-                    
-                    $transaction->update(['status' => \App\Enums\Banque\TransactionStatus::RECONCILED]);
+
+                    $transaction->update(['status' => TransactionStatus::RECONCILED]);
                     $successCount++;
                 }
             }
@@ -170,7 +179,7 @@ class ReconciliationService
         }
 
         // 3. Third party name match in description (+10 points)
-        if (!empty($thirdPartyName) && str_contains($descriptionLower, strtolower($thirdPartyName))) {
+        if (! empty($thirdPartyName) && str_contains($descriptionLower, strtolower($thirdPartyName))) {
             $score += 10;
         }
 
@@ -180,7 +189,7 @@ class ReconciliationService
     /**
      * Calculates a matching score between a transaction and an expense item.
      */
-    private function calculateExpenseItemScore(BankTransaction $transaction, \App\Models\RH\ExpenseItem $item): int
+    private function calculateExpenseItemScore(BankTransaction $transaction, ExpenseItem $item): int
     {
         $score = 0;
         $absTransactionAmount = abs($transaction->amount);
@@ -206,7 +215,7 @@ class ReconciliationService
         // 3. Merchant name match in description (+20 points)
         $descriptionLower = strtolower($transaction->description);
         $merchant = $item->merchant ?? '';
-        if (!empty($merchant) && str_contains($descriptionLower, strtolower($merchant))) {
+        if (! empty($merchant) && str_contains($descriptionLower, strtolower($merchant))) {
             $score += 20;
         }
 

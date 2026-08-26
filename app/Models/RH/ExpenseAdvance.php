@@ -2,8 +2,10 @@
 
 namespace App\Models\RH;
 
+use App\Enums\RH\ExpenseAdvanceStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ExpenseAdvance extends Model
 {
@@ -22,15 +24,15 @@ class ExpenseAdvance extends Model
     protected $casts = [
         'request_date' => 'date',
         'payment_date' => 'datetime',
-        'status' => \App\Enums\RH\ExpenseAdvanceStatus::class,
+        'status' => ExpenseAdvanceStatus::class,
     ];
 
-    public function employee(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function employee(): BelongsTo
     {
         return $this->belongsTo(Employee::class);
     }
 
-    public function expenseReport(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function expenseReport(): BelongsTo
     {
         return $this->belongsTo(ExpenseReport::class);
     }

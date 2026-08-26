@@ -53,8 +53,8 @@ class CegidFlowExportService
 
         $content = implode("\r\n", $lines);
 
-        $filename = 'export_cegid_flow_' . $year . '_' . date('Ymd_His') . '.csv';
-        $relativePath = 'exports/accounting/' . $filename;
+        $filename = 'export_cegid_flow_'.$year.'_'.date('Ymd_His').'.csv';
+        $relativePath = 'exports/accounting/'.$filename;
 
         Storage::disk('local')->put($relativePath, $content);
 

@@ -31,6 +31,7 @@ class RemindUpcomingStartsCommand extends Command
         }
 
         $this->info('Scan terminé.');
+
         return Command::SUCCESS;
     }
 }

@@ -2,14 +2,16 @@
 
 namespace App\Filament\Tiers\Resources\Tiers\EmailCampaigns\RelationManagers;
 
-use Filament\Actions\AssociateAction;
+use App\Enums\Tiers\EmailCampaignRecipientStatus;
+use App\Enums\Tiers\ThirdPartyType;
+use App\Models\Tiers\Contact;
+use App\Models\Tiers\EmailCampaignRecipient;
+use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\CreateAction;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
-use Filament\Actions\DissociateAction;
-use Filament\Actions\DissociateBulkAction;
-use Filament\Actions\EditAction;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Schemas\Schema;
@@ -47,36 +49,36 @@ class RecipientsRelationManager extends RelationManager
             ])
             ->headerActions([
                 CreateAction::make()->label('Ajouter manuel'),
-                \Filament\Actions\Action::make('generateRecipients')
+                Action::make('generateRecipients')
                     ->label('Générer la cible')
                     ->icon('heroicon-o-users')
                     ->form([
-                        \Filament\Forms\Components\Select::make('third_party_types')
+                        Select::make('third_party_types')
                             ->label('Types de tiers')
                             ->multiple()
-                            ->options(\App\Enums\Tiers\ThirdPartyType::class)
+                            ->options(ThirdPartyType::class)
                             ->required(),
                     ])
                     ->action(function (array $data, RelationManager $livewire) {
                         $campaignId = $livewire->getOwnerRecord()->id;
                         $types = $data['third_party_types'];
-                
-                        $contacts = \App\Models\Tiers\Contact::with('thirdParty')
-                            ->whereHas('thirdParty', function($q) use ($types) {
+
+                        $contacts = Contact::with('thirdParty')
+                            ->whereHas('thirdParty', function ($q) use ($types) {
                                 $q->whereIn('type', $types);
                             })
                             ->whereNotNull('email')
                             ->where('email', '!=', '')
                             ->get();
-                
-                        foreach($contacts as $contact) {
-                            \App\Models\Tiers\EmailCampaignRecipient::firstOrCreate([
+
+                        foreach ($contacts as $contact) {
+                            EmailCampaignRecipient::firstOrCreate([
                                 'email_campaign_id' => $campaignId,
                                 'email' => $contact->email,
                             ], [
                                 'third_party_id' => $contact->third_party_id,
                                 'contact_id' => $contact->id,
-                                'status' => \App\Enums\Tiers\EmailCampaignRecipientStatus::PENDING,
+                                'status' => EmailCampaignRecipientStatus::PENDING,
                             ]);
                         }
                     }),

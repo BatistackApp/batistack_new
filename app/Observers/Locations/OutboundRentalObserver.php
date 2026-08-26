@@ -2,6 +2,7 @@
 
 namespace App\Observers\Locations;
 
+use App\Enums\Immobilisation\AssetStatus;
 use App\Models\Locations\OutboundRentalContract;
 
 class OutboundRentalObserver
@@ -23,12 +24,12 @@ class OutboundRentalObserver
 
     protected function updateAssetStatus(OutboundRentalContract $contract): void
     {
-        $status = \App\Enums\Immobilisation\AssetStatus::ACTIVE;
-        
+        $status = AssetStatus::ACTIVE;
+
         if ($contract->status === 'active') {
-            $status = \App\Enums\Immobilisation\AssetStatus::RENTED;
+            $status = AssetStatus::RENTED;
         }
-        
+
         $contract->lines()->each(function ($line) use ($status) {
             if ($line->fixedAsset) {
                 $line->fixedAsset->update(['status' => $status]);
@@ -59,10 +60,10 @@ class OutboundRentalObserver
     {
         $this->releaseAssets($contract);
     }
-    
+
     protected function releaseAssets(OutboundRentalContract $contract): void
     {
-        $status = \App\Enums\Immobilisation\AssetStatus::ACTIVE;
+        $status = AssetStatus::ACTIVE;
         $contract->lines()->each(function ($line) use ($status) {
             if ($line->fixedAsset) {
                 $line->fixedAsset->update(['status' => $status]);

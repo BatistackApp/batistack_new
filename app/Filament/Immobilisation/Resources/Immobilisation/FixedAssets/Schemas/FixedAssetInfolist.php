@@ -2,10 +2,10 @@
 
 namespace App\Filament\Immobilisation\Resources\Immobilisation\FixedAssets\Schemas;
 
-use Filament\Schemas\Schema;
-use Filament\Schemas\Components\Section;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Components\ViewEntry;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Schema;
 
 class FixedAssetInfolist
 {
@@ -56,8 +56,8 @@ class FixedAssetInfolist
                 Section::make('Tableau d\'amortissement prévisionnel')
                     ->schema([
                         ViewEntry::make('depreciations')
-                            ->view('filament.immobilisation.infolists.components.depreciations-table')
-                    ])
+                            ->view('filament.immobilisation.infolists.components.depreciations-table'),
+                    ]),
             ]);
     }
 }

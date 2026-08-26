@@ -6,7 +6,7 @@ use Filament\Support\Contracts\HasColor;
 use Filament\Support\Contracts\HasIcon;
 use Filament\Support\Contracts\HasLabel;
 
-enum InterventionType: string implements HasLabel, HasColor, HasIcon
+enum InterventionType: string implements HasColor, HasIcon, HasLabel
 {
     case REGIE = 'regie';
     case FORFAIT = 'forfait';

@@ -5,7 +5,7 @@ namespace App\Enums\RH;
 use Filament\Support\Contracts\HasColor;
 use Filament\Support\Contracts\HasLabel;
 
-enum InterviewType: string implements HasLabel, HasColor
+enum InterviewType: string implements HasColor, HasLabel
 {
     case ANNUEL = 'annuel';
     case PROFESSIONNEL = 'professionnel';

@@ -2,15 +2,16 @@
 
 namespace App\Filament\Interventions\Widgets;
 
-use App\Models\Interventions\Intervention;
 use App\Enums\Interventions\InterventionStatus;
-use LaBoiteACode\FilamentDashboardWidgets\Widgets\FunnelWidget;
+use App\Models\Interventions\Intervention;
 use LaBoiteACode\FilamentDashboardWidgets\Data\FunnelStage;
+use LaBoiteACode\FilamentDashboardWidgets\Widgets\FunnelWidget;
 
 class InterventionPipelineFunnelWidget extends FunnelWidget
 {
     protected static ?int $sort = 3;
-    protected int | string | array $columnSpan = 1;
+
+    protected int|string|array $columnSpan = 1;
 
     public function getHeading(): string
     {

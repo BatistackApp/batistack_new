@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\Commerce\InvoiceStatus;
 use App\Models\Chantiers\Chantier;
 use App\Models\Commerce\CustomerOrder;
 use App\Models\Commerce\CustomerSituation;
@@ -24,7 +25,7 @@ test('situation has correct relationships', function () {
         'customer_order_id' => $this->order->id,
         'chantier_id' => $this->chantier->id,
         'responsable_id' => $this->user->id,
-        'status' => \App\Enums\Commerce\InvoiceStatus::DRAFT,
+        'status' => InvoiceStatus::DRAFT,
         'periode_start' => now()->startOfMonth(),
         'periode_end' => now()->endOfMonth(),
     ]);
@@ -42,7 +43,7 @@ test('situation calculates amount billed before correctly', function () {
         'total_ht' => 1000,
         'retenue_garantie_amount' => -50,
         'prorata_amount' => -20,
-        'status' => \App\Enums\Commerce\InvoiceStatus::DRAFT,
+        'status' => InvoiceStatus::DRAFT,
         'periode_start' => now()->subMonths(2)->startOfMonth(),
         'periode_end' => now()->subMonths(2)->endOfMonth(),
     ]);
@@ -54,7 +55,7 @@ test('situation calculates amount billed before correctly', function () {
         'total_ht' => 2000,
         'retenue_garantie_amount' => -100,
         'prorata_amount' => -40,
-        'status' => \App\Enums\Commerce\InvoiceStatus::DRAFT,
+        'status' => InvoiceStatus::DRAFT,
         'periode_start' => now()->subMonth()->startOfMonth(),
         'periode_end' => now()->subMonth()->endOfMonth(),
     ]);
@@ -66,7 +67,7 @@ test('situation calculates amount billed before correctly', function () {
         'total_ht' => 3000,
         'retenue_garantie_amount' => 0,
         'prorata_amount' => 0,
-        'status' => \App\Enums\Commerce\InvoiceStatus::DRAFT,
+        'status' => InvoiceStatus::DRAFT,
         'periode_start' => now()->startOfMonth(),
         'periode_end' => now()->endOfMonth(),
     ]);
@@ -88,15 +89,15 @@ test('situation period is correctly parsed', function () {
         'customer_order_id' => $this->order->id,
         'periode_start' => '2026-01-01 00:00:00',
         'periode_end' => '2026-01-31 23:59:59',
-        'status' => \App\Enums\Commerce\InvoiceStatus::DRAFT,
+        'status' => InvoiceStatus::DRAFT,
     ]);
-    
+
     $period = $situation->situation_period;
-    
+
     // Some models return string, some return Carbon. Let's make it work for both.
     $start = is_string($period['periode_start']) ? $period['periode_start'] : $period['periode_start']->format('Y-m-d');
     $end = is_string($period['periode_end']) ? $period['periode_end'] : $period['periode_end']->format('Y-m-d');
-    
+
     expect(substr($start, 0, 10))->toBe('2026-01-01')
         ->and(substr($end, 0, 10))->toBe('2026-01-31');
 });

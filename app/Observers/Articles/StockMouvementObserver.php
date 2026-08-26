@@ -11,6 +11,7 @@ class StockMouvementObserver
 {
     /**
      * Valider avant création
+     *
      * @throws Exception
      */
     public function creating(StockMouvement $mouvement): void
@@ -42,6 +43,7 @@ class StockMouvementObserver
 
     /**
      * Avant suppression: empêcher si important
+     *
      * @throws Exception
      */
     public function deleting(StockMouvement $mouvement): bool

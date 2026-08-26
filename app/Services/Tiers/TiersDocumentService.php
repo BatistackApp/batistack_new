@@ -67,6 +67,7 @@ class TiersDocumentService extends DocumentService
             );
         } catch (\Exception $exception) {
             Log::emergency($exception);
+
             return $exception->getMessage();
         }
     }

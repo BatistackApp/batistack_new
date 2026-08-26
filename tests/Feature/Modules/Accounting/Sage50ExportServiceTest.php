@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\Accounting\JournalType;
 use App\Models\Accounting\CompteComptable;
 use App\Models\Accounting\EcritureComptable;
 use App\Services\Accounting\Sage50ExportService;
@@ -7,7 +8,7 @@ use Database\Seeders\Accounting\PcgSeeder;
 
 beforeEach(function () {
     $this->seed(PcgSeeder::class);
-    $this->service = new Sage50ExportService();
+    $this->service = new Sage50ExportService;
 });
 
 test('Sage50ExportService getData returns header and rows', function () {
@@ -67,7 +68,7 @@ test('Sage50ExportService exportCsv uses semicolon separator by default', functi
 test('Sage50ExportService getData includes journal code and label', function () {
     $compte = CompteComptable::where('classe', 6)->first();
 
-    EcritureComptable::factory()->ofJournal(\App\Enums\Accounting\JournalType::ACHATS)
+    EcritureComptable::factory()->ofJournal(JournalType::ACHATS)
         ->debit(100)->create([
             'compte_numero' => $compte->numero,
             'date_ecriture' => '2025-02-15',

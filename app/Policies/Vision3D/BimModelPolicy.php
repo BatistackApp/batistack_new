@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace App\Policies\Vision3D;
 
-use Illuminate\Foundation\Auth\User as AuthUser;
 use App\Models\Vision3D\BimModel;
 use Illuminate\Auth\Access\HandlesAuthorization;
+use Illuminate\Foundation\Auth\User as AuthUser;
 
 class BimModelPolicy
 {
     use HandlesAuthorization;
-    
+
     public function viewAny(AuthUser $authUser): bool
     {
         return $authUser->can('ViewAny:BimModel');
@@ -71,5 +71,4 @@ class BimModelPolicy
     {
         return $authUser->can('Reorder:BimModel');
     }
-
 }

@@ -4,6 +4,8 @@ namespace App\Models\Chantiers;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 class ResourceAllocation extends Model
 {
@@ -23,12 +25,12 @@ class ResourceAllocation extends Model
         ];
     }
 
-    public function task(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function task(): BelongsTo
     {
         return $this->belongsTo(ChantierTask::class, 'chantier_task_id');
     }
 
-    public function allocatable(): \Illuminate\Database\Eloquent\Relations\MorphTo
+    public function allocatable(): MorphTo
     {
         return $this->morphTo();
     }

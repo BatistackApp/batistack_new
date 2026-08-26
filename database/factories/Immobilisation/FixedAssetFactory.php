@@ -2,6 +2,9 @@
 
 namespace Database\Factories\Immobilisation;
 
+use App\Enums\Immobilisation\AssetStatus;
+use App\Enums\Immobilisation\DepreciationMethod;
+use App\Models\Immobilisation\AssetCategory;
 use App\Models\Immobilisation\FixedAsset;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -18,15 +21,15 @@ class FixedAssetFactory extends Factory
     public function definition(): array
     {
         return [
-            'asset_category_id' => \App\Models\Immobilisation\AssetCategory::factory(),
+            'asset_category_id' => AssetCategory::factory(),
             'name' => $this->faker->words(3, true),
             'serial_number' => $this->faker->ean13(),
             'purchase_date' => $this->faker->dateTimeBetween('-2 years', 'now')->format('Y-m-d'),
             'purchase_price' => $this->faker->randomFloat(2, 500, 10000),
             'salvage_value' => 0,
-            'depreciation_method' => \App\Enums\Immobilisation\DepreciationMethod::LINEAR,
+            'depreciation_method' => DepreciationMethod::LINEAR,
             'useful_life_years' => 5,
-            'status' => \App\Enums\Immobilisation\AssetStatus::ACTIVE,
+            'status' => AssetStatus::ACTIVE,
         ];
     }
 }

@@ -2,12 +2,16 @@
 
 namespace App\Models\Paie;
 
+use App\Enums\Paie\AdvancePaymentStatus;
+use App\Enums\Paie\AdvancePaymentType;
+use App\Models\RH\Employee;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class AdvancePayment extends Model
 {
     use HasFactory;
+
     protected $fillable = [
         'employee_id',
         'amount',
@@ -23,13 +27,13 @@ class AdvancePayment extends Model
         'amount' => 'decimal:2',
         'request_date' => 'date',
         'payment_date' => 'date',
-        'status' => \App\Enums\Paie\AdvancePaymentStatus::class,
-        'type' => \App\Enums\Paie\AdvancePaymentType::class,
+        'status' => AdvancePaymentStatus::class,
+        'type' => AdvancePaymentType::class,
     ];
 
     public function employee()
     {
-        return $this->belongsTo(\App\Models\RH\Employee::class);
+        return $this->belongsTo(Employee::class);
     }
 
     public function payslip()

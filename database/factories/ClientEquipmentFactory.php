@@ -2,7 +2,9 @@
 
 namespace Database\Factories;
 
+use App\Models\Core\Company;
 use App\Models\Interventions\ClientEquipment;
+use App\Models\Tiers\ThirdParty;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -11,7 +13,7 @@ use Illuminate\Database\Eloquent\Factories\Factory;
 class ClientEquipmentFactory extends Factory
 {
     protected $model = ClientEquipment::class;
-    
+
     /**
      * Define the model's default state.
      *
@@ -20,9 +22,9 @@ class ClientEquipmentFactory extends Factory
     public function definition(): array
     {
         return [
-            'company_id' => \App\Models\Core\Company::factory(),
-            'third_party_id' => \App\Models\Tiers\ThirdParty::factory(),
-            'name' => $this->faker->word() . ' Equipment',
+            'company_id' => Company::factory(),
+            'third_party_id' => ThirdParty::factory(),
+            'name' => $this->faker->word().' Equipment',
             'brand' => $this->faker->company(),
             'serial_number' => $this->faker->uuid(),
             'installation_date' => $this->faker->date(),

@@ -2,16 +2,15 @@
 
 namespace Database\Factories\RH;
 
-use App\Models\RH\Interview;
-use Illuminate\Database\Eloquent\Factories\Factory;
-
+use App\Enums\RH\InterviewStatus;
+use App\Enums\RH\InterviewType;
 /**
  * @extends Factory<Interview>
  */
-use App\Models\User;
 use App\Models\RH\Employee;
-use App\Enums\RH\InterviewType;
-use App\Enums\RH\InterviewStatus;
+use App\Models\RH\Interview;
+use App\Models\User;
+use Illuminate\Database\Eloquent\Factories\Factory;
 
 class InterviewFactory extends Factory
 {

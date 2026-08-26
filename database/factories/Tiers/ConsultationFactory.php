@@ -2,8 +2,8 @@
 
 namespace Database\Factories\Tiers;
 
-use App\Models\Tiers\Consultation;
 use App\Models\Chantiers\Chantier;
+use App\Models\Tiers\Consultation;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class ConsultationFactory extends Factory

@@ -11,6 +11,7 @@ use Illuminate\Support\Carbon;
 class StockMovementsChart extends ChartWidget
 {
     protected static ?int $sort = 2;
+
     protected ?string $heading = 'Mouvements de Stock';
 
     public ?string $filter = '30_days';

@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class PayrollContributionProfile extends Model
 {
     use HasFactory;
+
     protected $fillable = [
         'code',
         'name',

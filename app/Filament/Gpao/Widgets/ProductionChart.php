@@ -5,13 +5,14 @@ namespace App\Filament\Gpao\Widgets;
 use App\Enums\Gpao\ManufacturingStatus;
 use App\Models\Gpao\ManufacturingOrder;
 use Filament\Widgets\ChartWidget;
-use Illuminate\Support\Carbon;
 
 class ProductionChart extends ChartWidget
 {
     protected ?string $heading = 'Production (OF Terminés)';
+
     protected static ?int $sort = 3;
-    protected int | string | array $columnSpan = 'full';
+
+    protected int|string|array $columnSpan = 'full';
 
     protected function getFilters(): ?array
     {

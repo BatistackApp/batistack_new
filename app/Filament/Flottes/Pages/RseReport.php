@@ -131,8 +131,8 @@ class RseReport extends Page implements HasForms
                         'byChantier' => $this->getCo2ByChantier(),
                     ];
 
-                    $filename = 'bilan_carbone_rse_' . now()->format('Y_m_d_His');
-                    
+                    $filename = 'bilan_carbone_rse_'.now()->format('Y_m_d_His');
+
                     $path = $documentService->generate(
                         'filament.flottes.pdf.rse-report',
                         $data,

@@ -19,9 +19,13 @@ class ExpenseAdvanceResource extends Resource
     protected static ?string $model = ExpenseAdvance::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+
     protected static \UnitEnum|string|null $navigationGroup = 'Suivi & Pointages';
+
     protected static ?string $navigationLabel = 'Avances sur Frais';
+
     protected static ?string $modelLabel = 'Avances sur Frais';
+
     protected static ?string $pluralModelLabel = 'Avances sur Frais';
 
     public static function form(Schema $schema): Schema

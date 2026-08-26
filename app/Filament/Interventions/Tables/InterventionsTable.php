@@ -2,25 +2,23 @@
 
 namespace App\Filament\Interventions\Tables;
 
-use App\Enums\Core\SignatureType;
 use App\Enums\Interventions\InterventionStatus;
 use App\Enums\Interventions\InterventionType;
-use App\Models\Interventions\Intervention;
-use App\Services\Core\SignatureService;
-use App\Services\Interventions\InterventionBillingService;
-use App\Services\Interventions\InterventionPdfService;
-use Filament\Actions\Action;
+use App\Filament\Interventions\InterventionResource;
+use App\Services\Interventions\InterventionManagementService;
 use Filament\Actions\BulkAction;
-use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
-use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Select;
 use Filament\Notifications\Notification;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
-use Saade\FilamentAutograph\Forms\Components\SignaturePad;
+use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 
 class InterventionsTable
 {
@@ -77,23 +75,23 @@ class InterventionsTable
             ->recordActions(array_merge([
                 ViewAction::make(),
                 EditAction::make(),
-            ], \App\Filament\Interventions\InterventionResource::getSharedActions()))
+            ], InterventionResource::getSharedActions()))
             ->groupedBulkActions([
                 DeleteBulkAction::make(),
                 BulkAction::make('change_status')
                     ->label('Changer le statut')
                     ->icon('heroicon-o-arrow-path')
                     ->schema([
-                        \Filament\Forms\Components\Select::make('status')->label('Statut')
+                        Select::make('status')->label('Statut')
                             ->label('Nouveau statut')
                             ->options(InterventionStatus::class)
                             ->required(),
                     ])
-                    ->action(function (\Illuminate\Database\Eloquent\Collection $records, array $data, \App\Services\Interventions\InterventionManagementService $interventionService): void {
+                    ->action(function (Collection $records, array $data, InterventionManagementService $interventionService): void {
                         try {
-                            \Illuminate\Support\Facades\DB::transaction(function () use ($records, $data, $interventionService) {
+                            DB::transaction(function () use ($records, $data, $interventionService) {
                                 foreach ($records as $record) {
-                                    \Illuminate\Support\Facades\Gate::authorize('update', $record);
+                                    Gate::authorize('update', $record);
 
                                     $targetStatus = $data['status'];
                                     $isTerminee = $targetStatus === InterventionStatus::TERMINEE->value || $targetStatus === InterventionStatus::TERMINEE;
@@ -104,7 +102,7 @@ class InterventionsTable
                                         $success = $record->update(['status' => $targetStatus]);
                                     }
 
-                                    if (!$success) {
+                                    if (! $success) {
                                         throw new \Exception("La mise à jour a échoué pour l'intervention {$record->reference}");
                                     }
                                 }
@@ -114,7 +112,7 @@ class InterventionsTable
                                 ->title('Statuts mis à jour avec succès')
                                 ->success()
                                 ->send();
-                        } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
+                        } catch (AuthorizationException $e) {
                             Notification::make()
                                 ->title('Action non autorisée')
                                 ->body('Vous n\'avez pas la permission de modifier cette intervention.')

@@ -2,19 +2,20 @@
 
 namespace App\Notifications\Gpao;
 
-use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Notifications\Notification;
-use NotificationChannels\WebPush\WebPushMessage;
-use NotificationChannels\WebPush\WebPushChannel;
 use Filament\Notifications\Notification as FilamentNotification;
+use Illuminate\Bus\Queueable;
+use Illuminate\Notifications\Notification;
+use NotificationChannels\WebPush\WebPushChannel;
+use NotificationChannels\WebPush\WebPushMessage;
 
 class ProductionAlertNotification extends Notification
 {
     use Queueable;
 
     public $title;
+
     public $message;
+
     public $url;
 
     public function __construct($title, $message, $url = null)

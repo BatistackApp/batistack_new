@@ -4,13 +4,10 @@ namespace App\Filament\RH\Resources\Employees\RelationManagers;
 
 use App\Enums\RH\QualificationType;
 use BackedEnum;
-use Filament\Actions\AssociateAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\CreateAction;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
-use Filament\Actions\DissociateAction;
-use Filament\Actions\DissociateBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
@@ -27,8 +24,10 @@ use ToneGabes\Filament\Icons\Enums\Phosphor;
 class QualificationsRelationManager extends RelationManager
 {
     protected static string $relationship = 'qualifications';
+
     protected static ?string $title = 'Habilitations & Compétences';
-    protected static string | BackedEnum | null $icon = Phosphor::ShieldCheck;
+
+    protected static string|BackedEnum|null $icon = Phosphor::ShieldCheck;
 
     public function form(Schema $schema): Schema
     {

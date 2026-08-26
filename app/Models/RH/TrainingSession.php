@@ -2,13 +2,12 @@
 
 namespace App\Models\RH;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
-
-use App\Enums\RH\TrainingSessionStatus;
+use App\Enums\RH\CertificationSymbol;
 use App\Enums\RH\OpcoStatus;
 use App\Enums\RH\QualificationType;
-use App\Enums\RH\CertificationSymbol;
+use App\Enums\RH\TrainingSessionStatus;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class TrainingSession extends Model

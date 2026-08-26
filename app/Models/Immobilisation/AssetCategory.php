@@ -2,13 +2,15 @@
 
 namespace App\Models\Immobilisation;
 
-use Illuminate\Database\Eloquent\Model;
-
+use App\Enums\Immobilisation\DepreciationMethod;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class AssetCategory extends Model
 {
     use HasFactory;
+
     protected $fillable = [
         'name',
         'account_code',
@@ -19,11 +21,11 @@ class AssetCategory extends Model
     protected function casts(): array
     {
         return [
-            'default_method' => \App\Enums\Immobilisation\DepreciationMethod::class,
+            'default_method' => DepreciationMethod::class,
         ];
     }
 
-    public function fixedAssets(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function fixedAssets(): HasMany
     {
         return $this->hasMany(FixedAsset::class);
     }

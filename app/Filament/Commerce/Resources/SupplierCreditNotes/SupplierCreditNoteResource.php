@@ -11,17 +11,21 @@ use App\Models\Commerce\SupplierCreditNote;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
-use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use ToneGabes\Filament\Icons\Enums\Phosphor;
 
 class SupplierCreditNoteResource extends Resource
 {
     protected static ?string $model = SupplierCreditNote::class;
 
-    protected static string|BackedEnum|null $navigationIcon = \ToneGabes\Filament\Icons\Enums\Phosphor::Receipt;
+    protected static string|BackedEnum|null $navigationIcon = Phosphor::Receipt;
+
     protected static ?string $navigationLabel = 'Avoirs Fournisseurs';
-    protected static string | \UnitEnum | null $navigationGroup = 'Achats';
+
+    protected static string|\UnitEnum|null $navigationGroup = 'Achats';
+
     protected static ?string $modelLabel = 'Avoir Fournisseur';
+
     protected static ?string $pluralModelLabel = 'Avoirs Fournisseurs';
 
     public static function form(Schema $schema): Schema

@@ -3,6 +3,7 @@
 namespace App\Models\Immobilisation;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class AssetDisposal extends Model
 {
@@ -23,7 +24,7 @@ class AssetDisposal extends Model
         ];
     }
 
-    public function fixedAsset(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function fixedAsset(): BelongsTo
     {
         return $this->belongsTo(FixedAsset::class);
     }

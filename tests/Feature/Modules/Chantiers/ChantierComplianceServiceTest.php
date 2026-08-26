@@ -2,6 +2,7 @@
 
 use App\Enums\RH\CertificationSymbol;
 use App\Enums\RH\MedicalAptitude;
+use App\Enums\RH\QualificationType;
 use App\Models\Chantiers\Chantier;
 use App\Models\RH\Employee;
 use App\Models\RH\MedicalVisit;
@@ -31,7 +32,7 @@ test('il détecte les non-conformités de l’équipe assignée', function () {
         'employee_id' => $employee->id,
         'expires_at' => now()->subDay(),
         'label' => CertificationSymbol::R482,
-        'type' => \App\Enums\RH\QualificationType::CACES,
+        'type' => QualificationType::CACES,
     ]);
 
     $res = $service->checkTeamCompliance($chantier->refresh());

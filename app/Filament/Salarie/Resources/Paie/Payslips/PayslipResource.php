@@ -2,8 +2,7 @@
 
 namespace App\Filament\Salarie\Resources\Paie\Payslips;
 
-use App\Filament\Salarie\Resources\Paie\Payslips\Pages\CreatePayslip;
-use App\Filament\Salarie\Resources\Paie\Payslips\Pages\EditPayslip;
+use App\Enums\Paie\PayslipStatus;
 use App\Filament\Salarie\Resources\Paie\Payslips\Pages\ListPayslips;
 use App\Filament\Salarie\Resources\Paie\Payslips\Pages\ViewPayslip;
 use App\Filament\Salarie\Resources\Paie\Payslips\Schemas\PayslipForm;
@@ -15,13 +14,14 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 
 class PayslipResource extends Resource
 {
     protected static ?string $model = Payslip::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
-
 
     protected static ?string $recordTitleAttribute = 'period';
 
@@ -52,21 +52,21 @@ class PayslipResource extends Resource
         return false;
     }
 
-    public static function canEdit(\Illuminate\Database\Eloquent\Model $record): bool
+    public static function canEdit(Model $record): bool
     {
         return false;
     }
 
-    public static function canDelete(\Illuminate\Database\Eloquent\Model $record): bool
+    public static function canDelete(Model $record): bool
     {
         return false;
     }
 
-    public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
+    public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()
             ->where('employee_id', auth()->user()->salarie?->id)
-            ->whereIn('status', [\App\Enums\Paie\PayslipStatus::VALIDATED, \App\Enums\Paie\PayslipStatus::PAID]);
+            ->whereIn('status', [PayslipStatus::VALIDATED, PayslipStatus::PAID]);
     }
 
     public static function getPages(): array

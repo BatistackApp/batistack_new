@@ -55,8 +55,8 @@ class Sage50ExportService
 
         $content = implode("\r\n", $lines);
 
-        $filename = 'export_sage50_' . $year . '_' . date('Ymd_His') . '.csv';
-        $relativePath = 'exports/accounting/' . $filename;
+        $filename = 'export_sage50_'.$year.'_'.date('Ymd_His').'.csv';
+        $relativePath = 'exports/accounting/'.$filename;
 
         Storage::disk('local')->put($relativePath, $content);
 

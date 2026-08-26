@@ -10,7 +10,8 @@ use LaBoiteACode\FilamentDashboardWidgets\Widgets\FunnelWidget;
 class ProductionFunnelWidget extends FunnelWidget
 {
     protected static ?int $sort = 4;
-    protected int | string | array $columnSpan = 'full';
+
+    protected int|string|array $columnSpan = 'full';
 
     public function getHeading(): string
     {

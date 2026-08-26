@@ -7,7 +7,7 @@ use Database\Seeders\Accounting\PcgSeeder;
 
 beforeEach(function () {
     $this->seed(PcgSeeder::class);
-    $this->service = new CegidFlowExportService();
+    $this->service = new CegidFlowExportService;
 });
 
 test('CegidFlowExportService getData returns header and rows', function () {

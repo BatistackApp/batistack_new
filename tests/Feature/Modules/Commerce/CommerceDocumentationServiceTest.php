@@ -2,10 +2,11 @@
 
 use App\Enums\Commerce\InvoiceStatus;
 use App\Enums\Tiers\ThirdPartyType;
+use App\Models\Chantiers\Chantier;
 use App\Models\Commerce\CustomerDeliveryNote;
 use App\Models\Commerce\CustomerInvoice;
-use App\Models\Commerce\CustomerQuote;
 use App\Models\Commerce\CustomerOrder;
+use App\Models\Commerce\CustomerQuote;
 use App\Models\Commerce\CustomerSituation;
 use App\Models\Commerce\PurchaseOrder;
 use App\Models\Commerce\SupplierInvoice;
@@ -109,7 +110,7 @@ describe('CommerceDocumentationService - generateOrderPdf', function () {
 
 describe('CommerceDocumentationService - generateSituationPdf', function () {
     test('génère une situation de travaux PDF', function () {
-        $chantier = \App\Models\Chantiers\Chantier::factory()->create(['reference' => 'CH-001']);
+        $chantier = Chantier::factory()->create(['reference' => 'CH-001']);
         $situation = CustomerSituation::factory()->create([
             'number' => 2,
             'chantier_id' => $chantier->id,

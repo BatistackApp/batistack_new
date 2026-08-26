@@ -2,6 +2,7 @@
 
 namespace App\Filament\Articles\Actions;
 
+use App\Exceptions\Articles\ArticlesModuleException;
 use App\Models\Articles\Item;
 use App\Models\Articles\Warehouse;
 use App\Services\Articles\StockService;
@@ -9,7 +10,6 @@ use Filament\Actions\Action;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
-use Illuminate\Database\Eloquent\Builder;
 
 class DestockKitAction extends Action
 {
@@ -51,6 +51,7 @@ class DestockKitAction extends Action
                     ->default(function () {
                         // Par défaut, l'entrepôt principal s'il existe
                         $main = Warehouse::where('is_active', true)->first();
+
                         return $main?->id;
                     })
                     ->searchable()
@@ -80,8 +81,8 @@ class DestockKitAction extends Action
                         ->title('Kit préparé avec succès !')
                         ->body("Les composants de {$kit->name} ont été transférés vers {$to->name}.")
                         ->send();
-                        
-                } catch (\App\Exceptions\Articles\ArticlesModuleException $e) {
+
+                } catch (ArticlesModuleException $e) {
                     Notification::make()
                         ->danger()
                         ->title('Erreur lors du déstockage')

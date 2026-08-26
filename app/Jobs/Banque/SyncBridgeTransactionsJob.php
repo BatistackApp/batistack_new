@@ -3,7 +3,10 @@
 namespace App\Jobs\Banque;
 
 use App\Models\Banque\BankAccount;
+use App\Models\Banque\BankTransaction;
+use App\Models\User;
 use App\Services\Banque\BridgeApiService;
+use App\Services\Banque\TransactionCategorizationService;
 use Filament\Notifications\Notification;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -48,34 +51,34 @@ class SyncBridgeTransactionsJob implements ShouldQueue
             Log::info("Bridge Sync Job: Successfully imported {$imported} transactions for account {$this->account->id}.");
 
             // Catégoriser les transactions non catégorisées (on pourrait restreindre à celles importées aujourd'hui pour optimiser)
-            $uncategorized = \App\Models\Banque\BankTransaction::where('bank_account_id', $this->account->id)
+            $uncategorized = BankTransaction::where('bank_account_id', $this->account->id)
                 ->whereNull('transaction_category_id')
                 ->get();
-            $categorizationService = new \App\Services\Banque\TransactionCategorizationService();
+            $categorizationService = new TransactionCategorizationService;
             $categorized = $categorizationService->categorizeMultiple($uncategorized);
-            
+
             if ($categorized > 0) {
                 Log::info("Categorization: {$categorized} transactions automatically categorized for account {$this->account->id}.");
             }
 
             if ($this->userId) {
-                $user = \App\Models\User::find($this->userId);
+                $user = User::find($this->userId);
                 if ($user) {
                     Notification::make()
-                        ->title("Synchronisation terminée")
+                        ->title('Synchronisation terminée')
                         ->body("L'importation des transactions pour le compte '{$this->account->name}' est terminée ({$imported} transactions).")
                         ->success()
                         ->sendToDatabase($user);
                 }
             }
         } catch (\Exception $e) {
-            Log::error("Bridge Sync Job Failed for account {$this->account->id}: " . $e->getMessage());
+            Log::error("Bridge Sync Job Failed for account {$this->account->id}: ".$e->getMessage());
 
             if ($this->userId) {
-                $user = \App\Models\User::find($this->userId);
+                $user = User::find($this->userId);
                 if ($user) {
                     Notification::make()
-                        ->title("Erreur de synchronisation")
+                        ->title('Erreur de synchronisation')
                         ->body("Une erreur est survenue lors de la synchronisation du compte '{$this->account->name}'.")
                         ->danger()
                         ->sendToDatabase($user);

@@ -78,7 +78,7 @@ class Abscence extends Model implements HasMedia
         return $query->where('requires_subrogation', true)
             ->where(function ($q) {
                 $q->whereNull('ij_received')
-                  ->orWhereColumn('ij_received', '<', 'ij_expected');
+                    ->orWhereColumn('ij_received', '<', 'ij_expected');
             });
     }
 
@@ -90,9 +90,10 @@ class Abscence extends Model implements HasMedia
 
     public function getIJBalance(): float
     {
-        if (!$this->requires_subrogation || !$this->ij_expected) {
+        if (! $this->requires_subrogation || ! $this->ij_expected) {
             return 0.0;
         }
+
         return max(0, (float) $this->ij_expected - (float) $this->ij_received);
     }
 }

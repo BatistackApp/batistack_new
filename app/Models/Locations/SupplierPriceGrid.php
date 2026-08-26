@@ -2,12 +2,14 @@
 
 namespace App\Models\Locations;
 
+use App\Models\Tiers\ThirdParty;
+use Database\Factories\Locations\SupplierPriceGridFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class SupplierPriceGrid extends Model
 {
-    /** @use HasFactory<\Database\Factories\Locations\SupplierPriceGridFactory> */
+    /** @use HasFactory<SupplierPriceGridFactory> */
     use HasFactory;
 
     protected $fillable = [
@@ -26,6 +28,6 @@ class SupplierPriceGrid extends Model
 
     public function supplier()
     {
-        return $this->belongsTo(\App\Models\Tiers\ThirdParty::class, 'supplier_id');
+        return $this->belongsTo(ThirdParty::class, 'supplier_id');
     }
 }

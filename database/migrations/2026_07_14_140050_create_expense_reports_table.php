@@ -19,7 +19,7 @@ return new class extends Migration
             $table->string('status')->default('draft'); // draft, submitted, validated, paid
             $table->decimal('total_amount', 10, 2)->default(0);
             $table->timestamps();
-            
+
             $table->unique(['employee_id', 'month', 'year']);
         });
     }

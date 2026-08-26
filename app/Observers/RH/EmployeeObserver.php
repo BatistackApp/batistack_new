@@ -2,10 +2,15 @@
 
 namespace App\Observers\RH;
 
+use App\Models\Chantiers\ResourceAllocation;
 use App\Models\RH\Employee;
 use App\Models\User;
 use App\Notifications\RH\WelcomeEmployeeNotification;
+use App\Services\Core\DocumentService;
+use App\Services\Paie\DigiposteService;
+use App\Services\RH\RHDocumentService;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Log;
 
@@ -56,22 +61,22 @@ class EmployeeObserver
 
         if ($employee->wasChanged('onboarding_completed') && $employee->onboarding_completed) {
             try {
-                $relativePath = app(\App\Services\RH\RHDocumentService::class)->generateAffiliationMutuelle($employee);
-                $disk = \App\Services\Core\DocumentService::getDisk();
-                $absolutePath = \Illuminate\Support\Facades\Storage::disk($disk)->path($relativePath);
+                $relativePath = app(RHDocumentService::class)->generateAffiliationMutuelle($employee);
+                $disk = DocumentService::getDisk();
+                $absolutePath = Storage::disk($disk)->path($relativePath);
 
                 $employee->addMedia($absolutePath)
                     ->toMediaCollection('rh_documents');
             } catch (\Exception $e) {
-                \Illuminate\Support\Facades\Log::error("Impossible de générer le bulletin d'affiliation: " . $e->getMessage());
+                \Illuminate\Support\Facades\Log::error("Impossible de générer le bulletin d'affiliation: ".$e->getMessage());
             }
 
             try {
                 dispatch(function () use ($employee) {
-                    app(\App\Services\Paie\DigiposteService::class)->createOrGetSafe($employee);
+                    app(DigiposteService::class)->createOrGetSafe($employee);
                 })->afterCommit();
             } catch (\Exception $e) {
-                \Illuminate\Support\Facades\Log::error("Impossible de créer le coffre Digiposte: " . $e->getMessage());
+                \Illuminate\Support\Facades\Log::error('Impossible de créer le coffre Digiposte: '.$e->getMessage());
             }
         }
     }
@@ -88,7 +93,7 @@ class EmployeeObserver
             throw new \Exception('Cannot delete: has time entries');
         }
 
-        \App\Models\Chantiers\ResourceAllocation::where('allocatable_type', Employee::class)
+        ResourceAllocation::where('allocatable_type', Employee::class)
             ->where('allocatable_id', $employee->id)
             ->delete();
     }

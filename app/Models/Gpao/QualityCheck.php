@@ -2,6 +2,7 @@
 
 namespace App\Models\Gpao;
 
+use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 
 class QualityCheck extends Model
@@ -20,11 +21,11 @@ class QualityCheck extends Model
 
     public function manufacturingOrder()
     {
-        return $this->belongsTo(\App\Models\Gpao\ManufacturingOrder::class);
+        return $this->belongsTo(ManufacturingOrder::class);
     }
 
     public function inspector()
     {
-        return $this->belongsTo(\App\Models\User::class, 'inspector_id');
+        return $this->belongsTo(User::class, 'inspector_id');
     }
 }

@@ -4,6 +4,8 @@ namespace App\Filament\Commerce\Resources\SupplierInvoices\Tables;
 
 use App\Enums\Commerce\InvoiceStatus;
 use App\Models\Commerce\SupplierInvoice;
+use App\Models\Core\Company;
+use App\Services\Commerce\SepaExportService;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkAction;
@@ -11,12 +13,16 @@ use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
+use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\Textarea;
+use Filament\Notifications\Notification;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\DB;
 
 class SupplierInvoicesTable
 {
@@ -101,39 +107,41 @@ class SupplierInvoicesTable
                         ->modalHeading('Exporter au format SEPA')
                         ->modalDescription('Cette action va générer un fichier XML de virement SEPA pour les factures sélectionnées.')
                         ->schema([
-                            \Filament\Forms\Components\Checkbox::make('mark_as_paid')
+                            Checkbox::make('mark_as_paid')
                                 ->label('Passer les factures en statut "Paiement en cours" ?')
-                                ->default(true)
+                                ->default(true),
                         ])
-                        ->action(function (\Illuminate\Database\Eloquent\Collection $records, array $data, \App\Services\Commerce\SepaExportService $service) {
+                        ->action(function (Collection $records, array $data, SepaExportService $service) {
                             $validRecords = $records->filter(fn ($r) => in_array($r->status, [InvoiceStatus::BON_A_PAYER, InvoiceStatus::VALIDATED]));
 
                             if ($validRecords->count() !== $records->count()) {
-                                \Filament\Notifications\Notification::make()
+                                Notification::make()
                                     ->title('Sélection invalide')
                                     ->body('Certaines factures sélectionnées ne sont pas "Bon à payer" ou "Validée". L\'export a été annulé.')
                                     ->warning()
                                     ->send();
+
                                 return;
                             }
 
                             if ($validRecords->isEmpty()) {
-                                \Filament\Notifications\Notification::make()
+                                Notification::make()
                                     ->title('Aucune facture "Bon à payer" ou "Validée" sélectionnée.')
                                     ->warning()
                                     ->send();
+
                                 return;
                             }
 
                             try {
-                                $company = \App\Models\Core\Company::first();
+                                $company = Company::first();
                                 $xmlContent = null;
-                                
-                                \Illuminate\Support\Facades\DB::transaction(function () use (&$xmlContent, $validRecords, $service, $data, $company) {
-                                    $lockedRecords = \App\Models\Commerce\SupplierInvoice::whereIn('id', $validRecords->pluck('id'))
+
+                                DB::transaction(function () use (&$xmlContent, $validRecords, $service, $data, $company) {
+                                    $lockedRecords = SupplierInvoice::whereIn('id', $validRecords->pluck('id'))
                                         ->lockForUpdate()
                                         ->get();
-                                        
+
                                     $xmlContent = $service->generateForSupplierInvoices($lockedRecords, $company);
 
                                     if ($data['mark_as_paid']) {
@@ -143,17 +151,17 @@ class SupplierInvoicesTable
                                     }
                                 });
 
-                                \Filament\Notifications\Notification::make()
+                                Notification::make()
                                     ->title('Fichier SEPA généré avec succès.')
                                     ->success()
                                     ->send();
 
                                 return response()->streamDownload(function () use ($xmlContent) {
                                     echo $xmlContent;
-                                }, 'fournisseurs_sepa_' . date('Ymd_His') . '.xml', ['Content-Type' => 'application/xml']);
+                                }, 'fournisseurs_sepa_'.date('Ymd_His').'.xml', ['Content-Type' => 'application/xml']);
 
                             } catch (\Exception $e) {
-                                \Filament\Notifications\Notification::make()
+                                Notification::make()
                                     ->title('Erreur lors de la génération SEPA')
                                     ->body($e->getMessage())
                                     ->danger()

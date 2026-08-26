@@ -16,9 +16,13 @@ class EquipementResource extends Resource
     protected static ?string $model = Equipement::class;
 
     protected static string|null|\BackedEnum $navigationIcon = 'heroicon-o-wrench-screwdriver';
+
     protected static ?string $navigationLabel = 'Mes Équipements';
+
     protected static ?string $modelLabel = 'Équipement';
+
     protected static ?string $pluralModelLabel = 'Équipements';
+
     protected static ?int $navigationSort = 4;
 
     public static function getEloquentQuery(): Builder

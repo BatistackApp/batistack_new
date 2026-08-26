@@ -2,7 +2,9 @@
 
 namespace App\Observers\RH;
 
+use App\Enums\RH\ExpensePaymentMethod;
 use App\Models\RH\ExpenseItem;
+use App\Models\RH\ExpenseReport;
 use App\Services\RH\ExpenseValidationService;
 use Filament\Notifications\Notification;
 
@@ -19,7 +21,7 @@ class ExpenseItemObserver
     {
         $validation = $this->validationService->validateItem($item);
 
-        if (!$validation['is_valid']) {
+        if (! $validation['is_valid']) {
             // Warn the user
             Notification::make()
                 ->warning()
@@ -27,7 +29,7 @@ class ExpenseItemObserver
                 ->body($validation['reason'])
                 ->persistent()
                 ->send();
-            
+
             // Optionally set status to rejected or flag it for manual review
             // For now, we just keep it pending but warn the user.
             $item->status = 'pending';
@@ -54,11 +56,11 @@ class ExpenseItemObserver
     protected function updateReportTotal($reportId): void
     {
         if ($reportId) {
-            $report = \App\Models\RH\ExpenseReport::find($reportId);
+            $report = ExpenseReport::find($reportId);
             if ($report) {
                 // Seuls les paiements avec carte personnelle doivent Ǹtre remboursǸs au salariǸ
                 $report->total_amount = $report->items()
-                    ->where('payment_method', '!=', \App\Enums\RH\ExpensePaymentMethod::CORPORATE_CARD->value)
+                    ->where('payment_method', '!=', ExpensePaymentMethod::CORPORATE_CARD->value)
                     ->sum('amount_ttc');
                 $report->save();
             }

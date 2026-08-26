@@ -33,6 +33,7 @@ class AddressObserver
         // Vérifier si c'est une création
         if ($address->wasRecentlyCreated) {
             GeocodeAddressJob::dispatch($address, auth()->user());
+
             return;
         }
 

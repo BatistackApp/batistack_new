@@ -2,17 +2,28 @@
 
 namespace App\Filament\Interventions;
 
+use App\Enums\Core\SignatureType;
+use App\Enums\Interventions\InterventionStatus;
 use App\Filament\Interventions\Pages\CreateIntervention;
 use App\Filament\Interventions\Pages\EditIntervention;
 use App\Filament\Interventions\Pages\ListInterventions;
+use App\Filament\Interventions\Pages\ViewIntervention;
 use App\Filament\Interventions\Schemas\InterventionForm;
+use App\Filament\Interventions\Schemas\InterventionInfolist;
 use App\Filament\Interventions\Tables\InterventionsTable;
 use App\Models\Interventions\Intervention;
+use App\Services\Core\SignatureService;
+use App\Services\Interventions\InterventionBillingService;
+use App\Services\Interventions\InterventionPdfService;
 use BackedEnum;
+use Filament\Actions\Action;
+use Filament\Forms\Components\TextInput;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use Saade\FilamentAutograph\Forms\Components\SignaturePad;
 
 class InterventionResource extends Resource
 {
@@ -27,7 +38,7 @@ class InterventionResource extends Resource
 
     public static function infolist(Schema $schema): Schema
     {
-        return \App\Filament\Interventions\Schemas\InterventionInfolist::configure($schema);
+        return InterventionInfolist::configure($schema);
     }
 
     public static function table(Table $table): Table
@@ -47,7 +58,7 @@ class InterventionResource extends Resource
         return [
             'index' => ListInterventions::route('/'),
             'create' => CreateIntervention::route('/create'),
-            'view' => \App\Filament\Interventions\Pages\ViewIntervention::route('/{record}'),
+            'view' => ViewIntervention::route('/{record}'),
             'edit' => EditIntervention::route('/{record}/edit'),
         ];
     }
@@ -55,60 +66,60 @@ class InterventionResource extends Resource
     public static function getSharedActions(): array
     {
         return [
-            \Filament\Actions\Action::make('sign')
+            Action::make('sign')
                 ->label('Faire Signer')
                 ->icon('heroicon-o-pencil-square')
                 ->color('success')
-                ->visible(fn (\App\Models\Interventions\Intervention $record) => $record->status === \App\Enums\Interventions\InterventionStatus::TERMINEE)
+                ->visible(fn (Intervention $record) => $record->status === InterventionStatus::TERMINEE)
                 ->form([
-                    \Filament\Forms\Components\TextInput::make('signer_name')
+                    TextInput::make('signer_name')
                         ->label('Nom du signataire (Client)')
                         ->required(),
-                    \Saade\FilamentAutograph\Forms\Components\SignaturePad::make('signature')
+                    SignaturePad::make('signature')
                         ->label('Signature')
                         ->required(),
                 ])
-                ->action(function (\App\Models\Interventions\Intervention $record, array $data, \App\Services\Core\SignatureService $signatureService) {
+                ->action(function (Intervention $record, array $data, SignatureService $signatureService) {
                     $signatureService->sign(
                         model: $record,
                         signatureData: $data['signature'],
-                        type: \App\Enums\Core\SignatureType::AUTOGRAPH,
+                        type: SignatureType::AUTOGRAPH,
                         additionalMetadata: [
                             'signer_name' => $data['signer_name'],
                             'role' => 'client',
                         ]
                     );
 
-                    \Filament\Notifications\Notification::make()
+                    Notification::make()
                         ->title('Intervention signée et scellée avec succès !')
                         ->success()
                         ->send();
                 }),
-            \Filament\Actions\Action::make('download_pdf')
+            Action::make('download_pdf')
                 ->label('Télécharger le Bon')
                 ->icon('heroicon-o-document-arrow-down')
-                ->action(function (\App\Models\Interventions\Intervention $record, \App\Services\Interventions\InterventionPdfService $pdfService) {
+                ->action(function (Intervention $record, InterventionPdfService $pdfService) {
                     $path = $pdfService->generatePdf($record);
 
                     return response()->download($path);
                 }),
-            \Filament\Actions\Action::make('create_invoice')
+            Action::make('create_invoice')
                 ->label('Générer Facture')
                 ->icon('heroicon-o-document-currency-euro')
                 ->color('warning')
-                ->visible(fn (\App\Models\Interventions\Intervention $record) => $record->status === \App\Enums\Interventions\InterventionStatus::TERMINEE)
+                ->visible(fn (Intervention $record) => $record->status === InterventionStatus::TERMINEE)
                 ->requiresConfirmation()
-                ->action(function (\App\Models\Interventions\Intervention $record, \App\Services\Interventions\InterventionBillingService $billingService) {
+                ->action(function (Intervention $record, InterventionBillingService $billingService) {
                     try {
                         $invoice = $billingService->generateInvoice($record);
                         if ($invoice) {
-                            \Filament\Notifications\Notification::make()
+                            Notification::make()
                                 ->title('Facture générée avec succès !')
                                 ->success()
                                 ->send();
                         }
                     } catch (\Exception $e) {
-                        \Filament\Notifications\Notification::make()
+                        Notification::make()
                             ->title('Erreur lors de la facturation')
                             ->body($e->getMessage())
                             ->danger()

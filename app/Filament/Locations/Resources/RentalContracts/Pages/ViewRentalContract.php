@@ -7,6 +7,8 @@ use App\Filament\Locations\Resources\RentalContracts\RentalContractResource;
 use App\Services\Locations\RentalBillingService;
 use Filament\Actions\Action;
 use Filament\Actions\EditAction;
+use Filament\Forms\Components\Radio;
+use Filament\Forms\Components\Textarea;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
 
@@ -29,7 +31,7 @@ class ViewRentalContract extends ViewRecord
                 ->action(function (RentalBillingService $billingService) {
                     try {
                         $invoice = $billingService->generateDraftInvoice($this->record);
-                        
+
                         Notification::make()
                             ->title('Facture générée')
                             ->body("La facture brouillon {$invoice->reference} a été créée avec succès.")
@@ -53,7 +55,7 @@ class ViewRentalContract extends ViewRecord
                 ->modalHeading('Terminer la location')
                 ->modalDescription('Souhaitez-vous évaluer le fournisseur pour cette location ? (Optionnel)')
                 ->schema([
-                    \Filament\Forms\Components\Radio::make('supplier_score')
+                    Radio::make('supplier_score')
                         ->label('Note du fournisseur')
                         ->options([
                             1 => '1 ⭐ - Très insatisfaisant',
@@ -64,7 +66,7 @@ class ViewRentalContract extends ViewRecord
                         ])
                         ->inline()
                         ->nullable(),
-                    \Filament\Forms\Components\Textarea::make('supplier_feedback')
+                    Textarea::make('supplier_feedback')
                         ->label('Commentaire / État du matériel')
                         ->rows(3)
                         ->nullable(),
@@ -76,7 +78,7 @@ class ViewRentalContract extends ViewRecord
                         'supplier_score' => $data['supplier_score'] ?? null,
                         'supplier_feedback' => $data['supplier_feedback'] ?? null,
                     ]);
-                    
+
                     Notification::make()
                         ->title('Location terminée')
                         ->success()

@@ -3,14 +3,15 @@
 namespace App\Filament\Immobilisation\Widgets;
 
 use App\Models\Immobilisation\FixedAsset;
+use Illuminate\Support\Carbon;
 use LaBoiteACode\FilamentDashboardWidgets\Data\VarianceItem;
 use LaBoiteACode\FilamentDashboardWidgets\Widgets\VarianceWidget;
-use Illuminate\Support\Carbon;
 
 class VncVarianceWidget extends VarianceWidget
 {
     protected static ?int $sort = 1;
-    protected int | string | array $columnSpan = 1;
+
+    protected int|string|array $columnSpan = 1;
 
     public function getHeading(): string
     {
@@ -29,8 +30,8 @@ class VncVarianceWidget extends VarianceWidget
 
         foreach ($assets as $asset) {
             // Current VNC
-            $currentVnc += max(0, $asset->purchase_price 
-                - $asset->depreciations->sum('amount') 
+            $currentVnc += max(0, $asset->purchase_price
+                - $asset->depreciations->sum('amount')
                 - $asset->impairments->sum('amount'));
 
             // Previous Month VNC
@@ -50,8 +51,8 @@ class VncVarianceWidget extends VarianceWidget
         return [
             VarianceItem::make('VNC Actuelle', $currentVnc)
                 ->previous($prevVnc)
-                ->formatUsing(fn (float $val) => number_format($val, 2, ',', ' ') . ' €')
-                ->changeFormatUsing(fn (float $val) => ($val > 0 ? '+' : '') . number_format($val, 2, ',', ' ') . ' €')
+                ->formatUsing(fn (float $val) => number_format($val, 2, ',', ' ').' €')
+                ->changeFormatUsing(fn (float $val) => ($val > 0 ? '+' : '').number_format($val, 2, ',', ' ').' €'),
         ];
     }
 }

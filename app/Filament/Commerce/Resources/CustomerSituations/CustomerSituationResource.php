@@ -5,24 +5,30 @@ namespace App\Filament\Commerce\Resources\CustomerSituations;
 use App\Filament\Commerce\Resources\CustomerSituations\Pages\CreateCustomerSituation;
 use App\Filament\Commerce\Resources\CustomerSituations\Pages\EditCustomerSituation;
 use App\Filament\Commerce\Resources\CustomerSituations\Pages\ListCustomerSituations;
+use App\Filament\Commerce\Resources\CustomerSituations\RelationManagers\ItemsRelationManager;
 use App\Filament\Commerce\Resources\CustomerSituations\Schemas\CustomerSituationForm;
 use App\Filament\Commerce\Resources\CustomerSituations\Tables\CustomerSituationsTable;
 use App\Models\Commerce\CustomerSituation;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
-use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use ToneGabes\Filament\Icons\Enums\Phosphor;
 
 class CustomerSituationResource extends Resource
 {
     protected static ?string $model = CustomerSituation::class;
 
-    protected static string|BackedEnum|null $navigationIcon = \ToneGabes\Filament\Icons\Enums\Phosphor::Percent;
+    protected static string|BackedEnum|null $navigationIcon = Phosphor::Percent;
+
     protected static ?string $navigationLabel = 'Situations de travaux';
-    protected static string | \UnitEnum | null $navigationGroup = 'Ventes';
+
+    protected static string|\UnitEnum|null $navigationGroup = 'Ventes';
+
     protected static ?string $modelLabel = 'Situation';
+
     protected static ?string $pluralModelLabel = 'Situations';
+
     protected static ?int $navigationSort = 4;
 
     public static function form(Schema $schema): Schema
@@ -38,7 +44,7 @@ class CustomerSituationResource extends Resource
     public static function getRelations(): array
     {
         return [
-            \App\Filament\Commerce\Resources\CustomerSituations\RelationManagers\ItemsRelationManager::class,
+            ItemsRelationManager::class,
         ];
     }
 

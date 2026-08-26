@@ -2,16 +2,17 @@
 
 namespace App\Filament\Salarie\Pages;
 
-use App\Models\Gpao\ManufacturingOrder;
 use App\Enums\Gpao\ManufacturingStatus;
 use App\Enums\RH\TimeEntryStatus;
 use App\Enums\RH\TimeEntryType;
+use App\Models\Gpao\ManufacturingOrder;
 use App\Models\RH\TimeEntry;
+use App\Services\Gpao\GpaoDocumentService;
+use Filament\Notifications\Notification;
 use Filament\Pages\Page;
-use ToneGabes\Filament\Icons\Enums\Phosphor;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\On;
-use Filament\Notifications\Notification;
+use ToneGabes\Filament\Icons\Enums\Phosphor;
 
 class AtelierProduction extends Page
 {
@@ -55,7 +56,9 @@ class AtelierProduction extends Page
     public function hasActiveTracking($orderId)
     {
         $employee = auth()->user()->salarie;
-        if (!$employee) return false;
+        if (! $employee) {
+            return false;
+        }
 
         return TimeEntry::where('employee_id', $employee->id)
             ->where('manufacturing_order_id', $orderId)
@@ -70,8 +73,9 @@ class AtelierProduction extends Page
         $order = ManufacturingOrder::findOrFail($orderId);
         $employee = auth()->user()->salarie;
 
-        if (!$employee) {
+        if (! $employee) {
             Notification::make()->title('Erreur')->body('Vous n\'êtes pas lié à une fiche Salarié.')->danger()->send();
+
             return;
         }
 
@@ -96,7 +100,9 @@ class AtelierProduction extends Page
     public function stopTracking($orderId)
     {
         $employee = auth()->user()->salarie;
-        if (!$employee) return;
+        if (! $employee) {
+            return;
+        }
 
         $activeEntry = TimeEntry::where('employee_id', $employee->id)
             ->where('manufacturing_order_id', $orderId)
@@ -142,7 +148,7 @@ class AtelierProduction extends Page
         }
 
         // Generate on the fly
-        $pdfPath = (new \App\Services\Gpao\GpaoDocumentService())->generateManufacturingOrderPdf($order);
+        $pdfPath = (new GpaoDocumentService)->generateManufacturingOrderPdf($order);
         $media = $order->addMedia($pdfPath)->toMediaCollection('pdf_documents');
 
         return response()->download($media->getPath(), $media->file_name);

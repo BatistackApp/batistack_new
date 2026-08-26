@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Builder;
 class HighValueAnomaliesWidget extends TableWidget
 {
     protected static ?int $sort = 2;
+
     protected int|string|array $columnSpan = 'full';
 
     protected static ?string $heading = 'Transactions > 1000€ sans justificatif (non lettrées)';
@@ -24,7 +25,7 @@ class HighValueAnomaliesWidget extends TableWidget
                 ->whereDoesntHave('reconciliations')
                 ->where(function ($query) {
                     $query->where('amount', '>=', 1000)
-                          ->orWhere('amount', '<=', -1000);
+                        ->orWhere('amount', '<=', -1000);
                 })
                 ->latest('date')
             )

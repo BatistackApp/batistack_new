@@ -5,6 +5,12 @@ use BezhanSalleh\FilamentShield\Resources\Roles\RoleResource;
 use Filament\Pages\Dashboard;
 use Filament\Widgets\AccountWidget;
 use Filament\Widgets\FilamentInfoWidget;
+use FilamentInbox\Pages\Inbox;
+use FilamentInbox\Pages\SentMessages;
+use FilamentInbox\Pages\StarredMessages;
+use FilamentInbox\Pages\Trash;
+use FilamentInbox\Pages\ViewMessage;
+use FilamentInbox\Pages\ViewSentMessage;
 
 return [
 
@@ -215,12 +221,12 @@ return [
         'prefix' => 'view',
         'exclude' => [
             Dashboard::class,
-            \FilamentInbox\Pages\Inbox::class,
-            \FilamentInbox\Pages\ViewMessage::class,
-            \FilamentInbox\Pages\ViewSentMessage::class,
-            \FilamentInbox\Pages\SentMessages::class,
-            \FilamentInbox\Pages\StarredMessages::class,
-            \FilamentInbox\Pages\Trash::class,
+            Inbox::class,
+            ViewMessage::class,
+            ViewSentMessage::class,
+            SentMessages::class,
+            StarredMessages::class,
+            Trash::class,
         ],
     ],
 

@@ -9,6 +9,7 @@ use App\Filament\Commerce\Resources\CustomerOrders\Pages\ViewCustomerOrder;
 use App\Filament\Commerce\Resources\CustomerOrders\RelationManagers\DeliveryNotesRelationManager;
 use App\Filament\Commerce\Resources\CustomerOrders\RelationManagers\InvoicesRelationManager;
 use App\Filament\Commerce\Resources\CustomerOrders\RelationManagers\ItemsRelationManager;
+use App\Filament\Commerce\Resources\CustomerOrders\RelationManagers\ManufacturingOrdersRelationManager;
 use App\Filament\Commerce\Resources\CustomerOrders\RelationManagers\SituationsRelationManager;
 use App\Filament\Commerce\Resources\CustomerOrders\Schemas\CustomerOrderForm;
 use App\Filament\Commerce\Resources\CustomerOrders\Schemas\CustomerOrderInfolist;
@@ -17,7 +18,6 @@ use App\Models\Commerce\CustomerOrder;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
-use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use ToneGabes\Filament\Icons\Enums\Phosphor;
 
@@ -26,10 +26,15 @@ class CustomerOrderResource extends Resource
     protected static ?string $model = CustomerOrder::class;
 
     protected static string|BackedEnum|null $navigationIcon = Phosphor::ShoppingBag;
+
     protected static string|null|\UnitEnum $navigationGroup = 'Ventes';
+
     protected static ?string $navigationLabel = 'Bon de Commandes';
+
     protected static ?string $modelLabel = 'Commande';
+
     protected static ?string $pluralModelLabel = 'Commandes';
+
     protected static ?int $navigationSort = 2;
 
     protected static ?string $recordTitleAttribute = 'reference';
@@ -56,7 +61,7 @@ class CustomerOrderResource extends Resource
             DeliveryNotesRelationManager::class,
             SituationsRelationManager::class,
             InvoicesRelationManager::class,
-            \App\Filament\Commerce\Resources\CustomerOrders\RelationManagers\ManufacturingOrdersRelationManager::class,
+            ManufacturingOrdersRelationManager::class,
         ];
     }
 
