@@ -348,7 +348,6 @@ document.addEventListener('alpine:init', () => {
             try {
                 this.viewer = new window.DxfViewer(container, {
                     autoResize: true,
-                    clearColor: 0x111827,
                 });
                 
                 this.loadingText = 'Chargement DXF en cours...';
