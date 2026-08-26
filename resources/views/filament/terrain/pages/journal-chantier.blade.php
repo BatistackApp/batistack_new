@@ -37,7 +37,7 @@
 
         <!-- Empty State -->
         <div x-show="!selectedChantierId" class="flex flex-col items-center justify-center p-12 bg-white rounded-xl shadow-sm border border-gray-200 dark:bg-gray-800 dark:border-gray-700">
-            <x-heroicon-o-notebook class="w-12 h-12 text-gray-400 mb-4" />
+            <x-heroicon-o-clipboard-document-list class="w-12 h-12 text-gray-400 mb-4" />
             <h3 class="text-lg font-medium text-gray-900 dark:text-white">Journal de Chantier</h3>
             <p class="text-gray-500 text-sm mt-1">Sélectionnez un chantier et une date pour consulter ou ajouter des entrées.</p>
         </div>

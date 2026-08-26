@@ -7,20 +7,21 @@ use App\Models\Chantiers\Chantier;
 use App\Models\RH\TimeEntry;
 use BackedEnum;
 use Filament\Actions\Action;
-use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Textarea;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Concerns\InteractsWithTable;
+use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
-use Filament\Tables;
-use Illuminate\Support\Facades\DB;
 use UnitEnum;
 use ToneGabes\Filament\Icons\Enums\Phosphor;
 
-class TimeTrackingValidationPage extends Page
+class TimeTrackingValidationPage extends Page implements HasTable
 {
+    use InteractsWithTable;
+
     protected static BackedEnum|string|null $navigationIcon = Phosphor::CheckCircle;
 
     protected static ?string $navigationLabel = 'Validation Pointages';
@@ -33,13 +34,11 @@ class TimeTrackingValidationPage extends Page
 
     protected static ?int $navigationSort = 4;
 
-    protected string $view = 'filament::pages.table';
-
-    public function getTable(): Table
+    public function table(Table $table): Table
     {
         $employee = auth()->user()->salarie;
 
-        return Table::make()
+        return $table
             ->query(
                 TimeEntry::query()
                     ->where('status', TimeEntryStatus::SUBMITTED)
@@ -148,8 +147,8 @@ class TimeTrackingValidationPage extends Page
                     }),
             ])
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\BulkAction::make('approve_all')
+                \Filament\Actions\BulkActionGroup::make([
+                    \Filament\Actions\BulkAction::make('approve_all')
                         ->label('Tout approuver')
                         ->icon(Phosphor::CheckCircle)
                         ->color('success')
@@ -173,12 +172,5 @@ class TimeTrackingValidationPage extends Page
                 ]),
             ])
             ->paginated([15, 30, 50]);
-    }
-
-    public function getViewData(): array
-    {
-        return [
-            'table' => $this->getTable(),
-        ];
     }
 }

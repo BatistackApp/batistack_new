@@ -88,7 +88,7 @@ class ChantierTerrainResource extends Resource
                     ->preload(),
             ])
             ->actions([
-                \Filament\Tables\Actions\ViewAction::make(),
+                \Filament\Actions\ViewAction::make(),
             ])
             ->bulkActions([]);
     }

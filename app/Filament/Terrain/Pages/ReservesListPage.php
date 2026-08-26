@@ -15,12 +15,16 @@ use Filament\Pages\Page;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Concerns\InteractsWithTable;
+use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Table;
-use Filament\Tables;
+use UnitEnum;
 use ToneGabes\Filament\Icons\Enums\Phosphor;
 
-class ReservesListPage extends Page
+class ReservesListPage extends Page implements HasTable
 {
+    use InteractsWithTable;
+
     protected static BackedEnum|string|null $navigationIcon = Phosphor::Warning;
 
     protected static ?string $navigationLabel = 'Réserves';
@@ -29,17 +33,15 @@ class ReservesListPage extends Page
 
     protected static ?string $slug = 'reserves';
 
-    protected static string|\UnitEnum|null $navigationGroup = 'Terrain';
+    protected static UnitEnum|string|null $navigationGroup = 'Terrain';
 
     protected static ?int $navigationSort = 2;
 
-    protected string $view = 'filament::pages.table';
-
-    public function getTable(): Table
+    public function table(Table $table): Table
     {
         $employee = auth()->user()->salarie;
 
-        return Table::make()
+        return $table
             ->query(
                 ChantierReserve::query()
                     ->whereHas('chantier', fn ($q) => $q->forEmployee($employee))
@@ -146,10 +148,4 @@ class ReservesListPage extends Page
             ->paginated([10, 25, 50]);
     }
 
-    public function getViewData(): array
-    {
-        return [
-            'table' => $this->getTable(),
-        ];
-    }
 }

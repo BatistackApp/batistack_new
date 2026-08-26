@@ -14,7 +14,7 @@ class TeamComplianceWidget extends StatsOverviewWidget
 
     protected int|string|array $columnSpan = 'full';
 
-    public ?string $heading = 'Conformité Équipes';
+    protected ?string $heading = 'Conformité Équipes';
 
     protected function getStats(): array
     {

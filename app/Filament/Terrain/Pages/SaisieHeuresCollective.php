@@ -111,8 +111,7 @@ class SaisieHeuresCollective extends Page
                     ->description('5 derniers jours de pointage pour ce chantier')
                     ->columnSpanFull()
                     ->schema([
-                        \Filament\Schemas\Components\Placeholder::make('history_display')
-                            ->content(fn () => $this->getHistoryHtml()),
+                        \Filament\Schemas\Components\Html::make(fn () => $this->getHistoryHtml()),
                     ])
                     ->visible(fn () => ! empty($this->recentEntries)),
             ])
