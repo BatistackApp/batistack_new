@@ -8,6 +8,7 @@ use App\Models\Chantiers\Chantier;
 use App\Models\RH\Employee;
 use App\Models\RH\TimeEntry;
 use BackedEnum;
+use Carbon\Carbon;
 use DB;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Repeater;
@@ -31,6 +32,8 @@ class SaisieHeuresCollective extends Page
 
     public ?array $data = [];
 
+    public ?array $recentEntries = [];
+
     public function mount(): void
     {
         $this->form->fill([
@@ -42,7 +45,6 @@ class SaisieHeuresCollective extends Page
     {
         $employee = auth()->user()->salarie;
 
-        // Requête pour ne récupérer que les chantiers gérés ou assignés à ce chef
         $chantiersQuery = Chantier::query()
             ->where('manager_id', $employee->id)
             ->orWhereHas('members', fn ($q) => $q->where('employees.id', $employee->id))
@@ -53,13 +55,15 @@ class SaisieHeuresCollective extends Page
                 Section::make('Contexte de la Journée')
                     ->columnSpanFull()
                     ->schema([
-                        DatePicker::make('date')->label('Date')
+                        DatePicker::make('date')
                             ->label('Date d\'intervention')
                             ->required()
                             ->native(false)
-                            ->default(now()),
+                            ->default(now())
+                            ->reactive()
+                            ->afterStateUpdated(fn () => $this->loadRecentEntries()),
 
-                        Select::make('chantier_id')->label('Chantier')
+                        Select::make('chantier_id')
                             ->label('Chantier concerné')
                             ->options($chantiersQuery)
                             ->required()
@@ -81,7 +85,7 @@ class SaisieHeuresCollective extends Page
                                     ->options(Employee::where('is_active', true)->pluck('last_name', 'id'))
                                     ->getOptionLabelFromRecordUsing(fn ($record) => $record->full_name)
                                     ->required()
-                                    ->disabled() // Verrouillé pour éviter les erreurs d'affectation
+                                    ->disabled()
                                     ->dehydrated(),
 
                                 TextInput::make('hours')
@@ -98,20 +102,27 @@ class SaisieHeuresCollective extends Page
                                     ->suffix('h'),
                             ])
                             ->columns(3)
-                            ->addable(false) // On n'autorise pas l'ajout manuel hors équipe
-                            ->deletable(true) // On peut supprimer si un ouvrier était absent
+                            ->addable(false)
+                            ->deletable(true)
                             ->reorderable(false),
                     ]),
+
+                Section::make('Historique récent')
+                    ->description('5 derniers jours de pointage pour ce chantier')
+                    ->columnSpanFull()
+                    ->schema([
+                        \Filament\Schemas\Components\Html::make(fn () => $this->getHistoryHtml()),
+                    ])
+                    ->visible(fn () => ! empty($this->recentEntries)),
             ])
             ->statePath('data');
     }
 
-    /**
-     * Charge automatiquement les membres de l'équipe du chantier sélectionné.
-     */
     protected function loadTeamMembers(?int $chantierId, callable $set): void
     {
         if (! $chantierId) {
+            $this->recentEntries = [];
+
             return;
         }
 
@@ -120,19 +131,95 @@ class SaisieHeuresCollective extends Page
             return;
         }
 
-        $entries = $chantier->members->map(fn ($member) => [
-            'employee_id' => $member->id,
-            'hours' => 7.0,
-            'travel_hours' => 0.5,
-        ])->toArray();
+        // Try to pre-fill from yesterday
+        $yesterdayEntries = TimeEntry::where('chantier_id', $chantierId)
+            ->where('date', now()->subDay()->toDateString())
+            ->where('employee_id', '!=', null)
+            ->get()
+            ->keyBy('employee_id');
+
+        $entries = $chantier->members->map(function ($member) use ($yesterdayEntries) {
+            $yesterday = $yesterdayEntries->get($member->id);
+
+            return [
+                'employee_id' => $member->id,
+                'hours' => $yesterday?->hours ?? 7.0,
+                'travel_hours' => $yesterday?->travel_hours ?? 0.5,
+            ];
+        })->toArray();
 
         $set('time_entries', $entries);
+
+        $this->loadRecentEntries();
     }
 
-    /**
-     * Traitement et enregistrement du lot de pointages.
-     */
+    protected function loadRecentEntries(): void
+    {
+        $state = $this->form->getState();
+        $chantierId = $state['chantier_id'] ?? null;
+
+        if (! $chantierId) {
+            $this->recentEntries = [];
+
+            return;
+        }
+
+        $this->recentEntries = TimeEntry::where('chantier_id', $chantierId)
+            ->where('date', '>=', now()->subDays(5)->toDateString())
+            ->with('employee')
+            ->orderBy('date', 'desc')
+            ->get()
+            ->toArray();
+    }
+
+    protected function getHistoryHtml(): string
+    {
+        if (empty($this->recentEntries)) {
+            return '<p class="text-sm text-gray-500">Aucun historique récent.</p>';
+        }
+
+        $html = '<div class="space-y-2">';
+        $grouped = collect($this->recentEntries)->groupBy('date');
+
+        foreach ($grouped as $date => $entries) {
+            $totalHours = collect($entries)->sum('hours');
+            $status = $entries[0]['status'] ?? 'draft';
+            $statusLabel = match ($status) {
+                'draft' => 'Brouillon',
+                'submitted' => 'En attente',
+                'approved' => 'Validé',
+                default => $status,
+            };
+            $statusColor = match ($status) {
+                'draft' => 'gray',
+                'submitted' => 'warning',
+                'approved' => 'success',
+                default => 'gray',
+            };
+
+            $html .= '<div class="flex items-center justify-between p-2 rounded bg-gray-50 dark:bg-gray-800">';
+            $html .= '<span class="text-sm font-medium">'.Carbon::parse($date)->format('d/m/Y').'</span>';
+            $html .= '<span class="text-sm text-gray-600">'.number_format($totalHours, 1, ',', ' ').'h — '.count($entries).' personne(s)</span>';
+            $html .= '<span class="px-2 py-0.5 text-xs rounded-full bg-'.$statusColor.'-100 text-'.$statusColor.'-800">'.$statusLabel.'</span>';
+            $html .= '</div>';
+        }
+
+        $html .= '</div>';
+
+        return $html;
+    }
+
     public function save(): void
+    {
+        $this->createEntries(TimeEntryStatus::DRAFT);
+    }
+
+    public function saveAndSubmit(): void
+    {
+        $this->createEntries(TimeEntryStatus::SUBMITTED);
+    }
+
+    protected function createEntries(TimeEntryStatus $status): void
     {
         $state = $this->form->getState();
 
@@ -142,9 +229,8 @@ class SaisieHeuresCollective extends Page
             return;
         }
 
-        DB::transaction(function () use ($state) {
+        DB::transaction(function () use ($state, $status) {
             foreach ($state['time_entries'] as $entry) {
-                // On crée une ligne de pointage individuelle
                 TimeEntry::create([
                     'employee_id' => $entry['employee_id'],
                     'chantier_id' => $state['chantier_id'],
@@ -152,14 +238,16 @@ class SaisieHeuresCollective extends Page
                     'hours' => $entry['hours'],
                     'travel_hours' => $entry['travel_hours'] ?? 0,
                     'type' => TimeEntryType::NORMAL,
-                    'status' => TimeEntryStatus::DRAFT, // Soumis à la validation du conducteur de travaux
+                    'status' => $status,
                 ]);
             }
         });
 
+        $label = $status === TimeEntryStatus::SUBMITTED ? 'envoyés pour validation' : 'enregistrés en brouillon';
+
         Notification::make()
-            ->title('Pointage enregistré')
-            ->body('Les heures de l\'équipe ont été envoyées pour validation.')
+            ->title('Pointages '.$label)
+            ->body('Les heures de l\'équipe ont été '.$label.'.')
             ->success()
             ->send();
 
