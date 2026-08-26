@@ -8,7 +8,7 @@ use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
-use Filament\Pages\Dashboard;
+use App\Filament\Technicien\Pages\TechDashboard as Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
@@ -48,10 +48,6 @@ class TechnicienPanelProvider extends PanelProvider
                 Dashboard::class,
             ])
             ->discoverWidgets(in: app_path('Filament/Technicien/Widgets'), for: 'App\Filament\Technicien\Widgets')
-            ->widgets([
-                AccountWidget::class,
-                FilamentInfoWidget::class,
-            ])
             ->plugin(KnowledgeBaseCompanionPlugin::make()->knowledgeBasePanelId('docs'))
             ->plugins([
                 FilamentSentryFeedbackPlugin::make(),
