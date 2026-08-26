@@ -4,6 +4,7 @@ namespace App\Filament\Commerce\Resources\CustomerInvoices\Pages;
 
 use App\Filament\Commerce\Resources\CustomerInvoices\CustomerInvoiceResource;
 use App\Models\Commerce\CustomerOrder;
+use App\Models\Commerce\CustomerSituation;
 use App\Services\Commerce\CustomerOrderService;
 use Filament\Resources\Pages\CreateRecord;
 use Illuminate\Database\Eloquent\Model;
@@ -12,6 +13,7 @@ use Illuminate\Support\Facades\Log;
 class CreateCustomerInvoice extends CreateRecord
 {
     protected static string $resource = CustomerInvoiceResource::class;
+
     protected static ?string $title = 'Nouvelle facture';
 
     /**
@@ -24,7 +26,7 @@ class CreateCustomerInvoice extends CreateRecord
                 order: CustomerOrder::query()->findOrFail($data['order_id']),
                 type: $data['type'],
                 responsable: auth()->user(),
-                situation: isset($data['customer_situation_id']) ? \App\Models\Commerce\CustomerSituation::find($data['customer_situation_id']) : null,
+                situation: isset($data['customer_situation_id']) ? CustomerSituation::find($data['customer_situation_id']) : null,
                 acompteAmount: $data['amountAcompte'] ?? null,
             );
         } catch (\Throwable $exception) {

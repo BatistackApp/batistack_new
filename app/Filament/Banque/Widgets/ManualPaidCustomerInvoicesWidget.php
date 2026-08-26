@@ -3,6 +3,7 @@
 namespace App\Filament\Banque\Widgets;
 
 use App\Enums\Commerce\InvoiceStatus;
+use App\Filament\Commerce\Resources\CustomerInvoices\CustomerInvoiceResource;
 use App\Models\Commerce\CustomerInvoice;
 use Filament\Actions\Action;
 use Filament\Tables\Columns\TextColumn;
@@ -13,6 +14,7 @@ use Illuminate\Database\Eloquent\Builder;
 class ManualPaidCustomerInvoicesWidget extends TableWidget
 {
     protected static ?int $sort = 3;
+
     protected int|string|array $columnSpan = 'full';
 
     protected static ?string $heading = 'Factures Clients "Payées" sans paiement bancaire (anomalie)';
@@ -35,7 +37,7 @@ class ManualPaidCustomerInvoicesWidget extends TableWidget
                 Action::make('voir')
                     ->label('Consulter')
                     ->icon('heroicon-o-eye')
-                    ->url(fn (CustomerInvoice $record) => \App\Filament\Commerce\Resources\CustomerInvoices\CustomerInvoiceResource::getUrl('view', ['record' => $record])),
+                    ->url(fn (CustomerInvoice $record) => CustomerInvoiceResource::getUrl('view', ['record' => $record])),
             ])
             ->paginated([5, 10, 25])
             ->defaultPaginationPageOption(5);

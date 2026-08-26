@@ -20,7 +20,7 @@ use Filament\Tables\Columns\ToggleColumn;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
+use Livewire\Component;
 use ToneGabes\Filament\Icons\Enums\Phosphor;
 
 class EmployeesTable
@@ -83,9 +83,9 @@ class EmployeesTable
                         ->label('Lien Onboarding')
                         ->icon('heroicon-o-link')
                         ->color('gray')
-                        ->action(function (Employee $record, \Livewire\Component $livewire) {
+                        ->action(function (Employee $record, Component $livewire) {
                             $livewire->js("window.navigator.clipboard.writeText('".route('public.onboarding', $record->uuid)."');");
-                            \Filament\Notifications\Notification::make()
+                            Notification::make()
                                 ->title('Lien copié !')
                                 ->success()
                                 ->send();

@@ -5,7 +5,6 @@ namespace Database\Factories\Tiers;
 use App\Models\Tiers\Contact;
 use App\Models\Tiers\ThirdParty;
 use Illuminate\Database\Eloquent\Factories\Factory;
-use Illuminate\Support\Carbon;
 
 class ContactFactory extends Factory
 {

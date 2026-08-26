@@ -2,8 +2,13 @@
 
 namespace App\Filament\Paie\Resources\Paie\Payslips\Pages;
 
+use App\Enums\Paie\PayslipStatus;
 use App\Filament\Paie\Resources\Paie\Payslips\PayslipResource;
 use App\Jobs\Paie\GenerateMassPayslipsJob;
+use App\Models\Paie\Payslip;
+use App\Notifications\Paie\DsnExportedNotification;
+use App\Services\Paie\AccountingExportService;
+use App\Services\Paie\DsnExportService;
 use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
 use Filament\Forms\Components\TextInput;
@@ -48,8 +53,8 @@ class ListPayslips extends ListRecords
                         ->default(now()->format('Y-m')),
                 ])
                 ->action(function (array $data) {
-                    $payslips = \App\Models\Paie\Payslip::where('period', $data['period'])
-                        ->whereIn('status', [\App\Enums\Paie\PayslipStatus::VALIDATED, \App\Enums\Paie\PayslipStatus::PAID])
+                    $payslips = Payslip::where('period', $data['period'])
+                        ->whereIn('status', [PayslipStatus::VALIDATED, PayslipStatus::PAID])
                         ->get();
 
                     if ($payslips->isEmpty()) {
@@ -58,13 +63,14 @@ class ListPayslips extends ListRecords
                             ->body("Il n'y a aucun bulletin validé ou payé pour la période {$data['period']}.")
                             ->warning()
                             ->send();
+
                         return;
                     }
 
-                    $service = new \App\Services\Paie\AccountingExportService();
+                    $service = new AccountingExportService;
                     $path = $service->generateCsv($payslips);
 
-                    return response()->download(storage_path('app/public/' . $path));
+                    return response()->download(storage_path('app/public/'.$path));
                 }),
             Action::make('exportDsnMonth')
                 ->label('Export DADS/DSN du mois')
@@ -81,8 +87,8 @@ class ListPayslips extends ListRecords
                         ->default(now()->format('Y-m')),
                 ])
                 ->action(function (array $data) {
-                    $payslips = \App\Models\Paie\Payslip::where('period', $data['period'])
-                        ->whereIn('status', [\App\Enums\Paie\PayslipStatus::VALIDATED, \App\Enums\Paie\PayslipStatus::PAID])
+                    $payslips = Payslip::where('period', $data['period'])
+                        ->whereIn('status', [PayslipStatus::VALIDATED, PayslipStatus::PAID])
                         ->get();
 
                     if ($payslips->isEmpty()) {
@@ -91,15 +97,16 @@ class ListPayslips extends ListRecords
                             ->body("Il n'y a aucun bulletin validé ou payé pour la période {$data['period']}.")
                             ->warning()
                             ->send();
+
                         return;
                     }
 
                     $companyId = $payslips->first()->employee->company_id ?? 1;
 
-                    $service = new \App\Services\Paie\DsnExportService();
+                    $service = new DsnExportService;
                     $submission = $service->generateForAccountant($payslips, $data['period'], $companyId, auth()->id());
 
-                    auth()->user()->notify(new \App\Notifications\Paie\DsnExportedNotification($submission));
+                    auth()->user()->notify(new DsnExportedNotification($submission));
 
                     return Storage::disk('local')->download($submission->exported_file_path);
                 }),

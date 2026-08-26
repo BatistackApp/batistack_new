@@ -2,6 +2,7 @@
 
 namespace Database\Factories\Commerce;
 
+use App\Enums\Commerce\DeliveryStatus;
 use App\Models\Articles\Warehouse;
 use App\Models\Commerce\PurchaseOrder;
 use App\Models\Commerce\ReceiptNote;
@@ -16,7 +17,7 @@ class ReceiptNoteFactory extends Factory
     {
         return [
             'reference' => $this->faker->word(),
-            'status' => \App\Enums\Commerce\DeliveryStatus::PREPARATION,
+            'status' => DeliveryStatus::PREPARATION,
             'received_at' => Carbon::now(),
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),

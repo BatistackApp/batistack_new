@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace App\Policies\Articles;
 
-use Illuminate\Foundation\Auth\User as AuthUser;
 use App\Models\Articles\Warehouse;
 use Illuminate\Auth\Access\HandlesAuthorization;
+use Illuminate\Foundation\Auth\User as AuthUser;
 
 class WarehousePolicy
 {
     use HandlesAuthorization;
-    
+
     public function viewAny(AuthUser $authUser): bool
     {
         return $authUser->can('ViewAny:Warehouse');
@@ -71,5 +71,4 @@ class WarehousePolicy
     {
         return $authUser->can('Reorder:Warehouse');
     }
-
 }

@@ -4,13 +4,13 @@ namespace App\Filament\RH\Pages;
 
 use App\Models\RH\Employee;
 use Filament\Pages\Page;
-use ToneGabes\Filament\Icons\Enums\Phosphor;
+use Illuminate\Contracts\Support\Htmlable;
 
 class CompetencyMatrix extends Page
 {
     protected string $view = 'filament.rh.pages.competency-matrix';
 
-    public static function getNavigationIcon(): string|\Illuminate\Contracts\Support\Htmlable|null
+    public static function getNavigationIcon(): string|Htmlable|null
     {
         return 'heroicon-o-table-cells';
     }

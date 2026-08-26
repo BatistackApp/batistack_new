@@ -2,6 +2,10 @@
 
 namespace App\Filament\Commerce\Resources\PurchaseOrders\Schemas;
 
+use App\Enums\Commerce\OrderStatus;
+use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Schema;
 
 class PurchaseOrderForm
@@ -10,39 +14,39 @@ class PurchaseOrderForm
     {
         return $schema
             ->components([
-                \Filament\Forms\Components\Select::make('supplier_id')
+                Select::make('supplier_id')
                     ->label('Fournisseur')
                     ->relationship('supplier', 'name')
                     ->required()
                     ->searchable(),
-                \Filament\Forms\Components\Select::make('chantier_id')->label('Chantier')
+                Select::make('chantier_id')->label('Chantier')
                     ->label('Chantier')
                     ->relationship('chantier', 'reference')
                     ->searchable(),
-                \Filament\Forms\Components\Select::make('purchase_request_id')
+                Select::make('purchase_request_id')
                     ->label('Demande d\'achat')
                     ->relationship('request', 'reference')
                     ->searchable(),
-                \Filament\Forms\Components\TextInput::make('reference')->label('Référence')
+                TextInput::make('reference')->label('Référence')
                     ->label('Référence')
                     ->required()
                     ->maxLength(255),
-                \Filament\Forms\Components\Select::make('status')->label('Statut')
+                Select::make('status')->label('Statut')
                     ->label('Statut')
-                    ->options(\App\Enums\Commerce\OrderStatus::class)
+                    ->options(OrderStatus::class)
                     ->required()
-                    ->default(\App\Enums\Commerce\OrderStatus::DRAFT),
-                \Filament\Forms\Components\TextInput::make('total_ht')
+                    ->default(OrderStatus::DRAFT),
+                TextInput::make('total_ht')
                     ->label('Total HT')
                     ->numeric()
                     ->prefix('€'),
-                \Filament\Forms\Components\TextInput::make('total_ttc')
+                TextInput::make('total_ttc')
                     ->label('Total TTC')
                     ->numeric()
                     ->prefix('€'),
-                \Filament\Forms\Components\DatePicker::make('ordered_at')
+                DatePicker::make('ordered_at')
                     ->label('Date de commande'),
-                \Filament\Forms\Components\DatePicker::make('expected_delivery_date')
+                DatePicker::make('expected_delivery_date')
                     ->label('Date de livraison prévue'),
             ]);
     }

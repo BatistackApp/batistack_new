@@ -4,10 +4,8 @@ namespace App\Providers;
 
 use App\Actions\Fortify\CreateNewUser;
 use App\Actions\Fortify\ResetUserPassword;
-use App\Models\User;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
@@ -21,11 +19,20 @@ class FortifyServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        $this->app->instance(LoginResponse::class, new class implements LoginResponse{
-            public function toResponse($request) {
-                if ($request->user()->is_admin) return redirect('/core');
-                if ($request->user()->is_tiers) return redirect('/customer');
-                if ($request->user()->is_employee) return redirect('/employee');
+        $this->app->instance(LoginResponse::class, new class implements LoginResponse
+        {
+            public function toResponse($request)
+            {
+                if ($request->user()->is_admin) {
+                    return redirect('/core');
+                }
+                if ($request->user()->is_tiers) {
+                    return redirect('/customer');
+                }
+                if ($request->user()->is_employee) {
+                    return redirect('/employee');
+                }
+
                 return redirect('/');
             }
         });

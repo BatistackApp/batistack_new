@@ -2,9 +2,12 @@
 
 namespace App\Models\Articles;
 
+use App\Models\Chantiers\Chantier;
+use App\Models\Flottes\Vehicle;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Warehouse extends Model
@@ -31,14 +34,14 @@ class Warehouse extends Model
         return $this->hasMany(Stock::class);
     }
 
-    public function vehicle(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function vehicle(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\Flottes\Vehicle::class);
+        return $this->belongsTo(Vehicle::class);
     }
 
-    public function chantier(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function chantier(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\Chantiers\Chantier::class);
+        return $this->belongsTo(Chantier::class);
     }
 
     public function isVirtualChantier(): bool

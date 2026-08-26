@@ -4,7 +4,7 @@ use App\Models\Banque\TransactionCategory;
 use App\Services\Accounting\AccountingPlanService;
 
 beforeEach(function () {
-    $this->service = new AccountingPlanService();
+    $this->service = new AccountingPlanService;
 });
 
 test('AccountingPlanService getChargeAccount returns default when no category', function () {

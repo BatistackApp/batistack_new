@@ -4,6 +4,7 @@ namespace App\Models\Flottes;
 
 use App\Enums\Flottes\AssignmentStatus;
 use App\Models\Chantiers\Chantier;
+use App\Models\Chantiers\WeatherAlert;
 use App\Models\RH\Employee;
 use App\Observers\Flottes\VehicleAssignmentObserver;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
@@ -12,6 +13,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[ObservedBy([VehicleAssignmentObserver::class])]
 class VehicleAssignment extends Model
@@ -55,7 +57,7 @@ class VehicleAssignment extends Model
         )->withTimestamps();
     }
 
-    public function conditionReports(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function conditionReports(): HasMany
     {
         return $this->hasMany(VehicleConditionReport::class, 'vehicle_assignment_id');
     }
@@ -224,15 +226,15 @@ class VehicleAssignment extends Model
 
         $endDate = $this->ended_at ?? now();
 
-        return \App\Models\Chantiers\WeatherAlert::where('chantier_id', $this->chantier_id)
+        return WeatherAlert::where('chantier_id', $this->chantier_id)
             ->where(function ($query) use ($endDate) {
                 $query->whereBetween('alert_date', [$this->started_at->startOfDay(), $endDate->endOfDay()])
                     ->orWhere(function ($q) use ($endDate) {
                         $q->where('started_at', '<=', $endDate)
-                          ->where(function ($q2) {
-                              $q2->where('ended_at', '>=', $this->started_at)
-                                 ->orWhereNull('ended_at');
-                          });
+                            ->where(function ($q2) {
+                                $q2->where('ended_at', '>=', $this->started_at)
+                                    ->orWhereNull('ended_at');
+                            });
                     });
             })
             ->get();

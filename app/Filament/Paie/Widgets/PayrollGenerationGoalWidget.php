@@ -10,7 +10,8 @@ use LaBoiteACode\FilamentDashboardWidgets\Widgets\GoalProgressWidget;
 class PayrollGenerationGoalWidget extends GoalProgressWidget
 {
     protected static ?int $sort = 2;
-    protected int | string | array $columnSpan = 1;
+
+    protected int|string|array $columnSpan = 1;
 
     public function getHeading(): string
     {
@@ -23,7 +24,7 @@ class PayrollGenerationGoalWidget extends GoalProgressWidget
 
         // On compte le nombre de bulletins générés sur la période courante
         $payslipsGenerated = Payslip::where('period', $currentPeriod)->count();
-        
+
         // On considère que l'objectif est de générer un bulletin pour chaque employé (actif)
         $totalEmployees = Employee::count();
 

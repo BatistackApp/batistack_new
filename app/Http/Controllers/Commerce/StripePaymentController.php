@@ -2,21 +2,23 @@
 
 namespace App\Http\Controllers\Commerce;
 
+use App\Enums\Commerce\InvoiceStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Commerce\CustomerInvoice;
-use App\Enums\Commerce\InvoiceStatus;
 use Illuminate\Http\Request;
-use Stripe\Stripe;
+use Illuminate\Support\Facades\DB;
 use Stripe\Checkout\Session;
+use Stripe\Customer;
+use Stripe\Stripe;
 
 class StripePaymentController extends Controller
 {
     public function checkout(Request $request, CustomerInvoice $invoice)
     {
-        return \Illuminate\Support\Facades\DB::transaction(function () use ($invoice) {
+        return DB::transaction(function () use ($invoice) {
             $invoice = CustomerInvoice::lockForUpdate()->findOrFail($invoice->id);
 
-            if (!in_array($invoice->status, [InvoiceStatus::VALIDATED, InvoiceStatus::PAYMENT_IN_PROGRESS, InvoiceStatus::PARTIALLY_PAID])) {
+            if (! in_array($invoice->status, [InvoiceStatus::VALIDATED, InvoiceStatus::PAYMENT_IN_PROGRESS, InvoiceStatus::PARTIALLY_PAID])) {
                 abort(403, 'Cette facture n\'est pas valide pour le paiement.');
             }
 
@@ -36,10 +38,10 @@ class StripePaymentController extends Controller
 
             // On utilise amount_remaining pour permettre le paiement partiel s'il y a déjà des paiements
             $amountToPay = $invoice->amount_remaining > 0 ? $invoice->amount_remaining : $invoice->total_ttc;
-            
+
             // Configuration des méthodes de paiement selon le montant
             $paymentMethodTypes = ['sepa_debit'];
-            
+
             if ($amountToPay <= 2000) {
                 $paymentMethodTypes[] = 'card';
                 $paymentMethodTypes[] = 'link';
@@ -59,8 +61,8 @@ class StripePaymentController extends Controller
                     'price_data' => [
                         'currency' => 'eur',
                         'product_data' => [
-                            'name' => 'Facture ' . $invoice->number,
-                            'description' => 'Règlement de la facture pour le chantier : ' . ($invoice->worksite?->name ?? 'N/A'),
+                            'name' => 'Facture '.$invoice->number,
+                            'description' => 'Règlement de la facture pour le chantier : '.($invoice->worksite?->name ?? 'N/A'),
                         ],
                         'unit_amount' => (int) round($amountToPay * 100), // En centimes
                     ],
@@ -73,16 +75,16 @@ class StripePaymentController extends Controller
                     ],
                 ],
                 'mode' => 'payment',
-                'success_url' => config('app.url') . '/payment/success?session_id={CHECKOUT_SESSION_ID}',
-                'cancel_url' => config('app.url') . '/payment/cancel',
+                'success_url' => config('app.url').'/payment/success?session_id={CHECKOUT_SESSION_ID}',
+                'cancel_url' => config('app.url').'/payment/cancel',
             ];
 
             if (in_array('customer_balance', $paymentMethodTypes)) {
-                $stripeCustomer = \Stripe\Customer::create([
+                $stripeCustomer = Customer::create([
                     'email' => $invoice->client?->email ?? 'contact@batistack.com',
                     'name' => $invoice->client?->name ?? 'Client Batistack',
                 ]);
-                
+
                 $sessionData['customer'] = $stripeCustomer->id;
                 unset($sessionData['customer_email']);
 
@@ -114,7 +116,7 @@ class StripePaymentController extends Controller
     {
         $sessionId = $request->query('session_id');
         $isPending = false;
-        
+
         if ($sessionId) {
             try {
                 Stripe::setApiKey(config('services.stripe.secret'));

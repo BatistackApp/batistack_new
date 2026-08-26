@@ -5,23 +5,28 @@ namespace App\Filament\Commerce\Resources\ReceiptNotes;
 use App\Filament\Commerce\Resources\ReceiptNotes\Pages\CreateReceiptNote;
 use App\Filament\Commerce\Resources\ReceiptNotes\Pages\EditReceiptNote;
 use App\Filament\Commerce\Resources\ReceiptNotes\Pages\ListReceiptNotes;
+use App\Filament\Commerce\Resources\ReceiptNotes\RelationManagers\ItemsRelationManager;
 use App\Filament\Commerce\Resources\ReceiptNotes\Schemas\ReceiptNoteForm;
 use App\Filament\Commerce\Resources\ReceiptNotes\Tables\ReceiptNotesTable;
 use App\Models\Commerce\ReceiptNote;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
-use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use ToneGabes\Filament\Icons\Enums\Phosphor;
 
 class ReceiptNoteResource extends Resource
 {
     protected static ?string $model = ReceiptNote::class;
 
-    protected static string|BackedEnum|null $navigationIcon = \ToneGabes\Filament\Icons\Enums\Phosphor::Package;
+    protected static string|BackedEnum|null $navigationIcon = Phosphor::Package;
+
     protected static ?string $navigationLabel = 'Bons de réception';
-    protected static string | \UnitEnum | null $navigationGroup = 'Logistique';
+
+    protected static string|\UnitEnum|null $navigationGroup = 'Logistique';
+
     protected static ?string $modelLabel = 'Bon de réception';
+
     protected static ?string $pluralModelLabel = 'Bons de réception';
 
     public static function form(Schema $schema): Schema
@@ -37,7 +42,7 @@ class ReceiptNoteResource extends Resource
     public static function getRelations(): array
     {
         return [
-            \App\Filament\Commerce\Resources\ReceiptNotes\RelationManagers\ItemsRelationManager::class,
+            ItemsRelationManager::class,
         ];
     }
 

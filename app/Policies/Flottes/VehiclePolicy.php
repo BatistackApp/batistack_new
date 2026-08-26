@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace App\Policies\Flottes;
 
-use Illuminate\Foundation\Auth\User as AuthUser;
 use App\Models\Flottes\Vehicle;
 use Illuminate\Auth\Access\HandlesAuthorization;
+use Illuminate\Foundation\Auth\User as AuthUser;
 
 class VehiclePolicy
 {
     use HandlesAuthorization;
-    
+
     public function viewAny(AuthUser $authUser): bool
     {
         return $authUser->can('ViewAny:Vehicle');
@@ -71,5 +71,4 @@ class VehiclePolicy
     {
         return $authUser->can('Reorder:Vehicle');
     }
-
 }

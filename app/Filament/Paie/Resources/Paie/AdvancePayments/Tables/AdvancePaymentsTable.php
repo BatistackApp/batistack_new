@@ -2,6 +2,7 @@
 
 namespace App\Filament\Paie\Resources\Paie\AdvancePayments\Tables;
 
+use App\Enums\Paie\AdvancePaymentStatus;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -36,11 +37,11 @@ class AdvancePaymentsTable
                 TextColumn::make('status')->label('Statut')
                     ->label('Statut')
                     ->badge()
-                    ->color(fn (\App\Enums\Paie\AdvancePaymentStatus $state): string => match ($state) {
-                        \App\Enums\Paie\AdvancePaymentStatus::PENDING => 'warning',
-                        \App\Enums\Paie\AdvancePaymentStatus::APPROVED => 'info',
-                        \App\Enums\Paie\AdvancePaymentStatus::PAID => 'success',
-                        \App\Enums\Paie\AdvancePaymentStatus::DEDUCTED => 'gray',
+                    ->color(fn (AdvancePaymentStatus $state): string => match ($state) {
+                        AdvancePaymentStatus::PENDING => 'warning',
+                        AdvancePaymentStatus::APPROVED => 'info',
+                        AdvancePaymentStatus::PAID => 'success',
+                        AdvancePaymentStatus::DEDUCTED => 'gray',
                     })
                     ->searchable(),
                 TextColumn::make('created_at')->label('Créé le')

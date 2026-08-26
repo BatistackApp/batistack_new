@@ -15,6 +15,7 @@ use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Tables\Table;
+use Relaticle\ActivityLog\Filament\RelationManagers\ActivityLogRelationManager;
 use ToneGabes\Filament\Icons\Enums\Phosphor;
 use UnitEnum;
 
@@ -55,7 +56,7 @@ class CustomerQuoteResource extends Resource
     {
         return [
             ItemsRelationManager::class,
-            \Relaticle\ActivityLog\Filament\RelationManagers\ActivityLogRelationManager::class,
+            ActivityLogRelationManager::class,
         ];
     }
 

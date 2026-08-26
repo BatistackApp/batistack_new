@@ -8,7 +8,6 @@ use App\Enums\Commerce\InvoiceType;
 use App\Enums\Commerce\OrderStatus;
 use App\Enums\Commerce\QuoteStatus;
 use App\Enums\Tiers\ThirdPartyType;
-use App\Models\Articles\Item;
 use App\Models\Chantiers\Chantier;
 use App\Models\Commerce\CustomerDeliveryNote;
 use App\Models\Commerce\CustomerInvoice;
@@ -18,7 +17,6 @@ use App\Models\Commerce\PurchaseOrder;
 use App\Models\Commerce\PurchaseRequest;
 use App\Models\Commerce\ReceiptNote;
 use App\Models\Commerce\SupplierInvoice;
-use App\Models\Core\VatRate;
 use App\Models\RH\Employee;
 use App\Models\Tiers\ThirdParty;
 use Illuminate\Database\Seeder;
@@ -49,7 +47,7 @@ class CommerceSeeder extends Seeder
             $quote = CustomerQuote::create([
                 'client_id' => $client->id,
                 'chantier_id' => $chantier?->id,
-                'reference' => 'DEV-' . now()->year . '-' . str_pad($i + 1, 3, '0', STR_PAD_LEFT),
+                'reference' => 'DEV-'.now()->year.'-'.str_pad($i + 1, 3, '0', STR_PAD_LEFT),
                 'status' => QuoteStatus::SIGNED,
                 'total_ht' => $totalHt,
                 'signed_at' => now()->subWeeks($weeksAgo),
@@ -60,7 +58,7 @@ class CommerceSeeder extends Seeder
                 'client_id' => $client->id,
                 'chantier_id' => $chantier?->id,
                 'customer_quote_id' => $quote->id,
-                'reference' => 'CMD-' . now()->year . '-' . str_pad($i + 1, 3, '0', STR_PAD_LEFT),
+                'reference' => 'CMD-'.now()->year.'-'.str_pad($i + 1, 3, '0', STR_PAD_LEFT),
                 'status' => OrderStatus::DELIVERED,
                 'total_ht' => $totalHt,
                 'responsable_id' => $responsableId,
@@ -70,7 +68,7 @@ class CommerceSeeder extends Seeder
                 'client_id' => $client->id,
                 'chantier_id' => $chantier?->id,
                 'customer_order_id' => $order->id,
-                'reference' => 'BL-' . now()->year . '-' . str_pad($i + 1, 3, '0', STR_PAD_LEFT),
+                'reference' => 'BL-'.now()->year.'-'.str_pad($i + 1, 3, '0', STR_PAD_LEFT),
                 'status' => DeliveryStatus::DELIVERED,
                 'delivery_date' => now()->subDays(rand(1, 10)),
                 'responsable_id' => $responsableId,
@@ -80,7 +78,7 @@ class CommerceSeeder extends Seeder
                 'client_id' => $client->id,
                 'chantier_id' => $chantier?->id,
                 'customer_order_id' => $order->id,
-                'reference' => 'FACT-' . now()->year . '-' . str_pad($i + 1, 3, '0', STR_PAD_LEFT),
+                'reference' => 'FACT-'.now()->year.'-'.str_pad($i + 1, 3, '0', STR_PAD_LEFT),
                 'type' => InvoiceType::SIMPLE,
                 'status' => InvoiceStatus::VALIDATED,
                 'total_ht' => $totalHt,
@@ -99,7 +97,7 @@ class CommerceSeeder extends Seeder
             $purchaseRequest = PurchaseRequest::create([
                 'supplier_id' => $supplier->id,
                 'chantier_id' => $chantier?->id,
-                'reference' => 'RFQ-' . now()->year . '-' . str_pad($i + 1, 3, '0', STR_PAD_LEFT),
+                'reference' => 'RFQ-'.now()->year.'-'.str_pad($i + 1, 3, '0', STR_PAD_LEFT),
                 'status' => QuoteStatus::SIGNED,
             ]);
 
@@ -107,7 +105,7 @@ class CommerceSeeder extends Seeder
                 'supplier_id' => $supplier->id,
                 'chantier_id' => $chantier?->id,
                 'purchase_request_id' => $purchaseRequest->id,
-                'reference' => 'BC-' . now()->year . '-' . str_pad($i + 1, 3, '0', STR_PAD_LEFT),
+                'reference' => 'BC-'.now()->year.'-'.str_pad($i + 1, 3, '0', STR_PAD_LEFT),
                 'status' => OrderStatus::DELIVERED,
                 'total_ht' => $totalHt,
                 'ordered_at' => now()->subWeeks(rand(1, 4)),
@@ -115,7 +113,7 @@ class CommerceSeeder extends Seeder
 
             ReceiptNote::create([
                 'purchase_order_id' => $purchaseOrder->id,
-                'reference' => 'BR-' . now()->year . '-' . str_pad($i + 1, 3, '0', STR_PAD_LEFT),
+                'reference' => 'BR-'.now()->year.'-'.str_pad($i + 1, 3, '0', STR_PAD_LEFT),
                 'status' => DeliveryStatus::DELIVERED,
                 'received_at' => now()->subDays(rand(1, 7)),
             ]);
@@ -123,7 +121,7 @@ class CommerceSeeder extends Seeder
             SupplierInvoice::create([
                 'supplier_id' => $supplier->id,
                 'purchase_order_id' => $purchaseOrder->id,
-                'reference' => 'F-FOURN-' . str_pad(10000 + $i, 5, '0', STR_PAD_LEFT),
+                'reference' => 'F-FOURN-'.str_pad(10000 + $i, 5, '0', STR_PAD_LEFT),
                 'amount_ht' => $totalHt,
                 'amount_ttc' => round($totalHt * 1.2, 2),
                 'status' => InvoiceStatus::VALIDATED,

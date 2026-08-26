@@ -2,6 +2,7 @@
 
 namespace Database\Factories\Immobilisation;
 
+use App\Models\Chantiers\Chantier;
 use App\Models\Immobilisation\FixedAsset;
 use App\Models\Immobilisation\FixedAssetAssignment;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -17,7 +18,7 @@ class FixedAssetAssignmentFactory extends Factory
     {
         return [
             'fixed_asset_id' => FixedAsset::factory(),
-            'chantier_id' => \App\Models\Chantiers\Chantier::factory(),
+            'chantier_id' => Chantier::factory(),
             'assigned_at' => now()->subMonth(),
             'released_at' => now(),
             'assigned_by' => null,

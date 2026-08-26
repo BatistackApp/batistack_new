@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace App\Policies\Core;
 
-use Illuminate\Foundation\Auth\User as AuthUser;
 use App\Models\Core\Setting;
 use Illuminate\Auth\Access\HandlesAuthorization;
+use Illuminate\Foundation\Auth\User as AuthUser;
 
 class SettingPolicy
 {
     use HandlesAuthorization;
-    
+
     public function viewAny(AuthUser $authUser): bool
     {
         return $authUser->can('ViewAny:Setting');
@@ -71,5 +71,4 @@ class SettingPolicy
     {
         return $authUser->can('Reorder:Setting');
     }
-
 }

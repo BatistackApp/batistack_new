@@ -12,9 +12,7 @@ class WeatherAlertNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 
-    public function __construct(public WeatherAlert $alert)
-    {
-    }
+    public function __construct(public WeatherAlert $alert) {}
 
     public function via(object $notifiable): array
     {
@@ -24,10 +22,10 @@ class WeatherAlertNotification extends Notification implements ShouldQueue
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
-            ->subject('Alerte Météo sur Chantier: ' . $this->alert->chantier->name)
+            ->subject('Alerte Météo sur Chantier: '.$this->alert->chantier->name)
             ->line("Une alerte météo de type {$this->alert->type} (vigilance {$this->alert->severity}) a été détectée sur votre chantier.")
             ->line($this->alert->description)
-            ->action('Voir le Chantier', url('/chantiers/' . $this->alert->chantier_id))
+            ->action('Voir le Chantier', url('/chantiers/'.$this->alert->chantier_id))
             ->line('Merci de prendre les précautions nécessaires.');
     }
 

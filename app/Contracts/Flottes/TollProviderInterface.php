@@ -14,7 +14,7 @@ interface TollProviderInterface
 
     /**
      * Fetch transactions between two dates.
-     * 
+     *
      * @return Collection Collection of structured data arrays representing transactions.
      */
     public function fetchTransactions(DateTime $from, DateTime $to): Collection;

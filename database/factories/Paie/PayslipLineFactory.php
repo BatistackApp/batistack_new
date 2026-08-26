@@ -2,6 +2,7 @@
 
 namespace Database\Factories\Paie;
 
+use App\Models\Paie\Payslip;
 use App\Models\Paie\PayslipLine;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -18,7 +19,7 @@ class PayslipLineFactory extends Factory
     public function definition(): array
     {
         return [
-            'payslip_id' => \App\Models\Paie\Payslip::factory(),
+            'payslip_id' => Payslip::factory(),
             'category' => 'SANTE',
             'label' => 'Sécurité Sociale Maladie',
             'base' => 1747.24,

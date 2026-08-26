@@ -10,7 +10,6 @@ use App\Models\Flottes\VehicleAssignment;
 use App\Models\RH\TimeEntry;
 use App\Models\User;
 use App\Notifications\Flottes\FleetExpenseAnomalyNotification;
-use Carbon\Carbon;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
@@ -20,6 +19,7 @@ class FleetExpenseService
 {
     /**
      * Enregistre un nouveau frais de route.
+     *
      * @throws \Throwable
      */
     public function registerExpense(

@@ -3,8 +3,6 @@
 namespace App\Filament\Chantier\Resources\Chantiers\Schemas;
 
 use App\Services\Chantiers\ChantierAnalyticService;
-use EduardoRibeiroDev\FilamentLeaflet\Infolists\MapEntry;
-use EduardoRibeiroDev\FilamentLeaflet\Layers\Marker;
 use Filament\Infolists\Components\RepeatableEntry;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Grid;

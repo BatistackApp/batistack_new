@@ -9,7 +9,6 @@ use App\Models\Flottes\Vehicle;
 use App\Models\Flottes\VehicleAssignment;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Log;
-use Mockery;
 
 uses(RefreshDatabase::class);
 
@@ -30,7 +29,7 @@ describe('SyncVehicleStatusJob', function () {
 
         Log::shouldReceive('info')->andReturnNull();
 
-        $job = new SyncVehicleStatusJob();
+        $job = new SyncVehicleStatusJob;
         $job->handle();
 
         expect($assignedVehicle->fresh()->status)->toBe(VehicleStatus::ASSIGNED)

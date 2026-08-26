@@ -2,6 +2,9 @@
 
 namespace App\Filament\Commerce\Resources\PurchaseRequests\Schemas;
 
+use App\Enums\Commerce\QuoteStatus;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Schema;
 
 class PurchaseRequestForm
@@ -10,23 +13,23 @@ class PurchaseRequestForm
     {
         return $schema
             ->components([
-                \Filament\Forms\Components\Select::make('supplier_id')
+                Select::make('supplier_id')
                     ->label('Fournisseur')
                     ->relationship('supplier', 'name')
                     ->searchable(),
-                \Filament\Forms\Components\Select::make('chantier_id')->label('Chantier')
+                Select::make('chantier_id')->label('Chantier')
                     ->label('Chantier')
                     ->relationship('chantier', 'reference')
                     ->searchable(),
-                \Filament\Forms\Components\TextInput::make('reference')->label('Référence')
+                TextInput::make('reference')->label('Référence')
                     ->label('Référence')
                     ->required()
                     ->maxLength(255),
-                \Filament\Forms\Components\Select::make('status')->label('Statut')
+                Select::make('status')->label('Statut')
                     ->label('Statut')
-                    ->options(\App\Enums\Commerce\QuoteStatus::class)
+                    ->options(QuoteStatus::class)
                     ->required()
-                    ->default(\App\Enums\Commerce\QuoteStatus::DRAFT),
+                    ->default(QuoteStatus::DRAFT),
             ]);
     }
 }

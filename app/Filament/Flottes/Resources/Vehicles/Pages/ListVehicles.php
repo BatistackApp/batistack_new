@@ -2,6 +2,7 @@
 
 namespace App\Filament\Flottes\Resources\Vehicles\Pages;
 
+use App\Filament\Flottes\Actions\ImportFuelCsvAction;
 use App\Filament\Flottes\Resources\Vehicles\VehicleResource;
 use Filament\Actions\CreateAction;
 use Filament\Resources\Pages\ListRecords;
@@ -13,7 +14,7 @@ class ListVehicles extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            \App\Filament\Flottes\Actions\ImportFuelCsvAction::make(),
+            ImportFuelCsvAction::make(),
             CreateAction::make(),
         ];
     }

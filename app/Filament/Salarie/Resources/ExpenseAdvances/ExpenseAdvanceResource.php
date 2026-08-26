@@ -20,8 +20,11 @@ class ExpenseAdvanceResource extends Resource
     protected static ?string $model = ExpenseAdvance::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+
     protected static ?string $navigationLabel = 'Mes Avances sur Frais';
+
     protected static ?string $modelLabel = 'Avance sur frais';
+
     protected static ?string $pluralModelLabel = 'Avances sur frais';
 
     public static function form(Schema $schema): Schema
@@ -53,6 +56,7 @@ class ExpenseAdvanceResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         $employeeId = auth()->user()->getEmployeeIdOrFail();
+
         return parent::getEloquentQuery()->where('employee_id', $employeeId);
     }
 }

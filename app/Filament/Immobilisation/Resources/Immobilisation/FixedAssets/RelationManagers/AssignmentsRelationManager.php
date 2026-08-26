@@ -9,8 +9,11 @@ use Filament\Tables\Table;
 class AssignmentsRelationManager extends RelationManager
 {
     protected static string $relationship = 'assignments';
+
     protected static ?string $title = 'Historique d\'Affectation';
+
     protected static ?string $modelLabel = 'Affectation';
+
     protected static ?string $pluralModelLabel = 'Affectations';
 
     public function table(Table $table): Table

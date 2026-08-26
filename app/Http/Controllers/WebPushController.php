@@ -12,9 +12,9 @@ class WebPushController extends Controller
     public function store(Request $request)
     {
         $this->validate($request, [
-            'endpoint'    => 'required',
-            'keys.auth'   => 'required',
-            'keys.p256dh' => 'required'
+            'endpoint' => 'required',
+            'keys.auth' => 'required',
+            'keys.p256dh' => 'required',
         ]);
 
         $endpoint = $request->endpoint;
@@ -25,6 +25,7 @@ class WebPushController extends Controller
 
         if ($user) {
             $user->updatePushSubscription($endpoint, $key, $token);
+
             return response()->json(['success' => true]);
         }
 

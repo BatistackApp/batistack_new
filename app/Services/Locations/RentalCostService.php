@@ -18,7 +18,7 @@ class RentalCostService
         }
 
         $end = $upToDate ?? today();
-        
+
         // Si le contrat est terminÃ©, la date de fin effective est la date de fin du contrat (si elle est avant $end)
         if ($contract->end_date && $contract->end_date->isBefore($end)) {
             $end = $contract->end_date;
@@ -37,12 +37,12 @@ class RentalCostService
      */
     public function getPenaltyDays(RentalContract $contract, ?Carbon $upToDate = null): int
     {
-        if (!$contract->expected_end_date || !$contract->daily_penalty_rate) {
+        if (! $contract->expected_end_date || ! $contract->daily_penalty_rate) {
             return 0;
         }
 
         $end = $upToDate ?? today();
-        
+
         if ($contract->end_date && $contract->end_date->isBefore($end)) {
             $end = $contract->end_date;
         }

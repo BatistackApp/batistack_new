@@ -5,6 +5,8 @@ namespace App\Models\RH;
 use App\Enums\Core\SignatureStatus;
 use App\Enums\RH\ContractType;
 use App\Enums\RH\EmployeeCategory;
+use App\Models\Core\Signature;
+use App\Models\Paie\PayrollContributionProfile;
 use App\Observers\RH\ContractObserver;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Builder;
@@ -42,12 +44,12 @@ class Contract extends Model implements HasMedia
 
     public function payrollContributionProfile(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\Paie\PayrollContributionProfile::class);
+        return $this->belongsTo(PayrollContributionProfile::class);
     }
 
     public function signatures()
     {
-        return $this->morphMany(\App\Models\Core\Signature::class, 'signable');
+        return $this->morphMany(Signature::class, 'signable');
     }
 
     protected function casts(): array

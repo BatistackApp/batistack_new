@@ -26,7 +26,7 @@ describe('DetectOverdueAssignmentsJob', function () {
             'started_at' => now()->subDays(2),
             'ended_at' => now()->subHours(5), // 5 hours late
         ]);
-        
+
         $hoursOverdue = now()->diffInHours($overdueAssignment->ended_at);
 
         // Stuck assignment (no ended_at, started 3 days ago)
@@ -35,25 +35,25 @@ describe('DetectOverdueAssignmentsJob', function () {
             'started_at' => now()->subDays(3),
             'ended_at' => null,
         ]);
-        
+
         $daysElapsed = $stuckAssignment->started_at->diffInDays(now());
 
         Log::shouldReceive('warning')
-            ->with(Mockery::pattern('/Restitution tardive : ' . $overdueAssignment->vehicle->reference . '/'))
+            ->with(Mockery::pattern('/Restitution tardive : '.$overdueAssignment->vehicle->reference.'/'))
             ->once();
 
         Log::shouldReceive('warning')
-            ->with(Mockery::pattern('/Affectation bloquée : ' . $stuckAssignment->vehicle->reference . '/'))
+            ->with(Mockery::pattern('/Affectation bloquée : '.$stuckAssignment->vehicle->reference.'/'))
             ->once();
 
-        $job = new DetectOverdueAssignmentsJob();
+        $job = new DetectOverdueAssignmentsJob;
         $job->handle();
 
         Notification::assertSentTo(
             [$admin],
             OverdueAssignmentNotification::class,
             function ($notification) use ($overdueAssignment) {
-                return (fn() => $this->assignment->id)->call($notification) === $overdueAssignment->id;
+                return (fn () => $this->assignment->id)->call($notification) === $overdueAssignment->id;
             }
         );
 
@@ -61,7 +61,7 @@ describe('DetectOverdueAssignmentsJob', function () {
             [$admin],
             OverdueAssignmentNotification::class,
             function ($notification) use ($stuckAssignment) {
-                return (fn() => $this->assignment->id)->call($notification) === $stuckAssignment->id;
+                return (fn () => $this->assignment->id)->call($notification) === $stuckAssignment->id;
             }
         );
     });
@@ -76,7 +76,7 @@ describe('DetectOverdueAssignmentsJob', function () {
             'ended_at' => now()->addHours(2),
         ]);
 
-        $job = new DetectOverdueAssignmentsJob();
+        $job = new DetectOverdueAssignmentsJob;
         $job->handle();
 
         $admin = User::first() ?? User::factory()->create(['is_admin' => true]);

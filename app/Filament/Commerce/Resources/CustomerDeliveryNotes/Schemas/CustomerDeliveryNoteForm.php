@@ -2,6 +2,10 @@
 
 namespace App\Filament\Commerce\Resources\CustomerDeliveryNotes\Schemas;
 
+use App\Enums\Commerce\DeliveryStatus;
+use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Schema;
 
 class CustomerDeliveryNoteForm
@@ -10,31 +14,31 @@ class CustomerDeliveryNoteForm
     {
         return $schema
             ->components([
-                \Filament\Forms\Components\Select::make('client_id')->label('Client')
+                Select::make('client_id')->label('Client')
                     ->label('Client')
                     ->relationship('client', 'name')
                     ->required()
                     ->searchable(),
-                \Filament\Forms\Components\Select::make('chantier_id')->label('Chantier')
+                Select::make('chantier_id')->label('Chantier')
                     ->label('Chantier')
                     ->relationship('chantier', 'reference')
                     ->searchable(),
-                \Filament\Forms\Components\Select::make('customer_order_id')
+                Select::make('customer_order_id')
                     ->label('Commande Client')
                     ->relationship('order', 'reference')
                     ->searchable(),
-                \Filament\Forms\Components\TextInput::make('reference')->label('Référence')
+                TextInput::make('reference')->label('Référence')
                     ->label('Référence')
                     ->required()
                     ->maxLength(255),
-                \Filament\Forms\Components\Select::make('status')->label('Statut')
+                Select::make('status')->label('Statut')
                     ->label('Statut')
-                    ->options(\App\Enums\Commerce\DeliveryStatus::class)
+                    ->options(DeliveryStatus::class)
                     ->required()
-                    ->default(\App\Enums\Commerce\DeliveryStatus::DRAFT),
-                \Filament\Forms\Components\DatePicker::make('delivery_date')
+                    ->default(DeliveryStatus::DRAFT),
+                DatePicker::make('delivery_date')
                     ->label('Date de livraison'),
-                \Filament\Forms\Components\Select::make('responsable_id')
+                Select::make('responsable_id')
                     ->label('Responsable')
                     ->relationship('user', 'name')
                     ->required(),

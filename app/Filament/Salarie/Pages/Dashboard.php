@@ -2,8 +2,15 @@
 
 namespace App\Filament\Salarie\Pages;
 
+use App\Enums\RH\ExpenseItemStatus;
+use App\Enums\RH\ExpenseReportStatus;
+use App\Models\Flottes\Vehicle;
+use App\Models\RH\ExpenseReport;
+use App\Services\RH\GoogleCloudVisionOcrService;
 use Filament\Actions\Action;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Select;
+use Filament\Notifications\Notification;
 use Filament\Pages\Dashboard as BaseDashboard;
 use Illuminate\Support\Facades\Log;
 
@@ -21,33 +28,34 @@ class Dashboard extends BaseDashboard
                         ->label('Photo du ticket')
                         ->image()
                         ->required(),
-                    \Filament\Forms\Components\Select::make('vehicle_id')
+                    Select::make('vehicle_id')
                         ->label('Véhicule (Si carburant ou péage)')
-                        ->options(\App\Models\Flottes\Vehicle::pluck('license_plate', 'id'))
+                        ->options(Vehicle::pluck('license_plate', 'id'))
                         ->searchable()
                         ->nullable(),
                 ])
                 ->action(function (array $data) {
-                    $path = storage_path('app/public/' . $data['receipt_image']);
-                    
+                    $path = storage_path('app/public/'.$data['receipt_image']);
+
                     // Call OCR
-                    $ocrService = new \App\Services\RH\GoogleCloudVisionOcrService();
+                    $ocrService = new GoogleCloudVisionOcrService;
                     $extractedData = $ocrService->extractData($path);
-                    
+
                     // Get current employee
                     $employee = auth()->user()->salarie;
-                    if (!$employee) {
-                        \Filament\Notifications\Notification::make()->danger()->title('Employé non trouvé')->send();
+                    if (! $employee) {
+                        Notification::make()->danger()->title('Employé non trouvé')->send();
+
                         return;
                     }
 
                     // Get or create current month's report
-                    $report = \App\Models\RH\ExpenseReport::firstOrCreate([
+                    $report = ExpenseReport::firstOrCreate([
                         'employee_id' => $employee->id,
                         'month' => now()->month,
                         'year' => now()->year,
                     ], [
-                        'status' => \App\Enums\RH\ExpenseReportStatus::DRAFT,
+                        'status' => ExpenseReportStatus::DRAFT,
                         'total_amount' => 0,
                     ]);
 
@@ -63,16 +71,16 @@ class Dashboard extends BaseDashboard
                         'vat_amount' => $extractedData['vat_amount'],
                         'merchant' => $extractedData['merchant'],
                         'vehicle_id' => $data['vehicle_id'] ?? null,
-                        'status' => \App\Enums\RH\ExpenseItemStatus::PENDING,
+                        'status' => ExpenseItemStatus::PENDING,
                     ]);
 
                     try {
                         $item->addMedia($path)->toMediaCollection('receipts');
                     } catch (\Exception $e) {
-                        Log::error('Media attach error: ' . $e->getMessage());
+                        Log::error('Media attach error: '.$e->getMessage());
                     }
 
-                    \Filament\Notifications\Notification::make()
+                    Notification::make()
                         ->success()
                         ->title('Ticket ajouté avec succès')
                         ->body("Montant extrait: {$item->amount_ttc} €")

@@ -5,6 +5,7 @@ namespace App\Filament\Paie\Resources\Paie\PayrollContributionProfiles;
 use App\Filament\Paie\Resources\Paie\PayrollContributionProfiles\Pages\CreatePayrollContributionProfile;
 use App\Filament\Paie\Resources\Paie\PayrollContributionProfiles\Pages\EditPayrollContributionProfile;
 use App\Filament\Paie\Resources\Paie\PayrollContributionProfiles\Pages\ListPayrollContributionProfiles;
+use App\Filament\Paie\Resources\Paie\PayrollContributionProfiles\RelationManagers\RatesRelationManager;
 use App\Filament\Paie\Resources\Paie\PayrollContributionProfiles\Schemas\PayrollContributionProfileForm;
 use App\Filament\Paie\Resources\Paie\PayrollContributionProfiles\Tables\PayrollContributionProfilesTable;
 use App\Models\Paie\PayrollContributionProfile;
@@ -39,7 +40,7 @@ class PayrollContributionProfileResource extends Resource
     public static function getRelations(): array
     {
         return [
-            \App\Filament\Paie\Resources\Paie\PayrollContributionProfiles\RelationManagers\RatesRelationManager::class,
+            RatesRelationManager::class,
         ];
     }
 

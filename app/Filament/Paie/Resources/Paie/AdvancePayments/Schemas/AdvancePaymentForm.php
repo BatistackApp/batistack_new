@@ -2,9 +2,12 @@
 
 namespace App\Filament\Paie\Resources\Paie\AdvancePayments\Schemas;
 
+use App\Enums\Paie\AdvancePaymentStatus;
+use App\Enums\Paie\AdvancePaymentType;
 use Filament\Forms\Components\DatePicker;
-use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Schema;
 
 class AdvancePaymentForm
@@ -13,28 +16,28 @@ class AdvancePaymentForm
     {
         return $schema
             ->components([
-                \Filament\Forms\Components\Select::make('employee_id')
+                Select::make('employee_id')
                     ->label('Employé')
                     ->relationship('employee', 'last_name')
                     ->required()
                     ->searchable(),
-                \Filament\Forms\Components\TextInput::make('amount')->label('Montant')
+                TextInput::make('amount')->label('Montant')
                     ->label('Montant')
                     ->required()
                     ->numeric(),
-                \Filament\Forms\Components\DatePicker::make('request_date')
+                DatePicker::make('request_date')
                     ->label('Date de demande')
                     ->required(),
-                \Filament\Forms\Components\DatePicker::make('payment_date')
+                DatePicker::make('payment_date')
                     ->label('Date de paiement (Optionnel)'),
-                \Filament\Forms\Components\Select::make('type')->label('Type')
-                    ->options(\App\Enums\Paie\AdvancePaymentType::class)
+                Select::make('type')->label('Type')
+                    ->options(AdvancePaymentType::class)
                     ->required()
-                    ->default(\App\Enums\Paie\AdvancePaymentType::CLASSIC),
-                \Filament\Forms\Components\Select::make('status')->label('Statut')
-                    ->options(\App\Enums\Paie\AdvancePaymentStatus::class)
+                    ->default(AdvancePaymentType::CLASSIC),
+                Select::make('status')->label('Statut')
+                    ->options(AdvancePaymentStatus::class)
                     ->required()
-                    ->default(\App\Enums\Paie\AdvancePaymentStatus::PENDING),
+                    ->default(AdvancePaymentStatus::PENDING),
                 Textarea::make('notes')->label('Notes')
                     ->columnSpanFull(),
             ]);

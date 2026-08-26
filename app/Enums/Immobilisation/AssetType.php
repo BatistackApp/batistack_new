@@ -5,7 +5,7 @@ namespace App\Enums\Immobilisation;
 use Filament\Support\Contracts\HasColor;
 use Filament\Support\Contracts\HasLabel;
 
-enum AssetType: string implements HasLabel, HasColor
+enum AssetType: string implements HasColor, HasLabel
 {
     case TANGIBLE = 'tangible';
     case INTANGIBLE = 'intangible';

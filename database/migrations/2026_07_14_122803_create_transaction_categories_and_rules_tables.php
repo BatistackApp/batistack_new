@@ -40,7 +40,7 @@ return new class extends Migration
             $table->dropForeign(['transaction_category_id']);
             $table->dropColumn('transaction_category_id');
         });
-        
+
         Schema::dropIfExists('categorization_rules');
         Schema::dropIfExists('transaction_categories');
     }

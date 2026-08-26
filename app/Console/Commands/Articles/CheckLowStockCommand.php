@@ -42,6 +42,7 @@ class CheckLowStockCommand extends Command
 
         if ($criticalStocks->isEmpty()) {
             $this->info('Aucun stock critique détecté par entrepôt.');
+
             return;
         }
 
@@ -88,11 +89,11 @@ class CheckLowStockCommand extends Command
             if ($availableStock < $item->min_stock) {
                 // On calcule le déficit pour revenir au moins au min_stock
                 $shortage = $item->min_stock - $availableStock;
-                
+
                 $supplierId = $item->supplier_id;
                 $supplierKey = $supplierId ?? 'no_supplier';
 
-                if (!isset($shortagesBySupplier[$supplierKey])) {
+                if (! isset($shortagesBySupplier[$supplierKey])) {
                     $shortagesBySupplier[$supplierKey] = [];
                 }
 
@@ -105,6 +106,7 @@ class CheckLowStockCommand extends Command
 
         if (empty($shortagesBySupplier)) {
             $this->info('Aucun réapprovisionnement automatique nécessaire.');
+
             return;
         }
 
@@ -112,7 +114,8 @@ class CheckLowStockCommand extends Command
 
         foreach ($shortagesBySupplier as $supplierKey => $missingItems) {
             if ($supplierKey === 'no_supplier') {
-                $this->warn('Articles en rupture sans fournisseur défini ignorés (' . count($missingItems) . ' articles).');
+                $this->warn('Articles en rupture sans fournisseur défini ignorés ('.count($missingItems).' articles).');
+
                 continue;
             }
 
@@ -121,7 +124,7 @@ class CheckLowStockCommand extends Command
                 [
                     'supplier_id' => $supplierKey,
                     'status' => OrderStatus::DRAFT,
-                    'reference' => 'PO-RESTOCK-' . date('Ymd') . '-' . $supplierKey,
+                    'reference' => 'PO-RESTOCK-'.date('Ymd').'-'.$supplierKey,
                 ],
                 [
                     'ordered_at' => now(),

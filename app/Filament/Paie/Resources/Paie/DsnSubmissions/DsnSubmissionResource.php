@@ -8,13 +8,14 @@ use App\Filament\Paie\Resources\Paie\DsnSubmissions\Pages\ViewDsnSubmission;
 use App\Models\Paie\DsnSubmission;
 use BackedEnum;
 use Filament\Infolists\Components\RepeatableEntry;
-use Filament\Schemas\Components\Section;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\Resource;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Schema;
 use Filament\Support\Enums\FontWeight;
+use Filament\Support\Icons\Heroicon;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Filament\Support\Icons\Heroicon;
 
 class DsnSubmissionResource extends Resource
 {
@@ -86,7 +87,7 @@ class DsnSubmissionResource extends Resource
             ]);
     }
 
-    public static function infolist(\Filament\Schemas\Schema $schema): \Filament\Schemas\Schema
+    public static function infolist(Schema $schema): Schema
     {
         return $schema
             ->components([

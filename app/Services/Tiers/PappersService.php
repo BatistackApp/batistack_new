@@ -4,9 +4,9 @@ namespace App\Services\Tiers;
 
 use App\Enums\Tiers\LegalStatus;
 use App\Models\Tiers\ThirdParty;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use Carbon\Carbon;
 
 class PappersService
 {
@@ -20,6 +20,7 @@ class PappersService
 
         if (empty($siren)) {
             Log::warning("Impossible de synchroniser: SIREN/SIRET manquant pour {$thirdParty->name}");
+
             return false;
         }
 
@@ -27,12 +28,12 @@ class PappersService
             // Utilisation de l'API publique ouverte du gouvernement
             $response = Http::timeout(10)->get('https://recherche-entreprises.api.gouv.fr/search', [
                 'q' => $siren,
-                'per_page' => 1
+                'per_page' => 1,
             ]);
 
-            if ($response->successful() && !empty($response->json('results'))) {
+            if ($response->successful() && ! empty($response->json('results'))) {
                 $company = $response->json('results')[0];
-                
+
                 $financialData = [
                     'chiffre_affaires' => $company['finances']['chiffre_affaires'] ?? null,
                     'resultat_net' => $company['finances']['resultat_net'] ?? null,
@@ -47,7 +48,7 @@ class PappersService
                 if ($financialData['etat_administratif'] === 'C') {
                     $status = 'Cessation';
                 }
-                if ($financialData['procedures_collectives'] !== 'Non' && !empty($financialData['procedures_collectives'])) {
+                if ($financialData['procedures_collectives'] !== 'Non' && ! empty($financialData['procedures_collectives'])) {
                     $status = 'Procédure Collective';
                 }
 
@@ -63,7 +64,7 @@ class PappersService
                 Log::warning("API recherche-entreprises n'a trouvé aucun résultat pour le SIREN {$siren}");
             }
         } catch (\Exception $e) {
-            Log::error("Erreur lors de la synchro financière pour le tiers {$thirdParty->id}: " . $e->getMessage());
+            Log::error("Erreur lors de la synchro financière pour le tiers {$thirdParty->id}: ".$e->getMessage());
         }
 
         return false;

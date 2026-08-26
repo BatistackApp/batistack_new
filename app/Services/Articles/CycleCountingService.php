@@ -4,7 +4,7 @@ namespace App\Services\Articles;
 
 use App\Enums\Articles\InventoryCycleLineStatus;
 use App\Enums\Articles\InventoryCycleStatus;
-use App\Enums\Articles\StockMouvementSource;
+use App\Exceptions\Articles\ArticlesModuleException;
 use App\Models\Articles\InventoryCycle;
 use App\Models\Articles\InventoryCycleLine;
 use App\Models\Articles\Stock;
@@ -18,17 +18,15 @@ class CycleCountingService
     /**
      * Génère un nouveau cycle d'inventaire aléatoire pour un entrepôt donné.
      *
-     * @param Warehouse $warehouse
-     * @param int $itemCount Le nombre d'articles à compter
-     * @param User|null $user L'utilisateur qui déclenche la génération (null = système)
-     * @return InventoryCycle
+     * @param  int  $itemCount  Le nombre d'articles à compter
+     * @param  User|null  $user  L'utilisateur qui déclenche la génération (null = système)
      */
     public function generateCycle(Warehouse $warehouse, int $itemCount = 10, ?User $user = null): InventoryCycle
     {
         return DB::transaction(function () use ($warehouse, $itemCount, $user) {
             $cycle = InventoryCycle::create([
                 'warehouse_id' => $warehouse->id,
-                'name' => 'Inventaire Tournant - ' . $warehouse->name . ' - ' . now()->format('d/m/Y'),
+                'name' => 'Inventaire Tournant - '.$warehouse->name.' - '.now()->format('d/m/Y'),
                 'status' => InventoryCycleStatus::PENDING,
                 'created_by' => $user?->id,
             ]);
@@ -59,15 +57,15 @@ class CycleCountingService
     public function submitForReview(InventoryCycle $cycle): void
     {
         if ($cycle->status !== InventoryCycleStatus::PENDING) {
-            throw new \App\Exceptions\Articles\ArticlesModuleException("Le cycle n'est pas dans un état soumettable.", 400);
+            throw new ArticlesModuleException("Le cycle n'est pas dans un état soumettable.", 400);
         }
 
         if ($cycle->lines()->count() === 0) {
-            throw new \App\Exceptions\Articles\ArticlesModuleException("Le cycle ne contient aucune ligne.", 400);
+            throw new ArticlesModuleException('Le cycle ne contient aucune ligne.', 400);
         }
 
         if ($cycle->lines()->whereNull('counted_quantity')->exists()) {
-            throw new \App\Exceptions\Articles\ArticlesModuleException("Toutes les lignes doivent être comptées avant soumission.", 400);
+            throw new ArticlesModuleException('Toutes les lignes doivent être comptées avant soumission.', 400);
         }
 
         $cycle->update([
@@ -86,12 +84,12 @@ class CycleCountingService
             $lockedCycle = InventoryCycle::with('lines.item')->lockForUpdate()->find($cycle->id);
 
             if ($lockedCycle->status !== InventoryCycleStatus::PENDING_REVIEW) {
-                throw new \App\Exceptions\Articles\ArticlesModuleException("Ce cycle n'est plus en attente de validation.", 400);
+                throw new ArticlesModuleException("Ce cycle n'est plus en attente de validation.", 400);
             }
 
             foreach ($lockedCycle->lines as $line) {
                 if ($line->counted_quantity === null || $line->status !== InventoryCycleLineStatus::COUNTED) {
-                    throw new \App\Exceptions\Articles\ArticlesModuleException("Toutes les lignes doivent être comptées.", 400);
+                    throw new ArticlesModuleException('Toutes les lignes doivent être comptées.', 400);
                 }
             }
 

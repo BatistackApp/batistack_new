@@ -3,9 +3,9 @@
 namespace App\Filament\Immobilisation\Widgets;
 
 use App\Models\Immobilisation\AssetCategory;
-use LaBoiteACode\FilamentDashboardWidgets\Widgets\CompositionWidget;
 use LaBoiteACode\FilamentDashboardWidgets\Data\Composition;
 use LaBoiteACode\FilamentDashboardWidgets\Data\CompositionSlice;
+use LaBoiteACode\FilamentDashboardWidgets\Widgets\CompositionWidget;
 
 class AssetCategoryCompositionWidget extends CompositionWidget
 {

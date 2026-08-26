@@ -220,7 +220,7 @@ describe('StockMouvementObserver - Intégration', function () {
     });
 
     test('multiple mouvements sur même stock', function () {
-        $stock = \App\Models\Articles\Stock::withoutEvents(fn () => Stock::factory()->create());
+        $stock = Stock::withoutEvents(fn () => Stock::factory()->create());
         $user = User::factory()->create();
 
         StockMouvement::factory(5)->create([
@@ -237,7 +237,7 @@ describe('StockMouvementObserver - Intégration', function () {
     });
 
     test('historique cohérent', function () {
-        $stock = \App\Models\Articles\Stock::withoutEvents(fn () => Stock::factory()->create(['quantity' => 0]));
+        $stock = Stock::withoutEvents(fn () => Stock::factory()->create(['quantity' => 0]));
         $user = User::factory()->create();
 
         StockMouvement::create([

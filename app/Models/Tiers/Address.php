@@ -52,7 +52,6 @@ class Address extends Model
     // SCOPES
     // ============================================
 
-
     /**
      * Scope: Récupérer l'adresse par défaut
      */

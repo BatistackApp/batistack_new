@@ -14,6 +14,7 @@ class VehicleMaintenanceObserver
 {
     /**
      * Valide et traite la création d'une maintenance.
+     *
      * @throws \Exception
      */
     public function creating(VehicleMaintenance $maintenance): void
@@ -90,6 +91,7 @@ class VehicleMaintenanceObserver
 
     /**
      * Valide les modifications.
+     *
      * @throws \Exception
      */
     public function updating(VehicleMaintenance $maintenance): void
@@ -143,6 +145,7 @@ class VehicleMaintenanceObserver
 
     /**
      * Validation avant suppression.
+     *
      * @throws \Exception
      */
     public function deleting(VehicleMaintenance $maintenance): void

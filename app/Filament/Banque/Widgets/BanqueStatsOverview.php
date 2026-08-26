@@ -3,7 +3,6 @@
 namespace App\Filament\Banque\Widgets;
 
 use App\Enums\Banque\TransactionStatus;
-use App\Models\Banque\BankAccount;
 use App\Models\Banque\BankTransaction;
 use Filament\Widgets\StatsOverviewWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;

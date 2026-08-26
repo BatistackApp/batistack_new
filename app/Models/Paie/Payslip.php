@@ -2,12 +2,15 @@
 
 namespace App\Models\Paie;
 
+use App\Enums\Paie\PayslipStatus;
+use App\Models\RH\Employee;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Payslip extends Model
 {
     use HasFactory;
+
     protected $fillable = [
         'employee_id',
         'period',
@@ -56,14 +59,14 @@ class Payslip extends Model
         'expense_reports_amount' => 'decimal:2',
         'meal_allowance_amount' => 'decimal:2',
         'custom_bonuses' => 'array',
-        'status' => \App\Enums\Paie\PayslipStatus::class,
+        'status' => PayslipStatus::class,
         'dsn_submitted_at' => 'datetime',
         'dsn_exported_at' => 'datetime',
     ];
 
     public function employee()
     {
-        return $this->belongsTo(\App\Models\RH\Employee::class);
+        return $this->belongsTo(Employee::class);
     }
 
     public function lines()

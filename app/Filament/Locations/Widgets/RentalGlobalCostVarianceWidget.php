@@ -2,16 +2,18 @@
 
 namespace App\Filament\Locations\Widgets;
 
-use App\Models\Locations\RentalContract;
 use App\Enums\Locations\RentalStatus;
+use App\Models\Locations\RentalContract;
+use Carbon\CarbonInterface;
+use Illuminate\Support\Carbon;
 use LaBoiteACode\FilamentDashboardWidgets\Data\VarianceItem;
 use LaBoiteACode\FilamentDashboardWidgets\Widgets\VarianceWidget;
-use Illuminate\Support\Carbon;
 
 class RentalGlobalCostVarianceWidget extends VarianceWidget
 {
     protected static ?int $sort = 1;
-    protected int | string | array $columnSpan = 1;
+
+    protected int|string|array $columnSpan = 1;
 
     public function getHeading(): string
     {
@@ -31,12 +33,12 @@ class RentalGlobalCostVarianceWidget extends VarianceWidget
         return [
             VarianceItem::make('Coût ce mois', $currentCost)
                 ->previous($prevCost)
-                ->formatUsing(fn (float $val) => number_format($val, 2, ',', ' ') . ' €')
-                ->changeFormatUsing(fn (float $val) => ($val > 0 ? '+' : '') . number_format($val, 2, ',', ' ') . ' €')
+                ->formatUsing(fn (float $val) => number_format($val, 2, ',', ' ').' €')
+                ->changeFormatUsing(fn (float $val) => ($val > 0 ? '+' : '').number_format($val, 2, ',', ' ').' €'),
         ];
     }
 
-    private function calculateCostForPeriod(\Carbon\CarbonInterface $start, \Carbon\CarbonInterface $end): float
+    private function calculateCostForPeriod(CarbonInterface $start, CarbonInterface $end): float
     {
         $cost = 0;
 
@@ -44,7 +46,7 @@ class RentalGlobalCostVarianceWidget extends VarianceWidget
         $contracts = RentalContract::where('start_date', '<=', $end)
             ->where(function ($query) use ($start) {
                 $query->whereNull('end_date')
-                      ->orWhere('end_date', '>=', $start);
+                    ->orWhere('end_date', '>=', $start);
             })
             ->whereIn('status', [RentalStatus::ACTIVE, RentalStatus::TERMINATED, RentalStatus::SUSPENDED])
             ->get();

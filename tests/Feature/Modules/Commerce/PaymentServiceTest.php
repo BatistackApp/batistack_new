@@ -6,11 +6,12 @@ use App\Models\Commerce\CustomerOrder;
 use App\Models\Commerce\CustomerSituation;
 use App\Models\Commerce\Payment;
 use App\Models\Commerce\PaymentAllocation;
+use App\Models\Core\Company;
 use App\Models\Tiers\ThirdParty;
 use App\Services\Commerce\PaymentService;
 
 beforeEach(function () {
-    \App\Models\Core\Company::factory()->create();
+    Company::factory()->create();
     $this->paymentService = app(PaymentService::class);
 
     // Données de base

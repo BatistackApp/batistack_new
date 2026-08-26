@@ -11,18 +11,23 @@ use App\Models\Commerce\CustomerCreditNote;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
-use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use ToneGabes\Filament\Icons\Enums\Phosphor;
 
 class CustomerCreditNoteResource extends Resource
 {
     protected static ?string $model = CustomerCreditNote::class;
 
-    protected static string|BackedEnum|null $navigationIcon = \ToneGabes\Filament\Icons\Enums\Phosphor::Receipt;
+    protected static string|BackedEnum|null $navigationIcon = Phosphor::Receipt;
+
     protected static ?string $navigationLabel = 'Avoirs Clients';
-    protected static string | \UnitEnum | null $navigationGroup = 'Ventes';
+
+    protected static string|\UnitEnum|null $navigationGroup = 'Ventes';
+
     protected static ?string $modelLabel = 'Avoir Client';
+
     protected static ?string $pluralModelLabel = 'Avoirs Clients';
+
     protected static ?int $navigationSort = 8;
 
     public static function form(Schema $schema): Schema

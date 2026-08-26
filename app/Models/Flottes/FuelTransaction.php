@@ -2,6 +2,7 @@
 
 namespace App\Models\Flottes;
 
+use App\Models\Chantiers\Chantier;
 use App\Models\RH\Employee;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -38,7 +39,7 @@ class FuelTransaction extends Model
 
     public function chantier(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\Chantiers\Chantier::class);
+        return $this->belongsTo(Chantier::class);
     }
 
     protected function casts(): array

@@ -2,15 +2,16 @@
 
 namespace App\Filament\Locations\Widgets;
 
-use App\Models\Locations\RentalContract;
 use App\Enums\Locations\RentalStatus;
-use LaBoiteACode\FilamentDashboardWidgets\Widgets\SegmentBarWidget;
+use App\Models\Locations\RentalContract;
 use LaBoiteACode\FilamentDashboardWidgets\Data\Segment;
+use LaBoiteACode\FilamentDashboardWidgets\Widgets\SegmentBarWidget;
 
 class RentalContractStatusSegmentWidget extends SegmentBarWidget
 {
     protected static ?int $sort = 2;
-    protected int | string | array $columnSpan = 1;
+
+    protected int|string|array $columnSpan = 1;
 
     public function getHeading(): string
     {

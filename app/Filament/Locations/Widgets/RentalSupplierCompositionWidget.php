@@ -2,17 +2,17 @@
 
 namespace App\Filament\Locations\Widgets;
 
-use App\Models\Locations\RentalContract;
 use App\Enums\Locations\RentalStatus;
-use LaBoiteACode\FilamentDashboardWidgets\Widgets\CompositionWidget;
+use App\Models\Locations\RentalContract;
 use LaBoiteACode\FilamentDashboardWidgets\Data\Composition;
 use LaBoiteACode\FilamentDashboardWidgets\Data\CompositionSlice;
-use Illuminate\Support\Facades\DB;
+use LaBoiteACode\FilamentDashboardWidgets\Widgets\CompositionWidget;
 
 class RentalSupplierCompositionWidget extends CompositionWidget
 {
     protected static ?int $sort = 3;
-    protected int | string | array $columnSpan = 1;
+
+    protected int|string|array $columnSpan = 1;
 
     public function getHeading(): string
     {
@@ -31,7 +31,7 @@ class RentalSupplierCompositionWidget extends CompositionWidget
             $supplierName = $contract->supplier->name ?? 'Fournisseur inconnu';
             $cost = $contract->daily_cost_ht ?? 0;
 
-            if (!isset($supplierCosts[$supplierName])) {
+            if (! isset($supplierCosts[$supplierName])) {
                 $supplierCosts[$supplierName] = 0;
             }
 

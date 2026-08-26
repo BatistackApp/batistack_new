@@ -9,7 +9,8 @@ use LaBoiteACode\FilamentDashboardWidgets\Widgets\VarianceWidget;
 class ClientAcquisitionVarianceWidget extends VarianceWidget
 {
     protected static ?int $sort = 1;
-    protected int | string | array $columnSpan = 1;
+
+    protected int|string|array $columnSpan = 1;
 
     public function getHeading(): string
     {
@@ -31,7 +32,7 @@ class ClientAcquisitionVarianceWidget extends VarianceWidget
         return [
             VarianceItem::make('Nouveaux clients', (float) $currentMonthCount)
                 ->previous((float) $lastMonthCount)
-                ->formatUsing(fn (float $val) => (int) $val)
+                ->formatUsing(fn (float $val) => (int) $val),
         ];
     }
 }

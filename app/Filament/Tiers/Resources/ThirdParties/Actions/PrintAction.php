@@ -20,6 +20,7 @@ class PrintAction
                 ->color('info')
                 ->action(function (TiersDocumentService $service) {
                     $path = $service->generateList(ThirdParty::all());
+
                     return response()->download($path);
                 }),
 
@@ -29,6 +30,7 @@ class PrintAction
                 ->color('info')
                 ->action(function (TiersDocumentService $service, ThirdParty $record) {
                     $path = $service->generateDetails($record);
+
                     return Storage::disk(DocumentService::getDisk())->download($path);
                 }),
         };

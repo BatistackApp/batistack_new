@@ -5,7 +5,7 @@ namespace App\Enums\Tiers;
 use Filament\Support\Contracts\HasColor;
 use Filament\Support\Contracts\HasLabel;
 
-enum ThirdPartyDocumentStatus: string implements HasLabel, HasColor
+enum ThirdPartyDocumentStatus: string implements HasColor, HasLabel
 {
     case VALID = 'valid';
     case EXPIRED = 'expired';

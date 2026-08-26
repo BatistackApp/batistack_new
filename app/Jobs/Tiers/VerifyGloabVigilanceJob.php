@@ -5,6 +5,7 @@ namespace App\Jobs\Tiers;
 use App\Enums\Tiers\ThirdPartyType;
 use App\Models\Tiers\ThirdParty;
 use App\Models\User;
+use App\Notifications\Tiers\SubcontractorVigilanceReminderNotification;
 use App\Notifications\Tiers\VigilanceExpirationNotification;
 use App\Services\Tiers\VigilanceService;
 use Illuminate\Bus\Queueable;
@@ -12,6 +13,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Notification;
 
 class VerifyGloabVigilanceJob implements ShouldQueue
 {
@@ -39,8 +41,8 @@ class VerifyGloabVigilanceJob implements ShouldQueue
                 // Notifier le sous-traitant (ou son contact principal)
                 $targetEmail = $subcontractor->email ?? $subcontractor->getPrimaryContact()?->email;
                 if ($targetEmail) {
-                    \Illuminate\Support\Facades\Notification::route('mail', $targetEmail)
-                        ->notify(new \App\Notifications\Tiers\SubcontractorVigilanceReminderNotification($subcontractor, $compliance['issues']));
+                    Notification::route('mail', $targetEmail)
+                        ->notify(new SubcontractorVigilanceReminderNotification($subcontractor, $compliance['issues']));
                 }
             }
         }

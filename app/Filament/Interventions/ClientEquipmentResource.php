@@ -10,6 +10,7 @@ use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
@@ -32,7 +33,7 @@ class ClientEquipmentResource extends Resource
     {
         return $schema
             ->components([
-                \Filament\Forms\Components\Hidden::make('company_id')
+                Hidden::make('company_id')
                     ->default(fn () => auth()->user()->company_id ?? 1),
                 Select::make('third_party_id')
                     ->label('Client')

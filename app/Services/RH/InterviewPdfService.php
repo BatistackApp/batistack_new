@@ -3,10 +3,9 @@
 namespace App\Services\RH;
 
 use App\Models\RH\Interview;
-use Spatie\Browsershot\Browsershot;
 use Illuminate\Support\Facades\View;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Spatie\Browsershot\Browsershot;
 
 class InterviewPdfService
 {
@@ -14,8 +13,8 @@ class InterviewPdfService
     {
         $html = View::make('pdfs.interview-report', compact('interview'))->render();
 
-        $fileName = 'interview_' . $interview->id . '_' . Str::random(10) . '.pdf';
-        $filePath = storage_path('app/public/' . $fileName);
+        $fileName = 'interview_'.$interview->id.'_'.Str::random(10).'.pdf';
+        $filePath = storage_path('app/public/'.$fileName);
 
         // Uses Spatie Browsershot (assuming Node and Puppeteer are available)
         Browsershot::html($html)

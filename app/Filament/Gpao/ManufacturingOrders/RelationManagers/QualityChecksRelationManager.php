@@ -4,15 +4,17 @@ namespace App\Filament\Gpao\ManufacturingOrders\RelationManagers;
 
 use Filament\Actions\ViewAction;
 use Filament\Forms;
-use Filament\Schemas\Schema;
 use Filament\Resources\RelationManagers\RelationManager;
+use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Table;
 
 class QualityChecksRelationManager extends RelationManager
 {
     protected static string $relationship = 'qualityChecks';
+
     protected static ?string $title = 'Contrôles Qualité';
+
     protected static ?string $modelLabel = 'contrôle qualité';
 
     public function form(Schema $schema): Schema

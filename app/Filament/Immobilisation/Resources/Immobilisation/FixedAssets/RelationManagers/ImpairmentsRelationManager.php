@@ -2,16 +2,19 @@
 
 namespace App\Filament\Immobilisation\Resources\Immobilisation\FixedAssets\RelationManagers;
 
-use Filament\Schemas\Schema;
 use Filament\Resources\RelationManagers\RelationManager;
-use Filament\Tables\Table;
+use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Table;
 
 class ImpairmentsRelationManager extends RelationManager
 {
     protected static string $relationship = 'impairments';
+
     protected static ?string $title = 'Dépréciations Exceptionnelles';
+
     protected static ?string $modelLabel = 'Dépréciation';
+
     protected static ?string $pluralModelLabel = 'Dépréciations';
 
     public function form(Schema $schema): Schema

@@ -5,18 +5,19 @@ namespace App\Services\Paie;
 use App\Enums\Paie\ContributionBaseFormula;
 use App\Models\Paie\PayrollContributionProfile;
 use Carbon\Carbon;
+use Carbon\CarbonInterface;
 
 class PayrollSimulatorService
 {
     /**
      * Calcule les nets et le coût employeur à partir d'un salaire brut.
-     * 
-     * @param float $grossSalary Le salaire brut de base
-     * @param PayrollContributionProfile $profile Le profil de cotisations à utiliser
-     * @param Carbon|null $date La date pour laquelle on veut les taux (par défaut: maintenant)
+     *
+     * @param  float  $grossSalary  Le salaire brut de base
+     * @param  PayrollContributionProfile  $profile  Le profil de cotisations à utiliser
+     * @param  Carbon|null  $date  La date pour laquelle on veut les taux (par défaut: maintenant)
      * @return array Les résultats de la simulation
      */
-    public function simulateFromGross(float $grossSalary, PayrollContributionProfile $profile, ?\Carbon\CarbonInterface $date = null, float $ijssBrutes = 0.0): array
+    public function simulateFromGross(float $grossSalary, PayrollContributionProfile $profile, ?CarbonInterface $date = null, float $ijssBrutes = 0.0): array
     {
         $date = $date ?? now();
         $validRates = $profile->rates()->validAt($date)->get();
@@ -42,7 +43,7 @@ class PayrollSimulatorService
         // Étape 3 : Calcul détaillé des lignes de cotisations
         foreach ($validRates as $rate) {
             $base = $grossSalary;
-            
+
             if ($rate->base_formula === ContributionBaseFormula::CSG_BASE) {
                 $base = $csgBase;
             } elseif ($rate->base_formula === ContributionBaseFormula::OPPBTP_BASE) {
@@ -65,7 +66,7 @@ class PayrollSimulatorService
             $totalEmployeeContributions += $employeeAmount;
             $totalEmployerContributions += $employerAmount;
 
-            if (!$rate->is_deductible) {
+            if (! $rate->is_deductible) {
                 $csgNonDeductibleAmount += $employeeAmount;
             }
         }
@@ -74,7 +75,7 @@ class PayrollSimulatorService
         if ($ijssBrutes > 0) {
             $csgDeductibleIjss = round($ijssBrutes * 0.062, 2);
             $csgNonDeductibleIjss = round($ijssBrutes * 0.005, 2);
-            
+
             $lines[] = [
                 'category' => 'csg_crds_ijss',
                 'label' => 'CSG/CRDS sur IJSS',
@@ -92,10 +93,10 @@ class PayrollSimulatorService
         // Calculs finaux
         // Le net social inclut les IJSS Brutes car elles sont versées à l'employé
         $netSocial = round(($grossSalary + $ijssBrutes) - $totalEmployeeContributions, 2);
-        
+
         // Net imposable = Net social + CSG non déductible + réintégration fiscale
         $taxableNet = round($netSocial + $csgNonDeductibleAmount + $fiscalReintegration, 2);
-        
+
         $employerCost = round($grossSalary + $totalEmployerContributions, 2);
 
         return [
@@ -113,42 +114,41 @@ class PayrollSimulatorService
     /**
      * Retrouve le salaire brut nécessaire pour atteindre un Net Social ciblé
      * via un algorithme d'approximation par dichotomie.
-     * 
-     * @param float $targetNet Le net social visé
-     * @param PayrollContributionProfile $profile Le profil de cotisations
-     * @param \Carbon\CarbonInterface|null $date
+     *
+     * @param  float  $targetNet  Le net social visé
+     * @param  PayrollContributionProfile  $profile  Le profil de cotisations
      * @return array Les résultats de la simulation correspondant au brut trouvé
      */
-    public function simulateFromNet(float $targetNet, PayrollContributionProfile $profile, ?\Carbon\CarbonInterface $date = null): array
+    public function simulateFromNet(float $targetNet, PayrollContributionProfile $profile, ?CarbonInterface $date = null): array
     {
         // Limites de la recherche binaire (on suppose qu'un brut est forcément entre le net et le net * 3)
-        $lowGross = $targetNet; 
+        $lowGross = $targetNet;
         $highGross = $targetNet * 3;
-        
+
         $bestSimulation = null;
         $tolerance = 0.01;
-        
+
         // Sécurité pour éviter une boucle infinie (max 100 itérations)
         for ($i = 0; $i < 100; $i++) {
             $midGross = round(($lowGross + $highGross) / 2, 4);
             $simulation = $this->simulateFromGross($midGross, $profile, $date);
-            
+
             $currentNet = $simulation['net_social'];
-            
+
             if (abs($currentNet - $targetNet) <= $tolerance) {
                 $bestSimulation = $simulation;
                 break;
             }
-            
+
             if ($currentNet < $targetNet) {
                 $lowGross = $midGross;
             } else {
                 $highGross = $midGross;
             }
-            
+
             $bestSimulation = $simulation;
         }
-        
+
         return $bestSimulation;
     }
 }

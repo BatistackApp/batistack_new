@@ -8,7 +8,9 @@ use Livewire\Component;
 class BiometricEnrollment extends Component
 {
     public $selectedEmployeeId;
+
     public $employeesList = [];
+
     public $isEnrolled = false;
 
     public function mount()
@@ -23,7 +25,7 @@ class BiometricEnrollment extends Component
 
     public function enroll($descriptor)
     {
-        if (!$this->selectedEmployeeId) {
+        if (! $this->selectedEmployeeId) {
             return;
         }
 
@@ -32,7 +34,7 @@ class BiometricEnrollment extends Component
             $employee->face_descriptor = $descriptor; // Cast handles array to json
             $employee->save();
             $this->isEnrolled = true;
-            
+
             // Remove from list or keep it
         }
     }

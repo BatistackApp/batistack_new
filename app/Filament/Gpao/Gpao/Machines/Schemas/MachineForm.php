@@ -2,6 +2,8 @@
 
 namespace App\Filament\Gpao\Gpao\Machines\Schemas;
 
+use App\Enums\Gpao\MachineStatus;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Schema;
 
@@ -14,10 +16,10 @@ class MachineForm
                 TextInput::make('name')->label('Nom')
                     ->required(),
                 TextInput::make('reference')->label('Référence'),
-                \Filament\Forms\Components\Select::make('status')->label('Statut')
-                    ->options(\App\Enums\Gpao\MachineStatus::class)
+                Select::make('status')->label('Statut')
+                    ->options(MachineStatus::class)
                     ->required()
-                    ->default(\App\Enums\Gpao\MachineStatus::OPERATIONAL),
+                    ->default(MachineStatus::OPERATIONAL),
                 TextInput::make('usage_hours')
                     ->required()
                     ->numeric()

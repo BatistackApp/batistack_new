@@ -3,6 +3,7 @@
 namespace App\Filament\Banque\Resources\Banque\BankAccounts\Pages;
 
 use App\Filament\Banque\Resources\Banque\BankAccounts\BankAccountResource;
+use App\Models\Core\Company;
 use App\Services\Banque\BridgeApiService;
 use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
@@ -31,7 +32,7 @@ class ListBankAccounts extends ListRecords
 
                         return;
                     }
-                    $company = \App\Models\Core\Company::first();
+                    $company = Company::first();
                     $externalUserId = 'company_'.$company->id;
                     $userEmail = $user->email;
                     $callbackUrl = route('bridge.callback');

@@ -2,6 +2,8 @@
 
 namespace Tests\Feature\Modules\Commerce\Models;
 
+use App\Enums\Commerce\DeliveryStatus;
+use App\Enums\Tiers\ThirdPartyType;
 use App\Models\Articles\Item;
 use App\Models\Chantiers\Chantier;
 use App\Models\Commerce\PurchaseOrder;
@@ -14,15 +16,17 @@ use App\Models\Commerce\SubcontractorSituation;
 use App\Models\Commerce\SupplierCreditNote;
 use App\Models\Commerce\SupplierInvoice;
 use App\Models\Commerce\SupplierInvoiceItem;
+use App\Models\Core\VatRate;
 use App\Models\Tiers\ThirdParty;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Event;
 
 uses(RefreshDatabase::class);
 
 describe('Purchase Documents Relations', function () {
     beforeEach(function () {
-        \Illuminate\Support\Facades\Event::fake();
-        $this->supplier = ThirdParty::factory()->create(['type' => \App\Enums\Tiers\ThirdPartyType::SUPPLIER]);
+        Event::fake();
+        $this->supplier = ThirdParty::factory()->create(['type' => ThirdPartyType::SUPPLIER]);
         $this->chantier = Chantier::factory()->create();
         $this->request = PurchaseRequest::factory()->create();
         $this->order = PurchaseOrder::factory()->create();
@@ -31,7 +35,7 @@ describe('Purchase Documents Relations', function () {
     });
 
     it('tests PurchaseOrder relations', function () {
-        $order = new PurchaseOrder();
+        $order = new PurchaseOrder;
         $order->forceFill([
             'supplier_id' => $this->supplier->id,
             'chantier_id' => $this->chantier->id,
@@ -47,8 +51,8 @@ describe('Purchase Documents Relations', function () {
     });
 
     it('tests PurchaseOrderItem relations', function () {
-        $vat = \App\Models\Core\VatRate::factory()->create();
-        $item = new PurchaseOrderItem();
+        $vat = VatRate::factory()->create();
+        $item = new PurchaseOrderItem;
         $item->forceFill([
             'purchase_order_id' => $this->order->id,
             'item_id' => $this->item->id,
@@ -63,7 +67,7 @@ describe('Purchase Documents Relations', function () {
     });
 
     it('tests PurchaseRequest relations', function () {
-        $request = new PurchaseRequest();
+        $request = new PurchaseRequest;
         $request->forceFill([
             'chantier_id' => $this->chantier->id,
             'supplier_id' => $this->supplier->id,
@@ -75,7 +79,7 @@ describe('Purchase Documents Relations', function () {
     });
 
     it('tests PurchaseRequestItem relations', function () {
-        $item = new PurchaseRequestItem();
+        $item = new PurchaseRequestItem;
         $item->forceFill([
             'purchase_request_id' => $this->request->id,
             'item_id' => $this->item->id,
@@ -88,11 +92,11 @@ describe('Purchase Documents Relations', function () {
     });
 
     it('tests ReceiptNote relations', function () {
-        $note = new ReceiptNote();
+        $note = new ReceiptNote;
         $note->forceFill([
             'purchase_order_id' => $this->order->id,
             'reference' => 'RN-001',
-            'status' => \App\Enums\Commerce\DeliveryStatus::PREPARATION,
+            'status' => DeliveryStatus::PREPARATION,
             'received_at' => now(),
         ])->save();
 
@@ -100,11 +104,11 @@ describe('Purchase Documents Relations', function () {
     });
 
     it('tests ReceiptNoteItem relations', function () {
-        $note = new ReceiptNote();
-        $note->forceFill(['purchase_order_id' => $this->order->id, 'reference' => 'RN-002', 'status' => \App\Enums\Commerce\DeliveryStatus::PREPARATION, 'received_at' => now()])->save();
+        $note = new ReceiptNote;
+        $note->forceFill(['purchase_order_id' => $this->order->id, 'reference' => 'RN-002', 'status' => DeliveryStatus::PREPARATION, 'received_at' => now()])->save();
 
-        $vat = \App\Models\Core\VatRate::factory()->create();
-        $orderItem = new PurchaseOrderItem();
+        $vat = VatRate::factory()->create();
+        $orderItem = new PurchaseOrderItem;
         $orderItem->forceFill([
             'purchase_order_id' => $this->order->id,
             'item_id' => $this->item->id,
@@ -114,7 +118,7 @@ describe('Purchase Documents Relations', function () {
             'vat_rate_id' => $vat->id,
         ])->save();
 
-        $item = new ReceiptNoteItem();
+        $item = new ReceiptNoteItem;
         $item->forceFill([
             'receipt_note_id' => $note->id,
             'purchase_order_item_id' => $orderItem->id,
@@ -126,7 +130,7 @@ describe('Purchase Documents Relations', function () {
     });
 
     it('tests SubcontractorSituation relations', function () {
-        $situation = new SubcontractorSituation();
+        $situation = new SubcontractorSituation;
         $situation->forceFill([
             'subcontractor_id' => $this->supplier->id,
             'chantier_id' => $this->chantier->id,
@@ -142,7 +146,7 @@ describe('Purchase Documents Relations', function () {
     });
 
     it('tests SupplierCreditNote relations', function () {
-        $note = new SupplierCreditNote();
+        $note = new SupplierCreditNote;
         $note->forceFill([
             'supplier_id' => $this->supplier->id,
             'supplier_invoice_id' => $this->invoice->id,
@@ -157,7 +161,7 @@ describe('Purchase Documents Relations', function () {
     });
 
     it('tests SupplierInvoice relations', function () {
-        $invoice = new SupplierInvoice();
+        $invoice = new SupplierInvoice;
         $invoice->forceFill([
             'supplier_id' => $this->supplier->id,
             'purchase_order_id' => $this->order->id,
@@ -173,8 +177,8 @@ describe('Purchase Documents Relations', function () {
     });
 
     it('tests SupplierInvoiceItem relations', function () {
-        $vat = \App\Models\Core\VatRate::factory()->create();
-        $item = new SupplierInvoiceItem();
+        $vat = VatRate::factory()->create();
+        $item = new SupplierInvoiceItem;
         $item->forceFill([
             'supplier_invoice_id' => $this->invoice->id,
             'item_id' => $this->item->id,

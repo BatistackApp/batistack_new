@@ -4,16 +4,21 @@ namespace App\Filament\Articles\Resources\Items\Tables;
 
 use App\Enums\Articles\ItemType;
 use App\Models\Articles\Item;
+use App\Services\Articles\ArticleDocumentService;
 use Filament\Actions\ActionGroup;
+use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Collection;
 
 class ItemsTable
 {
@@ -81,11 +86,11 @@ class ItemsTable
             ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),
-                    \Filament\Actions\BulkAction::make('printLabels')
+                    BulkAction::make('printLabels')
                         ->label('Imprimer Étiquettes')
                         ->icon('heroicon-o-printer')
                         ->form([
-                            \Filament\Forms\Components\Select::make('format')
+                            Select::make('format')
                                 ->label("Format d'impression")
                                 ->options([
                                     'a4' => 'Planche A4 (Avery 3x7)',
@@ -94,7 +99,7 @@ class ItemsTable
                                 ])
                                 ->required()
                                 ->default('a4'),
-                            \Filament\Forms\Components\TextInput::make('copies')
+                            TextInput::make('copies')
                                 ->label('Nombre de copies par article')
                                 ->numeric()
                                 ->default(1)
@@ -102,9 +107,10 @@ class ItemsTable
                                 ->minValue(1)
                                 ->maxValue(100),
                         ])
-                        ->action(function (\Illuminate\Database\Eloquent\Collection $records, array $data) {
-                            $service = app(\App\Services\Articles\ArticleDocumentService::class);
-                            $path = $service->generateLabels($records, $data['format'], (int)$data['copies']);
+                        ->action(function (Collection $records, array $data) {
+                            $service = app(ArticleDocumentService::class);
+                            $path = $service->generateLabels($records, $data['format'], (int) $data['copies']);
+
                             return $service->download($path);
                         })
                         ->deselectRecordsAfterCompletion(),

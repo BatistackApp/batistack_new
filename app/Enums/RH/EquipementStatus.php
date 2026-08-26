@@ -5,7 +5,7 @@ namespace App\Enums\RH;
 use Filament\Support\Contracts\HasColor;
 use Filament\Support\Contracts\HasLabel;
 
-enum EquipementStatus: string implements HasLabel, HasColor
+enum EquipementStatus: string implements HasColor, HasLabel
 {
     case AVAILABLE = 'available';
     case IN_USE = 'in_use';

@@ -15,6 +15,7 @@ class SupplierInvoiceObserver
     public function __construct(
         protected SupplierInvoiceAuditService $auditService
     ) {}
+
     public function created(SupplierInvoice $invoice): void
     {
         // Définition de l'échéance (ex: 30 jours)

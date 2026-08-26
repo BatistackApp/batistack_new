@@ -37,7 +37,7 @@ class BankAccountsTable
                 TextColumn::make('balance')
                     ->label('Solde')
                     ->money(
-                        currency:'eur',
+                        currency: 'eur',
                         locale: 'fr',
                     )
                     ->sortable(),

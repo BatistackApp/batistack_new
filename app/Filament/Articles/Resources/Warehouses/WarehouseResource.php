@@ -20,8 +20,11 @@ class WarehouseResource extends Resource
     protected static ?string $model = Warehouse::class;
 
     protected static string|BackedEnum|null $navigationIcon = Phosphor::Warehouse;
+
     protected static ?string $navigationLabel = 'Dépôts';
+
     protected static ?string $modelLabel = 'Dépôt';
+
     protected static ?string $pluralModelLabel = 'Dépôts';
 
     protected static string|null|\UnitEnum $navigationGroup = 'Configuration Dépôts';

@@ -47,7 +47,7 @@ enum ElectricalCertification: string implements HasDescription
 
     public function getDescription(): string|Htmlable|null
     {
-        return match($this) {
+        return match ($this) {
             self::B0 => 'B0 : Exécutant / Chargé de chantier d\'ordre non électrique (BT)',
             self::H0 => 'H0 : Exécutant / Chargé de chantier d\'ordre non électrique (HT)',
             self::H0V => 'H0V : Opérations d\'ordre non électrique au voisinage (HT)',

@@ -2,6 +2,12 @@
 
 namespace App\Filament\RH\Resources\ExpenseAdvances\Schemas;
 
+use App\Enums\RH\ExpenseAdvanceStatus;
+use App\Models\RH\Employee;
+use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Schema;
 
 class ExpenseAdvanceForm
@@ -10,38 +16,38 @@ class ExpenseAdvanceForm
     {
         return $schema
             ->components([
-                \Filament\Forms\Components\Select::make('employee_id')
+                Select::make('employee_id')
                     ->relationship('employee', 'last_name')
-                    ->getOptionLabelFromRecordUsing(fn (\App\Models\RH\Employee $record) => "{$record->first_name} {$record->last_name}")
+                    ->getOptionLabelFromRecordUsing(fn (Employee $record) => "{$record->first_name} {$record->last_name}")
                     ->searchable()
                     ->preload()
                     ->required()
                     ->label('Employé'),
 
-                \Filament\Forms\Components\TextInput::make('amount')->label('Montant')
+                TextInput::make('amount')->label('Montant')
                     ->numeric()
                     ->minValue(0.01)
                     ->required()
                     ->prefix('€')
                     ->label('Montant demandé'),
 
-                \Filament\Forms\Components\DatePicker::make('request_date')
+                DatePicker::make('request_date')
                     ->required()
                     ->default(now())
                     ->label('Date de la demande'),
 
-                \Filament\Forms\Components\Textarea::make('reason')
+                Textarea::make('reason')
                     ->required()
                     ->columnSpanFull()
                     ->label('Motif du déplacement / Dépense'),
 
-                \Filament\Forms\Components\Select::make('status')->label('Statut')
+                Select::make('status')->label('Statut')
                     ->options([
-                        \App\Enums\RH\ExpenseAdvanceStatus::PENDING->value => \App\Enums\RH\ExpenseAdvanceStatus::PENDING->getLabel(),
-                        \App\Enums\RH\ExpenseAdvanceStatus::APPROVED->value => \App\Enums\RH\ExpenseAdvanceStatus::APPROVED->getLabel(),
-                        \App\Enums\RH\ExpenseAdvanceStatus::REJECTED->value => \App\Enums\RH\ExpenseAdvanceStatus::REJECTED->getLabel(),
+                        ExpenseAdvanceStatus::PENDING->value => ExpenseAdvanceStatus::PENDING->getLabel(),
+                        ExpenseAdvanceStatus::APPROVED->value => ExpenseAdvanceStatus::APPROVED->getLabel(),
+                        ExpenseAdvanceStatus::REJECTED->value => ExpenseAdvanceStatus::REJECTED->getLabel(),
                     ])
-                    ->default(\App\Enums\RH\ExpenseAdvanceStatus::PENDING)
+                    ->default(ExpenseAdvanceStatus::PENDING)
                     ->required()
                     ->label('Statut'),
             ]);

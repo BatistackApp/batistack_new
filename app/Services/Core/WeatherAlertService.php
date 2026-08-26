@@ -21,6 +21,7 @@ class WeatherAlertService
 
         if ($lat === null || $lon === null) {
             Log::warning("Cannot check weather for Chantier {$chantier->id} - missing coordinates.");
+
             return null;
         }
 
@@ -63,7 +64,8 @@ class WeatherAlertService
         $apiKey = config('services.openweathermap.api_key');
 
         if (empty($apiKey)) {
-            Log::info("WeatherAlertService: OPENWEATHERMAP_API_KEY is not set. Flow is disabled.");
+            Log::info('WeatherAlertService: OPENWEATHERMAP_API_KEY is not set. Flow is disabled.');
+
             return null; // Fail closed
         }
 
@@ -77,6 +79,7 @@ class WeatherAlertService
 
             if ($response->failed()) {
                 Log::error("WeatherAlertService API error: {$response->status()}");
+
                 return null;
             }
 
@@ -90,6 +93,7 @@ class WeatherAlertService
             ];
         } catch (\Exception $e) {
             Log::error("WeatherAlertService exception: {$e->getMessage()}");
+
             return null;
         }
     }
@@ -101,10 +105,18 @@ class WeatherAlertService
 
     protected function determineWeatherType(array $data): string
     {
-        if ($data['wind_speed'] > 80) return 'vent';
-        if ($data['rain_volume'] > 30) return 'pluie';
-        if ($data['temp'] < -2) return 'neige_verglas';
-        if ($data['temp'] > 35) return 'canicule';
+        if ($data['wind_speed'] > 80) {
+            return 'vent';
+        }
+        if ($data['rain_volume'] > 30) {
+            return 'pluie';
+        }
+        if ($data['temp'] < -2) {
+            return 'neige_verglas';
+        }
+        if ($data['temp'] > 35) {
+            return 'canicule';
+        }
 
         return 'inconnu';
     }

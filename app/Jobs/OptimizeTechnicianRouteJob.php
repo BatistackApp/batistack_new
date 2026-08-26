@@ -27,8 +27,8 @@ class OptimizeTechnicianRouteJob implements ShouldQueue
     public function handle(RouteOptimizationService $optimizer): void
     {
         $technicien = Employee::find($this->technicienId);
-        
-        if (!$technicien) {
+
+        if (! $technicien) {
             return;
         }
 
@@ -41,13 +41,13 @@ class OptimizeTechnicianRouteJob implements ShouldQueue
                     Notification::make()
                         ->success()
                         ->title('Optimisation terminée')
-                        ->body($result['message'] . ' ' . $result['interventions_count'] . ' interventions réordonnées pour ' . $technicien->full_name . '.')
+                        ->body($result['message'].' '.$result['interventions_count'].' interventions réordonnées pour '.$technicien->full_name.'.')
                         ->sendToDatabase($user);
                 } else {
                     Notification::make()
                         ->danger()
                         ->title('Erreur d\'optimisation')
-                        ->body('Pour ' . $technicien->full_name . ' : ' . $result['message'])
+                        ->body('Pour '.$technicien->full_name.' : '.$result['message'])
                         ->sendToDatabase($user);
                 }
             }

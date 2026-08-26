@@ -27,7 +27,8 @@ class AssetTransferResource extends Resource
 
     protected static ?string $modelLabel = 'Transfert d\'asset';
 
-    protected static string | UnitEnum | null $navigationGroup = 'Gestion des Actifs';
+    protected static string|UnitEnum|null $navigationGroup = 'Gestion des Actifs';
+
     protected static ?int $navigationSort = 4;
 
     public static function form(Schema $schema): Schema

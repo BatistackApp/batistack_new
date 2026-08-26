@@ -6,7 +6,6 @@ use App\Enums\RH\AbsenceType;
 use App\Models\RH\Abscence;
 use App\Models\RH\Employee;
 use Illuminate\Database\Eloquent\Factories\Factory;
-use Illuminate\Support\Carbon;
 
 class AbscenceFactory extends Factory
 {

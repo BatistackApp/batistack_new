@@ -3,7 +3,10 @@
 namespace App\Filament\Salarie\Resources\Paie\Payslips\Schemas;
 
 use Filament\Infolists\Components\TextEntry;
+use Filament\Schemas\Components\Group;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
+use Filament\Support\Enums\FontWeight;
 
 class PayslipInfolist
 {
@@ -11,7 +14,7 @@ class PayslipInfolist
     {
         return $schema
             ->components([
-                \Filament\Schemas\Components\Section::make('Résumé du bulletin')
+                Section::make('Résumé du bulletin')
                     ->columnSpanFull()
                     ->icon('heroicon-o-document-text')
                     ->columns(3)
@@ -19,7 +22,7 @@ class PayslipInfolist
                         TextEntry::make('period')
                             ->label('Période')
                             ->size('lg')
-                            ->weight(\Filament\Support\Enums\FontWeight::Bold),
+                            ->weight(FontWeight::Bold),
                         TextEntry::make('status')->label('Statut')
                             ->label('Statut')
                             ->badge(),
@@ -29,13 +32,13 @@ class PayslipInfolist
                             ->placeholder('Non défini'),
                     ]),
 
-                \Filament\Schemas\Components\Section::make('Rémunération')
+                Section::make('Rémunération')
                     ->columnSpanFull()
                     ->icon('heroicon-o-currency-euro')
                     ->columns(2)
                     ->schema([
-                        \Filament\Schemas\Components\Group::make([
-                            \Filament\Schemas\Components\Section::make('Temps de travail')
+                        Group::make([
+                            Section::make('Temps de travail')
                                 ->schema([
                                     TextEntry::make('base_hours')
                                         ->label('Heures de base')
@@ -53,7 +56,7 @@ class PayslipInfolist
                                         ->visible(fn ($record) => $record->overtime_amount > 0),
                                 ])->columns(2),
 
-                            \Filament\Schemas\Components\Section::make('Indemnités & Primes')
+                            Section::make('Indemnités & Primes')
                                 ->schema([
                                     TextEntry::make('gd_allowance_amount')
                                         ->label('Grands Déplacements')
@@ -70,8 +73,8 @@ class PayslipInfolist
                                 ])->columns(2),
                         ])->columnSpan(1),
 
-                        \Filament\Schemas\Components\Group::make([
-                            \Filament\Schemas\Components\Section::make('Totaux')
+                        Group::make([
+                            Section::make('Totaux')
                                 ->schema([
                                     TextEntry::make('gross_salary')
                                         ->label('Salaire Brut')
@@ -85,16 +88,16 @@ class PayslipInfolist
                                     TextEntry::make('pas_amount')
                                         ->label('Prélèvement à la source (PAS)')
                                         ->money('EUR')
-                                        ->helperText(fn ($record) => 'Taux : ' . $record->pas_rate . '%'),
+                                        ->helperText(fn ($record) => 'Taux : '.$record->pas_rate.'%'),
                                 ])->columns(2),
 
-                            \Filament\Schemas\Components\Section::make('Net à Payer')
+                            Section::make('Net à Payer')
                                 ->schema([
                                     TextEntry::make('net_paid')
                                         ->label('Total Net Payé (après acompte)')
                                         ->money('EUR')
                                         ->size('lg')
-                                        ->weight(\Filament\Support\Enums\FontWeight::Bold)
+                                        ->weight(FontWeight::Bold)
                                         ->color('success'),
                                 ]),
                         ])->columnSpan(1),

@@ -35,7 +35,7 @@ class RentalContractInfolist
                                     TextEntry::make('unit_price_ht')->label('Prix U. HT')->money('EUR'),
                                     TextEntry::make('total_price_ht')->label('Total HT')->money('EUR'),
                                 ])
-                                ->columns(4)
+                                ->columns(4),
                         ]),
                 ])->columnSpan(['lg' => 2]),
 
@@ -69,12 +69,12 @@ class RentalContractInfolist
                                 })
                                 ->color('danger'),
                         ]),
-                        
+
                     Section::make('Évaluation du fournisseur')
                         ->schema([
                             TextEntry::make('supplier_score')
                                 ->label('Note')
-                                ->formatStateUsing(fn ($state) => str_repeat('⭐', $state) . " ($state/5)"),
+                                ->formatStateUsing(fn ($state) => str_repeat('⭐', $state)." ($state/5)"),
                             TextEntry::make('supplier_feedback')
                                 ->label('Commentaire'),
                         ])

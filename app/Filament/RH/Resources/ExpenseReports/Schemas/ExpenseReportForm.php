@@ -2,8 +2,11 @@
 
 namespace App\Filament\RH\Resources\ExpenseReports\Schemas;
 
+use App\Enums\RH\ExpenseAdvanceStatus;
+use App\Models\RH\ExpenseAdvance;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Get;
 use Filament\Schemas\Schema;
 
 class ExpenseReportForm
@@ -47,15 +50,14 @@ class ExpenseReportForm
                 Select::make('advance_ids')
                     ->label('Avances à déduire')
                     ->multiple()
-                    ->options(fn (\Filament\Forms\Get $get) => 
-                        \App\Models\RH\ExpenseAdvance::where('employee_id', $get('employee_id'))
-                            ->where('status', \App\Enums\RH\ExpenseAdvanceStatus::PAID)
-                            ->pluck('reason', 'id')
+                    ->options(fn (Get $get) => ExpenseAdvance::where('employee_id', $get('employee_id'))
+                        ->where('status', ExpenseAdvanceStatus::PAID)
+                        ->pluck('reason', 'id')
                     )
                     ->preload()
                     ->searchable()
                     ->columnSpanFull()
-                    ->helperText("Sélectionnez les avances déjà versées au salarié qui couvrent ce déplacement."),
+                    ->helperText('Sélectionnez les avances déjà versées au salarié qui couvrent ce déplacement.'),
             ]);
     }
 }

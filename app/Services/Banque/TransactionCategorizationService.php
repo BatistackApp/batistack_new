@@ -36,6 +36,7 @@ class TransactionCategorizationService
             if (str_contains($description, $keyword)) {
                 $transaction->transaction_category_id = $rule->transaction_category_id;
                 $transaction->save();
+
                 return true; // Stop at first match
             }
         }
@@ -54,6 +55,7 @@ class TransactionCategorizationService
                 $count++;
             }
         }
+
         return $count;
     }
 }

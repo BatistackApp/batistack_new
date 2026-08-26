@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace App\Policies\Chantiers;
 
-use Illuminate\Foundation\Auth\User as AuthUser;
 use App\Models\Chantiers\ChecklistTemplate;
 use Illuminate\Auth\Access\HandlesAuthorization;
+use Illuminate\Foundation\Auth\User as AuthUser;
 
 class ChecklistTemplatePolicy
 {
     use HandlesAuthorization;
-    
+
     public function viewAny(AuthUser $authUser): bool
     {
         return $authUser->can('ViewAny:ChecklistTemplate');
@@ -71,5 +71,4 @@ class ChecklistTemplatePolicy
     {
         return $authUser->can('Reorder:ChecklistTemplate');
     }
-
 }

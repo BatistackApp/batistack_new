@@ -2,9 +2,9 @@
 
 namespace App\Console\Commands\RH;
 
-use Illuminate\Console\Command;
 use App\Services\RH\TimeEntryAnomalyDetectorService;
 use Carbon\Carbon;
+use Illuminate\Console\Command;
 
 class DetectTimeEntryAnomaliesCommand extends Command
 {

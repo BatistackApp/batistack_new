@@ -2,8 +2,8 @@
 
 namespace Database\Factories\Tiers;
 
-use App\Models\Tiers\ConsultationOffer;
 use App\Models\Tiers\Consultation;
+use App\Models\Tiers\ConsultationOffer;
 use App\Models\Tiers\ThirdParty;
 use Illuminate\Database\Eloquent\Factories\Factory;
 

@@ -29,7 +29,7 @@ describe('Purchase Document Observers', function () {
         app()->instance(SupplierInvoiceAuditService::class, $serviceMock);
 
         $invoice = SupplierInvoice::factory()->create(['amount_ttc' => 120, 'status' => InvoiceStatus::DRAFT]);
-        
+
         $invoice->update(['status' => InvoiceStatus::AUDIT]);
     });
 });

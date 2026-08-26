@@ -2,7 +2,6 @@
 
 namespace App\Filament\Commerce\Resources\CustomerOrders\RelationManagers;
 
-use App\Enums\Articles\ItemType;
 use App\Enums\Commerce\InvoiceStatus;
 use App\Enums\Commerce\InvoiceType;
 use App\Models\Commerce\CustomerInvoice;
@@ -12,7 +11,6 @@ use App\Services\Commerce\CommerceDocumentationService;
 use App\Services\Commerce\CustomerOrderService;
 use App\Services\Commerce\InvoiceLegalizationService;
 use App\Services\Commerce\SituationService;
-use CodeWithKyrian\FilamentDateRange\Forms\Components\DateRangePicker;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
@@ -34,10 +32,8 @@ use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 use ToneGabes\Filament\Icons\Enums\Phosphor;
-use function Pest\Laravel\options;
 
 class SituationsRelationManager extends RelationManager
 {

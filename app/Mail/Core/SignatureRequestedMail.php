@@ -2,8 +2,9 @@
 
 namespace App\Mail\Core;
 
+use App\Models\Core\Signature;
+use App\Services\Core\DocumentService;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Mail\Mailables\Content;
@@ -18,7 +19,7 @@ class SignatureRequestedMail extends Mailable
      * Create a new message instance.
      */
     public function __construct(
-        public \App\Models\Core\Signature $signature,
+        public Signature $signature,
         public string $name,
         public ?string $documentPath = null
     ) {}
@@ -46,16 +47,16 @@ class SignatureRequestedMail extends Mailable
     /**
      * Get the attachments for the message.
      *
-     * @return array<int, \Illuminate\Mail\Mailables\Attachment>
+     * @return array<int, Attachment>
      */
     public function attachments(): array
     {
         if ($this->documentPath) {
             return [
-                Attachment::fromStorageDisk(\App\Services\Core\DocumentService::getDisk(), $this->documentPath)
+                Attachment::fromStorageDisk(DocumentService::getDisk(), $this->documentPath),
             ];
         }
-        
+
         return [];
     }
 }

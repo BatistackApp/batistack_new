@@ -2,17 +2,17 @@
 
 namespace App\Filament\RH\Resources\TrainingSessions\Schemas;
 
-use Filament\Forms\Components\DatePicker;
-use Filament\Forms\Components\Select;
-use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\Textarea;
-use Filament\Forms\Components\Tabs;
-use Filament\Schemas\Components\Section;
-use Filament\Schemas\Schema;
-use App\Enums\RH\TrainingSessionStatus;
+use App\Enums\RH\CertificationSymbol;
 use App\Enums\RH\OpcoStatus;
 use App\Enums\RH\QualificationType;
-use App\Enums\RH\CertificationSymbol;
+use App\Enums\RH\TrainingSessionStatus;
+use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Tabs;
+use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Schema;
 
 class TrainingSessionForm
 {
@@ -42,7 +42,7 @@ class TrainingSessionForm
                                     ->required()
                                     ->default(TrainingSessionStatus::PLANIFIEE->value)
                                     ->label('Statut de la session'),
-                                
+
                                 Section::make('Qualification (Optionnel)')
                                     ->schema([
                                         Select::make('qualification_type')
@@ -56,7 +56,7 @@ class TrainingSessionForm
                                             ->label('Durée de validité (mois)'),
                                     ])->columns(3),
                             ])->columns(2),
-                        
+
                         Tabs\Tab::make('Budget & OPCO')
                             ->schema([
                                 TextInput::make('cost')
@@ -75,7 +75,7 @@ class TrainingSessionForm
                                     ->default(OpcoStatus::NON_DEMANDE->value)
                                     ->label('Statut OPCO'),
                             ])->columns(3),
-                    ])->columnSpanFull()
+                    ])->columnSpanFull(),
             ]);
     }
 }

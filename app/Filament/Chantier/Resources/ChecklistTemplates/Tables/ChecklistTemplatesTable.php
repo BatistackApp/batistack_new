@@ -5,6 +5,8 @@ namespace App\Filament\Chantier\Resources\ChecklistTemplates\Tables;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Tables\Columns\IconColumn;
+use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
 class ChecklistTemplatesTable
@@ -13,15 +15,15 @@ class ChecklistTemplatesTable
     {
         return $table
             ->columns([
-                \Filament\Tables\Columns\TextColumn::make('name')->label('Nom')
+                TextColumn::make('name')->label('Nom')
                     ->label('Nom du modèle')
                     ->searchable()
                     ->sortable(),
-                \Filament\Tables\Columns\IconColumn::make('is_active')
+                IconColumn::make('is_active')
                     ->label('Actif')
                     ->boolean()
                     ->sortable(),
-                \Filament\Tables\Columns\TextColumn::make('created_at')->label('Créé le')
+                TextColumn::make('created_at')->label('Créé le')
                     ->label('Créé le')
                     ->dateTime('d/m/Y H:i')
                     ->sortable(),

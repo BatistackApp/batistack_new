@@ -125,7 +125,6 @@ describe('BarcodeObserver - deleted()', function () {
         Log::shouldReceive('info')
             ->zeroOrMoreTimes();
 
-
         $item = Item::factory()->create([
             'unit_id' => $this->unit->id,
             'vat_rate_id' => $this->vatRate->id,

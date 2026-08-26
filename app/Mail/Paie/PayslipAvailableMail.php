@@ -4,7 +4,6 @@ namespace App\Mail\Paie;
 
 use App\Models\Paie\Payslip;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Mail\Mailables\Content;
@@ -28,7 +27,7 @@ class PayslipAvailableMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Votre bulletin de salaire ' . $this->payslip->period . ' est disponible',
+            subject: 'Votre bulletin de salaire '.$this->payslip->period.' est disponible',
         );
     }
 

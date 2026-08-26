@@ -5,6 +5,7 @@ namespace App\Observers\Flottes;
 use App\Models\Flottes\TrafficFine;
 use App\Notifications\Flottes\TrafficFineReceivedNotification;
 use App\Services\Flottes\TrafficFineService;
+use App\Services\RH\RHDocumentService;
 use Log;
 
 class TrafficFineObserver
@@ -55,9 +56,9 @@ class TrafficFineObserver
 
             // [Nouveau] Synergie RH : Génération de l'avertissement RH
             try {
-                $rhDocumentService = app(\App\Services\RH\RHDocumentService::class);
+                $rhDocumentService = app(RHDocumentService::class);
                 $rhDocumentService->generateTrafficFineWarning($fine->employee, $fine);
-                
+
                 Log::info('Avertissement RH généré suite à une amende', [
                     'fine_id' => $fine->id,
                     'employee_id' => $fine->employee_id,
@@ -65,7 +66,7 @@ class TrafficFineObserver
             } catch (\Exception $e) {
                 Log::error('Erreur lors de la génération de l\'avertissement RH', [
                     'fine_id' => $fine->id,
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
                 ]);
             }
 

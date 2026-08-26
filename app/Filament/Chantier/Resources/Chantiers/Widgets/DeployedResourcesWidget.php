@@ -3,6 +3,7 @@
 namespace App\Filament\Chantier\Resources\Chantiers\Widgets;
 
 use App\Models\Chantiers\Chantier;
+use App\Models\Flottes\VehicleAssignment;
 use Filament\Widgets\Widget;
 use Illuminate\Database\Eloquent\Model;
 
@@ -12,14 +13,14 @@ class DeployedResourcesWidget extends Widget
 
     public ?Model $record = null;
 
-    protected int | string | array $columnSpan = 'full';
+    protected int|string|array $columnSpan = 'full';
 
     public function getResources(): array
     {
         /** @var Chantier $chantier */
         $chantier = $this->record;
-        
-        if (!$chantier) {
+
+        if (! $chantier) {
             return [];
         }
 
@@ -49,19 +50,19 @@ class DeployedResourcesWidget extends Widget
                     'status' => $contract->status?->getLabel() ?? 'Actif',
                     'start_date' => $contract->start_date?->format('d/m/Y') ?? '-',
                     'end_date' => $contract->end_date?->format('d/m/Y') ?? ($contract->end_date_preview?->format('d/m/Y') ?? '-'),
-                    'cost' => number_format($line->unit_price_ht, 2) . ' € / ' . ($contract->billing_period?->getLabel() ?? 'jour'),
+                    'cost' => number_format($line->unit_price_ht, 2).' € / '.($contract->billing_period?->getLabel() ?? 'jour'),
                 ];
             }
         }
 
         // 3. Vehicles
-        $vehicleAssignments = \App\Models\Flottes\VehicleAssignment::with(['vehicle', 'employee'])
+        $vehicleAssignments = VehicleAssignment::with(['vehicle', 'employee'])
             ->where('chantier_id', $chantier->id)
             ->get();
-            
+
         foreach ($vehicleAssignments as $assignment) {
             $resources[] = [
-                'name' => $assignment->vehicle->brand . ' ' . $assignment->vehicle->model . ' (' . $assignment->vehicle->license_plate . ')',
+                'name' => $assignment->vehicle->brand.' '.$assignment->vehicle->model.' ('.$assignment->vehicle->license_plate.')',
                 'type' => 'Véhicule',
                 'supplier' => $assignment->employee ? $assignment->employee->full_name : 'Sans conducteur',
                 'status' => $assignment->status?->getLabel() ?? 'Actif',

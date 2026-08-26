@@ -2,6 +2,7 @@
 
 namespace App\Filament\Technicien\Resources\Interventions;
 
+use App\Enums\Interventions\InterventionStatus;
 use App\Filament\Technicien\Resources\Interventions\Pages\CreateIntervention;
 use App\Filament\Technicien\Resources\Interventions\Pages\EditIntervention;
 use App\Filament\Technicien\Resources\Interventions\Pages\ListInterventions;
@@ -11,7 +12,6 @@ use App\Models\Interventions\Intervention;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
-use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use ToneGabes\Filament\Icons\Enums\Phosphor;
@@ -21,7 +21,9 @@ class InterventionResource extends Resource
     protected static ?string $model = Intervention::class;
 
     protected static string|BackedEnum|null $navigationIcon = Phosphor::Wrench;
+
     protected static ?string $modelLabel = 'Mes Interventions';
+
     protected static ?string $pluralModelLabel = 'Mes Interventions';
 
     public static function getEloquentQuery(): Builder
@@ -34,7 +36,7 @@ class InterventionResource extends Resource
                     $query->where('employee_id', $salarieId);
                 }
             })
-            ->where('status', '!=', \App\Enums\Interventions\InterventionStatus::BROUILLON->value);
+            ->where('status', '!=', InterventionStatus::BROUILLON->value);
     }
 
     public static function form(Schema $schema): Schema

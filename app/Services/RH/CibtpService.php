@@ -2,9 +2,13 @@
 
 namespace App\Services\RH;
 
+use App\Enums\RH\TimeEntryStatus;
 use App\Models\Chantiers\WeatherAlert;
 use App\Models\RH\CibtpDeclaration;
+use App\Models\RH\Employee;
+use App\Models\RH\TimeEntry;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Collection;
 
 class CibtpService
 {
@@ -19,10 +23,10 @@ class CibtpService
         }
 
         $chantier = $alert->chantier;
-        
+
         // Estimate the number of employees affected
         // In a real application, you might check Chantier->members() or specific schedules
-        $affectedEmployeesCount = $chantier->members()->count() ?: 1; 
+        $affectedEmployeesCount = $chantier->members()->count() ?: 1;
 
         // Assuming 7 hours lost per affected employee for a full day alert
         $estimatedLostHours = $affectedEmployeesCount * 7.0;
@@ -45,15 +49,15 @@ class CibtpService
         $startDate = Carbon::create($year - 1, 4, 1)->startOfDay();
         $endDate = Carbon::create($year, 3, 31)->endOfDay();
 
-        $employees = \App\Models\RH\Employee::with(['currentContract'])->get();
+        $employees = Employee::with(['currentContract'])->get();
 
         $csvData = [];
         // En-têtes
         $csvData[] = ['Matricule', 'Nom', 'Prénom', 'NIR', 'Heures Travaillées', 'Salaire Brut Période'];
 
         foreach ($employees as $employee) {
-            $hours = \App\Models\RH\TimeEntry::where('employee_id', $employee->id)
-                ->where('status', \App\Enums\RH\TimeEntryStatus::APPROVED)
+            $hours = TimeEntry::where('employee_id', $employee->id)
+                ->where('status', TimeEntryStatus::APPROVED)
                 ->whereBetween('date', [$startDate, $endDate])
                 ->sum('hours');
 
@@ -68,7 +72,7 @@ class CibtpService
                     $employee->first_name,
                     $employee->social_security_number ?? '',
                     round($hours, 2),
-                    $grossSalary
+                    $grossSalary,
                 ];
             }
         }
@@ -78,7 +82,8 @@ class CibtpService
 
     /**
      * Génère l'export CSV des Demandes De Congés (DDC)
-     * @param \Illuminate\Database\Eloquent\Collection $absences
+     *
+     * @param  Collection  $absences
      */
     public function generateDDC($absences): string
     {
@@ -89,7 +94,7 @@ class CibtpService
         foreach ($absences as $absence) {
             $employee = $absence->employee;
             $lastWorkedDay = $absence->start_date->copy()->subDay()->format('d/m/Y');
-            
+
             $csvData[] = [
                 $employee->registration_number,
                 $employee->last_name,
@@ -97,7 +102,7 @@ class CibtpService
                 $absence->start_date->format('d/m/Y'),
                 $absence->end_date->format('d/m/Y'),
                 $lastWorkedDay,
-                $absence->type->value
+                $absence->type->value,
             ];
         }
 
@@ -111,13 +116,14 @@ class CibtpService
     {
         $out = fopen('php://temp', 'r+');
         // Ajout du BOM UTF-8 pour Excel
-        fputs($out, $bom =(chr(0xEF) . chr(0xBB) . chr(0xBF)));
+        fwrite($out, $bom = (chr(0xEF).chr(0xBB).chr(0xBF)));
         foreach ($data as $row) {
             fputcsv($out, $row, ';');
         }
         rewind($out);
         $csv = stream_get_contents($out);
         fclose($out);
+
         return $csv;
     }
 }

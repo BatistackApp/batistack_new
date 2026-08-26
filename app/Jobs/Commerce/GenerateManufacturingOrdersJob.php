@@ -12,7 +12,6 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Str;
 
 class GenerateManufacturingOrdersJob implements ShouldQueue
 {
@@ -29,7 +28,7 @@ class GenerateManufacturingOrdersJob implements ShouldQueue
 
         foreach ($this->order->items as $orderItem) {
             $item = $orderItem->item;
-            
+
             // Si c'est un Ouvrage (WORK), on génère un OF
             if ($item && $item->type === ItemType::WORK) {
                 $this->generateOFForItem($item, $orderItem->quantity, null);
@@ -44,7 +43,7 @@ class GenerateManufacturingOrdersJob implements ShouldQueue
     {
         // 1. Créer l'OF pour cet article
         $of = ManufacturingOrder::create([
-            'reference' => 'OF-' . strtoupper(uniqid()),
+            'reference' => 'OF-'.strtoupper(uniqid()),
             'item_id' => $item->id,
             'chantier_id' => $this->order->chantier_id,
             'customer_order_id' => $this->order->id,
@@ -56,7 +55,7 @@ class GenerateManufacturingOrdersJob implements ShouldQueue
         // 2. Parcourir la nomenclature de l'article pour trouver les sous-ouvrages
         if ($item->relationLoaded('components') || $item->components()->exists()) {
             $components = $item->components()->with('childItem')->get();
-            
+
             foreach ($components as $component) {
                 $childItem = $component->childItem;
                 if ($childItem && $childItem->type === ItemType::WORK) {

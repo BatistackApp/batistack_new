@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\Flottes\ConditionReportType;
+use App\Models\Flottes\VehicleAssignment;
 use App\Models\Flottes\VehicleConditionReport;
 
 test('scope checkIn filtre rapports check-in', function () {
@@ -30,7 +31,7 @@ test('scope checkOut filtre rapports check-out', function () {
 });
 
 test('relation assignment charge affectation', function () {
-    $assignment = \App\Models\Flottes\VehicleAssignment::factory()->create();
+    $assignment = VehicleAssignment::factory()->create();
     $report = VehicleConditionReport::factory()->create([
         'vehicle_assignment_id' => $assignment->id,
     ]);

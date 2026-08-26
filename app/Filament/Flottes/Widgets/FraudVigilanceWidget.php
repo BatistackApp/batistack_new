@@ -4,17 +4,17 @@ namespace App\Filament\Flottes\Widgets;
 
 use App\Models\Flottes\FuelTransaction;
 use Filament\Actions\Action;
-use Filament\Actions\BulkActionGroup;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget;
-use Illuminate\Database\Eloquent\Builder;
 use ToneGabes\Filament\Icons\Enums\Phosphor;
 
 class FraudVigilanceWidget extends TableWidget
 {
     protected static ?string $heading = 'Vigilance & Audit Anti-Fraude';
-    protected int | string | array $columnSpan = 'full';
+
+    protected int|string|array $columnSpan = 'full';
+
     protected static ?int $sort = 6;
 
     public function table(Table $table): Table

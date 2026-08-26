@@ -13,6 +13,7 @@ class ItemObserver
 {
     /**
      * Valider avant création
+     *
      * @throws Exception
      */
     public function creating(Item $item): void
@@ -22,6 +23,7 @@ class ItemObserver
 
     /**
      * Valider avant mise à jour
+     *
      * @throws Exception
      */
     public function updating(Item $item): void
@@ -83,6 +85,7 @@ class ItemObserver
 
     /**
      * Avant suppression: vérifier que n'est pas utilisé
+     *
      * @throws Exception
      */
     public function deleting(Item $item): bool

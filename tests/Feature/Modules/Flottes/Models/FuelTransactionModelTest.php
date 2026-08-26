@@ -22,7 +22,7 @@ test('scope recent filtre derniers 30 jours', function () {
 });
 
 test('relation vehicle charge véhicule', function () {
-    $vehicle = \App\Models\Flottes\Vehicle::factory()->create();
+    $vehicle = Vehicle::factory()->create();
     $fuel = FuelTransaction::factory()->create(['vehicle_id' => $vehicle->id]);
 
     $fuel->load('vehicle');

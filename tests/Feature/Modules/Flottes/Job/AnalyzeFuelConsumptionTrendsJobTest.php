@@ -25,7 +25,7 @@ describe('AnalyzeFuelConsumptionTrendsJob', function () {
         $serviceMock = Mockery::mock(VehicleFuelService::class);
         $serviceMock->shouldReceive('getConsumptionStatistics')
             ->once()
-            ->with(Mockery::on(fn($v) => $v->id === $vehicle->id))
+            ->with(Mockery::on(fn ($v) => $v->id === $vehicle->id))
             ->andReturn($stats);
 
         app()->instance(VehicleFuelService::class, $serviceMock);
@@ -42,7 +42,7 @@ describe('AnalyzeFuelConsumptionTrendsJob', function () {
             ->with('Analyse consommation complétée pour 1 véhicules')
             ->once();
 
-        $job = new AnalyzeFuelConsumptionTrendsJob();
+        $job = new AnalyzeFuelConsumptionTrendsJob;
         $job->handle($serviceMock);
 
         expect(Cache::has("fuel_stats_{$vehicle->id}"))->toBeTrue()
@@ -64,7 +64,7 @@ describe('AnalyzeFuelConsumptionTrendsJob', function () {
 
         Log::shouldReceive('info')->once();
 
-        $job = new AnalyzeFuelConsumptionTrendsJob();
+        $job = new AnalyzeFuelConsumptionTrendsJob;
         $job->handle($serviceMock);
 
         expect(Cache::has("fuel_stats_{$vehicle->id}"))->toBeFalse();

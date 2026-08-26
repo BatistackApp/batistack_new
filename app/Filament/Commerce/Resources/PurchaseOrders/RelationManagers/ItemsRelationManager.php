@@ -17,6 +17,7 @@ use Filament\Tables\Table;
 class ItemsRelationManager extends RelationManager
 {
     protected static string $relationship = 'items';
+
     protected static ?string $title = 'Lignes de commande';
 
     public function form(Schema $schema): Schema

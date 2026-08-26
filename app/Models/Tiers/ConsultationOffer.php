@@ -5,8 +5,6 @@ namespace App\Models\Tiers;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use App\Models\Tiers\Consultation;
-use App\Models\Tiers\ThirdParty;
 
 class ConsultationOffer extends Model
 {

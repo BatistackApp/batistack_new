@@ -6,7 +6,6 @@ use App\Models\Chantiers\Chantier;
 use App\Models\Chantiers\ChantierLog;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
-use Illuminate\Support\Carbon;
 
 class ChantierLogFactory extends Factory
 {

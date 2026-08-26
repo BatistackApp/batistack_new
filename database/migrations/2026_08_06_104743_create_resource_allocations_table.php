@@ -17,7 +17,7 @@ return new class extends Migration
             $table->morphs('allocatable'); // allocatable_id, allocatable_type
             $table->date('date');
             $table->timestamps();
-            
+
             // Unicité : une ressource ne peut être affectée qu'une fois par jour (même tâche ou différente)
             // L'unicité sur la ressource + date empêchera de l'affecter à plusieurs tâches différentes le même jour
             $table->unique(['allocatable_id', 'allocatable_type', 'date'], 'resource_alloc_unique_daily');

@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace App\Policies\RH;
 
-use Illuminate\Foundation\Auth\User as AuthUser;
 use App\Models\RH\CibtpDeclaration;
 use Illuminate\Auth\Access\HandlesAuthorization;
+use Illuminate\Foundation\Auth\User as AuthUser;
 
 class CibtpDeclarationPolicy
 {
     use HandlesAuthorization;
-    
+
     public function viewAny(AuthUser $authUser): bool
     {
         return $authUser->can('ViewAny:CibtpDeclaration');
@@ -71,5 +71,4 @@ class CibtpDeclarationPolicy
     {
         return $authUser->can('Reorder:CibtpDeclaration');
     }
-
 }

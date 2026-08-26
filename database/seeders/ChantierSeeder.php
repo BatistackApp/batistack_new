@@ -41,11 +41,11 @@ class ChantierSeeder extends Seeder
             $chantier = Chantier::create([
                 'client_id' => $client->id,
                 'manager_id' => $manager->id,
-                'reference' => 'CH-' . (2026000 + $i),
-                'name' => collect(['Résidence ', 'Pavillon ', 'Réfection ', 'Lotissement ', 'Extension '])->random() . $client->name,
+                'reference' => 'CH-'.(2026000 + $i),
+                'name' => collect(['Résidence ', 'Pavillon ', 'Réfection ', 'Lotissement ', 'Extension '])->random().$client->name,
                 'status' => $statuses[array_rand($statuses)],
-                'address' => rand(1, 200) . ' Rue du Chantier ' . ($i + 1),
-                'zip_code' => '750' . str_pad($i, 2, '0', STR_PAD_LEFT),
+                'address' => rand(1, 200).' Rue du Chantier '.($i + 1),
+                'zip_code' => '750'.str_pad($i, 2, '0', STR_PAD_LEFT),
                 'city' => 'Paris',
                 'latitude' => 48.8566 + rand(-50, 50) / 1000,
                 'longitude' => 2.3522 + rand(-50, 50) / 1000,
@@ -72,8 +72,8 @@ class ChantierSeeder extends Seeder
                 for ($t = 0; $t < $taskCount; $t++) {
                     ChantierTask::create([
                         'chantier_phase_id' => $phase->id,
-                        'label' => 'Tâche ' . ($t + 1) . ' - ' . $phase->label,
-                        'description' => 'Description détaillée de la tâche ' . ($t + 1),
+                        'label' => 'Tâche '.($t + 1).' - '.$phase->label,
+                        'description' => 'Description détaillée de la tâche '.($t + 1),
                         'order' => $t + 1,
                         'estimated_hours' => rand(4, 80),
                         'progress_percentage' => rand(0, 100),
@@ -87,8 +87,8 @@ class ChantierSeeder extends Seeder
             for ($r = 0; $r < $reserveCount; $r++) {
                 ChantierReserve::create([
                     'chantier_id' => $chantier->id,
-                    'reference' => 'RS-' . now()->year . '-' . str_pad($i * 10 + $r + 1, 3, '0', STR_PAD_LEFT),
-                    'title' => 'Réserve ' . ($r + 1) . ' - ' . $chantier->name,
+                    'reference' => 'RS-'.now()->year.'-'.str_pad($i * 10 + $r + 1, 3, '0', STR_PAD_LEFT),
+                    'title' => 'Réserve '.($r + 1).' - '.$chantier->name,
                     'description' => 'Problème identifié sur le chantier nécessitant une intervention.',
                     'severity' => collect(ReserveSeverity::cases())->random(),
                     'status' => collect(ChantierReserveStatus::cases())->random(),
@@ -108,7 +108,7 @@ class ChantierSeeder extends Seeder
                         'Livraison matériel prévue demain',
                         'Réunion de coordination planifiée',
                         'Pointage des heures effectué',
-                        'Phase ' . $phasesLabels[array_rand($phasesLabels)] . ' terminée',
+                        'Phase '.$phasesLabels[array_rand($phasesLabels)].' terminée',
                         'Réserve signalée et documentée',
                     ])->random(),
                 ]);

@@ -15,7 +15,7 @@ enum DoeDocumentCategory: string implements HasLabel
 
     public function getLabel(): string|Htmlable|null
     {
-        return match($this) {
+        return match ($this) {
             self::PLAN => 'Plan',
             self::NOTICE => 'Notice',
             self::FICHE_TECHNIQUE => 'Fiche Technique',

@@ -2,9 +2,16 @@
 
 namespace App\Filament\Commerce\Resources\PurchaseRequests\Tables;
 
+use App\Enums\Commerce\QuoteStatus;
+use App\Models\Commerce\PurchaseOrder;
+use App\Models\Commerce\PurchaseRequest;
+use App\Models\Core\VatRate;
+use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Notifications\Notification;
+use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
 class PurchaseRequestsTable
@@ -13,19 +20,19 @@ class PurchaseRequestsTable
     {
         return $table
             ->columns([
-                \Filament\Tables\Columns\TextColumn::make('reference')->label('Référence')
+                TextColumn::make('reference')->label('Référence')
                     ->label('Référence')
                     ->searchable()
                     ->sortable(),
-                \Filament\Tables\Columns\TextColumn::make('supplier.name')
+                TextColumn::make('supplier.name')
                     ->label('Fournisseur')
                     ->searchable()
                     ->sortable(),
-                \Filament\Tables\Columns\TextColumn::make('chantier.reference')
+                TextColumn::make('chantier.reference')
                     ->label('Chantier')
                     ->searchable()
                     ->sortable(),
-                \Filament\Tables\Columns\TextColumn::make('status')->label('Statut')
+                TextColumn::make('status')->label('Statut')
                     ->label('Statut')
                     ->badge()
                     ->sortable(),
@@ -34,18 +41,18 @@ class PurchaseRequestsTable
                 //
             ])
             ->recordActions([
-                \Filament\Actions\EditAction::make(),
-                \Filament\Actions\Action::make('convert_to_order')
+                EditAction::make(),
+                Action::make('convert_to_order')
                     ->label('Transformer en commande')
                     ->icon('heroicon-o-arrow-right-circle')
                     ->color('success')
                     ->requiresConfirmation()
-                    ->action(function (\App\Models\Commerce\PurchaseRequest $record) {
-                        $order = \App\Models\Commerce\PurchaseOrder::create([
+                    ->action(function (PurchaseRequest $record) {
+                        $order = PurchaseOrder::create([
                             'supplier_id' => $record->supplier_id,
                             'chantier_id' => $record->chantier_id,
-                            'reference' => 'CMD-' . uniqid(),
-                            'status' => \App\Enums\Commerce\QuoteStatus::DRAFT,
+                            'reference' => 'CMD-'.uniqid(),
+                            'status' => QuoteStatus::DRAFT,
                         ]);
                         foreach ($record->items as $item) {
                             $order->items()->create([
@@ -53,19 +60,19 @@ class PurchaseRequestsTable
                                 'name' => $item->name,
                                 'quantity' => $item->quantity,
                                 'price_unit_ht' => $item->item->purchase_price ?? 0,
-                                'vat_rate_id' => \App\Models\Core\VatRate::first()->id ?? null,
+                                'vat_rate_id' => VatRate::first()->id ?? null,
                             ]);
                         }
-                        $record->update(['status' => \App\Enums\Commerce\QuoteStatus::ACCEPTED]);
-                        \Filament\Notifications\Notification::make()
+                        $record->update(['status' => QuoteStatus::ACCEPTED]);
+                        Notification::make()
                             ->title('Commande générée avec succès')
                             ->success()
                             ->send();
                     }),
             ])
             ->bulkActions([
-                \Filament\Actions\BulkActionGroup::make([
-                    \Filament\Actions\DeleteBulkAction::make(),
+                BulkActionGroup::make([
+                    DeleteBulkAction::make(),
                 ]),
             ]);
     }

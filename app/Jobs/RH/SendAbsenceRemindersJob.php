@@ -26,6 +26,7 @@ class SendAbsenceRemindersJob implements ShouldQueue
 
         if ($pendingAbsences->isEmpty()) {
             Log::info('SendAbsenceRemindersJob: No pending absences to remind');
+
             return;
         }
 

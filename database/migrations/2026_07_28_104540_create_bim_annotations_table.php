@@ -16,12 +16,12 @@ return new class extends Migration
             $table->foreignId('bim_model_id')->constrained()->cascadeOnDelete();
             $table->string('title');
             $table->text('description')->nullable();
-            
+
             // Coordonnées spatiales (X, Y, Z)
             $table->float('position_x')->nullable();
             $table->float('position_y')->nullable();
             $table->float('position_z')->nullable();
-            
+
             // Caméra optionnelle
             $table->float('camera_x')->nullable();
             $table->float('camera_y')->nullable();
@@ -29,7 +29,7 @@ return new class extends Migration
 
             // Lien polymorphique vers une tâche ou une intervention liée
             $table->nullableMorphs('target');
-            
+
             $table->timestamps();
         });
     }

@@ -9,7 +9,5 @@ class PaymentRecordedEvent
 {
     use Dispatchable;
 
-    public function __construct(public Payment $payment)
-    {
-    }
+    public function __construct(public Payment $payment) {}
 }

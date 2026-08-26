@@ -4,23 +4,23 @@ namespace App\Services\Paie;
 
 use App\Models\Core\Company;
 use Digitick\Sepa\TransferFile\Factory\TransferFileFacadeFactory;
-use Illuminate\Database\Eloquent\Collection;
 use Exception;
+use Illuminate\Database\Eloquent\Collection;
 
 class SepaExportService
 {
     /**
      * Genere le fichier XML SEPA (pain.001.001.03) pour une collection de bulletins.
      *
-     * @param Collection $payslips
      * @return string Le contenu XML
+     *
      * @throws Exception Si les coordonnées bancaires de l'entreprise ou d'un employé sont manquantes.
      */
     public function generateXml(Collection $payslips): string
     {
         $company = Company::first();
 
-        if (!$company || empty($company->iban)) {
+        if (! $company || empty($company->iban)) {
             throw new Exception("L'entreprise n'a pas d'IBAN configuré dans les paramètres système.");
         }
 
@@ -30,8 +30,8 @@ class SepaExportService
         $companyName = $company->legal_name ?? 'Entreprise Inconnue';
 
         // Identifiants de messages SEPA
-        $messageId = 'MSG-' . date('YmdHis');
-        $paymentInfoId = 'PMT-' . date('YmdHis');
+        $messageId = 'MSG-'.date('YmdHis');
+        $paymentInfoId = 'PMT-'.date('YmdHis');
 
         $transferFile = TransferFileFacadeFactory::createCustomerCredit($messageId, $companyName, 'pain.001.001.03');
 
@@ -54,13 +54,13 @@ class SepaExportService
             }
 
             $employee = $payslip->employee;
-            if (!$employee || empty($employee->iban)) {
+            if (! $employee || empty($employee->iban)) {
                 throw new Exception("Le salarié {$employee->getFullName()} n'a pas d'IBAN configuré.");
             }
 
             $employeeIban = str_replace(' ', '', $employee->iban);
             $employeeBic = $employee->bic ? str_replace(' ', '', $employee->bic) : null;
-            $remittanceInfo = 'Salaire ' . $payslip->period;
+            $remittanceInfo = 'Salaire '.$payslip->period;
 
             $transfer = [
                 'amount' => (int) round($payslip->net_paid * 100), // En centimes pour digitick

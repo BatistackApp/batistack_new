@@ -2,9 +2,9 @@
 
 namespace App\Filament\Articles\Resources\Warehouses\Pages;
 
+use App\Filament\Articles\Actions\DestockKitAction;
 use App\Filament\Articles\Resources\Warehouses\WarehouseResource;
 use Filament\Actions\CreateAction;
-use App\Filament\Articles\Actions\DestockKitAction;
 use Filament\Resources\Pages\ListRecords;
 
 class ListWarehouses extends ListRecords

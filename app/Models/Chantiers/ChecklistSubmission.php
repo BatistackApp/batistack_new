@@ -2,6 +2,8 @@
 
 namespace App\Models\Chantiers;
 
+use App\Models\User;
+use Illuminate\Database\Eloquent\Casts\AsArrayObject;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -20,7 +22,7 @@ class ChecklistSubmission extends Model
     protected function casts(): array
     {
         return [
-            'data' => \Illuminate\Database\Eloquent\Casts\AsArrayObject::class,
+            'data' => AsArrayObject::class,
         ];
     }
 
@@ -36,6 +38,6 @@ class ChecklistSubmission extends Model
 
     public function submitter()
     {
-        return $this->belongsTo(\App\Models\User::class, 'submitted_by');
+        return $this->belongsTo(User::class, 'submitted_by');
     }
 }

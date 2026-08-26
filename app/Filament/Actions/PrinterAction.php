@@ -8,10 +8,6 @@ use Illuminate\Database\Eloquent\Model;
 
 class PrinterAction
 {
-    /**
-     * @param string $typeDocument
-     * @return MediaAction
-     */
     public static function make(string $typeDocument): MediaAction
     {
         return MediaAction::make('viewPrinter')

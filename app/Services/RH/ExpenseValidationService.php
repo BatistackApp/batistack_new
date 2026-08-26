@@ -19,8 +19,7 @@ class ExpenseValidationService
 
     /**
      * Validate an expense item against company policy.
-     * 
-     * @param ExpenseItem $item
+     *
      * @return array{is_valid: bool, reason: ?string}
      */
     public function validateItem(ExpenseItem $item): array
@@ -39,12 +38,12 @@ class ExpenseValidationService
         if ($item->amount_ht !== null && $item->vat_amount !== null) {
             $calculatedTtc = round($item->amount_ht + $item->vat_amount, 2);
             $actualTtc = round($item->amount_ttc, 2);
-            
+
             // Allow 0.05 margin of error for rounding
             if (abs($calculatedTtc - $actualTtc) > 0.05) {
                 return [
                     'is_valid' => false,
-                    'reason' => "Incohérence détectée entre le montant HT, la TVA et le montant TTC.",
+                    'reason' => 'Incohérence détectée entre le montant HT, la TVA et le montant TTC.',
                 ];
             }
         }
@@ -53,7 +52,7 @@ class ExpenseValidationService
         if ($item->date && $item->date->isFuture()) {
             return [
                 'is_valid' => false,
-                'reason' => "La date de la dépense ne peut pas être dans le futur.",
+                'reason' => 'La date de la dépense ne peut pas être dans le futur.',
             ];
         }
 

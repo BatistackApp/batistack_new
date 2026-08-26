@@ -4,14 +4,14 @@ namespace Tests\Feature\Modules\Chantiers;
 
 use App\Enums\Chantiers\DoeDocumentCategory;
 use App\Enums\Tiers\ThirdPartyType;
+use App\Models\Articles\Item;
 use App\Models\Chantiers\Chantier;
 use App\Models\Chantiers\DoeDocument;
+use App\Models\Commerce\CustomerOrder;
+use App\Models\Commerce\CustomerOrderItem;
 use App\Models\Core\Company;
 use App\Models\Tiers\ThirdParty;
 use App\Services\Chantiers\DoeDocumentService;
-use App\Models\Articles\Item;
-use App\Models\Commerce\CustomerOrder;
-use App\Models\Commerce\CustomerOrderItem;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Storage;
 use Mockery;
@@ -26,6 +26,7 @@ beforeEach(function () {
     $this->service->shouldReceive('generateSommairePdf')->andReturnUsing(function () {
         $path = 'chantiers/doe_temp/dummy_sommaire.pdf';
         Storage::disk('public')->put($path, 'dummy content');
+
         return $path;
     });
 
@@ -95,7 +96,7 @@ describe('DoeDocumentService - compileDoe', function () {
     test('lève une exception si aucun document validé', function () {
         expect(function () {
             $this->service->compileDoe($this->chantier);
-        })->toThrow(\Exception::class, "Aucun document ou fiche technique");
+        })->toThrow(\Exception::class, 'Aucun document ou fiche technique');
     });
 
     test('ignore les documents non validés', function () {
@@ -215,14 +216,14 @@ describe('DoeDocumentService - compileDoe', function () {
     test('génère réellement le sommaire et le zip complet avec médias', function () {
         // Use real service instead of mocked one
         $realService = app(DoeDocumentService::class);
-        
+
         $doc = DoeDocument::create([
             'chantier_id' => $this->chantier->id,
             'name' => 'Plan archi',
             'category' => DoeDocumentCategory::PLAN,
             'is_validated' => true,
         ]);
-        
+
         // Ensure physical file exists for Spatie medialibrary fake disk
         $tmpFile1 = storage_path('app/temp_plan.pdf');
         file_put_contents($tmpFile1, 'dummy pdf');
@@ -231,11 +232,11 @@ describe('DoeDocumentService - compileDoe', function () {
         // Fiche technique
         $order = CustomerOrder::factory()->create(['chantier_id' => $this->chantier->id]);
         $item = Item::factory()->create(['name' => 'Peinture pro']);
-        
+
         $tmpFile2 = storage_path('app/temp_ft.pdf');
         file_put_contents($tmpFile2, 'dummy ft');
         $item->addMedia($tmpFile2)->usingFileName('peinture-pro.pdf')->toMediaCollection('technical_sheet');
-        
+
         CustomerOrderItem::factory()->create([
             'customer_order_id' => $order->id,
             'item_id' => $item->id,
@@ -243,7 +244,7 @@ describe('DoeDocumentService - compileDoe', function () {
 
         try {
             $path = $realService->compileDoe($this->chantier);
-            
+
             expect($path)->toContain('DOE_')
                 ->and(file_exists($path))->toBeTrue();
 

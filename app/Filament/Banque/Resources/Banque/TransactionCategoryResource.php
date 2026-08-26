@@ -12,9 +12,8 @@ use Filament\Forms\Components\ColorPicker;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
-use Filament\Schemas\Schema;
 use Filament\Resources\Resource;
-use Filament\Tables;
+use Filament\Schemas\Schema;
 use Filament\Tables\Columns\ColorColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
@@ -24,8 +23,11 @@ class TransactionCategoryResource extends Resource
     protected static ?string $model = TransactionCategory::class;
 
     protected static \BackedEnum|string|null $navigationIcon = 'heroicon-o-tag';
+
     protected static \UnitEnum|string|null $navigationGroup = 'Banque';
+
     protected static ?string $modelLabel = 'Catégorie';
+
     protected static ?string $pluralModelLabel = 'Catégories de transaction';
 
     public static function form(Schema $schema): Schema
@@ -55,7 +57,7 @@ class TransactionCategoryResource extends Resource
                             ->label('Mot-clé')
                             ->required()
                             ->maxLength(255)
-                            ->hint("Si le libellé de la transaction contient ce mot, elle sera classée dans cette catégorie."),
+                            ->hint('Si le libellé de la transaction contient ce mot, elle sera classée dans cette catégorie.'),
                     ])
                     ->columnSpanFull()
                     ->collapsible()

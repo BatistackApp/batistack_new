@@ -98,7 +98,7 @@ class BimModelsRelationManager extends RelationManager
                     ->color('success')
                     ->form([
                         FileUpload::make('file_path')
-                            ->label(fn(BimModel $record) => 'Nouveau Fichier IFC (V'.($record->version + 1).')')
+                            ->label(fn (BimModel $record) => 'Nouveau Fichier IFC (V'.($record->version + 1).')')
                             ->disk('public')
                             ->directory('bim_models')
                             ->preserveFilenames()
@@ -112,12 +112,12 @@ class BimModelsRelationManager extends RelationManager
                         $newModel->file_path = $data['file_path'];
                         $newModel->parent_id = $record->id;
                         $newModel->version = $record->version + 1;
-                        
+
                         // Recalculate file size
                         if (\Storage::disk('public')->exists($data['file_path'])) {
                             $newModel->file_size = \Storage::disk('public')->size($data['file_path']);
                         }
-                        
+
                         $newModel->save();
                     })
                     ->visible(fn (BimModel $record) => $record->format === 'ifc'),

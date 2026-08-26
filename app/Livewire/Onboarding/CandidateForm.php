@@ -19,7 +19,9 @@ class CandidateForm extends Component implements HasForms
     use InteractsWithForms;
 
     public ?array $data = [];
+
     public Employee $employee;
+
     public bool $isCompleted = false;
 
     public function mount(string $uuid): void
@@ -28,6 +30,7 @@ class CandidateForm extends Component implements HasForms
 
         if ($this->employee->onboarding_completed) {
             $this->isCompleted = true;
+
             return;
         }
 

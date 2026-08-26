@@ -17,16 +17,16 @@ use Illuminate\Support\Facades\Queue;
 beforeEach(function () {
     Company::factory()->create();
     $this->customer = ThirdParty::factory()->create();
-    
+
     // Add primary contact for customer to receive notifications
     $this->contact = Contact::factory()->create([
         'third_party_id' => $this->customer->id,
-        'is_primary' => true
+        'is_primary' => true,
     ]);
-    
+
     $this->chantier = Chantier::factory()->create(['client_id' => $this->customer->id]);
     $this->user = User::factory()->create();
-    
+
     Notification::fake();
     Queue::fake();
 });
@@ -36,9 +36,9 @@ test('observer sets expires_at on creating', function () {
         'client_id' => $this->customer->id,
         'chantier_id' => $this->chantier->id,
         'responsable_id' => $this->user->id,
-        'expires_at' => null
+        'expires_at' => null,
     ]);
-    
+
     expect($quote->expires_at)->not->toBeNull();
 });
 
@@ -48,11 +48,11 @@ test('observer triggers handleQuoteSent on status SENT', function () {
         'client_id' => $this->customer->id,
         'chantier_id' => $this->chantier->id,
         'responsable_id' => $this->user->id,
-        'status' => QuoteStatus::DRAFT
+        'status' => QuoteStatus::DRAFT,
     ]);
-    
+
     $quote->update(['status' => QuoteStatus::SENT]);
-    
+
     Queue::assertPushed(GenerateDocumentJob::class);
     Notification::assertSentTo(
         $this->contact,
@@ -65,11 +65,11 @@ test('observer triggers handleQuoteSigned on status SIGNED', function () {
         'client_id' => $this->customer->id,
         'chantier_id' => $this->chantier->id,
         'responsable_id' => $this->user->id,
-        'status' => QuoteStatus::SENT
+        'status' => QuoteStatus::SENT,
     ]);
-    
+
     $quote->update(['status' => QuoteStatus::SIGNED]);
-    
+
     Notification::assertSentTo(
         $this->user,
         QuoteAcceptedNotification::class
@@ -81,11 +81,11 @@ test('observer triggers handleQuoteRejected on status REJECTED', function () {
         'client_id' => $this->customer->id,
         'chantier_id' => $this->chantier->id,
         'responsable_id' => $this->user->id,
-        'status' => QuoteStatus::SENT
+        'status' => QuoteStatus::SENT,
     ]);
-    
+
     $quote->update(['status' => QuoteStatus::REJECTED]);
-    
+
     Notification::assertSentTo(
         $this->user,
         QuoteRejectedNotification::class

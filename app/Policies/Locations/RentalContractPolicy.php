@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace App\Policies\Locations;
 
-use Illuminate\Foundation\Auth\User as AuthUser;
 use App\Models\Locations\RentalContract;
 use Illuminate\Auth\Access\HandlesAuthorization;
+use Illuminate\Foundation\Auth\User as AuthUser;
 
 class RentalContractPolicy
 {
     use HandlesAuthorization;
-    
+
     public function viewAny(AuthUser $authUser): bool
     {
         return $authUser->can('ViewAny:RentalContract');
@@ -71,5 +71,4 @@ class RentalContractPolicy
     {
         return $authUser->can('Reorder:RentalContract');
     }
-
 }

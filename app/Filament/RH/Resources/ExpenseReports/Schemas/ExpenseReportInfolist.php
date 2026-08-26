@@ -2,6 +2,7 @@
 
 namespace App\Filament\RH\Resources\ExpenseReports\Schemas;
 
+use App\Enums\RH\ExpenseReportStatus;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Schema;
 
@@ -23,8 +24,8 @@ class ExpenseReportInfolist
                 TextEntry::make('status')->label('Statut')
                     ->label('Statut')
                     ->badge()
-                    ->color(fn (\App\Enums\RH\ExpenseReportStatus $state): string => $state->getColor())
-                    ->formatStateUsing(fn (\App\Enums\RH\ExpenseReportStatus $state): string => $state->getLabel()),
+                    ->color(fn (ExpenseReportStatus $state): string => $state->getColor())
+                    ->formatStateUsing(fn (ExpenseReportStatus $state): string => $state->getLabel()),
                 TextEntry::make('total_amount')->label('Montant total')
                     ->label('Montant Total')
                     ->numeric()

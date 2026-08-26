@@ -4,13 +4,10 @@ namespace App\Filament\Tiers\Resources\ThirdParties\RelationManagers;
 
 use App\Enums\Tiers\AddressType;
 use BackedEnum;
-use Filament\Actions\AssociateAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\CreateAction;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
-use Filament\Actions\DissociateAction;
-use Filament\Actions\DissociateBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -25,8 +22,10 @@ use ToneGabes\Filament\Icons\Enums\Phosphor;
 class AddressesRelationManager extends RelationManager
 {
     protected static string $relationship = 'addresses';
+
     protected static ?string $title = 'Adresses & Localisation';
-    protected static string | BackedEnum | null $icon = Phosphor::MapPin;
+
+    protected static string|BackedEnum|null $icon = Phosphor::MapPin;
 
     public function form(Schema $schema): Schema
     {

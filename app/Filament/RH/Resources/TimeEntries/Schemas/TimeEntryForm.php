@@ -7,6 +7,7 @@ use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
@@ -37,8 +38,8 @@ class TimeEntryForm
                                     ->relationship('chantier', 'name')
                                     ->placeholder('Rechercher un chantier...')
                                     ->searchable(),
-                                    
-                                \Filament\Forms\Components\Toggle::make('is_workshop')
+
+                                Toggle::make('is_workshop')
                                     ->label('Au dépôt / Atelier')
                                     ->inline(false)
                                     ->default(false),
@@ -102,7 +103,7 @@ class TimeEntryForm
                             ->label('Commentaires de la semaine')
                             ->columnSpanFull()
                             ->placeholder('Description succincte des travaux réalisés durant la semaine...'),
-                    ])
+                    ]),
             ]);
     }
 }

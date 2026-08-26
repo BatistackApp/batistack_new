@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers\Core;
 
+use App\Enums\Core\SignatureStatus;
+use App\Enums\Core\SignatureType;
 use App\Http\Controllers\Controller;
+use App\Models\Core\Signature;
+use App\Services\Core\SignatureService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use App\Models\Core\Signature;
-use App\Enums\Core\SignatureStatus;
-use App\Services\Core\SignatureService;
-use App\Enums\Core\SignatureType;
 
 class SignatureWebhookController extends Controller
 {
@@ -27,11 +27,11 @@ class SignatureWebhookController extends Controller
         //       "submitters": [...]
         //   }
         // }
-        
+
         $eventType = $request->input('event_type');
         $data = $request->input('data');
 
-        if (!$eventType || !$data) {
+        if (! $eventType || ! $data) {
             return response()->json(['error' => 'Invalid payload'], 400);
         }
 
@@ -39,7 +39,7 @@ class SignatureWebhookController extends Controller
 
         if ($eventType === 'submission.completed') {
             $submissionId = $data['id'] ?? $data['submission_id'] ?? null;
-            
+
             if ($submissionId) {
                 // Find the signature matching this submission ID
                 $signature = Signature::whereJsonContains('metadata->docuseal_submission_id', $submissionId)->first();
@@ -51,7 +51,7 @@ class SignatureWebhookController extends Controller
                         SignatureType::EIDAS,
                         [
                             'docuseal_event' => $eventType,
-                            'docuseal_document_id' => $data['id'] ?? null
+                            'docuseal_document_id' => $data['id'] ?? null,
                         ]
                     );
 

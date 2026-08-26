@@ -5,16 +5,16 @@ use App\Services\Core\CompanyService;
 use Illuminate\Support\Facades\Cache;
 
 beforeEach(function () {
-    $this->service = new CompanyService();
+    $this->service = new CompanyService;
     Cache::flush();
 });
 
 describe('CompanyService', function () {
     test('getDocumentHeaderData returns empty array if no company exists', function () {
         Company::query()->delete();
-        
+
         $data = $this->service->getDocumentHeaderData();
-        
+
         expect($data)->toBeArray()->toBeEmpty();
     });
 
@@ -28,9 +28,9 @@ describe('CompanyService', function () {
             'zip_code' => '75000',
             'city' => 'Paris',
         ]);
-        
+
         $data = $this->service->getDocumentHeaderData();
-        
+
         expect($data)->toBeArray()
             ->toHaveKey('name', 'Batistack SAS')
             ->toHaveKey('siret', '12345678901234')

@@ -17,17 +17,16 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Date;
-
 use Relaticle\ActivityLog\Concerns\InteractsWithTimeline;
 use Relaticle\ActivityLog\Contracts\HasTimeline;
 use Relaticle\ActivityLog\Timeline\TimelineBuilder;
-use Spatie\Activitylog\Support\LogOptions;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
+use Spatie\Activitylog\Support\LogOptions;
 
 #[ObservedBy([CustomerInvoiceObserver::class])]
 class CustomerInvoice extends Model implements HasTimeline
 {
-    use HasFactory, LogsActivity, InteractsWithTimeline;
+    use HasFactory, InteractsWithTimeline, LogsActivity;
 
     protected $fillable = [
         'client_id',
@@ -282,8 +281,8 @@ class CustomerInvoice extends Model implements HasTimeline
     /**
      * Filtrer les factures éligibles à une relance spécifique
      *
-     * @param int $days Nombre de jours de retard minimum requis
-     * @param int $currentLevel Le niveau de relance actuel (ex: 0 pour passer à 1)
+     * @param  int  $days  Nombre de jours de retard minimum requis
+     * @param  int  $currentLevel  Le niveau de relance actuel (ex: 0 pour passer à 1)
      */
     public function scopeEligibleForDunning($query, int $days, int $currentLevel)
     {

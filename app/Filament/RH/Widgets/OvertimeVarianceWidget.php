@@ -2,16 +2,17 @@
 
 namespace App\Filament\RH\Widgets;
 
-use App\Models\RH\TimeEntry;
-use App\Enums\RH\TimeEntryType;
 use App\Enums\RH\TimeEntryStatus;
+use App\Enums\RH\TimeEntryType;
+use App\Models\RH\TimeEntry;
 use LaBoiteACode\FilamentDashboardWidgets\Data\VarianceItem;
 use LaBoiteACode\FilamentDashboardWidgets\Widgets\VarianceWidget;
 
 class OvertimeVarianceWidget extends VarianceWidget
 {
     protected static ?int $sort = 1;
-    protected int | string | array $columnSpan = 1;
+
+    protected int|string|array $columnSpan = 1;
 
     public function getHeading(): string
     {
@@ -34,8 +35,8 @@ class OvertimeVarianceWidget extends VarianceWidget
         return [
             VarianceItem::make('Heures validées (Mois en cours)', (float) $currentMonthEntries)
                 ->previous((float) $lastMonthEntries)
-                ->formatUsing(fn (float $val) => number_format($val, 1, ',', ' ') . ' h')
-                ->changeFormatUsing(fn (float $val) => ($val > 0 ? '+' : '') . number_format($val, 1, ',', ' ') . ' h')
+                ->formatUsing(fn (float $val) => number_format($val, 1, ',', ' ').' h')
+                ->changeFormatUsing(fn (float $val) => ($val > 0 ? '+' : '').number_format($val, 1, ',', ' ').' h'),
         ];
     }
 }

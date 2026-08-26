@@ -3,6 +3,7 @@
 use App\Models\Articles\Item;
 use App\Models\Articles\Stock;
 use App\Models\Articles\Warehouse;
+use App\Models\User;
 use App\Services\Articles\InventoryService;
 
 test('il régularise le stock à la valeur trouvée lors de l\'inventaire', function () {
@@ -12,7 +13,7 @@ test('il régularise le stock à la valeur trouvée lors de l\'inventaire', func
     // Stock théorique de 50
     Stock::create(['item_id' => $item->id, 'warehouse_id' => $warehouse->id, 'quantity' => 50]);
 
-    $user = \App\Models\User::factory()->create();
+    $user = User::factory()->create();
     $this->actingAs($user);
 
     $service = new InventoryService;
@@ -39,7 +40,7 @@ test('il ne modifie pas le stock si la quantité trouvée est identique à la th
     $service->reconcile($item, $warehouse, 10, 'Inventaire annuel sans écart');
 
     $finalUpdatedAt = Stock::where('item_id', $item->id)->where('warehouse_id', $warehouse->id)->first()->updated_at;
-    
+
     // Le updated_at ne doit pas avoir changé car on return avant la mise à jour
     expect($finalUpdatedAt->eq($initialUpdatedAt))->toBeTrue();
 });

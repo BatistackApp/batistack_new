@@ -11,7 +11,8 @@ use Illuminate\Database\Eloquent\Builder;
 
 class LatestChantiersWidget extends TableWidget
 {
-    protected int | string | array $columnSpan = 'full';
+    protected int|string|array $columnSpan = 'full';
+
     protected static ?string $heading = 'Derniers Chantiers';
 
     public function table(Table $table): Table

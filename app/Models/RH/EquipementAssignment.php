@@ -2,6 +2,7 @@
 
 namespace App\Models\RH;
 
+use App\Models\Chantiers\Chantier;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -39,7 +40,7 @@ class EquipementAssignment extends Model
 
     public function chantier(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\Chantiers\Chantier::class, 'chantier_id');
+        return $this->belongsTo(Chantier::class, 'chantier_id');
     }
 
     /**
@@ -64,6 +65,7 @@ class EquipementAssignment extends Model
     public function getImmobilizationCost(): float
     {
         $dailyCost = $this->equipement->daily_cost ?? 0;
+
         return $this->getDurationInDays() * $dailyCost;
     }
 }

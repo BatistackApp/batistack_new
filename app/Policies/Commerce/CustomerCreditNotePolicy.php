@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace App\Policies\Commerce;
 
-use Illuminate\Foundation\Auth\User as AuthUser;
 use App\Models\Commerce\CustomerCreditNote;
 use Illuminate\Auth\Access\HandlesAuthorization;
+use Illuminate\Foundation\Auth\User as AuthUser;
 
 class CustomerCreditNotePolicy
 {
     use HandlesAuthorization;
-    
+
     public function viewAny(AuthUser $authUser): bool
     {
         return $authUser->can('ViewAny:CustomerCreditNote');
@@ -71,5 +71,4 @@ class CustomerCreditNotePolicy
     {
         return $authUser->can('Reorder:CustomerCreditNote');
     }
-
 }

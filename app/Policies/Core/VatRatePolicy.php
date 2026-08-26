@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace App\Policies\Core;
 
-use Illuminate\Foundation\Auth\User as AuthUser;
 use App\Models\Core\VatRate;
 use Illuminate\Auth\Access\HandlesAuthorization;
+use Illuminate\Foundation\Auth\User as AuthUser;
 
 class VatRatePolicy
 {
     use HandlesAuthorization;
-    
+
     public function viewAny(AuthUser $authUser): bool
     {
         return $authUser->can('ViewAny:VatRate');
@@ -71,5 +71,4 @@ class VatRatePolicy
     {
         return $authUser->can('Reorder:VatRate');
     }
-
 }

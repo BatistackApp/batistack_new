@@ -2,14 +2,19 @@
 
 namespace App\Models\Locations;
 
+use App\Models\Chantiers\Chantier;
+use App\Models\Core\Company;
+use App\Models\Tiers\ThirdParty;
+use App\Observers\Locations\OutboundRentalObserver;
+use Database\Factories\Locations\OutboundRentalContractFactory;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 
-#[ObservedBy(\App\Observers\Locations\OutboundRentalObserver::class)]
+#[ObservedBy(OutboundRentalObserver::class)]
 class OutboundRentalContract extends Model
 {
-    /** @use HasFactory<\Database\Factories\Locations\OutboundRentalContractFactory> */
+    /** @use HasFactory<OutboundRentalContractFactory> */
     use HasFactory;
 
     protected $fillable = [
@@ -35,17 +40,17 @@ class OutboundRentalContract extends Model
 
     public function thirdParty()
     {
-        return $this->belongsTo(\App\Models\Tiers\ThirdParty::class);
+        return $this->belongsTo(ThirdParty::class);
     }
 
     public function company()
     {
-        return $this->belongsTo(\App\Models\Core\Company::class);
+        return $this->belongsTo(Company::class);
     }
 
     public function chantier()
     {
-        return $this->belongsTo(\App\Models\Chantiers\Chantier::class);
+        return $this->belongsTo(Chantier::class);
     }
 
     public function lines()

@@ -3,10 +3,10 @@
 namespace App\Filament\Articles\Widgets;
 
 use App\Models\Articles\Stock;
-use LaBoiteACode\FilamentDashboardWidgets\Widgets\CompositionWidget;
+use Illuminate\Support\Facades\Cache;
 use LaBoiteACode\FilamentDashboardWidgets\Data\Composition;
 use LaBoiteACode\FilamentDashboardWidgets\Data\CompositionSlice;
-use Illuminate\Support\Facades\Cache;
+use LaBoiteACode\FilamentDashboardWidgets\Widgets\CompositionWidget;
 
 class StockCompositionWidget extends CompositionWidget
 {
@@ -33,20 +33,21 @@ class StockCompositionWidget extends CompositionWidget
                     ];
                 })->toArray();
         });
-        
+
         $slices = array_map(function ($item) {
             return CompositionSlice::make($item['label'], $item['value'])
                 ->color($item['color']);
         }, $cachedData);
-        
+
         return Composition::make('Valeur des stocks')
             ->type('doughnut')
             ->slices($slices);
     }
-    
+
     private function getRandomColor(): string
     {
         $colors = ['primary', 'success', 'warning', 'info', 'danger'];
+
         return $colors[array_rand($colors)];
     }
 }

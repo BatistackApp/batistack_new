@@ -2,6 +2,7 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Customer\Pages\Dashboard;
 use App\Filament\Customer\Widgets\CustomerDashboardWidget;
 use App\Http\Middleware\EnsureUserIsCustomer;
 use App\Providers\Filament\Traits\HasKnowledgeBaseCompanion;
@@ -44,7 +45,7 @@ class CustomerPanelProvider extends PanelProvider
             ->discoverResources(in: app_path('Filament/Customer/Resources'), for: 'App\Filament\Customer\Resources')
             ->discoverPages(in: app_path('Filament/Customer/Pages'), for: 'App\Filament\Customer\Pages')
             ->pages([
-                \App\Filament\Customer\Pages\Dashboard::class,
+                Dashboard::class,
             ])
             ->discoverWidgets(in: app_path('Filament/Customer/Widgets'), for: 'App\Filament\Customer\Widgets')
             ->widgets([

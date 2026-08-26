@@ -5,12 +5,12 @@ namespace App\Services\Core\Providers;
 use App\Contracts\Core\SignatureProviderInterface;
 use App\Enums\Core\SignatureStatus;
 use App\Enums\Core\SignatureType;
+use App\Mail\Core\SignatureRequestedMail;
 use App\Models\Core\Signature;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Mail;
-use App\Mail\Core\SignatureRequestedMail;
+use Illuminate\Support\Str;
 
 /**
  * Service de gestion de la signature numérique "maison".
@@ -54,7 +54,7 @@ class LocalSignatureProvider implements SignatureProviderInterface
      * Crée une demande de signature en attente.
      */
     public function requestSignature(
-        Model $model, 
+        Model $model,
         SignatureType $type = SignatureType::AUTOGRAPH,
         ?string $email = null,
         ?string $name = null,

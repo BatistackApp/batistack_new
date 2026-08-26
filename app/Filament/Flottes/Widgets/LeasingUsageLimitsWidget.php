@@ -3,8 +3,8 @@
 namespace App\Filament\Flottes\Widgets;
 
 use App\Models\Flottes\VehicleContract;
-use LaBoiteACode\FilamentDashboardWidgets\Widgets\UsageLimitsWidget;
 use LaBoiteACode\FilamentDashboardWidgets\Data\UsageLimit;
+use LaBoiteACode\FilamentDashboardWidgets\Widgets\UsageLimitsWidget;
 
 class LeasingUsageLimitsWidget extends UsageLimitsWidget
 {
@@ -23,16 +23,23 @@ class LeasingUsageLimitsWidget extends UsageLimitsWidget
             ->where('end_date', '>=', now())
             ->with('vehicle')
             ->get();
-            
+
         return $contracts->map(function ($contract) {
             $vehicle = $contract->vehicle;
-            
+
             return UsageLimit::make($vehicle->getDisplayName(), (float) $vehicle->odometer, (float) $contract->max_mileage)
                 ->color(function ($used, $max) {
-                    if ($max == 0) return 'gray';
+                    if ($max == 0) {
+                        return 'gray';
+                    }
                     $ratio = $used / $max;
-                    if ($ratio >= 0.9) return 'danger';
-                    if ($ratio >= 0.75) return 'warning';
+                    if ($ratio >= 0.9) {
+                        return 'danger';
+                    }
+                    if ($ratio >= 0.75) {
+                        return 'warning';
+                    }
+
                     return 'success';
                 });
         })->toArray();

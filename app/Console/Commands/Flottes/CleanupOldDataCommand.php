@@ -23,6 +23,7 @@ class CleanupOldDataCommand extends Command
         $monthsOption = $this->option('months');
         if (! is_numeric($monthsOption) || (int) $monthsOption < 1) {
             $this->error("Option --months invalide: '{$monthsOption}'. Valeur attendue: entier >= 1.");
+
             return self::FAILURE;
         }
 

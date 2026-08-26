@@ -2,10 +2,11 @@
 
 namespace App\Models\Immobilisation;
 
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use App\Models\Chantiers\Chantier;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class AssetTransfer extends Model
 {
@@ -28,22 +29,22 @@ class AssetTransfer extends Model
         ];
     }
 
-    public function fixedAsset(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function fixedAsset(): BelongsTo
     {
         return $this->belongsTo(FixedAsset::class);
     }
 
-    public function fromChantier(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function fromChantier(): BelongsTo
     {
         return $this->belongsTo(Chantier::class, 'from_chantier_id');
     }
 
-    public function toChantier(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function toChantier(): BelongsTo
     {
         return $this->belongsTo(Chantier::class, 'to_chantier_id');
     }
 
-    public function requester(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function requester(): BelongsTo
     {
         return $this->belongsTo(User::class, 'requested_by');
     }

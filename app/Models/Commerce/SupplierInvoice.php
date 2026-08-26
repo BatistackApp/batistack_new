@@ -3,6 +3,7 @@
 namespace App\Models\Commerce;
 
 use App\Enums\Commerce\InvoiceStatus;
+use App\Models\Immobilisation\FixedAsset;
 use App\Models\Tiers\ThirdParty;
 use App\Observers\Commerce\SupplierInvoiceObserver;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
@@ -10,6 +11,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 #[ObservedBy([SupplierInvoiceObserver::class])]
 class SupplierInvoice extends Model
@@ -37,14 +39,14 @@ class SupplierInvoice extends Model
         return $this->belongsTo(PurchaseOrder::class, 'purchase_order_id');
     }
 
-    public function allocations(): \Illuminate\Database\Eloquent\Relations\MorphMany
+    public function allocations(): MorphMany
     {
         return $this->morphMany(PaymentAllocation::class, 'payable');
     }
 
     public function fixedAssets(): HasMany
     {
-        return $this->hasMany(\App\Models\Immobilisation\FixedAsset::class);
+        return $this->hasMany(FixedAsset::class);
     }
 
     public function items(): HasMany
@@ -69,6 +71,7 @@ class SupplierInvoice extends Model
         }
 
         $allocated = $this->allocations()->sum('allocated_amount');
+
         return max(0.0, (float) $this->amount_ttc - (float) $allocated);
     }
 }

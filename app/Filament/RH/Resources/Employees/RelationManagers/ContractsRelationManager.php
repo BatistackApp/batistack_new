@@ -5,6 +5,7 @@ namespace App\Filament\RH\Resources\Employees\RelationManagers;
 use App\Enums\Core\SignatureStatus;
 use App\Enums\Core\SignatureType;
 use App\Enums\RH\ContractType;
+use App\Enums\RH\EmployeeCategory;
 use App\Models\RH\Contract;
 use App\Services\Core\DocumentService;
 use App\Services\Core\SignatureService;
@@ -52,7 +53,7 @@ class ContractsRelationManager extends RelationManager
                             ->native(false),
                         Select::make('category')
                             ->label('Catégorie (Statut)')
-                            ->options(\App\Enums\RH\EmployeeCategory::class)
+                            ->options(EmployeeCategory::class)
                             ->required()
                             ->default('ouvrier')
                             ->native(false),

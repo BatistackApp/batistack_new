@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\DB;
 class WarehouseDistributionChart extends ChartWidget
 {
     protected ?string $heading = 'Répartition par Entrepôt (Valeur)';
+
     protected static ?int $sort = 3;
 
     protected function getData(): array

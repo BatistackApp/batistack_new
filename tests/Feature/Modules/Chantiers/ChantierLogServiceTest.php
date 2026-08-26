@@ -7,7 +7,7 @@ use App\Models\User;
 use App\Services\Chantiers\ChantierLogService;
 
 test('il génère une synthèse quotidienne exacte', function () {
-    $service = new ChantierLogService();
+    $service = new ChantierLogService;
     $chantier = Chantier::factory()->create();
     $user = User::factory()->create();
     $today = now();
@@ -19,13 +19,13 @@ test('il génère une synthèse quotidienne exacte', function () {
         'date' => $today,
         'incident_reported' => true,
         'weather_condition' => 'Pluie',
-        'content' => 'Panne machine'
+        'content' => 'Panne machine',
     ]);
 
     // Création de 2 pointages pour ce jour
     TimeEntry::factory()->count(2)->create([
         'chantier_id' => $chantier->id,
-        'date' => $today
+        'date' => $today,
     ]);
 
     $summary = $service->getDailySummary($chantier, $today);

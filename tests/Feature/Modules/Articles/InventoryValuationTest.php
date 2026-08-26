@@ -7,6 +7,7 @@ use App\Models\Articles\Stock;
 use App\Models\Articles\Warehouse;
 use App\Models\Core\Company;
 use App\Services\Articles\InventoryService;
+use Illuminate\Support\Facades\Storage;
 
 beforeEach(function () {
     $this->service = app(InventoryService::class);
@@ -83,8 +84,8 @@ test('génère correctement la valorisation en PDF', function () {
     $fullPath = $this->service->generateValuationPdf();
 
     // Vérifier que le fichier a été généré
-    expect(\Illuminate\Support\Facades\Storage::disk('public')->exists($fullPath))->toBeTrue();
+    expect(Storage::disk('public')->exists($fullPath))->toBeTrue();
 
     // Nettoyage
-    \Illuminate\Support\Facades\Storage::disk('public')->delete($fullPath);
+    Storage::disk('public')->delete($fullPath);
 });

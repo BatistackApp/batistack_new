@@ -2,6 +2,9 @@
 
 namespace App\Filament\Tiers\Resources\Tiers\EmailCampaigns\Schemas;
 
+use Filament\Forms\Components\DateTimePicker;
+use Filament\Forms\Components\RichEditor;
+use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Schema;
 
 class EmailCampaignForm
@@ -10,19 +13,19 @@ class EmailCampaignForm
     {
         return $schema
             ->components([
-                \Filament\Forms\Components\TextInput::make('name')
+                TextInput::make('name')
                     ->label('Nom interne de la campagne')
                     ->required()
                     ->maxLength(255),
-                \Filament\Forms\Components\TextInput::make('subject')
+                TextInput::make('subject')
                     ->label('Objet de l\'email')
                     ->required()
                     ->maxLength(255),
-                \Filament\Forms\Components\RichEditor::make('body')
+                RichEditor::make('body')
                     ->label('Contenu de l\'email')
                     ->required()
                     ->columnSpanFull(),
-                \Filament\Forms\Components\DateTimePicker::make('scheduled_at')
+                DateTimePicker::make('scheduled_at')
                     ->label('Date de planification')
                     ->minDate(now())
                     ->nullable(),

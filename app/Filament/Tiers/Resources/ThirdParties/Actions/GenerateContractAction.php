@@ -2,15 +2,16 @@
 
 namespace App\Filament\Tiers\Resources\ThirdParties\Actions;
 
+use App\Enums\Tiers\ThirdPartyDocumentStatus;
+use App\Enums\Tiers\ThirdPartyDocumentType;
 use App\Enums\Tiers\ThirdPartyType;
 use App\Models\Tiers\ThirdParty;
 use App\Models\Tiers\ThirdPartyDocument;
 use App\Services\Tiers\ContractingGuardService;
 use App\Services\Tiers\TiersDocumentService;
 use Filament\Actions\Action;
-use Filament\Schemas\Schema;
-use Illuminate\Http\Response;
-use Joaopaulolndev\FilamentPdfViewer\Infolists\Components\PdfViewerEntry;
+use Filament\Notifications\Notification;
+use Illuminate\Support\Facades\Storage;
 use ToneGabes\Filament\Icons\Enums\Phosphor;
 
 class GenerateContractAction
@@ -26,7 +27,7 @@ class GenerateContractAction
                 $check = $guard->check($record);
 
                 if ($check['blocked']) {
-                    \Filament\Notifications\Notification::make()
+                    Notification::make()
                         ->title('Contrat bloqué')
                         ->body($check['reason'])
                         ->danger()
@@ -36,7 +37,7 @@ class GenerateContractAction
                 }
 
                 if ($check['warned']) {
-                    \Filament\Notifications\Notification::make()
+                    Notification::make()
                         ->title('Avertissement')
                         ->body($check['reason'])
                         ->warning()
@@ -44,18 +45,18 @@ class GenerateContractAction
                 }
 
                 $relativePath = $service->generateContract($record);
-                $absolutePath = \Illuminate\Support\Facades\Storage::disk('public')->path($relativePath);
+                $absolutePath = Storage::disk('public')->path($relativePath);
 
                 // Sauvegarde du document
                 $document = ThirdPartyDocument::updateOrCreate(
-                    ['third_party_id' => $record->id, 'type' => \App\Enums\Tiers\ThirdPartyDocumentType::CONTRAT_SOUS_TRAITANCE],
-                    ['expiration_date' => now()->addYear(), 'status' => \App\Enums\Tiers\ThirdPartyDocumentStatus::VALID]
+                    ['third_party_id' => $record->id, 'type' => ThirdPartyDocumentType::CONTRAT_SOUS_TRAITANCE],
+                    ['expiration_date' => now()->addYear(), 'status' => ThirdPartyDocumentStatus::VALID]
                 );
 
                 $document->clearMediaCollection('third_party_documents');
                 $media = $document->addMedia($absolutePath)->toMediaCollection('third_party_documents');
 
-                \Filament\Notifications\Notification::make()
+                Notification::make()
                     ->title('Contrat généré et sauvegardé dans les documents du sous-traitant')
                     ->success()
                     ->send();

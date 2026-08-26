@@ -2,13 +2,14 @@
 
 namespace App\Filament\Widgets\Core;
 
-use App\Models\Core\Setting;
-use LaBoiteACode\FilamentDashboardWidgets\Widgets\GoalProgressWidget;
+use App\Models\Core\Company;
 use LaBoiteACode\FilamentDashboardWidgets\Data\Goal;
+use LaBoiteACode\FilamentDashboardWidgets\Widgets\GoalProgressWidget;
 
 class CompanyOnboardingGoalWidget extends GoalProgressWidget
 {
     protected static ?int $sort = 4;
+
     protected string $view = 'filament.widgets.company-onboarding-goal-widget';
 
     public function getHeading(): string
@@ -29,25 +30,25 @@ class CompanyOnboardingGoalWidget extends GoalProgressWidget
             'siret' => 'SIRET',
             'vat_number' => 'TVA',
         ];
-        
+
         $target = count($criticalKeys);
-        
-        $company = \App\Models\Core\Company::first();
-        
+
+        $company = Company::first();
+
         $current = 0;
         $missingLabels = [];
-        
+
         foreach ($criticalKeys as $key => $label) {
-            if ($company && !empty($company->{$key})) {
+            if ($company && ! empty($company->{$key})) {
                 $current++;
             } else {
                 $missingLabels[] = $label;
             }
         }
-        
+
         $description = 'Configuration des paramètres critiques de l\'entreprise.';
-        if (!empty($missingLabels)) {
-            $description .= ' Manquant(s) : ' . implode(', ', $missingLabels) . '.';
+        if (! empty($missingLabels)) {
+            $description .= ' Manquant(s) : '.implode(', ', $missingLabels).'.';
         }
 
         return Goal::make('Complétion de la configuration', $current, $target)

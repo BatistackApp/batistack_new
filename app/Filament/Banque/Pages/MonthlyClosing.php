@@ -7,7 +7,6 @@ use App\Filament\Banque\Widgets\ManualPaidCustomerInvoicesWidget;
 use App\Filament\Banque\Widgets\ManualPaidSupplierInvoicesWidget;
 use App\Filament\Banque\Widgets\UncategorizedTransactionsWidget;
 use Filament\Pages\Page;
-use ToneGabes\Filament\Icons\Enums\Phosphor;
 
 class MonthlyClosing extends Page
 {

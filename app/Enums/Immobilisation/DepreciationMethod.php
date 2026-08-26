@@ -5,7 +5,7 @@ namespace App\Enums\Immobilisation;
 use Filament\Support\Contracts\HasColor;
 use Filament\Support\Contracts\HasLabel;
 
-enum DepreciationMethod: string implements HasLabel, HasColor
+enum DepreciationMethod: string implements HasColor, HasLabel
 {
     case LINEAR = 'linear';
     case DECLINING_BALANCE = 'declining_balance';

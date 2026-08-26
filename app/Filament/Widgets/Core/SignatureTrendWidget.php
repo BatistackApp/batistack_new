@@ -4,9 +4,9 @@ namespace App\Filament\Widgets\Core;
 
 use App\Models\Core\Signature;
 use Carbon\Carbon;
-use LaBoiteACode\FilamentDashboardWidgets\Widgets\TrendWidget;
 use LaBoiteACode\FilamentDashboardWidgets\Data\Trend;
 use LaBoiteACode\FilamentDashboardWidgets\Data\TrendPoint;
+use LaBoiteACode\FilamentDashboardWidgets\Widgets\TrendWidget;
 
 class SignatureTrendWidget extends TrendWidget
 {

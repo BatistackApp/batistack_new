@@ -2,22 +2,25 @@
 
 namespace App\Filament\Chantier\Pages;
 
-use Filament\Pages\Page;
-use App\Models\Chantiers\ChecklistTemplate;
+use App\Models\Chantiers\ChantierLog;
 use App\Models\Chantiers\ChantierTask;
 use App\Models\Chantiers\ChecklistSubmission;
+use App\Models\Chantiers\ChecklistTemplate;
+use Filament\Forms\Components;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
-use Filament\Forms\Form;
-use Filament\Forms\Components;
-use Illuminate\Support\Facades\Auth;
 use Filament\Notifications\Notification;
+use Filament\Pages\Page;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Schema;
+use Illuminate\Support\Facades\Auth;
+use Saade\FilamentAutograph\Forms\Components\SignaturePad;
 
 class FillChecklistPage extends Page implements HasForms
 {
     use InteractsWithForms;
 
-    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-document-text';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-document-text';
 
     protected string $view = 'filament.chantier.pages.fill-checklist-page';
 
@@ -26,8 +29,11 @@ class FillChecklistPage extends Page implements HasForms
     public ?array $data = [];
 
     public $template_id;
+
     public $task_id;
+
     public $template;
+
     public $chantierTask;
 
     public function mount()
@@ -35,7 +41,7 @@ class FillChecklistPage extends Page implements HasForms
         $this->template_id = request()->query('template_id');
         $this->task_id = request()->query('task_id');
 
-        if (!$this->template_id || !$this->task_id) {
+        if (! $this->template_id || ! $this->task_id) {
             abort(404);
         }
 
@@ -45,7 +51,7 @@ class FillChecklistPage extends Page implements HasForms
         $this->form->fill();
     }
 
-    public function form(\Filament\Schemas\Schema $schema): \Filament\Schemas\Schema
+    public function form(Schema $schema): Schema
     {
         $schemaComponents = [];
 
@@ -76,11 +82,11 @@ class FillChecklistPage extends Page implements HasForms
         }
 
         // Add Signature Field
-        $schemaComponents[] = \Filament\Schemas\Components\Section::make('Signature')
+        $schemaComponents[] = Section::make('Signature')
             ->schema([
-                \Saade\FilamentAutograph\Forms\Components\SignaturePad::make('signature')
+                SignaturePad::make('signature')
                     ->label('Signature numérique')
-                    ->required()
+                    ->required(),
             ]);
 
         return $schema
@@ -105,11 +111,11 @@ class FillChecklistPage extends Page implements HasForms
 
         $chantierId = $this->chantierTask->phase->chantier_id;
 
-        \App\Models\Chantiers\ChantierLog::create([
+        ChantierLog::create([
             'chantier_id' => $chantierId,
             'user_id' => Auth::id(),
             'date' => now(),
-            'content' => 'Checklist dynamique "' . $this->template->name . '" complétée pour la tâche "' . $this->chantierTask->label . '".',
+            'content' => 'Checklist dynamique "'.$this->template->name.'" complétée pour la tâche "'.$this->chantierTask->label.'".',
             'incident_reported' => false,
         ]);
 
@@ -119,6 +125,7 @@ class FillChecklistPage extends Page implements HasForms
             ->send();
 
         $chantierId = $this->chantierTask->phase->chantier_id;
-        return redirect()->to('/chantier/chantiers/' . $chantierId . '/edit');
+
+        return redirect()->to('/chantier/chantiers/'.$chantierId.'/edit');
     }
 }

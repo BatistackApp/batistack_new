@@ -2,15 +2,17 @@
 
 namespace App\Models\Locations;
 
+use App\Models\Immobilisation\FixedAsset;
+use App\Observers\Locations\OutboundRentalLineObserver;
+use Database\Factories\Locations\OutboundRentalLineFactory;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-use Illuminate\Database\Eloquent\Attributes\ObservedBy;
-
-#[ObservedBy(\App\Observers\Locations\OutboundRentalLineObserver::class)]
+#[ObservedBy(OutboundRentalLineObserver::class)]
 class OutboundRentalLine extends Model
 {
-    /** @use HasFactory<\Database\Factories\Locations\OutboundRentalLineFactory> */
+    /** @use HasFactory<OutboundRentalLineFactory> */
     use HasFactory;
 
     protected $fillable = [
@@ -30,6 +32,6 @@ class OutboundRentalLine extends Model
 
     public function fixedAsset()
     {
-        return $this->belongsTo(\App\Models\Immobilisation\FixedAsset::class, 'fixed_asset_id');
+        return $this->belongsTo(FixedAsset::class, 'fixed_asset_id');
     }
 }

@@ -5,6 +5,8 @@ namespace App\Models\Flottes;
 use App\Enums\Flottes\AssignmentStatus;
 use App\Enums\Flottes\VehicleStatus;
 use App\Enums\Flottes\VehicleType;
+use App\Models\Chantiers\ResourceAllocation;
+use App\Models\Immobilisation\FixedAsset;
 use App\Observers\Flottes\VehicleObserver;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Builder;
@@ -12,6 +14,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Support\Str;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
@@ -88,9 +91,9 @@ class Vehicle extends Model implements HasMedia
         return $this->hasMany(VehicleContract::class);
     }
 
-    public function resourceAllocations(): \Illuminate\Database\Eloquent\Relations\MorphMany
+    public function resourceAllocations(): MorphMany
     {
-        return $this->morphMany(\App\Models\Chantiers\ResourceAllocation::class, 'allocatable');
+        return $this->morphMany(ResourceAllocation::class, 'allocatable');
     }
 
     public function fines(): HasMany
@@ -103,9 +106,9 @@ class Vehicle extends Model implements HasMedia
         return $this->hasMany(Damage::class);
     }
 
-    public function fixedAsset(): \Illuminate\Database\Eloquent\Relations\HasOne
+    public function fixedAsset(): HasOne
     {
-        return $this->hasOne(\App\Models\Immobilisation\FixedAsset::class);
+        return $this->hasOne(FixedAsset::class);
     }
 
     public function fuelTransactions(): HasMany

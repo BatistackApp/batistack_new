@@ -2,16 +2,17 @@
 
 namespace App\Filament\Interventions\Widgets;
 
-use App\Models\Interventions\Intervention;
 use App\Enums\Interventions\InterventionStatus;
+use App\Models\Interventions\Intervention;
+use Illuminate\Support\Carbon;
 use LaBoiteACode\FilamentDashboardWidgets\Data\Goal;
 use LaBoiteACode\FilamentDashboardWidgets\Widgets\GoalProgressWidget;
-use Illuminate\Support\Carbon;
 
 class InterventionSlaGoalWidget extends GoalProgressWidget
 {
     protected static ?int $sort = 2;
-    protected int | string | array $columnSpan = 1;
+
+    protected int|string|array $columnSpan = 1;
 
     public function getHeading(): string
     {
@@ -24,7 +25,7 @@ class InterventionSlaGoalWidget extends GoalProgressWidget
             ->whereNotNull('completed_at')
             ->whereNotNull('scheduled_at')
             ->get();
-        
+
         $total = $interventions->count();
         $passed = 0;
 
@@ -44,7 +45,7 @@ class InterventionSlaGoalWidget extends GoalProgressWidget
         $color = $percentage >= 90 ? 'success' : ($percentage >= 70 ? 'warning' : 'danger');
 
         return Goal::make('Conformité SLA', $percentage, 100)
-            ->formatUsing(fn (float $val) => number_format($val, 1) . '%')
+            ->formatUsing(fn (float $val) => number_format($val, 1).'%')
             ->color($color);
     }
 }

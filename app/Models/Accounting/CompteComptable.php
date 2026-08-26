@@ -35,7 +35,7 @@ class CompteComptable extends Model
 
     public function ecritures(): HasMany
     {
-        return $this->hasMany(\App\Models\Accounting\EcritureComptable::class, 'compte_numero', 'numero');
+        return $this->hasMany(EcritureComptable::class, 'compte_numero', 'numero');
     }
 
     public function getClasseLabelAttribute(): string
@@ -55,7 +55,7 @@ class CompteComptable extends Model
 
     public function getFullLabelAttribute(): string
     {
-        return $this->numero . ' - ' . $this->libelle;
+        return $this->numero.' - '.$this->libelle;
     }
 
     public function scopeDeClasse($query, int $classe)

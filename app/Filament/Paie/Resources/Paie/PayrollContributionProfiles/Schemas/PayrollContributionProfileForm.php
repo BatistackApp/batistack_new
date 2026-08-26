@@ -2,8 +2,8 @@
 
 namespace App\Filament\Paie\Resources\Paie\PayrollContributionProfiles\Schemas;
 
-use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Schema;
 
 class PayrollContributionProfileForm

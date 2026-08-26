@@ -19,7 +19,7 @@ class TimeEntryResource extends Resource
     protected static ?string $model = TimeEntry::class;
 
     protected static string|BackedEnum|null $navigationIcon = Phosphor::Timer;
-    
+
     protected static \UnitEnum|string|null $navigationGroup = 'Suivi & Pointages';
 
     protected static ?string $modelLabel = 'Pointage';

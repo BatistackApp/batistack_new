@@ -2,7 +2,9 @@
 
 namespace App\Enums\Paie;
 
-enum AdvancePaymentStatus: string implements \Filament\Support\Contracts\HasLabel
+use Filament\Support\Contracts\HasLabel;
+
+enum AdvancePaymentStatus: string implements HasLabel
 {
     case PENDING = 'pending';
     case APPROVED = 'approved';

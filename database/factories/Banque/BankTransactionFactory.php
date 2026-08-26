@@ -13,7 +13,7 @@ class BankTransactionFactory extends Factory
     {
         $type = $this->faker->randomElement(TransactionType::cases());
         $amount = $this->faker->randomFloat(2, 10, 5000);
-        
+
         return [
             'bank_account_id' => BankAccount::factory(),
             'external_id' => $this->faker->uuid(),

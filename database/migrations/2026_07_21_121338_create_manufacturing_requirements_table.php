@@ -15,10 +15,10 @@ return new class extends Migration
             $table->id();
             $table->foreignId('manufacturing_order_id')->constrained()->cascadeOnDelete();
             $table->foreignId('item_id')->constrained('items')->onDelete('restrict');
-            
+
             $table->decimal('quantity_required', 10, 4);
             $table->decimal('quantity_consumed', 10, 4)->default(0);
-            
+
             $table->timestamps();
         });
     }

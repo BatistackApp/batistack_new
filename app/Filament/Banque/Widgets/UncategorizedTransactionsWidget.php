@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Builder;
 class UncategorizedTransactionsWidget extends TableWidget
 {
     protected static ?int $sort = 1;
+
     protected int|string|array $columnSpan = 'full';
 
     protected static ?string $heading = 'Transactions non catégorisées';

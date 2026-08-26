@@ -2,11 +2,8 @@
 
 namespace App\Filament\Commerce\Resources\CustomerInvoices\Schemas;
 
-use App\Enums\Commerce\InvoiceStatus;
 use App\Enums\Commerce\InvoiceType;
-use Ariefng\FilamentCalculator\Actions\CalculatorAction;
 use Filament\Forms\Components\DatePicker;
-use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -63,6 +60,7 @@ class CustomerInvoiceForm
                                 if (! $orderId) {
                                     return $query->whereRaw('1 = 0');
                                 }
+
                                 return $query->where('customer_order_id', $orderId);
                             })
                             ->visible(fn (Get $get) => $get('type') === InvoiceType::SITUATION->value)

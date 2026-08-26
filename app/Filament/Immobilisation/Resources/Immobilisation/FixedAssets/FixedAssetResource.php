@@ -6,6 +6,9 @@ use App\Filament\Immobilisation\Resources\Immobilisation\FixedAssets\Pages\Creat
 use App\Filament\Immobilisation\Resources\Immobilisation\FixedAssets\Pages\EditFixedAsset;
 use App\Filament\Immobilisation\Resources\Immobilisation\FixedAssets\Pages\ListFixedAssets;
 use App\Filament\Immobilisation\Resources\Immobilisation\FixedAssets\Pages\ViewFixedAsset;
+use App\Filament\Immobilisation\Resources\Immobilisation\FixedAssets\RelationManagers\AssignmentsRelationManager;
+use App\Filament\Immobilisation\Resources\Immobilisation\FixedAssets\RelationManagers\ImpairmentsRelationManager;
+use App\Filament\Immobilisation\Resources\Immobilisation\FixedAssets\RelationManagers\MaintenancesRelationManager;
 use App\Filament\Immobilisation\Resources\Immobilisation\FixedAssets\Schemas\FixedAssetForm;
 use App\Filament\Immobilisation\Resources\Immobilisation\FixedAssets\Schemas\FixedAssetInfolist;
 use App\Filament\Immobilisation\Resources\Immobilisation\FixedAssets\Tables\FixedAssetsTable;
@@ -50,9 +53,9 @@ class FixedAssetResource extends Resource
     public static function getRelations(): array
     {
         return [
-            \App\Filament\Immobilisation\Resources\Immobilisation\FixedAssets\RelationManagers\AssignmentsRelationManager::class,
-            \App\Filament\Immobilisation\Resources\Immobilisation\FixedAssets\RelationManagers\MaintenancesRelationManager::class,
-            \App\Filament\Immobilisation\Resources\Immobilisation\FixedAssets\RelationManagers\ImpairmentsRelationManager::class,
+            AssignmentsRelationManager::class,
+            MaintenancesRelationManager::class,
+            ImpairmentsRelationManager::class,
         ];
     }
 

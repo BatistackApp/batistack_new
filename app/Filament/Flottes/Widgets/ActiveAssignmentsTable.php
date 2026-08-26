@@ -5,7 +5,6 @@ namespace App\Filament\Flottes\Widgets;
 use App\Enums\Flottes\AssignmentStatus;
 use App\Models\Flottes\VehicleAssignment;
 use Filament\Actions\Action;
-use Filament\Actions\BulkActionGroup;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget;
@@ -17,7 +16,7 @@ class ActiveAssignmentsTable extends TableWidget
 
     protected static ?int $sort = 7;
 
-    protected int | string | array $columnSpan = 'full';
+    protected int|string|array $columnSpan = 'full';
 
     public function table(Table $table): Table
     {

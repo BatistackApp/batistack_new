@@ -3,7 +3,6 @@
 namespace App\Mail\Tiers;
 
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Mail\Mailables\Content;
@@ -15,6 +14,7 @@ class GenericCampaignEmail extends Mailable
     use Queueable, SerializesModels;
 
     public string $campaignSubject;
+
     public string $campaignBody;
 
     /**

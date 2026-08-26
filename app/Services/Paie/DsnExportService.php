@@ -6,12 +6,11 @@ use App\Enums\Paie\DsnStatus;
 use App\Enums\Paie\DsnSubmissionStatus;
 use App\Models\Paie\DsnSubmission;
 use App\Models\Paie\DsnSubmissionLine;
-use App\Models\Paie\Payslip;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-use Carbon\Carbon;
 
 class DsnExportService
 {
@@ -20,7 +19,7 @@ class DsnExportService
      */
     public function generateCsv(Collection $payslips): string
     {
-        $filename = 'export_dads_dsn_' . Carbon::now()->format('Y_m_d_His') . '_' . Str::random(8) . '.csv';
+        $filename = 'export_dads_dsn_'.Carbon::now()->format('Y_m_d_His').'_'.Str::random(8).'.csv';
 
         $csvData = [];
         $csvData[] = [
@@ -67,7 +66,7 @@ class DsnExportService
         }
 
         $output = fopen('php://temp', 'r+');
-        fputs($output, chr(0xEF) . chr(0xBB) . chr(0xBF));
+        fwrite($output, chr(0xEF).chr(0xBB).chr(0xBF));
 
         foreach ($csvData as $row) {
             fputcsv($output, $row, ';');
@@ -77,7 +76,7 @@ class DsnExportService
         $content = stream_get_contents($output);
         fclose($output);
 
-        $path = 'documents/exports/' . $filename;
+        $path = 'documents/exports/'.$filename;
         Storage::disk('local')->put($path, $content);
 
         return $path;

@@ -2,17 +2,23 @@
 
 namespace App\Filament\Gpao\Pages;
 
-use Filament\Pages\Page;
-use App\Models\Gpao\ManufacturingOrder;
 use App\Enums\Gpao\ManufacturingStatus;
 use App\Filament\Gpao\ManufacturingOrders\ManufacturingOrderResource;
+use App\Models\Gpao\ManufacturingOrder;
+use Carbon\Carbon;
+use Filament\Notifications\Notification;
+use Filament\Pages\Page;
 
 class ProductionCalendar extends Page
 {
     protected static string|null|\BackedEnum $navigationIcon = 'heroicon-o-calendar-days';
+
     protected static ?string $navigationLabel = 'Planning Capacitaire';
+
     protected static ?string $title = 'Calendrier de Production';
+
     protected static string|null|\UnitEnum $navigationGroup = 'Production';
+
     protected static ?int $navigationSort = 3;
 
     protected string $view = 'filament.gpao.pages.production-calendar';
@@ -24,7 +30,7 @@ class ProductionCalendar extends Page
                 ManufacturingStatus::PLANNED,
                 ManufacturingStatus::IN_PROGRESS,
                 ManufacturingStatus::QUALITY_CONTROL,
-                ManufacturingStatus::COMPLETED
+                ManufacturingStatus::COMPLETED,
             ])
             ->get();
 
@@ -43,7 +49,7 @@ class ProductionCalendar extends Page
             // Si end_date est null, on l'affiche sur 1 jour (start_date)
             $events[] = [
                 'id' => $order->id,
-                'title' => $order->reference . ' - ' . ($order->item->name ?? ''),
+                'title' => $order->reference.' - '.($order->item->name ?? ''),
                 'start' => $order->start_date->format('Y-m-d'),
                 'end' => $order->end_date ? $order->end_date->copy()->addDay()->format('Y-m-d') : $order->start_date->copy()->addDay()->format('Y-m-d'),
                 'color' => $color,
@@ -59,11 +65,11 @@ class ProductionCalendar extends Page
         $order = ManufacturingOrder::find($eventId);
         if ($order) {
             $order->update([
-                'start_date' => $startStr ? \Carbon\Carbon::parse($startStr) : null,
-                'end_date' => $endStr ? \Carbon\Carbon::parse($endStr)->subDay() : null, // FullCalendar end date is exclusive
+                'start_date' => $startStr ? Carbon::parse($startStr) : null,
+                'end_date' => $endStr ? Carbon::parse($endStr)->subDay() : null, // FullCalendar end date is exclusive
             ]);
 
-            \Filament\Notifications\Notification::make()
+            Notification::make()
                 ->title('Planning mis à jour')
                 ->success()
                 ->send();

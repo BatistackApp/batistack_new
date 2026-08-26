@@ -2,13 +2,10 @@
 
 namespace App\Filament\Commerce\Resources\CustomerOrders\Actions;
 
-use App\Services\Commerce\CommerceDocumentationService;
-use Filament\Actions\Action;
 use Filament\Support\Enums\Width;
 use Hugomyb\FilamentMediaAction\Actions\MediaAction;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
-use Joaopaulolndev\FilamentPdfViewer\Infolists\Components\PdfViewerEntry;
 use ToneGabes\Filament\Icons\Enums\Phosphor;
 
 class PrinterAction

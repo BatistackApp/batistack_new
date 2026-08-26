@@ -5,7 +5,6 @@ namespace App\Filament\Salarie\Resources\Paie\Payslips\Pages;
 use App\Filament\Salarie\Resources\Paie\Payslips\PayslipResource;
 use App\Models\Paie\Payslip;
 use Filament\Actions\Action;
-use Filament\Actions\EditAction;
 use Filament\Resources\Pages\ViewRecord;
 use Illuminate\Support\Facades\Storage;
 

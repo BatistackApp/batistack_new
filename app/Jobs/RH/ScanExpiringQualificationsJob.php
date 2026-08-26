@@ -27,6 +27,7 @@ class ScanExpiringQualificationsJob implements ShouldQueue
 
         if ($expiringIn30Days->isEmpty()) {
             Log::info('ScanExpiringQualificationsJob: No qualifications expiring in 30 days');
+
             return;
         }
 

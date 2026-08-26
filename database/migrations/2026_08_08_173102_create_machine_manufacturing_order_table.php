@@ -2,6 +2,8 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -32,21 +34,21 @@ return new class extends Migration
         Schema::table('manufacturing_orders', function (Blueprint $table) {
             $table->foreignId('machine_id')->nullable()->constrained('machines')->nullOnDelete();
         });
-        
+
         // Restore machine assignments by picking the first machine linked to each order
-        $assignments = \Illuminate\Support\Facades\DB::table('machine_manufacturing_order')
+        $assignments = DB::table('machine_manufacturing_order')
             ->orderBy('id', 'asc')
             ->get()
             ->groupBy('manufacturing_order_id');
-            
+
         foreach ($assignments as $orderId => $machines) {
             $firstMachine = $machines->first();
-            \Illuminate\Support\Facades\DB::table('manufacturing_orders')
+            DB::table('manufacturing_orders')
                 ->where('id', $orderId)
                 ->update(['machine_id' => $firstMachine->machine_id]);
-                
+
             if ($machines->count() > 1) {
-                \Illuminate\Support\Facades\Log::warning("Rollback of machine_manufacturing_order: ManufacturingOrder {$orderId} had multiple machines. Only machine {$firstMachine->machine_id} was restored.");
+                Log::warning("Rollback of machine_manufacturing_order: ManufacturingOrder {$orderId} had multiple machines. Only machine {$firstMachine->machine_id} was restored.");
             }
         }
 

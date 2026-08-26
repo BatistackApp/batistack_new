@@ -54,6 +54,7 @@ class ExpenseReportsTable
                                 ->title('Action impossible')
                                 ->body('Vous ne pouvez pas transférer une note de frais vide. Veuillez ajouter au moins un justificatif.')
                                 ->send();
+
                             return;
                         }
 

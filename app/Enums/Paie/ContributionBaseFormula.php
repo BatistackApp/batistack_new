@@ -2,7 +2,9 @@
 
 namespace App\Enums\Paie;
 
-enum ContributionBaseFormula: string implements \Filament\Support\Contracts\HasLabel
+use Filament\Support\Contracts\HasLabel;
+
+enum ContributionBaseFormula: string implements HasLabel
 {
     case GROSS_SALARY = 'gross_salary';
     case CSG_BASE = 'csg_base';

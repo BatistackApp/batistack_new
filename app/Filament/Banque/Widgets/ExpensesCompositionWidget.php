@@ -3,9 +3,9 @@
 namespace App\Filament\Banque\Widgets;
 
 use App\Models\Banque\BankTransaction;
-use LaBoiteACode\FilamentDashboardWidgets\Widgets\CompositionWidget;
 use LaBoiteACode\FilamentDashboardWidgets\Data\Composition;
 use LaBoiteACode\FilamentDashboardWidgets\Data\CompositionSlice;
+use LaBoiteACode\FilamentDashboardWidgets\Widgets\CompositionWidget;
 
 class ExpensesCompositionWidget extends CompositionWidget
 {
@@ -23,14 +23,14 @@ class ExpensesCompositionWidget extends CompositionWidget
             ->thisMonth()
             ->with('category')
             ->get();
-            
+
         $grouped = $expenses->groupBy('transaction_category_id');
 
         $slices = $grouped->map(function ($group) {
             $first = $group->first();
             $label = $first && $first->category ? $first->category->name : 'Non catégorisé';
             $total = $group->sum('amount');
-            
+
             return CompositionSlice::make($label, abs($total))
                 ->color($this->getRandomColor());
         })->values()->toArray();
@@ -39,10 +39,11 @@ class ExpensesCompositionWidget extends CompositionWidget
             ->type('doughnut')
             ->slices($slices);
     }
-    
+
     private function getRandomColor(): string
     {
         $colors = ['primary', 'success', 'warning', 'info', 'danger'];
+
         return $colors[array_rand($colors)];
     }
 }

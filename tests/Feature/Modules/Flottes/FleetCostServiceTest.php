@@ -187,7 +187,7 @@ test('Obtient un résumé complet des coûts', function () {
         ->and($summary)->toHaveKeys([
             'purchase_price', 'maintenance_costs', 'contract_costs',
             'fuel_costs', 'fleet_expenses', 'fine_costs',
-            'total_tco', 'cost_per_km', 'monthly_average'
+            'total_tco', 'cost_per_km', 'monthly_average',
         ])
         ->and($summary['purchase_price'])->toBe(30000.0);
 });

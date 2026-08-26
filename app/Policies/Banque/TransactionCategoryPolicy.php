@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace App\Policies\Banque;
 
-use Illuminate\Foundation\Auth\User as AuthUser;
 use App\Models\Banque\TransactionCategory;
 use Illuminate\Auth\Access\HandlesAuthorization;
+use Illuminate\Foundation\Auth\User as AuthUser;
 
 class TransactionCategoryPolicy
 {
     use HandlesAuthorization;
-    
+
     public function viewAny(AuthUser $authUser): bool
     {
         return $authUser->can('ViewAny:TransactionCategory');
@@ -71,5 +71,4 @@ class TransactionCategoryPolicy
     {
         return $authUser->can('Reorder:TransactionCategory');
     }
-
 }

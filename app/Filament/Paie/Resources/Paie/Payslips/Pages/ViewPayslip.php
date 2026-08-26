@@ -10,7 +10,6 @@ use App\Services\Paie\PayslipPdfService;
 use Filament\Actions;
 use Filament\Actions\Action;
 use Filament\Actions\EditAction;
-use Filament\Actions\ViewAction;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
 use Illuminate\Support\Facades\Storage;

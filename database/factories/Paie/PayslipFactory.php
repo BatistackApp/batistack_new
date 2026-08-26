@@ -2,7 +2,9 @@
 
 namespace Database\Factories\Paie;
 
+use App\Enums\Paie\PayslipStatus;
 use App\Models\Paie\Payslip;
+use App\Models\RH\Employee;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -18,7 +20,7 @@ class PayslipFactory extends Factory
     public function definition(): array
     {
         return [
-            'employee_id' => \App\Models\RH\Employee::factory(),
+            'employee_id' => Employee::factory(),
             'period' => $this->faker->date('Y-m'),
             'base_hours' => 151.67,
             'overtime_hours' => 0,
@@ -35,7 +37,7 @@ class PayslipFactory extends Factory
             'net_payable' => 1350.00,
             'net_paid' => 1350.00,
             'employer_cost' => 2200.00,
-            'status' => \App\Enums\Paie\PayslipStatus::DRAFT,
+            'status' => PayslipStatus::DRAFT,
             'custom_bonuses' => [],
         ];
     }

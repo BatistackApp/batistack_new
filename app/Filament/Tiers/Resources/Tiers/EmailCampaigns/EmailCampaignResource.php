@@ -5,6 +5,7 @@ namespace App\Filament\Tiers\Resources\Tiers\EmailCampaigns;
 use App\Filament\Tiers\Resources\Tiers\EmailCampaigns\Pages\CreateEmailCampaign;
 use App\Filament\Tiers\Resources\Tiers\EmailCampaigns\Pages\EditEmailCampaign;
 use App\Filament\Tiers\Resources\Tiers\EmailCampaigns\Pages\ListEmailCampaigns;
+use App\Filament\Tiers\Resources\Tiers\EmailCampaigns\RelationManagers\RecipientsRelationManager;
 use App\Filament\Tiers\Resources\Tiers\EmailCampaigns\Schemas\EmailCampaignForm;
 use App\Filament\Tiers\Resources\Tiers\EmailCampaigns\Tables\EmailCampaignsTable;
 use App\Models\Tiers\EmailCampaign;
@@ -35,7 +36,7 @@ class EmailCampaignResource extends Resource
     public static function getRelations(): array
     {
         return [
-            \App\Filament\Tiers\Resources\Tiers\EmailCampaigns\RelationManagers\RecipientsRelationManager::class,
+            RecipientsRelationManager::class,
         ];
     }
 

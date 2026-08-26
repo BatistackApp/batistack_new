@@ -24,7 +24,8 @@ class ChantierLogResource extends Resource
 
     protected static ?string $pluralModelLabel = 'Journal de Chantier';
 
-    protected static string | \UnitEnum | null $navigationGroup = 'Chantiers';
+    protected static string|\UnitEnum|null $navigationGroup = 'Chantiers';
+
     protected static ?int $navigationSort = 2;
 
     public static function form(Schema $schema): Schema
