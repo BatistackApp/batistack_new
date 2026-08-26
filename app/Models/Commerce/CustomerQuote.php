@@ -38,6 +38,8 @@ class CustomerQuote extends Model implements HasTimeline
         'expires_at',
         'responsable_id',
         'is_avenant',
+        'counter_amount',
+        'counter_message',
     ];
 
     public function client(): BelongsTo

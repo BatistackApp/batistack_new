@@ -2,6 +2,7 @@
 
 namespace App\Filament\Customer\Resources\CustomerDeliveryNotes;
 
+use App\Filament\Customer\Concerns\ScopesToAuthenticatedThirdParty;
 use App\Filament\Customer\Resources\CustomerDeliveryNotes\Pages\ListCustomerDeliveryNotes;
 use App\Filament\Customer\Resources\CustomerDeliveryNotes\Pages\ViewCustomerDeliveryNote;
 use App\Filament\Customer\Resources\CustomerDeliveryNotes\RelationManagers\ItemsRelationManager;
@@ -12,11 +13,14 @@ use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Model;
 use ToneGabes\Filament\Icons\Enums\Phosphor;
 use UnitEnum;
 
 class CustomerDeliveryNoteResource extends Resource
 {
+    use ScopesToAuthenticatedThirdParty;
+
     protected static ?string $model = CustomerDeliveryNote::class;
 
     protected static string|BackedEnum|null $navigationIcon = Phosphor::Truck;
@@ -56,5 +60,15 @@ class CustomerDeliveryNoteResource extends Resource
             'index' => ListCustomerDeliveryNotes::route('/'),
             'view' => ViewCustomerDeliveryNote::route('/{record}'),
         ];
+    }
+
+    public static function canAccess(): bool
+    {
+        return true;
+    }
+
+    public static function canView(Model $record): bool
+    {
+        return true;
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Filament\Customer\Resources\Interventions;
 
+use App\Filament\Customer\Concerns\ScopesToAuthenticatedThirdParty;
 use App\Filament\Customer\Resources\Interventions\Pages\EditIntervention;
 use App\Filament\Customer\Resources\Interventions\Pages\ListInterventions;
 use App\Filament\Customer\Resources\Interventions\Pages\ViewIntervention;
@@ -14,8 +15,7 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Database\Eloquent\Model;
 
 class InterventionResource extends Resource
 {
@@ -34,17 +34,17 @@ class InterventionResource extends Resource
         return false;
     }
 
-    public static function canEdit(\Illuminate\Database\Eloquent\Model $record): bool
+    public static function canEdit(Model $record): bool
     {
         return false;
     }
 
-    public static function canDelete(\Illuminate\Database\Eloquent\Model $record): bool
+    public static function canDelete(Model $record): bool
     {
         return false;
     }
 
-    use \App\Filament\Customer\Concerns\ScopesToAuthenticatedThirdParty;
+    use ScopesToAuthenticatedThirdParty;
 
     public static function form(Schema $schema): Schema
     {
@@ -77,4 +77,13 @@ class InterventionResource extends Resource
         ];
     }
 
+    public static function canAccess(): bool
+    {
+        return true;
+    }
+
+    public static function canView(Model $record): bool
+    {
+        return true;
+    }
 }

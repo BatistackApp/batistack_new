@@ -9,6 +9,8 @@ use App\Jobs\Commerce\SendCustomerInvoiceEmailJob;
 use App\Models\Commerce\CustomerInvoice;
 use App\Notifications\Commerce\InvoiceGeneratedNotification;
 use App\Notifications\Commerce\InvoicePaidNotification;
+use App\Notifications\Customer\FactureRecueNotification;
+use App\Notifications\Customer\PaiementRecuNotification;
 use App\Services\Commerce\CommerceDocumentationService;
 use App\Services\Commerce\InvoiceLegalizationService;
 
@@ -60,6 +62,7 @@ class CustomerInvoiceObserver
 
     /**
      * Actions liées à la validation définitive de la facture (légalisation, envoi).
+     *
      * @throws \Throwable
      */
     protected function handleInvoiceValidated(CustomerInvoice $invoice): void
@@ -76,6 +79,7 @@ class CustomerInvoiceObserver
         // 4. Notification In-App ou standard
         if ($invoice->client && $invoice->client->primaryContact) {
             $invoice->client->primaryContact->notify(new InvoiceGeneratedNotification($invoice));
+            $invoice->client->primaryContact->notify(new FactureRecueNotification($invoice));
         }
 
         \Log::info("Facture {$invoice->reference} validée et légalisée.");
@@ -88,6 +92,7 @@ class CustomerInvoiceObserver
     {
         if ($invoice->client && $invoice->client->primaryContact) {
             $invoice->client->primaryContact->notify(new InvoicePaidNotification($invoice));
+            $invoice->client->primaryContact->notify(new PaiementRecuNotification($invoice));
         }
 
         \Log::info("Facture {$invoice->reference} soldée.");

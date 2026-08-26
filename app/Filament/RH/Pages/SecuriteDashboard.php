@@ -6,9 +6,10 @@ use App\Models\Core\Company;
 use App\Services\Core\DocumentService;
 use App\Services\RH\SafetyRateService;
 use Filament\Actions\Action;
-use Filament\Pages\Dashboard as BaseDashboard;
+use Filament\Pages\Page;
+use Filament\Widgets\Widget;
 
-class SecuriteDashboard extends BaseDashboard
+class SecuriteDashboard extends Page
 {
     protected static ?string $title = 'Tableau de Bord Sécurité (AT/MP)';
 
@@ -17,6 +18,8 @@ class SecuriteDashboard extends BaseDashboard
     protected static string|\UnitEnum|null $navigationGroup = 'RH';
 
     protected static ?int $navigationSort = 1;
+
+    protected string $view = 'filament.rh.pages.securite-dashboard';
 
     protected function getHeaderActions(): array
     {
@@ -44,5 +47,22 @@ class SecuriteDashboard extends BaseDashboard
                     return app(DocumentService::class)->download($path);
                 }),
         ];
+    }
+
+    public function getColumns(): int|array
+    {
+        return [
+            'default' => 1,
+            'md' => 2,
+            'xl' => 3,
+        ];
+    }
+
+    /**
+     * @return array<class-string<Widget>>
+     */
+    public function getWidgets(): array
+    {
+        return [];
     }
 }

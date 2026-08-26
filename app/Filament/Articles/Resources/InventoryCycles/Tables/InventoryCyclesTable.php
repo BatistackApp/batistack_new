@@ -2,12 +2,15 @@
 
 namespace App\Filament\Articles\Resources\InventoryCycles\Tables;
 
+use App\Enums\Articles\InventoryCycleStatus;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
+use Filament\Notifications\Notification;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Collection;
 
 class InventoryCyclesTable
 {
@@ -54,16 +57,17 @@ class InventoryCyclesTable
                 EditAction::make(),
             ])
             ->toolbarActions([
-                \Filament\Tables\Actions\BulkActionGroup::make([
-                    \Filament\Tables\Actions\DeleteBulkAction::make()
-                        ->action(function (\Illuminate\Database\Eloquent\Collection $records, \Filament\Tables\Actions\DeleteBulkAction $action) {
-                            if ($records->contains(fn($record) => $record->status === \App\Enums\Articles\InventoryCycleStatus::COMPLETED)) {
-                                \Filament\Notifications\Notification::make()->danger()->title('Impossible de supprimer des cycles complétés.')->send();
+                BulkActionGroup::make([
+                    DeleteBulkAction::make()
+                        ->action(function (Collection $records, DeleteBulkAction $action) {
+                            if ($records->contains(fn ($record) => $record->status === InventoryCycleStatus::COMPLETED)) {
+                                Notification::make()->danger()->title('Impossible de supprimer des cycles complétés.')->send();
                                 $action->failure();
+
                                 return;
                             }
                             $records->each->delete();
-                            \Filament\Notifications\Notification::make()->success()->title('Supprimé avec succès.')->send();
+                            Notification::make()->success()->title('Supprimé avec succès.')->send();
                         }),
                 ]),
             ]);

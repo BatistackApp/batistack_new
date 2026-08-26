@@ -4,9 +4,6 @@ namespace App\Filament\Customer\Resources\CustomerQuotes\Tables;
 
 use App\Enums\Commerce\QuoteStatus;
 use App\Models\Commerce\CustomerQuote;
-use Filament\Actions\BulkActionGroup;
-use Filament\Actions\DeleteBulkAction;
-use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;

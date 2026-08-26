@@ -2,6 +2,7 @@
 
 namespace App\Filament\Customer\Resources\Interventions\Schemas;
 
+use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Schema;
 
 class InterventionInfolist
@@ -10,11 +11,11 @@ class InterventionInfolist
     {
         return $schema
             ->components([
-                \Filament\Infolists\Components\TextEntry::make('reference')->label('Référence'),
-                \Filament\Infolists\Components\TextEntry::make('status')->label('Statut'),
-                \Filament\Infolists\Components\TextEntry::make('description')->label('Description'),
-                \Filament\Infolists\Components\TextEntry::make('scheduled_at')->label('Prévu le')->dateTime(),
-                \Filament\Infolists\Components\TextEntry::make('clientEquipment.name')->label('Équipement'),
+                TextEntry::make('reference')->label('Référence'),
+                TextEntry::make('status')->label('Statut'),
+                TextEntry::make('description')->label('Description'),
+                TextEntry::make('scheduled_at')->label('Prévu le')->dateTime(),
+                TextEntry::make('clientEquipment.name')->label('Équipement'),
             ]);
     }
 }

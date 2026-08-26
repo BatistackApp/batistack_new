@@ -2,6 +2,7 @@
 
 namespace App\Filament\Customer\Resources\ClientEquipment;
 
+use App\Filament\Customer\Concerns\ScopesToAuthenticatedThirdParty;
 use App\Filament\Customer\Resources\ClientEquipment\Pages\EditClientEquipment;
 use App\Filament\Customer\Resources\ClientEquipment\Pages\ListClientEquipment;
 use App\Filament\Customer\Resources\ClientEquipment\Pages\ViewClientEquipment;
@@ -14,7 +15,7 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 
 class ClientEquipmentResource extends Resource
 {
@@ -33,17 +34,17 @@ class ClientEquipmentResource extends Resource
         return false;
     }
 
-    public static function canEdit(\Illuminate\Database\Eloquent\Model $record): bool
+    public static function canEdit(Model $record): bool
     {
         return false;
     }
 
-    public static function canDelete(\Illuminate\Database\Eloquent\Model $record): bool
+    public static function canDelete(Model $record): bool
     {
         return false;
     }
 
-    use \App\Filament\Customer\Concerns\ScopesToAuthenticatedThirdParty;
+    use ScopesToAuthenticatedThirdParty;
 
     public static function form(Schema $schema): Schema
     {
@@ -74,5 +75,15 @@ class ClientEquipmentResource extends Resource
             'view' => ViewClientEquipment::route('/{record}'),
             'edit' => EditClientEquipment::route('/{record}/edit'),
         ];
+    }
+
+    public static function canAccess(): bool
+    {
+        return true;
+    }
+
+    public static function canView(Model $record): bool
+    {
+        return true;
     }
 }
