@@ -7,12 +7,32 @@ order: 1000
 # 📋 Changelog & Notes de Version
 
 Bienvenue dans le journal des modifications (Changelog) de Batistack.
-Vous retrouverez ici les nouveautés, améliorations et corrections apportées à votre ERP et documentées au fil des versions (voir la note © Historique partie © ci-dessous).
+Vous retrouverez ici les nouveautés, améliorations et corrections apportées à votre ERP et documentées au fil des versions (voir la note « Historique partiel » ci-dessous).
 
 ---
 
 > [!NOTE]
-> **Historique partie** : ce journal détaille les versions jusqu'à la **v0.33.0**. Les versions suivantes (v0.34.0 ⬦ v0.38.0) sont suivies via les notes de release GitHub.
+> **Historique partiel** : ce journal détaille les versions jusqu'à la **v0.34.0**. Les versions suivantes (v0.35.0 → v0.42.0) sont suivies via les notes de release GitHub.
+
+## 📦 Version 0.35.0 (Août 2026)
+
+### 🚀 Mise en avant : Panel Terrain (Journal, BIM, RH)
+Cette version déploie le **Panel Terrain**, l'interface opérationnelle dédiée aux chefs de chantier et aux équipes terrain (PR #374).
+*   **Journal de chantier hors-ligne** : saisie des entrées (travaux, observations, météo, incidents) sans connexion, stockage local et synchronisation automatique ou manuelle via des API dédiées.
+*   **Tableau de bord Terrain** : statistiques essentielles (chantiers actifs, réserves ouvertes, heures travaillées cette semaine, équipes non conformes), widgets de conformité des équipes, de progression des chantiers et d'activité quotidienne (heures pointées, réserves, entrées de journal, incidents du jour).
+*   **Saisie des heures** : workflow amélioré avec gestion des brouillons, soumission, pré-remplissage basé sur la veille et historique des 5 derniers jours de pointage.
+*   **Validation des pointages** : nouvelle interface d'approbation / refus (avec motif) des heures collaborateurs, validation en masse, filtres par chantier et période.
+*   **Gestion des documents de chantier** : page « Documents » pour visualiser, générer et télécharger les documents clés (OS, Rentabilité, Journal, PPSPS, PV).
+*   **Visionneuse BIM** : page « Maquettes 3D » pour consulter les modèles BIM et plans des chantiers actifs, avec visionneuse dédiée et téléchargement.
+*   **Ressource « Mes Chantiers »** : liste des chantiers où l'employé est gestionnaire ou membre, consultation détaillée en lecture seule.
+*   **Sécurité** : nouveau scope `Chantier::forEmployee` pour restreindre la visibilité aux chantiers assignés.
+*   **Qualité** : couverture complète par des tests d'intégration (API de sync, validation des pointages, accès BIM, dashboards).
+
+### 🛠️ CI / Infrastructure
+*   **Permissions de déploiement** : ajout de `chmod -R 777 storage/` au script de build pour garantir la persistance des logs, cache, sessions et fichiers téléchargés.
+*   **Vite/BIM** : optimisation du bundle de la visionneuse et nettoyage de la configuration Vite.
+
+---
 
 ## 📦 Version 0.34.0 (Août 2026)
 
@@ -40,7 +60,7 @@ Cette version introduit le **Portail Salarié**, une interface centralisée perm
 ### 🚀 Mise en avant Feature : Score de Solvabilité / Risque Financier (Issue #294)
 Batistack interroge désormais l'API publique ouverte `recherche-entreprises.api.gouv.fr` pour afficher le **statut juridique** de vos tiers et **bloquer la contractualisation** avec les entreprises à risque.
 *   **Statut juridique granulaire** : Sauvegarde, Redressement judiciaire, Liquidation judiciaire, Cessation ou Sain (badge coloré sur la fiche et dans la liste des Tiers).
-*   **Garde-fou de contractualisation** : blocage dur (notification rouge) pour les entreprises en redressement ou liquidation judiciaire, perte de la génération d'un contrat de sous-traitance, de la création d'un bon de commande ou de l'affectation d'un sous-traitant à un chantier. Avertissement (orange) pour les situations à surveiller (sauvegarde, cessation, statut non vérifié).
+*   **Garde-fou de contractualisation** : blocage dur (notification rouge) pour les entreprises en redressement ou liquidation judiciaire, lors de la génération d'un contrat de sous-traitance, de la création d'un bon de commande ou de l'affectation d'un sous-traitant à un chantier. Avertissement (orange) pour les situations à surveiller (sauvegarde, cessation, statut non vérifié).
 
 ---
 
@@ -60,7 +80,7 @@ Cette version introduit un **Espace Client dédié** permettant une interaction 
 *   **Ajout** : Système d'alertes automatiques (J-1) avant la fin d'un contrat et application de pénalités de retard journalières paramétrables.
 
 **Interventions**
-*   **Ajout** : Formulaires d'Intervention Dynamiques (Checklists sur-mesure) ⬦ création de modèles de rapport par type d'intervention (Réparation/Forfait) avec blocs de champs (texte, nombre, case à cocher, liste, date, photo). Le technicien renseigne le rapport depuis son espace, et la couture est **bloquée** tant que les champs obligatoires ne sont pas complétés.
+*   **Ajout** : Formulaires d'Intervention Dynamiques (Checklists sur-mesure) — création de modèles de rapport par type d'intervention (Régie/Forfait) avec blocs de champs (texte, nombre, case à cocher, liste, date, photo). Le technicien renseigne le rapport depuis son espace, et la clôture est **bloquée** tant que les champs obligatoires ne sont pas complétés.
 
 **Immobilisations & Actifs**
 *   **Ajout** : Module de transfert inter-chantiers pour suivre les mouvements du gros matériel avec génération automatique de **Bons de Transport (PDF)**.
@@ -69,7 +89,7 @@ Cette version introduit un **Espace Client dédié** permettant une interaction 
 
 **GPAO (Gestion de production)**
 *   **Ajout** : Module complet de gestion des machines (suivi opérationnel, compteurs d'heures et intervalles de maintenance).
-*   **Ajout** : Gestion des rebuts de fabrication permettant de déclarer les composants perdus avec motifs (erreur humaine, défaut matière).
+*   **Ajout** : Gestion des rebuts de fabrication permettant de déclarer des composants perdus avec motifs (erreur humaine, défaut matière).
 
 **Administration & RH**
 *   **Ajout** : Interface de gestion des Rôles et Permissions pour affiner les accès utilisateurs.
@@ -77,6 +97,6 @@ Cette version introduit un **Espace Client dédié** permettant une interaction 
 *   **Correction** : Amélioration de l'OCR pour la lecture automatique des dates et montants sur les notes de frais.
 
 ### 🐛 Fix Général
-*   **Traduction** : Harmonisation complète des interfaces avec l'application système des libellés en français sur l'ensemble des champs (Rénovation, Statut, Montant, Créé le, etc.).
+*   **Traduction** : Harmonisation complète des interfaces avec l'application systématique des libellés en français sur l'ensemble des champs (Référence, Statut, Montant, Créé le, etc.).
 *   **Facturation** : Ajout d'une sécurité anti-doublon via une clé de facturation unique (`billing_key`) pour les contrats récurrents.
-*   **Performance** : Mise à jour des moteurs de rendu PDF et des composants de tableau de bord pour un meilleur rendu et plus de fluidité.
+*   **Performance** : Mise à jour des moteurs de rendu PDF et des composants de tableaux de bord pour une meilleure fluidité.
