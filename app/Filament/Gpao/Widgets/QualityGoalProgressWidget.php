@@ -29,7 +29,7 @@ class QualityGoalProgressWidget extends GoalProgressWidget
         $color = $percentage >= 95 ? 'success' : ($percentage >= 80 ? 'warning' : 'danger');
 
         return Goal::make('Objectif de conformité', $percentage, 95)
-            ->formatUsing(fn (float $val) => number_format($val, 1) . '%')
+            ->formatUsing(fn (float $val) => number_format($val, 1).'%')
             ->color($color);
     }
 }

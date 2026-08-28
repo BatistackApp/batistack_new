@@ -3,6 +3,7 @@
 namespace App\Models\RH;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class WageGarnishment extends Model
 {
@@ -27,9 +28,9 @@ class WageGarnishment extends Model
         ];
     }
 
-    public function employee(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function employee(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\RH\Employee::class);
+        return $this->belongsTo(Employee::class);
     }
 
     /**
@@ -53,9 +54,9 @@ class WageGarnishment extends Model
         // 2/3 sur la tranche 1694 - 2107
         // 100% au-delà de 2107
         // + RSA insaisissable (environ 635€)
-        
+
         $saisissable = 0;
-        
+
         if ($netSalary <= 635) {
             return 0; // RSA insaisissable
         }

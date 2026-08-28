@@ -5,7 +5,6 @@ namespace Database\Factories\Chantiers;
 use App\Models\Chantiers\ChantierPhase;
 use App\Models\Chantiers\ChantierTask;
 use Illuminate\Database\Eloquent\Factories\Factory;
-use Illuminate\Support\Carbon;
 
 class ChantierTaskFactory extends Factory
 {

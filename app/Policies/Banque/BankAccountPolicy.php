@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace App\Policies\Banque;
 
-use Illuminate\Foundation\Auth\User as AuthUser;
 use App\Models\Banque\BankAccount;
 use Illuminate\Auth\Access\HandlesAuthorization;
+use Illuminate\Foundation\Auth\User as AuthUser;
 
 class BankAccountPolicy
 {
     use HandlesAuthorization;
-    
+
     public function viewAny(AuthUser $authUser): bool
     {
         return $authUser->can('ViewAny:BankAccount');
@@ -71,5 +71,4 @@ class BankAccountPolicy
     {
         return $authUser->can('Reorder:BankAccount');
     }
-
 }

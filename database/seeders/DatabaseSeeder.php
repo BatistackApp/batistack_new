@@ -10,6 +10,7 @@ use App\Models\User;
 use Database\Seeders\Accounting\PcgSeeder;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Artisan;
+use Spatie\Permission\Models\Role;
 
 class DatabaseSeeder extends Seeder
 {
@@ -32,7 +33,7 @@ class DatabaseSeeder extends Seeder
 
         $admin = User::where('email', 'admin@admin.com')->first();
         if ($admin) {
-            \Spatie\Permission\Models\Role::firstOrCreate(['name' => 'super_admin', 'guard_name' => 'web']);
+            Role::firstOrCreate(['name' => 'super_admin', 'guard_name' => 'web']);
             $admin->assignRole('super_admin');
         }
 

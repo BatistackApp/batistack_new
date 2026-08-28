@@ -10,9 +10,10 @@ use App\Models\User;
 use App\Notifications\Flottes\ContractExpiringNotification;
 use App\Notifications\Flottes\VulPollutionControlAlertNotification;
 use App\Services\Flottes\VehicleAlertService;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Notification;
 use Mockery;
 
 uses(RefreshDatabase::class);
@@ -31,11 +32,11 @@ describe('CheckExpiringContractsJob', function () {
         $serviceMock->shouldReceive('getExpiringContracts')
             ->once()
             ->with(30)
-            ->andReturn(\Illuminate\Database\Eloquent\Collection::make([$expiringContract]));
+            ->andReturn(Collection::make([$expiringContract]));
 
         $serviceMock->shouldReceive('getExpiredContracts')
             ->once()
-            ->andReturn(\Illuminate\Database\Eloquent\Collection::make([$expiredContract]));
+            ->andReturn(Collection::make([$expiredContract]));
 
         $vulVehicle = Vehicle::factory()->create([
             'type' => VehicleType::UTILITY,
@@ -59,14 +60,14 @@ describe('CheckExpiringContractsJob', function () {
             ->with('Scan conformité : 3 alertes')
             ->once();
 
-        $job = new CheckExpiringContractsJob();
+        $job = new CheckExpiringContractsJob;
         $job->handle($serviceMock);
 
         Notification::assertSentTo(
             [$admin],
             ContractExpiringNotification::class,
             function ($notification) use ($expiringContract) {
-                return (fn() => $this->contract->id)->call($notification) === $expiringContract->id;
+                return (fn () => $this->contract->id)->call($notification) === $expiringContract->id;
             }
         );
 
@@ -74,7 +75,7 @@ describe('CheckExpiringContractsJob', function () {
             [$admin],
             ContractExpiringNotification::class,
             function ($notification) use ($expiredContract) {
-                return (fn() => $this->contract->id)->call($notification) === $expiredContract->id;
+                return (fn () => $this->contract->id)->call($notification) === $expiredContract->id;
             }
         );
 
@@ -82,7 +83,7 @@ describe('CheckExpiringContractsJob', function () {
             [$admin],
             VulPollutionControlAlertNotification::class,
             function ($notification) use ($vulVehicle) {
-                return (fn() => $this->vehicle->id)->call($notification) === $vulVehicle->id;
+                return (fn () => $this->vehicle->id)->call($notification) === $vulVehicle->id;
             }
         );
 

@@ -105,7 +105,7 @@ class BarcodeObserver
     private function generateQRCode(Item $item): void
     {
         // Vérifier que la collection est enregistrée
-        if (! in_array('barcode', (array)$item->getRegisteredMediaCollections())) {
+        if (! in_array('barcode', (array) $item->getRegisteredMediaCollections())) {
             $item->addMediaCollection('barcode')->singleFile();
         }
 
@@ -135,6 +135,7 @@ class BarcodeObserver
 
     /**
      * Valider l'unicité du barcode
+     *
      * @throws Exception
      */
     private function validateBarcodeUnique(string $reference, ?int $excludeId = null): void

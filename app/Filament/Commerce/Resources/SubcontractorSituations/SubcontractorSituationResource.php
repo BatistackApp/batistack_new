@@ -11,17 +11,21 @@ use App\Models\Commerce\SubcontractorSituation;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
-use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use ToneGabes\Filament\Icons\Enums\Phosphor;
 
 class SubcontractorSituationResource extends Resource
 {
     protected static ?string $model = SubcontractorSituation::class;
 
-    protected static string|BackedEnum|null $navigationIcon = \ToneGabes\Filament\Icons\Enums\Phosphor::Percent;
+    protected static string|BackedEnum|null $navigationIcon = Phosphor::Percent;
+
     protected static ?string $navigationLabel = 'Situations Sous-traitants';
-    protected static string | \UnitEnum | null $navigationGroup = 'Achats';
+
+    protected static string|\UnitEnum|null $navigationGroup = 'Achats';
+
     protected static ?string $modelLabel = 'Situation Sous-traitant';
+
     protected static ?string $pluralModelLabel = 'Situations Sous-traitants';
 
     public static function form(Schema $schema): Schema

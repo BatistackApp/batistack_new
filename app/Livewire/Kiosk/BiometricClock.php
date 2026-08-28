@@ -6,12 +6,12 @@ use App\Enums\RH\TimeEntryStatus;
 use App\Enums\RH\TimeEntryType;
 use App\Models\RH\Employee;
 use App\Models\RH\TimeEntry;
-use Carbon\Carbon;
 use Livewire\Component;
 
 class BiometricClock extends Component
 {
     public array $employeesData = [];
+
     public array $recentLogs = [];
 
     public function mount()
@@ -35,14 +35,16 @@ class BiometricClock extends Component
     public function clockIn($employeeId)
     {
         $employee = Employee::find($employeeId);
-        if (!$employee) return;
+        if (! $employee) {
+            return;
+        }
 
         // Verify if not already clocked in today to avoid spamming
         $todayEntry = TimeEntry::where('employee_id', $employee->id)
             ->whereDate('date', now()->toDateString())
             ->first();
 
-        if (!$todayEntry) {
+        if (! $todayEntry) {
             // Create a Draft TimeEntry for the day
             TimeEntry::create([
                 'employee_id' => $employee->id,
@@ -54,7 +56,7 @@ class BiometricClock extends Component
                 'status' => TimeEntryStatus::DRAFT,
             ]);
 
-            $message = "Bienvenue, {$employee->first_name}. Présence enregistrée à " . now()->format('H:i');
+            $message = "Bienvenue, {$employee->first_name}. Présence enregistrée à ".now()->format('H:i');
         } else {
             $message = "Bonjour {$employee->first_name}. Vous avez déjà pointé aujourd'hui.";
         }

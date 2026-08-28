@@ -2,10 +2,10 @@
 
 namespace Database\Factories\Tiers;
 
-use App\Models\Tiers\ThirdPartyDocument;
-use App\Models\Tiers\ThirdParty;
-use App\Enums\Tiers\ThirdPartyDocumentType;
 use App\Enums\Tiers\ThirdPartyDocumentStatus;
+use App\Enums\Tiers\ThirdPartyDocumentType;
+use App\Models\Tiers\ThirdParty;
+use App\Models\Tiers\ThirdPartyDocument;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class ThirdPartyDocumentFactory extends Factory

@@ -45,6 +45,7 @@ class SirenService
 
     /**
      * Récupère les informations complètes d'un établissement.
+     *
      * @throws \Exception
      */
     public function getInformation(string $identifier): ?array

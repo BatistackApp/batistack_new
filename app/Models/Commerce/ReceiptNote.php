@@ -4,12 +4,12 @@ namespace App\Models\Commerce;
 
 use App\Enums\Commerce\DeliveryStatus;
 use App\Models\Articles\Warehouse;
+use App\Observers\Commerce\ReceiptNoteObserver;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use App\Observers\Commerce\ReceiptNoteObserver;
-use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 
 #[ObservedBy([ReceiptNoteObserver::class])]
 class ReceiptNote extends Model

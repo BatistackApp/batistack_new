@@ -2,6 +2,8 @@
 
 namespace App\Observers\Locations;
 
+use App\Enums\Immobilisation\AssetStatus;
+use App\Models\Immobilisation\FixedAsset;
 use App\Models\Locations\OutboundRentalLine;
 
 class OutboundRentalLineObserver
@@ -13,7 +15,7 @@ class OutboundRentalLineObserver
     {
         if ($outboundRentalLine->contract && $outboundRentalLine->contract->status === 'active') {
             if ($outboundRentalLine->fixedAsset) {
-                $outboundRentalLine->fixedAsset->update(['status' => \App\Enums\Immobilisation\AssetStatus::RENTED]);
+                $outboundRentalLine->fixedAsset->update(['status' => AssetStatus::RENTED]);
             }
         }
     }
@@ -26,10 +28,10 @@ class OutboundRentalLineObserver
         if ($outboundRentalLine->wasChanged('fixed_asset_id')) {
             $oldAssetId = $outboundRentalLine->getOriginal('fixed_asset_id');
             if ($oldAssetId) {
-                \App\Models\Immobilisation\FixedAsset::find($oldAssetId)?->update(['status' => \App\Enums\Immobilisation\AssetStatus::ACTIVE]);
+                FixedAsset::find($oldAssetId)?->update(['status' => AssetStatus::ACTIVE]);
             }
             if ($outboundRentalLine->contract && $outboundRentalLine->contract->status === 'active') {
-                \App\Models\Immobilisation\FixedAsset::find($outboundRentalLine->fixed_asset_id)?->update(['status' => \App\Enums\Immobilisation\AssetStatus::RENTED]);
+                FixedAsset::find($outboundRentalLine->fixed_asset_id)?->update(['status' => AssetStatus::RENTED]);
             }
         }
     }
@@ -40,7 +42,7 @@ class OutboundRentalLineObserver
     public function deleted(OutboundRentalLine $outboundRentalLine): void
     {
         if ($outboundRentalLine->fixedAsset) {
-            $outboundRentalLine->fixedAsset->update(['status' => \App\Enums\Immobilisation\AssetStatus::ACTIVE]);
+            $outboundRentalLine->fixedAsset->update(['status' => AssetStatus::ACTIVE]);
         }
     }
 

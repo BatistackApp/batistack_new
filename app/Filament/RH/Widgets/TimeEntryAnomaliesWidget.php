@@ -4,16 +4,16 @@ namespace App\Filament\RH\Widgets;
 
 use App\Models\RH\TimeEntry;
 use Filament\Actions\Action;
-use Filament\Tables;
+use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget as BaseWidget;
-use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Columns\IconColumn;
 
 class TimeEntryAnomaliesWidget extends BaseWidget
 {
     protected static ?int $sort = 3;
-    protected int | string | array $columnSpan = 'full';
+
+    protected int|string|array $columnSpan = 'full';
+
     protected static ?string $heading = 'Anomalie de Pointage';
 
     public function table(Table $table): Table

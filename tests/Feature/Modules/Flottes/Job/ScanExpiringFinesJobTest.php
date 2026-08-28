@@ -24,7 +24,7 @@ describe('ScanExpiringFinesJob', function () {
             'status' => 'received',
             'infraction_at' => now()->subDays(50), // 50 days ago -> 5 days overdue
         ]);
-        
+
         $daysOverdue = 5; // 50 - 45
 
         // Pending fine but not overdue (infraction 35 days ago)
@@ -40,21 +40,21 @@ describe('ScanExpiringFinesJob', function () {
         ]);
 
         Log::shouldReceive('warning')
-            ->with(Mockery::pattern('/Amende en retard : ' . $overdueFine->reference . '/'))
+            ->with(Mockery::pattern('/Amende en retard : '.$overdueFine->reference.'/'))
             ->once();
 
         Log::shouldReceive('info')
             ->with('Scan amendes : 2 amendes en attente') // Both received and disputed are fetched
             ->once();
 
-        $job = new ScanExpiringFinesJob();
+        $job = new ScanExpiringFinesJob;
         $job->handle();
 
         Notification::assertSentTo(
             [$admin],
             TrafficFineReminderNotification::class,
             function ($notification) use ($overdueFine) {
-                return (fn() => $this->fine->id)->call($notification) === $overdueFine->id;
+                return (fn () => $this->fine->id)->call($notification) === $overdueFine->id;
             }
         );
 
@@ -62,7 +62,7 @@ describe('ScanExpiringFinesJob', function () {
             [$admin],
             TrafficFineReminderNotification::class,
             function ($notification) use ($pendingFine) {
-                return (fn() => $this->fine->id)->call($notification) === $pendingFine->id;
+                return (fn () => $this->fine->id)->call($notification) === $pendingFine->id;
             }
         );
     });

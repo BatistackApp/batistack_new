@@ -36,15 +36,15 @@ class InterventionCostingService
         // Dans une V2 on pourrait avoir un "selling_price" horaire sur InterventionWorker.
         // Pour l'instant, disons qu'on facture le matériel via son selling_price.
         // Les heures en régie peuvent avoir un taux de vente global ou par employé.
-        
+
         $materialBilled = $intervention->materials->sum(function ($material) {
             return $material->quantity * $material->selling_price;
         });
 
         // Supposons que le hourly_cost stocké soit le prix coûtant. Il faudrait idéalement un hourly_billing_rate.
-        // Faisons simple : si on est en régie, on suppose qu'une méthode ou règle détermine la marge. 
+        // Faisons simple : si on est en régie, on suppose qu'une méthode ou règle détermine la marge.
         // Pour l'instant, on laisse les heures à 0 facturées si on n'a pas de selling_rate, ou on peut les ajouter si la db évolue.
-        return $materialBilled; 
+        return $materialBilled;
     }
 
     /**

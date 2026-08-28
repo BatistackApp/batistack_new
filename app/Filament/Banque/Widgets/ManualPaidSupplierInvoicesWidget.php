@@ -3,6 +3,7 @@
 namespace App\Filament\Banque\Widgets;
 
 use App\Enums\Commerce\InvoiceStatus;
+use App\Filament\Commerce\Resources\SupplierInvoices\SupplierInvoiceResource;
 use App\Models\Commerce\SupplierInvoice;
 use Filament\Actions\Action;
 use Filament\Tables\Columns\TextColumn;
@@ -13,6 +14,7 @@ use Illuminate\Database\Eloquent\Builder;
 class ManualPaidSupplierInvoicesWidget extends TableWidget
 {
     protected static ?int $sort = 4;
+
     protected int|string|array $columnSpan = 'full';
 
     protected static ?string $heading = 'Factures Fournisseurs "Payées" sans paiement bancaire (anomalie)';
@@ -35,7 +37,7 @@ class ManualPaidSupplierInvoicesWidget extends TableWidget
                 Action::make('voir')
                     ->label('Consulter')
                     ->icon('heroicon-o-eye')
-                    ->url(fn (SupplierInvoice $record) => \App\Filament\Commerce\Resources\SupplierInvoices\SupplierInvoiceResource::getUrl('view', ['record' => $record])),
+                    ->url(fn (SupplierInvoice $record) => SupplierInvoiceResource::getUrl('view', ['record' => $record])),
             ])
             ->paginated([5, 10, 25])
             ->defaultPaginationPageOption(5);

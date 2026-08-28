@@ -2,18 +2,17 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Subcontractor\Pages\Dashboard;
+use App\Filament\Subcontractor\Widgets\SubcontractorDashboardWidget;
 use App\Http\Middleware\EnsureUserIsSubcontractor;
 use App\Providers\Filament\Traits\HasKnowledgeBaseCompanion;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
-use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
-use Filament\Widgets\AccountWidget;
-use Filament\Widgets\FilamentInfoWidget;
 use Guava\FilamentKnowledgeBase\Plugins\KnowledgeBaseCompanionPlugin;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
@@ -47,8 +46,7 @@ class SubcontractorPanelProvider extends PanelProvider
             ])
             ->discoverWidgets(in: app_path('Filament/Subcontractor/Widgets'), for: 'App\Filament\Subcontractor\Widgets')
             ->widgets([
-                AccountWidget::class,
-                FilamentInfoWidget::class,
+                SubcontractorDashboardWidget::class,
             ])
             ->plugin(KnowledgeBaseCompanionPlugin::make()->knowledgeBasePanelId('docs'))
             ->plugins([

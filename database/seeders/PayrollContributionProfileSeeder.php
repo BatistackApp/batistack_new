@@ -2,11 +2,9 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
-use Illuminate\Database\Seeder;
-
-use App\Models\Paie\PayrollContributionProfile;
 use App\Enums\Paie\ContributionBaseFormula;
+use App\Models\Paie\PayrollContributionProfile;
+use Illuminate\Database\Seeder;
 
 class PayrollContributionProfileSeeder extends Seeder
 {

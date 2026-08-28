@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -16,13 +17,14 @@ return new class extends Migration
         });
 
         // Backfill existing records
-        $transactions = \Illuminate\Support\Facades\DB::table('fuel_transactions')
+        $transactions = DB::table('fuel_transactions')
             ->join('vehicles', 'fuel_transactions.vehicle_id', '=', 'vehicles.id')
             ->select('fuel_transactions.id', 'fuel_transactions.liters', 'vehicles.fuel_type')
             ->get();
-            
+
         $getEmissionFactor = function (?string $fuelType): float {
             $type = mb_strtolower(trim($fuelType ?? ''));
+
             return match ($type) {
                 'diesel', 'gazole', 'b7', 'b10' => 2.64,
                 'essence', 'sp95', 'sp98', 'e10', 'hybride' => 2.28,
@@ -34,10 +36,10 @@ return new class extends Migration
         };
 
         foreach ($transactions as $transaction) {
-            \Illuminate\Support\Facades\DB::table('fuel_transactions')
+            DB::table('fuel_transactions')
                 ->where('id', $transaction->id)
                 ->update([
-                    'co2_emission_kg' => $transaction->liters * $getEmissionFactor($transaction->fuel_type)
+                    'co2_emission_kg' => $transaction->liters * $getEmissionFactor($transaction->fuel_type),
                 ]);
         }
     }

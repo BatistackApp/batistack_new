@@ -2,8 +2,10 @@
 
 namespace App\Models\Gpao;
 
+use App\Enums\Gpao\MachineStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Machine extends Model
@@ -21,7 +23,7 @@ class Machine extends Model
     protected function casts(): array
     {
         return [
-            'status' => \App\Enums\Gpao\MachineStatus::class,
+            'status' => MachineStatus::class,
             'usage_hours' => 'decimal:2',
             'maintenance_interval_hours' => 'decimal:2',
         ];
@@ -32,7 +34,7 @@ class Machine extends Model
         return $this->hasMany(MachineMaintenanceTicket::class);
     }
 
-    public function manufacturingOrders(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    public function manufacturingOrders(): BelongsToMany
     {
         return $this->belongsToMany(ManufacturingOrder::class);
     }

@@ -12,21 +12,25 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\ToggleButtons;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
-use Filament\Schemas\Components\Section;
-use Filament\Schemas\Schema;
-use Marcelorodrigo\FilamentBarcodeScannerField\Forms\Components\BarcodeInput;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Schema;
 use Illuminate\Support\Facades\DB;
+use Marcelorodrigo\FilamentBarcodeScannerField\Forms\Components\BarcodeInput;
 
 class ScanEquipementPage extends Page implements HasForms
 {
     use InteractsWithForms;
 
     protected static string|null|\BackedEnum $navigationIcon = 'heroicon-o-viewfinder-circle';
+
     protected static ?string $navigationLabel = 'Scan Outillage (NFC)';
+
     protected static ?string $title = 'Scanner un Outillage';
+
     protected static string|null|\UnitEnum $navigationGroup = 'Gestion';
+
     protected static ?int $navigationSort = 100;
 
     protected string $view = 'filament.rh.pages.scan-equipement-page';
@@ -87,7 +91,7 @@ class ScanEquipementPage extends Page implements HasForms
                             ->visible(fn (callable $get) => filled($get('equipement_id'))),
                     ])
                     ->columns(1)
-                    ->maxWidth('xl')
+                    ->maxWidth('xl'),
             ])
             ->statePath('data');
     }
@@ -97,6 +101,7 @@ class ScanEquipementPage extends Page implements HasForms
         if (blank($barcode)) {
             $set('equipement_id', null);
             $set('equipement_info', null);
+
             return;
         }
 
@@ -118,7 +123,7 @@ class ScanEquipementPage extends Page implements HasForms
             }
         } else {
             $set('equipement_id', null);
-            $set('equipement_info', "⚠️ Outil introuvable pour ce code.");
+            $set('equipement_info', '⚠️ Outil introuvable pour ce code.');
         }
     }
 
@@ -130,6 +135,7 @@ class ScanEquipementPage extends Page implements HasForms
 
         if (! $equipement) {
             Notification::make()->danger()->title('Outil introuvable')->send();
+
             return;
         }
 

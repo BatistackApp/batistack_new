@@ -13,7 +13,6 @@ use App\Models\Commerce\Payment;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
-use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use ToneGabes\Filament\Icons\Enums\Phosphor;
 
@@ -22,9 +21,13 @@ class PaymentResource extends Resource
     protected static ?string $model = Payment::class;
 
     protected static string|BackedEnum|null $navigationIcon = Phosphor::Bank;
+
     protected static ?string $navigationLabel = 'Paiements';
+
     protected static ?string $modelLabel = 'Paiement';
+
     protected static ?string $pluralModelLabel = 'Paiements';
+
     protected static ?int $navigationSort = 8;
 
     protected static ?string $recordTitleAttribute = 'reference';

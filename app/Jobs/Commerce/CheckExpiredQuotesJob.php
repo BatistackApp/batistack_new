@@ -29,6 +29,7 @@ class CheckExpiredQuotesJob implements ShouldQueue
 
         if ($expiredQuotes->isEmpty()) {
             Log::info('No expired quotes detected');
+
             return;
         }
 

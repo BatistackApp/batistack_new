@@ -10,13 +10,6 @@ interface SignatureProviderInterface
 {
     /**
      * Initiate a signature request.
-     *
-     * @param Model $model
-     * @param SignatureType $type
-     * @param string|null $email
-     * @param string|null $name
-     * @param string|null $documentPath
-     * @return Signature
      */
     public function requestSignature(
         Model $model,
@@ -28,12 +21,6 @@ interface SignatureProviderInterface
 
     /**
      * Process an incoming signature (e.g., from local input or from a webhook/callback).
-     *
-     * @param Model $model
-     * @param string|null $signatureData
-     * @param SignatureType $type
-     * @param array $additionalMetadata
-     * @return Signature
      */
     public function sign(
         Model $model,
@@ -44,9 +31,6 @@ interface SignatureProviderInterface
 
     /**
      * Verify the integrity or status of a signature.
-     *
-     * @param Signature $signature
-     * @return bool
      */
     public function verify(Signature $signature): bool;
 }

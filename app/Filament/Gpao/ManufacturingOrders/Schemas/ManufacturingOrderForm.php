@@ -4,11 +4,13 @@ namespace App\Filament\Gpao\ManufacturingOrders\Schemas;
 
 use App\Enums\Gpao\ManufacturingStatus;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Group;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
+use Illuminate\Support\HtmlString;
 
 class ManufacturingOrderForm
 {
@@ -25,9 +27,9 @@ class ManufacturingOrderForm
                                 ->required()
                                 ->readOnly(),
 
-                            \Filament\Forms\Components\Placeholder::make('customer_order')
+                            Placeholder::make('customer_order')
                                 ->label('Commande d\'origine')
-                                ->content(fn ($record) => $record && $record->customerOrder ? new \Illuminate\Support\HtmlString('<a href="'.route('filament.commerce.resources.customer-orders.edit', $record->customer_order_id).'" target="_blank" style="text-decoration:underline;color:blue;">'.$record->customerOrder->reference.'</a>') : '-')
+                                ->content(fn ($record) => $record && $record->customerOrder ? new HtmlString('<a href="'.route('filament.commerce.resources.customer-orders.edit', $record->customer_order_id).'" target="_blank" style="text-decoration:underline;color:blue;">'.$record->customerOrder->reference.'</a>') : '-')
                                 ->visible(fn ($record) => $record && $record->customer_order_id),
 
                             Select::make('item_id')
@@ -63,13 +65,13 @@ class ManufacturingOrderForm
 
                             DatePicker::make('end_date')
                                 ->label('Date de fin prévue'),
-                                
+
                             TextInput::make('batch_number')
                                 ->label('N° de Lot (Produit)'),
-                                
+
                             TextInput::make('serial_number')
                                 ->label('N° de Série (Produit)'),
-                                
+
                             Select::make('machines')
                                 ->label('Machines Assignées')
                                 ->relationship('machines', 'name')

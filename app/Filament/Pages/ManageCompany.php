@@ -3,9 +3,9 @@
 namespace App\Filament\Pages;
 
 use App\Models\Core\Company;
+use App\Rules\ValidSiret;
 use Filament\Actions\Action;
 use Filament\Forms\Components\FileUpload;
-use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
@@ -47,7 +47,7 @@ class ManageCompany extends Page
                         TextInput::make('siret')
                             ->label('SIRET')
                             ->length(14)
-                            ->rule(new \App\Rules\ValidSiret()),
+                            ->rule(new ValidSiret),
                         TextInput::make('vat_number')
                             ->label('N° TVA Intracommunautaire'),
                         TextInput::make('share_capital')

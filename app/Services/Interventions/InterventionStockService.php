@@ -2,6 +2,7 @@
 
 namespace App\Services\Interventions;
 
+use App\Models\Articles\Stock;
 use App\Models\Articles\StockMouvement;
 use App\Models\Interventions\Intervention;
 
@@ -15,14 +16,14 @@ class InterventionStockService
         foreach ($intervention->materials as $material) {
             if ($material->warehouse_id) {
                 // Fetch the actual stock
-                $stock = \App\Models\Articles\Stock::where('item_id', $material->item_id)
+                $stock = Stock::where('item_id', $material->item_id)
                     ->where('warehouse_id', $material->warehouse_id)
                     ->first();
-                    
+
                 $stockId = $stock ? $stock->id : 1;
                 $quantityBefore = $stock ? $stock->quantity : 0;
                 $quantityAfter = $quantityBefore - $material->quantity;
-                
+
                 StockMouvement::create([
                     'stock_id' => $stockId,
                     'user_id' => 1, // System or current user

@@ -4,13 +4,25 @@ namespace App\Filament\Gpao\ManufacturingOrders;
 
 use App\Filament\Gpao\ManufacturingOrders\Pages\CreateManufacturingOrder;
 use App\Filament\Gpao\ManufacturingOrders\Pages\EditManufacturingOrder;
+use App\Filament\Gpao\ManufacturingOrders\Pages\KanbanManufacturingOrders;
 use App\Filament\Gpao\ManufacturingOrders\Pages\ListManufacturingOrders;
 use App\Filament\Gpao\ManufacturingOrders\Pages\ViewManufacturingOrder;
+use App\Filament\Gpao\ManufacturingOrders\RelationManagers\QualityChecksRelationManager;
+use App\Filament\Gpao\ManufacturingOrders\RelationManagers\RequirementsRelationManager;
 use App\Filament\Gpao\ManufacturingOrders\Schemas\ManufacturingOrderForm;
 use App\Filament\Gpao\ManufacturingOrders\Schemas\ManufacturingOrderInfolist;
 use App\Filament\Gpao\ManufacturingOrders\Tables\ManufacturingOrdersTable;
+use App\Models\Articles\Item;
 use App\Models\Gpao\ManufacturingOrder;
+use App\Models\User;
+use App\Notifications\Gpao\ProductionAlertNotification;
+use App\Services\Gpao\ManufacturingScrapService;
 use BackedEnum;
+use Filament\Actions\Action;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
@@ -21,8 +33,11 @@ class ManufacturingOrderResource extends Resource
     protected static ?string $model = ManufacturingOrder::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedWrenchScrewdriver;
+
     protected static string|\UnitEnum|null $navigationGroup = 'Production';
+
     protected static ?string $modelLabel = 'Ordre de Fabrication';
+
     protected static ?string $pluralModelLabel = 'Ordres de Fabrication';
 
     public static function form(Schema $schema): Schema
@@ -39,21 +54,21 @@ class ManufacturingOrderResource extends Resource
     {
         return ManufacturingOrdersTable::configure($table)
             ->pushActions([
-                \Filament\Actions\Action::make('declare_scrap')
+                Action::make('declare_scrap')
                     ->label('Déclarer Rebut')
                     ->icon('heroicon-o-trash')
                     ->color('warning')
                     ->form([
-                        \Filament\Forms\Components\Select::make('item_id')
+                        Select::make('item_id')
                             ->label('Composant perdu')
                             ->options(fn (ManufacturingOrder $record) => $record->requirements()->with('item')->get()->pluck('item.name', 'item_id'))
                             ->required(),
-                        \Filament\Forms\Components\TextInput::make('quantity')->label('Quantité')
+                        TextInput::make('quantity')->label('Quantité')
                             ->label('Quantité (Rebut)')
                             ->numeric()
                             ->minValue(0.0001)
                             ->required(),
-                        \Filament\Forms\Components\Select::make('reason')
+                        Select::make('reason')
                             ->label('Motif')
                             ->options([
                                 'machine_breakdown' => 'Casse Machine',
@@ -61,44 +76,44 @@ class ManufacturingOrderResource extends Resource
                                 'human_error' => 'Erreur Humaine',
                             ])
                             ->required(),
-                        \Filament\Forms\Components\Textarea::make('notes')->label('Notes')
+                        Textarea::make('notes')->label('Notes')
                             ->label('Commentaires'),
                     ])
-                    ->action(function (array $data, ManufacturingOrder $record, \App\Services\Gpao\ManufacturingScrapService $scrapService) {
-                        $item = \App\Models\Articles\Item::find($data['item_id']);
+                    ->action(function (array $data, ManufacturingOrder $record, ManufacturingScrapService $scrapService) {
+                        $item = Item::find($data['item_id']);
                         $scrapService->declareScrap($record, $item, (float) $data['quantity'], $data['reason'], $data['notes'] ?? null);
-                        
-                        \Filament\Notifications\Notification::make()
+
+                        Notification::make()
                             ->title('Rebut déclaré et stock mis à jour')
                             ->success()
                             ->send();
                     }),
-                \Filament\Actions\Action::make('trigger_alert')
+                Action::make('trigger_alert')
                     ->label('Alerte Urgence')
                     ->icon('heroicon-o-bell-alert')
                     ->color('danger')
                     ->requiresConfirmation()
                     ->action(function (ManufacturingOrder $record) {
-                        $users = \App\Models\User::all(); // Dans la vraie vie, filtrer par rôle Chef d'Atelier
-                        \Illuminate\Support\Facades\Notification::send($users, new \App\Notifications\Gpao\ProductionAlertNotification(
+                        $users = User::all(); // Dans la vraie vie, filtrer par rôle Chef d'Atelier
+                        \Illuminate\Support\Facades\Notification::send($users, new ProductionAlertNotification(
                             '⚠️ Panne signalée !',
                             "Panne critique déclarée sur l'OF : {$record->reference}",
                             ManufacturingOrderResource::getUrl('view', ['record' => $record->id])
                         ));
-                        
-                        \Filament\Notifications\Notification::make()
+
+                        Notification::make()
                             ->title('Alerte envoyée à toute l\'équipe')
                             ->success()
                             ->send();
-                    })
+                    }),
             ]);
     }
 
     public static function getRelations(): array
     {
         return [
-            \App\Filament\Gpao\ManufacturingOrders\RelationManagers\RequirementsRelationManager::class,
-            \App\Filament\Gpao\ManufacturingOrders\RelationManagers\QualityChecksRelationManager::class,
+            RequirementsRelationManager::class,
+            QualityChecksRelationManager::class,
         ];
     }
 
@@ -106,7 +121,7 @@ class ManufacturingOrderResource extends Resource
     {
         return [
             'index' => ListManufacturingOrders::route('/'),
-            'kanban' => \App\Filament\Gpao\ManufacturingOrders\Pages\KanbanManufacturingOrders::route('/kanban'),
+            'kanban' => KanbanManufacturingOrders::route('/kanban'),
             'create' => CreateManufacturingOrder::route('/create'),
             'view' => ViewManufacturingOrder::route('/{record}'),
             'edit' => EditManufacturingOrder::route('/{record}/edit'),

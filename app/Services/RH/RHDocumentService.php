@@ -2,10 +2,14 @@
 
 namespace App\Services\RH;
 
+use App\Enums\Core\SignatureStatus;
 use App\Enums\RH\TimeEntryStatus;
 use App\Models\Core\Company;
+use App\Models\Flottes\TrafficFine;
+use App\Models\RH\Abscence;
 use App\Models\RH\Contract;
 use App\Models\RH\Employee;
+use App\Models\RH\WageGarnishment;
 use App\Services\Core\DocumentService;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
@@ -19,7 +23,7 @@ class RHDocumentService extends DocumentService
     {
         $contract->load(['employee']);
 
-        $signature = $contract->signatures()->where('status', \App\Enums\Core\SignatureStatus::SIGNED)->latest()->first();
+        $signature = $contract->signatures()->where('status', SignatureStatus::SIGNED)->latest()->first();
 
         $data = [
             'company' => Company::first(),
@@ -201,7 +205,7 @@ class RHDocumentService extends DocumentService
     /**
      * Génère un avertissement RH suite à une amende routière.
      */
-    public function generateTrafficFineWarning(Employee $employee, \App\Models\Flottes\TrafficFine $fine): string
+    public function generateTrafficFineWarning(Employee $employee, TrafficFine $fine): string
     {
         $fine->load(['vehicle']);
 
@@ -209,7 +213,7 @@ class RHDocumentService extends DocumentService
             'company' => Company::first(),
             'employee' => $employee,
             'fine' => $fine,
-            'title' => 'AVERTISSEMENT INFRACTION - ' . $employee->full_name,
+            'title' => 'AVERTISSEMENT INFRACTION - '.$employee->full_name,
             'generated_at' => Carbon::now()->format('d/m/Y H:i'),
         ];
 
@@ -258,7 +262,7 @@ class RHDocumentService extends DocumentService
         $netSalary = $grossSalary * 0.78;
 
         $satdDeduction = 0;
-        
+
         $activeSatds = $employee->wageGarnishments()
             ->where('is_active', true)
             ->where('start_date', '<=', Carbon::create($year, $month, 1)->endOfMonth())
@@ -266,11 +270,13 @@ class RHDocumentService extends DocumentService
             ->get();
 
         if ($activeSatds->isNotEmpty()) {
-            $dummyGarnishment = new \App\Models\RH\WageGarnishment(['total_amount_due' => 99999999, 'amount_collected' => 0]);
+            $dummyGarnishment = new WageGarnishment(['total_amount_due' => 99999999, 'amount_collected' => 0]);
             $maxDeduction = $dummyGarnishment->calculateDeduction($netSalary);
-            
+
             foreach ($activeSatds as $satd) {
-                if ($satdDeduction >= $maxDeduction) break;
+                if ($satdDeduction >= $maxDeduction) {
+                    break;
+                }
                 $deduction = $satd->calculateDeduction($netSalary);
                 $actualDeduction = min($deduction, $maxDeduction - $satdDeduction);
                 $satdDeduction += $actualDeduction;
@@ -312,11 +318,11 @@ class RHDocumentService extends DocumentService
     /**
      * Génère l'Attestation de Salaire (Arrêt Maladie / AT)
      */
-    public function generateAttestationSalaire(\App\Models\RH\Abscence $absence): string
+    public function generateAttestationSalaire(Abscence $absence): string
     {
         $absence->load(['employee.currentContract']);
         $employee = $absence->employee;
-        
+
         // Simuler les 3 derniers salaires (en conditions réelles on lirait les tables de paie)
         $contract = $employee->currentContract;
         $monthlyGross = $contract ? $contract->getSalary() : 0;
@@ -352,7 +358,7 @@ class RHDocumentService extends DocumentService
     /**
      * Génère le bulletin d'affiliation (PRO BTP) pour l'Onboarding.
      */
-    public function generateAffiliationMutuelle(\App\Models\RH\Employee $employee): string
+    public function generateAffiliationMutuelle(Employee $employee): string
     {
         $employee->load(['currentContract']);
 

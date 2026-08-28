@@ -4,6 +4,7 @@ namespace App\Services\Core;
 
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Service d'interaction avec les API Google Maps.
@@ -20,11 +21,12 @@ class GoogleMapsService
 
     public function hasApiKey(): bool
     {
-        return !empty($this->apiKey);
+        return ! empty($this->apiKey);
     }
 
     /**
      * Convertit une adresse textuelle en coordonnées GPS (lat, lng).
+     *
      * @throws ConnectionException
      */
     public function geocodeAddress(string $address): ?array
@@ -54,6 +56,7 @@ class GoogleMapsService
     /**
      * Calcule la distance et la durée entre deux points.
      * Utile pour l'imputation des coûts de transport aux chantiers.
+     *
      * @throws ConnectionException
      */
     public function getDistanceMatrix(string $origin, string $destination): ?array
@@ -88,16 +91,19 @@ class GoogleMapsService
 
     /**
      * Calcule l'itinéraire optimal (Travelling Salesperson Problem).
-     * @param string $origin Origine (lat,lng ou adresse)
-     * @param string $destination Destination (lat,lng ou adresse)
-     * @param array $waypoints Liste des points de passage (lat,lng ou adresse)
+     *
+     * @param  string  $origin  Origine (lat,lng ou adresse)
+     * @param  string  $destination  Destination (lat,lng ou adresse)
+     * @param  array  $waypoints  Liste des points de passage (lat,lng ou adresse)
      * @return array|null [ 'waypoint_order' => [1, 0, ...], 'legs' => [...] ]
+     *
      * @throws ConnectionException
      */
     public function optimizeRoute(string $origin, string $destination, array $waypoints): ?array
     {
         if (! $this->apiKey || empty($waypoints)) {
-            \Illuminate\Support\Facades\Log::error('GoogleMapsService::optimizeRoute failed: apiKey missing or waypoints empty');
+            Log::error('GoogleMapsService::optimizeRoute failed: apiKey missing or waypoints empty');
+
             return null;
         }
 
@@ -111,8 +117,8 @@ class GoogleMapsService
                         'latLng' => [
                             'latitude' => (float) trim($parts[0]),
                             'longitude' => (float) trim($parts[1]),
-                        ]
-                    ]
+                        ],
+                    ],
                 ];
             } else {
                 $intermediates[] = ['address' => $wp];
@@ -134,7 +140,7 @@ class GoogleMapsService
 
         if ($response->successful() && isset($response->json()['routes'][0])) {
             $route = $response->json()['routes'][0];
-            
+
             // Convert legs to legacy format expected by RouteOptimizationService
             $legacyLegs = [];
             if (isset($route['legs'])) {
@@ -149,14 +155,14 @@ class GoogleMapsService
             }
 
             return [
-                'waypoint_order' => $route['optimizedIntermediateWaypointIndex'] ?? [], 
+                'waypoint_order' => $route['optimizedIntermediateWaypointIndex'] ?? [],
                 'legs' => $legacyLegs,
             ];
         }
 
-        \Illuminate\Support\Facades\Log::error('GoogleMaps API Error in optimizeRoute (Routes API)', [
+        Log::error('GoogleMaps API Error in optimizeRoute (Routes API)', [
             'status' => $response->status(),
-            'body' => $response->json()
+            'body' => $response->json(),
         ]);
 
         return null;

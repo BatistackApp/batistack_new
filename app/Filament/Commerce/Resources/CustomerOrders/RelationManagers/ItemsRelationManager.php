@@ -6,12 +6,11 @@ use App\Enums\Commerce\OrderStatus;
 use App\Models\Articles\Item;
 use App\Models\Core\VatRate;
 use BackedEnum;
-use Filament\Actions\BulkActionGroup;
 use Filament\Actions\CreateAction;
 use Filament\Actions\DeleteAction;
-use Filament\Actions\DeleteBulkAction;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
+use Filament\Notifications\Notification;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Utilities\Get;
@@ -21,6 +20,7 @@ use Filament\Tables\Columns\Summarizers\Sum;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Model;
+use Marcelorodrigo\FilamentBarcodeScannerField\Forms\Components\BarcodeInput;
 use ToneGabes\Filament\Icons\Enums\Phosphor;
 
 class ItemsRelationManager extends RelationManager
@@ -74,7 +74,7 @@ class ItemsRelationManager extends RelationManager
                     ->label('Ajouter une ligne')
                     ->modalHeading('Ajouter une ligne')
                     ->schema([
-                        \Marcelorodrigo\FilamentBarcodeScannerField\Forms\Components\BarcodeInput::make('barcode')
+                        BarcodeInput::make('barcode')
                             ->label('Scanner un code-barres')
                             ->columnSpanFull()
                             ->live()
@@ -95,7 +95,7 @@ class ItemsRelationManager extends RelationManager
                                         $subtotalHt = $quantity * $sellingPrice;
                                         $set('subtotal_ht', number_format($subtotalHt, 2, '.', ''));
                                     } else {
-                                        \Filament\Notifications\Notification::make()->danger()->title('Article introuvable')->send();
+                                        Notification::make()->danger()->title('Article introuvable')->send();
                                     }
                                 }
                             }),

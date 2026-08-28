@@ -2,9 +2,9 @@
 
 namespace App\Filament\RH\Resources\Employees\RelationManagers;
 
-use App\Models\RH\WageGarnishment;
 use BackedEnum;
 use Filament\Actions\CreateAction;
+use Filament\Actions\EditAction;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
@@ -63,15 +63,15 @@ class WageGarnishmentsRelationManager extends RelationManager
                 TextColumn::make('total_amount_due')->label('Total dû')->money('EUR'),
                 TextColumn::make('amount_collected')->label('Prélevé')->money('EUR'),
                 TextColumn::make('monthly_deduction')->label('Mensualité')
-                    ->formatStateUsing(fn ($state) => $state ? number_format($state, 2) . ' € (Forcé)' : 'Auto'),
+                    ->formatStateUsing(fn ($state) => $state ? number_format($state, 2).' € (Forcé)' : 'Auto'),
                 TextColumn::make('start_date')->label('Date')->date('d/m/Y'),
                 IconColumn::make('is_active')->label('Actif')->boolean(),
             ])
             ->headerActions([
-                \Filament\Tables\Actions\CreateAction::make()->label('Nouveau SATD'),
+                CreateAction::make()->label('Nouveau SATD'),
             ])
             ->recordActions([
-                \Filament\Tables\Actions\EditAction::make(),
+                EditAction::make(),
             ]);
     }
 

@@ -2,6 +2,8 @@
 
 namespace App\Models\Paie;
 
+use App\Enums\Paie\ContributionBaseFormula;
+use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Model;
 
 class PayrollContributionRate extends Model
@@ -24,19 +26,19 @@ class PayrollContributionRate extends Model
         'employer_rate' => 'decimal:4',
         'is_deductible' => 'boolean',
         'is_fiscally_reintegrated' => 'boolean',
-        'base_formula' => \App\Enums\Paie\ContributionBaseFormula::class,
+        'base_formula' => ContributionBaseFormula::class,
         'valid_from' => 'date',
         'valid_to' => 'date',
     ];
 
-    public function scopeValidAt($query, \Carbon\CarbonInterface $date)
+    public function scopeValidAt($query, CarbonInterface $date)
     {
         return $query->where(function ($q) use ($date) {
             $q->whereNull('valid_from')
-              ->orWhere('valid_from', '<=', $date);
+                ->orWhere('valid_from', '<=', $date);
         })->where(function ($q) use ($date) {
             $q->whereNull('valid_to')
-              ->orWhere('valid_to', '>=', $date);
+                ->orWhere('valid_to', '>=', $date);
         });
     }
 

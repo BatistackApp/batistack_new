@@ -3,7 +3,6 @@
 namespace App\Filament\Chantier\Widgets;
 
 use App\Models\Chantiers\ChantierLog;
-use Filament\Actions\BulkActionGroup;
 use Filament\Actions\ViewAction;
 use Filament\Infolists\Components\IconEntry;
 use Filament\Infolists\Components\TextEntry;
@@ -20,7 +19,8 @@ class LatestActivityWidget extends TableWidget
     protected static ?string $heading = 'Derniers événements terrain';
 
     protected static ?int $sort = 9;
-    protected int | string | array $columnSpan = 'full';
+
+    protected int|string|array $columnSpan = 'full';
 
     public function table(Table $table): Table
     {

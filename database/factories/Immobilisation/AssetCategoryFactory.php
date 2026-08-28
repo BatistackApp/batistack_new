@@ -2,6 +2,7 @@
 
 namespace Database\Factories\Immobilisation;
 
+use App\Enums\Immobilisation\DepreciationMethod;
 use App\Models\Immobilisation\AssetCategory;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -18,10 +19,10 @@ class AssetCategoryFactory extends Factory
     public function definition(): array
     {
         return [
-            'name' => $this->faker->word() . ' Category',
-            'account_code' => '218' . $this->faker->randomDigitNotNull(),
+            'name' => $this->faker->word().' Category',
+            'account_code' => '218'.$this->faker->randomDigitNotNull(),
             'default_depreciation_years' => 5,
-            'default_method' => \App\Enums\Immobilisation\DepreciationMethod::LINEAR,
+            'default_method' => DepreciationMethod::LINEAR,
         ];
     }
 }

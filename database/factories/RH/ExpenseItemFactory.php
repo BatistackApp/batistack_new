@@ -2,12 +2,13 @@
 
 namespace Database\Factories\RH;
 
-use App\Models\RH\ExpenseItem;
 use App\Enums\RH\ExpenseItemStatus;
+use App\Models\RH\ExpenseItem;
+use App\Models\RH\ExpenseReport;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\RH\ExpenseItem>
+ * @extends Factory<ExpenseItem>
  */
 class ExpenseItemFactory extends Factory
 {
@@ -21,7 +22,7 @@ class ExpenseItemFactory extends Factory
     public function definition(): array
     {
         return [
-            'expense_report_id' => \App\Models\RH\ExpenseReport::factory(),
+            'expense_report_id' => ExpenseReport::factory(),
             'chantier_id' => null,
             'category' => $this->faker->randomElement(['Carburant', 'Péage', 'Parking', 'Repas', 'Hébergement', 'Autre']),
             'date' => $this->faker->date(),

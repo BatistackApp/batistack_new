@@ -204,7 +204,6 @@ enum CertificationSymbol: string implements HasDescription
         };
     }
 
-
     /**
      * Retourne le niveau de tension (Basse Tension ou Haute Tension)
      */

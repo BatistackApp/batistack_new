@@ -2,6 +2,7 @@
 
 namespace Database\Factories\Commerce;
 
+use App\Enums\Commerce\InvoiceStatus;
 use App\Models\Commerce\SupplierCreditNote;
 use App\Models\Commerce\SupplierInvoice;
 use App\Models\Tiers\ThirdParty;
@@ -16,7 +17,7 @@ class SupplierCreditNoteFactory extends Factory
     {
         return [
             'reference' => $this->faker->word(),
-            'status' => \App\Enums\Commerce\InvoiceStatus::DRAFT,
+            'status' => InvoiceStatus::DRAFT,
             'total_ht' => $this->faker->randomFloat(),
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),

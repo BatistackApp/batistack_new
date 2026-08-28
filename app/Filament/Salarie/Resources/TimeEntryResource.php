@@ -26,9 +26,13 @@ class TimeEntryResource extends Resource
     protected static ?string $model = TimeEntry::class;
 
     protected static string|null|\BackedEnum $navigationIcon = 'heroicon-o-clock';
+
     protected static ?string $navigationLabel = 'Mes Pointages';
+
     protected static ?string $modelLabel = 'Pointage';
+
     protected static ?string $pluralModelLabel = 'Pointages';
+
     protected static ?int $navigationSort = 3;
 
     public static function getEloquentQuery(): Builder

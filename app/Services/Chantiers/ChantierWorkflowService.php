@@ -13,6 +13,7 @@ class ChantierWorkflowService
 {
     /**
      * Gère le passage d'un état à un autre avec validations métiers.
+     *
      * @throws Exception
      */
     public function transitionTo(Chantier $chantier, ChantierStatus $newStatus): void

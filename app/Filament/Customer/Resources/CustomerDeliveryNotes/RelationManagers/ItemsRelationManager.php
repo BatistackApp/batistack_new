@@ -23,9 +23,9 @@ class ItemsRelationManager extends RelationManager
             ->columns([
                 IconColumn::make('quantity_in_stock')
                     ->label('')
-                    ->icon(fn(Model $record) => $record->quantity_delivered < $record->quantity_ordered ? Phosphor::WarningCircle : Phosphor::CheckCircle)
-                    ->color(fn(Model $record) => $record->quantity_delivered < $record->quantity_ordered ? 'warning' : 'success')
-                    ->tooltip(fn(Model $record) => $record->quantity_delivered < $record->quantity_ordered ? 'Reste à livrée: ' . $record->quantity_undelivered : 'OK'),
+                    ->icon(fn (Model $record) => $record->quantity_delivered < $record->quantity_ordered ? Phosphor::WarningCircle : Phosphor::CheckCircle)
+                    ->color(fn (Model $record) => $record->quantity_delivered < $record->quantity_ordered ? 'warning' : 'success')
+                    ->tooltip(fn (Model $record) => $record->quantity_delivered < $record->quantity_ordered ? 'Reste à livrée: '.$record->quantity_undelivered : 'OK'),
 
                 TextColumn::make('item.name')
                     ->label('Désignation'),

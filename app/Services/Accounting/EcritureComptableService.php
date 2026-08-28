@@ -73,7 +73,7 @@ class EcritureComptableService
         });
     }
 
-    public function getSoldeCompte(string $compteNumero, string $dateFrom = null, string $dateTo = null): float
+    public function getSoldeCompte(string $compteNumero, ?string $dateFrom = null, ?string $dateTo = null): float
     {
         $query = EcritureComptable::where('compte_numero', $compteNumero);
 
@@ -90,7 +90,7 @@ class EcritureComptableService
         return $totalDebit - $totalCredit;
     }
 
-    public function getSoldeJournal(JournalType $journal, string $dateFrom = null, string $dateTo = null): float
+    public function getSoldeJournal(JournalType $journal, ?string $dateFrom = null, ?string $dateTo = null): float
     {
         $query = EcritureComptable::where('journal_type', $journal);
 
@@ -123,9 +123,9 @@ class EcritureComptableService
     public function generateNumeroPiece(JournalType $journal): string
     {
         $code = $journal->getCode();
-        $prefix = $code . '-' . date('Ymd');
+        $prefix = $code.'-'.date('Ymd');
 
-        $last = EcritureComptable::where('numero_piece', 'LIKE', $prefix . '%')
+        $last = EcritureComptable::where('numero_piece', 'LIKE', $prefix.'%')
             ->orderByDesc('numero_piece')
             ->value('numero_piece');
 
@@ -135,6 +135,6 @@ class EcritureComptableService
             $seq = 1;
         }
 
-        return $prefix . '-' . str_pad((string) $seq, 4, '0', STR_PAD_LEFT);
+        return $prefix.'-'.str_pad((string) $seq, 4, '0', STR_PAD_LEFT);
     }
 }

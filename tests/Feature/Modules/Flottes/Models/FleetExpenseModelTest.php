@@ -1,6 +1,5 @@
 <?php
 
-use App\Models\Core\VatRate;
 use App\Models\Flottes\FleetExpense;
 use App\Models\Flottes\Vehicle;
 

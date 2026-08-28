@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\EtatDesLieuxSyncController;
+use App\Http\Controllers\Api\JournalSyncController;
 use App\Http\Controllers\Api\TechnicienSyncController;
 use App\Http\Controllers\Banque\BridgeCallbackController;
 use App\Http\Controllers\Commerce\StripePaymentController;
@@ -108,6 +109,11 @@ Route::middleware(['auth'])->group(function () {
     // API Offline État des Lieux (chef de chantier)
     Route::get('/api/etat-des-lieux/contracts', [EtatDesLieuxSyncController::class, 'index'])->name('etat-des-lieux.api.contracts');
     Route::post('/api/etat-des-lieux/sync', [EtatDesLieuxSyncController::class, 'sync'])->name('etat-des-lieux.api.sync');
+
+    // API Offline Journal de Chantier (chef de chantier)
+    Route::get('/api/journal/chantiers', [JournalSyncController::class, 'chantiers'])->name('journal.api.chantiers');
+    Route::get('/api/journal/logs', [JournalSyncController::class, 'index'])->name('journal.api.logs');
+    Route::post('/api/journal/sync', [JournalSyncController::class, 'sync'])->name('journal.api.sync');
 });
 require __DIR__.'/settings.php';
 // require __DIR__.'/test.php';

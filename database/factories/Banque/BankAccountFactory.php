@@ -12,7 +12,7 @@ class BankAccountFactory extends Factory
     {
         return [
             'company_id' => Company::factory(),
-            'name' => $this->faker->company() . ' - Compte Principal',
+            'name' => $this->faker->company().' - Compte Principal',
             'type' => $this->faker->randomElement(BankAccountType::cases()),
             'iban' => $this->faker->iban('FR'),
             'bic' => $this->faker->swiftBicNumber(),

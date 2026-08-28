@@ -2,11 +2,13 @@
 
 namespace App\Filament\Interventions\Resources\InterventionReportTemplates\Tables;
 
+use App\Enums\Interventions\InterventionType;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 
 class InterventionReportTemplatesTable
@@ -38,9 +40,9 @@ class InterventionReportTemplatesTable
                     ->sortable(),
             ])
             ->filters([
-                \Filament\Tables\Filters\SelectFilter::make('intervention_type')
+                SelectFilter::make('intervention_type')
                     ->label('Type d\'intervention')
-                    ->options(\App\Enums\Interventions\InterventionType::class),
+                    ->options(InterventionType::class),
             ])
             ->recordActions([
                 EditAction::make(),

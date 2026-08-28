@@ -2,9 +2,10 @@
 
 namespace App\Services\Gpao;
 
+use App\Jobs\Gpao\GeneratePurchaseOrdersForShortagesJob;
+use App\Models\Articles\ItemComposition;
 use App\Models\Gpao\ManufacturingOrder;
 use App\Models\Gpao\ManufacturingRequirement;
-use App\Models\Articles\ItemComposition;
 
 class MrpService
 {
@@ -33,6 +34,6 @@ class MrpService
         }
 
         // Déclencher le job de calcul des ruptures pour générer les PO
-        \App\Jobs\Gpao\GeneratePurchaseOrdersForShortagesJob::dispatch();
+        GeneratePurchaseOrdersForShortagesJob::dispatch();
     }
 }

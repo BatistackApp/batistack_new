@@ -1,14 +1,15 @@
 <?php
 
-use App\Models\User;
-use App\Models\RH\Employee;
-use App\Models\Interventions\Intervention;
-use App\Models\Core\Company;
-use App\Models\Tiers\ThirdParty;
-use App\Enums\Interventions\InterventionType;
 use App\Enums\Interventions\InterventionStatus;
+use App\Enums\Interventions\InterventionType;
+use App\Models\Core\Company;
+use App\Models\Interventions\Intervention;
+use App\Models\RH\Employee;
+use App\Models\Tiers\ThirdParty;
+use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 
-uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
+uses(RefreshDatabase::class);
 
 beforeEach(function () {
     $this->technician = User::factory()->create();
@@ -18,14 +19,14 @@ beforeEach(function () {
 
     $company = Company::factory()->create();
     $thirdParty = ThirdParty::factory()->create();
-    
+
     $this->intervention = Intervention::factory()->create([
         'company_id' => $company->id,
         'type' => InterventionType::REGIE,
         'status' => InterventionStatus::EN_COURS,
         'third_party_id' => $thirdParty->id,
     ]);
-    
+
     $this->intervention->workers()->create([
         'employee_id' => $this->employee->id,
     ]);
@@ -41,9 +42,9 @@ it('rejects empty material name', function () {
                     'name' => '',
                     'quantity' => 2,
                     'price' => 10,
-                ]
-            ]
-        ]
+                ],
+            ],
+        ],
     ];
 
     $response = $this->actingAs($this->technician)->postJson('/api/technicien/sync', $payload);
@@ -69,9 +70,9 @@ it('rejects whitespace material name', function () {
                     'intervention_id' => $this->intervention->id,
                     'name' => '   ',
                     'quantity' => 2,
-                ]
-            ]
-        ]
+                ],
+            ],
+        ],
     ];
 
     $response = $this->actingAs($this->technician)->postJson('/api/technicien/sync', $payload);
@@ -88,7 +89,7 @@ it('rejects negative or zero quantity', function () {
                     'intervention_id' => $this->intervention->id,
                     'name' => 'Cable',
                     'quantity' => 0,
-                ]
+                ],
             ],
             [
                 'type' => 'ADD_MATERIAL',
@@ -96,9 +97,9 @@ it('rejects negative or zero quantity', function () {
                     'intervention_id' => $this->intervention->id,
                     'name' => 'Cable',
                     'quantity' => -5,
-                ]
-            ]
-        ]
+                ],
+            ],
+        ],
     ];
 
     $response = $this->actingAs($this->technician)->postJson('/api/technicien/sync', $payload);
@@ -115,9 +116,9 @@ it('rejects non numeric quantity', function () {
                     'intervention_id' => $this->intervention->id,
                     'name' => 'Cable',
                     'quantity' => 'abc',
-                ]
-            ]
-        ]
+                ],
+            ],
+        ],
     ];
 
     $response = $this->actingAs($this->technician)->postJson('/api/technicien/sync', $payload);
@@ -135,9 +136,9 @@ it('accepts valid material', function () {
                     'name' => '  Valid Cable  ',
                     'quantity' => 10,
                     'price' => 15,
-                ]
-            ]
-        ]
+                ],
+            ],
+        ],
     ];
 
     $response = $this->actingAs($this->technician)->postJson('/api/technicien/sync', $payload);

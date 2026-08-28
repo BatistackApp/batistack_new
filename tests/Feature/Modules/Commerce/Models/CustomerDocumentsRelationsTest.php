@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Modules\Commerce\Models;
 
+use App\Enums\Commerce\DeliveryStatus;
 use App\Models\Articles\Item;
 use App\Models\Chantiers\Chantier;
 use App\Models\Commerce\CustomerCreditNote;
@@ -19,13 +20,15 @@ use App\Models\Core\VatRate;
 use App\Models\Tiers\ThirdParty;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Queue;
 
 uses(RefreshDatabase::class);
 
 describe('Customer Documents Relations', function () {
     beforeEach(function () {
-        \Illuminate\Support\Facades\Event::fake();
-        \Illuminate\Support\Facades\Queue::fake();
+        Event::fake();
+        Queue::fake();
         $this->client = ThirdParty::factory()->create();
         $this->user = User::factory()->create();
         $this->chantier = Chantier::factory()->create();
@@ -38,7 +41,7 @@ describe('Customer Documents Relations', function () {
     });
 
     it('tests CustomerCreditNote relations', function () {
-        $creditNote = new CustomerCreditNote();
+        $creditNote = new CustomerCreditNote;
         $creditNote->forceFill([
             'client_id' => $this->client->id,
             'customer_invoice_id' => $this->invoice->id,
@@ -55,14 +58,14 @@ describe('Customer Documents Relations', function () {
     });
 
     it('tests CustomerDeliveryNote relations', function () {
-        $deliveryNote = new CustomerDeliveryNote();
+        $deliveryNote = new CustomerDeliveryNote;
         $deliveryNote->forceFill([
             'client_id' => $this->client->id,
             'chantier_id' => $this->chantier->id,
             'customer_order_id' => $this->order->id,
             'responsable_id' => $this->user->id,
             'reference' => 'DN-001',
-            'status' => \App\Enums\Commerce\DeliveryStatus::PREPARATION,
+            'status' => DeliveryStatus::PREPARATION,
             'delivery_date' => now(),
         ])->save();
 
@@ -73,14 +76,14 @@ describe('Customer Documents Relations', function () {
     });
 
     it('tests CustomerDeliveryNoteItem relations', function () {
-        $deliveryNote = new CustomerDeliveryNote();
+        $deliveryNote = new CustomerDeliveryNote;
         $deliveryNote->forceFill([
             'client_id' => $this->client->id,
             'reference' => 'DN-002',
             'responsable_id' => $this->user->id,
         ])->save();
 
-        $orderItem = new CustomerOrderItem();
+        $orderItem = new CustomerOrderItem;
         $orderItem->forceFill([
             'customer_order_id' => $this->order->id,
             'item_id' => $this->item->id,
@@ -91,7 +94,7 @@ describe('Customer Documents Relations', function () {
             'total_ht' => 10,
         ])->save();
 
-        $item = new CustomerDeliveryNoteItem();
+        $item = new CustomerDeliveryNoteItem;
         $item->forceFill([
             'customer_delivery_note_id' => $deliveryNote->id,
             'customer_order_item_id' => $orderItem->id,
@@ -104,7 +107,7 @@ describe('Customer Documents Relations', function () {
     });
 
     it('tests CustomerInvoiceItem relations', function () {
-        $item = new CustomerInvoiceItem();
+        $item = new CustomerInvoiceItem;
         $item->forceFill([
             'customer_invoice_id' => $this->invoice->id,
             'item_id' => $this->item->id,
@@ -121,7 +124,7 @@ describe('Customer Documents Relations', function () {
     });
 
     it('tests CustomerOrderItem relations', function () {
-        $item = new CustomerOrderItem();
+        $item = new CustomerOrderItem;
         $item->forceFill([
             'customer_order_id' => $this->order->id,
             'item_id' => $this->item->id,
@@ -138,7 +141,7 @@ describe('Customer Documents Relations', function () {
     });
 
     it('tests CustomerQuoteItem relations', function () {
-        $item = new CustomerQuoteItem();
+        $item = new CustomerQuoteItem;
         $item->forceFill([
             'customer_quote_id' => $this->quote->id,
             'item_id' => $this->item->id,
@@ -156,7 +159,7 @@ describe('Customer Documents Relations', function () {
     });
 
     it('tests CustomerSituationItem relations', function () {
-        $orderItem = new CustomerOrderItem();
+        $orderItem = new CustomerOrderItem;
         $orderItem->forceFill([
             'customer_order_id' => $this->order->id,
             'item_id' => $this->item->id,
@@ -167,7 +170,7 @@ describe('Customer Documents Relations', function () {
             'total_ht' => 10,
         ])->save();
 
-        $item = new CustomerSituationItem();
+        $item = new CustomerSituationItem;
         $item->forceFill([
             'customer_situation_id' => $this->situation->id,
             'customer_order_item_id' => $orderItem->id,

@@ -14,6 +14,7 @@ class CreateChantierLog extends CreateRecord
     protected function handleRecordCreation(array $data): Model
     {
         $data['user_id'] = auth()->user()->id;
+
         return ChantierLog::create($data);
     }
 }

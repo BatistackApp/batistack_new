@@ -2,6 +2,9 @@
 
 namespace App\Console\Commands;
 
+use App\Enums\Immobilisation\AssetStatus;
+use App\Models\Immobilisation\Depreciation;
+use Carbon\Carbon;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
@@ -27,9 +30,9 @@ class RunDepreciationsCommand extends Command
      */
     public function handle()
     {
-        $today = \Carbon\Carbon::today()->toDateString();
+        $today = Carbon::today()->toDateString();
 
-        $depreciations = \App\Models\Immobilisation\Depreciation::where('is_passed', false)
+        $depreciations = Depreciation::where('is_passed', false)
             ->where('period_date', '<=', $today)
             ->get();
 
@@ -38,10 +41,10 @@ class RunDepreciationsCommand extends Command
                 'is_passed' => true,
                 'chantier_id' => $depreciation->fixedAsset->chantier_id,
             ]);
-            
+
             // If VNC is 0, update asset status
             if ($depreciation->remaining_vnc <= 0) {
-                $depreciation->fixedAsset->update(['status' => \App\Enums\Immobilisation\AssetStatus::DEPRECIATED]);
+                $depreciation->fixedAsset->update(['status' => AssetStatus::DEPRECIATED]);
             }
         }
 

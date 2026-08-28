@@ -65,8 +65,8 @@ class CustomerQuoteInfolist
                                             ->alignEnd()
                                             ->money('eur')
                                             ->label('Total TTC'),
-                                    ])
-                            ])
+                                    ]),
+                            ]),
                     ]),
             ]);
     }

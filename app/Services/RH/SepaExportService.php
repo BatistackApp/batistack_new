@@ -3,6 +3,7 @@
 namespace App\Services\RH;
 
 use App\Models\Banque\BankAccount;
+use App\Models\RH\ExpenseAdvance;
 use App\Models\RH\ExpenseReport;
 use Digitick\Sepa\TransferFile\Factory\TransferFileFacadeFactory;
 use Illuminate\Database\Eloquent\Collection;
@@ -11,28 +12,29 @@ use Illuminate\Support\Str;
 class SepaExportService
 {
     /**
-     * @param Collection<ExpenseReport> $expenseReports
+     * @param  Collection<ExpenseReport>  $expenseReports
      * @return string XML content
+     *
      * @throws \Exception
      */
     public function generateForExpenseReports(Collection $expenseReports): string
     {
         $companyAccount = BankAccount::first();
 
-        if (!$companyAccount || empty($companyAccount->iban) || empty($companyAccount->bic)) {
+        if (! $companyAccount || empty($companyAccount->iban) || empty($companyAccount->bic)) {
             throw new \Exception("Le compte en banque principal de l'entreprise (ou son IBAN/BIC) n'est pas configuré.");
         }
 
-        $msgId = 'NDF-' . date('YmdHis') . '-' . Str::random(4);
+        $msgId = 'NDF-'.date('YmdHis').'-'.Str::random(4);
         $companyName = $companyAccount->company->legal_name ?? 'Entreprise';
-        
+
         $transfer = TransferFileFacadeFactory::createCustomerCredit(
-            $msgId, 
-            $companyName, 
+            $msgId,
+            $companyName,
             'pain.001.001.03'
         );
 
-        $paymentInfoId = 'PMT-' . date('YmdHis');
+        $paymentInfoId = 'PMT-'.date('YmdHis');
 
         $transfer->addPaymentInfo($paymentInfoId, [
             'id' => $paymentInfoId,
@@ -44,7 +46,7 @@ class SepaExportService
         foreach ($expenseReports as $report) {
             $employee = $report->employee;
 
-            if (!$employee) {
+            if (! $employee) {
                 continue;
             }
 
@@ -61,39 +63,40 @@ class SepaExportService
 
             $transfer->addTransfer($paymentInfoId, [
                 'amount' => $amountInCents,
-                'creditorName' => $employee->first_name . ' ' . $employee->last_name,
+                'creditorName' => $employee->first_name.' '.$employee->last_name,
                 'creditorIban' => $employee->iban,
                 'creditorBic' => $employee->bic,
                 'remittanceInformation' => "Remboursement Note de frais {$report->month}/{$report->year}",
             ]);
         }
-        
+
         return $transfer->asXML();
     }
 
     /**
-     * @param Collection<\App\Models\RH\ExpenseAdvance> $advances
+     * @param  Collection<ExpenseAdvance>  $advances
      * @return string XML content
+     *
      * @throws \Exception
      */
     public function generateForExpenseAdvances(Collection $advances): string
     {
         $companyAccount = BankAccount::first();
 
-        if (!$companyAccount || empty($companyAccount->iban) || empty($companyAccount->bic)) {
+        if (! $companyAccount || empty($companyAccount->iban) || empty($companyAccount->bic)) {
             throw new \Exception("Le compte en banque principal de l'entreprise (ou son IBAN/BIC) n'est pas configuré.");
         }
 
-        $msgId = 'ADV-' . date('YmdHis') . '-' . Str::random(4);
+        $msgId = 'ADV-'.date('YmdHis').'-'.Str::random(4);
         $companyName = $companyAccount->company->legal_name ?? 'Entreprise';
-        
+
         $transfer = TransferFileFacadeFactory::createCustomerCredit(
-            $msgId, 
-            $companyName, 
+            $msgId,
+            $companyName,
             'pain.001.001.03'
         );
 
-        $paymentInfoId = 'PMT-ADV-' . date('YmdHis');
+        $paymentInfoId = 'PMT-ADV-'.date('YmdHis');
 
         $transfer->addPaymentInfo($paymentInfoId, [
             'id' => $paymentInfoId,
@@ -105,7 +108,7 @@ class SepaExportService
         foreach ($advances as $advance) {
             $employee = $advance->employee;
 
-            if (!$employee) {
+            if (! $employee) {
                 continue;
             }
 
@@ -120,13 +123,13 @@ class SepaExportService
 
             $transfer->addTransfer($paymentInfoId, [
                 'amount' => $amountInCents,
-                'creditorName' => $employee->first_name . ' ' . $employee->last_name,
+                'creditorName' => $employee->first_name.' '.$employee->last_name,
                 'creditorIban' => $employee->iban,
                 'creditorBic' => $employee->bic,
                 'remittanceInformation' => "Avance sur frais (Réf: {$advance->id}) - {$advance->reason}",
             ]);
         }
-        
+
         return $transfer->asXML();
     }
 }

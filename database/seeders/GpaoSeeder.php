@@ -9,6 +9,7 @@ use App\Models\Chantiers\Chantier;
 use App\Models\Gpao\Machine;
 use App\Models\Gpao\ManufacturingOrder;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Str;
 
 class GpaoSeeder extends Seeder
 {
@@ -36,8 +37,8 @@ class GpaoSeeder extends Seeder
             $startDate = now()->subDays(rand(0, 30));
 
             ManufacturingOrder::create([
-                'uuid' => (string) \Illuminate\Support\Str::uuid(),
-                'reference' => 'OF-' . now()->year . '-' . str_pad($i + 1, 4, '0', STR_PAD_LEFT),
+                'uuid' => (string) Str::uuid(),
+                'reference' => 'OF-'.now()->year.'-'.str_pad($i + 1, 4, '0', STR_PAD_LEFT),
                 'item_id' => $item->id,
                 'chantier_id' => $chantiers->isNotEmpty() ? $chantiers->random()->id : null,
                 'customer_order_id' => null,
@@ -48,7 +49,7 @@ class GpaoSeeder extends Seeder
                 'end_date' => rand(0, 100) > 50 ? (clone $startDate)->addDays(rand(1, 14)) : null,
                 'total_labor_cost' => rand(500, 5000) / 100,
                 'total_material_cost' => rand(1000, 10000) / 100,
-                'batch_number' => 'LOT-' . str_pad($i + 1, 3, '0', STR_PAD_LEFT),
+                'batch_number' => 'LOT-'.str_pad($i + 1, 3, '0', STR_PAD_LEFT),
             ]);
         }
     }

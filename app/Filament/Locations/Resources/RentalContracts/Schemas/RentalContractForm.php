@@ -4,6 +4,8 @@ namespace App\Filament\Locations\Resources\RentalContracts\Schemas;
 
 use App\Enums\Locations\RentalBillingPeriod;
 use App\Enums\Locations\RentalStatus;
+use App\Enums\Tiers\ThirdPartyType;
+use App\Filament\Locations\Pages\Locations\SupplierPriceComparator;
 use Filament\Actions\Action;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Repeater;
@@ -24,7 +26,7 @@ class RentalContractForm
                         Section::make('Informations du contrat')
                             ->schema([
                                 Select::make('supplier_id')
-                                    ->relationship('supplier', 'name', fn ($query) => $query->where('type', \App\Enums\Tiers\ThirdPartyType::SUPPLIER))
+                                    ->relationship('supplier', 'name', fn ($query) => $query->where('type', ThirdPartyType::SUPPLIER))
                                     ->searchable()
                                     ->preload()
                                     ->required()
@@ -33,7 +35,7 @@ class RentalContractForm
                                         Action::make('comparator')
                                             ->label('Comparer les prix')
                                             ->icon('heroicon-m-calculator')
-                                            ->url(fn () => \App\Filament\Locations\Pages\Locations\SupplierPriceComparator::getUrl(), shouldOpenInNewTab: true)
+                                            ->url(fn () => SupplierPriceComparator::getUrl(), shouldOpenInNewTab: true)
                                     ),
 
                                 Select::make('chantier_id')->label('Chantier')
@@ -82,7 +84,7 @@ class RentalContractForm
                                     ])
                                     ->columns(2)
                                     ->addActionLabel('Ajouter une ligne de location')
-                                    ->collapsible()
+                                    ->collapsible(),
                             ]),
                     ])
                     ->columnSpan(['lg' => 2]),
@@ -130,7 +132,7 @@ class RentalContractForm
                                     ->label('Majoration / Pénalité de retard (par jour)')
                                     ->suffix('€')
                                     ->helperText('Appliqué si la date de fin prévue est dépassée.'),
-                            ])
+                            ]),
                     ])
                     ->columnSpan(['lg' => 1]),
             ])

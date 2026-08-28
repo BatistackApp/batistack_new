@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace App\Policies\Interventions;
 
-use Illuminate\Foundation\Auth\User as AuthUser;
 use App\Models\Interventions\Intervention;
 use Illuminate\Auth\Access\HandlesAuthorization;
+use Illuminate\Foundation\Auth\User as AuthUser;
 
 class InterventionPolicy
 {
     use HandlesAuthorization;
-    
+
     public function viewAny(AuthUser $authUser): bool
     {
         return $authUser->can('ViewAny:Intervention');
@@ -71,5 +71,4 @@ class InterventionPolicy
     {
         return $authUser->can('Reorder:Intervention');
     }
-
 }

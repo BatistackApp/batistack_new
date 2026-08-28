@@ -2,8 +2,8 @@
 
 namespace App\Filament\Widgets\Core;
 
-use LaBoiteACode\FilamentDashboardWidgets\Widgets\UsageLimitsWidget;
 use LaBoiteACode\FilamentDashboardWidgets\Data\UsageLimit;
+use LaBoiteACode\FilamentDashboardWidgets\Widgets\UsageLimitsWidget;
 
 class ApiUsageLimitsWidget extends UsageLimitsWidget
 {

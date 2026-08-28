@@ -2,17 +2,20 @@
 
 namespace App\Filament\Banque\Widgets;
 
+use App\Services\Banque\CashFlowForecastService;
 use Filament\Widgets\ChartWidget;
 
 class CashFlowForecastChart extends ChartWidget
 {
     protected static ?int $sort = 6;
+
     protected ?string $heading = 'Prévisionnel de Trésorerie (30 prochains jours)';
-    protected int | string | array $columnSpan = 'full';
+
+    protected int|string|array $columnSpan = 'full';
 
     protected function getData(): array
     {
-        $service = new \App\Services\Banque\CashFlowForecastService();
+        $service = new CashFlowForecastService;
         $forecast = $service->getForecast(30);
 
         return [

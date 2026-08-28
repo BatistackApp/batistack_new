@@ -1,12 +1,11 @@
 <?php
 
-use App\Models\Chantiers\ChecklistTemplate;
-use App\Models\Chantiers\ChantierTask;
-use App\Models\Chantiers\ChecklistSubmission;
-use App\Models\User;
-use Livewire\Livewire;
 use App\Filament\Chantier\Pages\FillChecklistPage;
+use App\Models\Chantiers\ChantierTask;
+use App\Models\Chantiers\ChecklistTemplate;
+use App\Models\User;
 use Illuminate\Support\Facades\Auth;
+use Livewire\Livewire;
 
 it('can render fill checklist page and submit data', function () {
     $user = User::factory()->create();
@@ -22,9 +21,9 @@ it('can render fill checklist page and submit data', function () {
                     'name' => 'comment',
                     'label' => 'Commentaire',
                     'required' => true,
-                ]
-            ]
-        ]
+                ],
+            ],
+        ],
     ]);
 
     $task = ChantierTask::factory()->create();
@@ -37,16 +36,16 @@ it('can render fill checklist page and submit data', function () {
         ->assertSuccessful()
         ->fillForm([
             'comment' => 'Tout est conforme',
-            'signature' => 'data:image/png;base64,1234567890'
+            'signature' => 'data:image/png;base64,1234567890',
         ])
         ->call('submit')
-        ->assertRedirect('/chantier/chantiers/' . $task->phase->chantier_id . '/edit')
+        ->assertRedirect('/chantier/chantiers/'.$task->phase->chantier_id.'/edit')
         ->assertNotified();
 
     $this->assertDatabaseHas('checklist_submissions', [
         'checklist_template_id' => $template->id,
         'chantier_task_id' => $task->id,
         'submitted_by' => $user->id,
-        'signature_path' => 'data:image/png;base64,1234567890'
+        'signature_path' => 'data:image/png;base64,1234567890',
     ]);
 });

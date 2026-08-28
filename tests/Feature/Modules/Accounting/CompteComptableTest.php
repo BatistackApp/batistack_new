@@ -1,8 +1,8 @@
 <?php
 
 use App\Models\Accounting\CompteComptable;
-use Database\Factories\Accounting\CompteComptableFactory;
 use Database\Seeders\Accounting\PcgSeeder;
+use Illuminate\Database\UniqueConstraintViolationException;
 
 test('CompteComptable can be created via factory', function () {
     $compte = CompteComptable::factory()->create();
@@ -14,7 +14,7 @@ test('CompteComptable can be created via factory', function () {
 });
 
 test('CompteComptable has correct fillable attributes', function () {
-    $compte = new CompteComptable();
+    $compte = new CompteComptable;
 
     expect($compte->getFillable())->toBe([
         'numero', 'libelle', 'classe', 'is_balance', 'parent_id',
@@ -138,7 +138,7 @@ test('PCG seeder creates all essential class 4 supplier/client accounts', functi
 });
 
 test('CompteComptable numero must be unique', function () {
-    $this->expectException(\Illuminate\Database\UniqueConstraintViolationException::class);
+    $this->expectException(UniqueConstraintViolationException::class);
 
     $compte = CompteComptable::factory()->create(['numero' => '411100']);
     CompteComptable::factory()->create(['numero' => '411100']);

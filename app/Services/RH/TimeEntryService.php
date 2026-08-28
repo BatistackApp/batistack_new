@@ -10,6 +10,7 @@ class TimeEntryService
 {
     /**
      * Soumet un pointage pour validation.
+     *
      * @throws Exception
      */
     public function submit(TimeEntry $entry): void

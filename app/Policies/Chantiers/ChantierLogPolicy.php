@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace App\Policies\Chantiers;
 
-use Illuminate\Foundation\Auth\User as AuthUser;
 use App\Models\Chantiers\ChantierLog;
 use Illuminate\Auth\Access\HandlesAuthorization;
+use Illuminate\Foundation\Auth\User as AuthUser;
 
 class ChantierLogPolicy
 {
     use HandlesAuthorization;
-    
+
     public function viewAny(AuthUser $authUser): bool
     {
         return $authUser->can('ViewAny:ChantierLog');
@@ -71,5 +71,4 @@ class ChantierLogPolicy
     {
         return $authUser->can('Reorder:ChantierLog');
     }
-
 }

@@ -21,7 +21,7 @@ it('categorizes a transaction based on keyword rule ignoring case', function () 
         'description' => 'Achat Station Total Paris',
     ]);
 
-    $service = new TransactionCategorizationService();
+    $service = new TransactionCategorizationService;
     $result = $service->categorizeTransaction($transaction);
 
     expect($result)->toBeTrue()
@@ -42,7 +42,7 @@ it('does not categorize a transaction if no rules match', function () {
         'description' => 'Achat Station BP',
     ]);
 
-    $service = new TransactionCategorizationService();
+    $service = new TransactionCategorizationService;
     $result = $service->categorizeTransaction($transaction);
 
     expect($result)->toBeFalse()
@@ -62,7 +62,7 @@ it('categorizes multiple transactions correctly', function () {
 
     $transactions = [$tx1, $tx2, $tx3];
 
-    $service = new TransactionCategorizationService();
+    $service = new TransactionCategorizationService;
     $count = $service->categorizeMultiple($transactions);
 
     expect($count)->toBe(2)

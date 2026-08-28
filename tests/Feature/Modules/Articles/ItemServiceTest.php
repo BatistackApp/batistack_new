@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\Articles\ItemType;
+use App\Exceptions\Articles\ArticlesModuleException;
 use App\Models\Articles\Item;
 use App\Models\Core\Unit;
 use App\Models\Core\VatRate;
@@ -112,16 +113,16 @@ test('il peut calculer le coût d\'un ouvrage imbriqué dans un autre', function
 test('il lance une exception si la profondeur dépasse 5 (récursivité infinie)', function () {
     Item::withoutEvents(function () {
         $work = Item::factory()->create(['type' => ItemType::WORK]);
-        
+
         // On simule une boucle infinie en ajoutant l'ouvrage comme composant de lui-même
         $work->components()->create([
-            'child_item_id' => $work->id, 
-            'quantity' => 1, 
-            'loss_percentage' => 0
+            'child_item_id' => $work->id,
+            'quantity' => 1,
+            'loss_percentage' => 0,
         ]);
 
-        expect(fn() => $this->itemService->calculateDetailedCost($work))
-            ->toThrow(\App\Exceptions\Articles\ArticlesModuleException::class, "Profondeur maximale de l'ouvrage atteinte (Récursion infinie suspectée).");
+        expect(fn () => $this->itemService->calculateDetailedCost($work))
+            ->toThrow(ArticlesModuleException::class, "Profondeur maximale de l'ouvrage atteinte (Récursion infinie suspectée).");
     });
 });
 

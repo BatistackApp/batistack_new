@@ -34,6 +34,7 @@ class SyncAllBridgeAccounts extends Command
 
         if ($accounts->isEmpty()) {
             $this->info('No connected Bridge accounts found.');
+
             return self::SUCCESS;
         }
 

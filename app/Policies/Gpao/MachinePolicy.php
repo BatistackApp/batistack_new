@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace App\Policies\Gpao;
 
-use Illuminate\Foundation\Auth\User as AuthUser;
 use App\Models\Gpao\Machine;
 use Illuminate\Auth\Access\HandlesAuthorization;
+use Illuminate\Foundation\Auth\User as AuthUser;
 
 class MachinePolicy
 {
     use HandlesAuthorization;
-    
+
     public function viewAny(AuthUser $authUser): bool
     {
         return $authUser->can('ViewAny:Machine');
@@ -71,5 +71,4 @@ class MachinePolicy
     {
         return $authUser->can('Reorder:Machine');
     }
-
 }

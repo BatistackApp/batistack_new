@@ -4,15 +4,17 @@ use App\Enums\Commerce\InvoiceStatus;
 use App\Models\Banque\BankReconciliation;
 use App\Models\Banque\BankTransaction;
 use App\Models\Commerce\CustomerInvoice;
+use App\Models\Tiers\ThirdParty;
+use Illuminate\Support\Facades\Queue;
 
 it('updates invoice status to paid when fully reconciled', function () {
-    \Illuminate\Support\Facades\Queue::fake();
-    $customer = \App\Models\Tiers\ThirdParty::factory()->create();
+    Queue::fake();
+    $customer = ThirdParty::factory()->create();
     $invoice = CustomerInvoice::factory()->create([
         'status' => InvoiceStatus::DRAFT,
         'client_id' => $customer->id,
     ]);
-    
+
     // Total TTC needs to be mocked or retrieved
     $invoice->total_ttc = 100.00;
     $invoice->save();
@@ -31,13 +33,13 @@ it('updates invoice status to paid when fully reconciled', function () {
 });
 
 it('reverts invoice status to sent when reconciliation is deleted', function () {
-    \Illuminate\Support\Facades\Queue::fake();
-    $customer = \App\Models\Tiers\ThirdParty::factory()->create();
+    Queue::fake();
+    $customer = ThirdParty::factory()->create();
     $invoice = CustomerInvoice::factory()->create([
         'status' => InvoiceStatus::DRAFT,
         'client_id' => $customer->id,
     ]);
-    
+
     $invoice->total_ttc = 100.00;
     $invoice->save();
 
@@ -58,13 +60,13 @@ it('reverts invoice status to sent when reconciliation is deleted', function () 
 });
 
 it('updates invoice status to partially paid when partially reconciled', function () {
-    \Illuminate\Support\Facades\Queue::fake();
-    $customer = \App\Models\Tiers\ThirdParty::factory()->create();
+    Queue::fake();
+    $customer = ThirdParty::factory()->create();
     $invoice = CustomerInvoice::factory()->create([
         'status' => InvoiceStatus::DRAFT,
         'client_id' => $customer->id,
     ]);
-    
+
     $invoice->total_ttc = 100.00;
     $invoice->save();
 

@@ -5,6 +5,7 @@ namespace App\Filament\Commerce\Resources\SubcontractorSituations\Tables;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
 class SubcontractorSituationsTable
@@ -13,26 +14,26 @@ class SubcontractorSituationsTable
     {
         return $table
             ->columns([
-                \Filament\Tables\Columns\TextColumn::make('reference')->label('Référence')
+                TextColumn::make('reference')->label('Référence')
                     ->label('Référence')
                     ->searchable()
                     ->sortable(),
-                \Filament\Tables\Columns\TextColumn::make('subcontractor.name')
+                TextColumn::make('subcontractor.name')
                     ->label('Sous-traitant')
                     ->searchable()
                     ->sortable(),
-                \Filament\Tables\Columns\TextColumn::make('chantier.reference')
+                TextColumn::make('chantier.reference')
                     ->label('Chantier')
                     ->searchable()
                     ->sortable(),
-                \Filament\Tables\Columns\TextColumn::make('progress_percentage')
+                TextColumn::make('progress_percentage')
                     ->label('Avancement (%)')
                     ->sortable(),
-                \Filament\Tables\Columns\TextColumn::make('total_ht')
+                TextColumn::make('total_ht')
                     ->label('Total HT')
                     ->numeric()
                     ->sortable(),
-                \Filament\Tables\Columns\TextColumn::make('status')->label('Statut')
+                TextColumn::make('status')->label('Statut')
                     ->label('Statut')
                     ->badge()
                     ->sortable(),

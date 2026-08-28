@@ -2,8 +2,13 @@
 
 namespace App\Models\Interventions;
 
-use Illuminate\Database\Eloquent\Model;
+use App\Models\Core\Company;
+use App\Models\Tiers\ThirdParty;
+use Database\Factories\ClientEquipmentFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class ClientEquipment extends Model
 {
@@ -13,7 +18,7 @@ class ClientEquipment extends Model
 
     protected static function newFactory()
     {
-        return \Database\Factories\ClientEquipmentFactory::new();
+        return ClientEquipmentFactory::new();
     }
 
     protected $fillable = [
@@ -29,17 +34,17 @@ class ClientEquipment extends Model
         'installation_date' => 'date',
     ];
 
-    public function company(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function company(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\Core\Company::class);
+        return $this->belongsTo(Company::class);
     }
 
-    public function thirdParty(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function thirdParty(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\Tiers\ThirdParty::class);
+        return $this->belongsTo(ThirdParty::class);
     }
 
-    public function interventions(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function interventions(): HasMany
     {
         return $this->hasMany(Intervention::class);
     }

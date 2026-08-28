@@ -2,6 +2,7 @@
 
 namespace App\Services\Paie;
 
+use App\Enums\Paie\PayslipStatus;
 use App\Models\Paie\Payslip;
 use App\Services\Core\DocumentService;
 
@@ -20,7 +21,7 @@ class PayslipPdfService
     public function generatePdf(Payslip $payslip): string
     {
         $payslip->load(['employee', 'lines', 'advances']);
-        
+
         $data = [
             'payslip' => $payslip,
             'employee' => $payslip->employee,
@@ -31,9 +32,9 @@ class PayslipPdfService
         // Calcul des cumuls annuels réels
         $year = substr($payslip->period, 0, 4);
         $historicalPayslips = Payslip::where('employee_id', $payslip->employee_id)
-            ->where('period', '>=', $year . '-01')
+            ->where('period', '>=', $year.'-01')
             ->where('period', '<', $payslip->period)
-            ->whereIn('status', [\App\Enums\Paie\PayslipStatus::VALIDATED, \App\Enums\Paie\PayslipStatus::PAID])
+            ->whereIn('status', [PayslipStatus::VALIDATED, PayslipStatus::PAID])
             ->get();
 
         $annualTotals = [
@@ -55,16 +56,16 @@ class PayslipPdfService
             $annualTotals['pas_amount'] += $hp->pas_amount;
             $annualTotals['exonerations'] += 939.74;
         }
-        
+
         // Calcul des charges patronales (estimation basée sur le delta brut -> cout global)
         $annualTotals['employer_contributions'] = $annualTotals['employer_cost'] - $annualTotals['gross_salary'] - $annualTotals['exonerations'];
 
         $data['annualTotals'] = $annualTotals;
 
-        $filename = 'payslip_' . $payslip->period . '_' . $payslip->employee->last_name;
+        $filename = 'payslip_'.$payslip->period.'_'.$payslip->employee->last_name;
 
         // Le chemin relatif au disque public
-        $relativePath = 'documents/payslips/' . $filename . '.pdf';
+        $relativePath = 'documents/payslips/'.$filename.'.pdf';
 
         $this->documentService->generate(
             view: 'pdf.payslip',

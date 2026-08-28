@@ -2,18 +2,18 @@
 
 namespace App\Filament\RH\Resources\TrainingSessions\Tables;
 
+use App\Enums\RH\OpcoStatus;
+use App\Enums\RH\TrainingSessionStatus;
+use App\Models\RH\TrainingSession;
+use App\Services\RH\TrainingSessionService;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
-use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Table;
-use Filament\Tables\Filters\SelectFilter;
-use App\Enums\RH\TrainingSessionStatus;
-use App\Enums\RH\OpcoStatus;
-use App\Services\RH\TrainingSessionService;
-use App\Models\RH\TrainingSession;
 use Filament\Notifications\Notification;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Table;
 
 class TrainingSessionsTable
 {

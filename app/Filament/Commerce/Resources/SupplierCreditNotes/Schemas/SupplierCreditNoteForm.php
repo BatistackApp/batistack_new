@@ -2,6 +2,9 @@
 
 namespace App\Filament\Commerce\Resources\SupplierCreditNotes\Schemas;
 
+use App\Enums\Commerce\InvoiceStatus;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Schema;
 
 class SupplierCreditNoteForm
@@ -10,33 +13,33 @@ class SupplierCreditNoteForm
     {
         return $schema
             ->components([
-                \Filament\Forms\Components\Select::make('supplier_id')
+                Select::make('supplier_id')
                     ->label('Fournisseur')
                     ->relationship('supplier', 'name')
                     ->required()
                     ->searchable(),
-                \Filament\Forms\Components\Select::make('supplier_invoice_id')
+                Select::make('supplier_invoice_id')
                     ->label('Facture Fournisseur liée')
                     ->relationship('invoice', 'reference')
                     ->searchable(),
-                \Filament\Forms\Components\TextInput::make('reference')->label('Référence')
+                TextInput::make('reference')->label('Référence')
                     ->label('Référence')
                     ->required()
                     ->maxLength(255),
-                \Filament\Forms\Components\Select::make('status')->label('Statut')
+                Select::make('status')->label('Statut')
                     ->label('Statut')
-                    ->options(\App\Enums\Commerce\InvoiceStatus::class)
+                    ->options(InvoiceStatus::class)
                     ->required()
-                    ->default(\App\Enums\Commerce\InvoiceStatus::DRAFT),
-                \Filament\Forms\Components\TextInput::make('total_ht')
+                    ->default(InvoiceStatus::DRAFT),
+                TextInput::make('total_ht')
                     ->label('Total HT')
                     ->numeric()
                     ->prefix('€'),
-                \Filament\Forms\Components\TextInput::make('total_ttc')
+                TextInput::make('total_ttc')
                     ->label('Total TTC')
                     ->numeric()
                     ->prefix('€'),
-                \Filament\Forms\Components\Select::make('responsable_id')
+                Select::make('responsable_id')
                     ->label('Responsable')
                     ->relationship('user', 'name')
                     ->searchable(),

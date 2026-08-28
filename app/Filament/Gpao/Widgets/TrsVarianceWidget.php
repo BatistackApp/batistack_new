@@ -4,9 +4,9 @@ namespace App\Filament\Gpao\Widgets;
 
 use App\Enums\Gpao\ManufacturingStatus;
 use App\Models\Gpao\ManufacturingOrder;
+use Carbon\CarbonInterface;
 use LaBoiteACode\FilamentDashboardWidgets\Data\VarianceItem;
 use LaBoiteACode\FilamentDashboardWidgets\Widgets\VarianceWidget;
-use Illuminate\Support\Carbon;
 
 class TrsVarianceWidget extends VarianceWidget
 {
@@ -29,13 +29,13 @@ class TrsVarianceWidget extends VarianceWidget
         return [
             VarianceItem::make('TRS Global', $currentTrs)
                 ->previous($prevTrs)
-                ->formatUsing(fn (float $val) => number_format($val, 2) . '%')
-                ->changeFormatUsing(fn (float $val) => ($val > 0 ? '+' : '') . number_format($val, 2) . '%')
-                ->color(fn (float $current, float $prev) => $current >= $prev ? 'success' : 'danger')
+                ->formatUsing(fn (float $val) => number_format($val, 2).'%')
+                ->changeFormatUsing(fn (float $val) => ($val > 0 ? '+' : '').number_format($val, 2).'%')
+                ->color(fn (float $current, float $prev) => $current >= $prev ? 'success' : 'danger'),
         ];
     }
 
-    private function calculateTrs(\Carbon\CarbonInterface $start, \Carbon\CarbonInterface $end): float
+    private function calculateTrs(CarbonInterface $start, CarbonInterface $end): float
     {
         $orders = ManufacturingOrder::where('status', ManufacturingStatus::COMPLETED)
             ->whereBetween('updated_at', [$start, $end])

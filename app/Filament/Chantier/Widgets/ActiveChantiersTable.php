@@ -5,7 +5,6 @@ namespace App\Filament\Chantier\Widgets;
 use App\Enums\Chantiers\ChantierStatus;
 use App\Models\Chantiers\Chantier;
 use App\Services\Chantiers\ChantierAnalyticService;
-use Filament\Actions\BulkActionGroup;
 use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
@@ -14,7 +13,8 @@ use Filament\Widgets\TableWidget;
 class ActiveChantiersTable extends TableWidget
 {
     protected static ?int $sort = 8;
-    protected int | string | array $columnSpan = 'full';
+
+    protected int|string|array $columnSpan = 'full';
 
     protected static ?string $heading = 'Suivi d\'Avancement des Chantiers Actifs';
 

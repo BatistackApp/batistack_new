@@ -4,7 +4,6 @@ namespace App\Filament\Customer\Resources\CustomerOrders\Pages;
 
 use App\Filament\Commerce\Resources\CustomerOrders\Actions\PrinterAction;
 use App\Filament\Customer\Resources\CustomerOrders\CustomerOrderResource;
-use Filament\Actions\EditAction;
 use Filament\Resources\Pages\ViewRecord;
 
 class ViewCustomerOrder extends ViewRecord

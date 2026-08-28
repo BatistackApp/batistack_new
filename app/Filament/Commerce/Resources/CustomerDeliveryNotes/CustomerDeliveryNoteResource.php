@@ -11,18 +11,23 @@ use App\Models\Commerce\CustomerDeliveryNote;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
-use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use ToneGabes\Filament\Icons\Enums\Phosphor;
 
 class CustomerDeliveryNoteResource extends Resource
 {
     protected static ?string $model = CustomerDeliveryNote::class;
 
-    protected static string|BackedEnum|null $navigationIcon = \ToneGabes\Filament\Icons\Enums\Phosphor::Truck;
+    protected static string|BackedEnum|null $navigationIcon = Phosphor::Truck;
+
     protected static ?string $navigationLabel = 'Bons de livraison';
-    protected static string | \UnitEnum | null $navigationGroup = 'Ventes';
+
+    protected static string|\UnitEnum|null $navigationGroup = 'Ventes';
+
     protected static ?string $modelLabel = 'Bon de livraison';
+
     protected static ?string $pluralModelLabel = 'Bons de livraison';
+
     protected static ?int $navigationSort = 3;
 
     public static function form(Schema $schema): Schema

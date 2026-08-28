@@ -3,8 +3,8 @@
 namespace App\Filament\Banque\Widgets;
 
 use App\Models\Banque\BankTransaction;
-use LaBoiteACode\FilamentDashboardWidgets\Widgets\GoalProgressWidget;
 use LaBoiteACode\FilamentDashboardWidgets\Data\Goal;
+use LaBoiteACode\FilamentDashboardWidgets\Widgets\GoalProgressWidget;
 
 class ReconciliationGoalWidget extends GoalProgressWidget
 {
@@ -21,10 +21,10 @@ class ReconciliationGoalWidget extends GoalProgressWidget
         $reconciledTransactions = BankTransaction::thisMonth()
             ->whereHas('reconciliations')
             ->count();
-            
+
         $target = $totalTransactions > 0 ? $totalTransactions : 1;
-        
+
         return Goal::make('Transactions lettrées', $reconciledTransactions, $target)
-                ->color('success');
+            ->color('success');
     }
 }

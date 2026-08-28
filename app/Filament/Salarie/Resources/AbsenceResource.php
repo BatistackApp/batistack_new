@@ -2,6 +2,7 @@
 
 namespace App\Filament\Salarie\Resources;
 
+use App\Enums\RH\AbsenceType;
 use App\Filament\Salarie\Resources\AbsenceResource\Pages;
 use App\Models\RH\Abscence;
 use Filament\Actions\BulkActionGroup;
@@ -21,9 +22,13 @@ class AbsenceResource extends Resource
     protected static ?string $model = Abscence::class;
 
     protected static string|null|\BackedEnum $navigationIcon = 'heroicon-o-calendar-days';
+
     protected static ?string $navigationLabel = 'Mes Absences';
+
     protected static ?string $modelLabel = 'Absence';
+
     protected static ?string $pluralModelLabel = 'Absences';
+
     protected static ?int $navigationSort = 2;
 
     public static function getEloquentQuery(): Builder
@@ -37,7 +42,7 @@ class AbsenceResource extends Resource
         return $schema
             ->schema([
                 Forms\Components\Select::make('type')->label('Type')
-                    ->options(\App\Enums\RH\AbsenceType::class)
+                    ->options(AbsenceType::class)
                     ->required(),
                 Forms\Components\DatePicker::make('start_date')
                     ->label('Date de début')

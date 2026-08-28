@@ -2,19 +2,23 @@
 
 namespace App\Filament\Chantier\Pages;
 
-use Filament\Pages\Page;
 use App\Models\Chantiers\ChantierTask;
-use App\Models\RH\Employee;
-use App\Models\Flottes\Vehicle;
 use App\Models\Chantiers\ResourceAllocation;
+use App\Models\Flottes\Vehicle;
+use App\Models\RH\Employee;
 use Carbon\Carbon;
 use Filament\Notifications\Notification;
+use Filament\Pages\Page;
+use Livewire\Attributes\Computed;
 
 class ResourcePlanner extends Page
 {
-    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-calendar-days';
-    protected static string | \UnitEnum | null $navigationGroup = 'Chantiers';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-calendar-days';
+
+    protected static string|\UnitEnum|null $navigationGroup = 'Chantiers';
+
     protected static ?string $title = 'Planning des Ressources';
+
     protected static ?int $navigationSort = 3;
 
     protected string $view = 'filament.chantier.pages.resource-planner';
@@ -36,26 +40,26 @@ class ResourcePlanner extends Page
         $this->currentWeekStart = Carbon::parse($this->currentWeekStart)->subWeek()->format('Y-m-d');
     }
 
-    #[\Livewire\Attributes\Computed]
+    #[Computed]
     public function getTasksProperty()
     {
         // Only load tasks that are active or not completed
         return ChantierTask::with('phase.chantier')->where('is_completed', false)->get();
     }
 
-    #[\Livewire\Attributes\Computed]
+    #[Computed]
     public function getEmployeesProperty()
     {
         return Employee::where('is_active', true)->get();
     }
 
-    #[\Livewire\Attributes\Computed]
+    #[Computed]
     public function getVehiclesProperty()
     {
         return Vehicle::all();
     }
 
-    #[\Livewire\Attributes\Computed]
+    #[Computed]
     public function getAllocationsProperty()
     {
         $start = Carbon::parse($this->currentWeekStart);
@@ -83,6 +87,7 @@ class ResourcePlanner extends Page
                 ->body('Cette ressource est déjà affectée à une autre tâche pour cette journée.')
                 ->danger()
                 ->send();
+
             return;
         }
 

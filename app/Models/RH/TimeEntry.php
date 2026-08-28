@@ -5,6 +5,7 @@ namespace App\Models\RH;
 use App\Enums\RH\TimeEntryStatus;
 use App\Enums\RH\TimeEntryType;
 use App\Models\Chantiers\Chantier;
+use App\Models\Gpao\ManufacturingOrder;
 use App\Models\User;
 use App\Observers\RH\TimeEntryObserver;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
@@ -48,7 +49,7 @@ class TimeEntry extends Model
 
     public function manufacturingOrder(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\Gpao\ManufacturingOrder::class);
+        return $this->belongsTo(ManufacturingOrder::class);
     }
 
     protected function casts(): array

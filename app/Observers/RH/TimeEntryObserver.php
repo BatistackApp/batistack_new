@@ -5,7 +5,9 @@ namespace App\Observers\RH;
 use App\Enums\RH\TimeEntryStatus;
 use App\Models\RH\TimeEntry;
 use App\Models\User;
+use App\Notifications\Chantiers\ChantierBudgetExceededNotification;
 use App\Notifications\RH\TimeEntryStatusNotification;
+use App\Services\Chantiers\ChantierAnalyticService;
 use Illuminate\Support\Facades\Notification;
 use Log;
 
@@ -16,10 +18,10 @@ class TimeEntryObserver
      */
     public function creating(TimeEntry $entry): void
     {
-        if (!$entry->employee_id) {
+        if (! $entry->employee_id) {
             throw new \Exception('Employee required');
         }
-        if (!$entry->date) {
+        if (! $entry->date) {
             throw new \Exception('Date required');
         }
         if ($entry->hours < 0) {
@@ -42,7 +44,7 @@ class TimeEntryObserver
         // Si le statut passe à 'approved' ou repasse en 'draft' (refus), on notifie l'employé
         if ($timeEntry->isDirty('status') && in_array($timeEntry->status, [TimeEntryStatus::APPROVED, TimeEntryStatus::DRAFT])) {
             $timeEntry->employee->notify(new TimeEntryStatusNotification($timeEntry));
-            
+
             // [Nouveau] Synergie Chantiers : Vérification du budget global
             if ($timeEntry->status === TimeEntryStatus::APPROVED && $timeEntry->chantier_id) {
                 $this->checkChantierBudget($timeEntry);
@@ -75,7 +77,7 @@ class TimeEntryObserver
     protected function checkChantierBudget(TimeEntry $timeEntry): void
     {
         try {
-            $analyticService = app(\App\Services\Chantiers\ChantierAnalyticService::class);
+            $analyticService = app(ChantierAnalyticService::class);
             $metrics = $analyticService->getPerformanceMetrics($timeEntry->chantier);
             $marginReal = $metrics['financials']['margin_real'];
 
@@ -93,7 +95,7 @@ class TimeEntryObserver
                     // C'est le point de bascule : On notifie !
                     $manager = User::admin()->first(); // En situation réelle, on prendrait le manager lié au chantier
                     if ($manager) {
-                        $manager->notify(new \App\Notifications\Chantiers\ChantierBudgetExceededNotification(
+                        $manager->notify(new ChantierBudgetExceededNotification(
                             $timeEntry->chantier,
                             $marginReal
                         ));
@@ -108,10 +110,12 @@ class TimeEntryObserver
     protected function imputeManufacturingLaborCost(TimeEntry $timeEntry): void
     {
         $order = $timeEntry->manufacturingOrder;
-        if (!$order) return;
+        if (! $order) {
+            return;
+        }
 
         $cost = $timeEntry->hours * $timeEntry->employee->hourly_rate;
-        
+
         $order->total_labor_cost += $cost;
         $order->save();
     }

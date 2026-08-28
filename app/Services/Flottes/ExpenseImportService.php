@@ -3,13 +3,13 @@
 namespace App\Services\Flottes;
 
 use App\Enums\Flottes\FleetExpenseType;
+use App\Models\Core\VatRate;
 use App\Models\Flottes\FleetExpense;
 use App\Models\Flottes\FuelTransaction;
 use App\Models\Flottes\Vehicle;
-use App\Models\RH\Employee;
+use Carbon\Carbon;
 use Exception;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 
 class ExpenseImportService
 {
@@ -20,7 +20,7 @@ class ExpenseImportService
     public function importFromCsv(string $filePath, array $columnMapping, string $delimiter = ';'): array
     {
         if (! file_exists($filePath) || ! is_readable($filePath)) {
-            throw new Exception("Fichier CSV introuvable ou illisible.");
+            throw new Exception('Fichier CSV introuvable ou illisible.');
         }
 
         $results = [
@@ -33,7 +33,7 @@ class ExpenseImportService
             $rowIndex = 1;
 
             if (! $headers) {
-                throw new Exception("Le fichier CSV est vide ou mal formaté.");
+                throw new Exception('Le fichier CSV est vide ou mal formaté.');
             }
 
             DB::beginTransaction();
@@ -43,6 +43,7 @@ class ExpenseImportService
                     $rowIndex++;
                     if (count($headers) !== count($data)) {
                         $results['errors'][] = "Ligne {$rowIndex} : Mauvais nombre de colonnes.";
+
                         continue;
                     }
                     $row = array_combine($headers, $data);
@@ -51,10 +52,10 @@ class ExpenseImportService
                         $this->processRow($row, $columnMapping);
                         $results['success']++;
                     } catch (\Throwable $e) {
-                        $results['errors'][] = "Ligne {$rowIndex} : " . $e->getMessage();
+                        $results['errors'][] = "Ligne {$rowIndex} : ".$e->getMessage();
                     }
                 }
-                
+
                 DB::commit();
             } catch (\Throwable $e) {
                 DB::rollBack();
@@ -69,7 +70,7 @@ class ExpenseImportService
 
     /**
      * Traite une ligne selon le mapping de colonnes fourni.
-     * 
+     *
      * $columnMapping = [
      *    'license_plate' => 'Immatriculation',
      *    'date' => 'Date_Transaction',
@@ -95,17 +96,17 @@ class ExpenseImportService
         }
 
         $dateStr = $this->getValue($row, $columnMapping, 'date');
-        $date = $dateStr ? \Carbon\Carbon::parse($dateStr) : now();
+        $date = $dateStr ? Carbon::parse($dateStr) : now();
 
         $type = strtolower($this->getValue($row, $columnMapping, 'type') ?? '');
         $merchant = $this->getValue($row, $columnMapping, 'merchant') ?? 'Inconnu';
-        
+
         $ttcStr = $this->getValue($row, $columnMapping, 'amount_ttc');
         $amountTtc = $ttcStr ? (float) str_replace(',', '.', (string) $ttcStr) : 0;
-        
+
         $htStr = $this->getValue($row, $columnMapping, 'amount_ht');
         $amountHt = $htStr ? (float) str_replace(',', '.', (string) $htStr) : $amountTtc;
-        
+
         $odoStr = $this->getValue($row, $columnMapping, 'odometer');
         $odometer = $odoStr ? (float) str_replace(',', '.', (string) $odoStr) : 0;
 
@@ -114,7 +115,7 @@ class ExpenseImportService
             ->where('start_date', '<=', $date)
             ->where(function ($query) use ($date) {
                 $query->whereNull('end_date')
-                      ->orWhere('end_date', '>=', $date);
+                    ->orWhere('end_date', '>=', $date);
             })->first();
 
         $employeeId = $assignment ? $assignment->employee_id : null;
@@ -123,7 +124,7 @@ class ExpenseImportService
             // C'est du carburant -> FuelTransaction
             $litersStr = $this->getValue($row, $columnMapping, 'liters');
             $liters = $litersStr ? (float) str_replace(',', '.', (string) $litersStr) : 0;
-            
+
             FuelTransaction::create([
                 'vehicle_id' => $vehicle->id,
                 'employee_id' => $employeeId,
@@ -149,8 +150,8 @@ class ExpenseImportService
                 $expenseType = FleetExpenseType::WASH;
             }
 
-            $vatRate = \App\Models\Core\VatRate::where('is_default', true)->first() 
-                ?? \App\Models\Core\VatRate::first();
+            $vatRate = VatRate::where('is_default', true)->first()
+                ?? VatRate::first();
 
             FleetExpense::create([
                 'vehicle_id' => $vehicle->id,
@@ -160,7 +161,7 @@ class ExpenseImportService
                 'amount_ttc' => $amountTtc,
                 'vat_rate_id' => $vatRate?->id,
                 'merchant_name' => $merchant,
-                'description' => "Import automatique",
+                'description' => 'Import automatique',
                 'spent_at' => $date,
             ]);
         }
@@ -173,6 +174,7 @@ class ExpenseImportService
         }
 
         $csvColumn = $mapping[$key];
+
         return $row[$csvColumn] ?? null;
     }
 }

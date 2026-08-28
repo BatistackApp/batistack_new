@@ -2,8 +2,10 @@
 
 namespace App\Rules;
 
+use App\Services\Core\SirenService;
 use Closure;
 use Illuminate\Contracts\Validation\ValidationRule;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Translation\PotentiallyTranslatedString;
 
 class ValidSiret implements ValidationRule
@@ -19,15 +21,17 @@ class ValidSiret implements ValidationRule
 
         if (strlen($siret) !== 14) {
             $fail('Le numéro SIRET doit contenir exactement 14 chiffres.');
+
             return;
         }
 
         try {
-            $sirenService = app(\App\Services\Core\SirenService::class);
-            
+            $sirenService = app(SirenService::class);
+
             // Validation locale rapide (Luhn)
-            if (!$sirenService->isValid($siret)) {
+            if (! $sirenService->isValid($siret)) {
                 $fail('Ce numéro SIRET est invalide (clé de contrôle Luhn incorrecte).');
+
                 return;
             }
 
@@ -38,10 +42,10 @@ class ValidSiret implements ValidationRule
             if ($info === null) {
                 $fail('Ce numéro SIRET est introuvable dans la base de données de l\'INSEE.');
             }
-            
+
         } catch (\Exception $e) {
             // Approche Fail-Open : on accepte la valeur si l'API est indisponible ou non configurée
-            \Illuminate\Support\Facades\Log::warning("ValidSiret : Erreur API INSEE (Fail-Open) pour le SIRET {$siret} : " . $e->getMessage());
+            Log::warning("ValidSiret : Erreur API INSEE (Fail-Open) pour le SIRET {$siret} : ".$e->getMessage());
         }
     }
 }

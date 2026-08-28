@@ -23,21 +23,37 @@ class ManageDocuments extends Page implements HasForms
 
     protected static ?string $title = 'Mes Documents Légaux';
 
+    protected static ?int $navigationSort = 90;
+
+    protected string $view = 'filament.subcontractor.pages.manage-documents';
+
     public ?array $data = [];
 
     public bool $isCompliant = false;
 
+    public array $issues = [];
+
     public function mount(): void
     {
         $this->checkCompliance();
+        $this->fillForm();
+    }
 
+    protected function fillForm(): void
+    {
         $thirdPartyId = auth()->user()->contact->third_party_id;
         $disk = Storage::disk('local');
 
         $this->form->fill([
-            'vigilance_attestation' => $disk->exists("third_parties/{$thirdPartyId}/documents/vigilance_attestation.pdf") ? ["third_parties/{$thirdPartyId}/documents/vigilance_attestation.pdf"] : [],
-            'decennale_insurance' => $disk->exists("third_parties/{$thirdPartyId}/documents/decennale_insurance.pdf") ? ["third_parties/{$thirdPartyId}/documents/decennale_insurance.pdf"] : [],
-            'kbis' => $disk->exists("third_parties/{$thirdPartyId}/documents/kbis.pdf") ? ["third_parties/{$thirdPartyId}/documents/kbis.pdf"] : [],
+            'vigilance_attestation' => $disk->exists("third_parties/{$thirdPartyId}/documents/vigilance_attestation.pdf")
+                ? ["third_parties/{$thirdPartyId}/documents/vigilance_attestation.pdf"]
+                : [],
+            'decennale_insurance' => $disk->exists("third_parties/{$thirdPartyId}/documents/decennale_insurance.pdf")
+                ? ["third_parties/{$thirdPartyId}/documents/decennale_insurance.pdf"]
+                : [],
+            'kbis' => $disk->exists("third_parties/{$thirdPartyId}/documents/kbis.pdf")
+                ? ["third_parties/{$thirdPartyId}/documents/kbis.pdf"]
+                : [],
         ]);
     }
 
@@ -47,6 +63,7 @@ class ManageDocuments extends Page implements HasForms
         $vigilanceService = app(VigilanceService::class);
         $results = $vigilanceService->scanCompliance($thirdParty);
         $this->isCompliant = $results['compliant'];
+        $this->issues = $results['issues'];
     }
 
     public function form(Schema $schema): Schema
@@ -56,23 +73,31 @@ class ManageDocuments extends Page implements HasForms
                 Section::make('Dépôt de Fichiers')
                     ->description('Veuillez fournir les documents légaux récents au format PDF. Le téléversement d\'un nouveau fichier écrasera l\'ancien.')
                     ->schema([
-                        $this->createDocumentUploader('vigilance_attestation', 'Attestation de Vigilance URSSAF (moins de 6 mois)'),
-                        $this->createDocumentUploader('decennale_insurance', 'Attestation d\'Assurance Décennale (en cours de validité)'),
-                        $this->createDocumentUploader('kbis', 'Extrait Kbis (moins de 3 mois)'),
-                    ]),
+                        FileUpload::make('vigilance_attestation')
+                            ->label('Attestation de Vigilance URSSAF (moins de 6 mois)')
+                            ->acceptedFileTypes(['application/pdf'])
+                            ->disk('local')
+                            ->directory(fn () => 'third_parties/'.auth()->user()->contact->third_party_id.'/documents')
+                            ->getUploadedFileNameForStorageUsing(fn (TemporaryUploadedFile $file): string => 'vigilance_attestation.pdf')
+                            ->downloadable(),
+                        FileUpload::make('decennale_insurance')
+                            ->label('Attestation d\'Assurance Décennale (en cours de validité)')
+                            ->acceptedFileTypes(['application/pdf'])
+                            ->disk('local')
+                            ->directory(fn () => 'third_parties/'.auth()->user()->contact->third_party_id.'/documents')
+                            ->getUploadedFileNameForStorageUsing(fn (TemporaryUploadedFile $file): string => 'decennale_insurance.pdf')
+                            ->downloadable(),
+                        FileUpload::make('kbis')
+                            ->label('Extrait Kbis (moins de 3 mois)')
+                            ->acceptedFileTypes(['application/pdf'])
+                            ->disk('local')
+                            ->directory(fn () => 'third_parties/'.auth()->user()->contact->third_party_id.'/documents')
+                            ->getUploadedFileNameForStorageUsing(fn (TemporaryUploadedFile $file): string => 'kbis.pdf')
+                            ->downloadable(),
+                    ])
+                    ->columns(1),
             ])
             ->statePath('data');
-    }
-
-    protected function createDocumentUploader(string $name, string $label)
-    {
-        return FileUpload::make($name)
-            ->label($label)
-            ->acceptedFileTypes(['application/pdf'])
-            ->disk('local')
-            ->directory(fn () => 'third_parties/'.auth()->user()->contact->third_party_id.'/documents')
-            ->getUploadedFileNameForStorageUsing(fn (TemporaryUploadedFile $file): string => $name.'.pdf')
-            ->downloadable();
     }
 
     public function submit(): void
@@ -80,10 +105,13 @@ class ManageDocuments extends Page implements HasForms
         $this->form->getState();
 
         $this->checkCompliance();
+        $this->fillForm();
 
         Notification::make()
             ->title('Documents enregistrés')
-            ->body('Vos documents ont bien été mis à jour.')
+            ->body($this->isCompliant
+                ? 'Vos documents ont bien été mis à jour. Votre dossier est conforme.'
+                : 'Vos documents ont bien été mis à jour. Certains documents sont encore manquants.')
             ->success()
             ->send();
     }

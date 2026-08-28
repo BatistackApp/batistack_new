@@ -3,14 +3,15 @@
 namespace App\Filament\Tiers\Widgets;
 
 use App\Models\Tiers\ThirdParty;
-use LaBoiteACode\FilamentDashboardWidgets\Widgets\CompositionWidget;
 use LaBoiteACode\FilamentDashboardWidgets\Data\Composition;
 use LaBoiteACode\FilamentDashboardWidgets\Data\CompositionSlice;
+use LaBoiteACode\FilamentDashboardWidgets\Widgets\CompositionWidget;
 
 class PortfolioCompositionWidget extends CompositionWidget
 {
     protected static ?int $sort = 3;
-    protected int | string | array $columnSpan = 1;
+
+    protected int|string|array $columnSpan = 1;
 
     public function getHeading(): string
     {
@@ -20,7 +21,7 @@ class PortfolioCompositionWidget extends CompositionWidget
     protected function getComposition(): Composition
     {
         $thirdParties = ThirdParty::active()->get();
-        
+
         $groups = $thirdParties->groupBy(fn ($tp) => $tp->type ? $tp->type->getLabel() : 'Autre');
 
         $slices = [];

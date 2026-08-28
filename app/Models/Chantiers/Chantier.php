@@ -22,6 +22,7 @@ use App\Models\Tiers\ThirdParty;
 use App\Models\Vision3D\BimModel;
 use App\Observers\Chantiers\ChantierObserver;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -215,6 +216,12 @@ class Chantier extends Model implements HasMedia, HasTimeline
     {
         parent::boot();
         static::creating(fn ($model) => $model->uuid = (string) Str::uuid());
+    }
+
+    public function scopeForEmployee(Builder $query, Employee $employee): Builder
+    {
+        return $query->where('manager_id', $employee->id)
+            ->orWhereHas('members', fn ($q) => $q->where('employees.id', $employee->id));
     }
 
     public function getFullAddressAttribute(): string

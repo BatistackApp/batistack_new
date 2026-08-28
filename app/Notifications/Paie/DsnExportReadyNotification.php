@@ -11,9 +11,7 @@ class DsnExportReadyNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 
-    public function __construct(public string $period, public int $payslipsCount, public float $totalGross)
-    {
-    }
+    public function __construct(public string $period, public int $payslipsCount, public float $totalGross) {}
 
     public function via(object $notifiable): array
     {
@@ -25,7 +23,7 @@ class DsnExportReadyNotification extends Notification implements ShouldQueue
         return (new MailMessage)
             ->subject("DSN prête à exporter — {$this->period}")
             ->line("Tous les bulletins de la période {$this->period} sont validés ({$this->payslipsCount} bulletins).")
-            ->line("Montant brut total : " . number_format($this->totalGross, 2, ',', ' ') . " €")
+            ->line('Montant brut total : '.number_format($this->totalGross, 2, ',', ' ').' €')
             ->action('Exporter la DSN', url('/admin/payslips'))
             ->line('Vous pouvez maintenant lancer l\'export CSV pour votre expert-comptable.');
     }

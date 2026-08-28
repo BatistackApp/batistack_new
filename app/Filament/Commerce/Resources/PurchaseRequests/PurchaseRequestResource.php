@@ -5,23 +5,28 @@ namespace App\Filament\Commerce\Resources\PurchaseRequests;
 use App\Filament\Commerce\Resources\PurchaseRequests\Pages\CreatePurchaseRequest;
 use App\Filament\Commerce\Resources\PurchaseRequests\Pages\EditPurchaseRequest;
 use App\Filament\Commerce\Resources\PurchaseRequests\Pages\ListPurchaseRequests;
+use App\Filament\Commerce\Resources\PurchaseRequests\RelationManagers\ItemsRelationManager;
 use App\Filament\Commerce\Resources\PurchaseRequests\Schemas\PurchaseRequestForm;
 use App\Filament\Commerce\Resources\PurchaseRequests\Tables\PurchaseRequestsTable;
 use App\Models\Commerce\PurchaseRequest;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
-use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use ToneGabes\Filament\Icons\Enums\Phosphor;
 
 class PurchaseRequestResource extends Resource
 {
     protected static ?string $model = PurchaseRequest::class;
 
-    protected static string|BackedEnum|null $navigationIcon = \ToneGabes\Filament\Icons\Enums\Phosphor::ClipboardText;
+    protected static string|BackedEnum|null $navigationIcon = Phosphor::ClipboardText;
+
     protected static ?string $navigationLabel = 'Demandes d\'achat';
-    protected static string | \UnitEnum | null $navigationGroup = 'Achats';
+
+    protected static string|\UnitEnum|null $navigationGroup = 'Achats';
+
     protected static ?string $modelLabel = 'Demande d\'achat';
+
     protected static ?string $pluralModelLabel = 'Demandes d\'achat';
 
     public static function form(Schema $schema): Schema
@@ -37,7 +42,7 @@ class PurchaseRequestResource extends Resource
     public static function getRelations(): array
     {
         return [
-            \App\Filament\Commerce\Resources\PurchaseRequests\RelationManagers\ItemsRelationManager::class,
+            ItemsRelationManager::class,
         ];
     }
 

@@ -5,7 +5,7 @@ namespace App\Enums\Immobilisation;
 use Filament\Support\Contracts\HasColor;
 use Filament\Support\Contracts\HasLabel;
 
-enum AssetStatus: string implements HasLabel, HasColor
+enum AssetStatus: string implements HasColor, HasLabel
 {
     case ACTIVE = 'active';
     case IN_MAINTENANCE = 'in_maintenance';

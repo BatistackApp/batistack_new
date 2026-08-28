@@ -1,5 +1,7 @@
 <?php
 
+use App\Models\Chantiers\ChantierTask;
+use App\Models\Chantiers\ChecklistTemplate;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -13,8 +15,8 @@ return new class extends Migration
     {
         Schema::create('checklist_submissions', function (Blueprint $table) {
             $table->id();
-            $table->foreignIdFor(\App\Models\Chantiers\ChecklistTemplate::class)->constrained()->cascadeOnDelete();
-            $table->foreignIdFor(\App\Models\Chantiers\ChantierTask::class)->nullable()->constrained()->nullOnDelete();
+            $table->foreignIdFor(ChecklistTemplate::class)->constrained()->cascadeOnDelete();
+            $table->foreignIdFor(ChantierTask::class)->nullable()->constrained()->nullOnDelete();
             $table->foreignId('submitted_by')->constrained('users')->cascadeOnDelete();
             $table->json('data')->nullable();
             $table->string('signature_path')->nullable();

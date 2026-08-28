@@ -5,7 +5,6 @@ namespace App\Notifications\Chantiers;
 use App\Models\Chantiers\Chantier;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use ToneGabes\Filament\Icons\Enums\Phosphor;
 

@@ -2,15 +2,19 @@
 
 namespace App\Models\RH;
 
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Enums\RH\ExpenseItemStatus;
+use App\Enums\RH\ExpensePaymentMethod;
 use App\Models\Chantiers\Chantier;
+use App\Models\Flottes\Vehicle;
+use App\Observers\RH\ExpenseItemObserver;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
-use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 
-#[ObservedBy([\App\Observers\RH\ExpenseItemObserver::class])]
+#[ObservedBy([ExpenseItemObserver::class])]
 class ExpenseItem extends Model implements HasMedia
 {
     use HasFactory, InteractsWithMedia;
@@ -32,8 +36,8 @@ class ExpenseItem extends Model implements HasMedia
 
     protected $casts = [
         'date' => 'date',
-        'status' => \App\Enums\RH\ExpenseItemStatus::class,
-        'payment_method' => \App\Enums\RH\ExpensePaymentMethod::class,
+        'status' => ExpenseItemStatus::class,
+        'payment_method' => ExpensePaymentMethod::class,
     ];
 
     public function report(): BelongsTo
@@ -48,6 +52,6 @@ class ExpenseItem extends Model implements HasMedia
 
     public function vehicle(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\Flottes\Vehicle::class);
+        return $this->belongsTo(Vehicle::class);
     }
 }

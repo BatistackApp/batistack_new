@@ -9,8 +9,10 @@ use Filament\Widgets\Widget;
 class ChantierMapWidget extends Widget
 {
     protected string $view = 'filament.chantier.widgets.chantier-map-widget';
+
     protected static ?int $sort = 7;
-    protected int | string | array $columnSpan = 'full';
+
+    protected int|string|array $columnSpan = 'full';
 
     /**
      * Récupère la liste des chantiers actifs disposant de coordonnées GPS valides.

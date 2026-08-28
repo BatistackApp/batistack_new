@@ -11,10 +11,13 @@ use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
+use Filament\Notifications\Notification;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Tabs;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
+use Illuminate\Database\Eloquent\Builder;
+use Marcelorodrigo\FilamentBarcodeScannerField\Forms\Components\BarcodeInput;
 
 class InterventionForm
 {
@@ -39,7 +42,7 @@ class InterventionForm
 
                                         Select::make('client_equipment_id')
                                             ->label('Équipement concerné')
-                                            ->relationship('clientEquipment', 'name', fn (\Illuminate\Database\Eloquent\Builder $query, Get $get) => $query->where('third_party_id', $get('third_party_id')))
+                                            ->relationship('clientEquipment', 'name', fn (Builder $query, Get $get) => $query->where('third_party_id', $get('third_party_id')))
                                             ->searchable()
                                             ->preload()
                                             ->nullable()
@@ -107,10 +110,10 @@ class InterventionForm
                                                 ->step('0.5')
                                                 ->required()
                                                 ->default(1),
-                                        ])
+                                        ]),
                                     ])
                                     ->defaultItems(1)
-                                    ->addActionLabel('Ajouter un technicien')
+                                    ->addActionLabel('Ajouter un technicien'),
                             ]),
 
                         Tabs\Tab::make('Matériel')
@@ -121,7 +124,7 @@ class InterventionForm
                                     ->label('Pièces de rechange et matériel consommé')
                                     ->schema([
                                         Grid::make(['default' => 1, 'sm' => 5])->schema([
-                                            \Marcelorodrigo\FilamentBarcodeScannerField\Forms\Components\BarcodeInput::make('barcode_scanner')
+                                            BarcodeInput::make('barcode_scanner')
                                                 ->label('Scanner')
                                                 ->placeholder('Scanner le code-barres')
                                                 ->live()
@@ -133,7 +136,7 @@ class InterventionForm
                                                             $set('item_id', $item->id);
                                                             $set('selling_price', $item->selling_price);
                                                         } else {
-                                                            \Filament\Notifications\Notification::make()
+                                                            Notification::make()
                                                                 ->warning()
                                                                 ->title('Article introuvable')
                                                                 ->body("Code-barres {$state} inconnu.")
@@ -168,12 +171,12 @@ class InterventionForm
                                                 ->numeric()
                                                 ->prefix('€')
                                                 ->required(),
-                                        ])
+                                        ]),
                                     ])
                                     ->defaultItems(0)
-                                    ->addActionLabel('Ajouter une pièce')
+                                    ->addActionLabel('Ajouter une pièce'),
                             ]),
-                    ])->columnSpanFull()
+                    ])->columnSpanFull(),
             ]);
     }
 }

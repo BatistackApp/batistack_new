@@ -12,18 +12,18 @@ return new class extends Migration
             $table->id();
             $table->foreignId('supplier_id')->constrained('third_parties')->cascadeOnDelete();
             $table->foreignId('chantier_id')->nullable()->constrained('chantiers')->nullOnDelete();
-            
+
             $table->string('reference')->unique();
             $table->string('name');
-            
+
             $table->date('start_date');
             $table->date('end_date')->nullable();
-            
+
             $table->string('status')->default('draft');
             $table->string('billing_period')->default('monthly');
-            
+
             $table->decimal('daily_cost_ht', 15, 2)->default(0);
-            
+
             $table->timestamps();
             $table->softDeletes();
         });

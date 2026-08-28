@@ -322,6 +322,7 @@ class PaymentRecordingService
 
     /**
      * Valider un paiement avant enregistrement
+     *
      * @throws \Exception
      */
     private function validatePayment(

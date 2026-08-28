@@ -6,14 +6,14 @@ use App\Models\RH\Abscence;
 use App\Models\RH\TimeEntry;
 use Guava\Calendar\Filament\CalendarWidget;
 use Guava\Calendar\ValueObjects\CalendarEvent;
-use Guava\Calendar\ValueObjects\Event;
 use Guava\Calendar\ValueObjects\FetchInfo;
 use Illuminate\Support\Collection;
 
 class PlanningCalendarWidget extends CalendarWidget
 {
     protected static ?int $sort = 5;
-    protected int | string | array $columnSpan = 'full';
+
+    protected int|string|array $columnSpan = 'full';
 
     protected bool $isHeaderCalendar = true; // Use simple true/false if valid, or just let it be
 

@@ -14,7 +14,6 @@ use Filament\Notifications\Notification;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
 use ToneGabes\Filament\Icons\Enums\Phosphor;
 
 class MembersRelationManager extends RelationManager
@@ -49,7 +48,7 @@ class MembersRelationManager extends RelationManager
                     ->schema([
                         Select::make('recordId')
                             ->label('Sélectionner un employé')
-                            ->options(function (\Filament\Resources\RelationManagers\RelationManager $livewire) {
+                            ->options(function (RelationManager $livewire) {
                                 $options = [];
                                 foreach (Employee::with('currentContract')->get() as $emp) {
                                     $check = app(ChantierAnalyticService::class)->canAssignEmployee($livewire->getOwnerRecord(), $emp);
@@ -57,6 +56,7 @@ class MembersRelationManager extends RelationManager
                                     $job = $emp->currentContract?->job_title ?? 'Non défini';
                                     $options[$emp->id] = "{$emp->full_name} | {$job} | {$status}";
                                 }
+
                                 return $options;
                             })
                             ->searchable()

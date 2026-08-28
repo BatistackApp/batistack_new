@@ -2,9 +2,9 @@
 
 namespace App\Filament\Widgets\Core;
 
-use Spatie\Activitylog\Models\Activity;
-use LaBoiteACode\FilamentDashboardWidgets\Widgets\RecentItemsWidget;
 use LaBoiteACode\FilamentDashboardWidgets\Data\RecentItem;
+use LaBoiteACode\FilamentDashboardWidgets\Widgets\RecentItemsWidget;
+use Spatie\Activitylog\Models\Activity;
 
 class SystemActivityRecentItemsWidget extends RecentItemsWidget
 {
@@ -39,7 +39,7 @@ class SystemActivityRecentItemsWidget extends RecentItemsWidget
             $modelClass = class_basename($activity->subject_type);
             $action = $activity->description; // Ex: created, updated, deleted
 
-            $items[] = RecentItem::make("Modèle $modelClass ($action)", "Activité loggée le " . $activity->created_at->format('d/m/Y H:i'))
+            $items[] = RecentItem::make("Modèle $modelClass ($action)", 'Activité loggée le '.$activity->created_at->format('d/m/Y H:i'))
                 ->icon('heroicon-o-document-text')
                 ->badge(strtoupper($action))
                 ->badgeColor($action === 'deleted' ? 'danger' : ($action === 'created' ? 'success' : 'warning'))

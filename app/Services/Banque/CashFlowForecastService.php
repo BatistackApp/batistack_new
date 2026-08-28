@@ -2,11 +2,11 @@
 
 namespace App\Services\Banque;
 
+use App\Enums\Commerce\QuoteStatus;
 use App\Models\Banque\BankAccount;
 use App\Models\Commerce\CustomerInvoice;
 use App\Models\Commerce\CustomerQuote;
 use App\Models\Commerce\SupplierInvoice;
-use App\Enums\Commerce\QuoteStatus;
 use Carbon\Carbon;
 
 class CashFlowForecastService
@@ -26,14 +26,14 @@ class CashFlowForecastService
             ->whereNotNull('due_date')
             ->whereBetween('due_date', [$startDate, $endDate])
             ->get()
-            ->groupBy(fn($i) => Carbon::parse($i->due_date)->format('Y-m-d'));
+            ->groupBy(fn ($i) => Carbon::parse($i->due_date)->format('Y-m-d'));
 
         // Fetch unpaid supplier invoices due in the forecast period
         $supplierInvoices = SupplierInvoice::whereNotIn('status', ['paid', 'canceled'])
             ->whereNotNull('due_date')
             ->whereBetween('due_date', [$startDate, $endDate])
             ->get()
-            ->groupBy(fn($i) => Carbon::parse($i->due_date)->format('Y-m-d'));
+            ->groupBy(fn ($i) => Carbon::parse($i->due_date)->format('Y-m-d'));
 
         // Fetch SIGNED quotes that don't have invoices yet (either no order, or order has no invoices)
         $totalQuotesValue = CustomerQuote::where('status', QuoteStatus::SIGNED)
@@ -55,8 +55,8 @@ class CashFlowForecastService
             $date = $startDate->copy()->addDays($i)->format('Y-m-d');
             $labels[] = Carbon::parse($date)->format('d/m');
 
-            $dailyIncome = $customerInvoices->get($date, collect())->sum(fn($inv) => $inv->amount_remaining ?? 0);
-            $dailyExpense = $supplierInvoices->get($date, collect())->sum(fn($inv) => $inv->amount_remaining ?? 0);
+            $dailyIncome = $customerInvoices->get($date, collect())->sum(fn ($inv) => $inv->amount_remaining ?? 0);
+            $dailyExpense = $supplierInvoices->get($date, collect())->sum(fn ($inv) => $inv->amount_remaining ?? 0);
 
             $runningBalanceConfirmed = $runningBalanceConfirmed + $dailyIncome - $dailyExpense;
             $runningBalanceOptimistic = $runningBalanceOptimistic + $dailyIncome + $dailyQuoteIncome - $dailyExpense;

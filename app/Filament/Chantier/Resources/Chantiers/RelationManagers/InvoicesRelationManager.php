@@ -2,7 +2,7 @@
 
 namespace App\Filament\Chantier\Resources\Chantiers\RelationManagers;
 
-use App\Enums\Commerce\InvoiceStatus;
+use App\Filament\Commerce\Resources\CustomerInvoices\CustomerInvoiceResource;
 use BackedEnum;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
@@ -15,7 +15,9 @@ use ToneGabes\Filament\Icons\Enums\Phosphor;
 class InvoicesRelationManager extends RelationManager
 {
     protected static string $relationship = 'invoices';
-    protected static string | BackedEnum | null $icon = Phosphor::Receipt;
+
+    protected static string|BackedEnum|null $icon = Phosphor::Receipt;
+
     protected static ?string $title = 'Factures de Situation';
 
     public function table(Table $table): Table
@@ -40,7 +42,7 @@ class InvoicesRelationManager extends RelationManager
                     ->sortable(),
                 TextColumn::make('payment_percentage')
                     ->label('Payé (%)')
-                    ->getStateUsing(fn ($record) => number_format($record->payment_percentage, 0) . ' %')
+                    ->getStateUsing(fn ($record) => number_format($record->payment_percentage, 0).' %')
                     ->badge()
                     ->color(fn ($record) => $record->payment_percentage >= 100 ? 'success' : ($record->payment_percentage > 0 ? 'warning' : 'danger')),
                 TextColumn::make('created_at')->label('Créé le')
@@ -52,7 +54,7 @@ class InvoicesRelationManager extends RelationManager
             ])
             ->recordActions([
                 ViewAction::make()
-                    ->url(fn ($record): string => \App\Filament\Commerce\Resources\CustomerInvoices\CustomerInvoiceResource::getUrl('view', ['record' => $record], panel: 'commerce')),
+                    ->url(fn ($record): string => CustomerInvoiceResource::getUrl('view', ['record' => $record], panel: 'commerce')),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([

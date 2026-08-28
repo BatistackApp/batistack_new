@@ -2,7 +2,9 @@
 
 namespace Database\Factories\Paie;
 
+use App\Enums\Paie\AdvancePaymentStatus;
 use App\Models\Paie\AdvancePayment;
+use App\Models\RH\Employee;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -18,9 +20,9 @@ class AdvancePaymentFactory extends Factory
     public function definition(): array
     {
         return [
-            'employee_id' => \App\Models\RH\Employee::factory(),
+            'employee_id' => Employee::factory(),
             'amount' => $this->faker->randomFloat(2, 50, 500),
-            'status' => \App\Enums\Paie\AdvancePaymentStatus::PENDING,
+            'status' => AdvancePaymentStatus::PENDING,
             'request_date' => $this->faker->date(),
         ];
     }

@@ -15,7 +15,6 @@ class FleetFinancialsChart extends ChartWidget
 
     protected static ?int $sort = 4;
 
-
     protected function getData(): array
     {
         $months = [];

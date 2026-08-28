@@ -1,17 +1,20 @@
 <?php
 
 use App\Models\Chantiers\Chantier;
-use App\Models\Commerce\CustomerQuote;
-use App\Models\Commerce\CustomerOrder;
 use App\Models\Commerce\CustomerInvoice;
-use App\Models\Tiers\ThirdParty;
-use App\Models\Core\VatRate;
-use App\Models\Core\Company;
+use App\Models\Commerce\CustomerOrder;
+use App\Models\Commerce\CustomerQuote;
 use App\Models\Commerce\CustomerQuoteItem;
+use App\Models\Core\Company;
+use App\Models\Core\VatRate;
+use App\Models\Tiers\ThirdParty;
+use App\Models\User;
+use App\Services\Commerce\CustomerOrderService;
+use App\Services\Commerce\InvoiceLegalizationService;
 
 beforeEach(function () {
     Company::factory()->create();
-    
+
     $this->client = ThirdParty::factory()->create(['type' => 'client']);
     $this->chantier = Chantier::factory()->create(['client_id' => $this->client->id]);
     $this->vatRate = VatRate::factory()->create(['rate' => 20]);
@@ -47,10 +50,10 @@ it('can create a full commerce workflow from quote to invoice', function () {
         'status' => 'signed',
         'signed_at' => now(),
     ]);
-    
+
     // In a real scenario, a service transforms this, but we simulate it here or use the service if available.
     // Assuming QuoteService::convertToOrder exists.
-    $orderService = app(\App\Services\Commerce\CustomerOrderService::class);
+    $orderService = app(CustomerOrderService::class);
     $order = CustomerOrder::create([
         'customer_quote_id' => $quote->id,
         'client_id' => $quote->client_id,
@@ -59,13 +62,13 @@ it('can create a full commerce workflow from quote to invoice', function () {
         'status' => 'confirmed',
         'total_ht' => $quote->total_ht,
         'total_ttc' => $quote->total_ttc,
-        'responsable_id' => \App\Models\User::factory()->create()->id,
+        'responsable_id' => User::factory()->create()->id,
     ]);
-    
+
     expect($order->id)->not->toBeNull();
 
     // 3. Invoice the Order
-    $invoiceService = app(\App\Services\Commerce\InvoiceLegalizationService::class);
+    $invoiceService = app(InvoiceLegalizationService::class);
     // Assuming it has a generation feature, we'll create the invoice manually to test the lifecycle
     $invoice = CustomerInvoice::create([
         'customer_order_id' => $order->id,

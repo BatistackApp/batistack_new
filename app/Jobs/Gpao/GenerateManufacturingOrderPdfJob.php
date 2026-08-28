@@ -3,6 +3,7 @@
 namespace App\Jobs\Gpao;
 
 use App\Models\Gpao\ManufacturingOrder;
+use App\Services\Core\DocumentService;
 use App\Services\Gpao\GpaoDocumentService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
@@ -28,22 +29,22 @@ class GenerateManufacturingOrderPdfJob implements ShouldQueue
     {
         try {
             $order = ManufacturingOrder::findOrFail($this->manufacturingOrderId);
-            
+
             // Delete existing PDFs to avoid duplicates
             $order->clearMediaCollection('pdf_documents');
 
             $pdfPath = $documentService->generateManufacturingOrderPdf($order);
-            $disk = \App\Services\Core\DocumentService::getDisk();
-            
+            $disk = DocumentService::getDisk();
+
             $order->addMediaFromDisk($pdfPath, $disk)
                 ->toMediaCollection('pdf_documents');
 
-            Log::info("OF PDF generated and attached", ['order_id' => $order->id, 'reference' => $order->reference]);
-            
+            Log::info('OF PDF generated and attached', ['order_id' => $order->id, 'reference' => $order->reference]);
+
         } catch (\Exception $e) {
-            Log::error("Failed to generate OF PDF", [
+            Log::error('Failed to generate OF PDF', [
                 'order_id' => $this->manufacturingOrderId,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
         }
     }

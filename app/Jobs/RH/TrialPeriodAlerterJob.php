@@ -27,6 +27,7 @@ class TrialPeriodAlerterJob implements ShouldQueue
 
         if ($contracts->isEmpty()) {
             Log::info('TrialPeriodAlerterJob: No trial periods ending in 15 days');
+
             return;
         }
 

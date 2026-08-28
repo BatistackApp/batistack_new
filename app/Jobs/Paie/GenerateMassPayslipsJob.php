@@ -2,6 +2,9 @@
 
 namespace App\Jobs\Paie;
 
+use App\Models\Paie\Payslip;
+use App\Models\RH\Employee;
+use App\Services\Paie\PayrollCalculationService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 
@@ -22,15 +25,15 @@ class GenerateMassPayslipsJob implements ShouldQueue
     /**
      * Execute the job.
      */
-    public function handle(\App\Services\Paie\PayrollCalculationService $service): void
+    public function handle(PayrollCalculationService $service): void
     {
         // 1. Fetch all active employees with a current contract
-        $employees = \App\Models\RH\Employee::where('is_active', true)
+        $employees = Employee::where('is_active', true)
             ->with('currentContract')
             ->get();
 
         // 2. Fetch existing payslips for this period to avoid duplicates
-        $existingPayslips = \App\Models\Paie\Payslip::where('period', $this->period)
+        $existingPayslips = Payslip::where('period', $this->period)
             ->pluck('employee_id')
             ->toArray();
 
@@ -42,7 +45,7 @@ class GenerateMassPayslipsJob implements ShouldQueue
 
             $contract = $employee->currentContract;
             // We need a contract to get the hourly rate and base hours
-            if (!$contract) {
+            if (! $contract) {
                 continue;
             }
 
@@ -58,7 +61,7 @@ class GenerateMassPayslipsJob implements ShouldQueue
                     $hourlyRate
                 );
             } catch (\Exception $e) {
-                \Log::error("Failed to generate payslip for employee {$employee->id} for period {$this->period}: " . $e->getMessage());
+                \Log::error("Failed to generate payslip for employee {$employee->id} for period {$this->period}: ".$e->getMessage());
             }
         }
     }

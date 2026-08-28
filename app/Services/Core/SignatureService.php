@@ -2,9 +2,10 @@
 
 namespace App\Services\Core;
 
-use Illuminate\Support\Manager;
-use App\Services\Core\Providers\LocalSignatureProvider;
+use App\Contracts\Core\SignatureProviderInterface;
 use App\Services\Core\Providers\DocusealProvider;
+use App\Services\Core\Providers\LocalSignatureProvider;
+use Illuminate\Support\Manager;
 
 class SignatureService extends Manager
 {
@@ -21,20 +22,20 @@ class SignatureService extends Manager
     /**
      * Create an instance of the "local" signature driver.
      *
-     * @return \App\Contracts\Core\SignatureProviderInterface
+     * @return SignatureProviderInterface
      */
     protected function createLocalDriver()
     {
-        return new LocalSignatureProvider();
+        return new LocalSignatureProvider;
     }
 
     /**
      * Create an instance of the "docuseal" signature driver.
      *
-     * @return \App\Contracts\Core\SignatureProviderInterface
+     * @return SignatureProviderInterface
      */
     protected function createDocusealDriver()
     {
-        return new DocusealProvider();
+        return new DocusealProvider;
     }
 }

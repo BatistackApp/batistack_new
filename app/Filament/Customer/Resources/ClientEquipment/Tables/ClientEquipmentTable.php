@@ -2,19 +2,14 @@
 
 namespace App\Filament\Customer\Resources\ClientEquipment\Tables;
 
-use Filament\Actions\BulkActionGroup;
-use Filament\Actions\DeleteBulkAction;
-use Filament\Actions\EditAction;
-use Filament\Actions\ViewAction;
-use Filament\Tables\Table;
-
-use Filament\Actions\Action;
-use Filament\Tables\Columns\TextColumn;
-use Filament\Forms\Components\Textarea;
-use Filament\Notifications\Notification;
-use App\Models\Interventions\Intervention;
 use App\Enums\Interventions\InterventionStatus;
 use App\Enums\Interventions\InterventionType;
+use App\Models\Interventions\Intervention;
+use Filament\Actions\Action;
+use Filament\Forms\Components\Textarea;
+use Filament\Notifications\Notification;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Model;
 
 class ClientEquipmentTable
@@ -44,13 +39,14 @@ class ClientEquipmentTable
                     ])
                     ->action(function (array $data, Model $record) {
                         $contact = auth()->user()?->contact;
-                        
+
                         if (! $contact) {
                             Notification::make()
                                 ->title('Erreur')
                                 ->body('Aucun contact associé à votre compte.')
                                 ->danger()
                                 ->send();
+
                             return;
                         }
 
@@ -62,7 +58,7 @@ class ClientEquipmentTable
                             'status' => InterventionStatus::SOUMIS,
                             'description' => $data['description'],
                         ]);
-                        
+
                         Notification::make()
                             ->title('Panne signalée avec succès')
                             ->body('Notre équipe va prendre en charge votre demande très rapidement.')

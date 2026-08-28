@@ -5,7 +5,7 @@ namespace App\Enums\RH;
 use Filament\Support\Contracts\HasColor;
 use Filament\Support\Contracts\HasLabel;
 
-enum TrainingParticipantStatus: string implements HasLabel, HasColor
+enum TrainingParticipantStatus: string implements HasColor, HasLabel
 {
     case INSCRIT = 'inscrit';
     case PRESENT = 'present';

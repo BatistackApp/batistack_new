@@ -3,6 +3,7 @@
 namespace App\Notifications\Articles;
 
 use App\Models\Articles\Stock;
+use Filament\Actions\Action;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use ToneGabes\Filament\Icons\Enums\Phosphor;
@@ -39,7 +40,7 @@ class LowStockNotification extends Notification
 
         if ($this->stock->item->supplier_id) {
             $notification->actions([
-                \Filament\Actions\Action::make('request_quote')
+                Action::make('request_quote')
                     ->label('Demander prix')
                     ->button()
                     ->url(route('articles.request-quote', ['item' => $this->stock->item_id]))

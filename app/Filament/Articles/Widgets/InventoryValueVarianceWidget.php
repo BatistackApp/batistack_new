@@ -4,9 +4,9 @@ namespace App\Filament\Articles\Widgets;
 
 use App\Models\Articles\Stock;
 use App\Models\Articles\StockMouvement;
-use LaBoiteACode\FilamentDashboardWidgets\Widgets\VarianceWidget;
-use LaBoiteACode\FilamentDashboardWidgets\Data\VarianceItem;
 use Illuminate\Support\Facades\Cache;
+use LaBoiteACode\FilamentDashboardWidgets\Data\VarianceItem;
+use LaBoiteACode\FilamentDashboardWidgets\Widgets\VarianceWidget;
 
 class InventoryValueVarianceWidget extends VarianceWidget
 {
@@ -31,9 +31,10 @@ class InventoryValueVarianceWidget extends VarianceWidget
             $lastMonthMovements = StockMouvement::with('stock.item')
                 ->where('created_at', '>=', now()->subDays(30))
                 ->get();
-                
+
             $impactValue = $lastMonthMovements->sum(function ($mouvement) {
                 $price = $mouvement->stock?->item?->purchase_price ?? 0;
+
                 // quantity_delta est positif pour IN et négatif pour OUT
                 return $mouvement->quantity_delta * $price;
             });
@@ -45,8 +46,8 @@ class InventoryValueVarianceWidget extends VarianceWidget
         return [
             VarianceItem::make('Valeur actuelle', $currentValue)
                 ->previous($previousValue)
-                ->formatUsing(fn ($value) => number_format($value, 2, ',', ' ') . ' €')
-                ->changeFormatUsing(fn ($change) => ($change > 0 ? '+' : '') . number_format($change, 2, ',', ' ') . ' €')
+                ->formatUsing(fn ($value) => number_format($value, 2, ',', ' ').' €')
+                ->changeFormatUsing(fn ($change) => ($change > 0 ? '+' : '').number_format($change, 2, ',', ' ').' €')
                 ->icon('heroicon-o-banknotes'),
         ];
     }

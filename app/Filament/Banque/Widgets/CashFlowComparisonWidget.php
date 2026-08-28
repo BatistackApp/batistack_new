@@ -4,8 +4,8 @@ namespace App\Filament\Banque\Widgets;
 
 use App\Models\Banque\BankTransaction;
 use Carbon\Carbon;
-use LaBoiteACode\FilamentDashboardWidgets\Widgets\ComparisonChartWidget;
 use LaBoiteACode\FilamentDashboardWidgets\Data\ChartSeries;
+use LaBoiteACode\FilamentDashboardWidgets\Widgets\ComparisonChartWidget;
 
 class CashFlowComparisonWidget extends ComparisonChartWidget
 {
@@ -24,6 +24,7 @@ class CashFlowComparisonWidget extends ComparisonChartWidget
         for ($i = 5; $i >= 0; $i--) {
             $labels[] = now()->subMonthsNoOverflow($i)->format('m/Y');
         }
+
         return $labels;
     }
 
@@ -40,7 +41,7 @@ class CashFlowComparisonWidget extends ComparisonChartWidget
         // Use standard grouping for portability
         $transactions = BankTransaction::whereBetween('date', [$startDate, $endDate])
             ->get()
-            ->groupBy(function($item) {
+            ->groupBy(function ($item) {
                 return Carbon::parse($item->date)->format('Y-m');
             });
 
@@ -49,10 +50,10 @@ class CashFlowComparisonWidget extends ComparisonChartWidget
 
         foreach ($months as $month) {
             $monthTx = $transactions->get($month, collect());
-            
+
             $monthIncome = $monthTx->where('type.value', 'credit')->sum('amount');
             $monthExpense = $monthTx->where('type.value', 'debit')->sum('amount');
-            
+
             $incomes[] = (float) $monthIncome;
             $expenses[] = (float) abs($monthExpense);
         }
@@ -62,7 +63,7 @@ class CashFlowComparisonWidget extends ComparisonChartWidget
                 ->values($incomes)
                 ->type('bar')
                 ->color('success'),
-                
+
             ChartSeries::make('Sorties (Débits)')
                 ->values($expenses)
                 ->type('bar')

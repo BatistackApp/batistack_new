@@ -3,10 +3,13 @@
 namespace App\Filament\Commerce\Resources\CustomerQuotes\Pages;
 
 use App\Enums\Commerce\QuoteStatus;
+use App\Enums\Core\SignatureType;
 use App\Filament\Commerce\Resources\CustomerQuotes\CustomerQuoteResource;
 use App\Models\Commerce\CustomerQuote;
 use App\Services\Commerce\CommerceDocumentationService;
 use App\Services\Commerce\QuoteService;
+use App\Services\Core\DocumentService;
+use App\Services\Core\SignatureService;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Notifications\Notification;
@@ -45,24 +48,24 @@ class ViewCustomerQuote extends ViewRecord
                     }
 
                     $record->update(['status' => QuoteStatus::SENT]);
-                    
+
                     try {
                         $path = app(CommerceDocumentationService::class)->generateQuotePdf($record);
-                        
+
                         $client = $record->client;
                         $contact = $client?->getPrimaryContact();
                         $email = $contact?->email ?? $client?->email;
                         $name = $contact ? trim("{$contact->first_name} {$contact->last_name}") : ($client?->name ?? 'Client');
-                        
+
                         if ($email) {
-                            app(\App\Services\Core\SignatureService::class)->driver('local')->requestSignature(
+                            app(SignatureService::class)->driver('local')->requestSignature(
                                 model: $record,
-                                type: \App\Enums\Core\SignatureType::AUTOGRAPH,
+                                type: SignatureType::AUTOGRAPH,
                                 email: $email,
                                 name: $name,
                                 documentPath: $path
                             );
-                            
+
                             Notification::make()
                                 ->success()
                                 ->title('Devis envoyé avec demande de signature au client')
@@ -89,17 +92,18 @@ class ViewCustomerQuote extends ViewRecord
                 ->modalWidth(Width::Container)
                 ->media(function (Model $record) {
                     $path = 'commerce/quotes/devis_'.$record->reference.'.pdf';
-                    $disk = \App\Services\Core\DocumentService::getDisk();
+                    $disk = DocumentService::getDisk();
 
                     if (! Storage::disk($disk)->exists('documents/'.$path)) {
                         try {
                             app(CommerceDocumentationService::class)->generateQuotePdf($record);
                         } catch (\Exception $e) {
-                            \Filament\Notifications\Notification::make()
+                            Notification::make()
                                 ->danger()
                                 ->title('Erreur de génération PDF')
                                 ->body($e->getMessage())
                                 ->send();
+
                             return '';
                         }
                     }

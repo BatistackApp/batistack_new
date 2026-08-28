@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace App\Policies\Interventions;
 
-use Illuminate\Foundation\Auth\User as AuthUser;
 use App\Models\Interventions\ClientEquipment;
 use Illuminate\Auth\Access\HandlesAuthorization;
+use Illuminate\Foundation\Auth\User as AuthUser;
 
 class ClientEquipmentPolicy
 {
     use HandlesAuthorization;
-    
+
     public function viewAny(AuthUser $authUser): bool
     {
         return $authUser->can('ViewAny:ClientEquipment');
@@ -71,5 +71,4 @@ class ClientEquipmentPolicy
     {
         return $authUser->can('Reorder:ClientEquipment');
     }
-
 }

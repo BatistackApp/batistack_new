@@ -10,7 +10,7 @@ enum PayrollExportStatus: string
 
     public function getLabel(): string
     {
-        return match($this) {
+        return match ($this) {
             self::DRAFT => 'Brouillon',
             self::VALIDATED => 'Validé',
             self::EXPORTED => 'Exporté',
@@ -19,7 +19,7 @@ enum PayrollExportStatus: string
 
     public function getColor(): string
     {
-        return match($this) {
+        return match ($this) {
             self::DRAFT => 'warning',
             self::VALIDATED => 'success',
             self::EXPORTED => 'gray',

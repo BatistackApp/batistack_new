@@ -9,7 +9,8 @@ use LaBoiteACode\FilamentDashboardWidgets\Widgets\GoalProgressWidget;
 class LegalComplianceGoalWidget extends GoalProgressWidget
 {
     protected static ?int $sort = 2;
-    protected int | string | array $columnSpan = 1;
+
+    protected int|string|array $columnSpan = 1;
 
     public function getHeading(): string
     {
@@ -23,7 +24,7 @@ class LegalComplianceGoalWidget extends GoalProgressWidget
         $compliantCount = 0;
 
         foreach ($activeEmployees as $employee) {
-            if (!$employee->needsMedicalVisit()) {
+            if (! $employee->needsMedicalVisit()) {
                 $compliantCount++;
             }
         }

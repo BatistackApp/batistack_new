@@ -3,6 +3,7 @@
 namespace App\Services\Flottes;
 
 use App\Enums\RH\TimeEntryStatus;
+use App\Models\Core\Setting;
 use App\Models\Flottes\FuelTransaction;
 use App\Models\Flottes\Vehicle;
 use App\Models\Flottes\VehicleAssignment;
@@ -103,11 +104,11 @@ class VehicleFuelService
                 $distance = $odometer - $vehicle->odometer;
                 if ($distance > 0) {
                     $currentConsumption = ($liters / $distance) * 100;
-                    $threshold = (float) \App\Models\Core\Setting::getValue('fuel_anomaly_threshold', 20);
-                    
+                    $threshold = (float) Setting::getValue('fuel_anomaly_threshold', 20);
+
                     if ($this->detectConsumptionAnomaly($vehicle, $currentConsumption, $threshold)) {
                         $isSuspicious = true;
-                        $suspicionReason = "Surconsommation anormale détectée (" . round($currentConsumption, 1) . "L/100km). Siphonnage potentiel.";
+                        $suspicionReason = 'Surconsommation anormale détectée ('.round($currentConsumption, 1).'L/100km). Siphonnage potentiel.';
                     }
                 }
             }
@@ -147,6 +148,7 @@ class VehicleFuelService
     private function getEmissionFactor(string $fuelType): float
     {
         $type = mb_strtolower(trim($fuelType));
+
         return match ($type) {
             'diesel', 'gazole', 'b7', 'b10' => 2.64,
             'essence', 'sp95', 'sp98', 'e10', 'hybride' => 2.28,

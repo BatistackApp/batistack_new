@@ -86,7 +86,7 @@ class CustomerOrderForm
                                     ->label('Définir')
                                     ->action(function (Get $get, Set $set) {
                                         $address = ThirdParty::find($get('client_id'))->addresses()->where('type', AddressType::DELIVERY)->first();
-                                        if (!empty($address)) {
+                                        if (! empty($address)) {
                                             $set('delivery_address', $address->full_address);
                                         } else {
                                             Notification::make()->danger()->title('Aucune adresse de livraison définie')->send();

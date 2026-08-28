@@ -2,7 +2,9 @@
 
 namespace App\Models\Immobilisation;
 
+use App\Models\Chantiers\Chantier;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Depreciation extends Model
 {
@@ -29,13 +31,13 @@ class Depreciation extends Model
         ];
     }
 
-    public function fixedAsset(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function fixedAsset(): BelongsTo
     {
         return $this->belongsTo(FixedAsset::class);
     }
 
-    public function chantier(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function chantier(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\Chantiers\Chantier::class);
+        return $this->belongsTo(Chantier::class);
     }
 }

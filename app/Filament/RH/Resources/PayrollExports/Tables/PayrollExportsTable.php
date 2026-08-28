@@ -2,10 +2,16 @@
 
 namespace App\Filament\RH\Resources\PayrollExports\Tables;
 
+use App\Enums\RH\PayrollExportStatus;
+use App\Models\RH\PayrollExport;
+use App\Services\RH\PayrollGenerationService;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\ViewAction;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
+use Filament\Notifications\Notification;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
@@ -45,14 +51,14 @@ class PayrollExportsTable
                     ->label('Export CSV')
                     ->icon('heroicon-o-document-arrow-down')
                     ->color('success')
-                    ->action(function (\App\Models\RH\PayrollExport $record) {
+                    ->action(function (PayrollExport $record) {
                         $csv = "Employé,Heures Base,Heures Réelles,Heures Sup,Jours Abs,Indemnités Déplacement,Total Notes de Frais,Salaire Brut Estimé\n";
                         foreach ($record->variables as $variable) {
-                            $name = $variable->employee->first_name . ' ' . $variable->employee->last_name;
+                            $name = $variable->employee->first_name.' '.$variable->employee->last_name;
                             $csv .= "{$name},{$variable->base_hours},{$variable->worked_hours},{$variable->overtime_hours},{$variable->absence_days},{$variable->travel_allowances},{$variable->expense_reports_total},{$variable->estimated_gross_salary}\n";
                         }
 
-                        $record->update(['status' => \App\Enums\RH\PayrollExportStatus::EXPORTED]);
+                        $record->update(['status' => PayrollExportStatus::EXPORTED]);
 
                         return response()->streamDownload(function () use ($csv) {
                             echo $csv;
@@ -64,7 +70,7 @@ class PayrollExportsTable
                     ->label('Générer variables du mois')
                     ->icon('heroicon-o-calculator')
                     ->schema([
-                        \Filament\Forms\Components\Select::make('month')
+                        Select::make('month')
                             ->label('Mois')
                             ->options([
                                 1 => 'Janvier', 2 => 'Février', 3 => 'Mars', 4 => 'Avril',
@@ -73,17 +79,17 @@ class PayrollExportsTable
                             ])
                             ->default(now()->month)
                             ->required(),
-                        \Filament\Forms\Components\TextInput::make('year')
+                        TextInput::make('year')
                             ->label('Année')
                             ->numeric()
                             ->default(now()->year)
                             ->required(),
                     ])
                     ->action(function (array $data) {
-                        $service = new \App\Services\RH\PayrollGenerationService();
+                        $service = new PayrollGenerationService;
                         $service->generate($data['month'], $data['year']);
-                        \Filament\Notifications\Notification::make()->success()->title('Variables générées')->send();
-                    })
+                        Notification::make()->success()->title('Variables générées')->send();
+                    }),
             ])
             ->groupedBulkActions([
                 BulkActionGroup::make([

@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Builder;
 class PendingTransactionsTable extends TableWidget
 {
     protected static ?int $sort = 7;
+
     protected int|string|array $columnSpan = 'full';
 
     protected static ?string $heading = 'Transactions en attente de lettrage';

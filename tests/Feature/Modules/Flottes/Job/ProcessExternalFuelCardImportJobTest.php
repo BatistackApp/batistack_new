@@ -19,7 +19,7 @@ describe('ProcessExternalFuelCardImportJob', function () {
         Notification::fake();
 
         $admin = User::factory()->create(['is_admin' => true]);
-        
+
         // Format of license plate is cleaned
         $vehicleNormal = Vehicle::factory()->create(['license_plate' => 'AB123CD']);
         $vehicleAnomaly = Vehicle::factory()->create(['license_plate' => 'EF456GH']);
@@ -46,15 +46,15 @@ describe('ProcessExternalFuelCardImportJob', function () {
                 'cost_ht' => 75,
                 'odometer' => 100000,
                 'date' => now()->toDateTimeString(),
-            ]
+            ],
         ];
 
         $serviceMock = Mockery::mock(VehicleFuelService::class);
-        
+
         $serviceMock->shouldReceive('processAndAuditFuelTransaction')->times(2);
 
         $serviceMock->shouldReceive('logFuelConsumption')
-            ->with(Mockery::on(fn($v) => $v->id === $vehicleNormal->id), 50.0, 75.0, 100000.0, Mockery::any())
+            ->with(Mockery::on(fn ($v) => $v->id === $vehicleNormal->id), 50.0, 75.0, 100000.0, Mockery::any())
             ->andReturn([
                 'average_consumption_100km' => 6.5,
                 'distance_travelled' => 500,
@@ -62,7 +62,7 @@ describe('ProcessExternalFuelCardImportJob', function () {
             ]);
 
         $serviceMock->shouldReceive('logFuelConsumption')
-            ->with(Mockery::on(fn($v) => $v->id === $vehicleAnomaly->id), 100.0, 200.0, 103000.0, Mockery::any())
+            ->with(Mockery::on(fn ($v) => $v->id === $vehicleAnomaly->id), 100.0, 200.0, 103000.0, Mockery::any())
             ->andReturn([
                 'average_consumption_100km' => 20.0, // > 15
                 'distance_travelled' => 3000, // > 2000
@@ -70,7 +70,7 @@ describe('ProcessExternalFuelCardImportJob', function () {
             ]);
 
         Log::shouldReceive('warning')
-            ->with("Import carburant : Véhicule non trouvé UNKNOWN")
+            ->with('Import carburant : Véhicule non trouvé UNKNOWN')
             ->once();
 
         Log::shouldReceive('warning')
@@ -78,7 +78,7 @@ describe('ProcessExternalFuelCardImportJob', function () {
             ->once();
 
         Log::shouldReceive('info')
-            ->with("Import carburant : 2 transactions traitées, 1 erreurs")
+            ->with('Import carburant : 2 transactions traitées, 1 erreurs')
             ->once();
 
         $job = new ProcessExternalFuelCardImportJob($transactions);
@@ -88,8 +88,8 @@ describe('ProcessExternalFuelCardImportJob', function () {
             [$admin],
             FuelAnomalyAlertNotification::class,
             function ($notification) use ($vehicleAnomaly) {
-                return (fn() => $this->vehicle->id)->call($notification) === $vehicleAnomaly->id 
-                    && str_contains((fn() => $this->anomalyMessage)->call($notification), 'Consommation excessive');
+                return (fn () => $this->vehicle->id)->call($notification) === $vehicleAnomaly->id
+                    && str_contains((fn () => $this->anomalyMessage)->call($notification), 'Consommation excessive');
             }
         );
 
@@ -97,15 +97,15 @@ describe('ProcessExternalFuelCardImportJob', function () {
             [$admin],
             FuelAnomalyAlertNotification::class,
             function ($notification) use ($vehicleAnomaly) {
-                return (fn() => $this->vehicle->id)->call($notification) === $vehicleAnomaly->id 
-                    && str_contains((fn() => $this->anomalyMessage)->call($notification), 'Écart odomètre suspect');
+                return (fn () => $this->vehicle->id)->call($notification) === $vehicleAnomaly->id
+                    && str_contains((fn () => $this->anomalyMessage)->call($notification), 'Écart odomètre suspect');
             }
         );
     });
 
     it('handles job failure', function () {
         Log::shouldReceive('error')
-            ->with("Job import carburant échoué : Critical failure")
+            ->with('Job import carburant échoué : Critical failure')
             ->once();
 
         $job = new ProcessExternalFuelCardImportJob([]);

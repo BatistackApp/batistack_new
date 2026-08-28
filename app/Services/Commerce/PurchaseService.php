@@ -76,6 +76,7 @@ class PurchaseService
 
     /**
      * Enregistre un Bon de Réception (BR) à la livraison des marchandises.
+     *
      * @throws \Throwable
      */
     public function createReceiptNote(PurchaseOrder $order, ?int $warehouseId, string $deliveryRef, array $itemsData): ReceiptNote
@@ -104,6 +105,7 @@ class PurchaseService
 
     /**
      * Génère une Facture d'Achat Fournisseur à rapprocher.
+     *
      * @throws \Throwable
      */
     public function createSupplierInvoice(PurchaseOrder $order, string $invoiceRef, array $itemsData): SupplierInvoice

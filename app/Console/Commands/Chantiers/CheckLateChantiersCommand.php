@@ -30,6 +30,7 @@ class CheckLateChantiersCommand extends Command
         }
 
         $this->info('Fin du contrôle des délais.');
+
         return Command::SUCCESS;
     }
 }

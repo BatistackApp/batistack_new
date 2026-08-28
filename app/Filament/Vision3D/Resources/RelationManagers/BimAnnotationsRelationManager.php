@@ -2,13 +2,23 @@
 
 namespace App\Filament\Vision3D\Resources\RelationManagers;
 
-use Filament\Forms;
+use App\Models\Chantiers\ChantierTask;
+use App\Models\Interventions\Intervention;
+use App\Models\Vision3D\BimAnnotation;
+use Filament\Actions\Action;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
+use Filament\Forms\Components\MorphToSelect;
+use Filament\Forms\Components\MorphToSelect\Type;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Schemas\Components\Textarea;
 use Filament\Schemas\Components\TextInput;
 use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Livewire\Component;
 
 class BimAnnotationsRelationManager extends RelationManager
 {
@@ -30,13 +40,13 @@ class BimAnnotationsRelationManager extends RelationManager
                     ->label('Description')
                     ->maxLength(65535)
                     ->columnSpanFull(),
-                \Filament\Forms\Components\MorphToSelect::make('target')
+                MorphToSelect::make('target')
                     ->label('Lier à un élément')
                     ->types([
-                        \Filament\Forms\Components\MorphToSelect\Type::make(\App\Models\Chantiers\ChantierTask::class)
+                        Type::make(ChantierTask::class)
                             ->label('Tâche de chantier')
                             ->titleAttribute('title'),
-                        \Filament\Forms\Components\MorphToSelect\Type::make(\App\Models\Interventions\Intervention::class)
+                        Type::make(Intervention::class)
                             ->label('Intervention')
                             ->titleAttribute('title'),
                     ])
@@ -77,22 +87,22 @@ class BimAnnotationsRelationManager extends RelationManager
                 // Normalement les annotations sont créées via la vue 3D
             ])
             ->actions([
-                \Filament\Actions\Action::make('focus')
+                Action::make('focus')
                     ->label('Voir dans la maquette')
                     ->icon('heroicon-o-eye')
-                    ->action(function (\App\Models\Vision3D\BimAnnotation $record, \Livewire\Component $livewire) {
-                        $livewire->dispatch('focus-annotation', 
-                            x: $record->position_x, 
-                            y: $record->position_y, 
+                    ->action(function (BimAnnotation $record, Component $livewire) {
+                        $livewire->dispatch('focus-annotation',
+                            x: $record->position_x,
+                            y: $record->position_y,
                             z: $record->position_z
                         );
                     }),
-                \Filament\Actions\EditAction::make(),
-                \Filament\Actions\DeleteAction::make(),
+                EditAction::make(),
+                DeleteAction::make(),
             ])
             ->bulkActions([
-                \Filament\Actions\BulkActionGroup::make([
-                    \Filament\Actions\DeleteBulkAction::make(),
+                BulkActionGroup::make([
+                    DeleteBulkAction::make(),
                 ]),
             ]);
     }

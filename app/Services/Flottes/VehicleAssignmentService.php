@@ -25,6 +25,7 @@ class VehicleAssignmentService
 
     /**
      * Crée une nouvelle affectation avec contrôles stricts.
+     *
      * @throws Exception|\Throwable
      */
     public function createAssignment(
@@ -67,6 +68,7 @@ class VehicleAssignmentService
 
     /**
      * Clôture une affectation.
+     *
      * @throws Exception
      */
     public function endAssignment(
@@ -100,6 +102,7 @@ class VehicleAssignmentService
 
     /**
      * Valide l'aptitude du conducteur.
+     *
      * @throws Exception
      */
     protected function validateDriverCompliance(Employee $employee, Vehicle $vehicle): void
@@ -138,6 +141,7 @@ class VehicleAssignmentService
 
     /**
      * Valide la conformité ZFE.
+     *
      * @throws Exception
      */
     protected function validateZfeCompliance(Vehicle $vehicle, ?Chantier $chantier): void

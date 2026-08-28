@@ -4,7 +4,6 @@ namespace App\Filament\RH\Widgets;
 
 use App\Models\RH\Qualification;
 use Filament\Actions\Action;
-use Filament\Actions\BulkActionGroup;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget;
@@ -13,7 +12,9 @@ use ToneGabes\Filament\Icons\Enums\Phosphor;
 class ExpiringQualificationsWidget extends TableWidget
 {
     protected static ?int $sort = 8;
-    protected int | string | array $columnSpan = 'full';
+
+    protected int|string|array $columnSpan = 'full';
+
     protected static ?string $heading = 'Alertes Sécurité & Habilitations (Échéance < 60j)';
 
     public function table(Table $table): Table

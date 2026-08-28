@@ -5,7 +5,6 @@ namespace App\Notifications\Chantiers;
 use App\Models\Chantiers\Chantier;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
 class ChantierBudgetExceededNotification extends Notification implements ShouldQueue
@@ -38,7 +37,7 @@ class ChantierBudgetExceededNotification extends Notification implements ShouldQ
             'chantier_id' => $this->chantier->id,
             'chantier_name' => $this->chantier->name,
             'margin_amount' => $this->marginAmount,
-            'message' => "Le chantier {$this->chantier->name} est passé en marge négative (" . number_format($this->marginAmount, 2, ',', ' ') . " €).",
+            'message' => "Le chantier {$this->chantier->name} est passé en marge négative (".number_format($this->marginAmount, 2, ',', ' ').' €).',
         ];
     }
 }

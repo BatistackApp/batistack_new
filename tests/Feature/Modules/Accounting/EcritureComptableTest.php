@@ -9,7 +9,7 @@ use Database\Seeders\Accounting\PcgSeeder;
 
 beforeEach(function () {
     $this->seed(PcgSeeder::class);
-    $this->service = new EcritureComptableService();
+    $this->service = new EcritureComptableService;
 });
 
 test('EcritureComptable can be created via factory', function () {
@@ -21,7 +21,7 @@ test('EcritureComptable can be created via factory', function () {
 });
 
 test('EcritureComptable debit/credit validation prevents both non-zero', function () {
-    $this->expectException(\InvalidArgumentException::class);
+    $this->expectException(InvalidArgumentException::class);
 
     EcritureComptable::factory()->create([
         'debit' => 100,
@@ -30,7 +30,7 @@ test('EcritureComptable debit/credit validation prevents both non-zero', functio
 });
 
 test('EcritureComptable debit/credit validation prevents both zero', function () {
-    $this->expectException(\InvalidArgumentException::class);
+    $this->expectException(InvalidArgumentException::class);
 
     EcritureComptable::factory()->create([
         'debit' => 0,
@@ -133,7 +133,7 @@ test('EcritureComptableService lettrer updates status', function () {
 });
 
 test('EcritureComptableService lettrer throws on unbalanced entries', function () {
-    $this->expectException(\InvalidArgumentException::class);
+    $this->expectException(InvalidArgumentException::class);
 
     $ecritures = collect([
         EcritureComptable::factory()->debit(100)->create(),

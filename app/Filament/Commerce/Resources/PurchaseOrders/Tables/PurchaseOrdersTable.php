@@ -2,9 +2,15 @@
 
 namespace App\Filament\Commerce\Resources\PurchaseOrders\Tables;
 
+use App\Enums\Commerce\DeliveryStatus;
+use App\Models\Commerce\PurchaseOrder;
+use App\Models\Commerce\ReceiptNote;
+use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Notifications\Notification;
+use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
 class PurchaseOrdersTable
@@ -13,31 +19,31 @@ class PurchaseOrdersTable
     {
         return $table
             ->columns([
-                \Filament\Tables\Columns\TextColumn::make('reference')->label('Référence')
+                TextColumn::make('reference')->label('Référence')
                     ->label('Référence')
                     ->searchable()
                     ->sortable(),
-                \Filament\Tables\Columns\TextColumn::make('supplier.name')
+                TextColumn::make('supplier.name')
                     ->label('Fournisseur')
                     ->searchable()
                     ->sortable(),
-                \Filament\Tables\Columns\TextColumn::make('chantier.reference')
+                TextColumn::make('chantier.reference')
                     ->label('Chantier')
                     ->searchable()
                     ->sortable(),
-                \Filament\Tables\Columns\TextColumn::make('status')->label('Statut')
+                TextColumn::make('status')->label('Statut')
                     ->label('Statut')
                     ->badge()
                     ->sortable(),
-                \Filament\Tables\Columns\TextColumn::make('total_ht')
+                TextColumn::make('total_ht')
                     ->label('Total HT')
                     ->numeric()
                     ->sortable(),
-                \Filament\Tables\Columns\TextColumn::make('ordered_at')
+                TextColumn::make('ordered_at')
                     ->label('Date de commande')
                     ->date('d/m/Y')
                     ->sortable(),
-                \Filament\Tables\Columns\TextColumn::make('expected_delivery_date')
+                TextColumn::make('expected_delivery_date')
                     ->label('Livraison prévue')
                     ->date('d/m/Y')
                     ->sortable(),
@@ -46,17 +52,17 @@ class PurchaseOrdersTable
                 //
             ])
             ->recordActions([
-                \Filament\Actions\EditAction::make(),
-                \Filament\Actions\Action::make('convert_to_receipt')
+                EditAction::make(),
+                Action::make('convert_to_receipt')
                     ->label('Réceptionner')
                     ->icon('heroicon-o-arrow-right-circle')
                     ->color('success')
                     ->requiresConfirmation()
-                    ->action(function (\App\Models\Commerce\PurchaseOrder $record) {
-                        $receipt = \App\Models\Commerce\ReceiptNote::create([
+                    ->action(function (PurchaseOrder $record) {
+                        $receipt = ReceiptNote::create([
                             'purchase_order_id' => $record->id,
-                            'reference' => 'BR-' . uniqid(),
-                            'status' => \App\Enums\Commerce\DeliveryStatus::DRAFT,
+                            'reference' => 'BR-'.uniqid(),
+                            'status' => DeliveryStatus::DRAFT,
                             'received_at' => now(),
                         ]);
                         foreach ($record->items as $item) {
@@ -65,7 +71,7 @@ class PurchaseOrdersTable
                                 'quantity_received' => $item->quantity,
                             ]);
                         }
-                        \Filament\Notifications\Notification::make()
+                        Notification::make()
                             ->title('Bon de réception généré')
                             ->success()
                             ->send();

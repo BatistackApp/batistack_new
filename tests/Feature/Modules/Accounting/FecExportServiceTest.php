@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\Accounting\JournalType;
 use App\Models\Accounting\CompteComptable;
 use App\Models\Accounting\EcritureComptable;
 use App\Services\Accounting\FecExportService;
@@ -7,7 +8,7 @@ use Database\Seeders\Accounting\PcgSeeder;
 
 beforeEach(function () {
     $this->seed(PcgSeeder::class);
-    $this->service = new FecExportService();
+    $this->service = new FecExportService;
 });
 
 test('FecExportService getFecData returns header and rows', function () {
@@ -72,9 +73,9 @@ test('FecExportService exportFec handles multiple journal types', function () {
     $compte6 = CompteComptable::where('classe', 6)->first();
     $compte5 = CompteComptable::where('classe', 5)->first();
 
-    EcritureComptable::factory()->ofJournal(\App\Enums\Accounting\JournalType::ACHATS)
+    EcritureComptable::factory()->ofJournal(JournalType::ACHATS)
         ->debit(100)->create(['compte_numero' => $compte6->numero, 'date_ecriture' => '2025-01-10']);
-    EcritureComptable::factory()->ofJournal(\App\Enums\Accounting\JournalType::BANQUE)
+    EcritureComptable::factory()->ofJournal(JournalType::BANQUE)
         ->credit(100)->create(['compte_numero' => $compte5->numero, 'date_ecriture' => '2025-01-12']);
 
     $data = $this->service->getFecData(2025);

@@ -2,7 +2,11 @@
 
 namespace App\Observers\Interventions;
 
+use App\Enums\Interventions\InterventionStatus;
+use App\Models\Core\Company;
 use App\Models\Interventions\Intervention;
+use App\Notifications\Customer\InterventionPlanifieeNotification;
+use App\Notifications\Customer\InterventionTermineeNotification;
 
 class InterventionObserver
 {
@@ -13,7 +17,7 @@ class InterventionObserver
     {
         if (empty($intervention->company_id)) {
             // Assign a default company if none is provided
-            $defaultCompany = \App\Models\Core\Company::first();
+            $defaultCompany = Company::first();
             $intervention->company_id = $defaultCompany ? $defaultCompany->id : 1;
         }
 
@@ -35,7 +39,12 @@ class InterventionObserver
      */
     public function created(Intervention $intervention): void
     {
-        //
+        if ($intervention->status === InterventionStatus::PLANIFIEE && $intervention->thirdParty) {
+            $contact = $intervention->thirdParty->primaryContact;
+            if ($contact) {
+                $contact->notify(new InterventionPlanifieeNotification($intervention));
+            }
+        }
     }
 
     /**
@@ -43,9 +52,20 @@ class InterventionObserver
      */
     public function updated(Intervention $intervention): void
     {
-        // Si l'intervention passe en terminée et qu'elle est liée à un chantier, on pourrait imputer le budget
-        // Toutefois, le budget est souvent imputé via les StockMovement et les Payrolls.
-        // Ici, on pourrait ajouter une logique si nécessaire.
+        if (! $intervention->isDirty('status') || ! $intervention->thirdParty) {
+            return;
+        }
+
+        $contact = $intervention->thirdParty->primaryContact;
+        if (! $contact) {
+            return;
+        }
+
+        match ($intervention->status) {
+            InterventionStatus::PLANIFIEE => $contact->notify(new InterventionPlanifieeNotification($intervention)),
+            InterventionStatus::TERMINEE => $contact->notify(new InterventionTermineeNotification($intervention)),
+            default => null,
+        };
     }
 
     /**

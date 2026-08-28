@@ -4,11 +4,9 @@ namespace App\Filament\Articles\Widgets;
 
 use App\Models\Articles\Stock;
 use Filament\Actions\Action;
-use Filament\Actions\BulkActionGroup;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget;
-use Illuminate\Database\Eloquent\Builder;
 use ToneGabes\Filament\Icons\Enums\Phosphor;
 
 class LowStockTableWidget extends TableWidget

@@ -12,7 +12,7 @@ enum ExpenseReportStatus: string
 
     public function getLabel(): string
     {
-        return match($this) {
+        return match ($this) {
             self::DRAFT => 'Brouillon',
             self::SUBMITTED => 'Soumise',
             self::VALIDATED => 'Validée',
@@ -23,7 +23,7 @@ enum ExpenseReportStatus: string
 
     public function getColor(): string
     {
-        return match($this) {
+        return match ($this) {
             self::DRAFT => 'gray',
             self::SUBMITTED => 'warning',
             self::VALIDATED => 'success',

@@ -3,15 +3,15 @@
 use App\Enums\Commerce\InvoiceStatus;
 use App\Models\Commerce\CustomerInvoice;
 use App\Models\Commerce\Payment;
-use App\Models\Commerce\PaymentAllocation;
 use App\Models\Core\Company;
 use App\Models\Tiers\ThirdParty;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\URL;
 
 beforeEach(function () {
     Company::factory()->create();
     $this->client = ThirdParty::factory()->create(['email' => 'client@test.com']);
-    
+
     Config::set('services.stripe.secret', 'sk_test_123');
     Config::set('services.stripe.webhook_secret', 'whsec_123');
 });
@@ -22,7 +22,7 @@ it('rejects checkout for non-validated invoices', function () {
         'status' => InvoiceStatus::DRAFT,
     ]);
 
-    $response = $this->get(\Illuminate\Support\Facades\URL::signedRoute('pay.invoice', ['invoice' => $invoice->id]));
+    $response = $this->get(URL::signedRoute('pay.invoice', ['invoice' => $invoice->id]));
     $response->assertStatus(403);
 });
 
@@ -49,13 +49,13 @@ it('processes stripe webhook and creates payment allocation', function () {
                 'metadata' => [
                     'invoice_id' => (string) $invoice->id,
                 ],
-            ]
-        ]
+            ],
+        ],
     ]);
 
     // Construct valid signature
     $timestamp = time();
-    $signedPayload = $timestamp . '.' . $payload;
+    $signedPayload = $timestamp.'.'.$payload;
     $signature = hash_hmac('sha256', $signedPayload, 'whsec_123');
     $header = "t={$timestamp},v1={$signature}";
 
@@ -98,12 +98,12 @@ it('ignores checkout.session.completed when payment_status is unpaid', function 
                 'payment_status' => 'unpaid',
                 'payment_intent' => 'pi_124',
                 'metadata' => ['invoice_id' => (string) $invoice->id],
-            ]
-        ]
+            ],
+        ],
     ]);
 
     $timestamp = time();
-    $signedPayload = $timestamp . '.' . $payload;
+    $signedPayload = $timestamp.'.'.$payload;
     $signature = hash_hmac('sha256', $signedPayload, 'whsec_123');
     $header = "t={$timestamp},v1={$signature}";
 
@@ -132,12 +132,12 @@ it('processes async_payment_succeeded and creates payment', function () {
                 'payment_status' => 'paid',
                 'payment_intent' => 'pi_125',
                 'metadata' => ['invoice_id' => (string) $invoice->id],
-            ]
-        ]
+            ],
+        ],
     ]);
 
     $timestamp = time();
-    $signedPayload = $timestamp . '.' . $payload;
+    $signedPayload = $timestamp.'.'.$payload;
     $signature = hash_hmac('sha256', $signedPayload, 'whsec_123');
     $header = "t={$timestamp},v1={$signature}";
 

@@ -2,9 +2,16 @@
 
 namespace App\Services\Articles;
 
+use App\Enums\Articles\StockMouvementSource;
+use App\Enums\Articles\StockMouvementType;
+use App\Exceptions\Articles\ArticlesModuleException;
 use App\Models\Articles\Item;
 use App\Models\Articles\Stock;
+use App\Models\Articles\StockMouvement;
 use App\Models\Articles\Warehouse;
+use App\Models\Core\Company;
+use App\Services\Core\DocumentService;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Throwable;
 
@@ -26,11 +33,11 @@ class InventoryService
                 ->first();
 
             if ($foundQuantity < 0) {
-                throw new \App\Exceptions\Articles\ArticlesModuleException("La quantité trouvée ne peut pas être négative.", 400);
+                throw new ArticlesModuleException('La quantité trouvée ne peut pas être négative.', 400);
             }
 
             if ($stock && $foundQuantity < $stock->reserved_quantity) {
-                throw new \App\Exceptions\Articles\ArticlesModuleException(
+                throw new ArticlesModuleException(
                     "La quantité trouvée ({$foundQuantity}) ne peut pas être inférieure à la quantité réservée ({$stock->reserved_quantity}).",
                     400
                 );
@@ -44,11 +51,11 @@ class InventoryService
             }
 
             // Mise à jour du stock
-            if (!$stock) {
+            if (! $stock) {
                 $stock = Stock::create([
                     'item_id' => $item->id,
                     'warehouse_id' => $warehouse->id,
-                    'quantity' => $foundQuantity
+                    'quantity' => $foundQuantity,
                 ]);
             } else {
                 $stock->quantity = $foundQuantity;
@@ -56,15 +63,15 @@ class InventoryService
             }
 
             // Création du mouvement de stock
-            \App\Models\Articles\StockMouvement::create([
+            StockMouvement::create([
                 'stock_id' => $stock->id,
                 'user_id' => auth()->id() ?? 1,
-                'type' => $adjustment > 0 ? \App\Enums\Articles\StockMouvementType::IN : \App\Enums\Articles\StockMouvementType::OUT,
+                'type' => $adjustment > 0 ? StockMouvementType::IN : StockMouvementType::OUT,
                 'quantity_before' => $theoreticalQuantity,
                 'quantity_delta' => $adjustment,
                 'quantity_after' => $foundQuantity,
                 'description' => $reason,
-                'reference_type' => \App\Enums\Articles\StockMouvementSource::INVENTORY,
+                'reference_type' => StockMouvementSource::INVENTORY,
                 'reference_id' => null,
             ]);
         });
@@ -103,25 +110,25 @@ class InventoryService
     public function generateValuationPdf(): string
     {
         $stocks = Stock::with(['item', 'warehouse'])->where('quantity', '>', 0)->get();
-        
+
         $totalValue = $stocks->sum(function ($stock) {
             return $stock->quantity * ($stock->item->purchase_price ?? 0);
         });
 
-        $documentService = app(\App\Services\Core\DocumentService::class);
+        $documentService = app(DocumentService::class);
 
         $data = [
-            'company' => \App\Models\Core\Company::first(),
+            'company' => Company::first(),
             'stocks' => $stocks,
             'totalValue' => $totalValue,
             'title' => 'RAPPORT DE VALORISATION D\'INVENTAIRE',
-            'generated_at' => \Carbon\Carbon::now()->format('d/m/Y H:i'),
+            'generated_at' => Carbon::now()->format('d/m/Y H:i'),
         ];
 
         return $documentService->generate(
             'pdf.articles.inventory_valuation',
             $data,
-            'valorisation_inventaire_' . now()->format('YmdHis'),
+            'valorisation_inventaire_'.now()->format('YmdHis'),
             'articles/inventory'
         );
     }
@@ -132,6 +139,7 @@ class InventoryService
             return '';
         }
         $value = str_replace('"', '""', $value);
-        return '"' . $value . '"';
+
+        return '"'.$value.'"';
     }
 }

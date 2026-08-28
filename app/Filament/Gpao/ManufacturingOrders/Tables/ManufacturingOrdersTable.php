@@ -5,6 +5,7 @@ namespace App\Filament\Gpao\ManufacturingOrders\Tables;
 use App\Enums\Gpao\ManufacturingStatus;
 use App\Jobs\Gpao\GeneratePurchaseOrdersForShortagesJob;
 use App\Models\Gpao\ManufacturingOrder;
+use App\Services\Core\DocumentService;
 use App\Services\Gpao\GpaoDocumentService;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
@@ -132,7 +133,7 @@ class ManufacturingOrdersTable
 
                         // Generate on the fly
                         $pdfPath = (new GpaoDocumentService)->generateManufacturingOrderPdf($record);
-                        $disk = \App\Services\Core\DocumentService::getDisk();
+                        $disk = DocumentService::getDisk();
                         $media = $record->addMediaFromDisk($pdfPath, $disk)->toMediaCollection('pdf_documents');
 
                         return response()->download($media->getPath(), $media->file_name);

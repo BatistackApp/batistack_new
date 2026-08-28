@@ -6,8 +6,8 @@ use App\Models\Vision3D\BimModel;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Storage;
-use Spatie\Browsershot\Browsershot;
 use Illuminate\Support\Str;
+use Spatie\Browsershot\Browsershot;
 
 class GenerateBimThumbnailJob implements ShouldQueue
 {
@@ -32,7 +32,7 @@ class GenerateBimThumbnailJob implements ShouldQueue
         }
 
         $url = route('bim-viewer.headless', ['id' => $model->id]);
-        $filename = 'bim-thumbnails/' . $model->id . '_' . Str::random(8) . '.png';
+        $filename = 'bim-thumbnails/'.$model->id.'_'.Str::random(8).'.png';
 
         if (! Storage::disk('public')->exists('bim-thumbnails')) {
             Storage::disk('public')->makeDirectory('bim-thumbnails');
@@ -49,10 +49,15 @@ class GenerateBimThumbnailJob implements ShouldQueue
 
     protected function renderScreenshot(string $url, string $fullPath): void
     {
-        Browsershot::url($url)
+        $browsershot = Browsershot::url($url)
             ->waitUntilNetworkIdle()
             ->setDelay(8000)
-            ->windowSize(800, 600)
-            ->save($fullPath);
+            ->windowSize(800, 600);
+
+        if (env('CI')) {
+            $browsershot->addChromiumArguments(['--no-sandbox']);
+        }
+
+        $browsershot->save($fullPath);
     }
 }

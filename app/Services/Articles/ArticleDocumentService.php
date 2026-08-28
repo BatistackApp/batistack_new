@@ -21,19 +21,19 @@ class ArticleDocumentService extends DocumentService
     {
         // Options pour chillerlan/php-qrcode
         $options = new QROptions([
-            'version'      => 5,
-            'outputType'   => QRCode::OUTPUT_IMAGE_PNG,
-            'eccLevel'     => QRCode::ECC_L,
-            'scale'        => 3,
-            'imageBase64'  => true,
+            'version' => 5,
+            'outputType' => QRCode::OUTPUT_IMAGE_PNG,
+            'eccLevel' => QRCode::ECC_L,
+            'scale' => 3,
+            'imageBase64' => true,
         ]);
 
         $labels = [];
         foreach ($items as $item) {
             // Le QR Code pointe vers la référence de l'article ou le code-barres s'il existe
-            $qrData = $item->barcode ?: ($item->reference ?? 'ID:' . $item->id);
+            $qrData = $item->barcode ?: ($item->reference ?? 'ID:'.$item->id);
             $qrCodeSvg = (new QRCode($options))->render($qrData);
-            
+
             for ($i = 0; $i < $copies; $i++) {
                 $labels[] = [
                     'item' => $item,
@@ -64,7 +64,7 @@ class ArticleDocumentService extends DocumentService
         return $this->generate(
             view: $view,
             data: $data,
-            filename: 'etiquettes_articles_' . now()->format('Ymd_His') . '_' . uniqid(),
+            filename: 'etiquettes_articles_'.now()->format('Ymd_His').'_'.uniqid(),
             type: 'articles'
         );
     }

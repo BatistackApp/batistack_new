@@ -2,12 +2,17 @@
 
 namespace App\Services\Commerce;
 
+use App\Enums\Commerce\InvoiceStatus;
+use App\Mail\Commerce\InvoiceDunningMail;
 use App\Models\Commerce\CustomerInvoice;
 use App\Models\Commerce\CustomerInvoiceItem;
+use App\Models\Commerce\PaymentAllocation;
+use App\Models\Commerce\SupplierInvoice;
 use App\Models\Core\VatRate;
-use App\Mail\Commerce\InvoiceDunningMail;
-use Illuminate\Support\Facades\Mail;
+use App\Models\Tiers\ThirdParty;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class DuePaymentService
 {
@@ -23,7 +28,7 @@ class DuePaymentService
 
     public function getOverdueCustomerInvoices(int $daysOverdue = 1)
     {
-        return CustomerInvoice::where('status', \App\Enums\Commerce\InvoiceStatus::VALIDATED)
+        return CustomerInvoice::where('status', InvoiceStatus::VALIDATED)
             ->where('due_date', '<=', now()->subDays($daysOverdue)->endOfDay())
             ->orderBy('due_date', 'asc')
             ->get();
@@ -31,21 +36,21 @@ class DuePaymentService
 
     public function getUpcomingSupplierPayments(int $daysAhead = 7)
     {
-        return \App\Models\Commerce\SupplierInvoice::where('status', \App\Enums\Commerce\InvoiceStatus::VALIDATED)
+        return SupplierInvoice::where('status', InvoiceStatus::VALIDATED)
             ->where('due_date', '>=', now()->startOfDay())
             ->where('due_date', '<=', now()->addDays($daysAhead)->endOfDay())
             ->get();
     }
 
-    public function getClientBalance(\App\Models\Tiers\ThirdParty $client)
+    public function getClientBalance(ThirdParty $client)
     {
         $invoices = CustomerInvoice::where('client_id', $client->id)
-            ->whereIn('status', [\App\Enums\Commerce\InvoiceStatus::VALIDATED, \App\Enums\Commerce\InvoiceStatus::PAID])
+            ->whereIn('status', [InvoiceStatus::VALIDATED, InvoiceStatus::PAID])
             ->get();
 
         $totalInvoiced = (float) $invoices->sum('total_ttc');
-        
-        $totalPaid = (float) \App\Models\Commerce\PaymentAllocation::where('payable_type', CustomerInvoice::class)
+
+        $totalPaid = (float) PaymentAllocation::where('payable_type', CustomerInvoice::class)
             ->whereIn('payable_id', $invoices->pluck('id'))
             ->sum('allocated_amount');
 
@@ -58,7 +63,7 @@ class DuePaymentService
 
     public function getCustomerAgingReport()
     {
-        $overdue = CustomerInvoice::where('status', \App\Enums\Commerce\InvoiceStatus::VALIDATED)
+        $overdue = CustomerInvoice::where('status', InvoiceStatus::VALIDATED)
             ->where('due_date', '<', now()->startOfDay())
             ->get();
 
@@ -87,13 +92,13 @@ class DuePaymentService
 
     public function getTotalSupplierOutstanding()
     {
-        return (float) \App\Models\Commerce\SupplierInvoice::whereIn('status', [
-            \App\Enums\Commerce\InvoiceStatus::VALIDATED, 
-            \App\Enums\Commerce\InvoiceStatus::LITIGE
+        return (float) SupplierInvoice::whereIn('status', [
+            InvoiceStatus::VALIDATED,
+            InvoiceStatus::LITIGE,
         ])->sum('amount_ttc');
     }
 
-    public function generatePaymentReminder(\App\Models\Tiers\ThirdParty $client, int $reminderLevel = 1)
+    public function generatePaymentReminder(ThirdParty $client, int $reminderLevel = 1)
     {
         $titles = [
             1 => 'PREMIÈRE RELANCE AMIABLE',
@@ -102,10 +107,10 @@ class DuePaymentService
         ];
 
         $invoices = CustomerInvoice::where('client_id', $client->id)
-            ->where('status', \App\Enums\Commerce\InvoiceStatus::VALIDATED)
+            ->where('status', InvoiceStatus::VALIDATED)
             ->where('due_date', '<', now()->startOfDay())
             ->get();
-            
+
         if ($invoices->isEmpty()) {
             return [
                 'client' => $client,
@@ -127,7 +132,7 @@ class DuePaymentService
 
     public function processOverdueInvoices()
     {
-        Log::info("Starting Dunning Process for overdue invoices.");
+        Log::info('Starting Dunning Process for overdue invoices.');
 
         // J+30 : Mise en demeure (Niveau 3)
         $this->processLevel(30, 2, 3);
@@ -137,8 +142,8 @@ class DuePaymentService
 
         // J+3 : Relance Amiable (Niveau 1)
         $this->processLevel(3, 0, 1);
-        
-        Log::info("Dunning Process finished.");
+
+        Log::info('Dunning Process finished.');
     }
 
     protected function processLevel(int $days, int $currentLevel, int $nextLevel)
@@ -151,7 +156,7 @@ class DuePaymentService
             try {
                 $this->processInvoice($invoice, $nextLevel, $days);
             } catch (\Exception $e) {
-                Log::error("Error processing dunning for invoice {$invoice->id}: " . $e->getMessage());
+                Log::error("Error processing dunning for invoice {$invoice->id}: ".$e->getMessage());
             }
         }
     }
@@ -159,11 +164,11 @@ class DuePaymentService
     protected function processInvoice(CustomerInvoice $invoice, int $nextLevel, int $daysOverdue)
     {
         $shouldSendEmail = false;
-        
-        \Illuminate\Support\Facades\DB::transaction(function () use ($invoice, $nextLevel, &$shouldSendEmail) {
+
+        DB::transaction(function () use ($invoice, $nextLevel, &$shouldSendEmail) {
             $invoice = CustomerInvoice::lockForUpdate()->find($invoice->id);
-            
-            if (!$invoice || $invoice->dunning_level >= $nextLevel || $invoice->is_fully_paid) {
+
+            if (! $invoice || $invoice->dunning_level >= $nextLevel || $invoice->is_fully_paid) {
                 return;
             }
 
@@ -177,7 +182,7 @@ class DuePaymentService
                 'dunning_level' => $nextLevel,
                 'last_dunning_at' => now(),
             ]);
-            
+
             $shouldSendEmail = true;
         });
 
@@ -185,7 +190,7 @@ class DuePaymentService
             // Envoyer l'email
             // On récupère le contact principal ou email de facturation
             $contact = $invoice->client->contacts()->where('is_primary', true)->first();
-            $email = ($contact && !empty($contact->email)) ? $contact->email : $invoice->client->email;
+            $email = ($contact && ! empty($contact->email)) ? $contact->email : $invoice->client->email;
 
             if ($email) {
                 Mail::to($email)->send(new InvoiceDunningMail($invoice, $nextLevel));
@@ -200,17 +205,17 @@ class DuePaymentService
     {
         // On vérifie qu'on n'a pas déjà ajouté l'indemnité (avec verrou)
         $hasFee = $invoice->items()->where('name', 'LIKE', '%Indemnité forfaitaire de recouvrement%')->lockForUpdate()->exists();
-        
+
         if ($hasFee) {
             return;
         }
 
-        // Récupérer la TVA 0% 
+        // Récupérer la TVA 0%
         $vatRate = VatRate::where('rate', 0)->first();
-        
+
         // Calcul des pénalités sur le RESTE À PAYER
         $amountToPenalize = $invoice->amount_remaining;
-        
+
         $days = $invoice->getDaysOverdue();
         $penalties = round($amountToPenalize * (self::DEFAULT_PENALTY_RATE / 100) * ($days / 365), 2);
 

@@ -1,10 +1,13 @@
 <?php
 
 use App\Enums\Articles\ItemType;
+use App\Exceptions\Articles\ArticlesModuleException;
 use App\Models\Articles\Item;
 use App\Models\Articles\Stock;
 use App\Models\Articles\Warehouse;
+use App\Models\Core\User;
 use App\Services\Articles\StockService;
+use Filament\Notifications\Notification;
 
 beforeEach(function () {
     $this->stockService = app(StockService::class);
@@ -57,8 +60,8 @@ test('il lance une exception si une sortie de stock dépasse le disponible', fun
 });
 
 test('il envoie une notification si le stock passe sous le seuil minimum', function () {
-    \Illuminate\Support\Facades\Notification::fake();
-    
+    Illuminate\Support\Facades\Notification::fake();
+
     // Set min_threshold = 10
     Stock::create([
         'item_id' => $this->item->id,
@@ -71,9 +74,9 @@ test('il envoie une notification si le stock passe sous le seuil minimum', funct
 
     // Notification is sent to whoever is listening, but here we just check if it was generated
     // Since Filament\Notifications\Notification uses database or broadcast, we can just check if any notification was sent
-    \Illuminate\Support\Facades\Notification::assertSentTo(
-        \App\Models\Core\User::all(),
-        \Filament\Notifications\Notification::class
+    Illuminate\Support\Facades\Notification::assertSentTo(
+        User::all(),
+        Notification::class
     );
 })->skip('Difficile à tester car Notification::make() dans Filament a sa propre logique, mais on couvre le code.');
 
@@ -103,7 +106,7 @@ test('il peut transférer un kit complet et ses composants', function () {
 });
 
 test('il lance une exception si l\'article n\'est pas un kit pour le transfert de kit', function () {
-    $this->expectException(\App\Exceptions\Articles\ArticlesModuleException::class);
+    $this->expectException(ArticlesModuleException::class);
     $this->stockService->transferKit($this->item, $this->warehouseA, $this->warehouseB, 1);
 });
 
@@ -121,7 +124,7 @@ test('il ne peut pas réserver plus que le stock disponible', function () {
     $this->stockService->entry($this->item, $this->warehouseA, 50, 100.00);
     $this->stockService->reserve($this->item, $this->warehouseA, 40);
 
-    $this->expectException(\App\Exceptions\Articles\ArticlesModuleException::class);
+    $this->expectException(ArticlesModuleException::class);
     $this->stockService->reserve($this->item, $this->warehouseA, 20); // Seulement 10 disponibles
 });
 

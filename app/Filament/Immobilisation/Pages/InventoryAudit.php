@@ -2,18 +2,18 @@
 
 namespace App\Filament\Immobilisation\Pages;
 
-use Filament\Pages\Page;
-use Filament\Notifications\Notification;
 use App\Models\Immobilisation\FixedAsset;
+use Filament\Notifications\Notification;
+use Filament\Pages\Page;
 
 class InventoryAudit extends Page
 {
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-viewfinder-circle';
 
     protected string $view = 'filament.immobilisation.pages.inventory-audit';
-    
+
     protected static ?string $navigationLabel = 'Audit d\'inventaire (Scan)';
-    
+
     protected static ?string $title = 'Audit d\'inventaire';
 
     protected static string|null|\UnitEnum $navigationGroup = 'Gestion des Actifs';
@@ -27,10 +27,10 @@ class InventoryAudit extends Page
         if (preg_match('/fixed-assets\/(\d+)/', $this->scannedUrl, $matches)) {
             $assetId = $matches[1];
             $asset = FixedAsset::find($assetId);
-            
+
             if ($asset) {
                 $asset->update(['last_inventoried_at' => now()]);
-                
+
                 Notification::make()
                     ->title('Actif audité avec succès')
                     ->body("L'actif {$asset->name} a été marqué comme présent.")
@@ -49,7 +49,7 @@ class InventoryAudit extends Page
                 ->danger()
                 ->send();
         }
-        
+
         $this->scannedUrl = ''; // Reset input
     }
 }

@@ -4,11 +4,14 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use App\Models\RH\Employee;
+use App\Models\RH\Interview;
 use App\Models\Tiers\Contact;
-use App\Models\Tiers\ThirdParty;
 use Database\Factories\UserFactory;
+use Filament\Models\Contracts\FilamentUser;
+use Filament\Panel;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
+use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -17,10 +20,6 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Str;
 use Laravel\Fortify\TwoFactorAuthenticatable;
-use Illuminate\Database\Eloquent\Attributes\Scope;
-
-use Filament\Models\Contracts\FilamentUser;
-use Filament\Panel;
 use NotificationChannels\WebPush\HasPushSubscriptions;
 use Spatie\Permission\Traits\HasRoles;
 
@@ -29,7 +28,7 @@ use Spatie\Permission\Traits\HasRoles;
 class User extends Authenticatable implements FilamentUser
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable, TwoFactorAuthenticatable, HasPushSubscriptions, HasRoles;
+    use HasFactory, HasPushSubscriptions, HasRoles, Notifiable, TwoFactorAuthenticatable;
 
     public function canAccessPanel(Panel $panel): bool
     {
@@ -58,10 +57,11 @@ class User extends Authenticatable implements FilamentUser
 
     public function getEmployeeIdOrFail(): int
     {
-        $employeeId = \App\Models\RH\Employee::where('user_id', $this->id)->value('id');
-        if (!$employeeId) {
+        $employeeId = Employee::where('user_id', $this->id)->value('id');
+        if (! $employeeId) {
             throw new \Exception('Aucun employé lié à votre compte.');
         }
+
         return (int) $employeeId;
     }
 
@@ -102,7 +102,7 @@ class User extends Authenticatable implements FilamentUser
 
     public function conductedInterviews(): HasMany
     {
-        return $this->hasMany(\App\Models\RH\Interview::class, 'manager_id');
+        return $this->hasMany(Interview::class, 'manager_id');
     }
 
     public function contact(): HasOne

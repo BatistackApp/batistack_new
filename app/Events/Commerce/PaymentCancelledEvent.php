@@ -9,7 +9,5 @@ class PaymentCancelledEvent
 {
     use Dispatchable;
 
-    public function __construct(public Payment $payment, public string $reason)
-    {
-    }
+    public function __construct(public Payment $payment, public string $reason) {}
 }

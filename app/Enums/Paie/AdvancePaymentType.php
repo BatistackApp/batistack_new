@@ -2,7 +2,9 @@
 
 namespace App\Enums\Paie;
 
-enum AdvancePaymentType: string implements \Filament\Support\Contracts\HasLabel
+use Filament\Support\Contracts\HasLabel;
+
+enum AdvancePaymentType: string implements HasLabel
 {
     case CLASSIC = 'classic';
     case GRAND_DEPLACEMENT = 'grand_deplacement';

@@ -1,7 +1,6 @@
 <?php
 
 use App\Enums\Commerce\QuoteStatus;
-use App\Models\Articles\Item;
 use App\Models\Chantiers\Chantier;
 use App\Models\Commerce\CustomerQuote;
 use App\Models\Commerce\CustomerQuoteItem;

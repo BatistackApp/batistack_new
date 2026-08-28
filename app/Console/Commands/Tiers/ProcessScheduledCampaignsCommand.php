@@ -2,6 +2,9 @@
 
 namespace App\Console\Commands\Tiers;
 
+use App\Enums\Tiers\EmailCampaignStatus;
+use App\Jobs\Tiers\ProcessEmailCampaignJob;
+use App\Models\Tiers\EmailCampaign;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
@@ -27,16 +30,16 @@ class ProcessScheduledCampaignsCommand extends Command
      */
     public function handle()
     {
-        $campaigns = \App\Models\Tiers\EmailCampaign::where('status', \App\Enums\Tiers\EmailCampaignStatus::SCHEDULED->value)
-            ->where(function($q) {
+        $campaigns = EmailCampaign::where('status', EmailCampaignStatus::SCHEDULED->value)
+            ->where(function ($q) {
                 $q->whereNull('scheduled_at')
-                  ->orWhere('scheduled_at', '<=', now('Europe/Paris')->format('Y-m-d H:i:s'));
+                    ->orWhere('scheduled_at', '<=', now('Europe/Paris')->format('Y-m-d H:i:s'));
             })
             ->get();
 
         foreach ($campaigns as $campaign) {
-            $campaign->update(['status' => \App\Enums\Tiers\EmailCampaignStatus::SENDING->value]);
-            \App\Jobs\Tiers\ProcessEmailCampaignJob::dispatch($campaign);
+            $campaign->update(['status' => EmailCampaignStatus::SENDING->value]);
+            ProcessEmailCampaignJob::dispatch($campaign);
             $this->info("Dispatched campaign: {$campaign->name}");
         }
     }

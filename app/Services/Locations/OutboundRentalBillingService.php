@@ -2,9 +2,11 @@
 
 namespace App\Services\Locations;
 
-use App\Models\Locations\OutboundRentalContract;
+use App\Enums\Commerce\InvoiceStatus;
+use App\Enums\Commerce\InvoiceType;
 use App\Models\Commerce\CustomerInvoice;
 use App\Models\Commerce\CustomerInvoiceItem;
+use App\Models\Locations\OutboundRentalContract;
 use Carbon\Carbon;
 
 class OutboundRentalBillingService
@@ -38,7 +40,7 @@ class OutboundRentalBillingService
             return;
         }
 
-        $billingKey = 'OUT-' . $contract->id . '-' . $startOfPeriod->format('Ym');
+        $billingKey = 'OUT-'.$contract->id.'-'.$startOfPeriod->format('Ym');
 
         $exists = CustomerInvoice::where('billing_key', $billingKey)->exists();
 
@@ -53,13 +55,13 @@ class OutboundRentalBillingService
     {
         $invoice = CustomerInvoice::create([
             'client_id' => $contract->third_party_id,
-            'type' => \App\Enums\Commerce\InvoiceType::SIMPLE,
-            'status' => \App\Enums\Commerce\InvoiceStatus::DRAFT,
-            'reference' => 'INV-OUT-' . time(),
+            'type' => InvoiceType::SIMPLE,
+            'status' => InvoiceStatus::DRAFT,
+            'reference' => 'INV-OUT-'.time(),
             'issue_date' => Carbon::now(),
             'due_date' => Carbon::now()->addDays(30),
             'responsable_id' => auth()->id() ?? 1,
-            'notes' => 'Location de matériel - Contrat ' . $contract->reference,
+            'notes' => 'Location de matériel - Contrat '.$contract->reference,
             'billing_key' => $billingKey,
         ]);
 
@@ -74,7 +76,7 @@ class OutboundRentalBillingService
 
             CustomerInvoiceItem::create([
                 'customer_invoice_id' => $invoice->id,
-                'name' => 'Location: ' . ($line->fixedAsset->name ?? 'Équipement'),
+                'name' => 'Location: '.($line->fixedAsset->name ?? 'Équipement'),
                 'quantity' => $days,
                 'price_unit' => $line->daily_rate,
                 'vat_rate_id' => 1,

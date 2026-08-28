@@ -3,20 +3,30 @@
 namespace App\Filament\Vision3D\Resources;
 
 use App\Filament\Vision3D\Resources\BimModelResource\Pages;
+use App\Models\Chantiers\ChantierTask;
+use App\Models\Interventions\Intervention;
+use App\Models\Vision3D\BimAnnotation;
 use App\Models\Vision3D\BimModel;
+use Filament\Actions\Action;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
+use Filament\Actions\ViewAction;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\MorphToSelect;
+use Filament\Forms\Components\MorphToSelect\Type;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
-use Filament\Actions\Action;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Components\ViewEntry;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Tables;
-use Filament\Tables\Table;
 use Filament\Tables\Columns\ImageColumn;
+use Filament\Tables\Table;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 
@@ -25,6 +35,7 @@ class BimModelResource extends Resource
     protected static ?string $model = BimModel::class;
 
     protected static ?string $modelLabel = 'Maquette 3D';
+
     protected static ?string $pluralModelLabel = 'Maquettes 3D';
 
     public static function getNavigationIcon(): ?string
@@ -66,7 +77,7 @@ class BimModelResource extends Resource
                             ->directory('bim_models')
                             ->preserveFilenames()
                             ->getUploadedFileNameForStorageUsing(function (TemporaryUploadedFile $file): string {
-                                return (string) str($file->getClientOriginalName())->prepend(now()->timestamp . '_');
+                                return (string) str($file->getClientOriginalName())->prepend(now()->timestamp.'_');
                             })
                             ->required()
                             ->columnSpanFull(),
@@ -103,7 +114,7 @@ class BimModelResource extends Resource
 
                 Tables\Columns\TextColumn::make('file_size')
                     ->label('Taille')
-                    ->formatStateUsing(fn ($state) => number_format($state / 1048576, 2) . ' Mo')
+                    ->formatStateUsing(fn ($state) => number_format($state / 1048576, 2).' Mo')
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('created_at')->label('Créé le')
@@ -115,12 +126,12 @@ class BimModelResource extends Resource
                 //
             ])
             ->actions([
-                \Filament\Actions\ViewAction::make(),
-                \Filament\Actions\EditAction::make(),
+                ViewAction::make(),
+                EditAction::make(),
             ])
             ->bulkActions([
-                \Filament\Actions\BulkActionGroup::make([
-                    \Filament\Actions\DeleteBulkAction::make(),
+                BulkActionGroup::make([
+                    DeleteBulkAction::make(),
                 ]),
             ]);
     }
@@ -142,13 +153,13 @@ class BimModelResource extends Resource
                                             ->required(),
                                         Textarea::make('description')->label('Description')
                                             ->label('Description'),
-                                        \Filament\Forms\Components\MorphToSelect::make('target')
+                                        MorphToSelect::make('target')
                                             ->label('Lier à un élément')
                                             ->types([
-                                                \Filament\Forms\Components\MorphToSelect\Type::make(\App\Models\Chantiers\ChantierTask::class)
+                                                Type::make(ChantierTask::class)
                                                     ->label('Tâche de chantier')
                                                     ->titleAttribute('title'),
-                                                \Filament\Forms\Components\MorphToSelect\Type::make(\App\Models\Interventions\Intervention::class)
+                                                Type::make(Intervention::class)
                                                     ->label('Intervention')
                                                     ->titleAttribute('title'),
                                             ])
@@ -171,9 +182,11 @@ class BimModelResource extends Resource
                                     ->modalSubmitAction(false)
                                     ->modalCancelActionLabel('Fermer')
                                     ->infolist(function (array $arguments) {
-                                        $annotation = \App\Models\Vision3D\BimAnnotation::with('target')->find($arguments['id'] ?? null);
-                                        if (!$annotation) return [];
-                                        
+                                        $annotation = BimAnnotation::with('target')->find($arguments['id'] ?? null);
+                                        if (! $annotation) {
+                                            return [];
+                                        }
+
                                         $components = [
                                             TextEntry::make('title')->label('Titre')->default($annotation->title),
                                             TextEntry::make('description')->label('Description')->default($annotation->description),
@@ -195,17 +208,17 @@ class BimModelResource extends Resource
                                         foreach ($clashes as $clash) {
                                             $record->annotations()->create([
                                                 'title' => 'Collision détectée',
-                                                'description' => 'Collision automatique entre ' . $clash['layer1'] . ' et ' . $clash['layer2'],
+                                                'description' => 'Collision automatique entre '.$clash['layer1'].' et '.$clash['layer2'],
                                                 'position_x' => $clash['x'],
                                                 'position_y' => $clash['y'],
                                                 'position_z' => $clash['z'],
                                             ]);
                                         }
-                                        \Filament\Notifications\Notification::make()
-                                            ->title(count($clashes) . ' collisions sauvegardées avec succès.')
+                                        Notification::make()
+                                            ->title(count($clashes).' collisions sauvegardées avec succès.')
                                             ->success()
                                             ->send();
-                                    })
+                                    }),
                             ])
                             ->columnSpanFull(),
                     ]),
@@ -216,7 +229,7 @@ class BimModelResource extends Resource
                         TextEntry::make('format')->label('Format'),
                         TextEntry::make('file_size')
                             ->label('Taille')
-                            ->formatStateUsing(fn ($state) => number_format($state / 1048576, 2) . ' Mo'),
+                            ->formatStateUsing(fn ($state) => number_format($state / 1048576, 2).' Mo'),
                     ])->columns(3),
             ]);
     }

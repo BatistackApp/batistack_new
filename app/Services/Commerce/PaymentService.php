@@ -14,6 +14,7 @@ class PaymentService
 {
     /**
      * Ventile (lettre) un montant d'un paiement sur une pièce comptable (Facture ou Situation).
+     *
      * @throws \Throwable
      */
     public function allocatePayment(Payment $payment, Model $payable, float $amountToAllocate): PaymentAllocation

@@ -2,10 +2,12 @@
 
 namespace App\Filament\Immobilisation\Resources\Immobilisation\AssetCategories\Tables;
 
+use App\Enums\Immobilisation\DepreciationMethod;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 
 class AssetCategoriesTable
@@ -40,9 +42,9 @@ class AssetCategoriesTable
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                \Filament\Tables\Filters\SelectFilter::make('default_method')
+                SelectFilter::make('default_method')
                     ->label('Méthode d\'amortissement')
-                    ->options(\App\Enums\Immobilisation\DepreciationMethod::class),
+                    ->options(DepreciationMethod::class),
             ])
             ->recordActions([
                 EditAction::make(),

@@ -6,6 +6,7 @@ use App\Filament\Commerce\Resources\SupplierInvoices\Pages\CreateSupplierInvoice
 use App\Filament\Commerce\Resources\SupplierInvoices\Pages\EditSupplierInvoice;
 use App\Filament\Commerce\Resources\SupplierInvoices\Pages\ListSupplierInvoices;
 use App\Filament\Commerce\Resources\SupplierInvoices\Pages\ViewSupplierInvoice;
+use App\Filament\Commerce\Resources\SupplierInvoices\RelationManagers\ItemsRelationManager;
 use App\Filament\Commerce\Resources\SupplierInvoices\Schemas\SupplierInvoiceForm;
 use App\Filament\Commerce\Resources\SupplierInvoices\Schemas\SupplierInvoiceInfolist;
 use App\Filament\Commerce\Resources\SupplierInvoices\Tables\SupplierInvoicesTable;
@@ -13,7 +14,6 @@ use App\Models\Commerce\SupplierInvoice;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
-use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use ToneGabes\Filament\Icons\Enums\Phosphor;
 
@@ -22,9 +22,13 @@ class SupplierInvoiceResource extends Resource
     protected static ?string $model = SupplierInvoice::class;
 
     protected static string|BackedEnum|null $navigationIcon = Phosphor::FileMinus;
+
     protected static ?string $navigationLabel = 'Factures fournisseur';
+
     protected static ?string $modelLabel = 'Facture fournisseur';
+
     protected static ?string $pluralModelLabel = 'Factures Fournisseur';
+
     protected static ?int $navigationSort = 7;
 
     protected static ?string $recordTitleAttribute = 'reference';
@@ -47,7 +51,7 @@ class SupplierInvoiceResource extends Resource
     public static function getRelations(): array
     {
         return [
-            \App\Filament\Commerce\Resources\SupplierInvoices\RelationManagers\ItemsRelationManager::class,
+            ItemsRelationManager::class,
         ];
     }
 

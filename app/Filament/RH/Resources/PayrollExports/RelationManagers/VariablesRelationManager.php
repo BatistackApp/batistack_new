@@ -97,7 +97,7 @@ class VariablesRelationManager extends RelationManager
             ->columns([
                 TextColumn::make('employee.first_name')
                     ->label('Employé')
-                    ->formatStateUsing(fn ($record) => $record->employee->first_name . ' ' . $record->employee->last_name)
+                    ->formatStateUsing(fn ($record) => $record->employee->first_name.' '.$record->employee->last_name)
                     ->sortable(),
                 TextColumn::make('base_hours')
                     ->label('H. Base')

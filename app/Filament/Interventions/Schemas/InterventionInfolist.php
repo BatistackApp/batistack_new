@@ -35,12 +35,13 @@ class InterventionInfolist
                                 $latLng = null;
                                 if ($record->chantier && $record->chantier->latitude && $record->chantier->longitude) {
                                     $latLng = ['lat' => $record->chantier->latitude, 'lng' => $record->chantier->longitude];
-                                } else if ($record->thirdParty) {
+                                } elseif ($record->thirdParty) {
                                     $addr = $record->thirdParty->getMainAddress();
                                     if ($addr && $addr->latitude && $addr->longitude) {
                                         $latLng = ['lat' => $addr->latitude, 'lng' => $addr->longitude];
                                     }
                                 }
+
                                 return $latLng;
                             })
                             ->markers(function ($record) {
@@ -48,26 +49,32 @@ class InterventionInfolist
                                 $popup = 'Localisation inconnue';
                                 if ($record->chantier && $record->chantier->latitude && $record->chantier->longitude) {
                                     $latLng = ['lat' => $record->chantier->latitude, 'lng' => $record->chantier->longitude];
-                                    $popup = 'Chantier: ' . $record->chantier->name;
-                                } else if ($record->thirdParty) {
+                                    $popup = 'Chantier: '.$record->chantier->name;
+                                } elseif ($record->thirdParty) {
                                     $addr = $record->thirdParty->getMainAddress();
                                     if ($addr && $addr->latitude && $addr->longitude) {
                                         $latLng = ['lat' => $addr->latitude, 'lng' => $addr->longitude];
-                                        $popup = 'Client: ' . $record->thirdParty->name;
+                                        $popup = 'Client: '.$record->thirdParty->name;
                                     }
                                 }
 
                                 if ($latLng) {
                                     return [
-                                        Marker::make((float)$latLng['lat'], (float)$latLng['lng'])
-                                            ->popup($popup)
+                                        Marker::make((float) $latLng['lat'], (float) $latLng['lng'])
+                                            ->popup($popup),
                                     ];
                                 }
+
                                 return [];
                             })
                             ->visible(function ($record) {
-                                if ($record->chantier && $record->chantier->latitude && $record->chantier->longitude) return true;
-                                if ($record->thirdParty && $record->thirdParty->getMainAddress()?->latitude) return true;
+                                if ($record->chantier && $record->chantier->latitude && $record->chantier->longitude) {
+                                    return true;
+                                }
+                                if ($record->thirdParty && $record->thirdParty->getMainAddress()?->latitude) {
+                                    return true;
+                                }
+
                                 return false;
                             }),
                     ]),

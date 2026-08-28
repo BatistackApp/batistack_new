@@ -3,14 +3,15 @@
 namespace App\Filament\Paie\Widgets;
 
 use App\Models\Paie\Payslip;
-use LaBoiteACode\FilamentDashboardWidgets\Widgets\CompositionWidget;
 use LaBoiteACode\FilamentDashboardWidgets\Data\Composition;
 use LaBoiteACode\FilamentDashboardWidgets\Data\CompositionSlice;
+use LaBoiteACode\FilamentDashboardWidgets\Widgets\CompositionWidget;
 
 class PayrollCostCompositionWidget extends CompositionWidget
 {
     protected static ?int $sort = 3;
-    protected int | string | array $columnSpan = 1;
+
+    protected int|string|array $columnSpan = 1;
 
     public function getHeading(): string
     {

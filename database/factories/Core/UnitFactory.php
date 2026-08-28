@@ -5,7 +5,6 @@ namespace Database\Factories\Core;
 use App\Enums\Core\UnitType;
 use App\Models\Core\Unit;
 use Illuminate\Database\Eloquent\Factories\Factory;
-use Illuminate\Support\Carbon;
 
 class UnitFactory extends Factory
 {

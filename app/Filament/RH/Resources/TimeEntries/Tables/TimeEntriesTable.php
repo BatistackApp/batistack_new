@@ -101,7 +101,7 @@ class TimeEntriesTable
                         ->icon('heroicon-o-check-badge')
                         ->color('success')
                         ->requiresConfirmation()
-                        ->visible(fn ($record) => $record->is_anomaly && !$record->anomaly_resolved_at)
+                        ->visible(fn ($record) => $record->is_anomaly && ! $record->anomaly_resolved_at)
                         ->action(function (TimeEntry $record) {
                             $record->update([
                                 'anomaly_resolved_at' => now(),

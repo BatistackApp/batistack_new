@@ -11,6 +11,7 @@ class VatRateObserver
 {
     /**
      * Valider la TVA avant création/mise à jour
+     *
      * @throws Exception
      */
     public function creating(VatRate $vatRate): void
@@ -60,6 +61,7 @@ class VatRateObserver
 
     /**
      * Empêcher suppression si utilisée
+     *
      * @throws Exception
      */
     public function deleting(VatRate $vatRate): bool
@@ -104,6 +106,7 @@ class VatRateObserver
 
     /**
      * Valider le taux de TVA
+     *
      * @throws Exception
      */
     private function validateRate(VatRate $vatRate): void

@@ -12,6 +12,7 @@ class VehicleContractObserver
 {
     /**
      * Validation avant création.
+     *
      * @throws \Exception
      */
     public function creating(VehicleContract $contract): void
@@ -52,6 +53,7 @@ class VehicleContractObserver
 
     /**
      * Validation avant modification.
+     *
      * @throws \Exception
      */
     public function updating(VehicleContract $contract): void
@@ -96,6 +98,7 @@ class VehicleContractObserver
 
     /**
      * Validation avant suppression.
+     *
      * @throws \Exception
      */
     public function deleting(VehicleContract $contract): void

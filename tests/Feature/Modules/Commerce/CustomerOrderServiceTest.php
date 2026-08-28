@@ -10,13 +10,14 @@ use App\Models\Commerce\CustomerCreditNote;
 use App\Models\Commerce\CustomerDeliveryNote;
 use App\Models\Commerce\CustomerInvoice;
 use App\Models\Commerce\CustomerOrder;
+use App\Models\Core\Company;
 use App\Models\Core\VatRate;
 use App\Models\Tiers\ThirdParty;
 use App\Models\User;
 use App\Services\Commerce\CustomerOrderService;
 
 beforeEach(function () {
-    \App\Models\Core\Company::factory()->create();
+    Company::factory()->create();
     $this->orderService = app(CustomerOrderService::class);
 
     // Données de base

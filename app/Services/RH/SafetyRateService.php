@@ -6,7 +6,6 @@ use App\Enums\RH\AbsenceType;
 use App\Enums\RH\TimeEntryStatus;
 use App\Models\RH\Abscence;
 use App\Models\RH\TimeEntry;
-use Carbon\Carbon;
 use Carbon\CarbonInterface;
 
 class SafetyRateService
@@ -66,7 +65,7 @@ class SafetyRateService
         $start = $absence->start_date;
         $end = $absence->end_date;
 
-        if (!$start || !$end) {
+        if (! $start || ! $end) {
             return 0;
         }
 
@@ -82,7 +81,7 @@ class SafetyRateService
         $start = $absence->start_date;
         $end = $absence->end_date;
 
-        if (!$start || !$end) {
+        if (! $start || ! $end) {
             return 0;
         }
 

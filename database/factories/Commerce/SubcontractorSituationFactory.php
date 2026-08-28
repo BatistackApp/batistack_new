@@ -2,6 +2,7 @@
 
 namespace Database\Factories\Commerce;
 
+use App\Enums\Commerce\InvoiceStatus;
 use App\Models\Chantiers\Chantier;
 use App\Models\Commerce\PurchaseOrder;
 use App\Models\Commerce\SubcontractorSituation;
@@ -20,7 +21,7 @@ class SubcontractorSituationFactory extends Factory
             'progress_percentage' => $this->faker->randomNumber(),
             'total_ht' => $this->faker->randomFloat(),
             'retenue_garantie_amount' => $this->faker->randomFloat(),
-            'status' => \App\Enums\Commerce\InvoiceStatus::DRAFT,
+            'status' => InvoiceStatus::DRAFT,
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
 

@@ -14,13 +14,13 @@ class SalarieStatsOverview extends BaseWidget
     {
         $employee = Auth::user()?->salarie;
 
-        if (!$employee) {
+        if (! $employee) {
             return [];
         }
 
         // 1. Heures travaillées ce mois-ci
         $hoursWorked = $employee->getHoursWorkedThisMonth();
-        
+
         // 2. Absences prises ce mois-ci
         $absences = $employee->getAbsencesThisMonth();
 
@@ -31,12 +31,12 @@ class SalarieStatsOverview extends BaseWidget
         $medicalVisitIcon = $needsMedicalVisit ? 'heroicon-m-exclamation-triangle' : 'heroicon-m-check-circle';
 
         return [
-            Stat::make('Heures travaillées (ce mois)', $hoursWorked . ' h')
+            Stat::make('Heures travaillées (ce mois)', $hoursWorked.' h')
                 ->description('Total des heures déclarées')
                 ->descriptionIcon('heroicon-m-clock')
                 ->color('primary'),
 
-            Stat::make('Absences (ce mois)', $absences . ' jour(s)')
+            Stat::make('Absences (ce mois)', $absences.' jour(s)')
                 ->description('Jours de congés ou maladie')
                 ->descriptionIcon('heroicon-m-calendar-days')
                 ->color('warning'),

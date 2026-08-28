@@ -105,10 +105,10 @@ class InterventionForm
                                                 ->step('0.5')
                                                 ->required()
                                                 ->default(1),
-                                        ])
+                                        ]),
                                     ])
                                     ->defaultItems(1)
-                                    ->addActionLabel('Ajouter un technicien')
+                                    ->addActionLabel('Ajouter un technicien'),
                             ]),
 
                         Tabs\Tab::make('Matériel')
@@ -146,12 +146,12 @@ class InterventionForm
                                                 ->prefix('€')
                                                 ->disabled()
                                                 ->required(),
-                                        ])
+                                        ]),
                                     ])
                                     ->defaultItems(0)
-                                    ->addActionLabel('Ajouter une pièce')
+                                    ->addActionLabel('Ajouter une pièce'),
                             ]),
-                    ])->columnSpanFull()
+                    ])->columnSpanFull(),
             ]);
     }
 }

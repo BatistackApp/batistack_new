@@ -30,7 +30,7 @@ class SalaryPaymentService
      */
     public function createRun(Collection $payslips, BankAccount $source, User $creator): SalaryPaymentRun
     {
-if (! $source->bridge_bank_id) {
+        if (! $source->bridge_bank_id) {
             throw new \RuntimeException("Le compte �metteur n'est pas reli� � une banque Bridge (bridge_bank_id manquant).");
         }
 

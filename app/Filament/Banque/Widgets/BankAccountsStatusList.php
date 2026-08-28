@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Builder;
 class BankAccountsStatusList extends TableWidget
 {
     protected static ?int $sort = 8;
+
     protected int|string|array $columnSpan = 'full';
 
     protected static ?string $heading = 'État des synchronisations';

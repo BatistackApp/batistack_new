@@ -2,17 +2,17 @@
 
 namespace Tests\Feature\Modules\Commerce;
 
+use App\Enums\Commerce\InvoiceStatus;
 use App\Enums\Commerce\PaymentMethod;
 use App\Enums\Commerce\PaymentStatus;
 use App\Enums\Commerce\PaymentType;
 use App\Events\Commerce\PaymentCancelledEvent;
 use App\Events\Commerce\PaymentRecordedEvent;
-use App\Models\Commerce\Payment;
 use App\Models\Commerce\CustomerInvoice;
+use App\Models\Commerce\Payment;
 use App\Models\Core\Company;
 use App\Models\Tiers\ThirdParty;
 use App\Services\Commerce\PaymentRecordingService;
-use App\Services\Commerce\PaymentService;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
 use Mockery;
@@ -196,8 +196,8 @@ describe('PaymentRecordingService - recordPayment', function () {
 
 describe('PaymentRecordingService - recordPaymentWithAllocations', function () {
     test('enregistre un paiement et alloue sur les factures', function () {
-        $invoice1 = CustomerInvoice::factory()->create(['client_id' => $this->customer->id, 'status' => \App\Enums\Commerce\InvoiceStatus::VALIDATED, 'total_ttc' => 5000.0]);
-        $invoice2 = CustomerInvoice::factory()->create(['client_id' => $this->customer->id, 'status' => \App\Enums\Commerce\InvoiceStatus::VALIDATED, 'total_ttc' => 6000.0]);
+        $invoice1 = CustomerInvoice::factory()->create(['client_id' => $this->customer->id, 'status' => InvoiceStatus::VALIDATED, 'total_ttc' => 5000.0]);
+        $invoice2 = CustomerInvoice::factory()->create(['client_id' => $this->customer->id, 'status' => InvoiceStatus::VALIDATED, 'total_ttc' => 6000.0]);
 
         $payment = $this->service->recordPaymentWithAllocations(
             third_party: $this->customer,
@@ -214,13 +214,13 @@ describe('PaymentRecordingService - recordPaymentWithAllocations', function () {
         expect($payment)->toBeInstanceOf(Payment::class)
             ->and($payment->amount)->toEqual(11000.00)
             ->and($payment->allocations)->toHaveCount(2);
-        
-        expect($invoice1->fresh()->status)->toBe(\App\Enums\Commerce\InvoiceStatus::PAID)
-            ->and($invoice2->fresh()->status)->toBe(\App\Enums\Commerce\InvoiceStatus::PAID);
+
+        expect($invoice1->fresh()->status)->toBe(InvoiceStatus::PAID)
+            ->and($invoice2->fresh()->status)->toBe(InvoiceStatus::PAID);
     });
 
     test('échoue si le montant alloué ne correspond pas au montant total', function () {
-        $invoice1 = CustomerInvoice::factory()->create(['client_id' => $this->customer->id, 'status' => \App\Enums\Commerce\InvoiceStatus::VALIDATED, 'total_ttc' => 5000.0]);
+        $invoice1 = CustomerInvoice::factory()->create(['client_id' => $this->customer->id, 'status' => InvoiceStatus::VALIDATED, 'total_ttc' => 5000.0]);
 
         expect(function () use ($invoice1) {
             $this->service->recordPaymentWithAllocations(
@@ -337,8 +337,8 @@ describe('PaymentRecordingService - updatePayment', function () {
 describe('PaymentRecordingService - cancelPayment', function () {
 
     test('annule un paiement et dé-lettre les factures', function () {
-        $invoice = CustomerInvoice::factory()->create(['client_id' => $this->customer->id, 'status' => \App\Enums\Commerce\InvoiceStatus::VALIDATED, 'total_ttc' => 1000.0]);
-        
+        $invoice = CustomerInvoice::factory()->create(['client_id' => $this->customer->id, 'status' => InvoiceStatus::VALIDATED, 'total_ttc' => 1000.0]);
+
         $payment = $this->service->recordPaymentWithAllocations(
             third_party: $this->customer,
             type: PaymentType::IN,
@@ -348,13 +348,13 @@ describe('PaymentRecordingService - cancelPayment', function () {
             allocations: [['invoice' => $invoice, 'amount' => 1000.0]]
         );
 
-        expect($invoice->fresh()->status)->toBe(\App\Enums\Commerce\InvoiceStatus::PAID);
+        expect($invoice->fresh()->status)->toBe(InvoiceStatus::PAID);
 
         $cancelled = $this->service->cancelPayment($payment, 'Erreur de saisie');
 
         expect($cancelled->status)->toBe(PaymentStatus::FAILED)
             ->and($cancelled->notes)->toContain('Annulé')
-            ->and($invoice->fresh()->status)->toBe(\App\Enums\Commerce\InvoiceStatus::VALIDATED)
+            ->and($invoice->fresh()->status)->toBe(InvoiceStatus::VALIDATED)
             ->and($cancelled->allocations()->count())->toBe(0);
     });
 

@@ -10,12 +10,12 @@ use App\Services\Core\SignatureService;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Forms\Components\Checkbox;
+use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
 use Filament\Schemas\Components\Grid;
 use Illuminate\Contracts\Support\Htmlable;
-use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Log;
 use Saade\FilamentAutograph\Forms\Components\SignaturePad;
@@ -24,6 +24,7 @@ use ToneGabes\Filament\Icons\Enums\Phosphor;
 class ViewCustomerQuote extends ViewRecord
 {
     protected static string $resource = CustomerQuoteResource::class;
+
     protected static ?string $breadcrumb = 'Devis';
 
     protected function getHeaderActions(): array
@@ -92,6 +93,37 @@ class ViewCustomerQuote extends ViewRecord
                 })
                 ->icon(Phosphor::X),
 
+            Action::make('counterProposition')
+                ->label('Contre-proposition')
+                ->color('warning')
+                ->visible(fn (Model $record) => $record->status === QuoteStatus::SENT)
+                ->schema([
+                    TextInput::make('counter_amount')
+                        ->label('Montant proposé (€ HT)')
+                        ->numeric()
+                        ->required()
+                        ->minValue(1)
+                        ->prefix('€'),
+                    Textarea::make('counter_message')
+                        ->label('Message / Justification')
+                        ->maxLength(1000)
+                        ->rows(3),
+                ])
+                ->action(function (Model $record, array $data) {
+                    $record->update([
+                        'status' => QuoteStatus::REJECTED,
+                        'counter_amount' => $data['counter_amount'],
+                        'counter_message' => $data['counter_message'] ?? null,
+                    ]);
+
+                    Notification::make()
+                        ->success()
+                        ->title('Contre-proposition envoyée')
+                        ->body('Votre contre-proposition de '.number_format($data['counter_amount'], 2, ',', ' ').' € a été transmise à notre équipe pour révision.')
+                        ->send();
+                })
+                ->icon(Phosphor::ArrowsCounterClockwise),
+
             ActionGroup::make([
                 Action::make('printQuote')
                     ->label('Imprimer le PDF')
@@ -105,5 +137,4 @@ class ViewCustomerQuote extends ViewRecord
     {
         return 'Devis N°'.$this->record->reference;
     }
-
 }

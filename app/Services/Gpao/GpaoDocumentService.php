@@ -19,25 +19,25 @@ class GpaoDocumentService extends DocumentService
         $order->load(['item', 'requirements.item']);
 
         $qrOptions = new QROptions([
-            'version'      => 5,
-            'outputType'   => QRCode::OUTPUT_MARKUP_SVG,
-            'eccLevel'     => QRCode::ECC_L,
+            'version' => 5,
+            'outputType' => QRCode::OUTPUT_MARKUP_SVG,
+            'eccLevel' => QRCode::ECC_L,
         ]);
-        
+
         $qrCode = (new QRCode($qrOptions))->render($order->reference);
 
         $data = [
             'company' => Company::first(),
             'order' => $order,
             'qrCode' => $qrCode,
-            'title' => 'ORDRE DE FABRICATION - ' . $order->reference,
+            'title' => 'ORDRE DE FABRICATION - '.$order->reference,
             'generated_at' => Carbon::now()->format('d/m/Y H:i'),
         ];
 
         return $this->generate(
             'pdf.gpao.manufacturing_order',
             $data,
-            'of_' . $order->reference . '_' . now()->format('YmdHis'),
+            'of_'.$order->reference.'_'.now()->format('YmdHis'),
             'gpao'
         );
     }

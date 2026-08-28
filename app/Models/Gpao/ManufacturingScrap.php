@@ -2,11 +2,11 @@
 
 namespace App\Models\Gpao;
 
+use App\Models\Articles\Item;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use App\Models\Articles\Item;
-use App\Models\User;
 
 class ManufacturingScrap extends Model
 {

@@ -9,7 +9,8 @@ use LaBoiteACode\FilamentDashboardWidgets\Widgets\GoalProgressWidget;
 class VgpGoalProgressWidget extends GoalProgressWidget
 {
     protected static ?int $sort = 2;
-    protected int | string | array $columnSpan = 1;
+
+    protected int|string|array $columnSpan = 1;
 
     public function getHeading(): string
     {
@@ -20,7 +21,7 @@ class VgpGoalProgressWidget extends GoalProgressWidget
     {
         // Assets that require VGP
         $assets = FixedAsset::whereNotNull('vgp_frequency_months')->where('vgp_frequency_months', '>', 0)->get();
-        
+
         $total = $assets->count();
         $passed = 0;
 
@@ -34,7 +35,7 @@ class VgpGoalProgressWidget extends GoalProgressWidget
         $color = $percentage >= 100 ? 'success' : ($percentage >= 80 ? 'warning' : 'danger');
 
         return Goal::make('Taux de conformité', $percentage, 100)
-            ->formatUsing(fn (float $val) => number_format($val, 1) . '%')
+            ->formatUsing(fn (float $val) => number_format($val, 1).'%')
             ->color($color);
     }
 }

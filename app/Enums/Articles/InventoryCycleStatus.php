@@ -2,10 +2,10 @@
 
 namespace App\Enums\Articles;
 
-use Filament\Support\Contracts\HasLabel;
 use Filament\Support\Contracts\HasColor;
+use Filament\Support\Contracts\HasLabel;
 
-enum InventoryCycleStatus: string implements HasLabel, HasColor
+enum InventoryCycleStatus: string implements HasColor, HasLabel
 {
     case PENDING = 'pending';
     case IN_PROGRESS = 'in_progress';

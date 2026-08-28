@@ -3,6 +3,8 @@
 namespace App\Observers\Flottes;
 
 use App\Jobs\Flottes\RecalculateVehicleTcoJob;
+use App\Models\Articles\Warehouse;
+use App\Models\Chantiers\ResourceAllocation;
 use App\Models\Flottes\Vehicle;
 use Illuminate\Support\Str;
 use Log;
@@ -40,13 +42,13 @@ class VehicleObserver
     public function created(Vehicle $vehicle): void
     {
         if ($vehicle->isVUL()) {
-            \App\Models\Articles\Warehouse::create([
-                'name' => 'Camionnette ' . $vehicle->license_plate,
+            Warehouse::create([
+                'name' => 'Camionnette '.$vehicle->license_plate,
                 'location' => 'Mobile',
                 'is_active' => true,
                 'vehicle_id' => $vehicle->id,
             ]);
-            
+
             Log::info('Dépôt virtuel créé pour le véhicule', [
                 'vehicle_id' => $vehicle->id,
             ]);
@@ -97,6 +99,7 @@ class VehicleObserver
 
     /**
      * Validations avant suppression.
+     *
      * @throws \Exception
      */
     public function deleting(Vehicle $vehicle): void
@@ -106,7 +109,7 @@ class VehicleObserver
             throw new \Exception("Impossible de supprimer {$vehicle->reference}: affectations actives détectées.");
         }
 
-        \App\Models\Chantiers\ResourceAllocation::where('allocatable_type', Vehicle::class)
+        ResourceAllocation::where('allocatable_type', Vehicle::class)
             ->where('allocatable_id', $vehicle->id)
             ->delete();
 

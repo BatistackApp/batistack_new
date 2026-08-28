@@ -2,13 +2,13 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\RH\Pages\SecuriteDashboard;
 use App\Http\Middleware\EnsureUserIsAdmin;
 use App\Providers\Filament\Traits\HasKnowledgeBaseCompanion;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
-use App\Filament\RH\Pages\SecuriteDashboard;
 use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;

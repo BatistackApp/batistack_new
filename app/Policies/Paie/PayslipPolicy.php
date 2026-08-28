@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace App\Policies\Paie;
 
-use Illuminate\Foundation\Auth\User as AuthUser;
 use App\Models\Paie\Payslip;
 use Illuminate\Auth\Access\HandlesAuthorization;
+use Illuminate\Foundation\Auth\User as AuthUser;
 
 class PayslipPolicy
 {
     use HandlesAuthorization;
-    
+
     public function viewAny(AuthUser $authUser): bool
     {
         return $authUser->can('ViewAny:Payslip');
@@ -71,5 +71,4 @@ class PayslipPolicy
     {
         return $authUser->can('Reorder:Payslip');
     }
-
 }

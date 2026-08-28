@@ -41,15 +41,15 @@ it('calculates cash flow forecast correctly over 30 days', function () {
         'total_ttc' => 999.0,
     ]);
 
-    $service = new CashFlowForecastService();
+    $service = new CashFlowForecastService;
     $forecast = $service->getForecast(30);
 
     expect(count($forecast['labels']))->toBe(31); // Day 0 to 30 = 31 points
-    
+
     // Day 0 (Today)
     expect($forecast['balances_confirmed'][0])->toBe(1000.0);
     expect($forecast['incomes'][0])->toBe(0.0);
-    
+
     // Day 5 (+500)
     expect($forecast['balances_confirmed'][5])->toBe(1500.0);
     expect($forecast['incomes'][5])->toBe(500.0);

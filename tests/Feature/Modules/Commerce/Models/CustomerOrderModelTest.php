@@ -37,7 +37,7 @@ test('order has correct relationships', function () {
 
 test('order calculates total tva correctly', function () {
     $vatRate = VatRate::factory()->create(['rate' => 20]);
-    
+
     // total_ht = 100 * 2 = 200 => TVA = 40
     CustomerOrderItem::factory()->create([
         'customer_order_id' => $this->order->id,
@@ -46,7 +46,7 @@ test('order calculates total tva correctly', function () {
         'total_ht' => 200,
         'vat_rate_id' => $vatRate->id,
     ]);
-    
+
     // total_ht = 50 * 3 = 150 => TVA = 30
     CustomerOrderItem::factory()->create([
         'customer_order_id' => $this->order->id,
@@ -55,15 +55,15 @@ test('order calculates total tva correctly', function () {
         'total_ht' => 150,
         'vat_rate_id' => $vatRate->id,
     ]);
-    
+
     $this->order->refresh();
-    
+
     expect($this->order->total_tva)->toBeFloat()->toEqual(70.0);
 });
 
 test('order casts attributes correctly', function () {
     $this->order->update(['status' => OrderStatus::BILLED]);
-    
+
     expect($this->order->status)->toBeInstanceOf(OrderStatus::class)
         ->and($this->order->status)->toBe(OrderStatus::BILLED);
 });

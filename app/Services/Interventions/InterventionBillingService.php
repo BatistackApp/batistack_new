@@ -48,7 +48,7 @@ class InterventionBillingService
                 CustomerInvoiceItem::create([
                     'customer_invoice_id' => $invoice->id,
                     'item_id' => $material->item_id,
-                    'name' => $material->item->name ?? "Pièce détachée",
+                    'name' => $material->item->name ?? 'Pièce détachée',
                     'quantity' => $material->quantity,
                     'price_unit' => $material->selling_price,
                     'total_ht' => $material->quantity * $material->selling_price,

@@ -5,7 +5,7 @@ namespace App\Enums\RH;
 use Filament\Support\Contracts\HasColor;
 use Filament\Support\Contracts\HasLabel;
 
-enum OpcoStatus: string implements HasLabel, HasColor
+enum OpcoStatus: string implements HasColor, HasLabel
 {
     case NON_DEMANDE = 'non_demande';
     case EN_ATTENTE = 'en_attente';

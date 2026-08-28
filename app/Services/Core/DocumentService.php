@@ -3,7 +3,6 @@
 namespace App\Services\Core;
 
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\View;
 use Spatie\Browsershot\Browsershot;
 
 class DocumentService
@@ -27,6 +26,7 @@ class DocumentService
     {
         return Storage::disk(static::getDisk())->download($relativePath, $filename);
     }
+
     public function generate(string $view, array $data, string $filename, string $type = 'other', bool $pdfView = false): mixed
     {
         $browsershot = Browsershot::html(view($view, $data)->render())
@@ -35,7 +35,7 @@ class DocumentService
             ->showBackground()
             ->waitUntilNetworkIdle()
             ->noSandbox();
-            
+
         if (isset($data['paperSize'])) {
             $browsershot->paperSize($data['paperSize']['width'], $data['paperSize']['height']);
         } else {
@@ -47,7 +47,7 @@ class DocumentService
         } else {
             $browsershot->margins(10, 10, 10, 10);
         }
-            
+
         if (isset($data['position']) && $data['position'] !== 'portrait') {
             $browsershot->landscape();
         }

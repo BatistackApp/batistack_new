@@ -11,9 +11,10 @@ use ToneGabes\Filament\Icons\Enums\Phosphor;
 class ListThirdParties extends ListRecords
 {
     protected static string $resource = ThirdPartyResource::class;
-    protected static ?string $title = 'Liste des tiers';
-    protected static ?string $breadcrumb = 'Liste';
 
+    protected static ?string $title = 'Liste des tiers';
+
+    protected static ?string $breadcrumb = 'Liste';
 
     protected function getHeaderActions(): array
     {

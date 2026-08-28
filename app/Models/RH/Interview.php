@@ -2,20 +2,19 @@
 
 namespace App\Models\RH;
 
+use App\Enums\RH\InterviewStatus;
+use App\Enums\RH\InterviewType;
+use App\Models\User;
+use Database\Factories\RH\InterviewFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-
-use App\Enums\RH\InterviewType;
-use App\Enums\RH\InterviewStatus;
-use App\Models\User;
-use App\Models\RH\Employee;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Interview extends Model implements HasMedia
 {
-    /** @use HasFactory<\Database\Factories\RH\InterviewFactory> */
+    /** @use HasFactory<InterviewFactory> */
     use HasFactory, InteractsWithMedia;
 
     protected $fillable = [

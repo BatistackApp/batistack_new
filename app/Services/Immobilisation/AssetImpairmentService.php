@@ -30,7 +30,7 @@ class AssetImpairmentService
 
             // 3. Recalculate remaining schedule and save
             $newSchedule = $this->calculatorService->recalculateSchedule($asset);
-            
+
             foreach ($newSchedule as $item) {
                 $asset->depreciations()->create([
                     'period_date' => $item['period_date'],

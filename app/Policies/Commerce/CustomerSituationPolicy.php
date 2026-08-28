@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace App\Policies\Commerce;
 
-use Illuminate\Foundation\Auth\User as AuthUser;
 use App\Models\Commerce\CustomerSituation;
 use Illuminate\Auth\Access\HandlesAuthorization;
+use Illuminate\Foundation\Auth\User as AuthUser;
 
 class CustomerSituationPolicy
 {
     use HandlesAuthorization;
-    
+
     public function viewAny(AuthUser $authUser): bool
     {
         return $authUser->can('ViewAny:CustomerSituation');
@@ -71,5 +71,4 @@ class CustomerSituationPolicy
     {
         return $authUser->can('Reorder:CustomerSituation');
     }
-
 }

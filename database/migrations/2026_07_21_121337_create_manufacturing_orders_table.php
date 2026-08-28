@@ -17,15 +17,15 @@ return new class extends Migration
             $table->string('reference')->unique();
             $table->foreignId('item_id')->constrained('items')->onDelete('restrict');
             $table->foreignId('chantier_id')->nullable()->constrained('chantiers')->onDelete('set null');
-            
+
             $table->decimal('quantity_planned', 10, 4);
             $table->decimal('quantity_produced', 10, 4)->default(0);
-            
+
             $table->string('status')->default('draft');
-            
+
             $table->date('start_date')->nullable();
             $table->date('end_date')->nullable();
-            
+
             $table->decimal('total_labor_cost', 10, 2)->default(0);
             $table->decimal('total_material_cost', 10, 2)->default(0);
 

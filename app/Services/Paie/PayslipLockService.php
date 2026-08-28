@@ -9,7 +9,6 @@ use App\Models\Paie\Payslip;
 use App\Models\RH\TimeEntry;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
-use Exception;
 
 class PayslipLockService
 {
@@ -31,8 +30,8 @@ class PayslipLockService
 
         DB::transaction(function () use ($payslip) {
             // 1. Lock TimeEntries for this employee during this period
-            $startOfMonth = Carbon::parse($payslip->period . '-01')->startOfMonth();
-            $endOfMonth = Carbon::parse($payslip->period . '-01')->endOfMonth();
+            $startOfMonth = Carbon::parse($payslip->period.'-01')->startOfMonth();
+            $endOfMonth = Carbon::parse($payslip->period.'-01')->endOfMonth();
 
             TimeEntry::where('employee_id', $payslip->employee_id)
                 ->whereBetween('date', [$startOfMonth, $endOfMonth])

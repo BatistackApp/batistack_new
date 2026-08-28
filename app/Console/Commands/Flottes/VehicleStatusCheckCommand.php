@@ -43,6 +43,7 @@ class VehicleStatusCheckCommand extends Command
 
         if ($issues->isEmpty()) {
             $this->info('✓ Tous les statuts sont cohérents');
+
             return self::SUCCESS;
         }
 

@@ -28,7 +28,7 @@ class CibtpDeadlineReminderNotification extends Notification implements ShouldQu
             ->line("Attention : {$this->urgentCount} déclaration(s) d'intempéries sont au statut brouillon depuis plus de 15 jours.")
             ->line("Le délai légal strict est de 30 jours pour transmettre ces déclarations à la CIBTP, sous peine de refus d'indemnisation.")
             ->action('Gérer les déclarations', url('/admin/cibtp-declarations'))
-            ->line("Merci de les traiter dans les plus brefs délais.");
+            ->line('Merci de les traiter dans les plus brefs délais.');
     }
 
     public function toArray(object $notifiable): array

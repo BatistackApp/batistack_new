@@ -5,6 +5,7 @@ namespace App\Jobs\Commerce;
 use App\Enums\Commerce\InvoiceStatus;
 use App\Models\Commerce\CustomerInvoice;
 use App\Notifications\Commerce\PaymentReminderNotification;
+use App\Notifications\Customer\RelanceNotification;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -41,9 +42,9 @@ class CheckOverdueInvoicesJob implements ShouldQueue
             $reminderLevel = $this->determineReminderLevel($daysLate);
 
             // Vérification : pas de relance si elle a déjà été envoyée récemment
-            // if ($this->hasRecentReminder($invoice, $reminderLevel)) {
-            //     continue;
-            // }
+            if ($this->hasRecentReminder($invoice, $reminderLevel)) {
+                continue;
+            }
 
             $this->sendReminder($invoice, $reminderLevel, $daysLate);
         }
@@ -68,18 +69,12 @@ class CheckOverdueInvoicesJob implements ShouldQueue
     /**
      * Vérifie si une relance de ce niveau a déjà été envoyée récemment.
      */
-    // protected function hasRecentReminder(CustomerInvoice $invoice, int $level): bool
-    // {
-    //     // Récupération du dernier log de relance
-    //     $lastReminder = $invoice->auditLogs() // Supposant une relation de logs d'audit
-    //         ->where('action', 'reminder_sent')
-    //         ->where('metadata->level', $level)
-    //         ->where('created_at', '>=', now()->subDays(7))
-    //         ->latest()
-    //         ->first();
-
-    //     return $lastReminder !== null;
-    // }
+    protected function hasRecentReminder(CustomerInvoice $invoice, int $level): bool
+    {
+        return $invoice->dunning_level === $level
+            && $invoice->last_dunning_at !== null
+            && $invoice->last_dunning_at->isAfter(now()->subDays(7));
+    }
 
     /**
      * Envoie la relance au client.
@@ -99,9 +94,18 @@ class CheckOverdueInvoicesJob implements ShouldQueue
             $contact->notify(
                 new PaymentReminderNotification($invoice, $level, $daysLate)
             );
+            $contact->notify(
+                new RelanceNotification($invoice, $level, $daysLate)
+            );
 
             // 3. Logging du rappel
             Log::info("Reminder level {$level} sent for invoice {$invoice->reference} ({$daysLate} days late)");
+
+            // 4. Mise à jour du niveau de relance sur la facture
+            $invoice->update([
+                'dunning_level' => $level,
+                'last_dunning_at' => now(),
+            ]);
 
         } catch (\Exception $e) {
             Log::error("Failed to send reminder for invoice {$invoice->reference}: ".$e->getMessage());

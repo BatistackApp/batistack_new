@@ -2,10 +2,10 @@
 
 namespace App\Filament\Flottes\Widgets;
 
-use App\Services\Flottes\FleetCostService;
 use App\Models\Flottes\Vehicle;
-use LaBoiteACode\FilamentDashboardWidgets\Widgets\VarianceWidget;
+use App\Services\Flottes\FleetCostService;
 use LaBoiteACode\FilamentDashboardWidgets\Data\VarianceItem;
+use LaBoiteACode\FilamentDashboardWidgets\Widgets\VarianceWidget;
 
 class TcoVarianceWidget extends VarianceWidget
 {
@@ -26,14 +26,14 @@ class TcoVarianceWidget extends VarianceWidget
 
         $currentTco = 0;
         $prevTco = 0;
-        
+
         foreach ($vehicles as $v) {
-            $currentTco += $costService->getMaintenanceCostsByPeriod($v, $currentMonth, now()) 
+            $currentTco += $costService->getMaintenanceCostsByPeriod($v, $currentMonth, now())
                 + (float) $v->fuelTransactions()->where('purchased_at', '>=', $currentMonth)->sum('cost_ht')
                 + (float) $v->expenses()->where('spent_at', '>=', $currentMonth)->sum('amount_ht')
                 + ($v->getAnnualCost() / 12);
 
-            $prevTco += $costService->getMaintenanceCostsByPeriod($v, $prevMonthStart, $prevMonthEnd) 
+            $prevTco += $costService->getMaintenanceCostsByPeriod($v, $prevMonthStart, $prevMonthEnd)
                 + (float) $v->fuelTransactions()->whereBetween('purchased_at', [$prevMonthStart, $prevMonthEnd])->sum('cost_ht')
                 + (float) $v->expenses()->whereBetween('spent_at', [$prevMonthStart, $prevMonthEnd])->sum('amount_ht')
                 + ($v->getAnnualCost() / 12);
@@ -42,8 +42,8 @@ class TcoVarianceWidget extends VarianceWidget
         return [
             VarianceItem::make('Coût Mensuel (TCO)', (float) $currentTco)
                 ->previous((float) $prevTco)
-                ->formatUsing(fn ($val) => number_format($val, 2, ',', ' ') . ' €')
-                ->changeFormatUsing(fn ($val) => ($val > 0 ? '+' : '') . number_format($val, 2, ',', ' ') . ' €')
+                ->formatUsing(fn ($val) => number_format($val, 2, ',', ' ').' €')
+                ->changeFormatUsing(fn ($val) => ($val > 0 ? '+' : '').number_format($val, 2, ',', ' ').' €'),
         ];
     }
 }

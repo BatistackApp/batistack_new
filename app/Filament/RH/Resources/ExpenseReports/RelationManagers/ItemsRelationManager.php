@@ -3,6 +3,10 @@
 namespace App\Filament\RH\Resources\ExpenseReports\RelationManagers;
 
 use App\Enums\RH\ExpenseItemStatus;
+use App\Enums\RH\ExpensePaymentMethod;
+use App\Models\RH\ExpenseItem;
+use App\Services\RH\GoogleCloudVisionOcrService;
+use Carbon\Carbon;
 use Filament\Actions\Action;
 use Filament\Actions\AssociateAction;
 use Filament\Actions\BulkActionGroup;
@@ -17,8 +21,11 @@ use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
+use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Infolists\Components\SpatieMediaLibraryImageEntry;
 use Filament\Infolists\Components\TextEntry;
+use Filament\Notifications\Notification;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
@@ -58,52 +65,56 @@ class ItemsRelationManager extends RelationManager
                     ->required(fn (Get $get) => in_array($get('category'), ['Carburant', 'Péage', 'Parking'])),
                 Select::make('payment_method')
                     ->label('Moyen de paiement')
-                    ->options(\App\Enums\RH\ExpensePaymentMethod::class)
+                    ->options(ExpensePaymentMethod::class)
                     ->required()
-                    ->default(\App\Enums\RH\ExpensePaymentMethod::PERSONAL_CARD->value),
-                \Filament\Forms\Components\SpatieMediaLibraryFileUpload::make('receipts')
+                    ->default(ExpensePaymentMethod::PERSONAL_CARD->value),
+                SpatieMediaLibraryFileUpload::make('receipts')
                     ->label('Preuve (Ticket)')
                     ->collection('receipts')
                     ->acceptedFileTypes(['image/*', 'application/pdf'])
                     ->columnSpanFull()
                     ->live(onBlur: false)
                     ->afterStateUpdated(function ($state, Set $set) {
-                        if (empty($state)) return;
+                        if (empty($state)) {
+                            return;
+                        }
 
                         $file = is_array($state) ? array_values($state)[0] ?? null : $state;
-                        if (!$file || !method_exists($file, 'getRealPath')) return;
+                        if (! $file || ! method_exists($file, 'getRealPath')) {
+                            return;
+                        }
 
                         $path = $file->getRealPath();
 
                         try {
-                            $ocrService = app(\App\Services\RH\GoogleCloudVisionOcrService::class);
+                            $ocrService = app(GoogleCloudVisionOcrService::class);
                             $extractedData = $ocrService->extractData($path);
 
-                            if (!empty($extractedData['amount_ttc'])) {
+                            if (! empty($extractedData['amount_ttc'])) {
                                 $set('amount_ttc', $extractedData['amount_ttc']);
                             }
-                            if (!empty($extractedData['amount_ht'])) {
+                            if (! empty($extractedData['amount_ht'])) {
                                 $set('amount_ht', $extractedData['amount_ht']);
                             }
-                            if (!empty($extractedData['vat_amount'])) {
+                            if (! empty($extractedData['vat_amount'])) {
                                 $set('vat_amount', $extractedData['vat_amount']);
                             }
-                            if (!empty($extractedData['date'])) {
-                                $set('date', \Carbon\Carbon::parse($extractedData['date'])->format('Y-m-d'));
+                            if (! empty($extractedData['date'])) {
+                                $set('date', Carbon::parse($extractedData['date'])->format('Y-m-d'));
                             }
-                            if (!empty($extractedData['merchant'])) {
+                            if (! empty($extractedData['merchant'])) {
                                 $set('merchant', $extractedData['merchant']);
                             }
-                            if (!empty($extractedData['category'])) {
+                            if (! empty($extractedData['category'])) {
                                 $set('category', $extractedData['category']);
                             }
 
-                            \Filament\Notifications\Notification::make()
+                            Notification::make()
                                 ->success()
                                 ->title('Extraction OCR réussie')
                                 ->send();
                         } catch (\Exception $e) {
-                            \Illuminate\Support\Facades\Log::error('OCR Live Error: ' . $e->getMessage());
+                            \Illuminate\Support\Facades\Log::error('OCR Live Error: '.$e->getMessage());
                         }
                     }),
                 DatePicker::make('date')->label('Date')
@@ -180,7 +191,7 @@ class ItemsRelationManager extends RelationManager
                         TextEntry::make('updated_at')->label('Mis à jour le')
                             ->dateTime()
                             ->placeholder('-'),
-                        \Filament\Infolists\Components\SpatieMediaLibraryImageEntry::make('receipts')
+                        SpatieMediaLibraryImageEntry::make('receipts')
                             ->label('Preuve (Ticket)')
                             ->collection('receipts')
                             ->columnSpanFull(),
@@ -249,8 +260,8 @@ class ItemsRelationManager extends RelationManager
                             ->required(),
                     ])
                     ->action(function (array $data, RelationManager $livewire) {
-                        $path = storage_path('app/public/' . $data['receipt_image']);
-                        $ocrService = new \App\Services\RH\GoogleCloudVisionOcrService();
+                        $path = storage_path('app/public/'.$data['receipt_image']);
+                        $ocrService = new GoogleCloudVisionOcrService;
                         $extractedData = $ocrService->extractData($path);
 
                         $item = $livewire->getOwnerRecord()->items()->create([
@@ -261,13 +272,13 @@ class ItemsRelationManager extends RelationManager
                             'vat_amount' => $extractedData['vat_amount'],
                             'merchant' => $extractedData['merchant'],
                             'status' => 'pending',
-                            'payment_method' => \App\Enums\RH\ExpensePaymentMethod::PERSONAL_CARD->value,
+                            'payment_method' => ExpensePaymentMethod::PERSONAL_CARD->value,
                         ]);
 
                         try {
                             $item->addMedia($path)->toMediaCollection('receipts');
                         } catch (\Exception $e) {
-                            Log::error('Media attach error: ' . $e->getMessage());
+                            Log::error('Media attach error: '.$e->getMessage());
                         }
 
                         $livewire->mountTableAction('edit', $item);
@@ -280,24 +291,24 @@ class ItemsRelationManager extends RelationManager
                     ->label('Approuver')
                     ->icon('heroicon-o-check-circle')
                     ->color('success')
-                    ->action(fn(\App\Models\RH\ExpenseItem $record) => $record->update(['status' => \App\Enums\RH\ExpenseItemStatus::APPROVED]))
-                    ->visible(fn(\App\Models\RH\ExpenseItem $record) => $record->status === \App\Enums\RH\ExpenseItemStatus::PENDING),
+                    ->action(fn (ExpenseItem $record) => $record->update(['status' => ExpenseItemStatus::APPROVED]))
+                    ->visible(fn (ExpenseItem $record) => $record->status === ExpenseItemStatus::PENDING),
                 Action::make('reject')
                     ->label('Rejeter')
                     ->icon('heroicon-o-x-circle')
                     ->color('danger')
                     ->schema([
-                        \Filament\Forms\Components\Textarea::make('reason')
+                        Textarea::make('reason')
                             ->label('Motif du rejet')
                             ->required(),
                     ])
-                    ->action(function (\App\Models\RH\ExpenseItem $record, array $data) {
+                    ->action(function (ExpenseItem $record, array $data) {
                         $record->update([
-                            'status' => \App\Enums\RH\ExpenseItemStatus::REJECTED,
+                            'status' => ExpenseItemStatus::REJECTED,
                             'rejection_reason' => $data['reason'],
                         ]);
                     })
-                    ->visible(fn(\App\Models\RH\ExpenseItem $record) => $record->status === \App\Enums\RH\ExpenseItemStatus::PENDING),
+                    ->visible(fn (ExpenseItem $record) => $record->status === ExpenseItemStatus::PENDING),
                 ViewAction::make(),
                 EditAction::make(),
                 DissociateAction::make(),

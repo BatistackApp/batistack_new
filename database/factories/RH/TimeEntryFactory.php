@@ -9,7 +9,6 @@ use App\Models\RH\Employee;
 use App\Models\RH\TimeEntry;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
-use Illuminate\Support\Carbon;
 
 class TimeEntryFactory extends Factory
 {

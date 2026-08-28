@@ -13,9 +13,7 @@ class WelcomeCustomerNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 
-    public function __construct(public Contact  $contact)
-    {
-    }
+    public function __construct(public Contact $contact) {}
 
     public function via($notifiable): array
     {

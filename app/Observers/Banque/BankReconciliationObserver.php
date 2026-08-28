@@ -3,19 +3,24 @@
 namespace App\Observers\Banque;
 
 use App\Enums\Accounting\JournalType;
+use App\Enums\Banque\TransactionType;
 use App\Enums\Commerce\InvoiceStatus;
+use App\Enums\Paie\PayslipStatus;
+use App\Enums\RH\ExpenseReportStatus;
 use App\Models\Accounting\EcritureComptable;
 use App\Models\Banque\BankReconciliation;
 use App\Models\Commerce\CustomerInvoice;
 use App\Models\Commerce\SupplierInvoice;
+use App\Models\Paie\Payslip;
+use App\Models\RH\ExpenseReport;
 use App\Services\Accounting\AccountingPlanService;
 use App\Services\Accounting\EcritureComptableService;
 
 class BankReconciliationObserver
 {
     public function __construct(
-        private AccountingPlanService $accountingPlanService = new AccountingPlanService(),
-        private EcritureComptableService $ecritureService = new EcritureComptableService(),
+        private AccountingPlanService $accountingPlanService = new AccountingPlanService,
+        private EcritureComptableService $ecritureService = new EcritureComptableService,
     ) {}
 
     public function created(BankReconciliation $reconciliation): void
@@ -53,9 +58,9 @@ class BankReconciliationObserver
         try {
             $numeroPiece = $this->ecritureService->generateNumeroPiece(JournalType::BANQUE);
             $date = $transaction->date->toDateString();
-            $libelle = 'Lettrage ' . ($invoice->reference ?? $invoice->number ?? 'N/A');
+            $libelle = 'Lettrage '.($invoice->reference ?? $invoice->number ?? 'N/A');
 
-            if ($transaction->type === \App\Enums\Banque\TransactionType::DEBIT) {
+            if ($transaction->type === TransactionType::DEBIT) {
                 $compteCharge = $this->accountingPlanService->getChargeAccount();
                 $compteBanque = $this->accountingPlanService->getBankAccount();
 
@@ -150,33 +155,33 @@ class BankReconciliationObserver
                     $invoice->save();
                 }
             }
-        } elseif ($invoice instanceof \App\Models\RH\ExpenseReport) {
+        } elseif ($invoice instanceof ExpenseReport) {
             $totalReconciled = $invoice->morphMany(BankReconciliation::class, 'reconcilable')->sum('amount_applied');
             $totalAmount = $invoice->total_amount ?? 0;
 
             if ($totalAmount > 0 && $totalReconciled >= $totalAmount - 0.05) { // 5 cents tolerance
-                if ($invoice->status !== \App\Enums\RH\ExpenseReportStatus::PAID) {
-                    $invoice->status = \App\Enums\RH\ExpenseReportStatus::PAID;
+                if ($invoice->status !== ExpenseReportStatus::PAID) {
+                    $invoice->status = ExpenseReportStatus::PAID;
                     $invoice->save();
                 }
             } else {
-                if ($invoice->status === \App\Enums\RH\ExpenseReportStatus::PAID) {
-                    $invoice->status = \App\Enums\RH\ExpenseReportStatus::VALIDATED;
+                if ($invoice->status === ExpenseReportStatus::PAID) {
+                    $invoice->status = ExpenseReportStatus::VALIDATED;
                     $invoice->save();
                 }
             }
-        } elseif ($invoice instanceof \App\Models\Paie\Payslip) {
+        } elseif ($invoice instanceof Payslip) {
             $totalReconciled = $invoice->morphMany(BankReconciliation::class, 'reconcilable')->sum('amount_applied');
             $totalAmount = $invoice->net_payable ?? 0;
 
             if ($totalAmount > 0 && $totalReconciled >= $totalAmount - 0.05) { // 5 cents tolerance
-                if ($invoice->status !== \App\Enums\Paie\PayslipStatus::PAID) {
-                    $invoice->status = \App\Enums\Paie\PayslipStatus::PAID;
+                if ($invoice->status !== PayslipStatus::PAID) {
+                    $invoice->status = PayslipStatus::PAID;
                     $invoice->save();
                 }
             } else {
-                if ($invoice->status === \App\Enums\Paie\PayslipStatus::PAID) {
-                    $invoice->status = \App\Enums\Paie\PayslipStatus::VALIDATED;
+                if ($invoice->status === PayslipStatus::PAID) {
+                    $invoice->status = PayslipStatus::VALIDATED;
                     $invoice->save();
                 }
             }

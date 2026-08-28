@@ -56,6 +56,6 @@ class Signature extends Model
      */
     public function getIsValidAttribute(): bool
     {
-        return $this->status === \App\Enums\Core\SignatureStatus::SIGNED;
+        return $this->status === SignatureStatus::SIGNED;
     }
 }

@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace App\Policies\Paie;
 
-use Illuminate\Foundation\Auth\User as AuthUser;
 use App\Models\Paie\PayrollContributionProfile;
 use Illuminate\Auth\Access\HandlesAuthorization;
+use Illuminate\Foundation\Auth\User as AuthUser;
 
 class PayrollContributionProfilePolicy
 {
     use HandlesAuthorization;
-    
+
     public function viewAny(AuthUser $authUser): bool
     {
         return $authUser->can('ViewAny:PayrollContributionProfile');
@@ -71,5 +71,4 @@ class PayrollContributionProfilePolicy
     {
         return $authUser->can('Reorder:PayrollContributionProfile');
     }
-
 }
