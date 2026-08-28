@@ -41,8 +41,10 @@ class TechnicienKpiWidget extends StatsOverviewWidget
             ->count();
 
         $hoursThisMonth = InterventionWorker::where('employee_id', $employee->id)
-            ->whereMonth('created_at', now()->month)
-            ->whereYear('created_at', now()->year)
+            ->whereHas('intervention', fn ($q) => $q
+                ->whereMonth('completed_at', now()->month)
+                ->whereYear('completed_at', now()->year)
+            )
             ->sum('hours_worked');
 
         return [

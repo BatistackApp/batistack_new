@@ -44,7 +44,7 @@ class PendingSignaturesWidget extends StatsOverviewWidget
             ->whereYear('completed_at', now()->year)
             ->count();
 
-        $signatureRate = ($totalDone > 0) ? round(($totalSigned / $totalDone) * 100) : 100;
+        $signatureRate = ($totalDone > 0) ? round(($totalSigned / $totalDone) * 100) : null;
 
         return [
             Stat::make('Signées ce mois', $totalSigned)
@@ -57,10 +57,10 @@ class PendingSignaturesWidget extends StatsOverviewWidget
                 ->descriptionIcon(Phosphor::Clock)
                 ->color($totalPending > 0 ? 'warning' : 'success'),
 
-            Stat::make('Taux de signature', $signatureRate.'%')
-                ->description($totalDone.' intervention(s) terminée(s) ce mois')
+            Stat::make('Taux de signature', $signatureRate !== null ? $signatureRate.'%' : '—')
+                ->description($totalDone > 0 ? $totalDone.' intervention(s) terminée(s) ce mois' : 'Aucune intervention terminée ce mois')
                 ->descriptionIcon(Phosphor::ChartPieSlice)
-                ->color($signatureRate >= 80 ? 'success' : ($signatureRate >= 50 ? 'warning' : 'danger')),
+                ->color($signatureRate === null ? 'gray' : ($signatureRate >= 80 ? 'success' : ($signatureRate >= 50 ? 'warning' : 'danger'))),
         ];
     }
 }
