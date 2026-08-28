@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Storage;
 
 it('generates rh documents', function () {
     Storage::fake(config('batistack.documents_disk', 'public'));
-    
+
     Company::factory()->create();
     $employee = Employee::factory()->create();
     $contract = Contract::factory()->create(['employee_id' => $employee->id]);

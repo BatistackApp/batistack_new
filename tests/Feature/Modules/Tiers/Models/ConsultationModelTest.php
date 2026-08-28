@@ -2,9 +2,9 @@
 
 namespace Tests\Feature\Modules\Tiers\Models;
 
+use App\Models\Chantiers\Chantier;
 use App\Models\Tiers\Consultation;
 use App\Models\Tiers\ConsultationOffer;
-use App\Models\Chantiers\Chantier;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
@@ -19,7 +19,7 @@ describe('Consultation - Relations', function () {
 
     test('peut avoir plusieurs offres', function () {
         $consultation = Consultation::factory()->create();
-        
+
         ConsultationOffer::factory(3)->create(['consultation_id' => $consultation->id]);
 
         expect($consultation->offers->count())->toBe(3);

@@ -1,7 +1,7 @@
 <?php
 
-use App\Models\Immobilisation\FixedAsset;
 use App\Enums\Immobilisation\DepreciationMethod;
+use App\Models\Immobilisation\FixedAsset;
 use App\Services\Immobilisation\DepreciationCalculatorService;
 
 it('calculates linear prorata temporis correctly', function () {
@@ -16,7 +16,7 @@ it('calculates linear prorata temporis correctly', function () {
         'depreciation_method' => DepreciationMethod::LINEAR,
     ]);
 
-    $service = new DepreciationCalculatorService();
+    $service = new DepreciationCalculatorService;
     $schedule = $service->generateSchedule($asset);
 
     // Because of prorata, it spills over to year 6
@@ -36,7 +36,7 @@ it('calculates declining balance correctly', function () {
         'depreciation_method' => DepreciationMethod::DECLINING_BALANCE,
     ]);
 
-    $service = new DepreciationCalculatorService();
+    $service = new DepreciationCalculatorService;
     $schedule = $service->generateSchedule($asset);
 
     // First year: 35% of 1000 = 350
@@ -55,16 +55,16 @@ it('calculates investment grant reversal correctly', function () {
         'grant_amount' => 2000, // 20% of the asset
     ]);
 
-    $service = new DepreciationCalculatorService();
+    $service = new DepreciationCalculatorService;
     $schedule = $service->generateSchedule($asset);
 
     expect(count($schedule))->toEqual(5);
-    
+
     // Annual depreciation is 2000. Reversal should be 20% of 2000 = 400.
     expect((float) $schedule[0]['amount'])->toEqual(2000.00);
     expect((float) $schedule[0]['grant_reversal_amount'])->toEqual(400.00);
     expect((float) $schedule[0]['grant_remaining_amount'])->toEqual(1600.00);
-    
+
     expect((float) $schedule[4]['amount'])->toEqual(2000.00);
     expect((float) $schedule[4]['grant_reversal_amount'])->toEqual(400.00);
     expect((float) $schedule[4]['grant_remaining_amount'])->toEqual(0.00);

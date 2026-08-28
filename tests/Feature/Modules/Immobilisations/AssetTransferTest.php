@@ -1,8 +1,8 @@
 <?php
 
-use App\Models\Immobilisation\FixedAsset;
-use App\Models\Immobilisation\AssetTransfer;
 use App\Models\Chantiers\Chantier;
+use App\Models\Immobilisation\AssetTransfer;
+use App\Models\Immobilisation\FixedAsset;
 
 it('completes transfer and updates fixed asset chantier', function () {
     $chantier1 = Chantier::factory()->create();

@@ -1,11 +1,11 @@
 <?php
 
-use App\Models\Articles\Item;
-use App\Models\Gpao\ManufacturingOrder;
 use App\Enums\Gpao\ManufacturingStatus;
+use App\Models\Articles\Item;
 use App\Models\Articles\Warehouse;
+use App\Models\Gpao\ManufacturingOrder;
 use App\Models\User;
-use App\Models\Gpao\QualityCheck;
+
 use function Pest\Laravel\actingAs;
 
 beforeEach(function () {
@@ -25,7 +25,6 @@ it('can transition an order to quality control', function () {
 
     expect($this->manufacturingOrder->fresh()->status)->toBe(ManufacturingStatus::QUALITY_CONTROL);
 });
-
 
 it('can fail quality control and return to in progress', function () {
     $user = User::factory()->create();

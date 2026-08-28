@@ -1,11 +1,9 @@
 <?php
 
-use App\Models\RH\Employee;
-use App\Models\RH\Contract;
 use App\Models\Core\Company;
-use Illuminate\Support\Facades\Event;
+use App\Models\RH\Employee;
+use App\Services\RH\RHDocumentService;
 use Illuminate\Support\Facades\Storage;
-use Carbon\Carbon;
 
 beforeEach(function () {
     Company::factory()->create([
@@ -27,11 +25,11 @@ it('auto-generates the affiliation form when onboarding is completed', function 
     Storage::disk('public')->put($dummyPath, 'fake pdf content');
 
     // Mock the service
-    $mock = Mockery::mock(\App\Services\RH\RHDocumentService::class)->makePartial();
+    $mock = Mockery::mock(RHDocumentService::class)->makePartial();
     $mock->shouldReceive('generateAffiliationMutuelle')
         ->once()
         ->andReturn($dummyPath);
-    app()->instance(\App\Services\RH\RHDocumentService::class, $mock);
+    app()->instance(RHDocumentService::class, $mock);
 
     // Act: Mark onboarding as completed
     $employee->onboarding_completed = true;
@@ -39,7 +37,7 @@ it('auto-generates the affiliation form when onboarding is completed', function 
 
     // Assert: Media is attached
     $media = $employee->getFirstMedia('rh_documents');
-    
+
     expect($media)->not->toBeNull()
         ->and($media->file_name)->toContain('dummy_affiliation');
 });
@@ -49,9 +47,9 @@ it('does not generate the affiliation form if onboarding is already completed', 
         'onboarding_completed' => true,
     ]);
 
-    $mock = Mockery::mock(\App\Services\RH\RHDocumentService::class)->makePartial();
+    $mock = Mockery::mock(RHDocumentService::class)->makePartial();
     $mock->shouldNotReceive('generateAffiliationMutuelle');
-    app()->instance(\App\Services\RH\RHDocumentService::class, $mock);
+    app()->instance(RHDocumentService::class, $mock);
 
     // Act: update something else
     $employee->first_name = 'Jean-Claude';

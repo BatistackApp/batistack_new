@@ -19,20 +19,20 @@ it('synchronizes financial data successfully', function () {
                     'finances' => [
                         'chiffre_affaires' => 1000000,
                         'resultat_net' => 50000,
-                        'annee_cloture_exercice' => '2025'
-                    ]
-                ]
-            ]
-        ], 200)
+                        'annee_cloture_exercice' => '2025',
+                    ],
+                ],
+            ],
+        ], 200),
     ]);
 
     $service = app(PappersService::class);
     $result = $service->syncFinancialData($thirdParty);
 
     expect($result)->toBeTrue();
-    
+
     $thirdParty->refresh();
-    
+
     expect($thirdParty->financial_status)->toBe('Sain')
         ->and($thirdParty->financial_data['chiffre_affaires'])->toBe(1000000)
         ->and($thirdParty->last_financial_sync_at)->not->toBeNull();
@@ -49,9 +49,9 @@ it('detects cessation or liquidation', function () {
                 [
                     'etat_administratif' => 'C', // Cessation
                     'procedures_collectives' => 'Liquidation judiciaire',
-                ]
-            ]
-        ], 200)
+                ],
+            ],
+        ], 200),
     ]);
 
     $service = app(PappersService::class);
@@ -84,8 +84,8 @@ it('returns false if api finds no results', function () {
 
     Http::fake([
         'recherche-entreprises.api.gouv.fr/*' => Http::response([
-            'results' => []
-        ], 200)
+            'results' => [],
+        ], 200),
     ]);
 
     Log::shouldReceive('warning')->once()->withArgs(function ($message) {
@@ -105,8 +105,8 @@ it('catches exception and returns false', function () {
 
     Http::fake([
         'recherche-entreprises.api.gouv.fr/*' => function () {
-            throw new \Exception('Connection timeout');
-        }
+            throw new Exception('Connection timeout');
+        },
     ]);
 
     Log::shouldReceive('error')->once()->withArgs(function ($message) {

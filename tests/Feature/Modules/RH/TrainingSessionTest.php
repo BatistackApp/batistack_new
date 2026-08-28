@@ -1,16 +1,17 @@
 <?php
 
-use App\Models\RH\TrainingSession;
-use App\Models\RH\Employee;
-use App\Models\RH\Qualification;
-use App\Enums\RH\TrainingSessionStatus;
+use App\Enums\RH\CertificationSymbol;
 use App\Enums\RH\OpcoStatus;
 use App\Enums\RH\QualificationType;
-use App\Enums\RH\CertificationSymbol;
 use App\Enums\RH\TrainingParticipantStatus;
+use App\Enums\RH\TrainingSessionStatus;
+use App\Models\RH\Employee;
+use App\Models\RH\Qualification;
+use App\Models\RH\TrainingSession;
 use App\Services\RH\TrainingSessionService;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 
-uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
+uses(RefreshDatabase::class);
 
 it('creates a training session with correct default statuses', function () {
     $session = TrainingSession::create([
@@ -54,7 +55,7 @@ it('completes session and generates qualifications only for validated participan
     $session->participants()->attach($employeeFailed->id, ['status' => TrainingParticipantStatus::ECHOUE->value]);
     $session->participants()->attach($employeeAbsent->id, ['status' => TrainingParticipantStatus::ABSENT->value]);
 
-    $service = new TrainingSessionService();
+    $service = new TrainingSessionService;
     $service->completeSession($session);
 
     // Refresh
@@ -85,7 +86,7 @@ it('does not generate qualifications if session has no qualification type', func
     $employee = Employee::factory()->create();
     $session->participants()->attach($employee->id, ['status' => TrainingParticipantStatus::VALIDE->value]);
 
-    $service = new TrainingSessionService();
+    $service = new TrainingSessionService;
     $service->completeSession($session);
 
     expect(Qualification::where('employee_id', $employee->id)->count())->toBe(0)

@@ -1,12 +1,12 @@
 <?php
 
+use App\Enums\RH\ContractType;
 use App\Models\RH\Contract;
 use App\Models\RH\Employee;
 use App\Models\User;
+use App\Services\RH\RHDocumentService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Role;
-use App\Enums\RH\ContractType;
-use App\Services\RH\RHDocumentService;
 
 uses(RefreshDatabase::class);
 
@@ -81,6 +81,6 @@ it('removes role when contract is deleted', function () {
     expect($user->fresh()->hasRole($roleName))->toBeTrue();
 
     $contract->delete();
-    
+
     expect($user->fresh()->hasRole($roleName))->toBeFalse();
 });

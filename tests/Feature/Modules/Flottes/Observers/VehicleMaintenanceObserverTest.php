@@ -1,11 +1,15 @@
 <?php
 
+use App\Enums\Flottes\AssignmentStatus;
 use App\Enums\Flottes\VehicleStatus;
 use App\Jobs\Flottes\RecalculateVehicleTcoJob;
 use App\Models\Core\VatRate;
 use App\Models\Flottes\Vehicle;
+use App\Models\Flottes\VehicleAssignment;
 use App\Models\Flottes\VehicleMaintenance;
+use App\Models\RH\Employee;
 use App\Models\Tiers\ThirdParty;
+use App\Notifications\Flottes\MaintenanceScheduledNotification;
 use Illuminate\Support\Facades\Log;
 
 beforeEach(function () {
@@ -98,13 +102,13 @@ test('refuse création maintenance avec date future', function () {
 test('notifie le conducteur actif de la maintenance', function () {
     Notification::fake();
     $vehicle = Vehicle::factory()->create();
-    $employee = \App\Models\RH\Employee::factory()->create();
+    $employee = Employee::factory()->create();
 
-    \App\Models\Flottes\VehicleAssignment::create([
+    VehicleAssignment::create([
         'vehicle_id' => $vehicle->id,
         'employee_id' => $employee->id,
         'started_at' => now()->subHour(),
-        'status' => \App\Enums\Flottes\AssignmentStatus::ACTIVE,
+        'status' => AssignmentStatus::ACTIVE,
     ]);
 
     VehicleMaintenance::create([
@@ -116,5 +120,5 @@ test('notifie le conducteur actif de la maintenance', function () {
         'performed_at' => now(),
     ]);
 
-    Notification::assertSentTo($employee, \App\Notifications\Flottes\MaintenanceScheduledNotification::class);
+    Notification::assertSentTo($employee, MaintenanceScheduledNotification::class);
 });

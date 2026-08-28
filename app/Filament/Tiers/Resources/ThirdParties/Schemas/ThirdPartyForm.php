@@ -122,6 +122,14 @@ class ThirdPartyForm
                                             ->label('Délai de règlement')
                                             ->numeric()
                                             ->suffix('jours'),
+                                        TextInput::make('delivery_delay_days')
+                                            ->label('Délai de livraison fournisseur')
+                                            ->numeric()
+                                            ->minValue(0)
+                                            ->maxValue(90)
+                                            ->default(5)
+                                            ->suffix('jours')
+                                            ->helperText('Utilisé pour les prévisions de rupture'),
                                         TextInput::make('credit_limit')
                                             ->label('Encours autorisé')
                                             ->numeric()

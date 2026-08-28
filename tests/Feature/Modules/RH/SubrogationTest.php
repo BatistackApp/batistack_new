@@ -1,13 +1,14 @@
 <?php
 
-use App\Models\RH\Abscence;
-use App\Models\RH\Employee;
-use App\Models\RH\Contract;
 use App\Enums\RH\AbsenceType;
 use App\Models\Core\Company;
-use Illuminate\Support\Facades\Config;
-use Illuminate\Support\Facades\Event;
+use App\Models\RH\Abscence;
+use App\Models\RH\Contract;
+use App\Models\RH\Employee;
+use App\Services\RH\RHDocumentService;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Storage;
 
 beforeEach(function () {
     Company::factory()->create([
@@ -21,7 +22,7 @@ beforeEach(function () {
 
 it('automatically sets subrogation and calculates expected IJ for sick leave', function () {
     $employee = Employee::factory()->create();
-    
+
     // (15 * 35) * 4 = 2100
     // 2100 / 30 = 70
     // 70 * 0.5 * 5 = 175
@@ -46,7 +47,7 @@ it('automatically sets subrogation and calculates expected IJ for sick leave', f
 
     expect($absence->requires_subrogation)->toBeTrue()
         ->and($absence->ij_expected)->not->toBeNull()
-        ->and(round((float)$absence->ij_expected, 2))->toBe(175.0);
+        ->and(round((float) $absence->ij_expected, 2))->toBe(175.0);
 });
 
 it('calculates correctly the IJ balance', function () {
@@ -107,14 +108,14 @@ it('generates a PDF attestation for sick leaves', function () {
 
     // Create a dummy PDF file
     $dummyPath = 'documents/rh/attestations/attestation_salaire_dummy.pdf';
-    \Illuminate\Support\Facades\Storage::disk('public')->put($dummyPath, 'fake pdf content');
+    Storage::disk('public')->put($dummyPath, 'fake pdf content');
 
     // Mock the service
-    $mock = Mockery::mock(\App\Services\RH\RHDocumentService::class)->makePartial();
+    $mock = Mockery::mock(RHDocumentService::class)->makePartial();
     $mock->shouldReceive('generateAttestationSalaire')
         ->once()
         ->andReturn($dummyPath);
-    app()->instance(\App\Services\RH\RHDocumentService::class, $mock);
+    app()->instance(RHDocumentService::class, $mock);
 
     $absence = Abscence::create([
         'employee_id' => $employee->id,
@@ -126,7 +127,7 @@ it('generates a PDF attestation for sick leaves', function () {
     ]);
 
     $media = $absence->getFirstMedia('attestations_salaire');
-    
+
     expect($media)->not->toBeNull()
         ->and($media->file_name)->toContain('attestation_salaire');
 });

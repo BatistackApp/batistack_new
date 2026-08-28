@@ -23,6 +23,7 @@ class ThirdPartyFactory extends Factory
             'phone' => $this->faker->phoneNumber(),
             'is_active' => true,
             'payment_terms_days' => $this->faker->randomElement([0, 30, 45, 60]),
+            'delivery_delay_days' => $this->faker->randomElement([2, 5, 7, 10]),
             'credit_limit' => $this->faker->randomFloat(2, 5000, 50000),
         ];
     }

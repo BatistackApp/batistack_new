@@ -6,10 +6,10 @@ use App\Enums\Gpao\ManufacturingStatus;
 use App\Jobs\Gpao\GenerateManufacturingOrderPdfJob;
 use App\Models\Articles\Item;
 use App\Models\Core\Unit;
+use App\Models\Core\VatRate;
 use App\Models\Gpao\ManufacturingOrder;
 use App\Services\Gpao\GpaoDocumentService;
 use Illuminate\Support\Facades\Storage;
-use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 beforeEach(function () {
     $this->unit = Unit::create([
@@ -19,7 +19,7 @@ beforeEach(function () {
         'type' => UnitType::UNIT,
     ]);
 
-    $vat = \App\Models\Core\VatRate::create(['name' => 'TVA', 'rate' => 20]);
+    $vat = VatRate::create(['name' => 'TVA', 'rate' => 20]);
 
     $this->item = Item::create([
         'reference' => 'IT-PDF',
@@ -39,17 +39,17 @@ beforeEach(function () {
 
 it('generates and attaches PDF to manufacturing order', function () {
     Storage::fake('local');
-    
+
     // We can mock the document service so we don't really generate a PDF with Browsershot
     $documentServiceMock = Mockery::mock(GpaoDocumentService::class);
-    
+
     // Simuler la création du fichier
     $pdfPath = 'chantiers/of/OF-PDF.pdf';
     Storage::disk('local')->put($pdfPath, 'dummy content');
-    
+
     $documentServiceMock
         ->shouldReceive('generateManufacturingOrderPdf')
-        ->with(Mockery::on(fn($o) => $o->id === $this->order->id))
+        ->with(Mockery::on(fn ($o) => $o->id === $this->order->id))
         ->once()
         ->andReturn($pdfPath);
 

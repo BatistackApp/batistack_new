@@ -37,14 +37,14 @@ describe('ScanExpiringMedicalVisitsJob', function () {
             ->with('Medical visit reminder sent', ['visit_id' => $expiringVisit->id, 'employee_id' => $expiringVisit->employee_id])
             ->once();
 
-        $job = new ScanExpiringMedicalVisitsJob();
+        $job = new ScanExpiringMedicalVisitsJob;
         $job->handle();
 
         Notification::assertSentTo(
             [$admin],
             MedicalVisitReminderNotification::class,
             function ($notification) use ($expiringVisit) {
-                return (fn() => $this->visit->id)->call($notification) === $expiringVisit->id;
+                return (fn () => $this->visit->id)->call($notification) === $expiringVisit->id;
             }
         );
 
@@ -52,7 +52,7 @@ describe('ScanExpiringMedicalVisitsJob', function () {
             [$admin],
             MedicalVisitReminderNotification::class,
             function ($notification) use ($futureVisit) {
-                return (fn() => $this->visit->id)->call($notification) === $futureVisit->id;
+                return (fn () => $this->visit->id)->call($notification) === $futureVisit->id;
             }
         );
     });
@@ -64,7 +64,7 @@ describe('ScanExpiringMedicalVisitsJob', function () {
             ->with('ScanExpiringMedicalVisitsJob: No medical visits due in 30 days')
             ->once();
 
-        $job = new ScanExpiringMedicalVisitsJob();
+        $job = new ScanExpiringMedicalVisitsJob;
         $job->handle();
 
         Notification::assertNothingSent();

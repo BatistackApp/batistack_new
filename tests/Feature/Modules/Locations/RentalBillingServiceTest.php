@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\Commerce\InvoiceStatus;
+use App\Models\Core\VatRate;
 use App\Models\Locations\RentalContract;
 use App\Models\Locations\RentalContractLine;
 use App\Services\Locations\RentalBillingService;
@@ -9,7 +10,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 uses(RefreshDatabase::class);
 
 it('generates a draft invoice from contract without lines', function () {
-    \App\Models\Core\VatRate::factory()->create(['id' => 1, 'rate' => 20, 'is_default' => true]);
+    VatRate::factory()->create(['id' => 1, 'rate' => 20, 'is_default' => true]);
 
     $contract = RentalContract::factory()->create([
         'daily_cost_ht' => 100,
@@ -26,16 +27,16 @@ it('generates a draft invoice from contract without lines', function () {
 });
 
 it('generates a draft invoice from contract with lines', function () {
-    \App\Models\Core\VatRate::factory()->create(['id' => 1, 'rate' => 20, 'is_default' => true]);
+    VatRate::factory()->create(['id' => 1, 'rate' => 20, 'is_default' => true]);
 
     $contract = RentalContract::factory()->create();
-    
+
     RentalContractLine::factory()->create([
         'rental_contract_id' => $contract->id,
         'quantity' => 2,
         'unit_price_ht' => 500, // total 1000
     ]);
-    
+
     RentalContractLine::factory()->create([
         'rental_contract_id' => $contract->id,
         'quantity' => 1,

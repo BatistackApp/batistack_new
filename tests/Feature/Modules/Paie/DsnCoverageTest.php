@@ -5,9 +5,12 @@ use App\Enums\Paie\DsnSubmissionStatus;
 use App\Models\Paie\DsnSubmission;
 use App\Models\Paie\DsnSubmissionLine;
 use App\Models\Paie\Payslip;
+use App\Models\User;
 use App\Services\Paie\DsnExportService;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 uses(RefreshDatabase::class);
 
@@ -61,7 +64,7 @@ it('validates DsnSubmissionLine relationships', function () {
 });
 
 it('validates DsnSubmissionLine fillable', function () {
-    $line = new DsnSubmissionLine();
+    $line = new DsnSubmissionLine;
     expect($line->getFillable())->toBe(['dsn_submission_id', 'payslip_id', 'status', 'error_message']);
 });
 
@@ -92,7 +95,7 @@ it('validates Payslip dsn fillable fields', function () {
 });
 
 it('validates DsnSubmission model fillable', function () {
-    $submission = new DsnSubmission();
+    $submission = new DsnSubmission;
     expect($submission->getFillable())->toContain('company_id');
     expect($submission->getFillable())->toContain('period');
     expect($submission->getFillable())->toContain('status');
@@ -102,8 +105,8 @@ it('validates DsnSubmission model fillable', function () {
 });
 
 it('rejects mixed companies in generateForAccountant', function () {
-    $service = new DsnExportService();
-    $user = \App\Models\User::factory()->create();
+    $service = new DsnExportService;
+    $user = User::factory()->create();
 
     $payslips = new Collection([
         Payslip::factory()->create(['status' => 'validated', 'period' => '2026-07']),
@@ -113,21 +116,21 @@ it('rejects mixed companies in generateForAccountant', function () {
     // All employees have null company_id (no company_id column), so this should pass
     // (unique nulls = count 1). Test that it does NOT throw.
     $submission = $service->generateForAccountant($payslips, '2026-07', null, $user->id);
-    expect($submission)->toBeInstanceOf(\App\Models\Paie\DsnSubmission::class);
+    expect($submission)->toBeInstanceOf(DsnSubmission::class);
 });
 
 it('cleans up file when transaction fails', function () {
-    $service = new DsnExportService();
-    $user = \App\Models\User::factory()->create();
+    $service = new DsnExportService;
+    $user = User::factory()->create();
     $payslip = Payslip::factory()->create([
         'status' => 'validated',
         'period' => '2026-07',
     ]);
 
-    \Illuminate\Support\Facades\Storage::fake('local');
-    \Illuminate\Support\Facades\DB::shouldReceive('transaction')
+    Storage::fake('local');
+    DB::shouldReceive('transaction')
         ->once()
-        ->andThrow(new \RuntimeException('DB error'));
+        ->andThrow(new RuntimeException('DB error'));
 
     try {
         $service->generateForAccountant(
@@ -136,13 +139,13 @@ it('cleans up file when transaction fails', function () {
             null,
             $user->id
         );
-    } catch (\RuntimeException $e) {
+    } catch (RuntimeException $e) {
         expect($e->getMessage())->toBe('DB error');
     }
 });
 
 it('generates export summary with warnings for missing data', function () {
-    $service = new DsnExportService();
+    $service = new DsnExportService;
     $payslip = Payslip::factory()->create([
         'status' => 'validated',
     ]);

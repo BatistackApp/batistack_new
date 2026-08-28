@@ -1,9 +1,9 @@
 <?php
 
+use App\Enums\Immobilisation\AssetStatus;
+use App\Models\Immobilisation\FixedAsset;
 use App\Models\Locations\OutboundRentalContract;
 use App\Models\Locations\OutboundRentalLine;
-use App\Models\Immobilisation\FixedAsset;
-use App\Enums\Immobilisation\AssetStatus;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
@@ -14,7 +14,7 @@ it('updates asset status to rented when contract becomes active', function () {
     $contract = OutboundRentalContract::factory()->create(['status' => 'draft']);
     $line = OutboundRentalLine::factory()->create([
         'outbound_rental_contract_id' => $contract->id,
-        'fixed_asset_id' => $asset->id
+        'fixed_asset_id' => $asset->id,
     ]);
 
     expect($asset->fresh()->status)->toBe(AssetStatus::ACTIVE);
@@ -30,7 +30,7 @@ it('releases asset when contract is deleted', function () {
     $contract = OutboundRentalContract::factory()->create(['status' => 'active']);
     $line = OutboundRentalLine::factory()->create([
         'outbound_rental_contract_id' => $contract->id,
-        'fixed_asset_id' => $asset->id
+        'fixed_asset_id' => $asset->id,
     ]);
 
     expect($asset->fresh()->status)->toBe(AssetStatus::RENTED);
@@ -49,7 +49,7 @@ it('updates asset status to rented when adding line to active contract', functio
 
     OutboundRentalLine::factory()->create([
         'outbound_rental_contract_id' => $contract->id,
-        'fixed_asset_id' => $asset->id
+        'fixed_asset_id' => $asset->id,
     ]);
 
     expect($asset->fresh()->status)->toBe(AssetStatus::RENTED);
@@ -61,7 +61,7 @@ it('releases asset when line is deleted from active contract', function () {
 
     $line = OutboundRentalLine::factory()->create([
         'outbound_rental_contract_id' => $contract->id,
-        'fixed_asset_id' => $asset->id
+        'fixed_asset_id' => $asset->id,
     ]);
 
     expect($asset->fresh()->status)->toBe(AssetStatus::RENTED);
@@ -77,7 +77,7 @@ it('does not change asset status when contract is draft', function () {
 
     OutboundRentalLine::factory()->create([
         'outbound_rental_contract_id' => $contract->id,
-        'fixed_asset_id' => $asset->id
+        'fixed_asset_id' => $asset->id,
     ]);
 
     expect($asset->fresh()->status)->toBe(AssetStatus::ACTIVE);

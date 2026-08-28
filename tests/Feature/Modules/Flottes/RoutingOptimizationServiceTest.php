@@ -6,13 +6,13 @@ use App\Models\Chantiers\Chantier;
 use App\Models\Flottes\Vehicle;
 use App\Services\Flottes\RoutingOptimizationService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Http;
 
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
-    $this->service = new RoutingOptimizationService();
+    $this->service = new RoutingOptimizationService;
 });
 
 it('uses simulated routing when no API key is provided', function () {
@@ -44,15 +44,15 @@ it('uses google maps distance matrix when api key is provided', function () {
                             'status' => 'OK',
                             'distance' => ['value' => 15000], // 15km
                             'duration' => ['value' => 1200],  // 20 mins
-                        ]
-                    ]
-                ]
-            ]
-        ], 200)
+                        ],
+                    ],
+                ],
+            ],
+        ], 200),
     ]);
 
     // L'instanciation doit se faire après le config::set pour prendre en compte la clé
-    $service = new RoutingOptimizationService();
+    $service = new RoutingOptimizationService;
     $result = $service->optimizeAssignments($vehicles, $chantiers);
 
     expect($result)->toHaveCount(1)

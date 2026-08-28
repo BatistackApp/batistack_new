@@ -4,15 +4,17 @@ use App\Enums\Chantiers\ChantierStatus;
 use App\Enums\RH\TimeEntryStatus;
 use App\Enums\RH\TimeEntryType;
 use App\Models\Chantiers\Chantier;
+use App\Models\RH\Employee;
 use App\Models\RH\TimeEntry;
 use App\Models\User;
+use App\Models\Vision3D\BimModel;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
     $this->user = User::factory()->create();
-    $this->employee = \App\Models\RH\Employee::factory()->create([
+    $this->employee = Employee::factory()->create([
         'user_id' => $this->user->id,
     ]);
     $this->chantier = Chantier::factory()->create([
@@ -124,8 +126,8 @@ it('can query submitted entries for validation', function () {
 
 it('can list bim models for accessible chantiers', function () {
     // Create BimModel without triggering observer thumbnail generation
-    \App\Models\Vision3D\BimModel::withoutEvents(function () {
-        \App\Models\Vision3D\BimModel::create([
+    BimModel::withoutEvents(function () {
+        BimModel::create([
             'name' => 'Plan Rez-de-chaussée',
             'file_path' => 'bim/plan-rdc.ifc',
             'format' => 'IFC',
@@ -135,8 +137,8 @@ it('can list bim models for accessible chantiers', function () {
     });
 
     $otherChantier = Chantier::factory()->create();
-    \App\Models\Vision3D\BimModel::withoutEvents(function () use ($otherChantier) {
-        \App\Models\Vision3D\BimModel::create([
+    BimModel::withoutEvents(function () use ($otherChantier) {
+        BimModel::create([
             'name' => 'Autre modèle',
             'file_path' => 'bim/autre.ifc',
             'format' => 'IFC',
@@ -145,7 +147,7 @@ it('can list bim models for accessible chantiers', function () {
         ]);
     });
 
-    $models = \App\Models\Vision3D\BimModel::where('modelable_type', Chantier::class)
+    $models = BimModel::where('modelable_type', Chantier::class)
         ->whereHas('modelable', fn ($q) => $q->forEmployee($this->employee))
         ->get();
 

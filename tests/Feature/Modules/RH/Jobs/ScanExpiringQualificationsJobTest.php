@@ -18,7 +18,7 @@ describe('ScanExpiringQualificationsJob', function () {
         Notification::fake();
 
         $admin = User::factory()->create(['is_admin' => true]);
-        
+
         $employeeWithEmail = Employee::factory()->create(['email' => 'employee@batistack.com']);
         $employeeWithoutEmail = Employee::factory()->create(['email' => null]);
 
@@ -47,7 +47,7 @@ describe('ScanExpiringQualificationsJob', function () {
             ->with('Qualification expiration notification sent', ['qualification_id' => $expiringQualifNoEmail->id, 'employee_id' => $expiringQualifNoEmail->employee_id])
             ->once();
 
-        $job = new ScanExpiringQualificationsJob();
+        $job = new ScanExpiringQualificationsJob;
         $job->handle();
 
         // Notified admins for both
@@ -55,7 +55,7 @@ describe('ScanExpiringQualificationsJob', function () {
             [$admin],
             QualificationExpiringNotification::class,
             function ($notification) use ($expiringQualif) {
-                return (fn() => $this->qualification->id)->call($notification) === $expiringQualif->id;
+                return (fn () => $this->qualification->id)->call($notification) === $expiringQualif->id;
             }
         );
 
@@ -63,7 +63,7 @@ describe('ScanExpiringQualificationsJob', function () {
             [$admin],
             QualificationExpiringNotification::class,
             function ($notification) use ($expiringQualifNoEmail) {
-                return (fn() => $this->qualification->id)->call($notification) === $expiringQualifNoEmail->id;
+                return (fn () => $this->qualification->id)->call($notification) === $expiringQualifNoEmail->id;
             }
         );
 
@@ -72,7 +72,7 @@ describe('ScanExpiringQualificationsJob', function () {
             [$employeeWithEmail],
             QualificationExpiringNotification::class,
             function ($notification) use ($expiringQualif) {
-                return (fn() => $this->qualification->id)->call($notification) === $expiringQualif->id;
+                return (fn () => $this->qualification->id)->call($notification) === $expiringQualif->id;
             }
         );
 
@@ -90,7 +90,7 @@ describe('ScanExpiringQualificationsJob', function () {
             ->with('ScanExpiringQualificationsJob: No qualifications expiring in 30 days')
             ->once();
 
-        $job = new ScanExpiringQualificationsJob();
+        $job = new ScanExpiringQualificationsJob;
         $job->handle();
 
         Notification::assertNothingSent();

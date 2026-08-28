@@ -140,7 +140,7 @@ it('can batch create entries with transaction', function () {
         ['employee_id' => $this->employee->id, 'hours' => 7.0, 'travel_hours' => 0.5],
     ];
 
-    \DB::transaction(function () use ($entries) {
+    DB::transaction(function () use ($entries) {
         foreach ($entries as $entry) {
             TimeEntry::create([
                 'employee_id' => $entry['employee_id'],

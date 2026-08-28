@@ -2,22 +2,25 @@
 
 use App\Enums\Interventions\InterventionStatus;
 use App\Enums\Interventions\InterventionType;
+use App\Models\Articles\Item;
+use App\Models\Core\Company;
 use App\Models\Interventions\ClientEquipment;
 use App\Models\Interventions\Intervention;
 use App\Models\Interventions\InterventionMaterial;
 use App\Models\Interventions\InterventionWorker;
+use App\Models\RH\Employee;
+use App\Models\Tiers\ThirdParty;
 use App\Notifications\Interventions\InterventionScheduledNotification;
 use App\Services\Core\DocumentService;
 use App\Services\Core\PdfStamperService;
 use App\Services\Interventions\InterventionPdfService;
-use App\Models\RH\Employee;
-use App\Models\Articles\Item;
-use App\Models\Tiers\ThirdParty;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Schema;
 
 beforeEach(function () {
-    \Illuminate\Support\Facades\Schema::disableForeignKeyConstraints();
-    $this->company = \App\Models\Core\Company::factory()->create();
+    Schema::disableForeignKeyConstraints();
+    $this->company = Company::factory()->create();
 });
 
 describe('Interventions Minor Components', function () {
@@ -38,7 +41,7 @@ describe('Interventions Minor Components', function () {
         $client = ThirdParty::factory()->create();
         $equipment = ClientEquipment::create(['third_party_id' => $client->id, 'company_id' => $this->company->id, 'name' => 'Eq', 'serial_number' => '1']);
         expect($equipment->thirdParty)->not->toBeNull()
-            ->and($equipment->interventions())->toBeInstanceOf(\Illuminate\Database\Eloquent\Relations\HasMany::class);
+            ->and($equipment->interventions())->toBeInstanceOf(HasMany::class);
     });
 
     test('InterventionMaterial model relations', function () {
@@ -49,7 +52,7 @@ describe('Interventions Minor Components', function () {
             'intervention_id' => $intervention->id,
             'item_id' => $item->id,
             'quantity' => 1,
-            'selling_price' => 10
+            'selling_price' => 10,
         ]);
         expect($material->intervention)->not->toBeNull()
             ->and($material->item)->not->toBeNull();
@@ -73,8 +76,8 @@ describe('Interventions Minor Components', function () {
         expect($intervention->company)->not->toBeNull()
             ->and($intervention->thirdParty)->not->toBeNull()
             ->and($intervention->chantier)->toBeNull()
-            ->and($intervention->materials())->toBeInstanceOf(\Illuminate\Database\Eloquent\Relations\HasMany::class)
-            ->and($intervention->workers())->toBeInstanceOf(\Illuminate\Database\Eloquent\Relations\HasMany::class);
+            ->and($intervention->materials())->toBeInstanceOf(HasMany::class)
+            ->and($intervention->workers())->toBeInstanceOf(HasMany::class);
     });
 
     test('InterventionScheduledNotification can be sent', function () {
@@ -82,11 +85,12 @@ describe('Interventions Minor Components', function () {
         $client = ThirdParty::factory()->create();
         $employee = Employee::factory()->create();
         $intervention = Intervention::factory()->create(['third_party_id' => $client->id, 'type' => InterventionType::REGIE, 'status' => InterventionStatus::BROUILLON]);
-        
+
         $employee->notify(new InterventionScheduledNotification($intervention));
-        
+
         Notification::assertSentTo($employee, InterventionScheduledNotification::class, function ($notification) use ($intervention, $employee) {
             $array = $notification->toArray($employee);
+
             return $array['intervention_id'] === $intervention->id;
         });
     });
@@ -94,18 +98,18 @@ describe('Interventions Minor Components', function () {
     test('InterventionPdfService generates and stamps pdf', function () {
         $client = ThirdParty::factory()->create();
         $intervention = Intervention::factory()->create(['third_party_id' => $client->id, 'type' => InterventionType::REGIE, 'status' => InterventionStatus::BROUILLON]);
-        
+
         // Mock DocumentService
         $documentService = Mockery::mock(DocumentService::class);
         $documentService->shouldReceive('generate')->once()->andReturn('/tmp/fake.pdf');
-        
+
         // Mock PdfStamperService
         $pdfStamperService = Mockery::mock(PdfStamperService::class);
-        
+
         $service = new InterventionPdfService($documentService, $pdfStamperService);
-        
+
         $pdfPath = $service->generatePdf($intervention);
-        
+
         expect($pdfPath)->toBe('/tmp/fake.pdf');
     });
 });

@@ -1,15 +1,13 @@
 <?php
 
-use App\Models\RH\Interview;
-use App\Models\RH\Employee;
-use App\Models\User;
-use App\Enums\RH\InterviewType;
 use App\Enums\RH\InterviewStatus;
-use App\Services\RH\InterviewPdfService;
-use Spatie\Browsershot\Browsershot;
-use Illuminate\Support\Facades\Storage;
+use App\Enums\RH\InterviewType;
+use App\Models\RH\Employee;
+use App\Models\RH\Interview;
+use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 
-uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
+uses(RefreshDatabase::class);
 
 it('creates an interview with required fields', function () {
     $employee = Employee::factory()->create();
@@ -37,7 +35,7 @@ it('can store evaluation grid as json array', function () {
         'evaluation_grid' => [
             ['question' => 'Objectif 1', 'answer' => 'Atteint'],
             ['question' => 'Objectif 2', 'answer' => 'Partiellement atteint'],
-        ]
+        ],
     ]);
 
     expect($interview->evaluation_grid)->toBeArray()

@@ -32,28 +32,28 @@ describe('TrialPeriodAlerterJob', function () {
                 'employee_id' => $employee->id,
                 'trial_end_date' => now()->addDays(20),
             ]);
-            
+
             // No trial period
             Contract::factory()->create([
                 'employee_id' => $employee->id,
                 'trial_end_date' => null,
             ]);
         });
-        
+
         $expiringContract = Contract::whereNotNull('trial_end_date')->where('trial_end_date', '<', now()->addDays(16))->first();
 
         Log::shouldReceive('info')
             ->with('Trial period ending notification sent', ['contract_id' => $expiringContract->id, 'employee_id' => $expiringContract->employee_id])
             ->once();
 
-        $job = new TrialPeriodAlerterJob();
+        $job = new TrialPeriodAlerterJob;
         $job->handle();
 
         Notification::assertSentTo(
             [$admin],
             TrialPeriodEndingNotification::class,
             function ($notification) use ($expiringContract) {
-                return (fn() => $this->contract->id)->call($notification) === $expiringContract->id;
+                return (fn () => $this->contract->id)->call($notification) === $expiringContract->id;
             }
         );
     });
@@ -65,7 +65,7 @@ describe('TrialPeriodAlerterJob', function () {
             ->with('TrialPeriodAlerterJob: No trial periods ending in 15 days')
             ->once();
 
-        $job = new TrialPeriodAlerterJob();
+        $job = new TrialPeriodAlerterJob;
         $job->handle();
 
         Notification::assertNothingSent();

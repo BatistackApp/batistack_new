@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\RH\CertificationSymbol;
 use App\Filament\RH\Pages\CompetencyMatrix;
 use App\Models\RH\Employee;
 use App\Models\RH\Equipement;
@@ -16,7 +17,7 @@ beforeEach(function () {
 test('it renders the competency matrix page correctly', function () {
     Qualification::factory()->create([
         'employee_id' => $this->employee->id,
-        'label' => \App\Enums\RH\CertificationSymbol::R486,
+        'label' => CertificationSymbol::R486,
         'obtained_at' => now()->subYear(),
         'expires_at' => now()->addYear(),
     ]);

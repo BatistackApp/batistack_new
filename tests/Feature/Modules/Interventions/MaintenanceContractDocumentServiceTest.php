@@ -3,7 +3,6 @@
 use App\Enums\Interventions\MaintenanceContractFrequency;
 use App\Enums\Interventions\MaintenanceContractStatus;
 use App\Models\Core\Company;
-use App\Models\Interventions\ClientEquipment;
 use App\Models\Interventions\MaintenanceContract;
 use App\Services\Interventions\MaintenanceContractDocumentService;
 use Illuminate\Support\Facades\Storage;
