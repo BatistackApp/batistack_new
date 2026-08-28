@@ -45,6 +45,17 @@ class ClientEquipmentResource extends Resource
         return false;
     }
 
+    public static function canView(Model $record): bool
+    {
+        $employeeId = auth()->user()?->salarie?->id;
+
+        if (! $employeeId) {
+            return false;
+        }
+
+        return $record->interventions()->whereHas('workers', fn ($q) => $q->where('employee_id', $employeeId))->exists();
+    }
+
     public static function getEloquentQuery(): Builder
     {
         $employeeId = auth()->user()?->salarie?->id;

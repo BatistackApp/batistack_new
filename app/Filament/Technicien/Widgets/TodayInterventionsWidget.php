@@ -54,7 +54,7 @@ class TodayInterventionsWidget extends TableWidget
                     ->badge(),
 
                 TextColumn::make('scheduled_at')
-                    ->label('Prvu')
+                    ->label('Prévue')
                     ->dateTime('H:i')
                     ->sortable(),
             ])

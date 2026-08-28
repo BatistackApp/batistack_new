@@ -2,6 +2,7 @@
 
 namespace App\Filament\Technicien\Widgets;
 
+use App\Enums\Interventions\InterventionStatus;
 use App\Models\Interventions\Intervention;
 use Filament\Widgets\TableWidget;
 use Filament\Tables\Columns\TextColumn;
@@ -23,6 +24,7 @@ class TechnicienRecentActivityWidget extends TableWidget
         return $table
             ->query(
                 Intervention::whereHas('workers', fn ($q) => $q->where('employee_id', $employee?->id))
+                    ->whereNotIn('status', [InterventionStatus::BROUILLON, InterventionStatus::ANNULEE])
                     ->with(['thirdParty', 'chantier'])
                     ->latest('updated_at')
             )
