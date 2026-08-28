@@ -39,6 +39,7 @@ class ThirdParty extends Model implements HasMedia
         'website',
         'is_active',
         'payment_terms_days',
+        'delivery_delay_days',
         'credit_limit',
         'last_siren_sync_at',
         'last_legal_sync_at',
@@ -64,6 +65,7 @@ class ThirdParty extends Model implements HasMedia
             'financial_data' => 'array',
             'legal_status' => LegalStatus::class,
             'supplier_score' => 'integer',
+            'delivery_delay_days' => 'integer',
         ];
     }
 
