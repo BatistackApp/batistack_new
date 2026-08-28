@@ -61,15 +61,15 @@ describe('CheckEquipementMaintenanceJob', function () {
             ])
             ->once();
 
-        $job = new CheckEquipementMaintenanceJob();
+        $job = new CheckEquipementMaintenanceJob;
         $job->handle();
 
         Notification::assertSentTo(
             [$admin],
             EquipementMaintenanceNotification::class,
             function ($notification) use ($expiredEquipement) {
-                return (fn() => $this->equipement->id)->call($notification) === $expiredEquipement->id
-                    && (fn() => $this->type)->call($notification) === 'expired';
+                return (fn () => $this->equipement->id)->call($notification) === $expiredEquipement->id
+                    && (fn () => $this->type)->call($notification) === 'expired';
             }
         );
 
@@ -77,8 +77,8 @@ describe('CheckEquipementMaintenanceJob', function () {
             [$admin],
             EquipementMaintenanceNotification::class,
             function ($notification) use ($noCheckEquipement) {
-                return (fn() => $this->equipement->id)->call($notification) === $noCheckEquipement->id
-                    && (fn() => $this->type)->call($notification) === 'maintenance';
+                return (fn () => $this->equipement->id)->call($notification) === $noCheckEquipement->id
+                    && (fn () => $this->type)->call($notification) === 'maintenance';
             }
         );
 
@@ -86,8 +86,8 @@ describe('CheckEquipementMaintenanceJob', function () {
             [$admin],
             EquipementMaintenanceNotification::class,
             function ($notification) use ($oldCheckEquipement) {
-                return (fn() => $this->equipement->id)->call($notification) === $oldCheckEquipement->id
-                    && (fn() => $this->type)->call($notification) === 'maintenance';
+                return (fn () => $this->equipement->id)->call($notification) === $oldCheckEquipement->id
+                    && (fn () => $this->type)->call($notification) === 'maintenance';
             }
         );
 
@@ -95,7 +95,7 @@ describe('CheckEquipementMaintenanceJob', function () {
             [$admin],
             EquipementMaintenanceNotification::class,
             function ($notification) use ($validEquipement) {
-                return (fn() => $this->equipement->id)->call($notification) === $validEquipement->id;
+                return (fn () => $this->equipement->id)->call($notification) === $validEquipement->id;
             }
         );
     });

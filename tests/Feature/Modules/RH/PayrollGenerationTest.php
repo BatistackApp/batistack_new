@@ -1,13 +1,14 @@
 <?php
 
+use App\Enums\RH\AbsenceType;
 use App\Enums\RH\ExpenseReportStatus;
 use App\Enums\RH\TimeEntryStatus;
+use App\Models\Core\Company;
 use App\Models\RH\Abscence;
 use App\Models\RH\Contract;
 use App\Models\RH\Employee;
 use App\Models\RH\ExpenseReport;
 use App\Models\RH\TimeEntry;
-use App\Models\Core\Company;
 use App\Services\RH\PayrollGenerationService;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -42,14 +43,14 @@ it('generates payroll variables correctly', function () {
         'status' => TimeEntryStatus::APPROVED,
     ]);
 
-    $startDate = Carbon::create($year, $month, 1)->next(\Carbon\Carbon::MONDAY);
-    
+    $startDate = Carbon::create($year, $month, 1)->next(Carbon::MONDAY);
+
     // 3. Add Absence (2 days)
     Abscence::factory()->create([
         'employee_id' => $employee->id,
         'start_date' => $startDate,
         'end_date' => $startDate->copy()->addDay(),
-        'type' => \App\Enums\RH\AbsenceType::PAID_LEAVE,
+        'type' => AbsenceType::PAID_LEAVE,
     ]);
 
     // 4. Add Expense Report
@@ -62,33 +63,33 @@ it('generates payroll variables correctly', function () {
     ]);
 
     // 5. Generate Payroll
-    $service = new PayrollGenerationService();
+    $service = new PayrollGenerationService;
     $export = $service->generate($month, $year);
 
     // 6. Assertions
     expect($export->total_employees)->toBe(1);
-    
+
     $variable = $export->variables()->first();
     expect($variable)->not->toBeNull();
-    
+
     // Base hours for 35h is ~151.67
     expect($variable->base_hours)->toBe('151.67');
-    
+
     // Worked hours = 20 + 10 = 30
     expect($variable->worked_hours)->toBe('30.00');
-    
+
     // Overtime = max(0, 30 - 151.67) = 0
     expect($variable->overtime_hours)->toBe('0.00');
-    
+
     // Absences = 2 days
     expect($variable->absence_days)->toBe('2.00');
-    
+
     // Travel allowance = 50
     expect($variable->travel_allowances)->toBe('50.00');
-    
+
     // Expenses = 120.50
     expect($variable->expense_reports_total)->toBe('120.50');
-    
+
     // Gross Salary = 151.67 * 15 = 2275.05
     expect($variable->estimated_gross_salary)->toBe('2275.05');
 });

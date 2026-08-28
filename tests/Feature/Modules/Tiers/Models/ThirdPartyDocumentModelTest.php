@@ -2,9 +2,10 @@
 
 namespace Tests\Feature\Modules\Tiers\Models;
 
-use App\Models\Tiers\ThirdPartyDocument;
-use App\Models\Tiers\ThirdParty;
 use App\Models\Core\Signature;
+use App\Models\Tiers\ThirdParty;
+use App\Models\Tiers\ThirdPartyDocument;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
@@ -19,15 +20,15 @@ describe('ThirdPartyDocument - Relations', function () {
 
     test('peut avoir des signatures polymorphiques', function () {
         $document = ThirdPartyDocument::factory()->create();
-        $user = \App\Models\User::factory()->create();
-        
+        $user = User::factory()->create();
+
         $signature = new Signature([
             'user_id' => $user->id,
             'signed_at' => now(),
             'ip_address' => '127.0.0.1',
-            'checksum' => 'test-checksum'
+            'checksum' => 'test-checksum',
         ]);
-        
+
         $document->signatures()->save($signature);
 
         expect($document->signatures->count())->toBe(1)

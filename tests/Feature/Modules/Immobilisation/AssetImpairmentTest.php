@@ -1,8 +1,8 @@
 <?php
 
-use App\Models\Immobilisation\FixedAsset;
-use App\Models\Immobilisation\AssetCategory;
 use App\Enums\Immobilisation\DepreciationMethod;
+use App\Models\Immobilisation\AssetCategory;
+use App\Models\Immobilisation\FixedAsset;
 use App\Services\Immobilisation\AssetImpairmentService;
 use App\Services\Immobilisation\DepreciationCalculatorService;
 
@@ -24,7 +24,7 @@ it('records impairment and recalculates remaining schedule', function () {
     $asset->depreciations()->orderBy('period_date')->first()->update(['is_passed' => true]);
 
     // Record an impairment of 3000 in 2027
-    $service = new AssetImpairmentService(new DepreciationCalculatorService());
+    $service = new AssetImpairmentService(new DepreciationCalculatorService);
     $service->recordImpairment($asset, [
         'date' => '2027-12-31',
         'amount' => 3000,
@@ -39,7 +39,7 @@ it('records impairment and recalculates remaining schedule', function () {
     // New VNC = 10000 - 2000 (passed) - 3000 (impairment) = 5000.
     // So 2028, 2029, 2030 should be roughly 1666.67 each.
     $futureDepreciations = $asset->depreciations()->where('is_passed', false)->orderBy('period_date')->get();
-    
+
     expect($futureDepreciations)->toHaveCount(3);
     expect((float) $futureDepreciations[0]->amount)->toEqual(1666.67);
     expect((float) $futureDepreciations[1]->amount)->toEqual(1666.67);

@@ -6,6 +6,7 @@ use App\Enums\Paie\PayslipStatus;
 use App\Models\Paie\DsnSubmission;
 use App\Models\Paie\DsnSubmissionLine;
 use App\Models\Paie\Payslip;
+use App\Models\User;
 use App\Services\Paie\DsnExportService;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -15,7 +16,7 @@ uses(RefreshDatabase::class);
 
 beforeEach(function () {
     Storage::fake('local');
-    $this->service = new DsnExportService();
+    $this->service = new DsnExportService;
 });
 
 it('generates a dsn export csv', function () {
@@ -45,7 +46,7 @@ it('generates csv with enriched columns', function () {
 });
 
 it('creates a DsnSubmission when generating for accountant', function () {
-    $user = \App\Models\User::factory()->create();
+    $user = User::factory()->create();
     $payslip = Payslip::factory()->create([
         'status' => PayslipStatus::VALIDATED,
         'period' => '2026-07',
@@ -68,7 +69,7 @@ it('creates a DsnSubmission when generating for accountant', function () {
 });
 
 it('creates DsnSubmissionLines for each payslip', function () {
-    $user = \App\Models\User::factory()->create();
+    $user = User::factory()->create();
     $payslips = Payslip::factory()->count(3)->create([
         'status' => PayslipStatus::VALIDATED,
         'period' => '2026-07',
@@ -86,7 +87,7 @@ it('creates DsnSubmissionLines for each payslip', function () {
 });
 
 it('updates payslip dsn_status to exported', function () {
-    $user = \App\Models\User::factory()->create();
+    $user = User::factory()->create();
     $payslip = Payslip::factory()->create([
         'status' => PayslipStatus::VALIDATED,
         'dsn_status' => null,
@@ -105,7 +106,7 @@ it('updates payslip dsn_status to exported', function () {
 });
 
 it('calculates correct totals in submission', function () {
-    $user = \App\Models\User::factory()->create();
+    $user = User::factory()->create();
     $payslips = Payslip::factory()->count(2)->create([
         'status' => PayslipStatus::VALIDATED,
         'period' => '2026-07',
@@ -172,7 +173,7 @@ it('validates DsnSubmissionStatus enum', function () {
 });
 
 it('validates DsnSubmission model relationships', function () {
-    $user = \App\Models\User::factory()->create();
+    $user = User::factory()->create();
     $payslip = Payslip::factory()->create([
         'status' => PayslipStatus::VALIDATED,
     ]);
@@ -191,17 +192,17 @@ it('validates DsnSubmission model relationships', function () {
 });
 
 it('rejects mixed periods in generateForAccountant', function () {
-    $user = \App\Models\User::factory()->create();
+    $user = User::factory()->create();
     $payslips = new Collection([
         Payslip::factory()->create(['status' => PayslipStatus::VALIDATED, 'period' => '2026-07']),
         Payslip::factory()->create(['status' => PayslipStatus::VALIDATED, 'period' => '2026-08']),
     ]);
 
     $this->service->generateForAccountant($payslips, '2026-07', null, $user->id);
-})->throws(\InvalidArgumentException::class, 'même période');
+})->throws(InvalidArgumentException::class, 'même période');
 
 it('cleans up file on failure', function () {
-    $user = \App\Models\User::factory()->create();
+    $user = User::factory()->create();
     $payslip = Payslip::factory()->create([
         'status' => PayslipStatus::VALIDATED,
         'period' => '2026-07',
@@ -216,7 +217,7 @@ it('cleans up file on failure', function () {
             null,
             $user->id
         );
-    } catch (\Throwable $e) {
+    } catch (Throwable $e) {
         // Expected - just verify no leftover files
     }
 });

@@ -2,6 +2,8 @@
 
 use App\Enums\Flottes\VehicleStatus;
 use App\Enums\RH\TimeEntryStatus;
+use App\Models\Chantiers\Chantier;
+use App\Models\Core\Setting;
 use App\Models\Flottes\FuelTransaction;
 use App\Models\Flottes\Vehicle;
 use App\Models\Flottes\VehicleAssignment;
@@ -52,7 +54,7 @@ it('calculates CO2 emission properly based on vehicle fuel type', function () {
         'odometer' => 10000,
     ]);
 
-    $service = new VehicleFuelService();
+    $service = new VehicleFuelService;
 
     // 50 Liters of Diesel (2.64 kg/L) = 132 kg CO2
     $transaction = $service->processAndAuditFuelTransaction(
@@ -145,7 +147,7 @@ test('plein semaine avec pointage RH approuvé sans suspicion', function () {
 
 test('plein est relié au chantier si le véhicule y est affecté', function () {
     $datePlein = Carbon::parse('2026-06-15 10:00:00');
-    $chantier = \App\Models\Chantiers\Chantier::factory()->create();
+    $chantier = Chantier::factory()->create();
 
     VehicleAssignment::create([
         'vehicle_id' => $this->vehicle->id,
@@ -154,7 +156,7 @@ test('plein est relié au chantier si le véhicule y est affecté', function () 
         'started_at' => $datePlein->copy()->startOfDay(),
         'status' => 'active',
     ]);
-    
+
     TimeEntry::create([
         'employee_id' => $this->employee->id,
         'date' => $datePlein->toDateString(),
@@ -231,7 +233,7 @@ test('calcule consommation moyenne', function () {
 
 test('détecte anomalie consommation et signale le siphonnage', function () {
     User::factory()->create(['is_admin' => true]);
-    \App\Models\Core\Setting::setValue('fuel_anomaly_threshold', 20);
+    Setting::setValue('fuel_anomaly_threshold', 20);
 
     // 1. Transaction 1: 50L pour 500km (10L/100km)
     $this->fuelService->processAndAuditFuelTransaction($this->vehicle, 50, 70, 50500, now()->subDays(10), 'Station A');
@@ -268,5 +270,3 @@ test('détecte anomalie consommation et signale le siphonnage', function () {
     expect($transaction->is_suspicious)->toBeTrue()
         ->and($transaction->suspicion_reason)->toContain('Surconsommation');
 });
-
-

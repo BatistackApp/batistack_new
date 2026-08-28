@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\Chantiers\ChantierStatus;
 use App\Models\Chantiers\Chantier;
 use App\Models\RH\Employee;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -69,15 +70,15 @@ it('works with query constraints', function () {
 
     $chantier1 = Chantier::factory()->create([
         'manager_id' => $employee->id,
-        'status' => \App\Enums\Chantiers\ChantierStatus::IN_PROGRESS,
+        'status' => ChantierStatus::IN_PROGRESS,
     ]);
     $chantier2 = Chantier::factory()->create([
         'manager_id' => $employee->id,
-        'status' => \App\Enums\Chantiers\ChantierStatus::FINISHED,
+        'status' => ChantierStatus::FINISHED,
     ]);
 
     $results = Chantier::forEmployee($employee)
-        ->where('status', \App\Enums\Chantiers\ChantierStatus::IN_PROGRESS)
+        ->where('status', ChantierStatus::IN_PROGRESS)
         ->get();
 
     expect($results)->toHaveCount(1)

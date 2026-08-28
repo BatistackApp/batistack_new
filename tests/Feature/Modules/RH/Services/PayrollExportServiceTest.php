@@ -8,7 +8,7 @@ use App\Services\RH\PayrollExportService;
 use Carbon\Carbon;
 
 beforeEach(function () {
-    $this->service = new PayrollExportService();
+    $this->service = new PayrollExportService;
     $this->employee = Employee::factory()->create([
         'first_name' => 'John',
         'last_name' => 'Doe',
@@ -19,7 +19,7 @@ beforeEach(function () {
 test('it exports correct hours and absences', function () {
     $month = 1;
     $year = 2026;
-    
+
     // Create TimeEntries inside the month
     TimeEntry::factory()->create([
         'employee_id' => $this->employee->id,
@@ -29,7 +29,7 @@ test('it exports correct hours and absences', function () {
         'is_grand_deplacement' => false,
         'status' => TimeEntryStatus::APPROVED,
     ]);
-    
+
     TimeEntry::factory()->create([
         'employee_id' => $this->employee->id,
         'date' => Carbon::create($year, $month, 11),
@@ -61,7 +61,7 @@ test('it exports correct hours and absences', function () {
     // 1 GD
     // 1 Travel hour
     // 2 Absence days
-    
+
     expect($csv)->toContain('MAT-001')
         ->toContain('Doe')
         ->toContain('John')
@@ -73,7 +73,7 @@ test('it exports correct hours and absences', function () {
 test('it downloads the generated CSV with correct headers', function () {
     $month = 1;
     $year = 2026;
-    
+
     $response = $this->service->downloadCsv($month, $year);
 
     expect($response->getStatusCode())->toBe(200)

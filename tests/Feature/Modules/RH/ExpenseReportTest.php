@@ -1,8 +1,7 @@
 <?php
 
-use App\Models\RH\ExpenseReport;
-use App\Models\RH\ExpenseItem;
 use App\Models\RH\Employee;
+use App\Models\RH\ExpenseReport;
 use App\Models\User;
 
 it('can create an expense report and attach items', function () {

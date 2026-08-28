@@ -16,7 +16,7 @@ uses(RefreshDatabase::class);
 beforeEach(function () {
     $this->company = Company::factory()->create();
     $this->client = ThirdParty::factory()->create();
-    
+
     // User authentifié requis pour la création de la signature (voir SignatureService)
     $this->user = User::factory()->create();
     $this->actingAs($this->user);

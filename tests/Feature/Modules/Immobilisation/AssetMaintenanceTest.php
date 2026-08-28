@@ -9,7 +9,7 @@ use App\Models\Immobilisation\FixedAsset;
 it('creates an asset maintenance record linked to an asset and chantier', function () {
     $category = AssetCategory::factory()->create();
     $chantier = Chantier::factory()->create();
-    
+
     $asset = FixedAsset::factory()->create([
         'asset_category_id' => $category->id,
         'status' => AssetStatus::ACTIVE,

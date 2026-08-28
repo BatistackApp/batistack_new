@@ -1,9 +1,9 @@
 <?php
 
+use App\Enums\Immobilisation\AssetStatus;
+use App\Models\Immobilisation\FixedAsset;
 use App\Models\Locations\OutboundRentalContract;
 use App\Models\Locations\OutboundRentalLine;
-use App\Models\Immobilisation\FixedAsset;
-use App\Enums\Immobilisation\AssetStatus;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);

@@ -1,13 +1,10 @@
 <?php
 
-use App\Models\RH\ExpenseReport;
 use App\Models\RH\ExpenseItem;
-use App\Models\RH\Employee;
-use App\Models\Chantiers\Chantier;
 use App\Services\RH\ExpenseValidationService;
 
 it('validates expense items against policies', function () {
-    $service = new ExpenseValidationService();
+    $service = new ExpenseValidationService;
 
     $item1 = new ExpenseItem([
         'category' => 'Repas',
@@ -34,7 +31,7 @@ it('validates expense items against policies', function () {
 });
 
 it('detects vat inconsistencies', function () {
-    $service = new ExpenseValidationService();
+    $service = new ExpenseValidationService;
 
     $item = new ExpenseItem([
         'category' => 'Péage',
@@ -50,7 +47,7 @@ it('detects vat inconsistencies', function () {
 });
 
 it('prevents future dates', function () {
-    $service = new ExpenseValidationService();
+    $service = new ExpenseValidationService;
 
     $item = new ExpenseItem([
         'category' => 'Hébergement',

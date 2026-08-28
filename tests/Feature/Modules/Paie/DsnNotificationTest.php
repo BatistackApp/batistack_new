@@ -1,7 +1,6 @@
 <?php
 
 use App\Models\Paie\DsnSubmission;
-use App\Models\Paie\Payslip;
 use App\Models\User;
 use App\Notifications\Paie\DsnExportedNotification;
 use App\Notifications\Paie\DsnExportReadyNotification;

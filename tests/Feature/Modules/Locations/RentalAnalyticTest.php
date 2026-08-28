@@ -5,7 +5,6 @@ use App\Models\Locations\RentalContract;
 use App\Services\Chantiers\ChantierAnalyticService;
 use App\Services\Locations\RentalCostService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Carbon;
 
 uses(RefreshDatabase::class);
 
@@ -23,14 +22,14 @@ it('calculates active days correctly', function () {
         'start_date' => today()->subDays(10),
         'end_date' => today()->subDays(8),
     ]);
-    
+
     // from 10 days ago to 8 days ago = 3 days
     expect($service->getActiveDays($contractClosed))->toBe(3);
 });
 
 it('includes rental cost in chantier performance metrics', function () {
     $chantier = Chantier::factory()->create(['budget_total_ht' => 10000]);
-    
+
     // 6 days active, 100 per day = 600
     RentalContract::factory()->create([
         'chantier_id' => $chantier->id,

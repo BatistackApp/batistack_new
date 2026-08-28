@@ -1,14 +1,14 @@
 <?php
 
+use App\Enums\Immobilisation\AssetStatus;
+use App\Models\Commerce\CustomerInvoice;
+use App\Models\Immobilisation\FixedAsset;
 use App\Models\Locations\OutboundRentalContract;
 use App\Models\Locations\OutboundRentalLine;
-use App\Models\Immobilisation\FixedAsset;
-use App\Models\Commerce\CustomerInvoice;
-use App\Enums\Immobilisation\AssetStatus;
 use App\Services\Locations\OutboundRentalBillingService;
-use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 uses(RefreshDatabase::class);
 
@@ -38,7 +38,7 @@ it('completes full lifecycle: draft -> active -> billed -> terminated', function
     $contract->update(['status' => 'active']);
     expect($asset->fresh()->status)->toBe(AssetStatus::RENTED);
 
-    $service = new OutboundRentalBillingService();
+    $service = new OutboundRentalBillingService;
     $service->generateInvoiceIfDue($contract);
     expect(CustomerInvoice::count())->toBe(1);
 
@@ -72,11 +72,11 @@ it('reports correct daily_rate on invoice lines', function () {
         'daily_rate' => 250,
     ]);
 
-    $service = new OutboundRentalBillingService();
+    $service = new OutboundRentalBillingService;
     $service->generateInvoiceIfDue($contract);
 
     $startOfPeriod = now()->startOfMonth();
-    $billingKey = 'OUT-' . $contract->id . '-' . $startOfPeriod->format('Ym');
+    $billingKey = 'OUT-'.$contract->id.'-'.$startOfPeriod->format('Ym');
     $invoice = CustomerInvoice::where('billing_key', $billingKey)->first();
 
     $items = $invoice->items()->get();

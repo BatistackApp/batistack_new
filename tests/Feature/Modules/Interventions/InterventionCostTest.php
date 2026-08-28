@@ -19,7 +19,7 @@ beforeEach(function () {
     $this->client = ThirdParty::factory()->create();
     $this->employee = Employee::factory()->create();
     $this->item = Item::factory()->create();
-    
+
     $this->service = app(InterventionCostingService::class);
 });
 
@@ -50,7 +50,7 @@ it('calculates total cost correctly for an intervention', function () {
 
     // Total Cost = 50 + 30 = 80
     $totalCost = $this->service->calculateTotalCost($intervention);
-    
+
     expect($totalCost)->toBe(80.0);
 });
 
@@ -64,7 +64,7 @@ it('calculates billable amount for FORFAIT intervention', function () {
     ]);
 
     $amount = $this->service->calculateBillableAmount($intervention);
-    
+
     expect($amount)->toBe(500.0);
 });
 
@@ -86,7 +86,7 @@ it('calculates billable amount for REGIE intervention based on material selling 
     ]);
 
     $amount = $this->service->calculateBillableAmount($intervention);
-    
+
     expect($amount)->toBe(60.0);
 });
 
@@ -121,7 +121,7 @@ it('calculates profitability correctly', function () {
     // Margin % = (120 / 200) * 100 = 60%
 
     $profitability = $this->service->calculateProfitability($intervention);
-    
+
     expect($profitability['cost'])->toBe(80.0)
         ->and($profitability['revenue'])->toBe(200.0)
         ->and($profitability['margin'])->toBe(120.0)

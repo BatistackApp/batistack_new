@@ -1,7 +1,9 @@
 <?php
 
-use App\Models\Tiers\ThirdPartyDocument;
+use App\Enums\Tiers\ThirdPartyDocumentStatus;
+use App\Enums\Tiers\ThirdPartyDocumentType;
 use App\Models\Tiers\ThirdParty;
+use App\Models\Tiers\ThirdPartyDocument;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Artisan;
 
@@ -10,16 +12,16 @@ it('expires document if date is past', function () {
 
     $document = ThirdPartyDocument::create([
         'third_party_id' => $thirdParty->id,
-        'type' => \App\Enums\Tiers\ThirdPartyDocumentType::KBIS,
+        'type' => ThirdPartyDocumentType::KBIS,
         'expiration_date' => Carbon::now()->subDay(),
-        'status' => \App\Enums\Tiers\ThirdPartyDocumentStatus::VALID,
+        'status' => ThirdPartyDocumentStatus::VALID,
     ]);
 
     Artisan::call('app:check-third-party-documents');
 
     $document->refresh();
 
-    expect($document->status)->toBe(\App\Enums\Tiers\ThirdPartyDocumentStatus::EXPIRED);
+    expect($document->status)->toBe(ThirdPartyDocumentStatus::EXPIRED);
 });
 
 it('keeps document valid if date is future', function () {
@@ -27,14 +29,14 @@ it('keeps document valid if date is future', function () {
 
     $document = ThirdPartyDocument::create([
         'third_party_id' => $thirdParty->id,
-        'type' => \App\Enums\Tiers\ThirdPartyDocumentType::KBIS,
+        'type' => ThirdPartyDocumentType::KBIS,
         'expiration_date' => Carbon::now()->addDays(5),
-        'status' => \App\Enums\Tiers\ThirdPartyDocumentStatus::VALID,
+        'status' => ThirdPartyDocumentStatus::VALID,
     ]);
 
     Artisan::call('app:check-third-party-documents');
 
     $document->refresh();
 
-    expect($document->status)->toBe(\App\Enums\Tiers\ThirdPartyDocumentStatus::VALID);
+    expect($document->status)->toBe(ThirdPartyDocumentStatus::VALID);
 });

@@ -2,7 +2,7 @@
 
 use App\Enums\RH\AbsenceType;
 use App\Enums\RH\TimeEntryStatus;
-use App\Models\Core\Company;
+use App\Enums\RH\TimeEntryType;
 use App\Models\RH\Abscence;
 use App\Models\RH\Employee;
 use App\Models\RH\TimeEntry;
@@ -18,7 +18,7 @@ function safetyHours(Employee $employee, float $hours, string $date, TimeEntrySt
         'employee_id' => $employee->id,
         'date' => $date,
         'hours' => $hours,
-        'type' => \App\Enums\RH\TimeEntryType::NORMAL,
+        'type' => TimeEntryType::NORMAL,
         'status' => $status,
     ]);
 }

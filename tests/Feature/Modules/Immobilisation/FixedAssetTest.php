@@ -1,9 +1,9 @@
 <?php
 
-use App\Models\Immobilisation\FixedAsset;
-use App\Enums\Immobilisation\DepreciationMethod;
 use App\Enums\Chantiers\ChantierStatus;
+use App\Enums\Immobilisation\DepreciationMethod;
 use App\Models\Chantiers\Chantier;
+use App\Models\Immobilisation\FixedAsset;
 
 it('generates depreciations automatically when a fixed asset is created', function () {
     $asset = FixedAsset::factory()->create([

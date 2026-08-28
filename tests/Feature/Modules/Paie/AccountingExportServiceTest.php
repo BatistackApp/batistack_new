@@ -21,7 +21,7 @@ it('generates an accounting export csv', function () {
         'employer_cost' => 2800,
     ]);
 
-    $service = new AccountingExportService();
+    $service = new AccountingExportService;
     $path = $service->generateCsv(new Collection([$payslip]));
 
     expect($path)->toStartWith('documents/exports/export_od_paie_');

@@ -5,6 +5,7 @@ use App\Models\RH\Employee;
 use App\Models\User;
 use App\Services\Interventions\RouteOptimizationService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Notifications\DatabaseNotification;
 
 uses(RefreshDatabase::class);
 
@@ -38,8 +39,8 @@ it('optimizes route and sends success notification', function () {
         'notifiable_id' => $user->id,
         'notifiable_type' => User::class,
     ]);
-    
-    $notification = \Illuminate\Notifications\DatabaseNotification::where('notifiable_id', $user->id)->first();
+
+    $notification = DatabaseNotification::where('notifiable_id', $user->id)->first();
     expect($notification->data['title'] ?? '')->toContain('Optimisation terminée');
 });
 
@@ -62,7 +63,7 @@ it('handles optimization failure and sends error notification', function () {
     $job = new OptimizeTechnicianRouteJob($technicien->id, $date, $user->id);
     $job->handle(app(RouteOptimizationService::class));
 
-    $notification = \Illuminate\Notifications\DatabaseNotification::where('notifiable_id', $user->id)->first();
+    $notification = DatabaseNotification::where('notifiable_id', $user->id)->first();
     expect($notification->data['title'] ?? '')->toContain('Erreur');
     expect($notification->data['body'] ?? '')->toContain('Error message');
 });
@@ -79,7 +80,7 @@ it('aborts if technician is not found', function () {
     // Pass a non-existent technician ID
     $job = new OptimizeTechnicianRouteJob(99999, $date);
     $job->handle(app(RouteOptimizationService::class));
-    
+
     // Test passes if no exception is thrown and optimizeForTechnician was not called
     expect(true)->toBeTrue();
 });

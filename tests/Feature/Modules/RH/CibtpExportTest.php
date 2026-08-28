@@ -1,11 +1,11 @@
 <?php
 
-use App\Models\RH\Abscence;
-use App\Models\RH\Employee;
-use App\Models\RH\Contract;
-use App\Models\RH\TimeEntry;
 use App\Enums\RH\AbsenceType;
 use App\Enums\RH\TimeEntryStatus;
+use App\Models\RH\Abscence;
+use App\Models\RH\Contract;
+use App\Models\RH\Employee;
+use App\Models\RH\TimeEntry;
 use App\Services\RH\CibtpService;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
@@ -16,7 +16,7 @@ it('calculates DNA totals correctly for the reference period', function () {
         'last_name' => 'Dupont',
         'first_name' => 'Jean',
     ]);
-    
+
     // Contrat avec 20€/h sans déclencher l'observer (génération PDF)
     Contract::withoutEvents(function () use ($employee) {
         Contract::factory()->create([
@@ -50,7 +50,7 @@ it('calculates DNA totals correctly for the reference period', function () {
 
     // Heures travaillées dans la période = 7
     // Salaire brut dans la période = 7 * 20 = 140
-    
+
     expect($csv)->toContain('MAT-1234')
         ->and($csv)->toContain('Dupont')
         ->and($csv)->toContain('Jean')
@@ -78,7 +78,7 @@ it('generates a valid CSV for DDC export and formats correctly', function () {
     $csv = $service->generateDDC(new Collection([$absence]));
 
     $lastWorkedDay = Carbon::create(2026, 8, 9)->format('d/m/Y');
-    
+
     expect($csv)->toContain('MAT-5678')
         ->and($csv)->toContain('Martin')
         ->and($csv)->toContain('10/08/2026')

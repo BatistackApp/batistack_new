@@ -1,19 +1,22 @@
 <?php
 
+use App\Enums\Tiers\EmailCampaignRecipientStatus;
+use App\Enums\Tiers\EmailCampaignStatus;
+use App\Enums\Tiers\ThirdPartyType;
+use App\Jobs\Tiers\ProcessEmailCampaignJob;
+use App\Mail\Tiers\GenericCampaignEmail;
+use App\Models\Core\Company;
+use App\Models\Tiers\Contact;
 use App\Models\Tiers\EmailCampaign;
 use App\Models\Tiers\EmailCampaignRecipient;
-use App\Models\Tiers\Contact;
 use App\Models\Tiers\ThirdParty;
-use App\Enums\Tiers\ThirdPartyType;
-use App\Enums\Tiers\EmailCampaignStatus;
-use App\Enums\Tiers\EmailCampaignRecipientStatus;
-use App\Jobs\Tiers\ProcessEmailCampaignJob;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
 
-uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
+uses(RefreshDatabase::class);
 
 beforeEach(function () {
-    \App\Models\Core\Company::create([
+    Company::create([
         'name' => 'Test Company',
         'legal_name' => 'Test Company',
     ]);
@@ -28,7 +31,7 @@ it('can generate recipients based on third party type', function () {
     $contactClient1 = Contact::factory()->create(['third_party_id' => $client->id, 'email' => 'client1@test.com']);
     $contactClient2 = Contact::factory()->create(['third_party_id' => $client->id, 'email' => 'client2@test.com']);
     $contactSupplier = Contact::factory()->create(['third_party_id' => $supplier->id, 'email' => 'supplier@test.com']);
-    
+
     // Create a contact without email
     Contact::factory()->create(['third_party_id' => $client->id, 'email' => null]);
 
@@ -41,16 +44,16 @@ it('can generate recipients based on third party type', function () {
 
     // Manually trigger the logic that would be in the Filament action
     $types = [ThirdPartyType::CLIENT->value];
-    
+
     $contacts = Contact::with('thirdParty')
-        ->whereHas('thirdParty', function($q) use ($types) {
+        ->whereHas('thirdParty', function ($q) use ($types) {
             $q->whereIn('type', $types);
         })
         ->whereNotNull('email')
         ->where('email', '!=', '')
         ->get();
 
-    foreach($contacts as $contact) {
+    foreach ($contacts as $contact) {
         EmailCampaignRecipient::firstOrCreate([
             'email_campaign_id' => $campaign->id,
             'email' => $contact->email,
@@ -87,7 +90,7 @@ it('sends emails and updates status', function () {
     $job = new ProcessEmailCampaignJob($campaign);
     $job->handle();
 
-    Mail::assertSent(\App\Mail\Tiers\GenericCampaignEmail::class, function ($mail) {
+    Mail::assertSent(GenericCampaignEmail::class, function ($mail) {
         return $mail->hasTo('test@test.com') &&
                $mail->campaignSubject === 'Hello';
     });

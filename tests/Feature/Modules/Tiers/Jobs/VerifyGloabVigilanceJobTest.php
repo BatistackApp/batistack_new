@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Notification;
 
 uses(RefreshDatabase::class);
 
+use App\Enums\Tiers\ThirdPartyType;
 use Illuminate\Support\Facades\Queue;
 
 it('dispatches vigilance expiration notifications to admins and subcontractors via primary contact', function () {
@@ -23,7 +24,7 @@ it('dispatches vigilance expiration notifications to admins and subcontractors v
 
     // Create subcontractor with no direct email but a primary contact
     $subcontractor = ThirdParty::factory()->create([
-        'type' => \App\Enums\Tiers\ThirdPartyType::SUBCONTRACTOR,
+        'type' => ThirdPartyType::SUBCONTRACTOR,
         'is_active' => true,
         'email' => null, // No generic email
     ]);
@@ -44,7 +45,7 @@ it('dispatches vigilance expiration notifications to admins and subcontractors v
             'issues' => ['URSSAF expired'],
         ]);
 
-    $job = new VerifyGloabVigilanceJob();
+    $job = new VerifyGloabVigilanceJob;
     $job->handle($mockService);
 
     // Assert internal notification sent to admin
@@ -67,7 +68,7 @@ it('updates compliant status and sends no notifications when subcontractor is co
     Queue::fake([VerifyGloabVigilanceJob::class]);
 
     $subcontractor = ThirdParty::factory()->create([
-        'type' => \App\Enums\Tiers\ThirdPartyType::SUBCONTRACTOR,
+        'type' => ThirdPartyType::SUBCONTRACTOR,
         'is_active' => true,
     ]);
 
@@ -79,7 +80,7 @@ it('updates compliant status and sends no notifications when subcontractor is co
             'issues' => [],
         ]);
 
-    $job = new VerifyGloabVigilanceJob();
+    $job = new VerifyGloabVigilanceJob;
     $job->handle($mockService);
 
     Notification::assertNothingSent();
@@ -90,4 +91,3 @@ it('updates compliant status and sends no notifications when subcontractor is co
         'issues' => [],
     ]);
 });
-

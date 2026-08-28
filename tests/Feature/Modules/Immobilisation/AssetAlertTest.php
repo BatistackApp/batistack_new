@@ -1,12 +1,11 @@
 <?php
 
-use App\Models\Immobilisation\FixedAsset;
+use App\Enums\Immobilisation\AssetStatus;
 use App\Models\Immobilisation\AssetCategory;
 use App\Models\Immobilisation\AssetMaintenance;
+use App\Models\Immobilisation\FixedAsset;
 use App\Models\User;
 use Illuminate\Support\Facades\Artisan;
-use Filament\Notifications\Notification;
-use App\Enums\Immobilisation\AssetStatus;
 
 it('generates vgp alerts for expired and imminent inspections', function () {
     $admin = User::factory()->create(['is_admin' => true]);

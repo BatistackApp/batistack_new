@@ -1,5 +1,7 @@
 <?php
 
+use App\Enums\Core\SignatureStatus;
+use App\Enums\Core\SignatureType;
 use App\Enums\Interventions\InterventionStatus;
 use App\Enums\Interventions\InterventionType;
 use App\Enums\Interventions\MaintenanceContractFrequency;
@@ -13,6 +15,7 @@ use App\Models\Interventions\MaintenanceContract;
 use App\Models\Interventions\MaintenanceContractReminder;
 use App\Models\Tiers\Contact;
 use App\Models\Tiers\ThirdParty;
+use App\Models\User;
 use App\Notifications\Interventions\MaintenanceContractReminderNotification;
 use App\Services\Interventions\MaintenanceContractService;
 use Illuminate\Support\Facades\Log;
@@ -85,14 +88,14 @@ describe('MaintenanceContract', function () {
 
     test('exposes the signatures morph relation', function () {
         $contract = makeContract();
-        $user = \App\Models\User::factory()->create();
+        $user = User::factory()->create();
 
         $contract->signatures()->create([
             'user_id' => $user->id,
             'token' => 'sig-token',
             'checksum' => 'abc123',
-            'status' => \App\Enums\Core\SignatureStatus::PENDING,
-            'type' => \App\Enums\Core\SignatureType::AUTOGRAPH,
+            'status' => SignatureStatus::PENDING,
+            'type' => SignatureType::AUTOGRAPH,
         ]);
 
         expect($contract->signatures()->count())->toBe(1);
@@ -255,14 +258,14 @@ describe('MaintenanceContractService', function () {
 
     test('reminder is deleted and the error is rethrown when sending fails', function () {
         $manager = Mockery::mock('Illuminate\Notifications\NotificationManager')->makePartial();
-        $manager->shouldReceive('send')->andThrow(new \RuntimeException('SMTP indisponible'));
+        $manager->shouldReceive('send')->andThrow(new RuntimeException('SMTP indisponible'));
         Notification::swap($manager);
 
         $this->client->update(['email' => 'client@batistack.fr']);
         makeContract(['next_due_date' => now()->addDays(10)->toDateString()]);
 
         expect(fn () => app(MaintenanceContractService::class)->notifyUpcoming())
-            ->toThrow(\RuntimeException::class, 'SMTP indisponible');
+            ->toThrow(RuntimeException::class, 'SMTP indisponible');
 
         expect(MaintenanceContractReminder::count())->toBe(0);
     });
@@ -298,7 +301,7 @@ describe('MaintenanceContractService', function () {
         $contract = makeContract();
 
         $service = Mockery::mock(MaintenanceContractService::class)->makePartial();
-        $service->shouldReceive('generateForContract')->once()->andThrow(new \RuntimeException('boom'));
+        $service->shouldReceive('generateForContract')->once()->andThrow(new RuntimeException('boom'));
 
         $count = $service->generateDueInterventions();
 

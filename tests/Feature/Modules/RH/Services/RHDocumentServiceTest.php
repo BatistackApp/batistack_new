@@ -4,6 +4,7 @@ namespace Tests\Feature\Modules\RH\Services;
 
 use App\Enums\RH\TimeEntryStatus;
 use App\Models\Core\Company;
+use App\Models\Flottes\TrafficFine;
 use App\Models\RH\Contract;
 use App\Models\RH\Employee;
 use App\Models\RH\TimeEntry;
@@ -20,7 +21,7 @@ beforeEach(function () {
         'city' => 'Paris',
         'siret' => '12345678901234',
     ]);
-    
+
     $this->employee = Employee::factory()->create([
         'first_name' => 'John',
         'last_name' => 'Doe',
@@ -33,7 +34,7 @@ beforeEach(function () {
     ]);
 
     $this->service = app(RHDocumentService::class);
-    
+
     Storage::fake('public');
 });
 
@@ -65,7 +66,7 @@ test('it generates a pro forma payslip', function () {
     // Let's mock it
     $mock = \Mockery::mock(RHDocumentService::class)->makePartial();
     $mock->shouldReceive('generate')->once()->andReturn('documents/rh/payslips/paie_proforma.pdf');
-    
+
     $path = $mock->generateProFormaPayslip($this->employee, $month, $year);
 
     expect($path)->toBe('documents/rh/payslips/paie_proforma.pdf');
@@ -84,18 +85,18 @@ test('it generates a pro forma payslip with overtime > 25% and 50%', function ()
 
     $mock = \Mockery::mock(RHDocumentService::class)->makePartial();
     $mock->shouldReceive('generate')->once()->andReturn('documents/rh/payslips/paie_proforma_ot.pdf');
-    
+
     $path = $mock->generateProFormaPayslip($this->employee, $month, $year);
 
     expect($path)->toBe('documents/rh/payslips/paie_proforma_ot.pdf');
 });
 
 test('it generates a traffic fine warning', function () {
-    $fine = \App\Models\Flottes\TrafficFine::factory()->create();
+    $fine = TrafficFine::factory()->create();
 
     $mock = \Mockery::mock(RHDocumentService::class)->makePartial();
     $mock->shouldReceive('generate')->once()->andReturn('documents/rh/warnings/avertissement.pdf');
-    
+
     $path = $mock->generateTrafficFineWarning($this->employee, $fine);
 
     expect($path)->toBe('documents/rh/warnings/avertissement.pdf');
@@ -104,7 +105,7 @@ test('it generates a traffic fine warning', function () {
 test('it generates affiliation mutuelle document', function () {
     $mock = \Mockery::mock(RHDocumentService::class)->makePartial();
     $mock->shouldReceive('generate')->once()->andReturn('documents/rh/onboarding/affiliation.pdf');
-    
+
     $path = $mock->generateAffiliationMutuelle($this->employee);
 
     expect($path)->toBe('documents/rh/onboarding/affiliation.pdf');
