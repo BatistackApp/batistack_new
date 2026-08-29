@@ -55,6 +55,21 @@ class AppServiceProvider extends ServiceProvider
             $panelSwitch
                 ->modalHeading('Espaces')
                 ->slideOver()
+                ->panels([
+                    'core',
+                    'tiers',
+                    'chantier',
+                    'interventions',
+                    'articles',
+                    'commerce',
+                    'banque',
+                    'rh',
+                    'paie',
+                    'flottes',
+                    'immobilisation',
+                    'locations',
+                    'gpao',
+                ])
                 ->icons([
                     'core' => Phosphor::Building,
                     'tiers' => Phosphor::Users,
