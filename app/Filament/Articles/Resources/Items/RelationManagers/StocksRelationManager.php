@@ -30,6 +30,7 @@ use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Model;
+use MarceloRodigo\FilamentBarcodeScannerField\Forms\Components\BarcodeInput;
 use ToneGabes\Filament\Icons\Enums\Phosphor;
 
 class StocksRelationManager extends RelationManager
@@ -157,6 +158,12 @@ class StocksRelationManager extends RelationManager
                     ->label('Seuil mini')
                     ->numeric(decimalPlaces: 2)
                     ->color('gray'),
+                TextColumn::make('locations_summary')
+                    ->label('Emplacements')
+                    ->state(fn ($record) => $record->locations->pluck('location_code')->filter()->implode(', ') ?: '—')
+                    ->badge()
+                    ->color('info')
+                    ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
                 //
@@ -185,6 +192,10 @@ class StocksRelationManager extends RelationManager
                             ->required()
                             ->minValue(0.01)
                             ->suffixAction(CalculatorAction::make()),
+                        BarcodeInput::make('location_code')
+                            ->label('Emplacement (optionnel)')
+                            ->nullable()
+                            ->placeholder('Scanner ou laisser vide pour FIFO'),
                         TextInput::make('batch_number')->label('Numéro de lot')
                             ->required(fn ($get, $livewire) => $get('type') === 'in' && $livewire->getOwnerRecord()->is_sensitive),
                         DatePicker::make('expiration_date')->label('Date de péremption')
@@ -201,7 +212,8 @@ class StocksRelationManager extends RelationManager
                             null,
                             null,
                             $data['batch_number'],
-                            $data['expiration_date']
+                            $data['expiration_date'],
+                            $data['location_code'] ?? null
                         );
                         Notification::make()->title('Mouvement de stock créé')->success()->send();
                     }),
@@ -270,6 +282,64 @@ class StocksRelationManager extends RelationManager
                         Notification::make()->title('Stock consommé')->success()->send();
                     })
                     ->visible(fn ($record) => $record->reserved_quantity > 0),
+                Action::make('assignBin')
+                    ->label('Assigner emplacement')
+                    ->icon(Phosphor::MapPin)
+                    ->color('info')
+                    ->form([
+                        BarcodeInput::make('location_code')
+                            ->label('Emplacement (scanner le code du bin)')
+                            ->autofocus()
+                            ->live(debounce: 500)
+                            ->required()
+                            ->placeholder('Ex: A01-R03-S02-B05'),
+                        TextInput::make('quantity')
+                            ->label('Quantité à assigner')
+                            ->numeric()
+                            ->required()
+                            ->minValue(0.01)
+                            ->maxValue(fn ($record) => $record->quantity)
+                            ->suffix(fn ($record) => $record->item->unit->symbol),
+                    ])
+                    ->action(function ($record, array $data) {
+                        app(StockService::class)->assignToLocation(
+                            $record,
+                            $data['location_code'],
+                            $data['quantity']
+                        );
+                        Notification::make()->title('Emplacement assigné')->success()->send();
+                    }),
+                Action::make('moveBin')
+                    ->label('Déplacer emplacement')
+                    ->icon(Phosphor::ArrowsLeftRight)
+                    ->color('warning')
+                    ->form([
+                        Select::make('from_location')
+                            ->label('De (emplacement source)')
+                            ->options(fn ($record) => $record->locations->pluck('location_code', 'location_code'))
+                            ->required()
+                            ->native(false),
+                        BarcodeInput::make('to_location')
+                            ->label('Vers (scanner le code cible)')
+                            ->autofocus()
+                            ->live(debounce: 500)
+                            ->required(),
+                        TextInput::make('quantity')
+                            ->label('Quantité à déplacer')
+                            ->numeric()
+                            ->required()
+                            ->minValue(0.01),
+                    ])
+                    ->action(function ($record, array $data) {
+                        app(StockService::class)->moveLocation(
+                            $record,
+                            $data['from_location'],
+                            $data['to_location'],
+                            $data['quantity']
+                        );
+                        Notification::make()->title('Emplacement déplacé')->success()->send();
+                    })
+                    ->visible(fn ($record) => $record->locations()->hasQuantity()->count() > 0),
                 ViewAction::make(),
                 EditAction::make(),
                 DissociateAction::make(),

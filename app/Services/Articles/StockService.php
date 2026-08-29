@@ -7,6 +7,7 @@ use App\Enums\Articles\StockMouvementType;
 use App\Exceptions\Articles\ArticlesModuleException;
 use App\Models\Articles\Item;
 use App\Models\Articles\Stock;
+use App\Models\Articles\StockLocation;
 use App\Models\Articles\StockMouvement;
 use App\Models\Articles\Warehouse;
 use DB;
@@ -21,16 +22,16 @@ class StockService
      *
      * @throws Throwable
      */
-    public function createMouvement(Item $item, Warehouse $warehouse, string $type, float $quantity, ?string $description, ?StockMouvementSource $source = null, ?int $referenceId = null, ?string $batchNumber = null, ?string $expirationDate = null): void
+    public function createMouvement(Item $item, Warehouse $warehouse, string $type, float $quantity, ?string $description, ?StockMouvementSource $source = null, ?int $referenceId = null, ?string $batchNumber = null, ?string $expirationDate = null, ?string $locationCode = null): void
     {
         if ($quantity <= 0) {
             throw new ArticlesModuleException('La quantité doit être strictement positive.', 400);
         }
 
         if ($type === 'in') {
-            $this->entry($item, $warehouse, $quantity, $item->purchase_price, $batchNumber, $expirationDate);
+            $this->entry($item, $warehouse, $quantity, $item->purchase_price, $batchNumber, $expirationDate, $locationCode);
         } else {
-            $this->exit($item, $warehouse, $quantity, $description, $source, $referenceId, $batchNumber, $expirationDate);
+            $this->exit($item, $warehouse, $quantity, $description, $source, $referenceId, $batchNumber, $expirationDate, $locationCode);
         }
     }
 
@@ -39,7 +40,7 @@ class StockService
      *
      * @throws Throwable
      */
-    public function entry(Item $item, Warehouse $warehouse, float $quantity, float $purchasePrice, ?string $batchNumber = null, ?string $expirationDate = null): void
+    public function entry(Item $item, Warehouse $warehouse, float $quantity, float $purchasePrice, ?string $batchNumber = null, ?string $expirationDate = null, ?string $locationCode = null): void
     {
         if ($item->is_sensitive && (empty($batchNumber) || empty($expirationDate))) {
             throw new ArticlesModuleException(
@@ -48,7 +49,7 @@ class StockService
             );
         }
 
-        DB::transaction(function () use ($item, $warehouse, $quantity, $purchasePrice, $batchNumber, $expirationDate) {
+        DB::transaction(function () use ($item, $warehouse, $quantity, $purchasePrice, $batchNumber, $expirationDate, $locationCode) {
             $currentGlobalStock = $item->stocks()->sum('quantity');
             $oldPump = (float) $item->purchase_price;
 
@@ -91,12 +92,17 @@ class StockService
                 'batch_number' => $batchNumber,
                 'expiration_date' => $expirationDate,
             ]);
+
+            // Emplacement physique
+            if ($locationCode !== null) {
+                $this->upsertLocation($stock, $locationCode, $quantity);
+            }
         });
     }
 
-    public function exit(Item $item, Warehouse $warehouse, float $quantity, ?string $reason = null, ?StockMouvementSource $source = null, ?int $referenceId = null, ?string $batchNumber = null, ?string $expirationDate = null): void
+    public function exit(Item $item, Warehouse $warehouse, float $quantity, ?string $reason = null, ?StockMouvementSource $source = null, ?int $referenceId = null, ?string $batchNumber = null, ?string $expirationDate = null, ?string $locationCode = null): void
     {
-        DB::transaction(function () use ($item, $warehouse, $quantity, $reason, $source, $referenceId, $batchNumber, $expirationDate) {
+        DB::transaction(function () use ($item, $warehouse, $quantity, $reason, $source, $referenceId, $batchNumber, $expirationDate, $locationCode) {
             $stock = Stock::where('item_id', $item->id)
                 ->where('warehouse_id', $warehouse->id)
                 ->lockForUpdate()
@@ -145,6 +151,9 @@ class StockService
                 'batch_number' => $batchNumber,
                 'expiration_date' => $expirationDate,
             ]);
+
+            // Déduction de l'emplacement physique
+            $this->deductFromLocations($stock, $quantity, $locationCode);
 
             // Logique d'alerte si stock < seuil
             if ($stock->quantity <= $stock->min_threshold) {
@@ -237,11 +246,11 @@ class StockService
      *
      * @throws Throwable
      */
-    public function transfer(Item $item, Warehouse $from, Warehouse $to, float $quantity): void
+    public function transfer(Item $item, Warehouse $from, Warehouse $to, float $quantity, ?string $targetLocationCode = null): void
     {
-        DB::transaction(function () use ($item, $from, $to, $quantity) {
+        DB::transaction(function () use ($item, $from, $to, $quantity, $targetLocationCode) {
             $this->exit($item, $from, $quantity, "Transfert vers {$to->name}");
-            $this->entry($item, $to, $quantity, $item->purchase_price);
+            $this->entry($item, $to, $quantity, $item->purchase_price, null, null, $targetLocationCode);
         });
     }
 
@@ -270,5 +279,118 @@ class StockService
                 $this->transfer($composition->childItem, $from, $to, $requiredQuantity);
             }
         });
+    }
+
+    // ============================================
+    // EMPLACEMENTS PHYSIQUES (BIN-PICKING)
+    // ============================================
+
+    /**
+     * Créer ou mettre à jour un emplacement physique pour un stock.
+     */
+    public function upsertLocation(Stock $stock, string $locationCode, float $quantity): StockLocation
+    {
+        $location = StockLocation::firstOrCreate(
+            ['stock_id' => $stock->id, 'location_code' => $locationCode],
+            ['quantity' => 0]
+        );
+
+        $location->quantity += $quantity;
+        $location->save();
+
+        return $location;
+    }
+
+    /**
+     * Déduire la quantité des emplacements physiques (FIFO ou bin cible).
+     *
+     * @throws ArticlesModuleException
+     */
+    public function deductFromLocations(Stock $stock, float $quantity, ?string $targetLocationCode = null): void
+    {
+        $locations = $stock->locations()->hasQuantity()->get();
+
+        if ($locations->isEmpty()) {
+            return;
+        }
+
+        $remaining = $quantity;
+
+        if ($targetLocationCode !== null) {
+            // Cibler un bin spécifique
+            $target = $locations->firstWhere('location_code', $targetLocationCode);
+
+            if (! $target || $target->quantity < $remaining) {
+                throw new ArticlesModuleException(
+                    "Quantité insuffisante dans l'emplacement {$targetLocationCode}.",
+                    400
+                );
+            }
+
+            $target->quantity -= $remaining;
+            $target->save();
+
+            return;
+        }
+
+        // FIFO : déduire des bins les plus anciens en premier
+        foreach ($locations as $location) {
+            if ($remaining <= 0) {
+                break;
+            }
+
+            $toDeduct = min($remaining, $location->quantity);
+            $location->quantity -= $toDeduct;
+            $location->save();
+            $remaining -= $toDeduct;
+        }
+
+        if ($remaining > 0.0001) {
+            throw new ArticlesModuleException(
+                'Quantité insuffisante répartie dans les emplacements.',
+                400
+            );
+        }
+    }
+
+    /**
+     * Déplacer du stock d'un emplacement à un autre dans le même dépôt.
+     *
+     * @throws ArticlesModuleException
+     */
+    public function moveLocation(Stock $stock, string $fromCode, string $toCode, float $quantity): void
+    {
+        DB::transaction(function () use ($stock, $fromCode, $toCode, $quantity) {
+            $from = $stock->locations()->where('location_code', $fromCode)->first();
+
+            if (! $from || $from->quantity < $quantity) {
+                throw new ArticlesModuleException(
+                    "Quantité insuffisante dans l'emplacement source {$fromCode}.",
+                    400
+                );
+            }
+
+            $from->quantity -= $quantity;
+            $from->save();
+
+            $this->upsertLocation($stock, $toCode, $quantity);
+        });
+    }
+
+    /**
+     * Assigner du stock à un emplacement (sans mouvement, réorganisation physique).
+     *
+     * @throws ArticlesModuleException
+     */
+    public function assignToLocation(Stock $stock, string $locationCode, float $quantity): void
+    {
+        if ($quantity > $stock->quantity) {
+            throw new ArticlesModuleException(
+                'La quantité assignée ne peut pas dépasser le stock total.',
+                400
+            );
+        }
+
+        $this->upsertLocation($stock, $locationCode, $quantity);
     }
 }

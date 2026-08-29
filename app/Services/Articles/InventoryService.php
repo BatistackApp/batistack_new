@@ -24,9 +24,9 @@ class InventoryService
      *
      * @throws Throwable
      */
-    public function reconcile(Item $item, Warehouse $warehouse, float $foundQuantity, string $reason): void
+    public function reconcile(Item $item, Warehouse $warehouse, float $foundQuantity, string $reason, ?string $locationCode = null): void
     {
-        DB::transaction(function () use ($item, $warehouse, $foundQuantity, $reason) {
+        DB::transaction(function () use ($item, $warehouse, $foundQuantity, $reason, $locationCode) {
             $stock = Stock::where('item_id', $item->id)
                 ->where('warehouse_id', $warehouse->id)
                 ->lockForUpdate()
@@ -74,6 +74,17 @@ class InventoryService
                 'reference_type' => StockMouvementSource::INVENTORY,
                 'reference_id' => null,
             ]);
+
+            // Réconciliation d'un emplacement spécifique
+            if ($locationCode !== null && $stock) {
+                $location = $stock->locations()->where('location_code', $locationCode)->first();
+                if ($location) {
+                    $location->quantity = $foundQuantity;
+                    $location->save();
+                } else {
+                    app(StockService::class)->upsertLocation($stock, $locationCode, $foundQuantity);
+                }
+            }
         });
     }
 

@@ -2,6 +2,7 @@
 
 namespace App\Filament\Articles\Resources\Warehouses;
 
+use App\Filament\Articles\Resources\Warehouses\Pages\BinInventoryPage;
 use App\Filament\Articles\Resources\Warehouses\Pages\CreateWarehouse;
 use App\Filament\Articles\Resources\Warehouses\Pages\EditWarehouse;
 use App\Filament\Articles\Resources\Warehouses\Pages\ListWarehouses;
@@ -54,6 +55,7 @@ class WarehouseResource extends Resource
             'index' => ListWarehouses::route('/'),
             'create' => CreateWarehouse::route('/create'),
             'edit' => EditWarehouse::route('/{record}/edit'),
+            'bin-inventory' => BinInventoryPage::route('/{record}/bin-inventory'),
         ];
     }
 }

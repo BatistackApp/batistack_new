@@ -34,13 +34,13 @@ class StockLogisticsService
      *
      * @throws Exception
      */
-    public function transferToChantier(Warehouse $source, Chantier $chantier, Item $item, float $quantity, int $userId): void
+    public function transferToChantier(Warehouse $source, Chantier $chantier, Item $item, float $quantity, int $userId, ?string $sourceLocationCode = null): void
     {
         if ($quantity <= 0) {
             throw new Exception('La quantité à transférer doit être supérieure à 0.');
         }
 
-        DB::transaction(function () use ($source, $chantier, $item, $quantity, $userId) {
+        DB::transaction(function () use ($source, $chantier, $item, $quantity, $userId, $sourceLocationCode) {
             $sourceStock = $source->stocks()
                 ->where('item_id', $item->id)
                 ->lockForUpdate()
@@ -66,6 +66,9 @@ class StockLogisticsService
                 'reference_id' => $chantier->id,
             ]);
 
+            // Déduction FIFO ou bin cible source
+            app(StockService::class)->deductFromLocations($sourceStock, $quantity, $sourceLocationCode);
+
             // Mouvement d'entrée (Chantier)
             $destStock = $destination->stocks()->firstOrCreate(
                 ['item_id' => $item->id],
@@ -83,11 +86,14 @@ class StockLogisticsService
                 'reference_type' => StockMouvementSource::INTERNAL,
                 'reference_id' => $source->id,
             ]);
+
+            // Créer un emplacement par défaut au chantier
+            app(StockService::class)->upsertLocation($destStock, 'CHANTIER', $quantity);
         });
     }
 
     /**
-     * Consume stock on a chantier site.
+     * Consume stock on a chantier site (FIFO).
      *
      * @throws Exception
      */
@@ -120,11 +126,14 @@ class StockLogisticsService
                 'reference_type' => StockMouvementSource::SITE,
                 'reference_id' => $chantier->id,
             ]);
+
+            // FIFO sur les emplacements du chantier
+            app(StockService::class)->deductFromLocations($stock, $quantity);
         });
     }
 
     /**
-     * Return remaining stock from a chantier to a depot.
+     * Return remaining stock from a chantier to a depot (FIFO).
      *
      * @throws Exception
      */
@@ -159,6 +168,9 @@ class StockLogisticsService
                 'reference_id' => $chantier->id,
             ]);
 
+            // FIFO sur les emplacements du chantier
+            app(StockService::class)->deductFromLocations($sourceStock, $quantity);
+
             // Mouvement d'entrée (Dépôt)
             $destStock = $destination->stocks()->firstOrCreate(
                 ['item_id' => $item->id],
@@ -176,6 +188,9 @@ class StockLogisticsService
                 'reference_type' => StockMouvementSource::RETURN,
                 'reference_id' => $chantier->id,
             ]);
+
+            // Créer un emplacement par défaut au dépôt
+            app(StockService::class)->upsertLocation($destStock, 'RETOUR', $quantity);
         });
     }
 }

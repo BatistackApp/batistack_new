@@ -56,6 +56,11 @@ class LatestStockMouvementsWidget extends BaseWidget
                 Tables\Columns\TextColumn::make('reference_type')
                     ->label('Source')
                     ->formatStateUsing(fn (StockMouvement $record): string => $record->getSourceLabel()),
+                Tables\Columns\TextColumn::make('stock.locations_summary')
+                    ->label('Emplacement')
+                    ->state(fn ($record) => $record->stock->locations->pluck('location_code')->filter()->implode(', ') ?: '—')
+                    ->badge()
+                    ->color('info'),
             ])
             ->paginated(false);
     }

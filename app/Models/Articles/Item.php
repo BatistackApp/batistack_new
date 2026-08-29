@@ -319,13 +319,13 @@ class Item extends Model implements HasMedia
     }
 
     /**
-     * Récupérer le stock disponible dans un entrepôt
+     * Récupérer le stock disponible dans un entrepôt (somme de tous les emplacements)
      */
     public function getStockInWarehouse(Warehouse $warehouse): float
     {
         return $this->stocks()
             ->where('warehouse_id', $warehouse->id)
-            ->first()?->quantity ?? 0;
+            ->sum('quantity');
     }
 
     /**
