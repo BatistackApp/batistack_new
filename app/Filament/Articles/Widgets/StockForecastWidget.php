@@ -2,6 +2,7 @@
 
 namespace App\Filament\Articles\Widgets;
 
+use App\Filament\Articles\Resources\Items\ItemResource;
 use App\Models\Articles\StockForecast;
 use Filament\Actions\Action;
 use Filament\Tables\Columns\BadgeColumn;
@@ -66,7 +67,7 @@ class StockForecastWidget extends TableWidget
                 Action::make('view_item')
                     ->label('Fiche')
                     ->icon(Phosphor::Eye)
-                    ->url(fn ($record) => "/articles/items/{$record->item_id}"),
+                    ->url(fn ($record) => ItemResource::getUrl('view', ['record' => $record->item_id])),
             ])
             ->emptyStateHeading('Aucune prévision de rupture')
             ->emptyStateDescription('Lancez `php artisan articles:forecast-stock` pour générer les prévisions.')

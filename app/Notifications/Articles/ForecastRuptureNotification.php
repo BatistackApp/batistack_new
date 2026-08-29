@@ -2,6 +2,7 @@
 
 namespace App\Notifications\Articles;
 
+use App\Filament\Commerce\Resources\PurchaseOrders\PurchaseOrderResource;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -25,7 +26,7 @@ class ForecastRuptureNotification extends Notification implements ShouldQueue
             ->greeting("Bonjour {$notifiable->first_name},")
             ->line("La prévision prédictive a analysé l'historique (90j), la saisonnalité (24 mois) et les besoins BIM des chantiers planifiés.")
             ->line("{$this->poCount} commande(s) prédictive(s) générée(s), dont {$this->urgentCount} urgente(s) (rupture <=14j).")
-            ->action('Voir les Commandes d\'Achat', url('/commerce/purchase-orders'))
+            ->action('Voir les Commandes d\'Achat', PurchaseOrderResource::getUrl('index', panel: 'commerce'))
             ->line('Vérifiez les quantités et dates de commande suggérées dans le widget Prévisions.');
     }
 
@@ -35,7 +36,7 @@ class ForecastRuptureNotification extends Notification implements ShouldQueue
             'title' => 'Prévisions de ruptures',
             'body' => "{$this->poCount} commande(s) prédictive(s) générée(s) ({$this->urgentCount} urgente(s) <=14j).",
             'icon' => 'heroicon-o-chart-bar',
-            'url' => url('/commerce/purchase-orders'),
+            'url' => PurchaseOrderResource::getUrl('index', panel: 'commerce'),
         ];
     }
 }

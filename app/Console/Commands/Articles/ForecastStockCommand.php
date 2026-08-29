@@ -27,6 +27,12 @@ class ForecastStockCommand extends Command
 
         $this->info("Prévision des ruptures (horizon {$horizon}j) en cours...");
 
+        // Purge des prévisions de plus de 30 jours
+        $purged = StockForecast::where('forecasted_at', '<', now()->subDays(30))->delete();
+        if ($purged > 0) {
+            $this->info("{$purged} prévisions obsolètes supprimées (>30j).");
+        }
+
         $items = Item::where('is_active', true)
             ->where('min_stock', '>', 0)
             ->with(['supplier'])
@@ -67,8 +73,7 @@ class ForecastStockCommand extends Command
             }
 
             if ($forecast['confidence'] === 'low' && ! $force && $forecast['daily_burn'] == 0) {
-                // On a déjà fallback min_stock dans le service, mais on évite de générer si vraiment vide
-                // sauf --force
+                continue;
             }
 
             // Délai fournisseur pour déterminer si commande prédictive nécessaire
@@ -123,7 +128,7 @@ class ForecastStockCommand extends Command
                 continue;
             }
 
-            $reference = 'PO-FORECAST-'.now()->format('Ymd').'-'.$supplierKey;
+            $reference = 'PO-FORECAST-'.$supplierKey;
 
             $po = PurchaseOrder::firstOrCreate(
                 [

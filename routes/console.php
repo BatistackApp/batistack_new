@@ -35,6 +35,11 @@ Schedule::command('tiers:verify-vigilance')
 Schedule::command('articles:check-stocks')
     ->dailyAt('07:00');
 
+Schedule::command('articles:forecast-stock')
+    ->dailyAt('07:30')
+    ->timezone('Europe/Paris')
+    ->onFailure(fn () => logger()->error('Échec de la génération des prévisions de stock.'));
+
 // Schedule::job(new CheckLowStockJob)->dailyAt('08:00');
 Schedule::job(new CheckExpiringStocksJob)->dailyAt('08:00');
 
