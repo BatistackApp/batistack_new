@@ -17,7 +17,7 @@ class CompetencyMatrix extends Page
 
     public static function getNavigationGroup(): ?string
     {
-        return 'Gestion';
+        return 'Outils & Simulation';
     }
 
     public static function getNavigationSort(): ?int

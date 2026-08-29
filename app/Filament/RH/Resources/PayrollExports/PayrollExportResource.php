@@ -21,15 +21,15 @@ class PayrollExportResource extends Resource
 {
     protected static ?string $model = PayrollExport::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedDocumentArrowDown;
 
     protected static \UnitEnum|string|null $navigationGroup = 'Déclarations & Exports';
 
-    protected static ?string $navigationLabel = 'Exports Paie';
+    protected static ?string $navigationLabel = 'Export Paie Mensuel';
 
-    protected static ?string $modelLabel = 'Export Paie';
+    protected static ?string $modelLabel = 'Export Paie Mensuel';
 
-    protected static ?string $pluralModelLabel = 'Exports Paie';
+    protected static ?string $pluralModelLabel = 'Export Paie Mensuel';
 
     public static function form(Schema $schema): Schema
     {

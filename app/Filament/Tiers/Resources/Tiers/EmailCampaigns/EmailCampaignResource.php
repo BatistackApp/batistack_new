@@ -14,12 +14,15 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use ToneGabes\Filament\Icons\Enums\Phosphor;
 
 class EmailCampaignResource extends Resource
 {
     protected static ?string $model = EmailCampaign::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = Phosphor::Mailbox;
+
+    protected static ?string $modelLabel = 'Campagnes Emailing';
 
     protected static ?string $recordTitleAttribute = 'name';
 

@@ -29,7 +29,7 @@ class ScanEquipementPage extends Page implements HasForms
 
     protected static ?string $title = 'Scanner un Outillage';
 
-    protected static string|null|\UnitEnum $navigationGroup = 'Gestion';
+    protected static string|null|\UnitEnum $navigationGroup = 'Outils & Simulation';
 
     protected static ?int $navigationSort = 100;
 
