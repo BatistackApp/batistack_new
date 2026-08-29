@@ -35,13 +35,6 @@ class StockForecastService
             return 0.0;
         }
 
-        // Moyenne mobile 30j si on a au moins 30 jours d'historique exploitable
-        $daysWithData = StockMouvement::whereHas('stock', fn ($q) => $q->where('item_id', $item->id))
-            ->where('type', 'out')
-            ->where('created_at', '>=', $since)
-            ->selectRaw('COUNT(DISTINCT DATE(created_at)) as d')
-            ->value('d');
-
         // On garde une simple moyenne journalière ; la moyenne mobile 30j revient au même
         // que la moyenne brute si on n'a pas de pondération différente. On conserve la distinction
         // pour évolution future (pondération exponentielle).
@@ -70,8 +63,8 @@ class StockForecastService
         $monthly = StockMouvement::whereHas('stock', fn ($q) => $q->where('item_id', $item->id))
             ->where('type', 'out')
             ->where('created_at', '>=', $since)
-            ->selectRaw('MONTH(created_at) as m, SUM(ABS(quantity_delta)) as total')
-            ->groupBy(DB::raw('MONTH(created_at)'))
+            ->selectRaw((DB::getDriverName() === 'sqlite' ? "CAST(strftime('%m', created_at) AS INTEGER)" : 'MONTH(created_at)').' as m, SUM(ABS(quantity_delta)) as total')
+            ->groupBy(DB::raw(DB::getDriverName() === 'sqlite' ? "CAST(strftime('%m', created_at) AS INTEGER)" : 'MONTH(created_at)'))
             ->pluck('total', 'm');
 
         if ($monthly->isEmpty()) {
@@ -154,7 +147,7 @@ class StockForecastService
         $monthsWithData = StockMouvement::whereHas('stock', fn ($q) => $q->where('item_id', $item->id))
             ->where('type', 'out')
             ->where('created_at', '>=', $since24m)
-            ->selectRaw('COUNT(DISTINCT DATE_FORMAT(created_at, "%Y-%m")) as m')
+            ->selectRaw('COUNT(DISTINCT '.(DB::getDriverName() === 'sqlite' ? "strftime('%Y-%m', created_at)" : "DATE_FORMAT(created_at, '%Y-%m')").') as m')
             ->value('m');
 
         $confidence = 'low';
