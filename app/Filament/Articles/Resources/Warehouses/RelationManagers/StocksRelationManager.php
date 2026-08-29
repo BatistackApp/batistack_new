@@ -60,7 +60,17 @@ class StocksRelationManager extends RelationManager
                     ->suffix(fn ($record) => " {$record->item->unit->symbol}"),
                 TextColumn::make('locations_summary')
                     ->label('Emplacements')
-                    ->state(fn ($record) => $record->locations->pluck('location_code')->filter()->implode(', ') ?: '—')
+                    ->state(function ($record) {
+                        $codes = $record->locations->pluck('location_code')->filter()->take(3);
+                        $total = $record->locations->count();
+                        $summary = $codes->implode(', ');
+
+                        if ($total > 3) {
+                            $summary .= ' +'.($total - 3);
+                        }
+
+                        return $summary ?: '—';
+                    })
                     ->badge()
                     ->color('info')
                     ->toggleable(isToggledHiddenByDefault: true),
@@ -74,7 +84,7 @@ class StocksRelationManager extends RelationManager
                         BarcodeInput::make('location_code')
                             ->label('Scanner le code du bin')
                             ->autofocus()
-                            ->live(debounce: 500)
+                            ->live()
                             ->required()
                             ->placeholder('Scanner ou taper le code...'),
                     ])

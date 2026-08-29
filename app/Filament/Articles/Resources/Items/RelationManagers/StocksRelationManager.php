@@ -160,7 +160,17 @@ class StocksRelationManager extends RelationManager
                     ->color('gray'),
                 TextColumn::make('locations_summary')
                     ->label('Emplacements')
-                    ->state(fn ($record) => $record->locations->pluck('location_code')->filter()->implode(', ') ?: '—')
+                    ->state(function ($record) {
+                        $codes = $record->locations->pluck('location_code')->filter()->take(3);
+                        $total = $record->locations->count();
+                        $summary = $codes->implode(', ');
+
+                        if ($total > 3) {
+                            $summary .= ' +'.($total - 3);
+                        }
+
+                        return $summary ?: '—';
+                    })
                     ->badge()
                     ->color('info')
                     ->toggleable(isToggledHiddenByDefault: true),
@@ -290,7 +300,7 @@ class StocksRelationManager extends RelationManager
                         BarcodeInput::make('location_code')
                             ->label('Emplacement (scanner le code du bin)')
                             ->autofocus()
-                            ->live(debounce: 500)
+                            ->live()
                             ->required()
                             ->placeholder('Ex: A01-R03-S02-B05'),
                         TextInput::make('quantity')
@@ -322,7 +332,7 @@ class StocksRelationManager extends RelationManager
                         BarcodeInput::make('to_location')
                             ->label('Vers (scanner le code cible)')
                             ->autofocus()
-                            ->live(debounce: 500)
+                            ->live()
                             ->required(),
                         TextInput::make('quantity')
                             ->label('Quantité à déplacer')
