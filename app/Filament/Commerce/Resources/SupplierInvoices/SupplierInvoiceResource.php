@@ -16,6 +16,7 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Tables\Table;
 use ToneGabes\Filament\Icons\Enums\Phosphor;
+use UnitEnum;
 
 class SupplierInvoiceResource extends Resource
 {
@@ -28,6 +29,8 @@ class SupplierInvoiceResource extends Resource
     protected static ?string $modelLabel = 'Facture fournisseur';
 
     protected static ?string $pluralModelLabel = 'Factures Fournisseur';
+
+    protected static string | UnitEnum | null $navigationGroup = 'Achats';
 
     protected static ?int $navigationSort = 7;
 

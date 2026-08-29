@@ -16,7 +16,7 @@ class ExportDNA extends Page implements HasSchemas
 
     protected static string|\BackedEnum|null $navigationIcon = Phosphor::Files;
 
-    protected static string|\UnitEnum|null $navigationGroup = 'Exports & Rapports';
+    protected static string|\UnitEnum|null $navigationGroup = 'Déclarations & Exports';
 
     protected static ?string $navigationLabel = 'Export DNA (CIBTP)';
 
