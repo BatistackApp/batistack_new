@@ -6,6 +6,7 @@ use App\Enums\Immobilisation\AssetStatus;
 use App\Enums\Immobilisation\DepreciationMethod;
 use App\Enums\Locations\RentalBillingPeriod;
 use App\Models\Chantiers\Chantier;
+use App\Models\Chantiers\ChantierEquipmentTracking;
 use App\Models\Commerce\SupplierInvoice;
 use App\Models\Flottes\Vehicle;
 use App\Models\Locations\InternalRentalInvoice;
@@ -120,6 +121,11 @@ class FixedAsset extends Model implements HasMedia
     public function maintenanceTickets(): MorphMany
     {
         return $this->morphMany(AssetMaintenanceTicket::class, 'asset');
+    }
+
+    public function trackings(): MorphMany
+    {
+        return $this->morphMany(ChantierEquipmentTracking::class, 'trackable');
     }
 
     public function getNextVgpDateAttribute(): ?Carbon
