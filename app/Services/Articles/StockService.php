@@ -308,7 +308,7 @@ class StockService
      */
     public function deductFromLocations(Stock $stock, float $quantity, ?string $targetLocationCode = null): void
     {
-        $locations = $stock->locations()->hasQuantity()->get();
+        $locations = $stock->locations()->hasQuantity()->orderBy('created_at')->orderBy('id')->get();
 
         if ($locations->isEmpty()) {
             return;
@@ -346,6 +346,10 @@ class StockService
         }
 
         if ($remaining > 0.0001) {
+            if ($stock->getUnallocatedQuantity() >= $remaining) {
+                return;
+            }
+
             throw new ArticlesModuleException(
                 'Quantité insuffisante répartie dans les emplacements.',
                 400
@@ -361,7 +365,7 @@ class StockService
     public function moveLocation(Stock $stock, string $fromCode, string $toCode, float $quantity): void
     {
         DB::transaction(function () use ($stock, $fromCode, $toCode, $quantity) {
-            $from = $stock->locations()->where('location_code', $fromCode)->first();
+            $from = $stock->locations()->where('location_code', $fromCode)->lockForUpdate()->first();
 
             if (! $from || $from->quantity < $quantity) {
                 throw new ArticlesModuleException(
@@ -384,13 +388,24 @@ class StockService
      */
     public function assignToLocation(Stock $stock, string $locationCode, float $quantity): void
     {
-        if ($quantity > $stock->quantity) {
+        if ($quantity <= 0) {
             throw new ArticlesModuleException(
-                'La quantité assignée ne peut pas dépasser le stock total.',
+                'La quantité assignée doit être positive.',
                 400
             );
         }
 
-        $this->upsertLocation($stock, $locationCode, $quantity);
+        DB::transaction(function () use ($stock, $locationCode, $quantity) {
+            $stock = Stock::where('id', $stock->id)->lockForUpdate()->first();
+
+            if ($quantity > $stock->getUnallocatedQuantity()) {
+                throw new ArticlesModuleException(
+                    'La quantité assignée ne peut pas dépasser la quantité non affectée.',
+                    400
+                );
+            }
+
+            $this->upsertLocation($stock, $locationCode, $quantity);
+        });
     }
 }

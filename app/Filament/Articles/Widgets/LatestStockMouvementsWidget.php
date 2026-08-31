@@ -21,7 +21,7 @@ class LatestStockMouvementsWidget extends BaseWidget
         return $table
             ->query(
                 StockMouvement::query()
-                    ->with(['stock.item', 'stock.warehouse', 'user'])
+                    ->with(['stock.item', 'stock.warehouse', 'stock.locations', 'user'])
                     ->latest()
                     ->limit(10)
             )

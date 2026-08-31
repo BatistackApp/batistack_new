@@ -79,8 +79,12 @@ class InventoryService
             if ($locationCode !== null && $stock) {
                 $location = $stock->locations()->where('location_code', $locationCode)->first();
                 if ($location) {
+                    $locationDelta = $foundQuantity - $location->quantity;
                     $location->quantity = $foundQuantity;
                     $location->save();
+
+                    $stock->quantity += $locationDelta;
+                    $stock->save();
                 } else {
                     app(StockService::class)->upsertLocation($stock, $locationCode, $foundQuantity);
                 }

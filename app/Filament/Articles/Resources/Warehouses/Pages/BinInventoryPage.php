@@ -6,17 +6,20 @@ use App\Filament\Articles\Resources\Warehouses\WarehouseResource;
 use App\Models\Articles\StockLocation;
 use App\Models\Articles\Warehouse;
 use App\Services\Articles\InventoryService;
+use Filament\Actions\Action;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\Page;
-use Filament\Tables\Actions\Action;
+use Filament\Tables;
+use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Support\Facades\DB;
 use ToneGabes\Filament\Icons\Enums\Phosphor;
 
-class BinInventoryPage extends Page
+class BinInventoryPage extends Page implements Tables\Contracts\HasTable
 {
+    use InteractsWithTable;
     protected static string $resource = WarehouseResource::class;
 
     protected static string|null|\BackedEnum $navigationIcon = Phosphor::Scan;
@@ -29,6 +32,8 @@ class BinInventoryPage extends Page
 
     protected static ?int $navigationSort = 20;
 
+    protected string $view = 'filament.articles.resources.warehouses.pages.bin-inventory-page';
+
     public ?Warehouse $warehouse = null;
 
     public int $recordId;
@@ -39,9 +44,9 @@ class BinInventoryPage extends Page
         $this->warehouse = Warehouse::findOrFail($this->recordId);
     }
 
-    public function getTable(): Table
+    public function table(Table $table): Table
     {
-        return Table::make()
+        return $table
             ->query(
                 StockLocation::whereHas('stock', fn ($q) => $q->where('warehouse_id', $this->recordId))
                     ->with('stock.item')

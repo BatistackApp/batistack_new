@@ -308,7 +308,7 @@ class StocksRelationManager extends RelationManager
                             ->numeric()
                             ->required()
                             ->minValue(0.01)
-                            ->maxValue(fn ($record) => $record->quantity)
+                            ->maxValue(fn ($record) => $record->getUnallocatedQuantity())
                             ->suffix(fn ($record) => $record->item->unit->symbol),
                     ])
                     ->action(function ($record, array $data) {
