@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\ChecklistSyncController;
 use App\Http\Controllers\Api\EtatDesLieuxSyncController;
 use App\Http\Controllers\Api\JournalSyncController;
+use App\Http\Controllers\Api\ReservesSyncController;
 use App\Http\Controllers\Api\TechnicienSyncController;
 use App\Http\Controllers\Banque\BridgeCallbackController;
 use App\Http\Controllers\Commerce\StripePaymentController;
@@ -121,6 +122,11 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/api/checklist/templates', [ChecklistSyncController::class, 'templates'])->name('checklist.api.templates');
     Route::get('/api/checklist/submissions', [ChecklistSyncController::class, 'submissions'])->name('checklist.api.submissions');
     Route::post('/api/checklist/sync', [ChecklistSyncController::class, 'sync'])->name('checklist.api.sync');
+
+    // API Offline Réserves (chef de chantier)
+    Route::get('/api/reserves/chantiers', [ReservesSyncController::class, 'chantiers'])->name('reserves.api.chantiers');
+    Route::get('/api/reserves/list', [ReservesSyncController::class, 'list'])->name('reserves.api.list');
+    Route::post('/api/reserves/sync', [ReservesSyncController::class, 'sync'])->name('reserves.api.sync');
 });
 require __DIR__.'/settings.php';
 // require __DIR__.'/test.php';
