@@ -156,6 +156,8 @@ class ScanChantierEquipmentPage extends Page implements HasForms
 
     public function submit(): void
     {
+        $this->validate();
+
         $data = $this->form->getState();
 
         if (blank($data['trackable_id']) || blank($data['trackable_type'])) {
@@ -166,6 +168,15 @@ class ScanChantierEquipmentPage extends Page implements HasForms
 
         if (blank($data['chantier_id'])) {
             Notification::make()->danger()->title('Veuillez sélectionner un chantier')->send();
+
+            return;
+        }
+
+        // Verify trackable still exists
+        $trackableClass = $data['trackable_type'];
+        if (! $trackableClass::where('id', $data['trackable_id'])->exists()) {
+            Notification::make()->danger()->title('Matériel non valide — rescannez le code')->send();
+            $this->form->fill(['chantier_id' => $data['chantier_id']]);
 
             return;
         }

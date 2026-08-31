@@ -67,7 +67,7 @@ class Equipement extends Model
         return $this->morphMany(AssetMaintenanceTicket::class, 'asset');
     }
 
-    public function trackings(): HasMany
+    public function trackings(): MorphMany
     {
         return $this->morphMany(ChantierEquipmentTracking::class, 'trackable');
     }

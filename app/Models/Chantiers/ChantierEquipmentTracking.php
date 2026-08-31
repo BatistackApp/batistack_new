@@ -77,9 +77,9 @@ class ChantierEquipmentTracking extends Model
         }
 
         $end = $this->check_out_at ?? now();
-        $days = $this->check_in_at->diffInDays($end);
+        $hours = $this->check_in_at->diffInHours($end);
 
-        return max(1, (int) $days);
+        return max(1, (int) ceil($hours / 24));
     }
 
     public function getDailyRate(): float

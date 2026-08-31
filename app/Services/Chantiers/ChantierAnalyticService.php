@@ -110,14 +110,16 @@ class ChantierAnalyticService
             ->sum(fn ($tracking) => $tracking->getImmobilizationCost());
 
         // Legacy: affectations RH non encore trackées via le scan terrain
+        $trackedEquipementIds = ChantierEquipmentTracking::where('trackable_type', \App\Models\RH\Equipement::class)
+            ->where('chantier_id', $chantier->id)
+            ->pluck('trackable_id')
+            ->toArray();
+
         $legacyEquipementCost = EquipementAssignment::query()
             ->where('chantier_id', $chantier->id)
+            ->whereNotIn('equipement_id', $trackedEquipementIds)
             ->with('equipement')
             ->get()
-            ->filter(fn ($a) => ! ChantierEquipmentTracking::where('trackable_type', \App\Models\RH\Equipement::class)
-                ->where('trackable_id', $a->equipement_id)
-                ->where('chantier_id', $chantier->id)
-                ->exists())
             ->sum(fn ($a) => $a->getImmobilizationCost());
 
         $equipmentCost = $equipmentTrackingCost + $legacyEquipementCost;

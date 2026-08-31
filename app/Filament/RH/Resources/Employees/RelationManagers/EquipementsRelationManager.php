@@ -5,9 +5,8 @@ namespace App\Filament\RH\Resources\Employees\RelationManagers;
 use App\Enums\RH\EquipementStatus;
 use App\Enums\RH\EquipementType;
 use App\Models\RH\Equipement;
+use App\Services\Immobilisation\AssetQrCodeService;
 use App\Services\Immobilisation\ImmobilisationDocumentService;
-use chillerlan\QRCode\QRCode;
-use chillerlan\QRCode\QROptions;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\CreateAction;
@@ -140,24 +139,7 @@ class EquipementsRelationManager extends RelationManager
                     ->label('QR Scan Terrain')
                     ->icon('heroicon-o-device-phone-mobile')
                     ->color('primary')
-                    ->action(function (Equipement $record) {
-                        $url = url('/terrain/scan-materiel?token='.$record->qr_token);
-                        $options = new QROptions([
-                            'version' => 5,
-                            'outputType' => QRCode::OUTPUT_IMAGE_PNG,
-                            'eccLevel' => QRCode::ECC_L,
-                            'scale' => 6,
-                            'imageBase64' => true,
-                        ]);
-                        $qrData = (new QRCode($options))->render($url);
-
-                        $decoded = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $qrData));
-
-                        return response($decoded, 200, [
-                            'Content-Type' => 'image/png',
-                            'Content-Disposition' => 'inline; filename="qr-scan-'.$record->qr_token.'.png"',
-                        ]);
-                    }),
+                    ->action(fn (Equipement $record) => AssetQrCodeService::generateStream($record->qr_token)),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([

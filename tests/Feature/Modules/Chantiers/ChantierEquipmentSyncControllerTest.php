@@ -248,6 +248,44 @@ describe('ChantierEquipmentSyncController - scan()', function () {
         expect($closedTracking->check_out_at)->not->toBeNull();
     });
 
+    test('check_in retourne succès si déjà présent sur le même chantier', function () {
+        $asset = FixedAsset::factory()->create([
+            'asset_category_id' => $this->category->id,
+            'qr_token' => 'FA-DUP123',
+        ]);
+
+        // Créer un tracking ouvert sur le même chantier
+        $existing = ChantierEquipmentTracking::create([
+            'chantier_id' => $this->chantier->id,
+            'trackable_type' => FixedAsset::class,
+            'trackable_id' => $asset->id,
+            'scanned_by' => $this->user->id,
+            'check_in_at' => now()->subHour(),
+        ]);
+
+        $request = Request::create('/api/chantier-equipment/scan', 'POST', [
+            'qr_token' => 'FA-DUP123',
+            'chantier_id' => $this->chantier->id,
+            'action' => 'check_in',
+        ]);
+        $request->setUserResolver(fn () => $this->user);
+
+        $response = $this->controller->scan($request);
+
+        expect($response->getStatusCode())->toBe(200);
+        $data = $response->getData(true);
+        expect($data['success'])->toBeTrue()
+            ->and($data['message'])->toContain('Déjà présent')
+            ->and($data['tracking_id'])->toBe($existing->id);
+
+        // Ne doit pas créer un second tracking
+        $count = ChantierEquipmentTracking::where('trackable_type', FixedAsset::class)
+            ->where('trackable_id', $asset->id)
+            ->whereNull('check_out_at')
+            ->count();
+        expect($count)->toBe(1);
+    });
+
     test('check_out ferme le tracking ouvert et retourne le coût', function () {
         $asset = FixedAsset::factory()->create([
             'asset_category_id' => $this->category->id,

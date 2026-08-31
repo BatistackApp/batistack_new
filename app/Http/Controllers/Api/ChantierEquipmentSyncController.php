@@ -114,6 +114,18 @@ class ChantierEquipmentSyncController extends Controller
                     ->first();
 
                 if ($existing) {
+                    // Already on this chantier — no duplicate
+                    if ($existing->chantier_id == $chantierId) {
+                        DB::rollBack();
+
+                        return response()->json([
+                            'success' => true,
+                            'message' => 'Déjà présent sur ce chantier',
+                            'tracking_id' => $existing->id,
+                            'label' => $existing->getTrackableLabel(),
+                        ]);
+                    }
+
                     // Auto check-out from previous chantier
                     $existing->update(['check_out_at' => now()]);
                 }
