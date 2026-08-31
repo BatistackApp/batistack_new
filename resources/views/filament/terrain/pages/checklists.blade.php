@@ -511,6 +511,13 @@
                             },
                             body: JSON.stringify({ operations: this.syncQueue })
                         });
+
+                        // Handle CSRF token expiration (419)
+                        if (response.status === 419) {
+                            this.showToast('Session expirée. Veuillez rafraîchir la page.', 'error');
+                            return;
+                        }
+
                         const result = await response.json();
                         if (result.success) {
                             await this.db.sync_queue.clear();
@@ -520,6 +527,18 @@
                     } catch (error) {
                         console.error('Sync failed', error);
                     }
+                },
+
+                showToast(message, type = 'info') {
+                    const toast = document.createElement('div');
+                    const bgColor = type === 'error' ? 'bg-red-600' : 'bg-emerald-600';
+                    toast.className = `fixed bottom-4 right-4 z-[9999] px-4 py-3 ${bgColor} text-white rounded-lg shadow-lg flex items-center gap-2 transition-opacity`;
+                    toast.innerHTML = '<span>' + message + '</span>';
+                    document.body.appendChild(toast);
+                    setTimeout(() => {
+                        toast.style.opacity = '0';
+                        setTimeout(() => toast.remove(), 300);
+                    }, 5000);
                 },
             }));
         });

@@ -11,6 +11,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class ReservesSyncController extends Controller
 {
@@ -165,8 +166,8 @@ class ReservesSyncController extends Controller
                 if (str_starts_with($photoData, 'data:image')) {
                     $base64 = explode(',', $photoData)[1];
                     $binary = base64_decode($base64);
-                    $filename = 'reserve_{$reserve->id}_photo_'.($index + 1).'.jpg';
-                    $tempPath = storage_path('app/public/'.$filename);
+                    $filename = 'reserve_'.$reserve->id.'_photo_'.($index + 1).'.jpg';
+                    $tempPath = sys_get_temp_dir().'/'.$filename;
                     file_put_contents($tempPath, $binary);
 
                     $reserve->addMedia($tempPath)

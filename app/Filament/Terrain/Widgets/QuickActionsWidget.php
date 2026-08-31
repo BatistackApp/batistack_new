@@ -2,6 +2,10 @@
 
 namespace App\Filament\Terrain\Widgets;
 
+use App\Filament\Terrain\Pages\ChecklistPage;
+use App\Filament\Terrain\Pages\JournalPage;
+use App\Filament\Terrain\Pages\ReservesOfflinePage;
+use App\Filament\Terrain\Pages\SaisieHeuresCollective;
 use Filament\Widgets\Widget;
 use ToneGabes\Filament\Icons\Enums\Phosphor;
 
@@ -20,28 +24,28 @@ class QuickActionsWidget extends Widget
                 'label' => 'Journal',
                 'description' => 'Notes & observations du jour',
                 'icon' => Phosphor::Notebook,
-                'url' => '/terrain/journal-chantier',
+                'url' => JournalPage::getUrl(),
                 'color' => 'emerald',
             ],
             [
                 'label' => 'Checklists',
                 'description' => 'Contrôles & conformité',
                 'icon' => Phosphor::ClipboardText,
-                'url' => '/terrain/checklists',
+                'url' => ChecklistPage::getUrl(),
                 'color' => 'blue',
             ],
             [
                 'label' => 'Réserve / OPR',
                 'description' => 'Signaler un défaut',
                 'icon' => Phosphor::Warning,
-                'url' => '/terrain/signal-reserve',
+                'url' => ReservesOfflinePage::getUrl(),
                 'color' => 'danger',
             ],
             [
                 'label' => 'Pointage',
                 'description' => 'Heures de l\'équipe',
                 'icon' => Phosphor::Timer,
-                'url' => '/terrain/saisie-heures-collective',
+                'url' => SaisieHeuresCollective::getUrl(),
                 'color' => 'warning',
             ],
         ];

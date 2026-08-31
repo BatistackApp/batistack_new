@@ -69,17 +69,13 @@ class ChecklistSyncController extends Controller
             return response()->json(['data' => []], 403);
         }
 
-        $submissions = ChecklistSubmission::where('chantier_task_id', function ($q) use ($chantierId) {
-            $q->whereIn('chantier_task_id', function ($q2) use ($chantierId) {
-                $q2->select('id')
-                    ->from('chantier_tasks')
-                    ->whereIn('chantier_phase_id', function ($q3) use ($chantierId) {
-                        $q3->select('id')
-                            ->from('chantier_phases')
-                            ->where('chantier_id', $chantierId);
-                    });
-            });
-        })
+        $taskIds = \App\Models\Chantiers\ChantierTask::query()
+            ->select('chantier_tasks.id')
+            ->join('chantier_phases', 'chantier_phases.id', '=', 'chantier_tasks.chantier_phase_id')
+            ->where('chantier_phases.chantier_id', $chantierId)
+            ->pluck('id');
+
+        $submissions = ChecklistSubmission::whereIn('chantier_task_id', $taskIds)
             ->with('template:id,name')
             ->latest('created_at')
             ->limit(20)
@@ -168,13 +164,18 @@ class ChecklistSyncController extends Controller
 
         $template = ChecklistTemplate::findOrFail($templateId);
 
-        // Find the first task of the first phase of this chantier for linking
-        $firstTask = \App\Models\Chantiers\ChantierTask::whereHas('phase', fn ($q) => $q->where('chantier_id', $chantierId))
-            ->first();
+        // Use task ID from payload if provided, otherwise find first task of the chantier
+        $taskId = $payload['chantier_task_id'] ?? null;
+        if (! $taskId) {
+            $taskId = \App\Models\Chantiers\ChantierTask::query()
+                ->join('chantier_phases', 'chantier_phases.id', '=', 'chantier_tasks.chantier_phase_id')
+                ->where('chantier_phases.chantier_id', $chantierId)
+                ->value('chantier_tasks.id');
+        }
 
         ChecklistSubmission::create([
             'checklist_template_id' => $templateId,
-            'chantier_task_id' => $firstTask?->id,
+            'chantier_task_id' => $taskId,
             'submitted_by' => auth()->id(),
             'data' => $payload['data'] ?? [],
         ]);

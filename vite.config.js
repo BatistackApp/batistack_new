@@ -9,7 +9,7 @@ import { VitePWA } from 'vite-plugin-pwa';
 export default defineConfig({
     plugins: [
         laravel({
-            input: ['resources/css/app.css', 'resources/js/app.js', 'resources/css/filament/commerce/theme.css', 'resources/css/filament/customer/theme.css', 'resources/css/filament/core/theme.css', 'resources/css/filament/rh/theme.css', 'resources/css/filament/chantier/theme.css', 'resources/css/filament/gpao/theme.css', 'resources/css/filament/salarie/theme.css', 'resources/css/filament/technicien/theme.css', 'resources/css/filament/terrain/theme.css'],
+            input: ['resources/css/app.css', 'resources/js/app.js', 'resources/js/terrain-init.js', 'resources/css/filament/commerce/theme.css', 'resources/css/filament/customer/theme.css', 'resources/css/filament/core/theme.css', 'resources/css/filament/rh/theme.css', 'resources/css/filament/chantier/theme.css', 'resources/css/filament/gpao/theme.css', 'resources/css/filament/salarie/theme.css', 'resources/css/filament/technicien/theme.css', 'resources/css/filament/terrain/theme.css'],
             refresh: true,
             fonts: [
                 bunny('Instrument Sans', {
@@ -47,7 +47,7 @@ export default defineConfig({
                         src: '/images/icon-512x512.png',
                         sizes: '512x512',
                         type: 'image/png',
-                        purpose: 'any maskable'
+                        purpose: 'any maskable', // Ensure logo is within inner 80% safe zone
                     }
                 ]
             }
