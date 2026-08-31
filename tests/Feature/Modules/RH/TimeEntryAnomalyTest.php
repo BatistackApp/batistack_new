@@ -1,19 +1,21 @@
 <?php
 
-use App\Models\RH\TimeEntry;
-use App\Models\RH\Employee;
+use App\Enums\Flottes\AssignmentStatus;
+use App\Enums\RH\TimeEntryType;
 use App\Models\Flottes\Vehicle;
 use App\Models\Flottes\VehicleAssignment;
-use App\Enums\RH\TimeEntryType;
+use App\Models\RH\Employee;
+use App\Models\RH\TimeEntry;
 use App\Services\RH\TimeEntryAnomalyDetectorService;
 use Carbon\Carbon;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 
-uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
+uses(RefreshDatabase::class);
 
 it('detects anomaly when vehicle duration is too low', function () {
     $date = Carbon::today();
     $employee = Employee::factory()->create();
-    
+
     // 10 hours of work
     TimeEntry::factory()->create([
         'employee_id' => $employee->id,
@@ -28,12 +30,12 @@ it('detects anomaly when vehicle duration is too low', function () {
     VehicleAssignment::factory()->create([
         'vehicle_id' => $vehicle->id,
         'employee_id' => $employee->id,
-        'status' => \App\Enums\Flottes\AssignmentStatus::COMPLETED,
+        'status' => AssignmentStatus::COMPLETED,
         'started_at' => $date->copy()->setHour(8)->setMinute(0),
         'ended_at' => $date->copy()->setHour(10)->setMinute(0),
     ]);
 
-    $service = new TimeEntryAnomalyDetectorService();
+    $service = new TimeEntryAnomalyDetectorService;
     $count = $service->detectForDate($date, 1.0);
 
     expect($count)->toBe(1);
@@ -46,7 +48,7 @@ it('detects anomaly when vehicle duration is too low', function () {
 it('does not detect anomaly if vehicle duration is close enough', function () {
     $date = Carbon::today();
     $employee = Employee::factory()->create();
-    
+
     // 8 hours of work
     TimeEntry::factory()->create([
         'employee_id' => $employee->id,
@@ -61,12 +63,12 @@ it('does not detect anomaly if vehicle duration is close enough', function () {
     VehicleAssignment::factory()->create([
         'vehicle_id' => $vehicle->id,
         'employee_id' => $employee->id,
-        'status' => \App\Enums\Flottes\AssignmentStatus::COMPLETED,
+        'status' => AssignmentStatus::COMPLETED,
         'started_at' => $date->copy()->setHour(8)->setMinute(0),
         'ended_at' => $date->copy()->setHour(15)->setMinute(30),
     ]);
 
-    $service = new TimeEntryAnomalyDetectorService();
+    $service = new TimeEntryAnomalyDetectorService;
     $count = $service->detectForDate($date, 1.0);
 
     expect($count)->toBe(0)
@@ -76,7 +78,7 @@ it('does not detect anomaly if vehicle duration is close enough', function () {
 it('ignores sedentary workshop time entries', function () {
     $date = Carbon::today();
     $employee = Employee::factory()->create();
-    
+
     // 10 hours of work but ATELIER
     TimeEntry::factory()->create([
         'employee_id' => $employee->id,
@@ -88,7 +90,7 @@ it('ignores sedentary workshop time entries', function () {
 
     // NO vehicle assignment at all
 
-    $service = new TimeEntryAnomalyDetectorService();
+    $service = new TimeEntryAnomalyDetectorService;
     $count = $service->detectForDate($date, 1.0);
 
     expect($count)->toBe(0)

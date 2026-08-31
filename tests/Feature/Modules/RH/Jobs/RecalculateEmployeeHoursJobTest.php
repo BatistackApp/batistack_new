@@ -60,7 +60,7 @@ describe('RecalculateEmployeeHoursJob', function () {
             ->with('Employee hours recalculated', \Mockery::any())
             ->zeroOrMoreTimes();
 
-        $job = new RecalculateEmployeeHoursJob();
+        $job = new RecalculateEmployeeHoursJob;
         $job->handle();
 
         expect(Cache::get("employee_hours_month_{$employee->id}"))->toEqual(15.5)

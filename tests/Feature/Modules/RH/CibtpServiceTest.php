@@ -19,13 +19,13 @@ test('it generates draft cibtp declaration', function () {
         'description' => 'Alerte Test',
     ]);
 
-    $service = new CibtpService();
+    $service = new CibtpService;
     $declaration = $service->generateDraftFromAlert($alert);
 
     expect($declaration)->toBeInstanceOf(CibtpDeclaration::class);
     expect($declaration->status)->toBe('draft');
     expect($declaration->chantier_id)->toBe($chantier->id);
-    
+
     $this->assertDatabaseHas('cibtp_declarations', [
         'weather_alert_id' => $alert->id,
         'status' => 'draft',

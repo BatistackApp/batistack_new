@@ -44,6 +44,38 @@ class Stock extends Model
         return $this->hasMany(StockMouvement::class);
     }
 
+    /**
+     * Emplacements physiques (bins) de ce stock
+     */
+    public function locations(): HasMany
+    {
+        return $this->hasMany(StockLocation::class);
+    }
+
+    /**
+     * Quantité totale assignée aux emplacements
+     */
+    public function getTotalLocationQuantity(): float
+    {
+        return (float) $this->locations()->sum('quantity');
+    }
+
+    /**
+     * Quantité non assignée à un emplacement
+     */
+    public function getUnallocatedQuantity(): float
+    {
+        return $this->quantity - $this->getTotalLocationQuantity();
+    }
+
+    /**
+     * Toute la quantité est-elle assignée à des emplacements ?
+     */
+    public function isFullyAllocated(): bool
+    {
+        return abs($this->getUnallocatedQuantity()) < 0.0001;
+    }
+
     // ============================================
     // SCOPES
     // ============================================

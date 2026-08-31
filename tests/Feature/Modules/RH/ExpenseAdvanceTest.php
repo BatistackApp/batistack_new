@@ -1,12 +1,12 @@
 <?php
 
-use App\Models\RH\Employee;
-use App\Models\RH\ExpenseAdvance;
-use App\Models\RH\ExpenseReport;
-use App\Models\RH\ExpenseItem;
 use App\Enums\RH\ExpenseAdvanceStatus;
 use App\Enums\RH\ExpenseItemStatus;
 use App\Enums\RH\ExpenseReportStatus;
+use App\Models\RH\Employee;
+use App\Models\RH\ExpenseAdvance;
+use App\Models\RH\ExpenseItem;
+use App\Models\RH\ExpenseReport;
 use App\Services\RH\ExpenseWorkflowService;
 
 it('calculates the correct amount to pay with deducted advances', function () {
@@ -48,7 +48,7 @@ it('calculates the correct amount to pay with deducted advances', function () {
     $advance->update(['expense_report_id' => $report->id]);
 
     // Validate report
-    $service = new ExpenseWorkflowService();
+    $service = new ExpenseWorkflowService;
     $service->validate($report);
 
     // Assertions

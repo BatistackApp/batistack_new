@@ -22,6 +22,8 @@ class CibtpDeclarationResource extends Resource
 
     protected static \UnitEnum|string|null $navigationGroup = 'Déclarations & Exports';
 
+    protected static ?string $modelLabel = 'Déclaration CIBTP';
+
     protected static ?string $recordTitleAttribute = 'date';
 
     public static function form(Schema $schema): Schema

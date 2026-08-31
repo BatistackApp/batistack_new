@@ -1,7 +1,9 @@
 <?php
 
 use App\Jobs\Paie\GenerateMassPayslipsJob;
+use App\Models\Core\Company;
 use App\Models\Paie\PayrollContributionProfile;
+use App\Models\Paie\Payslip;
 use App\Models\RH\Contract;
 use App\Models\RH\Employee;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -9,7 +11,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 uses(RefreshDatabase::class);
 
 it('generates mass payslips for employees', function () {
-    \App\Models\Core\Company::factory()->create();
+    Company::factory()->create();
     $profile = PayrollContributionProfile::factory()->create();
     $employee1 = Employee::factory()->create();
     $employee2 = Employee::factory()->create();
@@ -27,6 +29,6 @@ it('generates mass payslips for employees', function () {
     app()->call([$job, 'handle']);
 
     // Verify two payslips were generated for the period
-    $payslipsCount = \App\Models\Paie\Payslip::where('period', '2026-08')->count();
+    $payslipsCount = Payslip::where('period', '2026-08')->count();
     expect($payslipsCount)->toBe(2);
 });

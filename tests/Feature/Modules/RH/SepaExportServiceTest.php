@@ -20,7 +20,7 @@ it('generates a sepa xml file successfully for valid employees and company', fun
         'first_name' => 'John',
         'last_name' => 'Doe',
         'iban' => 'FR7698765432109876543210987',
-        'bic' => 'EMPTESTX'
+        'bic' => 'EMPTESTX',
     ]);
 
     $report = ExpenseReport::factory()->create([
@@ -29,7 +29,7 @@ it('generates a sepa xml file successfully for valid employees and company', fun
         'status' => ExpenseReportStatus::VALIDATED,
     ]);
 
-    $service = new SepaExportService();
+    $service = new SepaExportService;
     $xml = $service->generateForExpenseReports(new Collection([$report]));
 
     expect($xml)->toContain('FR7612345678901234567890123')
@@ -49,10 +49,10 @@ it('throws exception if company bank account is missing iban', function () {
 
     $report = ExpenseReport::factory()->create();
 
-    $service = new SepaExportService();
-    
-    expect(fn() => $service->generateForExpenseReports(new Collection([$report])))
-        ->toThrow(\Exception::class, "Le compte en banque principal de l'entreprise (ou son IBAN/BIC) n'est pas configuré.");
+    $service = new SepaExportService;
+
+    expect(fn () => $service->generateForExpenseReports(new Collection([$report])))
+        ->toThrow(Exception::class, "Le compte en banque principal de l'entreprise (ou son IBAN/BIC) n'est pas configuré.");
 });
 
 it('throws exception if employee is missing iban', function () {
@@ -65,7 +65,7 @@ it('throws exception if employee is missing iban', function () {
 
     $employee = Employee::factory()->create([
         'iban' => null, // missing IBAN
-        'bic' => 'EMPTESTX'
+        'bic' => 'EMPTESTX',
     ]);
 
     $report = ExpenseReport::factory()->create([
@@ -73,8 +73,8 @@ it('throws exception if employee is missing iban', function () {
         'status' => ExpenseReportStatus::VALIDATED,
     ]);
 
-    $service = new SepaExportService();
-    
-    expect(fn() => $service->generateForExpenseReports(new Collection([$report])))
-        ->toThrow(\Exception::class, "L'employé {$employee->first_name} {$employee->last_name} n'a pas d'IBAN ou de BIC renseigné sur sa fiche.");
+    $service = new SepaExportService;
+
+    expect(fn () => $service->generateForExpenseReports(new Collection([$report])))
+        ->toThrow(Exception::class, "L'employé {$employee->first_name} {$employee->last_name} n'a pas d'IBAN ou de BIC renseigné sur sa fiche.");
 });

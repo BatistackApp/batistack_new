@@ -15,7 +15,7 @@ class SecuriteDashboard extends Page
 
     protected static string|null|\BackedEnum $navigationIcon = 'heroicon-o-shield-check';
 
-    protected static string|\UnitEnum|null $navigationGroup = 'RH';
+    protected static string|\UnitEnum|null $navigationGroup = 'Outils & Simulation';
 
     protected static ?int $navigationSort = 1;
 

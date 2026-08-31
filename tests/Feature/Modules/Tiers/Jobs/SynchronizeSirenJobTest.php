@@ -11,7 +11,7 @@ uses(RefreshDatabase::class);
 it('returns early and logs warning if SIRET is missing', function () {
     $thirdParty = ThirdParty::factory()->create(['siret' => null]);
     $job = new SynchronizeSirenJob($thirdParty);
-    
+
     $mockService = Mockery::mock(SirenService::class);
     // Should not be called
     $mockService->shouldNotReceive('getInformation');
@@ -28,17 +28,17 @@ it('updates third party and logs info if siren info is found', function () {
         'siret' => '12345678900014',
         'legal_name' => 'Old Name',
     ]);
-    
+
     $job = new SynchronizeSirenJob($thirdParty);
-    
+
     $mockService = Mockery::mock(SirenService::class);
     $mockService->shouldReceive('getInformation')
         ->once()
         ->with('12345678900014')
         ->andReturn([
             'uniteLegale' => [
-                'denominationUniteLegale' => 'New Legal Name'
-            ]
+                'denominationUniteLegale' => 'New Legal Name',
+            ],
         ]);
 
     Log::shouldReceive('info')->once()->withArgs(function ($message) use ($thirdParty) {
@@ -56,9 +56,9 @@ it('logs warning if no siren info found', function () {
     $thirdParty = ThirdParty::factory()->create([
         'siret' => '12345678900014',
     ]);
-    
+
     $job = new SynchronizeSirenJob($thirdParty);
-    
+
     $mockService = Mockery::mock(SirenService::class);
     $mockService->shouldReceive('getInformation')
         ->once()
@@ -76,14 +76,14 @@ it('catches exception and logs error', function () {
     $thirdParty = ThirdParty::factory()->create([
         'siret' => '12345678900014',
     ]);
-    
+
     $job = new SynchronizeSirenJob($thirdParty);
-    
+
     $mockService = Mockery::mock(SirenService::class);
     $mockService->shouldReceive('getInformation')
         ->once()
         ->with('12345678900014')
-        ->andThrow(new \Exception('API Error'));
+        ->andThrow(new Exception('API Error'));
 
     Log::shouldReceive('error')->once()->withArgs(function ($message) use ($thirdParty) {
         return str_contains($message, "Failed to synchronize ThirdParty {$thirdParty->id}");

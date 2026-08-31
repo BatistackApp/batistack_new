@@ -17,7 +17,7 @@ beforeEach(function () {
 describe('ContactObserver - created()', function () {
     test('crée un User si email présent', function () {
         $thirdParty = ThirdParty::factory()->create();
-        \Illuminate\Support\Facades\Notification::fake();
+        Notification::fake();
 
         Contact::create([
             'third_party_id' => $thirdParty->id,
@@ -39,7 +39,7 @@ describe('ContactObserver - created()', function () {
 
     test('ne crée pas d\'User si email vide', function () {
         $thirdParty = ThirdParty::factory()->create();
-        \Illuminate\Support\Facades\Notification::fake();
+        Notification::fake();
 
         Contact::create([
             'third_party_id' => $thirdParty->id,
@@ -56,7 +56,7 @@ describe('ContactObserver - created()', function () {
 
     test('ne crée pas d\'User si email null', function () {
         $thirdParty = ThirdParty::factory()->create();
-        \Illuminate\Support\Facades\Notification::fake();
+        Notification::fake();
 
         Contact::create([
             'third_party_id' => $thirdParty->id,
@@ -72,7 +72,7 @@ describe('ContactObserver - created()', function () {
 
     test('envoie WelcomeCustomerNotification', function () {
         $thirdParty = ThirdParty::factory()->create();
-        \Illuminate\Support\Facades\Notification::fake();
+        Notification::fake();
 
         Contact::create([
             'third_party_id' => $thirdParty->id,
@@ -88,7 +88,7 @@ describe('ContactObserver - created()', function () {
 
     test('n\'envoie pas de notification sans email', function () {
         $thirdParty = ThirdParty::factory()->create();
-        \Illuminate\Support\Facades\Notification::fake();
+        Notification::fake();
 
         Contact::create([
             'third_party_id' => $thirdParty->id,
@@ -102,7 +102,7 @@ describe('ContactObserver - created()', function () {
 
     test('User password est hashé', function () {
         $thirdParty = ThirdParty::factory()->create();
-        \Illuminate\Support\Facades\Notification::fake();
+        Notification::fake();
 
         Contact::create([
             'third_party_id' => $thirdParty->id,
@@ -120,7 +120,7 @@ describe('ContactObserver - created()', function () {
 describe('ContactObserver - saving()', function () {
     test('détache autres contacts si is_primary true', function () {
         $thirdParty = ThirdParty::factory()->create();
-        \Illuminate\Support\Facades\Notification::fake();
+        Notification::fake();
 
         $contact1 = Contact::factory()->create([
             'third_party_id' => $thirdParty->id,
@@ -142,7 +142,7 @@ describe('ContactObserver - saving()', function () {
 
     test('peut avoir un seul contact primary par tiers', function () {
         $thirdParty = ThirdParty::factory()->create();
-        \Illuminate\Support\Facades\Notification::fake();
+        Notification::fake();
 
         Contact::factory()->create([
             'third_party_id' => $thirdParty->id,
@@ -163,7 +163,7 @@ describe('ContactObserver - saving()', function () {
 
     test('peut avoir plusieurs contacts non-primary', function () {
         $thirdParty = ThirdParty::factory()->create();
-        \Illuminate\Support\Facades\Notification::fake();
+        Notification::fake();
 
         Contact::factory(3)->create([
             'third_party_id' => $thirdParty->id,
@@ -179,7 +179,7 @@ describe('ContactObserver - saving()', function () {
 
     test('peut changer primary entre contacts', function () {
         $thirdParty = ThirdParty::factory()->create();
-        \Illuminate\Support\Facades\Notification::fake();
+        Notification::fake();
 
         $contact1 = Contact::factory()->create([
             'third_party_id' => $thirdParty->id,
@@ -203,7 +203,7 @@ describe('ContactObserver - saving()', function () {
 describe('ContactObserver - Intégration', function () {
     test('crée contact avec email complètement', function () {
         $thirdParty = ThirdParty::factory()->create();
-        \Illuminate\Support\Facades\Notification::fake();
+        Notification::fake();
 
         Contact::create([
             'third_party_id' => $thirdParty->id,
@@ -226,7 +226,7 @@ describe('ContactObserver - Intégration', function () {
 
     test('crée contact sans email', function () {
         $thirdParty = ThirdParty::factory()->create();
-        \Illuminate\Support\Facades\Notification::fake();
+        Notification::fake();
 
         Contact::create([
             'third_party_id' => $thirdParty->id,
@@ -244,7 +244,7 @@ describe('ContactObserver - Intégration', function () {
 
     test('plusieurs contacts du même tiers', function () {
         $thirdParty = ThirdParty::factory()->create();
-        \Illuminate\Support\Facades\Notification::fake();
+        Notification::fake();
 
         Contact::create([
             'third_party_id' => $thirdParty->id,

@@ -1,8 +1,8 @@
 <?php
 
-use App\Models\Immobilisation\FixedAsset;
-use App\Enums\Immobilisation\DepreciationMethod;
 use App\Enums\Immobilisation\AssetStatus;
+use App\Enums\Immobilisation\DepreciationMethod;
+use App\Models\Immobilisation\FixedAsset;
 use App\Services\Immobilisation\AssetDisposalService;
 
 it('disposes of an asset correctly', function () {
@@ -17,7 +17,7 @@ it('disposes of an asset correctly', function () {
     // Fast-forward 1 year (mark first depreciation as passed)
     $asset->depreciations()->first()->update(['is_passed' => true]);
 
-    $service = new AssetDisposalService();
+    $service = new AssetDisposalService;
     $disposal = $service->dispose($asset, '2027-01-01', 500, 'Revente');
 
     $asset->refresh();
@@ -26,7 +26,7 @@ it('disposes of an asset correctly', function () {
     // Sale price is 500, so profit/loss is 500 - 800 = -300
     expect((float) $disposal->profit_or_loss)->toEqual(-300.00);
     expect($asset->status)->toEqual(AssetStatus::DISPOSED);
-    
+
     // Future depreciations should be deleted (only 1 passed left)
     expect($asset->depreciations)->toHaveCount(1);
 });

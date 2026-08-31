@@ -1,8 +1,8 @@
 <?php
 
+use App\Filament\Locations\Pages\Locations\SupplierPriceComparator;
 use App\Models\Locations\SupplierPriceGrid;
 use App\Models\Tiers\ThirdParty;
-use App\Filament\Locations\Pages\Locations\SupplierPriceComparator;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
@@ -50,7 +50,7 @@ it('calculates cost for daily-only duration', function () {
         'monthly_rate' => 1000,
     ]);
 
-    $page = new SupplierPriceComparator();
+    $page = new SupplierPriceComparator;
     $page->fill([
         'data' => [
             'equipment_category' => 'Bétonnière',
@@ -75,7 +75,7 @@ it('calculates cost for mixed months/weeks/days duration', function () {
         'monthly_rate' => 2000,
     ]);
 
-    $page = new SupplierPriceComparator();
+    $page = new SupplierPriceComparator;
     $page->fill([
         'data' => [
             'equipment_category' => 'Pelle',
@@ -102,7 +102,7 @@ it('rejects grid when a required rate is missing', function () {
         'monthly_rate' => 2000,
     ]);
 
-    $page = new SupplierPriceComparator();
+    $page = new SupplierPriceComparator;
     $page->fill([
         'data' => [
             'equipment_category' => 'Grue',
@@ -135,7 +135,7 @@ it('sorts results by total cost ascending', function () {
         'monthly_rate' => 3000,
     ]);
 
-    $page = new SupplierPriceComparator();
+    $page = new SupplierPriceComparator;
     $page->fill([
         'data' => [
             'equipment_category' => 'Chargeur',
@@ -168,7 +168,7 @@ it('filters by equipment category', function () {
         'monthly_rate' => 3000,
     ]);
 
-    $page = new SupplierPriceComparator();
+    $page = new SupplierPriceComparator;
     $page->fill([
         'data' => [
             'equipment_category' => 'Excavatrice',
@@ -193,7 +193,7 @@ it('returns empty results when all grids lack required rates', function () {
         'monthly_rate' => 2000,
     ]);
 
-    $page = new SupplierPriceComparator();
+    $page = new SupplierPriceComparator;
     $page->fill([
         'data' => [
             'equipment_category' => 'Grue',

@@ -49,7 +49,7 @@ describe('SendAbsenceRemindersJob', function () {
             }))
             ->once();
 
-        $job = new SendAbsenceRemindersJob();
+        $job = new SendAbsenceRemindersJob;
         $job->handle();
 
         // Sent to admin
@@ -57,7 +57,7 @@ describe('SendAbsenceRemindersJob', function () {
             [$admin],
             AbsencePendingNotification::class,
             function ($notification) use ($pendingAbsence) {
-                return (fn() => $this->absence->id)->call($notification) === $pendingAbsence->id;
+                return (fn () => $this->absence->id)->call($notification) === $pendingAbsence->id;
             }
         );
 
@@ -66,7 +66,7 @@ describe('SendAbsenceRemindersJob', function () {
             [$employee],
             AbsencePendingNotification::class,
             function ($notification) use ($pendingAbsence) {
-                return (fn() => $this->absence->id)->call($notification) === $pendingAbsence->id;
+                return (fn () => $this->absence->id)->call($notification) === $pendingAbsence->id;
             }
         );
     });
@@ -78,7 +78,7 @@ describe('SendAbsenceRemindersJob', function () {
             ->with('SendAbsenceRemindersJob: No pending absences to remind')
             ->once();
 
-        $job = new SendAbsenceRemindersJob();
+        $job = new SendAbsenceRemindersJob;
         $job->handle();
 
         Notification::assertNothingSent();

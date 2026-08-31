@@ -7,9 +7,12 @@ use App\Enums\Gpao\ManufacturingStatus;
 use App\Models\Articles\Item;
 use App\Models\Commerce\CustomerOrder;
 use App\Models\Core\Unit;
+use App\Models\Core\VatRate;
 use App\Models\Gpao\Machine;
 use App\Models\Gpao\ManufacturingOrder;
 use App\Models\Gpao\ManufacturingRequirement;
+use App\Models\Tiers\ThirdParty;
+use App\Models\User;
 use App\Services\Gpao\ApsSchedulingService;
 use Carbon\Carbon;
 
@@ -20,8 +23,8 @@ beforeEach(function () {
         'name' => 'Unit',
         'type' => UnitType::UNIT,
     ]);
-    
-    $vat = \App\Models\Core\VatRate::create(['name' => 'TVA', 'rate' => 20]);
+
+    $vat = VatRate::create(['name' => 'TVA', 'rate' => 20]);
 
     // Simulate stock via mock instead
     $this->item = Item::create([
@@ -51,11 +54,11 @@ beforeEach(function () {
 });
 
 it('schedules planned orders with stock and returns shortages', function () {
-    $user = \App\Models\User::factory()->create();
-    
+    $user = User::factory()->create();
+
     $customerOrder1 = CustomerOrder::create([
         'reference' => 'CO-1',
-        'client_id' => \App\Models\Tiers\ThirdParty::factory()->create()->id,
+        'client_id' => ThirdParty::factory()->create()->id,
         'responsable_id' => $user->id,
         'delivery_date' => Carbon::now()->addDays(5),
     ]);
@@ -67,7 +70,7 @@ it('schedules planned orders with stock and returns shortages', function () {
         'status' => ManufacturingStatus::PLANNED,
         'customer_order_id' => $customerOrder1->id,
     ]);
-    
+
     ManufacturingRequirement::create([
         'manufacturing_order_id' => $orderStock->id,
         'item_id' => $this->item->id,
@@ -88,11 +91,11 @@ it('schedules planned orders with stock and returns shortages', function () {
     ]);
 
     $this->service->shouldReceive('isMaterialAvailable')
-        ->with(Mockery::on(fn($o) => $o->id === $orderStock->id))
+        ->with(Mockery::on(fn ($o) => $o->id === $orderStock->id))
         ->andReturn(true);
-        
+
     $this->service->shouldReceive('isMaterialAvailable')
-        ->with(Mockery::on(fn($o) => $o->id === $orderNoStock->id))
+        ->with(Mockery::on(fn ($o) => $o->id === $orderNoStock->id))
         ->andReturn(false);
 
     $shortages = $this->service->scheduleOpenOrders();
@@ -103,7 +106,7 @@ it('schedules planned orders with stock and returns shortages', function () {
     $orderStock->refresh();
     expect($orderStock->start_date)->not->toBeNull();
     expect($orderStock->machines->pluck('id')->contains($this->machine->id))->toBeTrue();
-    
+
     $orderNoStock->refresh();
     expect($orderNoStock->start_date)->toBeNull();
     expect($orderNoStock->machines)->toHaveCount(0);

@@ -2,7 +2,6 @@
 
 namespace Tests\Feature\Modules\RH\Models;
 
-use App\Enums\RH\CertificationSymbol;
 use App\Models\Core\Company;
 use App\Models\RH\Employee;
 use App\Models\RH\Qualification;

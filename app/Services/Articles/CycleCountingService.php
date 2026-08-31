@@ -32,11 +32,14 @@ class CycleCountingService
             ]);
 
             // Sélection aléatoire d'articles en stock dans cet entrepôt
-            // Idéalement, on pourrait filtrer par ceux n'ayant pas eu d'inventaire récent.
+            // Grouper par item_id pour éviter les doublons quand un article a plusieurs emplacements
             $stocks = Stock::where('warehouse_id', $warehouse->id)
+                ->selectRaw('item_id, MAX(id) as id')
+                ->groupBy('item_id')
                 ->inRandomOrder()
                 ->limit($itemCount)
-                ->get();
+                ->get()
+                ->map(fn ($row) => Stock::find($row->id));
 
             foreach ($stocks as $stock) {
                 InventoryCycleLine::create([

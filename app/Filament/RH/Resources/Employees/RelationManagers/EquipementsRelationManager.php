@@ -5,6 +5,7 @@ namespace App\Filament\RH\Resources\Employees\RelationManagers;
 use App\Enums\RH\EquipementStatus;
 use App\Enums\RH\EquipementType;
 use App\Models\RH\Equipement;
+use App\Services\Immobilisation\AssetQrCodeService;
 use App\Services\Immobilisation\ImmobilisationDocumentService;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
@@ -134,6 +135,11 @@ class EquipementsRelationManager extends RelationManager
 
                         return $service->download($path);
                     }),
+                Action::make('generate_scan_qr')
+                    ->label('QR Scan Terrain')
+                    ->icon('heroicon-o-device-phone-mobile')
+                    ->color('primary')
+                    ->action(fn (Equipement $record) => AssetQrCodeService::generateStream($record->qr_token)),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([

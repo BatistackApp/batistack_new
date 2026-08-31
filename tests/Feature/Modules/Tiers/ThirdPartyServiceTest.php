@@ -90,7 +90,7 @@ it('throws exception if siren service fails', function () {
     $this->sirenService->shouldReceive('getInformation')
         ->once()
         ->with($siret)
-        ->andThrow(new \Exception($exceptionMessage));
+        ->andThrow(new Exception($exceptionMessage));
 
     $this->expectException(TiersModuleException::class);
     $this->expectExceptionMessage($exceptionMessage);
@@ -140,7 +140,7 @@ it('calculates vat number correctly', function () {
     $expectedVat = 'FR39356000000';
 
     // Access the protected method using reflection
-    $method = new \ReflectionMethod(ThirdPartyService::class, 'calculateVatNumber');
+    $method = new ReflectionMethod(ThirdPartyService::class, 'calculateVatNumber');
     $method->setAccessible(true);
     $vatNumber = $method->invokeArgs($this->thirdPartyService, [$siren]);
 

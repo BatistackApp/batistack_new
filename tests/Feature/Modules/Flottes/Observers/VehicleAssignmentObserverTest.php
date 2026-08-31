@@ -7,7 +7,6 @@ use App\Models\Chantiers\Chantier;
 use App\Models\Flottes\Vehicle;
 use App\Models\Flottes\VehicleAssignment;
 use App\Models\RH\Employee;
-use App\Notifications\Flottes\VehicleAssignmentStartingNotification;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 

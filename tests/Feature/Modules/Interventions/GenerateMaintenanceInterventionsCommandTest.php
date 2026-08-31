@@ -5,6 +5,7 @@ use App\Enums\Interventions\MaintenanceContractStatus;
 use App\Enums\Tiers\ThirdPartyType;
 use App\Models\Core\Company;
 use App\Models\Interventions\ClientEquipment;
+use App\Models\Interventions\Intervention;
 use App\Models\Interventions\MaintenanceContract;
 use App\Models\Tiers\ThirdParty;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -28,11 +29,11 @@ it('generates due interventions for a given date', function () {
     $this->artisan('interventions:generate-maintenance', ['--date' => now()->toDateString()])
         ->assertSuccessful();
 
-    expect(\App\Models\Interventions\Intervention::count())->toBe(1);
+    expect(Intervention::count())->toBe(1);
 });
 
 it('fails when an invalid date is provided', function () {
     $this->artisan('interventions:generate-maintenance', ['--date' => 'not-a-date'])
-        ->expectsOutputToContain("Date invalide")
+        ->expectsOutputToContain('Date invalide')
         ->assertExitCode(1);
 });

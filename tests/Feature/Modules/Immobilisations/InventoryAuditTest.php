@@ -1,15 +1,15 @@
 <?php
 
+use App\Filament\Immobilisation\Pages\InventoryAudit;
 use App\Models\Immobilisation\FixedAsset;
 use Livewire\Livewire;
-use App\Filament\Immobilisation\Pages\InventoryAudit;
 
 it('scanning valid url updates inventory date', function () {
     $asset = FixedAsset::factory()->create([
         'last_inventoried_at' => now()->subYear(),
     ]);
 
-    $url = 'http://gestion.c2me.ovh/immobilisation/fixed-assets/' . $asset->id;
+    $url = 'http://gestion.c2me.ovh/immobilisation/fixed-assets/'.$asset->id;
 
     Livewire::test(InventoryAudit::class)
         ->set('scannedUrl', $url)

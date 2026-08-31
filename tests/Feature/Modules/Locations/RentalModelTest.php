@@ -1,10 +1,10 @@
 <?php
 
+use App\Enums\Tiers\ThirdPartyType;
 use App\Models\Chantiers\Chantier;
 use App\Models\Locations\RentalContract;
 use App\Models\Locations\RentalContractLine;
 use App\Models\Tiers\ThirdParty;
-use App\Enums\Tiers\ThirdPartyType;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
@@ -24,9 +24,9 @@ it('can create a rental contract with supplier and chantier', function () {
 
 it('can have lines associated to a contract', function () {
     $contract = RentalContract::factory()->create();
-    
+
     RentalContractLine::factory()->count(3)->create([
-        'rental_contract_id' => $contract->id
+        'rental_contract_id' => $contract->id,
     ]);
 
     expect($contract->lines)->toHaveCount(3);

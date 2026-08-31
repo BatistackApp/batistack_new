@@ -34,10 +34,10 @@ it('calculates annual totals correctly when generating pdf', function () {
     $service->generatePdf($payslip);
 
     // The data passed to the view should have annual totals summed up.
-    // We can just check that the method runs without throwing errors 
+    // We can just check that the method runs without throwing errors
     // and updates the pdf_path as expected.
     $payslip->refresh();
-    
+
     expect($payslip->pdf_path)->toStartWith('documents/payslips/payslip_2026-07_');
     expect(str_ends_with($payslip->pdf_path, '.pdf'))->toBeTrue();
 });

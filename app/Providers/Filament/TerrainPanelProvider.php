@@ -8,16 +8,20 @@ use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
+use App\Filament\Terrain\Pages\ReservesOfflinePage;
 use App\Filament\Terrain\Pages\TerrainDashboard as Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
+use Filament\Support\Facades\FilamentView;
+use Filament\View\PanelsRenderHook;
 use Guava\FilamentKnowledgeBase\Plugins\KnowledgeBaseCompanionPlugin;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
+use Illuminate\Support\Facades\Blade;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use MartinPetricko\FilamentSentryFeedback\FilamentSentryFeedbackPlugin;
 use Vaslv\FilamentAppVersion\AppVersionPlugin;
@@ -32,14 +36,15 @@ class TerrainPanelProvider extends PanelProvider
             ->id('terrain')
             ->path('terrain')
             ->colors([
-                'primary' => Color::Emerald, // Vert robuste "Sécurité / Terrain"
+                'primary' => Color::Emerald,
                 'gray' => Color::Stone,
             ])
             ->login()
-            ->sidebarCollapsibleOnDesktop()
-            ->databaseNotifications() // Alertes directes en cas de consignes
-            ->brandName('Batistack - Espace Terrain')
+            ->topNavigation()
+            ->databaseNotifications()
+            ->brandName('Batistack - Terrain')
             ->brandLogo(asset('images/chantiers.png'))
+            ->viteTheme('resources/css/filament/terrain/theme.css')
             ->discoverResources(in: app_path('Filament/Terrain/Resources'), for: 'App\Filament\Terrain\Resources')
             ->discoverPages(in: app_path('Filament/Terrain/Pages'), for: 'App\Filament\Terrain\Pages')
             ->pages([
@@ -66,5 +71,16 @@ class TerrainPanelProvider extends PanelProvider
                 Authenticate::class,
                 EnsureUserIsChefDeChantier::class,
             ]);
+    }
+
+    public function boot(): void
+    {
+        FilamentView::registerRenderHook(
+            PanelsRenderHook::BODY_END,
+            fn (): string => Blade::render('
+                <script src="https://unpkg.com/dexie@4.0.1/dist/dexie.js"></script>
+                <script src="{{ Vite::asset(\'resources/js/terrain-init.js\') }}"></script>
+            '),
+        );
     }
 }

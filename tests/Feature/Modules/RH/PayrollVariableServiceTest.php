@@ -90,7 +90,7 @@ describe('Calculs de Paie et Indemnités', function () {
         });
 
         $service = app(PayrollVariableService::class);
-        
+
         $res1 = $service->calculateTravelAllowance('Chantier 15km');
         expect($res1['zone'])->toEqual(2)
             ->and($res1['is_gd'])->toBeFalse();

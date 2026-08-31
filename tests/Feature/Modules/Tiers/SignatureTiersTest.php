@@ -1,13 +1,13 @@
 <?php
 
-use App\Models\Core\Signature;
+use App\Enums\Core\SignatureStatus;
+use App\Enums\Core\SignatureType;
+use App\Enums\Tiers\ThirdPartyDocumentType;
 use App\Models\Tiers\ThirdParty;
 use App\Models\Tiers\ThirdPartyDocument;
-use App\Services\Core\SignatureService;
-use App\Enums\Core\SignatureType;
-use App\Enums\Core\SignatureStatus;
-use Illuminate\Support\Facades\Auth;
 use App\Models\User;
+use App\Services\Core\SignatureService;
+use Illuminate\Support\Facades\Auth;
 
 beforeEach(function () {
     $this->user = User::factory()->create();
@@ -18,7 +18,7 @@ it('requests a signature for a third party document', function () {
     $thirdParty = ThirdParty::factory()->create();
     $document = ThirdPartyDocument::create([
         'third_party_id' => $thirdParty->id,
-        'type' => \App\Enums\Tiers\ThirdPartyDocumentType::CONTRAT_SOUS_TRAITANCE,
+        'type' => ThirdPartyDocumentType::CONTRAT_SOUS_TRAITANCE,
     ]);
 
     $service = app(SignatureService::class);
@@ -33,7 +33,7 @@ it('signs a third party document', function () {
     $thirdParty = ThirdParty::factory()->create();
     $document = ThirdPartyDocument::create([
         'third_party_id' => $thirdParty->id,
-        'type' => \App\Enums\Tiers\ThirdPartyDocumentType::CONTRAT_SOUS_TRAITANCE,
+        'type' => ThirdPartyDocumentType::CONTRAT_SOUS_TRAITANCE,
     ]);
 
     $service = app(SignatureService::class);

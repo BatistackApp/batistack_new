@@ -7,6 +7,7 @@ use App\Models\Chantiers\Chantier;
 use App\Models\Immobilisation\FixedAsset;
 use App\Services\Accounting\FecExportService;
 use App\Services\Immobilisation\AssetDisposalService;
+use App\Services\Immobilisation\AssetQrCodeService;
 use App\Services\Immobilisation\ImmobilisationDocumentService;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
@@ -210,6 +211,11 @@ class FixedAssetsTable
 
                             return $service->download($path);
                         }),
+                    Action::make('generate_scan_qr')
+                        ->label('QR Scan Terrain')
+                        ->icon('heroicon-o-device-phone-mobile')
+                        ->color('primary')
+                        ->action(fn (FixedAsset $record) => AssetQrCodeService::generateStream($record->qr_token)),
                     Action::make('dispose')
                         ->label('Céder / Rebut')
                         ->icon('heroicon-o-archive-box-x-mark')

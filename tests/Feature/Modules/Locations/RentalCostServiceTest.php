@@ -5,7 +5,7 @@ use App\Services\Locations\RentalCostService;
 use Illuminate\Support\Carbon;
 
 it('calculates cost without penalty', function () {
-    $service = new RentalCostService();
+    $service = new RentalCostService;
 
     $contract = new RentalContract([
         'start_date' => Carbon::today()->subDays(5),
@@ -19,7 +19,7 @@ it('calculates cost without penalty', function () {
 });
 
 it('calculates cost with penalty', function () {
-    $service = new RentalCostService();
+    $service = new RentalCostService;
 
     $contract = new RentalContract([
         'start_date' => Carbon::today()->subDays(10),
@@ -34,7 +34,7 @@ it('calculates cost with penalty', function () {
 });
 
 it('returns 0 penalty days when expected_end_date is null', function () {
-    $service = new RentalCostService();
+    $service = new RentalCostService;
 
     $contract = new RentalContract([
         'start_date' => Carbon::today()->subDays(5),
@@ -47,7 +47,7 @@ it('returns 0 penalty days when expected_end_date is null', function () {
 });
 
 it('returns 0 penalty days when daily_penalty_rate is null', function () {
-    $service = new RentalCostService();
+    $service = new RentalCostService;
 
     $contract = new RentalContract([
         'start_date' => Carbon::today()->subDays(5),
@@ -60,7 +60,7 @@ it('returns 0 penalty days when daily_penalty_rate is null', function () {
 });
 
 it('returns 0 penalty days when expected_end_date is in the future', function () {
-    $service = new RentalCostService();
+    $service = new RentalCostService;
 
     $contract = new RentalContract([
         'start_date' => Carbon::today()->subDays(10),
@@ -73,7 +73,7 @@ it('returns 0 penalty days when expected_end_date is in the future', function ()
 });
 
 it('returns 0 penalty days when expected_end_date equals today', function () {
-    $service = new RentalCostService();
+    $service = new RentalCostService;
 
     $contract = new RentalContract([
         'start_date' => Carbon::today()->subDays(5),
@@ -86,7 +86,7 @@ it('returns 0 penalty days when expected_end_date equals today', function () {
 });
 
 it('caps penalty days at end_date for terminated contracts', function () {
-    $service = new RentalCostService();
+    $service = new RentalCostService;
 
     $contract = new RentalContract([
         'start_date' => Carbon::today()->subDays(20),
@@ -102,7 +102,7 @@ it('caps penalty days at end_date for terminated contracts', function () {
 });
 
 it('returns 0 cumulative cost when contract has no daily_cost_ht', function () {
-    $service = new RentalCostService();
+    $service = new RentalCostService;
 
     $contract = new RentalContract([
         'start_date' => Carbon::today()->subDays(5),
@@ -115,7 +115,7 @@ it('returns 0 cumulative cost when contract has no daily_cost_ht', function () {
 });
 
 it('calculates active days correctly with no end_date', function () {
-    $service = new RentalCostService();
+    $service = new RentalCostService;
 
     $contract = new RentalContract([
         'start_date' => Carbon::today()->subDays(9),
@@ -128,7 +128,7 @@ it('calculates active days correctly with no end_date', function () {
 });
 
 it('returns 0 active days when start_date is after end', function () {
-    $service = new RentalCostService();
+    $service = new RentalCostService;
 
     $contract = new RentalContract([
         'start_date' => Carbon::today()->addDays(5),

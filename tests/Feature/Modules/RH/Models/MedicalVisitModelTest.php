@@ -2,11 +2,11 @@
 
 namespace Tests\Feature\Modules\RH\Models;
 
+use App\Enums\RH\MedicalAptitude;
+use App\Enums\RH\MedicalVisiteType;
 use App\Models\Core\Company;
 use App\Models\RH\Employee;
 use App\Models\RH\MedicalVisit;
-use App\Enums\RH\MedicalVisiteType;
-use App\Enums\RH\MedicalAptitude;
 
 beforeEach(function () {
     Company::factory()->create();

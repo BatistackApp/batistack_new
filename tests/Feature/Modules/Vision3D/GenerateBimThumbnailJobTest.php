@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
 
 afterEach(function () {
-    \Mockery::close();
+    Mockery::close();
 });
 
 it('generates a thumbnail successfully', function () {
@@ -20,7 +20,7 @@ it('generates a thumbnail successfully', function () {
         'version' => 1,
     ]);
 
-    $job = \Mockery::mock(GenerateBimThumbnailJob::class)->makePartial()->shouldAllowMockingProtectedMethods();
+    $job = Mockery::mock(GenerateBimThumbnailJob::class)->makePartial()->shouldAllowMockingProtectedMethods();
     $job->bimModel = $model;
     $job->filePath = $model->file_path;
     $job->shouldReceive('renderScreenshot')->once();
@@ -28,7 +28,7 @@ it('generates a thumbnail successfully', function () {
 
     $model->refresh();
     expect($model->thumbnail_path)->not->toBeNull()
-        ->and($model->thumbnail_path)->toContain('bim-thumbnails/' . $model->id . '_');
+        ->and($model->thumbnail_path)->toContain('bim-thumbnails/'.$model->id.'_');
 });
 
 it('skips update when model no longer exists', function () {
@@ -79,7 +79,7 @@ it('stores the thumbnail in the correct directory', function () {
         'version' => 1,
     ]);
 
-    $job = \Mockery::mock(GenerateBimThumbnailJob::class)->makePartial()->shouldAllowMockingProtectedMethods();
+    $job = Mockery::mock(GenerateBimThumbnailJob::class)->makePartial()->shouldAllowMockingProtectedMethods();
     $job->bimModel = $model;
     $job->filePath = $model->file_path;
     $job->shouldReceive('renderScreenshot')->once();

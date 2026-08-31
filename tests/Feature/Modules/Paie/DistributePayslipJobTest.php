@@ -18,12 +18,12 @@ it('distributes payslip via mail and notification', function () {
     $user = User::factory()->create();
     $employee = Employee::factory()->create([
         'user_id' => $user->id,
-        'email' => 'employee@test.com'
+        'email' => 'employee@test.com',
     ]);
-    
+
     $payslip = Payslip::factory()->create([
         'employee_id' => $employee->id,
-        'period' => '2026-07'
+        'period' => '2026-07',
     ]);
 
     $job = new DistributePayslipJob($payslip);

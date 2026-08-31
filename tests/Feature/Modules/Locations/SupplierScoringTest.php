@@ -1,12 +1,12 @@
 <?php
 
+use App\Enums\Locations\RentalStatus;
 use App\Models\Locations\RentalContract;
 use App\Models\Tiers\ThirdParty;
-use App\Enums\Locations\RentalStatus;
 
 it('recalculates supplier score when a rental contract is terminated with a score', function () {
     $supplier = ThirdParty::factory()->create([
-        'supplier_score' => null
+        'supplier_score' => null,
     ]);
 
     // Create a first contract with score 4
@@ -34,7 +34,7 @@ it('recalculates supplier score when a rental contract is terminated with a scor
 
 it('does not count active contracts or contracts without score', function () {
     $supplier = ThirdParty::factory()->create([
-        'supplier_score' => null
+        'supplier_score' => null,
     ]);
 
     $contract1 = RentalContract::factory()->create([

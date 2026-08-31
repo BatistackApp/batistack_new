@@ -1,15 +1,15 @@
 <?php
 
+use App\Enums\Immobilisation\AssetStatus;
+use App\Enums\Immobilisation\DepreciationMethod;
 use App\Models\Chantiers\Chantier;
 use App\Models\Immobilisation\AssetCategory;
-use App\Models\Immobilisation\FixedAsset;
+use App\Models\Immobilisation\AssetMaintenance;
 use App\Models\Immobilisation\Depreciation;
+use App\Models\Immobilisation\FixedAsset;
 use App\Services\Chantiers\ChantierAnalyticService;
-use App\Enums\Immobilisation\DepreciationMethod;
-use App\Enums\Immobilisation\AssetStatus;
-use App\Services\Immobilisation\DepreciationCalculatorService;
-use Illuminate\Support\Facades\Artisan;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Artisan;
 
 it('records chantier_id on depreciation when passed via command', function () {
     // Créer un chantier
@@ -31,7 +31,7 @@ it('records chantier_id on depreciation when passed via command', function () {
     // L'observer crée les dotations prévisionnelles
     $depreciations = $asset->depreciations;
     expect($depreciations)->not->toBeEmpty();
-    
+
     // On avance dans le temps à la date de la première dotation + 1 jour
     $firstDepreciation = $asset->depreciations()->orderBy('period_date')->first();
     Carbon::setTestNow(Carbon::parse($firstDepreciation->period_date)->addDay());
@@ -68,7 +68,7 @@ it('includes asset depreciation cost in chantier performance metrics', function 
         'amount' => 2000,
     ]);
 
-    $service = new ChantierAnalyticService();
+    $service = new ChantierAnalyticService;
     $metrics = $service->getPerformanceMetrics($chantier);
 
     expect($metrics['financials'])->toHaveKey('asset_depreciation_cost_real')
@@ -90,7 +90,7 @@ it('includes asset maintenance cost in chantier performance metrics', function (
         'useful_life_years' => 5,
     ]);
 
-    \App\Models\Immobilisation\AssetMaintenance::create([
+    AssetMaintenance::create([
         'fixed_asset_id' => $asset->id,
         'chantier_id' => $chantier->id,
         'maintenance_date' => now(),
@@ -99,7 +99,7 @@ it('includes asset maintenance cost in chantier performance metrics', function (
         'cost_ht' => 500.00,
     ]);
 
-    $service = new ChantierAnalyticService();
+    $service = new ChantierAnalyticService;
     $metrics = $service->getPerformanceMetrics($chantier);
 
     expect($metrics['financials'])->toHaveKey('asset_maintenance_cost_real')
