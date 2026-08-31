@@ -29,6 +29,8 @@ class SignalReservePage extends Page
 
     protected static ?string $navigationLabel = 'Réserve / OPR';
 
+    protected static bool $shouldRegisterNavigation = false;
+
     public ?array $data = [];
 
     public function mount(): void

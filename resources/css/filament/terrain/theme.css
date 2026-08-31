@@ -1,0 +1,352 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Phase 4: Touch-optimized terrain theme */
+
+/* === Touch Targets === */
+.touch-target {
+    min-height: 44px;
+    min-width: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.touch-target-sm {
+    min-height: 36px;
+    min-width: 36px;
+}
+
+/* === Form Inputs: Touch Size === */
+input[type="text"],
+input[type="number"],
+input[type="email"],
+input[type="password"],
+textarea,
+select {
+    min-height: 48px;
+    font-size: 16px !important; /* Prevents iOS zoom on focus */
+}
+
+/* === Checkbox/Toggle Switch === */
+.toggle-switch {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.toggle-switch input[type="checkbox"] {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.toggle-track {
+    width: 52px;
+    height: 28px;
+    background: #d1d5db;
+    border-radius: 14px;
+    transition: background 0.2s ease;
+    flex-shrink: 0;
+}
+
+.toggle-switch input:checked + .toggle-track {
+    background: #f97316;
+}
+
+.toggle-track::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 24px;
+    height: 24px;
+    background: white;
+    border-radius: 50%;
+    transition: transform 0.2s ease;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.toggle-switch input:checked + .toggle-track::after {
+    transform: translateX(24px);
+}
+
+/* === Checklist Wizard === */
+.wizard-container {
+    min-height: calc(100vh - 140px);
+    display: flex;
+    flex-direction: column;
+}
+
+.wizard-step {
+    display: none;
+    flex: 1;
+    padding: 1rem 0;
+}
+
+.wizard-step.active {
+    display: flex;
+    flex-direction: column;
+}
+
+.wizard-progress {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: white;
+    border-bottom: 1px solid #e5e7eb;
+    padding: 0.75rem 0;
+}
+
+.dark .wizard-progress {
+    background: #111827;
+    border-bottom-color: #374151;
+}
+
+.wizard-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 20;
+    background: white;
+    border-top: 1px solid #e5e7eb;
+    padding: 0.75rem 1rem;
+    display: flex;
+    gap: 0.75rem;
+}
+
+.dark .wizard-nav {
+    background: #111827;
+    border-top-color: #374151;
+}
+
+/* === Swipeable Cards === */
+.wizard-step-card {
+    background: white;
+    border-radius: 1rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    padding: 1.5rem;
+    margin: 0.5rem 0;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+    touch-action: pan-y;
+}
+
+.dark .wizard-step-card {
+    background: #1f2937;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.wizard-step-card.slide-left {
+    transform: translateX(-100%);
+    opacity: 0;
+}
+
+.wizard-step-card.slide-right {
+    transform: translateX(100%);
+    opacity: 0;
+}
+
+/* === Priority/Severity Badges === */
+.badge-severity {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.badge-low { background: #dcfce7; color: #166534; }
+.badge-medium { background: #fef9c3; color: #854d0e; }
+.badge-high { background: #fee2e2; color: #991b1b; }
+.badge-critical { background: #7f1d1d; color: white; }
+
+.dark .badge-low { background: #14532d; color: #86efac; }
+.dark .badge-medium { background: #713f12; color: #fde047; }
+.dark .badge-high { background: #7f1d1d; color: #fca5a5; }
+.dark .badge-critical { background: #991b1b; color: white; }
+
+/* === Status Selectors (Grid) === */
+.status-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+}
+
+@media (min-width: 640px) {
+    .status-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+.status-option {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 1rem 0.5rem;
+    border: 2px solid #e5e7eb;
+    border-radius: 0.75rem;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    -webkit-tap-highlight-color: transparent;
+    text-align: center;
+    min-height: 80px;
+    justify-content: center;
+}
+
+.status-option:active {
+    transform: scale(0.96);
+}
+
+.status-option.selected {
+    border-color: #f97316;
+    background: #fff7ed;
+}
+
+.dark .status-option.selected {
+    background: #431407;
+}
+
+.status-option input {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+/* === Photo Grid === */
+.photo-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.5rem;
+}
+
+@media (min-width: 640px) {
+    .photo-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+.photo-item {
+    position: relative;
+    aspect-ratio: 1;
+    border-radius: 0.5rem;
+    overflow: hidden;
+    border: 2px solid #e5e7eb;
+}
+
+.photo-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.photo-item .photo-remove {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 24px;
+    height: 24px;
+    background: rgba(239, 68, 68, 0.9);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: bold;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+/* === Pull-to-Refresh Indicator === */
+.pull-indicator {
+    position: fixed;
+    top: 60px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 50;
+    background: #f97316;
+    color: white;
+    padding: 0.5rem 1.5rem;
+    border-radius: 9999px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    box-shadow: 0 4px 12px rgba(249, 115, 22, 0.4);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.pull-indicator.visible {
+    opacity: 1;
+}
+
+/* === Toast/Notification === */
+.toast-terrain {
+    position: fixed;
+    bottom: 100px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 100;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.75rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+    transition: transform 0.3s ease, opacity 0.3s ease;
+    max-width: 90%;
+    text-align: center;
+}
+
+.toast-terrain.success {
+    background: #166534;
+    color: white;
+}
+
+.toast-terrain.error {
+    background: #991b1b;
+    color: white;
+}
+
+.toast-terrain.info {
+    background: #1e40af;
+    color: white;
+}
+
+/* === Section Headers === */
+.section-header {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #6b7280;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #e5e7eb;
+    margin-bottom: 0.75rem;
+}
+
+.dark .section-header {
+    color: #9ca3af;
+    border-bottom-color: #374151;
+}
+
+/* === Smooth Scroll for Wizard === */
+html {
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* === Input Focus (iOS prevention) === */
+@media (max-width: 768px) {
+    input, textarea, select {
+        font-size: 16px !important;
+    }
+}

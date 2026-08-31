@@ -6,9 +6,9 @@
     <title>Batistack ERP - Portail de Connexion</title>
     
     <!-- PWA -->
-    <link rel="manifest" href="/manifest.json">
+    <link rel="manifest" href="/build/manifest.webmanifest">
     <meta name="theme-color" content="#f97316">
-    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+    <link rel="apple-touch-icon" href="/images/icon-192x192.png">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     
