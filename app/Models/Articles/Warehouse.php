@@ -98,13 +98,13 @@ class Warehouse extends Model
     }
 
     /**
-     * Récupérer le stock d'un article
+     * Récupérer le stock d'un article (somme de tous les emplacements)
      */
     public function getStockForItem(Item $item): float
     {
         return $this->stocks()
             ->where('item_id', $item->id)
-            ->first()?->quantity ?? 0;
+            ->sum('quantity');
     }
 
     /**
@@ -134,7 +134,7 @@ class Warehouse extends Model
      */
     public function getItemCount(): int
     {
-        return $this->stocks()->count();
+        return $this->stocks()->distinct('item_id')->count('item_id');
     }
 
     /**
