@@ -127,6 +127,11 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/api/reserves/chantiers', [ReservesSyncController::class, 'chantiers'])->name('reserves.api.chantiers');
     Route::get('/api/reserves/list', [ReservesSyncController::class, 'list'])->name('reserves.api.list');
     Route::post('/api/reserves/sync', [ReservesSyncController::class, 'sync'])->name('reserves.api.sync');
+
+    // API Equipment Tracking (pointage matériel terrain)
+    Route::get('/api/chantier-equipment/chantiers', [\App\Http\Controllers\Api\ChantierEquipmentSyncController::class, 'chantiers'])->name('chantier-equipment.api.chantiers');
+    Route::get('/api/chantier-equipment/presence', [\App\Http\Controllers\Api\ChantierEquipmentSyncController::class, 'presence'])->name('chantier-equipment.api.presence');
+    Route::post('/api/chantier-equipment/scan', [\App\Http\Controllers\Api\ChantierEquipmentSyncController::class, 'scan'])->name('chantier-equipment.api.scan');
 });
 require __DIR__.'/settings.php';
 // require __DIR__.'/test.php';

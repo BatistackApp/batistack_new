@@ -5,6 +5,7 @@ namespace App\Models\RH;
 use App\Enums\RH\EquipementStatus;
 use App\Enums\RH\EquipementType;
 use App\Models\Articles\Item;
+use App\Models\Chantiers\ChantierEquipmentTracking;
 use App\Models\Immobilisation\AssetMaintenanceTicket;
 use App\Observers\RH\EquipementObserver;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
@@ -64,6 +65,11 @@ class Equipement extends Model
     public function maintenanceTickets(): MorphMany
     {
         return $this->morphMany(AssetMaintenanceTicket::class, 'asset');
+    }
+
+    public function trackings(): HasMany
+    {
+        return $this->morphMany(ChantierEquipmentTracking::class, 'trackable');
     }
 
     protected function casts(): array

@@ -8,6 +8,8 @@ use App\Models\Immobilisation\FixedAsset;
 use App\Services\Accounting\FecExportService;
 use App\Services\Immobilisation\AssetDisposalService;
 use App\Services\Immobilisation\ImmobilisationDocumentService;
+use chillerlan\QRCode\QRCode;
+use chillerlan\QRCode\QROptions;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkAction;
@@ -209,6 +211,28 @@ class FixedAssetsTable
                             $path = $service->generateQrLabel($record);
 
                             return $service->download($path);
+                        }),
+                    Action::make('generate_scan_qr')
+                        ->label('QR Scan Terrain')
+                        ->icon('heroicon-o-device-phone-mobile')
+                        ->color('primary')
+                        ->action(function (FixedAsset $record) {
+                            $url = url('/terrain/scan-materiel?token='.$record->qr_token);
+                            $options = new QROptions([
+                                'version' => 5,
+                                'outputType' => QRCode::OUTPUT_IMAGE_PNG,
+                                'eccLevel' => QRCode::ECC_L,
+                                'scale' => 6,
+                                'imageBase64' => true,
+                            ]);
+                            $qrData = (new QRCode($options))->render($url);
+
+                            $decoded = base64_decode(preg_replace('#^data:image/\w+;base64,#i', '', $qrData));
+
+                            return response($decoded, 200, [
+                                'Content-Type' => 'image/png',
+                                'Content-Disposition' => 'inline; filename="qr-scan-'.$record->qr_token.'.png"',
+                            ]);
                         }),
                     Action::make('dispose')
                         ->label('Céder / Rebut')

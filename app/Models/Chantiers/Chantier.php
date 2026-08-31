@@ -195,6 +195,11 @@ class Chantier extends Model implements HasMedia, HasTimeline
         return $this->hasMany(CibtpDeclaration::class);
     }
 
+    public function equipmentTrackings(): HasMany
+    {
+        return $this->hasMany(ChantierEquipmentTracking::class);
+    }
+
     protected function casts(): array
     {
         return [

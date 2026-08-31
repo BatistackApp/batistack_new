@@ -13,7 +13,7 @@ class QuickActionsWidget extends Widget
 {
     protected static ?int $sort = 0;
 
-    protected static string $view = 'filament.terrain.widgets.quick-actions';
+    protected string $view = 'filament.terrain.widgets.quick-actions';
 
     protected int|string|array $columnSpan = 'full';
 

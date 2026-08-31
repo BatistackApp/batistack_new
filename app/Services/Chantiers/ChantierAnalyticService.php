@@ -9,6 +9,7 @@ use App\Enums\Locations\InternalRentalInvoiceStatus;
 use App\Enums\RH\TimeEntryStatus;
 use App\Models\Articles\StockMouvement;
 use App\Models\Chantiers\Chantier;
+use App\Models\Chantiers\ChantierEquipmentTracking;
 use App\Models\Chantiers\ChantierTask;
 use App\Models\Commerce\PurchaseOrder;
 use App\Models\Flottes\FuelTransaction;
@@ -101,12 +102,25 @@ class ChantierAnalyticService
             ->get()
             ->sum(fn ($contract) => $rentalCostService->getCumulativeCost($contract));
 
-        // 8. Coûts d'immobilisation de l'Outillage/Gros Matériel (Module RH)
-        $equipmentCost = EquipementAssignment::query()
+        // 8. Coûts d'immobilisation du Matériel (via pointage terrain + legacy RH)
+        $equipmentTrackingCost = ChantierEquipmentTracking::query()
+            ->where('chantier_id', $chantier->id)
+            ->with('trackable')
+            ->get()
+            ->sum(fn ($tracking) => $tracking->getImmobilizationCost());
+
+        // Legacy: affectations RH non encore trackées via le scan terrain
+        $legacyEquipementCost = EquipementAssignment::query()
             ->where('chantier_id', $chantier->id)
             ->with('equipement')
             ->get()
-            ->sum(fn ($assignment) => $assignment->getImmobilizationCost());
+            ->filter(fn ($a) => ! ChantierEquipmentTracking::where('trackable_type', \App\Models\RH\Equipement::class)
+                ->where('trackable_id', $a->equipement_id)
+                ->where('chantier_id', $chantier->id)
+                ->exists())
+            ->sum(fn ($a) => $a->getImmobilizationCost());
+
+        $equipmentCost = $equipmentTrackingCost + $legacyEquipementCost;
 
         // 9. Achats directs (Commandes fournisseurs pour le chantier)
         $purchaseCost = PurchaseOrder::query()

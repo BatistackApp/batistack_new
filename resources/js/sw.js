@@ -65,6 +65,14 @@ registerRoute(
     'POST'
 );
 
+registerRoute(
+    ({ url }) => url.pathname.startsWith('/api/chantier-equipment/'),
+    new NetworkOnly({
+        plugins: [bgSyncPlugin],
+    }),
+    'POST'
+);
+
 // Cache pages navigation (NetworkFirst with fallback)
 const navigationRoute = new NavigationRoute(
     new NetworkFirst({
