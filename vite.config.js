@@ -27,23 +27,27 @@ export default defineConfig({
                 injectionPoint: undefined
             },
             manifest: {
-                name: 'Batistack',
+                name: 'Batistack ERP',
                 short_name: 'Batistack',
-                theme_color: '#4f46e5',
-                background_color: '#ffffff',
+                description: "L'ERP complet de gestion de chantiers pour Batistack.",
+                theme_color: '#f97316',
+                background_color: '#0f172a',
                 display: 'standalone',
+                orientation: 'portrait-primary',
                 scope: '/',
                 start_url: '/',
                 icons: [
                     {
                         src: '/images/icon-192x192.png',
                         sizes: '192x192',
-                        type: 'image/png'
+                        type: 'image/png',
+                        purpose: 'any'
                     },
                     {
                         src: '/images/icon-512x512.png',
                         sizes: '512x512',
-                        type: 'image/png'
+                        type: 'image/png',
+                        purpose: 'any maskable'
                     }
                 ]
             }

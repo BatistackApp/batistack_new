@@ -105,9 +105,9 @@ class AppServiceProvider extends ServiceProvider
         FilamentView::registerRenderHook(
             PanelsRenderHook::HEAD_START,
             fn (): string => Blade::render('
-                <link rel="manifest" href="/manifest.json">
-                <meta name="theme-color" content="#1d4ed8">
-                <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+                <link rel="manifest" href="/build/manifest.webmanifest">
+                <meta name="theme-color" content="#f97316">
+                <link rel="apple-touch-icon" href="/images/icon-192x192.png">
                 <meta name="apple-mobile-web-app-capable" content="yes">
                 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
             '),
