@@ -36,9 +36,9 @@ class TerrainPanelProvider extends PanelProvider
                 'gray' => Color::Stone,
             ])
             ->login()
-            ->sidebarCollapsibleOnDesktop()
+            ->topNavigation()
             ->databaseNotifications() // Alertes directes en cas de consignes
-            ->brandName('Batistack - Espace Terrain')
+            ->brandName('Batistack - Terrain')
             ->brandLogo(asset('images/chantiers.png'))
             ->discoverResources(in: app_path('Filament/Terrain/Resources'), for: 'App\Filament\Terrain\Resources')
             ->discoverPages(in: app_path('Filament/Terrain/Pages'), for: 'App\Filament\Terrain\Pages')

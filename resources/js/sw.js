@@ -35,6 +35,14 @@ registerRoute(
     'POST'
 );
 
+registerRoute(
+    ({ url }) => url.pathname.startsWith('/api/checklist/'),
+    new NetworkOnly({
+        plugins: [bgSyncPlugin],
+    }),
+    'POST'
+);
+
 // Cache pages navigation (NetworkFirst with fallback)
 const navigationRoute = new NavigationRoute(
     new NetworkFirst({
