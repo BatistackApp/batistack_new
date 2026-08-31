@@ -19,7 +19,7 @@ class ChantierEquipmentSyncController extends Controller
      */
     public function chantiers(Request $request): JsonResponse
     {
-        $employee = $request->user()->salarie ?? $request->user()->employee;
+        $employee = $request->user()->salarie;
 
         if (! $employee) {
             return response()->json(['data' => []]);

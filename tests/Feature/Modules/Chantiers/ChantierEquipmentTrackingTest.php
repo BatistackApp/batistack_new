@@ -237,6 +237,156 @@ test('getTrackableTypeLabel retourne le bon type', function () {
     expect($tracking->getTrackableTypeLabel())->toBe('Gros matériel');
 });
 
+test('getDurationInDays retourne au moins 1 jour pour check_in récent', function () {
+    $asset = FixedAsset::factory()->create([
+        'asset_category_id' => $this->category->id,
+    ]);
+
+    $tracking = ChantierEquipmentTracking::create([
+        'chantier_id' => $this->chantier->id,
+        'trackable_type' => FixedAsset::class,
+        'trackable_id' => $asset->id,
+        'scanned_by' => $this->user->id,
+        'check_in_at' => now()->subMinutes(30),
+    ]);
+
+    expect($tracking->getDurationInDays())->toBeGreaterThanOrEqual(1);
+});
+
+test('getDailyRate retourne le daily_rate du FixedAsset', function () {
+    $asset = FixedAsset::factory()->create([
+        'asset_category_id' => $this->category->id,
+        'daily_rate' => 350.00,
+    ]);
+
+    $tracking = ChantierEquipmentTracking::create([
+        'chantier_id' => $this->chantier->id,
+        'trackable_type' => FixedAsset::class,
+        'trackable_id' => $asset->id,
+        'scanned_by' => $this->user->id,
+        'check_in_at' => now(),
+    ]);
+
+    expect($tracking->getDailyRate())->toBe(350.00);
+});
+
+test('getDailyRate retourne le daily_cost de l\'Equipement', function () {
+    $equipement = Equipement::factory()->create([
+        'daily_cost' => 75.00,
+    ]);
+
+    $tracking = ChantierEquipmentTracking::create([
+        'chantier_id' => $this->chantier->id,
+        'trackable_type' => Equipement::class,
+        'trackable_id' => $equipement->id,
+        'scanned_by' => $this->user->id,
+        'check_in_at' => now(),
+    ]);
+
+    expect($tracking->getDailyRate())->toBe(75.00);
+});
+
+test('getTrackableLabel retourne le label de l\'Equipement', function () {
+    $equipement = Equipement::factory()->create([
+        'label' => 'Perceuse Makita',
+        'brand' => 'Makita',
+        'model_name' => 'DF333',
+    ]);
+
+    $tracking = ChantierEquipmentTracking::create([
+        'chantier_id' => $this->chantier->id,
+        'trackable_type' => Equipement::class,
+        'trackable_id' => $equipement->id,
+        'scanned_by' => $this->user->id,
+        'check_in_at' => now(),
+    ]);
+
+    expect($tracking->getTrackableLabel())->toContain('Perceuse Makita');
+});
+
+test('getTrackableLabel retourne Inconnu pour trackable non trouvé', function () {
+    $tracking = new ChantierEquipmentTracking([
+        'trackable_type' => FixedAsset::class,
+        'trackable_id' => 999999,
+    ]);
+
+    expect($tracking->getTrackableLabel())->toBe('Inconnu');
+});
+
+test('getTrackableTypeLabel retourne Autre pour type inconnu', function () {
+    $tracking = new ChantierEquipmentTracking();
+    $tracking->trackable_type = 'App\\Models\\Inconnu';
+
+    expect($tracking->getTrackableTypeLabel())->toBe('Autre');
+});
+
+test('scopeForChantier filtre par chantier_id', function () {
+    $asset = FixedAsset::factory()->create([
+        'asset_category_id' => $this->category->id,
+    ]);
+
+    $otherChantier = Chantier::factory()->create();
+
+    ChantierEquipmentTracking::create([
+        'chantier_id' => $this->chantier->id,
+        'trackable_type' => FixedAsset::class,
+        'trackable_id' => $asset->id,
+        'scanned_by' => $this->user->id,
+        'check_in_at' => now(),
+    ]);
+
+    $trackings = ChantierEquipmentTracking::forChantier($this->chantier->id)->get();
+    expect($trackings)->toHaveCount(1);
+
+    $otherTrackings = ChantierEquipmentTracking::forChantier($otherChantier->id)->get();
+    expect($otherTrackings)->toHaveCount(0);
+});
+
+test('scopeCheckedInToday filtre les entrées du jour', function () {
+    $asset = FixedAsset::factory()->create([
+        'asset_category_id' => $this->category->id,
+    ]);
+
+    ChantierEquipmentTracking::create([
+        'chantier_id' => $this->chantier->id,
+        'trackable_type' => FixedAsset::class,
+        'trackable_id' => $asset->id,
+        'scanned_by' => $this->user->id,
+        'check_in_at' => now(),
+    ]);
+
+    // Entrée d'hier
+    $asset2 = FixedAsset::factory()->create([
+        'asset_category_id' => $this->category->id,
+    ]);
+    ChantierEquipmentTracking::create([
+        'chantier_id' => $this->chantier->id,
+        'trackable_type' => FixedAsset::class,
+        'trackable_id' => $asset2->id,
+        'scanned_by' => $this->user->id,
+        'check_in_at' => now()->subDay(),
+    ]);
+
+    $todayTrackings = ChantierEquipmentTracking::checkedInToday()->get();
+    expect($todayTrackings)->toHaveCount(1);
+});
+
+test('scannedBy retourne l\'utilisateur ayant scanné', function () {
+    $asset = FixedAsset::factory()->create([
+        'asset_category_id' => $this->category->id,
+    ]);
+
+    $tracking = ChantierEquipmentTracking::create([
+        'chantier_id' => $this->chantier->id,
+        'trackable_type' => FixedAsset::class,
+        'trackable_id' => $asset->id,
+        'scanned_by' => $this->user->id,
+        'check_in_at' => now(),
+    ]);
+
+    expect($tracking->scannedBy->id)->toBe($this->user->id);
+});
+
 test('ChantierAnalyticService intègre le coût de tracking matériel', function () {
     $chantier = Chantier::factory()->create([
         'budget_total_ht' => 50000,
