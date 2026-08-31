@@ -44,6 +44,7 @@ class TerrainPanelProvider extends PanelProvider
             ->databaseNotifications()
             ->brandName('Batistack - Terrain')
             ->brandLogo(asset('images/chantiers.png'))
+            ->viteTheme('resources/css/filament/terrain/theme.css')
             ->discoverResources(in: app_path('Filament/Terrain/Resources'), for: 'App\Filament\Terrain\Resources')
             ->discoverPages(in: app_path('Filament/Terrain/Pages'), for: 'App\Filament\Terrain\Pages')
             ->pages([

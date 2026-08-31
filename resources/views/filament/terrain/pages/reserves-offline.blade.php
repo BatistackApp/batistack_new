@@ -55,67 +55,80 @@
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Objet de la réserve *</label>
                     <input type="text" x-model="form.title" required
                         placeholder="Ex: Fissure mur porteur"
-                        class="w-full rounded-lg border-gray-300 shadow-sm focus:border-amber-500 focus:ring-amber-500 dark:bg-gray-700 dark:border-gray-600" />
+                        class="w-full rounded-xl border-2 border-gray-200 shadow-sm focus:border-amber-500 focus:ring-amber-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
                 </div>
 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description</label>
                     <textarea x-model="form.description" rows="3"
                         placeholder="Détails du défaut constaté..."
-                        class="w-full rounded-lg border-gray-300 shadow-sm focus:border-amber-500 focus:ring-amber-500 dark:bg-gray-700 dark:border-gray-600"></textarea>
+                        class="w-full rounded-xl border-2 border-gray-200 shadow-sm focus:border-amber-500 focus:ring-amber-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white resize-none"></textarea>
                 </div>
 
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Gravité *</label>
-                        <select x-model="form.severity"
-                            class="w-full rounded-lg border-gray-300 shadow-sm focus:border-amber-500 focus:ring-amber-500 dark:bg-gray-700 dark:border-gray-600">
-                            <option value="info">Informatif</option>
-                            <option value="minor">Mineur</option>
-                            <option value="major" selected>Majeur</option>
-                            <option value="critical">Critique</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">GPS</label>
-                        <button @click="captureGPS()" type="button"
-                            class="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600"
-                            :class="form.latitude ? 'bg-green-50 border-green-300 text-green-700 dark:bg-green-900/20' : 'bg-gray-50 dark:bg-gray-700'">
-                            <span x-text="form.latitude ? '✓ GPS capturé' : '📍 Capturer position'"></span>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Photo Capture -->
+                <!-- Severity Selector (Touch-optimized grid) -->
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Photos du défaut</label>
-                    <div class="mt-1 flex items-center gap-3">
-                        <label for="reserve-photo"
-                            class="cursor-pointer px-4 py-2 text-sm font-medium text-amber-600 bg-amber-50 rounded-lg hover:bg-amber-100 dark:bg-amber-900/20 dark:text-amber-400">
-                            📷 Prendre une photo
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Gravité *</label>
+                    <div class="status-grid">
+                        <label class="status-option" :class="{ 'selected': form.severity === 'info' }">
+                            <input type="radio" name="severity" value="info" x-model="form.severity" />
+                            <span class="badge-severity badge-low">ℹ️ Info</span>
                         </label>
-                        <input type="file" id="reserve-photo" accept="image/*" capture="environment"
-                            class="hidden" @change="handlePhoto($event)" />
+                        <label class="status-option" :class="{ 'selected': form.severity === 'minor' }">
+                            <input type="radio" name="severity" value="minor" x-model="form.severity" />
+                            <span class="badge-severity badge-medium">⚠️ Mineur</span>
+                        </label>
+                        <label class="status-option" :class="{ 'selected': form.severity === 'major' }">
+                            <input type="radio" name="severity" value="major" x-model="form.severity" />
+                            <span class="badge-severity badge-high">🔶 Majeur</span>
+                        </label>
+                        <label class="status-option" :class="{ 'selected': form.severity === 'critical' }">
+                            <input type="radio" name="severity" value="critical" x-model="form.severity" />
+                            <span class="badge-severity badge-critical">🔴 Critique</span>
+                        </label>
                     </div>
-                    <!-- Photo Preview -->
-                    <div x-show="form.photos.length > 0" class="mt-3 flex flex-wrap gap-2">
+                </div>
+
+                <!-- GPS Capture -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Position GPS</label>
+                    <button @click="captureGPS()" type="button"
+                        class="touch-target w-full px-4 py-3 text-sm font-medium rounded-xl border-2 transition-colors"
+                        :class="form.latitude ? 'bg-green-50 border-green-400 text-green-700 dark:bg-green-900/20 dark:border-green-600 dark:text-green-400' : 'bg-gray-50 border-gray-200 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300'">
+                        <span x-text="form.latitude ? '✓ Position capturée (' + form.latitude.toFixed(5) + ', ' + form.longitude.toFixed(5) + ')' : '📍 Capturer ma position GPS'"></span>
+                    </button>
+                </div>
+
+                <!-- Photo Capture (Touch-optimized) -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Photos du défaut</label>
+                    <label for="reserve-photo"
+                        class="touch-target flex items-center gap-3 px-4 py-3 text-sm font-medium text-amber-600 bg-amber-50 rounded-xl hover:bg-amber-100 dark:bg-amber-900/20 dark:text-amber-400 cursor-pointer active:scale-[0.98] transition-all">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                        </svg>
+                        Capturer une photo
+                    </label>
+                    <input type="file" id="reserve-photo" accept="image/*" capture="environment"
+                        class="hidden" @change="handlePhoto($event)" />
+                    <!-- Photo Grid -->
+                    <div x-show="form.photos.length > 0" class="photo-grid mt-3">
                         <template x-for="(photo, idx) in form.photos" :key="idx">
-                            <div class="relative group">
-                                <img :src="photo" class="w-20 h-20 object-cover rounded-lg border border-gray-200 dark:border-gray-600" />
+                            <div class="photo-item">
+                                <img :src="photo" />
                                 <button @click="form.photos.splice(idx, 1)" type="button"
-                                    class="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white rounded-full text-xs opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                    ✕
-                                </button>
+                                    class="photo-remove">✕</button>
                             </div>
                         </template>
                     </div>
+                    <p x-show="form.photos.length > 0" class="text-xs text-gray-400 mt-1" x-text="form.photos.length + ' photo(s) — compression auto'"></p>
                 </div>
 
                 <!-- Submit -->
                 <div class="flex flex-col sm:flex-row gap-3 pt-2">
                     <button @click="submitReserve()" type="button"
                         :disabled="!form.title.trim() || !form.chantier_id"
-                        class="flex-1 px-4 py-3 text-sm font-medium text-white bg-amber-600 rounded-lg hover:bg-amber-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                        class="touch-target flex-1 px-4 py-3 text-sm font-medium text-white bg-amber-600 rounded-xl hover:bg-amber-700 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98] transition-all shadow-md">
                         <span x-text="isOnline ? 'Envoyer la réserve' : 'Sauvegarder localement'"></span>
                     </button>
                 </div>
@@ -127,7 +140,7 @@
             <!-- Filter -->
             <div class="p-3 rounded-lg bg-white shadow dark:bg-gray-800">
                 <select x-model="filterStatus" @change="loadReserves()"
-                    class="w-full rounded-lg border-gray-300 text-sm shadow-sm focus:border-amber-500 dark:bg-gray-700 dark:border-gray-600">
+                    class="w-full rounded-xl border-2 border-gray-200 text-sm shadow-sm focus:border-amber-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                     <option value="">Tous les statuts</option>
                     <option value="open">Ouverte</option>
                     <option value="in_progress">En cours</option>
@@ -307,7 +320,20 @@
                     if (!file) return;
                     const reader = new FileReader();
                     reader.onload = (e) => {
-                        this.form.photos.push(e.target.result);
+                        const img = new Image();
+                        img.onload = () => {
+                            const canvas = document.createElement('canvas');
+                            let { width, height } = img;
+                            if (width > 1024) {
+                                height = Math.round((height * 1024) / width);
+                                width = 1024;
+                            }
+                            canvas.width = width;
+                            canvas.height = height;
+                            canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+                            this.form.photos.push(canvas.toDataURL('image/jpeg', 0.8));
+                        };
+                        img.src = e.target.result;
                     };
                     reader.readAsDataURL(file);
                     event.target.value = '';

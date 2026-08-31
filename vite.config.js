@@ -9,7 +9,7 @@ import { VitePWA } from 'vite-plugin-pwa';
 export default defineConfig({
     plugins: [
         laravel({
-            input: ['resources/css/app.css', 'resources/js/app.js', 'resources/css/filament/commerce/theme.css', 'resources/css/filament/customer/theme.css', 'resources/css/filament/core/theme.css', 'resources/css/filament/rh/theme.css', 'resources/css/filament/chantier/theme.css', 'resources/css/filament/gpao/theme.css', 'resources/css/filament/salarie/theme.css', 'resources/css/filament/technicien/theme.css'],
+            input: ['resources/css/app.css', 'resources/js/app.js', 'resources/css/filament/commerce/theme.css', 'resources/css/filament/customer/theme.css', 'resources/css/filament/core/theme.css', 'resources/css/filament/rh/theme.css', 'resources/css/filament/chantier/theme.css', 'resources/css/filament/gpao/theme.css', 'resources/css/filament/salarie/theme.css', 'resources/css/filament/technicien/theme.css', 'resources/css/filament/terrain/theme.css'],
             refresh: true,
             fonts: [
                 bunny('Instrument Sans', {
