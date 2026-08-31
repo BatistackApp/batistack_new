@@ -311,6 +311,13 @@ class StockService
         $locations = $stock->locations()->hasQuantity()->orderBy('created_at')->orderBy('id')->get();
 
         if ($locations->isEmpty()) {
+            if ($targetLocationCode !== null) {
+                throw new ArticlesModuleException(
+                    "Aucun emplacement trouvé pour {$targetLocationCode}.",
+                    400
+                );
+            }
+
             return;
         }
 
@@ -364,6 +371,13 @@ class StockService
      */
     public function moveLocation(Stock $stock, string $fromCode, string $toCode, float $quantity): void
     {
+        if ($quantity <= 0) {
+            throw new ArticlesModuleException(
+                'La quantité à déplacer doit être strictement positive.',
+                400
+            );
+        }
+
         DB::transaction(function () use ($stock, $fromCode, $toCode, $quantity) {
             $from = $stock->locations()->where('location_code', $fromCode)->lockForUpdate()->first();
 
