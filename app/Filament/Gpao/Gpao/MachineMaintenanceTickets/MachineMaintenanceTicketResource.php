@@ -25,7 +25,7 @@ class MachineMaintenanceTicketResource extends Resource
 
     protected static ?int $navigationSort = 30;
 
-    protected static ?string $recordTitleAttribute = 'id';
+    protected static ?string $recordTitleAttribute = 'description';
 
     protected static ?string $modelLabel = 'Ticket de Maintenance';
 

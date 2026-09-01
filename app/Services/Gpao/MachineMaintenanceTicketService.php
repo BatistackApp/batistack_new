@@ -80,7 +80,7 @@ class MachineMaintenanceTicketService
             ->where('id', '!=', $ticket->id)
             ->exists();
 
-        if (! $hasOpenTicket) {
+        if (! $hasOpenTicket && $machine->status === MachineStatus::MAINTENANCE) {
             $machine->update(['status' => MachineStatus::OPERATIONAL]);
         }
     }
