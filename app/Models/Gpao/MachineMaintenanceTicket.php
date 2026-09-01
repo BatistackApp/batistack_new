@@ -2,6 +2,8 @@
 
 namespace App\Models\Gpao;
 
+use App\Enums\Gpao\MachineMaintenanceTicketStatus;
+use App\Enums\Gpao\MachineMaintenanceTicketType;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -16,6 +18,9 @@ class MachineMaintenanceTicket extends Model
         'type',
         'status',
         'description',
+        'cost_ht',
+        'provider_name',
+        'notes',
         'reported_by_id',
         'resolved_at',
     ];
@@ -23,6 +28,9 @@ class MachineMaintenanceTicket extends Model
     protected function casts(): array
     {
         return [
+            'status' => MachineMaintenanceTicketStatus::class,
+            'type' => MachineMaintenanceTicketType::class,
+            'cost_ht' => 'decimal:2',
             'resolved_at' => 'datetime',
         ];
     }
