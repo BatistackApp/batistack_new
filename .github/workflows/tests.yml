@@ -241,6 +241,15 @@ jobs:
       - name: Copy Environment File
         run: cp .env.example .env
 
+      - name: Create Storage Directories
+        run: |
+          mkdir -p storage/framework/views
+          mkdir -p storage/framework/cache
+          mkdir -p storage/framework/sessions
+          mkdir -p storage/framework/testing
+          mkdir -p storage/logs
+          mkdir -p bootstrap/cache
+
       - name: Generate Application Key
         run: php artisan key:generate
 
@@ -303,6 +312,15 @@ jobs:
 
       - name: Copy Environment File
         run: cp .env.example .env
+
+      - name: Create Storage Directories
+        run: |
+          mkdir -p storage/framework/views
+          mkdir -p storage/framework/cache
+          mkdir -p storage/framework/sessions
+          mkdir -p storage/framework/testing
+          mkdir -p storage/logs
+          mkdir -p bootstrap/cache
 
       - name: Generate Application Key
         run: php artisan key:generate
