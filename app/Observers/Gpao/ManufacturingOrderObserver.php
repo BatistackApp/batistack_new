@@ -2,11 +2,14 @@
 
 namespace App\Observers\Gpao;
 
+use App\Enums\Gpao\MachineMaintenanceTicketStatus;
+use App\Enums\Gpao\MachineMaintenanceTicketType;
 use App\Enums\Gpao\ManufacturingStatus;
 use App\Jobs\Gpao\GenerateManufacturingOrderPdfJob;
 use App\Models\Gpao\MachineMaintenanceTicket;
 use App\Models\Gpao\ManufacturingOrder;
 use App\Services\Articles\StockService;
+use App\Services\Gpao\MachineMaintenanceTicketService;
 use App\Services\Gpao\MrpService;
 use App\Services\Gpao\ProductionInventoryService;
 
@@ -71,17 +74,19 @@ class ManufacturingOrderObserver
 
             if ($machine->usage_hours >= $machine->maintenance_interval_hours) {
                 $hasOpenTicket = MachineMaintenanceTicket::where('machine_id', $machine->id)
-                    ->where('type', 'preventive')
-                    ->where('status', 'open')
+                    ->where('type', MachineMaintenanceTicketType::PREVENTIVE)
+                    ->where('status', MachineMaintenanceTicketStatus::OPEN)
                     ->exists();
 
                 if (! $hasOpenTicket) {
-                    MachineMaintenanceTicket::create([
+                    $ticket = MachineMaintenanceTicket::create([
                         'machine_id' => $machine->id,
-                        'type' => 'preventive',
-                        'status' => 'open',
+                        'type' => MachineMaintenanceTicketType::PREVENTIVE,
+                        'status' => MachineMaintenanceTicketStatus::OPEN,
                         'description' => 'Maintenance préventive requise suite au dépassement du seuil d\'utilisation.',
                     ]);
+
+                    app(MachineMaintenanceTicketService::class)->notifyAdmins($ticket);
                 }
             }
         }

@@ -2,6 +2,8 @@
 
 use App\Enums\Articles\ItemType;
 use App\Enums\Core\UnitType;
+use App\Enums\Gpao\MachineMaintenanceTicketStatus;
+use App\Enums\Gpao\MachineMaintenanceTicketType;
 use App\Enums\Gpao\MachineStatus;
 use App\Enums\Gpao\ManufacturingStatus;
 use App\Enums\RH\TimeEntryType;
@@ -81,18 +83,18 @@ it('creates maintenance ticket when threshold is reached upon completion', funct
 
     $tickets = MachineMaintenanceTicket::where('machine_id', $this->machine->id)->get();
     expect($tickets)->toHaveCount(1);
-    expect($tickets->first()->type)->toEqual('preventive');
-    expect($tickets->first()->status)->toEqual('open');
+    expect($tickets->first()->type)->toBe(MachineMaintenanceTicketType::PREVENTIVE);
+    expect($tickets->first()->status)->toBe(MachineMaintenanceTicketStatus::OPEN);
 
     // Test recalcul du labor cost (4h * 25€ = 100)
     expect((float) $this->order->total_labor_cost)->toEqual(100.0);
 });
 
 it('does not create duplicate tickets if one is already open', function () {
-    MachineMaintenanceTicket::create([
+    MachineMaintenanceTicket::factory()->create([
         'machine_id' => $this->machine->id,
-        'type' => 'preventive',
-        'status' => 'open',
+        'type' => MachineMaintenanceTicketType::PREVENTIVE,
+        'status' => MachineMaintenanceTicketStatus::OPEN,
         'description' => 'Existing ticket',
     ]);
 
