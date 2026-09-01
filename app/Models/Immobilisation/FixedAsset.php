@@ -4,6 +4,7 @@ namespace App\Models\Immobilisation;
 
 use App\Enums\Immobilisation\AssetStatus;
 use App\Enums\Immobilisation\DepreciationMethod;
+use App\Enums\Immobilisation\GrantMethod;
 use App\Enums\Locations\RentalBillingPeriod;
 use App\Models\Chantiers\Chantier;
 use App\Models\Chantiers\ChantierEquipmentTracking;
@@ -49,6 +50,7 @@ class FixedAsset extends Model implements HasMedia
         'vgp_frequency_months',
         'grant_amount',
         'grant_name',
+        'grant_method',
     ];
 
     protected function casts(): array
@@ -59,6 +61,7 @@ class FixedAsset extends Model implements HasMedia
             'purchase_price' => 'decimal:2',
             'salvage_value' => 'decimal:2',
             'depreciation_method' => DepreciationMethod::class,
+            'grant_method' => GrantMethod::class,
             'status' => AssetStatus::class,
             'daily_rate' => 'decimal:2',
             'internal_rental_period' => RentalBillingPeriod::class,
