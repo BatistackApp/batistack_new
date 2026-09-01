@@ -5,6 +5,7 @@ namespace App\Models\RH;
 use App\Enums\Core\SignatureStatus;
 use App\Enums\RH\ContractType;
 use App\Enums\RH\EmployeeCategory;
+use App\Enums\RH\TerminationType;
 use App\Models\Core\Signature;
 use App\Models\Paie\PayrollContributionProfile;
 use App\Observers\RH\ContractObserver;
@@ -35,6 +36,11 @@ class Contract extends Model implements HasMedia
         'docuseal_submission_id',
         'signature_status',
         'payroll_contribution_profile_id',
+        'termination_type',
+        'termination_reason',
+        'terminated_at',
+        'notice_end_date',
+        'termination_amount',
     ];
 
     public function employee(): BelongsTo
@@ -57,10 +63,14 @@ class Contract extends Model implements HasMedia
         return [
             'type' => ContractType::class,
             'category' => EmployeeCategory::class,
+            'termination_type' => TerminationType::class,
             'start_date' => 'date',
             'end_date' => 'date',
             'hourly_rate' => 'decimal:4',
             'trial_end_date' => 'date',
+            'terminated_at' => 'date',
+            'notice_end_date' => 'date',
+            'termination_amount' => 'decimal:2',
             'signature_status' => SignatureStatus::class,
         ];
     }
@@ -69,7 +79,13 @@ class Contract extends Model implements HasMedia
     public function scopeActive(Builder $query): Builder
     {
         return $query->where('start_date', '<=', now())
-            ->where(fn ($q) => $q->whereNull('end_date')->orWhere('end_date', '>=', now()));
+            ->where(fn ($q) => $q->whereNull('end_date')->orWhere('end_date', '>=', now()))
+            ->where(fn ($q) => $q->whereNull('notice_end_date')->orWhere('notice_end_date', '>=', now()));
+    }
+
+    public function scopeTerminated(Builder $query): Builder
+    {
+        return $query->whereNotNull('terminated_at');
     }
 
     public function scopeExpired(Builder $query): Builder
@@ -100,13 +116,21 @@ class Contract extends Model implements HasMedia
     // METHODS
     public function isActive(): bool
     {
-        return $this->start_date <= now()
-            && (! $this->end_date || $this->end_date >= now());
+        $today = now()->startOfDay();
+
+        return $this->start_date <= $today
+            && (! $this->end_date || $this->end_date >= $today)
+            && (! $this->notice_end_date || $this->notice_end_date >= $today);
     }
 
     public function isExpired(): bool
     {
         return $this->end_date && $this->end_date < now();
+    }
+
+    public function isTerminated(): bool
+    {
+        return ! is_null($this->terminated_at);
     }
 
     public function getDuration(): ?int
