@@ -11,6 +11,7 @@ use App\Models\RH\Contract;
 use App\Models\RH\Employee;
 use App\Models\RH\WageGarnishment;
 use App\Services\Core\DocumentService;
+use App\Services\RH\ContractTerminationService;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 
@@ -79,6 +80,87 @@ class RHDocumentService extends DocumentService
             'pdf.rh.cdd_termination',
             $data,
             'avenant_rupture_cdd_'.$contract->employee->registration_number,
+            'rh/ruptures'
+        );
+    }
+
+    /**
+     * Génère la lettre de licenciement CDI.
+     */
+    public function generateCdiTerminationLetter(Contract $contract, ContractTerminationService $terminationService): string
+    {
+        $contract->load(['employee']);
+
+        $noticeDays = $terminationService->getNoticeDays($contract, $contract->terminated_at);
+
+        $data = [
+            'company' => Company::first(),
+            'contract' => $contract,
+            'employee' => $contract->employee,
+            'noticeDays' => $noticeDays,
+            'title' => 'LETTRE DE LICENCIEMENT - '.$contract->employee->full_name,
+            'generated_at' => Carbon::now()->format('d/m/Y H:i'),
+        ];
+
+        return $this->generate(
+            'pdf.rh.cdi_termination_letter',
+            $data,
+            'lettre_licenciement_'.$contract->employee->registration_number,
+            'rh/ruptures'
+        );
+    }
+
+    /**
+     * Génère la convention de rupture conventionnelle.
+     */
+    public function generateRuptureConventionnelle(Contract $contract): string
+    {
+        $contract->load(['employee']);
+
+        $data = [
+            'company' => Company::first(),
+            'contract' => $contract,
+            'employee' => $contract->employee,
+            'title' => 'CONVENTION RUPTURE CONVENTIONNELLE - '.$contract->employee->full_name,
+            'generated_at' => Carbon::now()->format('d/m/Y H:i'),
+        ];
+
+        return $this->generate(
+            'pdf.rh.rupture_conventionnelle',
+            $data,
+            'rupture_conventionnelle_'.$contract->employee->registration_number,
+            'rh/ruptures'
+        );
+    }
+
+    /**
+     * Génère le reçu pour solde de tout compte.
+     */
+    public function generateSoldeDeToutCompte(Contract $contract): string
+    {
+        $contract->load(['employee']);
+
+        $monthlyGross = $contract->getSalary();
+        $noticeDays = $contract->start_date->diffInDays($contract->notice_end_date ?? now());
+        $noticeMonths = max(1, (int) ceil($noticeDays / 30));
+        $noticeCompensation = $monthlyGross * $noticeMonths;
+        $total = ($contract->termination_amount ?? 0) + $noticeCompensation;
+
+        $data = [
+            'company' => Company::first(),
+            'contract' => $contract,
+            'employee' => $contract->employee,
+            'salary_amount' => $monthlyGross,
+            'notice_compensation' => $noticeCompensation,
+            'total' => $total,
+            'title' => 'SOLDE DE TOUT COMPTE - '.$contract->employee->full_name,
+            'generated_at' => Carbon::now()->format('d/m/Y H:i'),
+        ];
+
+        return $this->generate(
+            'pdf.rh.solde_de_tout_compte',
+            $data,
+            'solde_de_tout_compte_'.$contract->employee->registration_number,
             'rh/ruptures'
         );
     }

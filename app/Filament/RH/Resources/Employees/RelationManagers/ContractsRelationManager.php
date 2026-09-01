@@ -6,9 +6,11 @@ use App\Enums\Core\SignatureStatus;
 use App\Enums\Core\SignatureType;
 use App\Enums\RH\ContractType;
 use App\Enums\RH\EmployeeCategory;
+use App\Enums\RH\TerminationType;
 use App\Models\RH\Contract;
 use App\Services\Core\DocumentService;
 use App\Services\Core\SignatureService;
+use App\Services\RH\ContractTerminationService;
 use App\Services\RH\RHDocumentService;
 use BackedEnum;
 use Filament\Actions\Action;
@@ -132,9 +134,17 @@ class ContractsRelationManager extends RelationManager
                 TextColumn::make('signature_status')
                     ->label('Signature')
                     ->badge(),
+                TextColumn::make('terminated_at')
+                    ->label('Rompus le')
+                    ->date('d/m/Y')
+                    ->placeholder('—')
+                    ->color('danger'),
             ])
             ->filters([
-                //
+                Filament\Tables\Filters\Filter::make('terminated')
+                    ->label('Rompus')
+                    ->query(fn ($query) => $query->whereNotNull('terminated_at'))
+                    ->toggle(),
             ])
             ->headerActions([
                 CreateAction::make()->label('Nouveau contrat'),
@@ -202,6 +212,51 @@ class ContractsRelationManager extends RelationManager
                                 ->required(),
                         ])
                         ->action(fn (Contract $record, array $data, RHDocumentService $service) => $service->download($service->generateCddEarlyTermination($record, Carbon::parse($data['termination_date'])))),
+                    Action::make('cdi_terminate')
+                        ->label('Rupture CDI')
+                        ->icon(Phosphor::FileX)
+                        ->color('danger')
+                        ->visible(fn (Contract $record) => $record->type === ContractType::CDI && $record->isActive())
+                        ->form(fn (Action $action) => [
+                            Select::make('termination_type')
+                                ->label('Type de rupture')
+                                ->options(TerminationType::class)
+                                ->required()
+                                ->native(false),
+                            DatePicker::make('terminated_at')
+                                ->label('Date de notification')
+                                ->required()
+                                ->default(now())
+                                ->native(false),
+                            TextInput::make('termination_reason')
+                                ->label('Motif')
+                                ->required(),
+                            TextInput::make('termination_amount')
+                                ->label('Indemnité (€)')
+                                ->numeric()
+                                ->prefix('€')
+                                ->minValue(0),
+                        ])
+                        ->requiresConfirmation()
+                        ->modalHeading('Rompre le CDI')
+                        ->modalDescription('Cette action va rompre le contrat et générer les documents de fin de contrat.')
+                        ->action(function (Contract $record, array $data, ContractTerminationService $terminationService, RHDocumentService $documentService) {
+                            $record = $terminationService->terminate(
+                                contract: $record,
+                                type: TerminationType::from($data['termination_type']),
+                                reason: $data['termination_reason'],
+                                terminatedAt: Carbon::parse($data['terminated_at']),
+                                amount: $data['termination_amount'] ?? null,
+                            );
+
+                            $documentService->download($documentService->generateCdiTerminationLetter($record, $terminationService));
+
+                            Notification::make()
+                                ->title('CDI rompu')
+                                ->body("Le contrat de {$record->job_title} a été rompu le {$record->terminated_at->format('d/m/Y')}.")
+                                ->success()
+                                ->send();
+                        }),
                 ])->label('Documents de rupture')->icon(Phosphor::Files),
             ]);
     }
