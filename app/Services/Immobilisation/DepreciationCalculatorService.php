@@ -3,6 +3,7 @@
 namespace App\Services\Immobilisation;
 
 use App\Enums\Immobilisation\DepreciationMethod;
+use App\Enums\Immobilisation\GrantMethod;
 use App\Models\Immobilisation\FixedAsset;
 use Carbon\Carbon;
 
@@ -18,6 +19,13 @@ class DepreciationCalculatorService
         }
 
         $baseValue = $asset->purchase_price - $asset->salvage_value;
+
+        // DEDUCT_FROM_BASE: subtract grant from depreciable base
+        $grantAmount = $asset->grant_amount ?? 0;
+        if ($grantAmount > 0 && ($asset->grant_method ?? null) === GrantMethod::DEDUCT_FROM_BASE) {
+            $baseValue = max(0, $baseValue - $grantAmount);
+        }
+
         if ($baseValue <= 0) {
             return [];
         }
@@ -29,7 +37,17 @@ class DepreciationCalculatorService
             $schedule = $this->calculateDecliningBalance($asset, $baseValue);
         }
 
-        return $this->applyGrantToSchedule($schedule, $asset, $baseValue);
+        // PROPORTIONAL_REVERSAL: apply grant reversal (or no grant at all)
+        if ($grantAmount > 0 && ($asset->grant_method ?? null) !== GrantMethod::DEDUCT_FROM_BASE) {
+            return $this->applyGrantToSchedule($schedule, $asset, $baseValue);
+        }
+
+        foreach ($schedule as &$period) {
+            $period['grant_reversal_amount'] = 0.00;
+            $period['grant_remaining_amount'] = 0.00;
+        }
+
+        return $schedule;
     }
 
     private function applyGrantToSchedule(array $schedule, FixedAsset $asset, float $baseValue): array
@@ -191,6 +209,14 @@ class DepreciationCalculatorService
     public function recalculateSchedule(FixedAsset $asset): array
     {
         $baseValue = $asset->purchase_price - $asset->salvage_value;
+
+        // DEDUCT_FROM_BASE: subtract grant from depreciable base
+        $grantAmount = $asset->grant_amount ?? 0;
+        $isDeductFromBase = $grantAmount > 0 && ($asset->grant_method ?? null) === GrantMethod::DEDUCT_FROM_BASE;
+        if ($isDeductFromBase) {
+            $baseValue = max(0, $baseValue - $grantAmount);
+        }
+
         if ($baseValue <= 0) {
             return [];
         }
@@ -243,11 +269,11 @@ class DepreciationCalculatorService
 
         // For grant reversal during recalculation:
         // The remaining grant should also be distributed proportionally
-        $grantAmount = $asset->grant_amount ?? 0;
+        // (only for PROPORTIONAL_REVERSAL method)
         $passedGrantReversal = 0;
         $remainingGrant = 0;
 
-        if ($grantAmount > 0) {
+        if ($grantAmount > 0 && ! $isDeductFromBase) {
             $passedGrantReversal = $asset->depreciations()->where('is_passed', true)->sum('grant_reversal_amount');
             $remainingGrant = $grantAmount - $passedGrantReversal;
         }
@@ -271,7 +297,7 @@ class DepreciationCalculatorService
 
             $runningVnc -= $amount;
 
-            if ($grantAmount > 0) {
+            if ($grantAmount > 0 && ! $isDeductFromBase) {
                 $grantReversal = min($grantReversal, $remainingGrant);
                 $remainingGrant -= $grantReversal;
             } else {
