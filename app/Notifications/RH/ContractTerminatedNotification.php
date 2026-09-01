@@ -2,6 +2,7 @@
 
 namespace App\Notifications\RH;
 
+use App\Filament\RH\Resources\Employees\EmployeeResource;
 use App\Models\RH\Contract;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification as FilamentNotification;
@@ -45,7 +46,7 @@ class ContractTerminatedNotification extends Notification
             'body' => 'Votre contrat a été terminé le '.$this->contract->notice_end_date->format('d/m/Y').'.',
             'icon' => Phosphor::FileX,
             'color' => 'danger',
-            'url' => '/rh/employees/'.$this->contract->employee_id.'/edit',
+            'url' => EmployeeResource::getUrl('edit', ['record' => $this->contract->employee_id]),
         ];
     }
 
@@ -61,7 +62,9 @@ class ContractTerminatedNotification extends Notification
             ->actions([
                 Action::make('view')
                     ->label('Voir le contrat')
-                    ->url('/rh/employees/'.$this->contract->employee_id.'/edit?activeTab=contracts'),
+                    ->url(EmployeeResource::getUrl('edit', [
+                        'record' => $this->contract->employee_id,
+                    ])),
             ]);
     }
 }

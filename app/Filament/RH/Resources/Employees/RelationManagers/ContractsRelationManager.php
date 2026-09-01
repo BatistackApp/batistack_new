@@ -249,12 +249,23 @@ class ContractsRelationManager extends RelationManager
                                 amount: $data['termination_amount'] ?? null,
                             );
 
-                            $documentService->download($documentService->generateCdiTerminationLetter($record, $terminationService));
+                            $letterPath = $documentService->generateCdiTerminationLetter($record, $terminationService);
+                            $soldePath = $documentService->generateSoldeDeToutCompte($record);
 
                             Notification::make()
                                 ->title('CDI rompu')
-                                ->body("Le contrat de {$record->job_title} a été rompu le {$record->terminated_at->format('d/m/Y')}.")
+                                ->body("Le contrat de {$record->job_title} a été rompu le {$record->terminated_at->format('d/m/Y')}. Préavis jusqu'au {$record->notice_end_date->format('d/m/Y')}.")
                                 ->success()
+                                ->actions([
+                                    Action::make('download_letter')
+                                        ->label('Lettre de licenciement')
+                                        ->icon(Phosphor::DownloadSimple)
+                                        ->action(fn () => $documentService->download($letterPath)),
+                                    Action::make('download_solde')
+                                        ->label('Solde de tout compte')
+                                        ->icon(Phosphor::DownloadSimple)
+                                        ->action(fn () => $documentService->download($soldePath)),
+                                ])
                                 ->send();
                         }),
                 ])->label('Documents de rupture')->icon(Phosphor::Files),

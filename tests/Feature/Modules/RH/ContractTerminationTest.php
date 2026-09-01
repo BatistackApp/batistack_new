@@ -45,7 +45,6 @@ it('terminates a CDI contract and sets termination fields', function () {
     expect($terminated->termination_reason)->toBe('Faute professionnelle');
     expect($terminated->notice_end_date)->not->toBeNull();
     expect($terminated->end_date)->not->toBeNull();
-    expect($terminated->isActive())->toBeFalse();
     expect($terminated->isTerminated())->toBeTrue();
 });
 
@@ -63,11 +62,29 @@ it('calculates notice period for < 6 months tenure', function () {
     $service = app(ContractTerminationService::class);
     $noticeEndDate = $service->calculateNoticeEndDate($contract, now());
 
-    // < 6 months: 2 days notice
+    // < 6 months: 2 days notice (prévenance légale)
     expect($noticeEndDate->format('d/m/Y'))->toBe(now()->copy()->addDays(2)->format('d/m/Y'));
 });
 
-it('calculates notice period for 2-5 years tenure', function () {
+it('calculates notice period for 6-24 months tenure (1 mois)', function () {
+    $user = User::factory()->create();
+    $employee = Employee::factory()->create(['user_id' => $user->id]);
+
+    $contract = Contract::factory()->create([
+        'employee_id' => $employee->id,
+        'type' => ContractType::CDI,
+        'start_date' => now()->subMonths(12),
+        'hourly_rate' => 20,
+    ]);
+
+    $service = app(ContractTerminationService::class);
+    $noticeEndDate = $service->calculateNoticeEndDate($contract, now());
+
+    // 6-24 months: 1 mois calendar (date à date)
+    expect($noticeEndDate->format('d/m/Y'))->toBe(now()->copy()->addMonthNoOverflow()->format('d/m/Y'));
+});
+
+it('calculates notice period for 2-5 years tenure (2 mois)', function () {
     $user = User::factory()->create();
     $employee = Employee::factory()->create(['user_id' => $user->id]);
 
@@ -81,10 +98,11 @@ it('calculates notice period for 2-5 years tenure', function () {
     $service = app(ContractTerminationService::class);
     $noticeEndDate = $service->calculateNoticeEndDate($contract, now());
 
-    expect($noticeEndDate->format('d/m/Y'))->toBe(now()->copy()->addDays(60)->format('d/m/Y'));
+    // 2-5 ans: 2 mois calendar
+    expect($noticeEndDate->format('d/m/Y'))->toBe(now()->copy()->addMonthsNoOverflow(2)->format('d/m/Y'));
 });
 
-it('calculates notice period for 5-10 years tenure', function () {
+it('calculates notice period for 5-10 years tenure (4 mois)', function () {
     $user = User::factory()->create();
     $employee = Employee::factory()->create(['user_id' => $user->id]);
 
@@ -98,10 +116,11 @@ it('calculates notice period for 5-10 years tenure', function () {
     $service = app(ContractTerminationService::class);
     $noticeEndDate = $service->calculateNoticeEndDate($contract, now());
 
-    expect($noticeEndDate->format('d/m/Y'))->toBe(now()->copy()->addDays(120)->format('d/m/Y'));
+    // 5-10 ans: 4 mois calendar
+    expect($noticeEndDate->format('d/m/Y'))->toBe(now()->copy()->addMonthsNoOverflow(4)->format('d/m/Y'));
 });
 
-it('calculates notice period for > 10 years tenure', function () {
+it('calculates notice period for > 10 years tenure (8 mois)', function () {
     $user = User::factory()->create();
     $employee = Employee::factory()->create(['user_id' => $user->id]);
 
@@ -115,10 +134,11 @@ it('calculates notice period for > 10 years tenure', function () {
     $service = app(ContractTerminationService::class);
     $noticeEndDate = $service->calculateNoticeEndDate($contract, now());
 
-    expect($noticeEndDate->format('d/m/Y'))->toBe(now()->copy()->addDays(240)->format('d/m/Y'));
+    // > 10 ans: 8 mois calendar
+    expect($noticeEndDate->format('d/m/Y'))->toBe(now()->copy()->addMonthsNoOverflow(8)->format('d/m/Y'));
 });
 
-it('scope active excludes terminated contracts', function () {
+it('scope active excludes contracts with past notice_end_date', function () {
     $user = User::factory()->create();
     $employee = Employee::factory()->create(['user_id' => $user->id]);
 
@@ -127,12 +147,31 @@ it('scope active excludes terminated contracts', function () {
         'type' => ContractType::CDI,
         'start_date' => now()->subYear(),
         'hourly_rate' => 20,
-        'terminated_at' => now()->subWeek(),
+        'terminated_at' => now()->subMonth(),
+        'notice_end_date' => now()->subWeek(),
     ]);
 
     $activeContracts = $employee->contracts()->active()->get();
 
     expect($activeContracts->isEmpty())->toBeTrue();
+});
+
+it('scope active includes terminated contracts during notice period', function () {
+    $user = User::factory()->create();
+    $employee = Employee::factory()->create(['user_id' => $user->id]);
+
+    $contract = Contract::factory()->create([
+        'employee_id' => $employee->id,
+        'type' => ContractType::CDI,
+        'start_date' => now()->subYear(),
+        'hourly_rate' => 20,
+        'terminated_at' => now(),
+        'notice_end_date' => now()->addMonth(),
+    ]);
+
+    $activeContracts = $employee->contracts()->active()->get();
+
+    expect($activeContracts->isNotEmpty())->toBeTrue();
 });
 
 it('scope terminated only returns terminated contracts', function () {
@@ -161,7 +200,7 @@ it('scope terminated only returns terminated contracts', function () {
     expect($terminatedContracts->first()->id)->toBe($terminatedContract->id);
 });
 
-it('termination removes user role', function () {
+it('termination keeps role during notice period', function () {
     $roleName = 'Conducteur de travaux';
     Role::create(['name' => $roleName, 'guard_name' => 'web']);
 
@@ -186,7 +225,8 @@ it('termination removes user role', function () {
         reason: 'Démission volontaire',
     );
 
-    expect($user->fresh()->hasRole($roleName))->toBeFalse();
+    // Role is kept during notice period (notice_end_date is in the future)
+    expect($user->fresh()->hasRole($roleName))->toBeTrue();
 });
 
 it('can terminate with rupture conventionnelle type', function () {
@@ -209,7 +249,7 @@ it('can terminate with rupture conventionnelle type', function () {
 
     expect($terminated->termination_type)->toBe(TerminationType::RUPTURE_CONVENTIONNELLE);
     expect($terminated->termination_amount)->toBe('5000.00');
-    expect($terminated->isActive())->toBeFalse();
+    expect($terminated->isTerminated())->toBeTrue();
 });
 
 it('can terminate with retraite type', function () {
@@ -233,7 +273,7 @@ it('can terminate with retraite type', function () {
     expect($terminated->isTerminated())->toBeTrue();
 });
 
-it('returns correct notice days count', function () {
+it('returns correct notice months', function () {
     $user = User::factory()->create();
     $employee = Employee::factory()->create(['user_id' => $user->id]);
 
@@ -245,7 +285,13 @@ it('returns correct notice days count', function () {
     ]);
 
     $service = app(ContractTerminationService::class);
-    $days = $service->getNoticeDays($contract, now());
+    $months = $service->getNoticeMonths($contract, now());
 
-    expect($days)->toBe(60);
+    expect($months)->toBe(2);
+});
+
+it('getArticle returns correct prefix', function () {
+    expect(TerminationType::LICENCIEMENT->getArticle())->toBe('votre ');
+    expect(TerminationType::RETRAITE->getArticle())->toBe('votre départ à la ');
+    expect(TerminationType::DEMISSION->getArticle())->toBe('votre ');
 });

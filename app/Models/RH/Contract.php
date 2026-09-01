@@ -80,7 +80,7 @@ class Contract extends Model implements HasMedia
     {
         return $query->where('start_date', '<=', now())
             ->where(fn ($q) => $q->whereNull('end_date')->orWhere('end_date', '>=', now()))
-            ->whereNull('terminated_at');
+            ->where(fn ($q) => $q->whereNull('notice_end_date')->orWhere('notice_end_date', '>=', now()));
     }
 
     public function scopeTerminated(Builder $query): Builder
@@ -116,9 +116,11 @@ class Contract extends Model implements HasMedia
     // METHODS
     public function isActive(): bool
     {
-        return $this->start_date <= now()
-            && (! $this->end_date || $this->end_date >= now())
-            && is_null($this->terminated_at);
+        $today = now()->startOfDay();
+
+        return $this->start_date <= $today
+            && (! $this->end_date || $this->end_date >= $today)
+            && (! $this->notice_end_date || $this->notice_end_date >= $today);
     }
 
     public function isExpired(): bool

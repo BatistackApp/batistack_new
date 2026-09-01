@@ -141,9 +141,14 @@ class RHDocumentService extends DocumentService
         $contract->load(['employee']);
 
         $monthlyGross = $contract->getSalary();
-        $noticeDays = $contract->start_date->diffInDays($contract->notice_end_date ?? now());
-        $noticeMonths = max(1, (int) ceil($noticeDays / 30));
-        $noticeCompensation = $monthlyGross * $noticeMonths;
+
+        // Calculate notice compensation using actual dates
+        $terminatedAt = $contract->terminated_at ?? now();
+        $noticeEndDate = $contract->notice_end_date ?? now();
+        $noticeDays = (int) $terminatedAt->diffInDays($noticeEndDate);
+        // Daily rate = monthly salary / 26 (working days per month in France)
+        $dailyRate = $monthlyGross / 26;
+        $noticeCompensation = round($dailyRate * $noticeDays, 2);
         $total = ($contract->termination_amount ?? 0) + $noticeCompensation;
 
         $data = [

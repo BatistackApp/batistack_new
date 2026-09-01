@@ -41,7 +41,7 @@ class ContractTerminationService
      *
      * Legal notice periods (Art. L1234-1 du Code du travail):
      *   < 6 mois : 48h (we use 2 days min)
-     *   6 mois – 2 ans : 1 mois
+     *   6 mois – 2 ans : 1 mois (date à date)
      *   2 ans – 5 ans : 2 mois
      *   5 ans – 10 ans : 4 mois
      *   > 10 ans : 8 mois
@@ -51,31 +51,40 @@ class ContractTerminationService
         $terminatedAt ??= now();
         $tenureMonths = $contract->start_date->diffInMonths($terminatedAt);
 
-        $noticeDays = match (true) {
-            $tenureMonths < 6 => 2,
-            $tenureMonths < 24 => 30,
-            $tenureMonths < 60 => 60,
-            $tenureMonths < 120 => 120,
-            default => 240,
+        return match (true) {
+            $tenureMonths < 6 => $terminatedAt->copy()->addDays(2),
+            $tenureMonths < 24 => $terminatedAt->copy()->addMonthNoOverflow(),
+            $tenureMonths < 60 => $terminatedAt->copy()->addMonthsNoOverflow(2),
+            $tenureMonths < 120 => $terminatedAt->copy()->addMonthsNoOverflow(4),
+            default => $terminatedAt->copy()->addMonthsNoOverflow(8),
         };
-
-        return $terminatedAt->copy()->addDays($noticeDays);
     }
 
     /**
-     * Get the notice period in days.
+     * Get the notice period in calendar days.
      */
     public function getNoticeDays(Contract $contract, $terminatedAt = null): int
+    {
+        $terminatedAt ??= now();
+        $noticeEndDate = $this->calculateNoticeEndDate($contract, $terminatedAt);
+
+        return (int) $terminatedAt->diffInDays($noticeEndDate, false);
+    }
+
+    /**
+     * Get the notice period in months.
+     */
+    public function getNoticeMonths(Contract $contract, $terminatedAt = null): int
     {
         $terminatedAt ??= now();
         $tenureMonths = $contract->start_date->diffInMonths($terminatedAt);
 
         return match (true) {
-            $tenureMonths < 6 => 2,
-            $tenureMonths < 24 => 30,
-            $tenureMonths < 60 => 60,
-            $tenureMonths < 120 => 120,
-            default => 240,
+            $tenureMonths < 6 => 0,
+            $tenureMonths < 24 => 1,
+            $tenureMonths < 60 => 2,
+            $tenureMonths < 120 => 4,
+            default => 8,
         };
     }
 }

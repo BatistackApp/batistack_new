@@ -53,12 +53,8 @@ class ContractObserver
             }
         }
 
-        // When terminated_at is set, remove the role (contract is no longer active)
-        if ($contract->isDirty('terminated_at') && $contract->terminated_at && $contract->employee?->user) {
-            if ($contract->job_title && Role::where('name', $contract->job_title)->exists()) {
-                $contract->employee->user->removeRole($contract->job_title);
-            }
-        }
+        // Don't remove role on terminated_at — employee keeps access during notice period.
+        // Role removal is handled by syncUserRole() based on isActive() (which now checks terminated_at).
 
         if ($contract->isDirty('job_title') || $contract->isDirty('start_date') || $contract->isDirty('end_date') || $contract->isDirty('employee_id')) {
             if ($contract->isDirty('job_title') && $contract->getOriginal('job_title')) {

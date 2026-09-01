@@ -34,4 +34,15 @@ enum TerminationType: string implements HasColor, HasLabel
             self::INAPTITUDE => 'danger',
         };
     }
+
+    /**
+     * Get the article prefix for PDF templates (gender-neutral).
+     */
+    public function getArticle(): string
+    {
+        return match ($this) {
+            self::RETRAITE => 'votre départ à la ',
+            default => 'votre ',
+        };
+    }
 }
