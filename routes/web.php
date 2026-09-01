@@ -73,7 +73,7 @@ Route::get('/health', function () {
     }
 })->name('health');
 
-Route::get('/pass-securite/{uuid}', [PublicSafetyPassportController::class, 'show'])->name('public.safety-check');
+Route::get('/pass-securite/{uuid}', PublicSafetyPassportController::class)->name('public.safety-check');
 
 Route::get('/kiosk', BiometricClock::class)->name('kiosk.clock');
 Route::get('/kiosk/enroll', BiometricEnrollment::class)->name('kiosk.enroll');
