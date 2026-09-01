@@ -26,6 +26,7 @@ use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\Filter;
 use Filament\Tables\Table;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Gate;
@@ -141,7 +142,7 @@ class ContractsRelationManager extends RelationManager
                     ->color('danger'),
             ])
             ->filters([
-                Filament\Tables\Filters\Filter::make('terminated')
+                Filter::make('terminated')
                     ->label('Rompus')
                     ->query(fn ($query) => $query->whereNotNull('terminated_at'))
                     ->toggle(),
@@ -150,51 +151,51 @@ class ContractsRelationManager extends RelationManager
                 CreateAction::make()->label('Nouveau contrat'),
             ])
             ->recordActions([
-                EditAction::make(),
-                DeleteAction::make(),
-                Action::make('print_contract')
-                    ->label('Imprimer')
-                    ->icon(Phosphor::Printer)
-                    ->action(function (Contract $record, RHDocumentService $service) {
-                        $relativePath = 'documents/rh/contrat_'.$record->employee->registration_number.'.pdf';
-                        if (! Storage::disk(DocumentService::getDisk())->exists($relativePath)) {
-                            $relativePath = $service->generateContract($record);
-                        }
-
-                        return $service->download($relativePath);
-                    }),
-                Action::make('request_signature')
-                    ->icon(Phosphor::PenNib)
-                    ->color('info')
-                    ->visible(fn (Contract $record) => $record->signature_status === SignatureStatus::PENDING)
-                    ->action(function (Contract $record, SignatureService $signatureService, RHDocumentService $documentService) {
-                        $email = $record->employee->email;
-                        $name = $record->employee->full_name;
-                        $relativePath = 'documents/rh/contrat_'.$record->employee->registration_number.'.pdf';
-
-                        if (! $email) {
-                            Notification::make()->title('Erreur : Le salarié n\'a pas d\'adresse email')->danger()->send();
-
-                            return;
-                        }
-
-                        $disk = DocumentService::getDisk();
-                        if (! Storage::disk($disk)->exists($relativePath)) {
-                            $relativePath = $documentService->generateContract($record);
-                        }
-
-                        $signatureService->requestSignature(
-                            model: $record,
-                            type: SignatureType::AUTOGRAPH,
-                            email: $email,
-                            name: $name,
-                            documentPath: $relativePath,
-                        );
-
-                        Notification::make()->title('Demande de signature envoyée par email')->success()->send();
-                    })
-                    ->label('Demander Signature'),
                 ActionGroup::make([
+                    EditAction::make(),
+                    DeleteAction::make(),
+                    Action::make('print_contract')
+                        ->label('Imprimer')
+                        ->icon(Phosphor::Printer)
+                        ->action(function (Contract $record, RHDocumentService $service) {
+                            $relativePath = 'documents/rh/contrat_'.$record->employee->registration_number.'.pdf';
+                            if (! Storage::disk(DocumentService::getDisk())->exists($relativePath)) {
+                                $relativePath = $service->generateContract($record);
+                            }
+
+                            return $service->download($relativePath);
+                        }),
+                    Action::make('request_signature')
+                        ->icon(Phosphor::PenNib)
+                        ->color('info')
+                        ->label('Demander Signature')
+                        ->visible(fn (Contract $record) => $record->signature_status === SignatureStatus::PENDING)
+                        ->action(function (Contract $record, SignatureService $signatureService, RHDocumentService $documentService) {
+                            $email = $record->employee->email;
+                            $name = $record->employee->full_name;
+                            $relativePath = 'documents/rh/contrat_'.$record->employee->registration_number.'.pdf';
+
+                            if (! $email) {
+                                Notification::make()->title('Erreur : Le salarié n\'a pas d\'adresse email')->danger()->send();
+
+                                return;
+                            }
+
+                            $disk = DocumentService::getDisk();
+                            if (! Storage::disk($disk)->exists($relativePath)) {
+                                $relativePath = $documentService->generateContract($record);
+                            }
+
+                            $signatureService->requestSignature(
+                                model: $record,
+                                type: SignatureType::AUTOGRAPH,
+                                email: $email,
+                                name: $name,
+                                documentPath: $relativePath,
+                            );
+
+                            Notification::make()->title('Demande de signature envoyée par email')->success()->send();
+                        }),
                     Action::make('trial_end')
                         ->label('Rupture Période d\'Essai')
                         ->icon(Phosphor::FileMinus)
@@ -212,6 +213,12 @@ class ContractsRelationManager extends RelationManager
                                 ->required(),
                         ])
                         ->action(fn (Contract $record, array $data, RHDocumentService $service) => $service->download($service->generateCddEarlyTermination($record, Carbon::parse($data['termination_date'])))),
+                    Action::make('print_solde_compte')
+                        ->label('Solde de tout compte')
+                        ->icon(Phosphor::DownloadSimple)
+                        ->color('info')
+                        ->visible(fn (Contract $record) => $record->isTerminated())
+                        ->action(fn (Contract $record, RHDocumentService $service) => $service->download($service->generateSoldeDeToutCompte($record))),
                     Action::make('cdi_terminate')
                         ->label('Rupture CDI')
                         ->icon(Phosphor::FileX)
@@ -241,34 +248,27 @@ class ContractsRelationManager extends RelationManager
                         ->modalHeading('Rompre le CDI')
                         ->modalDescription('Cette action va rompre le contrat et générer les documents de fin de contrat.')
                         ->action(function (Contract $record, array $data, ContractTerminationService $terminationService, RHDocumentService $documentService) {
+                            $type = $data['termination_type'] instanceof TerminationType ? $data['termination_type'] : TerminationType::from($data['termination_type']);
+
                             $record = $terminationService->terminate(
                                 contract: $record,
-                                type: TerminationType::from($data['termination_type']),
+                                type: $type,
                                 reason: $data['termination_reason'],
                                 terminatedAt: Carbon::parse($data['terminated_at']),
                                 amount: $data['termination_amount'] ?? null,
                             );
 
-                            $letterPath = $documentService->generateCdiTerminationLetter($record, $terminationService);
-                            $soldePath = $documentService->generateSoldeDeToutCompte($record);
+                            $documentPath = $documentService->generateTerminationDocument($record, $terminationService);
 
                             Notification::make()
-                                ->title('CDI rompu')
-                                ->body("Le contrat de {$record->job_title} a été rompu le {$record->terminated_at->format('d/m/Y')}. Préavis jusqu'au {$record->notice_end_date->format('d/m/Y')}.")
+                                ->title('Contrat rompu')
+                                ->body("Le contrat de {$record->job_title} a été rompu ({$type->getLabel()}). Préavis jusqu'au {$record->notice_end_date->format('d/m/Y')}.")
                                 ->success()
-                                ->actions([
-                                    Action::make('download_letter')
-                                        ->label('Lettre de licenciement')
-                                        ->icon(Phosphor::DownloadSimple)
-                                        ->action(fn () => $documentService->download($letterPath)),
-                                    Action::make('download_solde')
-                                        ->label('Solde de tout compte')
-                                        ->icon(Phosphor::DownloadSimple)
-                                        ->action(fn () => $documentService->download($soldePath)),
-                                ])
                                 ->send();
+
+                            return $documentService->download($documentPath);
                         }),
-                ])->label('Documents de rupture')->icon(Phosphor::Files),
+                ]),
             ]);
     }
 

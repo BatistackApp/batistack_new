@@ -3,6 +3,7 @@
 namespace App\Services\RH;
 
 use App\Enums\Core\SignatureStatus;
+use App\Enums\RH\TerminationType;
 use App\Enums\RH\TimeEntryStatus;
 use App\Models\Core\Company;
 use App\Models\Flottes\TrafficFine;
@@ -108,6 +109,42 @@ class RHDocumentService extends DocumentService
             'lettre_licenciement_'.$contract->employee->registration_number,
             'rh/ruptures'
         );
+    }
+
+    /**
+     * Génère l'accusé de réception de démission.
+     */
+    public function generateResignationLetter(Contract $contract): string
+    {
+        $contract->load(['employee']);
+
+        $data = [
+            'company' => Company::first(),
+            'contract' => $contract,
+            'employee' => $contract->employee,
+            'title' => 'ACCUSÉ DE RÉCEPTION DÉMISSION - '.$contract->employee->full_name,
+            'generated_at' => Carbon::now()->format('d/m/Y H:i'),
+        ];
+
+        return $this->generate(
+            'pdf.rh.resignation_letter',
+            $data,
+            'accuse_demission_'.$contract->employee->registration_number,
+            'rh/ruptures'
+        );
+    }
+
+    /**
+     * Génère le document de fin de contrat adapté au type de rupture.
+     */
+    public function generateTerminationDocument(Contract $contract, ContractTerminationService $terminationService): string
+    {
+        return match ($contract->termination_type) {
+            TerminationType::LICENCIEMENT, TerminationType::INAPTITUDE => $this->generateCdiTerminationLetter($contract, $terminationService),
+            TerminationType::DEMISSION => $this->generateResignationLetter($contract),
+            TerminationType::RUPTURE_CONVENTIONNELLE => $this->generateRuptureConventionnelle($contract),
+            TerminationType::RETRAITE => $this->generateCdiTerminationLetter($contract, $terminationService),
+        };
     }
 
     /**
