@@ -237,7 +237,12 @@
                         await this.queueOperation('UPDATE_GPS', {
                             intervention_id: intervention.id,
                             latitude: position.coords.latitude,
-                            longitude: position.coords.longitude
+                            longitude: position.coords.longitude,
+                            recorded_at: new Date().toISOString(),
+                            accuracy: position.coords.accuracy || null,
+                            altitude: position.coords.altitude || null,
+                            speed: position.coords.speed || null,
+                            heading: position.coords.heading || null,
                         });
                         alert('Position GPS enregistrée avec succès.');
                     }, () => {
