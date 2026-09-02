@@ -6,6 +6,7 @@ use App\Enums\Immobilisation\AssetStatus;
 use App\Enums\Immobilisation\DepreciationMethod;
 use App\Filament\Immobilisation\Resources\Immobilisation\AssetMaintenances\Schemas\AssetMaintenanceForm;
 use App\Filament\Immobilisation\Resources\Immobilisation\FixedAssets\FixedAssetResource;
+use App\Services\Immobilisation\AssetDisposalService;
 use App\Services\Immobilisation\AssetImpairmentService;
 use App\Services\Immobilisation\ImmobilisationDocumentService;
 use Filament\Actions\Action;
@@ -112,6 +113,30 @@ class ViewFixedAsset extends ViewRecord
                                 ->send();
                         })
                         ->visible(fn () => $this->getRecord()->status === AssetStatus::ACTIVE && $this->getRecord()->depreciation_method !== DepreciationMethod::NONE),
+                    Action::make('dispose')
+                        ->label('Céder / Rebut')
+                        ->icon('heroicon-o-archive-box-arrow-down')
+                        ->color('danger')
+                        ->requiresConfirmation()
+                        ->modalHeading('Sortie définitive de l\'actif')
+                        ->modalDescription('Cette action va définitivement sortir l\'actif du parc et générer les écritures comptables correspondantes.')
+                        ->schema([
+                            DatePicker::make('disposal_date')->label('Date de sortie')->required()->default(now()),
+                            TextInput::make('sale_price')->label('Prix de cession')->numeric()->default(0)->required()->prefix('€'),
+                            TextInput::make('reason')->label('Motif (Revente, Vol, Rebut)')->required(),
+                        ])
+                        ->action(function (array $data) {
+                            $record = $this->getRecord();
+                            $service = app(AssetDisposalService::class);
+                            $service->dispose($record, $data['disposal_date'], $data['sale_price'], $data['reason']);
+
+                            Notification::make()
+                                ->title('Actif cédé')
+                                ->body('L\'actif a été sorti du parc et les écritures comptables ont été générées.')
+                                ->success()
+                                ->send();
+                        })
+                        ->visible(fn () => $this->getRecord()->status !== AssetStatus::DISPOSED),
                 ]),
         ];
     }

@@ -7,6 +7,7 @@ use App\Filament\Immobilisation\Resources\Immobilisation\FixedAssets\Pages\EditF
 use App\Filament\Immobilisation\Resources\Immobilisation\FixedAssets\Pages\ListFixedAssets;
 use App\Filament\Immobilisation\Resources\Immobilisation\FixedAssets\Pages\ViewFixedAsset;
 use App\Filament\Immobilisation\Resources\Immobilisation\FixedAssets\RelationManagers\AssignmentsRelationManager;
+use App\Filament\Immobilisation\Resources\Immobilisation\FixedAssets\RelationManagers\DisposalRelationManager;
 use App\Filament\Immobilisation\Resources\Immobilisation\FixedAssets\RelationManagers\ImpairmentsRelationManager;
 use App\Filament\Immobilisation\Resources\Immobilisation\FixedAssets\RelationManagers\MaintenancesRelationManager;
 use App\Filament\Immobilisation\Resources\Immobilisation\FixedAssets\Schemas\FixedAssetForm;
@@ -56,6 +57,7 @@ class FixedAssetResource extends Resource
             AssignmentsRelationManager::class,
             MaintenancesRelationManager::class,
             ImpairmentsRelationManager::class,
+            DisposalRelationManager::class,
         ];
     }
 
