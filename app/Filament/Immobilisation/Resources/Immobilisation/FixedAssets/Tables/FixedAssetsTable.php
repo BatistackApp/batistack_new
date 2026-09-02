@@ -250,6 +250,7 @@ class FixedAssetsTable
                                         $component->state(round($record->getVncAtDate(now()->format('Y-m-d')), 2));
                                     }
                                 })
+                                ->minValue(0)
                                 ->required()
                                 ->prefix('€'),
                             TextInput::make('reason')->label('Raison (Revente, Vol, Rebut)')->required(),

@@ -17,7 +17,7 @@ class ImmobilisationSeeder extends Seeder
             AssetCategory::create(['name' => 'Outillage', 'account_code' => '215400', 'compte_amortissement' => '281500', 'default_depreciation_years' => 3, 'default_method' => DepreciationMethod::LINEAR]),
             AssetCategory::create(['name' => 'Mobilier de bureau', 'account_code' => '218200', 'compte_amortissement' => '281800', 'default_depreciation_years' => 5, 'default_method' => DepreciationMethod::LINEAR]),
             AssetCategory::create(['name' => 'Matériel informatique', 'account_code' => '218300', 'compte_amortissement' => '281800', 'default_depreciation_years' => 3, 'default_method' => DepreciationMethod::LINEAR]),
-            AssetCategory::create(['name' => 'Véhicules', 'account_code' => '211000', 'compte_amortissement' => '281500', 'default_depreciation_years' => 4, 'default_method' => DepreciationMethod::LINEAR]),
+            AssetCategory::create(['name' => 'Véhicules', 'account_code' => '215100', 'compte_amortissement' => '281500', 'default_depreciation_years' => 4, 'default_method' => DepreciationMethod::LINEAR]),
         ];
 
         $assets = [

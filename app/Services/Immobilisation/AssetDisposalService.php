@@ -18,6 +18,10 @@ class AssetDisposalService
 
     public function dispose(FixedAsset $asset, string $disposalDate, float $salePrice, string $reason): AssetDisposal
     {
+        if ($salePrice < 0) {
+            throw new \InvalidArgumentException('Le prix de cession ne peut pas être négatif.');
+        }
+
         return DB::transaction(function () use ($asset, $disposalDate, $salePrice, $reason) {
             $lastPassedDepreciation = $asset->depreciations()
                 ->where('is_passed', true)
