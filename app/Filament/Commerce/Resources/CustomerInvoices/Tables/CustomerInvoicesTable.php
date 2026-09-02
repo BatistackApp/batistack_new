@@ -29,6 +29,7 @@ use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 
 class CustomerInvoicesTable
 {
@@ -227,13 +228,13 @@ class CustomerInvoicesTable
                         }),
                     DeleteBulkAction::make()
                         ->requiresConfirmation()
-                        ->action(function (\Illuminate\Database\Eloquent\Collection $records) {
-                            $nonDraft = $records->filter(fn ($r) => $r->status !== \App\Enums\Commerce\InvoiceStatus::DRAFT);
+                        ->action(function (Collection $records) {
+                            $nonDraft = $records->filter(fn ($r) => ! $r->canBeDeleted());
 
                             if ($nonDraft->isNotEmpty()) {
                                 Notification::make()
                                     ->title('Suppression impossible')
-                                    ->body($nonDraft->count() . ' facture(s) n\'est/sont plus en brouillon.')
+                                    ->body($nonDraft->count().' facture(s) n\'est/sont plus en brouillon.')
                                     ->danger()
                                     ->send();
 

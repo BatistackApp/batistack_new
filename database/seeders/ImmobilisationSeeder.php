@@ -12,6 +12,10 @@ class ImmobilisationSeeder extends Seeder
 {
     public function run(): void
     {
+        if (FixedAsset::count() > 0) {
+            return;
+        }
+
         $categories = [
             AssetCategory::create(['name' => 'Matériel de BTP', 'account_code' => '215100', 'compte_amortissement' => '281500', 'default_depreciation_years' => 5, 'default_method' => DepreciationMethod::LINEAR]),
             AssetCategory::create(['name' => 'Outillage', 'account_code' => '215400', 'compte_amortissement' => '281500', 'default_depreciation_years' => 3, 'default_method' => DepreciationMethod::LINEAR]),

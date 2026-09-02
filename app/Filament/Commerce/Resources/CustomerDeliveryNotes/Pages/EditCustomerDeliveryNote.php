@@ -15,7 +15,7 @@ class EditCustomerDeliveryNote extends EditRecord
         return [
             DeleteAction::make()
                 ->requiresConfirmation()
-                ->visible(fn () => $this->record->status === \App\Enums\Commerce\DeliveryStatus::DRAFT),
+                ->visible(fn () => $this->record->canBeDeleted()),
         ];
     }
 }

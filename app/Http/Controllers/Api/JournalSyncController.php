@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Chantiers\Chantier;
 use App\Models\Chantiers\ChantierLog;
+use App\Models\RH\Employee;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -127,7 +128,7 @@ class JournalSyncController extends Controller
 
         // Vérifier l'accès
         $hasAccess = Chantier::forEmployee(
-            \App\Models\RH\Employee::findOrFail($employeeId)
+            Employee::findOrFail($employeeId)
         )->where('id', $chantierId)->exists();
 
         if (! $hasAccess) {
@@ -157,7 +158,7 @@ class JournalSyncController extends Controller
         // Vérifier que l'utilisateur est l'auteur ou manage le chantier
         $hasAccess = $log->user_id === auth()->id()
             || Chantier::forEmployee(
-                \App\Models\RH\Employee::findOrFail($employeeId)
+                Employee::findOrFail($employeeId)
             )->where('id', $log->chantier_id)->exists();
 
         if (! $hasAccess) {

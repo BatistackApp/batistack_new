@@ -17,6 +17,10 @@ class InterventionSeeder extends Seeder
 {
     public function run(): void
     {
+        if (Intervention::count() > 0) {
+            return;
+        }
+
         $company = Company::first();
         $clients = ThirdParty::where('type', 'client')->get();
 

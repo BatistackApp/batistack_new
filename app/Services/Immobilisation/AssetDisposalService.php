@@ -3,7 +3,12 @@
 namespace App\Services\Immobilisation;
 
 use App\Enums\Accounting\JournalType;
+use App\Enums\Commerce\InvoiceStatus;
+use App\Enums\Commerce\InvoiceType;
 use App\Enums\Immobilisation\AssetStatus;
+use App\Models\Commerce\CustomerInvoice;
+use App\Models\Commerce\CustomerInvoiceItem;
+use App\Models\Core\VatRate;
 use App\Models\Immobilisation\AssetDisposal;
 use App\Models\Immobilisation\FixedAsset;
 use App\Services\Accounting\EcritureComptableService;
@@ -52,6 +57,36 @@ class AssetDisposalService
             $this->createAccountingEntries($asset, $disposal, $totalDepreciated, $profitOrLoss);
 
             return $disposal;
+        });
+    }
+
+    public function createDisposalInvoice(FixedAsset $asset, int $clientId, float $invoiceAmount): CustomerInvoice
+    {
+        return DB::transaction(function () use ($asset, $clientId, $invoiceAmount) {
+            $invoice = CustomerInvoice::create([
+                'client_id' => $clientId,
+                'reference' => 'FV-'.now()->format('Ym').'-'.$asset->id,
+                'type' => InvoiceType::SIMPLE,
+                'status' => InvoiceStatus::DRAFT,
+                'total_ht' => $invoiceAmount,
+                'total_ttc' => $invoiceAmount,
+                'responsable_id' => auth()->id(),
+            ]);
+
+            $vatRate = VatRate::getDefault();
+
+            CustomerInvoiceItem::create([
+                'customer_invoice_id' => $invoice->id,
+                'name' => "Cession immobilisation: {$asset->name}",
+                'quantity' => 1,
+                'price_unit' => $invoiceAmount,
+                'vat_rate_id' => $vatRate?->id,
+                'total_ht' => $invoiceAmount,
+            ]);
+
+            $invoice->recalculateTotals();
+
+            return $invoice;
         });
     }
 

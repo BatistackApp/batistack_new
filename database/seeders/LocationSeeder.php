@@ -15,6 +15,10 @@ class LocationSeeder extends Seeder
 {
     public function run(): void
     {
+        if (RentalContract::count() > 0) {
+            return;
+        }
+
         $suppliers = ThirdParty::where('type', 'supplier')->get();
         $chantiers = Chantier::all();
 

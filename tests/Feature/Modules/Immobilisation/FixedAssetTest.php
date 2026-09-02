@@ -177,3 +177,119 @@ it('opens an assignment trace when an asset is created with a chantier', functio
         ->and($open->assigned_at)->not->toBeNull()
         ->and($open->released_at)->toBeNull();
 });
+
+it('returns full purchase price when no depreciations exist', function () {
+    $asset = FixedAsset::factory()->create([
+        'purchase_price' => 32000,
+        'salvage_value' => 0,
+        'purchase_date' => '2026-01-01',
+    ]);
+
+    expect($asset->getVncAtDate('2026-06-15'))->toEqual(32000.0);
+});
+
+it('returns VNC from last passed depreciation before target date', function () {
+    $asset = FixedAsset::factory()->create([
+        'purchase_price' => 32000,
+        'salvage_value' => 0,
+        'purchase_date' => '2026-01-01',
+    ]);
+
+    $deps = $asset->depreciations()->orderBy('period_date')->get();
+    $deps[0]->update(['is_passed' => true, 'remaining_vnc' => 28000]);
+
+    expect($asset->getVncAtDate('2027-06-15'))->toEqual(28000.0);
+});
+
+it('interpolates pro-rata VNC within a depreciation period', function () {
+    $asset = FixedAsset::factory()->create([
+        'purchase_price' => 32000,
+        'salvage_value' => 0,
+        'useful_life_years' => 4,
+        'purchase_date' => '2026-04-01',
+        'depreciation_method' => DepreciationMethod::LINEAR,
+    ]);
+
+    $deps = $asset->depreciations()->orderBy('period_date')->get();
+
+    $vncAtMid = $asset->getVncAtDate('2027-04-01');
+    $vncAtEnd = $asset->getVncAtDate('2027-03-31');
+
+    expect($vncAtMid)->toBeGreaterThan(0)
+        ->and($vncAtEnd)->toBeGreaterThan($vncAtMid);
+});
+
+it('returns zero VNC when fully depreciated at target date', function () {
+    $asset = FixedAsset::factory()->create([
+        'purchase_price' => 1000,
+        'salvage_value' => 0,
+        'useful_life_years' => 1,
+        'purchase_date' => '2026-01-01',
+        'depreciation_method' => DepreciationMethod::LINEAR,
+    ]);
+
+    expect($asset->getVncAtDate('2027-01-01'))->toEqual(0.0);
+});
+
+it('calculates VNC with salvage value', function () {
+    $asset = FixedAsset::factory()->create([
+        'purchase_price' => 32000,
+        'salvage_value' => 2000,
+        'useful_life_years' => 4,
+        'purchase_date' => '2026-01-01',
+        'depreciation_method' => DepreciationMethod::LINEAR,
+    ]);
+
+    expect($asset->getVncAtDate('2026-01-01'))->toEqual(30000.0);
+});
+
+it('returns correct vgp_status when vgp_frequency_months is null', function () {
+    $asset = FixedAsset::factory()->create([
+        'vgp_frequency_months' => null,
+    ]);
+
+    expect($asset->vgp_status)->toBe('none');
+});
+
+it('returns danger vgp_status when vgp is expired', function () {
+    $asset = FixedAsset::factory()->create([
+        'vgp_frequency_months' => 12,
+        'purchase_date' => now()->subYears(2)->format('Y-m-d'),
+    ]);
+
+    expect($asset->vgp_status)->toBe('danger');
+});
+
+it('returns warning vgp_status when vgp expires within 30 days', function () {
+    $asset = FixedAsset::factory()->create([
+        'vgp_frequency_months' => 12,
+    ]);
+
+    $asset->maintenances()->create([
+        'type' => 'control',
+        'maintenance_date' => now()->subMonths(11)->format('Y-m-d'),
+    ]);
+
+    expect($asset->vgp_status)->toBe('warning');
+});
+
+it('returns ok vgp_status when vgp is up to date', function () {
+    $asset = FixedAsset::factory()->create([
+        'vgp_frequency_months' => 12,
+    ]);
+
+    $asset->maintenances()->create([
+        'type' => 'control',
+        'maintenance_date' => now()->subMonths(3)->format('Y-m-d'),
+    ]);
+
+    expect($asset->vgp_status)->toBe('ok');
+});
+
+it('returns null next_vgp_date when vgp_frequency_months is null', function () {
+    $asset = FixedAsset::factory()->create([
+        'vgp_frequency_months' => null,
+    ]);
+
+    expect($asset->next_vgp_date)->toBeNull();
+});

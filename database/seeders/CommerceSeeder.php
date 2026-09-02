@@ -25,6 +25,10 @@ class CommerceSeeder extends Seeder
 {
     public function run(): void
     {
+        if (CustomerQuote::count() > 0) {
+            return;
+        }
+
         $clients = ThirdParty::where('type', ThirdPartyType::CLIENT)->get();
         $suppliers = ThirdParty::where('type', ThirdPartyType::SUPPLIER)->get();
         $chantiers = Chantier::all();

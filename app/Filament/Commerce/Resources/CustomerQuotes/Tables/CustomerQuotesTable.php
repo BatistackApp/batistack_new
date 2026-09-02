@@ -91,7 +91,7 @@ class CustomerQuotesTable
                     EditAction::make(),
                     DeleteAction::make()
                         ->requiresConfirmation()
-                        ->visible(fn ($record) => $record->status === \App\Enums\Commerce\QuoteStatus::DRAFT),
+                        ->visible(fn ($record) => $record->canBeDeleted()),
                     Action::make('sendQuote')
                         ->label('Envoyer')
                         ->icon('heroicon-o-paper-airplane')
@@ -221,7 +221,7 @@ class CustomerQuotesTable
                 BulkActionGroup::make([
                     DeleteBulkAction::make()
                         ->requiresConfirmation()
-                        ->check(fn ($records) => $records->every(fn ($r) => $r->status === \App\Enums\Commerce\QuoteStatus::DRAFT)),
+                        ->check(fn ($records) => $records->every(fn ($r) => $r->canBeDeleted())),
                 ]),
             ]);
     }

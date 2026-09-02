@@ -13,8 +13,8 @@ use Filament\Schemas\Schema;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
-use UnitEnum;
 use ToneGabes\Filament\Icons\Enums\Phosphor;
+use UnitEnum;
 
 class ClientEquipmentResource extends Resource
 {

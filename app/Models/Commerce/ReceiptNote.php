@@ -4,6 +4,7 @@ namespace App\Models\Commerce;
 
 use App\Enums\Commerce\DeliveryStatus;
 use App\Models\Articles\Warehouse;
+use App\Models\Commerce\Concerns\DeletableWhenDraft;
 use App\Observers\Commerce\ReceiptNoteObserver;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -14,7 +15,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 #[ObservedBy([ReceiptNoteObserver::class])]
 class ReceiptNote extends Model
 {
-    use HasFactory;
+    use DeletableWhenDraft, HasFactory;
 
     protected $fillable = [
         'purchase_order_id',

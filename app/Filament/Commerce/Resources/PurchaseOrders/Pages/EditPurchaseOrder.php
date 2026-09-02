@@ -15,7 +15,7 @@ class EditPurchaseOrder extends EditRecord
         return [
             DeleteAction::make()
                 ->requiresConfirmation()
-                ->visible(fn () => $this->record->status === \App\Enums\Commerce\OrderStatus::DRAFT),
+                ->visible(fn () => $this->record->canBeDeleted()),
         ];
     }
 }

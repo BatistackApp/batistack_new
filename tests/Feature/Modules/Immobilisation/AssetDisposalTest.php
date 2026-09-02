@@ -1,6 +1,5 @@
 <?php
 
-use App\Enums\Accounting\JournalType;
 use App\Enums\Immobilisation\AssetStatus;
 use App\Enums\Immobilisation\DepreciationMethod;
 use App\Models\Accounting\EcritureComptable;
@@ -157,3 +156,13 @@ it('creates accounting entries on disposal with zero depreciation', function () 
 
     expect((float) $entries->sum('debit'))->toEqualWithDelta((float) $entries->sum('credit'), 0.01);
 });
+
+it('rejects disposal with negative sale price', function () {
+    $asset = FixedAsset::factory()->create([
+        'purchase_price' => 10000,
+        'depreciation_method' => DepreciationMethod::LINEAR,
+    ]);
+
+    $service = app(AssetDisposalService::class);
+    $service->dispose($asset, '2027-01-01', -500, 'Test négatif');
+})->throws(InvalidArgumentException::class, 'Le prix de cession ne peut pas être négatif.');

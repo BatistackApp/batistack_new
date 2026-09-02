@@ -2,12 +2,8 @@
 
 namespace App\Filament\Immobilisation\Resources\Immobilisation\FixedAssets\Tables;
 
-use App\Enums\Commerce\InvoiceStatus;
-use App\Enums\Commerce\InvoiceType;
 use App\Enums\Immobilisation\AssetStatus;
 use App\Models\Chantiers\Chantier;
-use App\Models\Commerce\CustomerInvoice;
-use App\Models\Commerce\CustomerInvoiceItem;
 use App\Models\Immobilisation\FixedAsset;
 use App\Models\Tiers\ThirdParty;
 use App\Services\Accounting\FecExportService;
@@ -15,7 +11,6 @@ use App\Services\Immobilisation\AssetDisposalService;
 use App\Services\Immobilisation\AssetQrCodeService;
 use App\Services\Immobilisation\ImmobilisationDocumentService;
 use Filament\Actions\Action;
-use Illuminate\Support\Facades\Storage;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
@@ -24,9 +19,9 @@ use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\DatePicker;
-use Filament\Notifications\Notification;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
+use Filament\Notifications\Notification;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
@@ -34,6 +29,7 @@ use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class FixedAssetsTable
@@ -238,7 +234,9 @@ class FixedAssetsTable
                                 ->default(now())
                                 ->live()
                                 ->afterStateUpdated(function ($state, $set, FixedAsset $record) {
-                                    if (blank($state)) return;
+                                    if (blank($state)) {
+                                        return;
+                                    }
                                     $vnc = $record->getVncAtDate($state);
                                     $set('sale_price', round($vnc, 2));
                                 }),
@@ -285,31 +283,7 @@ class FixedAssetsTable
                             $docService->download($path);
 
                             if (! empty($data['create_invoice']) && ! empty($data['client_id'])) {
-                                $invoice = CustomerInvoice::create([
-                                    'client_id' => $data['client_id'],
-                                    'reference' => 'FV-'.now()->format('Ym').'-'.$record->id,
-                                    'type' => InvoiceType::SIMPLE,
-                                    'status' => InvoiceStatus::DRAFT,
-                                    'total_ht' => $data['invoice_amount'],
-                                    'total_ttc' => $data['invoice_amount'],
-                                    'responsable_id' => auth()->id(),
-                                ]);
-
-                                $vatRate = \App\Models\Core\VatRate::getDefault();
-                                CustomerInvoiceItem::create([
-                                    'customer_invoice_id' => $invoice->id,
-                                    'name' => "Cession immobilisation: {$record->name}",
-                                    'quantity' => 1,
-                                    'price_unit' => $data['invoice_amount'],
-                                    'vat_rate_id' => $vatRate?->id,
-                                    'total_ht' => $data['invoice_amount'],
-                                ]);
-
-                                $invoice->update([
-                                    'total_ht' => $invoice->items()->sum(\DB::raw('customer_invoice_items.quantity * customer_invoice_items.price_unit')),
-                                    'total_tva' => $invoice->items()->sum(\DB::raw('customer_invoice_items.quantity * customer_invoice_items.price_unit * ((SELECT rate FROM vat_rates WHERE id = customer_invoice_items.vat_rate_id) / 100)')),
-                                    'total_ttc' => $invoice->items()->sum(\DB::raw('customer_invoice_items.quantity * customer_invoice_items.price_unit * (1 + (SELECT rate FROM vat_rates WHERE id = customer_invoice_items.vat_rate_id) / 100)')),
-                                ]);
+                                $invoice = $service->createDisposalInvoice($record, $data['client_id'], $data['invoice_amount']);
 
                                 Notification::make()
                                     ->title('Facture créée')

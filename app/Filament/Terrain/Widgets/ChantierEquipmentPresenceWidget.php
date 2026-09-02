@@ -4,7 +4,6 @@ namespace App\Filament\Terrain\Widgets;
 
 use App\Models\Chantiers\ChantierEquipmentTracking;
 use Filament\Widgets\Widget;
-use Illuminate\Support\Facades\Auth;
 
 class ChantierEquipmentPresenceWidget extends Widget
 {

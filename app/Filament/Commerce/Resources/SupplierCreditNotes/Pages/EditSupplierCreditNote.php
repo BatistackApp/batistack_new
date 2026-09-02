@@ -15,7 +15,7 @@ class EditSupplierCreditNote extends EditRecord
         return [
             DeleteAction::make()
                 ->requiresConfirmation()
-                ->visible(fn () => $this->record->status === \App\Enums\Commerce\InvoiceStatus::DRAFT),
+                ->visible(fn () => $this->record->canBeDeleted()),
         ];
     }
 }

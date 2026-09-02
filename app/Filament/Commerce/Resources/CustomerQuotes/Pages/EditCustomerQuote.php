@@ -17,7 +17,7 @@ class EditCustomerQuote extends EditRecord
             ViewAction::make(),
             DeleteAction::make()
                 ->requiresConfirmation()
-                ->visible(fn () => $this->record->status === \App\Enums\Commerce\QuoteStatus::DRAFT),
+                ->visible(fn () => $this->record->canBeDeleted()),
         ];
     }
 }

@@ -2,8 +2,6 @@
 
 namespace App\Filament\Terrain\Widgets;
 
-use App\Enums\Chantiers\ChantierStatus;
-use App\Models\Chantiers\Chantier;
 use App\Models\Chantiers\ChantierLog;
 use App\Models\Chantiers\ChantierReserve;
 use App\Models\RH\TimeEntry;

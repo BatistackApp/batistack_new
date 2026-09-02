@@ -201,6 +201,7 @@ class FixedAsset extends Model implements HasMedia
             if ($periodDate->lte($carbonDate)) {
                 $previousVnc = (float) $dep->remaining_vnc;
                 $prevPeriodDate = $periodDate;
+
                 continue;
             }
 

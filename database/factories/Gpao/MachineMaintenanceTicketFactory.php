@@ -5,12 +5,13 @@ namespace Database\Factories\Gpao;
 use App\Enums\Gpao\MachineMaintenanceTicketStatus;
 use App\Enums\Gpao\MachineMaintenanceTicketType;
 use App\Models\Gpao\Machine;
+use App\Models\Gpao\MachineMaintenanceTicket;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class MachineMaintenanceTicketFactory extends Factory
 {
-    protected $model = \App\Models\Gpao\MachineMaintenanceTicket::class;
+    protected $model = MachineMaintenanceTicket::class;
 
     public function definition(): array
     {

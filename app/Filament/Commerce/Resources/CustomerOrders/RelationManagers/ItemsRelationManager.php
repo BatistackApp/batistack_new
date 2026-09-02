@@ -173,11 +173,7 @@ class ItemsRelationManager extends RelationManager
                         $data['total_ht'] = $data['selling_price'] * $data['quantity'];
                         $data['purchase_price'] = 0;
                         $order->items()->create($data);
-
-                        $order->update([
-                            'total_ht' => $order->items()->sum('total_ht'),
-                            'total_ttc' => $order->items()->sum(\DB::raw('total_ht * (1 + (select rate from vat_rates where id = vat_rate_id) / 100)')),
-                        ]);
+                        $order->recalculateTotals();
                     })
                     ->icon(Phosphor::Plus),
             ])

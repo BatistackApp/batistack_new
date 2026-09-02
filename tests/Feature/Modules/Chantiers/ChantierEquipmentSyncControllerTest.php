@@ -5,12 +5,11 @@ use App\Models\Chantiers\Chantier;
 use App\Models\Chantiers\ChantierEquipmentTracking;
 use App\Models\Immobilisation\AssetCategory;
 use App\Models\Immobilisation\FixedAsset;
-use App\Models\RH\Equipement;
 use App\Models\RH\Employee;
+use App\Models\RH\Equipement;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 
 uses(RefreshDatabase::class);
 

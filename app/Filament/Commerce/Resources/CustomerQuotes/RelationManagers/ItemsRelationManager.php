@@ -137,11 +137,7 @@ class ItemsRelationManager extends RelationManager
                         $data['total_ht'] = $data['selling_price'] * $data['quantity'];
                         $data['purchase_price'] = 0;
                         $quote->items()->create($data);
-
-                        $quote->update([
-                            'total_ht' => $quote->items()->sum('total_ht'),
-                            'total_ttc' => $quote->items()->sum(\DB::raw('total_ht * (1 + (select rate from vat_rates where id = vat_rate_id) / 100)')),
-                        ]);
+                        $quote->recalculateTotals();
                     }),
             ])
             ->recordActions([
@@ -150,10 +146,7 @@ class ItemsRelationManager extends RelationManager
                     ->requiresConfirmation()
                     ->action(function (Model $record) {
                         $record->delete();
-                        $record->quote()->update([
-                            'total_ht' => $record->quote()->items()->sum('total_ht'),
-                            'total_ttc' => $record->quote()->items()->sum(\DB::raw('total_ht * (1 + (select rate from vat_rates where id = vat_rate_id) / 100)')),
-                        ]);
+                        $record->quote->recalculateTotals();
                     }),
             ]);
     }

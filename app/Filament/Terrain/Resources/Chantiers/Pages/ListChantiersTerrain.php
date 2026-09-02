@@ -2,12 +2,12 @@
 
 namespace App\Filament\Terrain\Resources\Chantiers\Pages;
 
-use Filament\Actions;
+use App\Filament\Terrain\Resources\Chantiers\ChantierTerrainResource;
 use Filament\Resources\Pages\ListRecords;
 
 class ListChantiersTerrain extends ListRecords
 {
-    protected static string $resource = \App\Filament\Terrain\Resources\Chantiers\ChantierTerrainResource::class;
+    protected static string $resource = ChantierTerrainResource::class;
 
     protected static ?string $title = 'Mes Chantiers';
 

@@ -100,7 +100,7 @@ class SupplierInvoicesTable
                 BulkActionGroup::make([
                     DeleteBulkAction::make()
                         ->requiresConfirmation()
-                        ->check(fn ($records) => $records->every(fn ($r) => $r->status === \App\Enums\Commerce\InvoiceStatus::DRAFT)),
+                        ->check(fn ($records) => $records->every(fn ($r) => $r->canBeDeleted())),
                     BulkAction::make('export_sepa')
                         ->label('Payer par virement (SEPA)')
                         ->icon('heroicon-o-currency-euro')

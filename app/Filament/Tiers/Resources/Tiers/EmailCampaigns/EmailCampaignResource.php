@@ -12,7 +12,6 @@ use App\Models\Tiers\EmailCampaign;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
-use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use ToneGabes\Filament\Icons\Enums\Phosphor;
 
