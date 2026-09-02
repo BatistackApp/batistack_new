@@ -10,6 +10,7 @@ use App\Models\Articles\Item;
 use App\Models\Core\Unit;
 use App\Models\Core\VatRate;
 use App\Models\Interventions\Intervention;
+use App\Models\Interventions\InterventionGpsTrack;
 use App\Models\Interventions\InterventionMaterial;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -141,7 +142,40 @@ class TechnicienSyncController extends Controller
                     ]);
                     $processed++;
                 } elseif ($type === 'UPDATE_GPS') {
-                    // Logic to store GPS tracking if needed
+                    $latitude = $payload['latitude'] ?? null;
+                    $longitude = $payload['longitude'] ?? null;
+                    $recordedAt = $payload['recorded_at'] ?? null;
+
+                    if ($latitude === null || $longitude === null || ! is_numeric($latitude) || ! is_numeric($longitude) || $recordedAt === null) {
+                        $failed++;
+
+                        continue;
+                    }
+
+                    if ($latitude < -90 || $latitude > 90 || $longitude < -180 || $longitude > 180) {
+                        $failed++;
+
+                        continue;
+                    }
+
+                    InterventionGpsTrack::create([
+                        'intervention_id' => $intervention->id,
+                        'employee_id' => $salarieId,
+                        'latitude' => $latitude,
+                        'longitude' => $longitude,
+                        'altitude' => $payload['altitude'] ?? null,
+                        'accuracy' => $payload['accuracy'] ?? null,
+                        'speed' => $payload['speed'] ?? null,
+                        'heading' => $payload['heading'] ?? null,
+                        'recorded_at' => $recordedAt,
+                    ]);
+
+                    $intervention->update([
+                        'last_latitude' => $latitude,
+                        'last_longitude' => $longitude,
+                        'last_gps_at' => $recordedAt,
+                    ]);
+
                     $processed++;
                 } elseif ($type === 'UPLOAD_PHOTO') {
                     // Assuming base64 image
