@@ -145,7 +145,7 @@ class ItemsRelationManager extends RelationManager
                     ->label('Référence'),
 
                 TextColumn::make('name')->label('Nom')
-                    ->description(fn (Model $record) => $record->item->description)
+                    ->description(fn (Model $record) => $record->item?->description)
                     ->label('Nom'),
 
                 TextColumn::make('quantity')->label('Quantité')
@@ -182,12 +182,7 @@ class ItemsRelationManager extends RelationManager
                             $data['customer_invoice_id'] = $livewire->getOwnerRecord()->id;
                             $data['total_ht'] = $data['price_unit'] * $data['quantity'];
                             $livewire->getOwnerRecord()->items()->create($data);
-
-                            $livewire->getOwnerRecord()->update([
-                                'total_ht' => $livewire->getOwnerRecord()->items()->sum(\DB::raw('customer_invoice_items.quantity * customer_invoice_items.price_unit')),
-                                'total_tva' => $livewire->getOwnerRecord()->items()->sum(\DB::raw('customer_invoice_items.quantity * customer_invoice_items.price_unit * ( (SELECT rate FROM vat_rates WHERE id = customer_invoice_items.vat_rate_id) / 100)')),
-                                'total_ttc' => $livewire->getOwnerRecord()->items()->sum(\DB::raw('customer_invoice_items.quantity * customer_invoice_items.price_unit * (1 + (SELECT rate FROM vat_rates WHERE id = customer_invoice_items.vat_rate_id) / 100)')),
-                            ]);
+                            $livewire->getOwnerRecord()->recalculateTotals();
                         });
                     }),
             ])
@@ -195,13 +190,7 @@ class ItemsRelationManager extends RelationManager
                 DeleteAction::make()
                     ->action(function (array $data, Model $record, RelationManager $livewire) {
                         $record->delete();
-
-                        // Calcule des nouveau totaux
-                        $record->invoice->update([
-                            'total_ht' => $livewire->getOwnerRecord()->items()->sum(\DB::raw('customer_invoice_items.quantity * customer_invoice_items.price_unit')),
-                            'total_tva' => $livewire->getOwnerRecord()->items()->sum(\DB::raw('customer_invoice_items.quantity * customer_invoice_items.price_unit * ( (SELECT rate FROM vat_rates WHERE id = customer_invoice_items.vat_rate_id) / 100)')),
-                            'total_ttc' => $livewire->getOwnerRecord()->items()->sum(\DB::raw('customer_invoice_items.quantity * customer_invoice_items.price_unit * (1 + (SELECT rate FROM vat_rates WHERE id = customer_invoice_items.vat_rate_id) / 100)')),
-                        ]);
+                        $record->invoice->recalculateTotals();
                     }),
             ]);
     }

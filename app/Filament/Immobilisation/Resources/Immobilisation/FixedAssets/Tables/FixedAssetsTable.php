@@ -5,6 +5,7 @@ namespace App\Filament\Immobilisation\Resources\Immobilisation\FixedAssets\Table
 use App\Enums\Immobilisation\AssetStatus;
 use App\Models\Chantiers\Chantier;
 use App\Models\Immobilisation\FixedAsset;
+use App\Models\Tiers\ThirdParty;
 use App\Services\Accounting\FecExportService;
 use App\Services\Immobilisation\AssetDisposalService;
 use App\Services\Immobilisation\AssetQrCodeService;
@@ -16,9 +17,11 @@ use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
+use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
+use Filament\Notifications\Notification;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
@@ -26,6 +29,8 @@ use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class FixedAssetsTable
 {
@@ -141,7 +146,7 @@ class FixedAssetsTable
                         $service = new ImmobilisationDocumentService;
                         $path = $service->generateGlobalDepreciationSchedule($data['year']);
 
-                        return response()->download($path);
+                        return $service->download($path);
                     }),
                 Action::make('inventory_pdf')
                     ->label('Fiche Inventaire (PDF)')
@@ -159,7 +164,7 @@ class FixedAssetsTable
                         $service = new ImmobilisationDocumentService;
                         $path = $service->generateInventoryChecklist($chantier);
 
-                        return response()->download($path);
+                        return $service->download($path);
                     }),
                 Action::make('export_fec')
                     ->label('Export FEC (Amortissements)')
@@ -182,9 +187,10 @@ class FixedAssetsTable
                     ])
                     ->action(function (array $data) {
                         $service = new FecExportService;
-                        $path = $service->exportDepreciationsFec($data['year']);
+                        $absolutePath = $service->exportDepreciationsFec($data['year']);
+                        $relativePath = Str::after($absolutePath, Storage::disk('local')->path(''));
 
-                        return response()->download($path);
+                        return Storage::disk('local')->download($relativePath);
                     }),
             ])
             ->recordActions([
@@ -199,7 +205,7 @@ class FixedAssetsTable
                             $service = new ImmobilisationDocumentService;
                             $path = $service->generateAssetSheet($record);
 
-                            return response()->download($path);
+                            return $service->download($path);
                         }),
                     Action::make('print_qr')
                         ->label('Imprimer QR')
@@ -222,21 +228,82 @@ class FixedAssetsTable
                         ->color('danger')
                         ->requiresConfirmation()
                         ->schema([
-                            DatePicker::make('disposal_date')->label('Date de sortie')->required()->default(now()),
-                            TextInput::make('sale_price')->label('Prix de cession')->numeric()->default(0)->required()->prefix('€'),
+                            DatePicker::make('disposal_date')
+                                ->label('Date de sortie')
+                                ->required()
+                                ->default(now())
+                                ->live()
+                                ->afterStateUpdated(function ($state, $set, FixedAsset $record) {
+                                    if (blank($state)) {
+                                        return;
+                                    }
+                                    $vnc = $record->getVncAtDate($state);
+                                    $set('sale_price', round($vnc, 2));
+                                }),
+                            TextInput::make('sale_price')
+                                ->label('Prix de cession')
+                                ->numeric()
+                                ->afterStateHydrated(function ($component, FixedAsset $record) {
+                                    if ($record) {
+                                        $component->state(round($record->getVncAtDate(now()->format('Y-m-d')), 2));
+                                    }
+                                })
+                                ->minValue(0)
+                                ->required()
+                                ->prefix('€'),
                             TextInput::make('reason')->label('Raison (Revente, Vol, Rebut)')->required(),
+
+                            Checkbox::make('create_invoice')
+                                ->label('Générer une facture de revente')
+                                ->live()
+                                ->default(false),
+
+                            Select::make('client_id')
+                                ->label('Acheteur (Tiers)')
+                                ->options(fn () => ThirdParty::where('is_active', true)->pluck('name', 'id'))
+                                ->searchable()
+                                ->required()
+                                ->visible(fn ($get) => $get('create_invoice') === true),
+
+                            TextInput::make('invoice_amount')
+                                ->label('Montant HT de la facture')
+                                ->numeric()
+                                ->default(fn (FixedAsset $record) => round($record->getVncAtDate(now()->format('Y-m-d')), 2))
+                                ->required()
+                                ->prefix('€')
+                                ->visible(fn ($get) => $get('create_invoice') === true),
                         ])
                         ->action(function (FixedAsset $record, array $data) {
-                            $service = new AssetDisposalService;
+                            $service = app(AssetDisposalService::class);
                             $service->dispose($record, $data['disposal_date'], $data['sale_price'], $data['reason']);
 
                             // Génération du PV
                             $docService = new ImmobilisationDocumentService;
                             $path = $docService->generateDisposalCertificate($record);
+                            $docService->download($path);
 
-                            return response()->download($path);
+                            if (! empty($data['create_invoice']) && ! empty($data['client_id'])) {
+                                $invoice = $service->createDisposalInvoice($record, $data['client_id'], $data['invoice_amount']);
+
+                                Notification::make()
+                                    ->title('Facture créée')
+                                    ->body("Facture de revente {$invoice->reference} créée pour {$invoice->total_ht} € HT")
+                                    ->success()
+                                    ->send();
+                            }
                         })
                         ->visible(fn (FixedAsset $record) => $record->status !== AssetStatus::DISPOSED),
+                    Action::make('print_disposal_certificate')
+                        ->label('Télécharger PV de cession')
+                        ->icon('heroicon-o-document-text')
+                        ->color('warning')
+                        ->action(function (FixedAsset $record) {
+                            $service = new ImmobilisationDocumentService;
+                            $path = $service->generateDisposalCertificate($record);
+
+                            return $service->download($path);
+                        })
+                        ->visible(fn (FixedAsset $record) => $record->status === AssetStatus::DISPOSED),
                 ]),
             ])
             ->toolbarActions([
@@ -249,7 +316,7 @@ class FixedAssetsTable
                             $service = new ImmobilisationDocumentService;
                             $path = $service->generateQrCodeSheet($records);
 
-                            return response()->download($path);
+                            return $service->download($path);
                         }),
                     DeleteBulkAction::make(),
                 ]),

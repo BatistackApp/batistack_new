@@ -11,6 +11,10 @@ class TiersSeeder extends Seeder
 {
     public function run(): void
     {
+        if (ThirdParty::count() > 0) {
+            return;
+        }
+
         $tiers = ThirdParty::factory(10)->create();
 
         foreach ($tiers as $tier) {

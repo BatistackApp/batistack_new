@@ -5,8 +5,10 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Chantiers\Chantier;
 use App\Models\Chantiers\ChantierLog;
+use App\Models\Chantiers\ChantierTask;
 use App\Models\Chantiers\ChecklistSubmission;
 use App\Models\Chantiers\ChecklistTemplate;
+use App\Models\RH\Employee;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -69,7 +71,7 @@ class ChecklistSyncController extends Controller
             return response()->json(['data' => []], 403);
         }
 
-        $taskIds = \App\Models\Chantiers\ChantierTask::query()
+        $taskIds = ChantierTask::query()
             ->select('chantier_tasks.id')
             ->join('chantier_phases', 'chantier_phases.id', '=', 'chantier_tasks.chantier_phase_id')
             ->where('chantier_phases.chantier_id', $chantierId)
@@ -155,7 +157,7 @@ class ChecklistSyncController extends Controller
         }
 
         $hasAccess = Chantier::forEmployee(
-            \App\Models\RH\Employee::findOrFail($employeeId)
+            Employee::findOrFail($employeeId)
         )->where('id', $chantierId)->exists();
 
         if (! $hasAccess) {
@@ -167,7 +169,7 @@ class ChecklistSyncController extends Controller
         // Use task ID from payload if provided, otherwise find first task of the chantier
         $taskId = $payload['chantier_task_id'] ?? null;
         if (! $taskId) {
-            $taskId = \App\Models\Chantiers\ChantierTask::query()
+            $taskId = ChantierTask::query()
                 ->join('chantier_phases', 'chantier_phases.id', '=', 'chantier_tasks.chantier_phase_id')
                 ->where('chantier_phases.chantier_id', $chantierId)
                 ->value('chantier_tasks.id');

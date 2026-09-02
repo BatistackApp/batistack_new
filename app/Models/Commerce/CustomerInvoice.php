@@ -5,6 +5,8 @@ namespace App\Models\Commerce;
 use App\Enums\Commerce\InvoiceStatus;
 use App\Enums\Commerce\InvoiceType;
 use App\Models\Chantiers\Chantier;
+use App\Models\Commerce\Concerns\DeletableWhenDraft;
+use App\Models\Commerce\Concerns\RecalculatesTotals;
 use App\Models\Tiers\ThirdParty;
 use App\Models\User;
 use App\Observers\Commerce\CustomerInvoiceObserver;
@@ -26,7 +28,7 @@ use Spatie\Activitylog\Support\LogOptions;
 #[ObservedBy([CustomerInvoiceObserver::class])]
 class CustomerInvoice extends Model implements HasTimeline
 {
-    use HasFactory, InteractsWithTimeline, LogsActivity;
+    use DeletableWhenDraft, HasFactory, InteractsWithTimeline, LogsActivity, RecalculatesTotals;
 
     protected $fillable = [
         'client_id',

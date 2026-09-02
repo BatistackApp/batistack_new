@@ -4,6 +4,8 @@ namespace App\Models\Commerce;
 
 use App\Enums\Commerce\OrderStatus;
 use App\Models\Chantiers\Chantier;
+use App\Models\Commerce\Concerns\DeletableWhenDraft;
+use App\Models\Commerce\Concerns\RecalculatesTotals;
 use App\Models\Gpao\ManufacturingOrder;
 use App\Models\Tiers\ThirdParty;
 use App\Models\User;
@@ -17,7 +19,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 #[ObservedBy([CustomerOrderObserver::class])]
 class CustomerOrder extends Model
 {
-    use HasFactory;
+    use DeletableWhenDraft, HasFactory, RecalculatesTotals;
 
     protected $fillable = [
         'client_id',

@@ -2,12 +2,18 @@
 
 namespace App\Filament\Terrain\Resources\Chantiers;
 
+use App\Enums\Chantiers\ChantierStatus;
+use App\Filament\Terrain\Resources\Chantiers\Pages\ListChantiersTerrain;
+use App\Filament\Terrain\Resources\Chantiers\Pages\ViewChantierTerrain;
 use App\Models\Chantiers\Chantier;
 use BackedEnum;
-use Filament\Schemas\Components\Grid;
-use Filament\Schemas\Components\Section;
-use Filament\Schemas\Schema;
+use Filament\Actions\ViewAction;
 use Filament\Resources\Resource;
+use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Components\RepeatableEntry;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\TextEntry;
+use Filament\Schemas\Schema;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
@@ -84,11 +90,11 @@ class ChantierTerrainResource extends Resource
             ->defaultSort('name')
             ->filters([
                 SelectFilter::make('status')
-                    ->options(\App\Enums\Chantiers\ChantierStatus::class)
+                    ->options(ChantierStatus::class)
                     ->preload(),
             ])
             ->actions([
-                \Filament\Actions\ViewAction::make(),
+                ViewAction::make(),
             ])
             ->bulkActions([]);
     }
@@ -100,23 +106,23 @@ class ChantierTerrainResource extends Resource
                 Section::make('Informations générales')
                     ->schema([
                         Grid::make(4)->schema([
-                            \Filament\Schemas\Components\TextEntry::make('name')
+                            TextEntry::make('name')
                                 ->weight('bold')
                                 ->size('lg')
                                 ->columnSpan(2),
-                            \Filament\Schemas\Components\TextEntry::make('reference')
+                            TextEntry::make('reference')
                                 ->fontFamily('mono'),
-                            \Filament\Schemas\Components\TextEntry::make('status')
+                            TextEntry::make('status')
                                 ->badge(),
                         ]),
                         Grid::make(4)->schema([
-                            \Filament\Schemas\Components\TextEntry::make('client.name')
+                            TextEntry::make('client.name')
                                 ->label('Client')
                                 ->icon(Phosphor::Buildings),
-                            \Filament\Schemas\Components\TextEntry::make('city')
+                            TextEntry::make('city')
                                 ->label('Ville')
                                 ->icon(Phosphor::MapPin),
-                            \Filament\Schemas\Components\TextEntry::make('address')
+                            TextEntry::make('address')
                                 ->label('Adresse')
                                 ->columnSpan(2),
                         ]),
@@ -125,17 +131,17 @@ class ChantierTerrainResource extends Resource
                 Section::make('Dates')
                     ->schema([
                         Grid::make(4)->schema([
-                            \Filament\Schemas\Components\TextEntry::make('start_date_preview')
+                            TextEntry::make('start_date_preview')
                                 ->label('Début prévisionnel')
                                 ->date('d/m/Y'),
-                            \Filament\Schemas\Components\TextEntry::make('end_date_preview')
+                            TextEntry::make('end_date_preview')
                                 ->label('Fin prévisionnelle')
                                 ->date('d/m/Y')
                                 ->color(fn ($state) => $state && $state->isPast() ? 'danger' : null),
-                            \Filament\Schemas\Components\TextEntry::make('start_date')
+                            TextEntry::make('start_date')
                                 ->label('Début réel')
                                 ->date('d/m/Y'),
-                            \Filament\Schemas\Components\TextEntry::make('end_date')
+                            TextEntry::make('end_date')
                                 ->label('Fin réelle')
                                 ->date('d/m/Y'),
                         ]),
@@ -144,16 +150,16 @@ class ChantierTerrainResource extends Resource
                 Section::make('Budget')
                     ->schema([
                         Grid::make(4)->schema([
-                            \Filament\Schemas\Components\TextEntry::make('budget_hours')
+                            TextEntry::make('budget_hours')
                                 ->label('Heures budgétées')
                                 ->suffix(' h'),
-                            \Filament\Schemas\Components\TextEntry::make('budget_material')
+                            TextEntry::make('budget_material')
                                 ->label('Matériaux')
                                 ->money('EUR'),
-                            \Filament\Schemas\Components\TextEntry::make('budget_subcontracting')
+                            TextEntry::make('budget_subcontracting')
                                 ->label('Sous-traitance')
                                 ->money('EUR'),
-                            \Filament\Schemas\Components\TextEntry::make('budget_total_ht')
+                            TextEntry::make('budget_total_ht')
                                 ->label('Budget total HT')
                                 ->money('EUR')
                                 ->weight('bold'),
@@ -162,11 +168,11 @@ class ChantierTerrainResource extends Resource
 
                 Section::make('Équipe assignée')
                     ->schema([
-                        \Filament\Schemas\Components\RepeatableEntry::make('members')
+                        RepeatableEntry::make('members')
                             ->schema([
-                                \Filament\Schemas\Components\TextEntry::make('full_name')
+                                TextEntry::make('full_name')
                                     ->label('Nom'),
-                                \Filament\Schemas\Components\TextEntry::make('currentContract.job_title')
+                                TextEntry::make('currentContract.job_title')
                                     ->label('Poste'),
                             ])
                             ->columns(4),
@@ -174,15 +180,15 @@ class ChantierTerrainResource extends Resource
 
                 Section::make('Phases et tâches')
                     ->schema([
-                        \Filament\Schemas\Components\RepeatableEntry::make('phases')
+                        RepeatableEntry::make('phases')
                             ->schema([
-                                \Filament\Schemas\Components\TextEntry::make('label')
+                                TextEntry::make('label')
                                     ->label('Phase')
                                     ->weight('bold'),
-                                \Filament\Schemas\Components\TextEntry::make('start_date')
+                                TextEntry::make('start_date')
                                     ->label('Début')
                                     ->date('d/m/Y'),
-                                \Filament\Schemas\Components\TextEntry::make('end_date')
+                                TextEntry::make('end_date')
                                     ->label('Fin')
                                     ->date('d/m/Y'),
                             ])
@@ -194,8 +200,8 @@ class ChantierTerrainResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => \App\Filament\Terrain\Resources\Chantiers\Pages\ListChantiersTerrain::route('/'),
-            'view' => \App\Filament\Terrain\Resources\Chantiers\Pages\ViewChantierTerrain::route('/{record}/view'),
+            'index' => ListChantiersTerrain::route('/'),
+            'view' => ViewChantierTerrain::route('/{record}/view'),
         ];
     }
 }

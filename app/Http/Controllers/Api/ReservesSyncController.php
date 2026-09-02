@@ -7,11 +7,11 @@ use App\Http\Controllers\Controller;
 use App\Models\Chantiers\Chantier;
 use App\Models\Chantiers\ChantierLog;
 use App\Models\Chantiers\ChantierReserve;
+use App\Models\RH\Employee;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
 
 class ReservesSyncController extends Controller
 {
@@ -145,7 +145,7 @@ class ReservesSyncController extends Controller
         }
 
         $hasAccess = Chantier::forEmployee(
-            \App\Models\RH\Employee::findOrFail($employeeId)
+            Employee::findOrFail($employeeId)
         )->where('id', $chantierId)->exists();
 
         if (! $hasAccess) {

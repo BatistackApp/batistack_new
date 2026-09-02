@@ -4,8 +4,8 @@ namespace App\Filament\Technicien\Resources\ClientEquipment\Pages;
 
 use App\Filament\Technicien\Resources\ClientEquipment\ClientEquipmentResource;
 use Filament\Actions\Action;
-use Filament\Schemas\Schema;
 use Filament\Resources\Pages\ViewRecord;
+use Filament\Schemas\Schema;
 
 class ViewClientEquipment extends ViewRecord
 {

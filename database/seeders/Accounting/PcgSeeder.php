@@ -158,6 +158,7 @@ class PcgSeeder extends Seeder
             ['numero' => '686200', 'libelle' => 'Dotations aux provisions pour dépréciations - Actif circulant', 'classe' => 6, 'is_balance' => false],
             ['numero' => '686300', 'libelle' => 'Dotations aux provisions financières', 'classe' => 6, 'is_balance' => false],
             ['numero' => '686800', 'libelle' => 'Dotations aux provisions pour risques et charges', 'classe' => 6, 'is_balance' => false],
+            ['numero' => '654000', 'libelle' => 'Pertes sur cessions d\'immobilisations', 'classe' => 6, 'is_balance' => false],
             ['numero' => '691000', 'libelle' => 'Impôts sur les bénéfices', 'classe' => 6, 'is_balance' => false],
             ['numero' => '695000', 'libelle' => 'Autres impôts sur les bénéfices', 'classe' => 6, 'is_balance' => false],
 
@@ -173,6 +174,7 @@ class PcgSeeder extends Seeder
             ['numero' => '731000', 'libelle' => 'Production immobilisée', 'classe' => 7, 'is_balance' => false],
             ['numero' => '741000', 'libelle' => 'Subventions d\'exploitation', 'classe' => 7, 'is_balance' => false],
             ['numero' => '751000', 'libelle' => 'Autres produits d\'exploitation', 'classe' => 7, 'is_balance' => false],
+            ['numero' => '754000', 'libelle' => 'Produits des cessions d\'immobilisations', 'classe' => 7, 'is_balance' => false],
             ['numero' => '761000', 'libelle' => 'Produits financiers', 'classe' => 7, 'is_balance' => false],
             ['numero' => '771000', 'libelle' => 'Autres produits', 'classe' => 7, 'is_balance' => false],
 

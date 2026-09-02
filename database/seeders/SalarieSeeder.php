@@ -14,6 +14,10 @@ class SalarieSeeder extends Seeder
 {
     public function run(): void
     {
+        if (Abscence::count() > 0) {
+            return;
+        }
+
         $employees = Employee::all();
         if ($employees->isEmpty()) {
             return;

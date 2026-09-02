@@ -6,17 +6,23 @@ use App\Models\Chantiers\Chantier;
 use App\Notifications\Chantiers\ChantierBudgetAlertNotification;
 use App\Services\Chantiers\ChantierAnalyticService;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
 
-class RecalculateChantierProgressJob implements ShouldQueue
+class RecalculateChantierProgressJob implements ShouldBeUnique, ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public function __construct(protected Chantier $chantier) {}
+
+    public function uniqueId(): string
+    {
+        return "chantier_progress_{$this->chantier->id}";
+    }
 
     public function handle(ChantierAnalyticService $service): void
     {

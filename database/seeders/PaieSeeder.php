@@ -12,6 +12,10 @@ class PaieSeeder extends Seeder
 {
     public function run(): void
     {
+        if (Payslip::count() > 0) {
+            return;
+        }
+
         $employees = Employee::all();
         $periods = collect([
             now()->subMonths(5)->format('Y-m'),

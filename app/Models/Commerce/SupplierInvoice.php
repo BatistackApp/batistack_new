@@ -3,6 +3,7 @@
 namespace App\Models\Commerce;
 
 use App\Enums\Commerce\InvoiceStatus;
+use App\Models\Commerce\Concerns\DeletableWhenDraft;
 use App\Models\Immobilisation\FixedAsset;
 use App\Models\Tiers\ThirdParty;
 use App\Observers\Commerce\SupplierInvoiceObserver;
@@ -16,7 +17,7 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
 #[ObservedBy([SupplierInvoiceObserver::class])]
 class SupplierInvoice extends Model
 {
-    use HasFactory;
+    use DeletableWhenDraft, HasFactory;
 
     protected $fillable = [
         'supplier_id',

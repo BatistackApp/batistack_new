@@ -29,6 +29,7 @@ use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 
 class CustomerInvoicesTable
 {
@@ -225,7 +226,22 @@ class CustomerInvoicesTable
                                 ->success()
                                 ->send();
                         }),
-                    DeleteBulkAction::make(),
+                    DeleteBulkAction::make()
+                        ->requiresConfirmation()
+                        ->action(function (Collection $records) {
+                            $deletable = $records->filter->canBeDeleted();
+                            $skipped = $records->count() - $deletable->count();
+
+                            $deletable->each->delete();
+
+                            if ($skipped > 0) {
+                                Notification::make()
+                                    ->title("{$deletable->count()} facture(s) supprimée(s)")
+                                    ->body("{$skipped} facture(s) ignorée(s) car non en brouillon.")
+                                    ->success()
+                                    ->send();
+                            }
+                        }),
                 ]),
             ]);
     }

@@ -19,6 +19,7 @@ use App\Models\Immobilisation\Depreciation;
 use App\Models\Locations\InternalRentalInvoice;
 use App\Models\Locations\RentalContract;
 use App\Models\RH\Employee;
+use App\Models\RH\Equipement;
 use App\Models\RH\EquipementAssignment;
 use App\Services\Locations\RentalCostService;
 
@@ -110,7 +111,7 @@ class ChantierAnalyticService
             ->sum(fn ($tracking) => $tracking->getImmobilizationCost());
 
         // Legacy: affectations RH non encore trackées via le scan terrain
-        $trackedEquipementIds = ChantierEquipmentTracking::where('trackable_type', \App\Models\RH\Equipement::class)
+        $trackedEquipementIds = ChantierEquipmentTracking::where('trackable_type', Equipement::class)
             ->where('chantier_id', $chantier->id)
             ->pluck('trackable_id')
             ->toArray();

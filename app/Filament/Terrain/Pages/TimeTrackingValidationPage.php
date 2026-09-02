@@ -7,6 +7,8 @@ use App\Models\Chantiers\Chantier;
 use App\Models\RH\TimeEntry;
 use BackedEnum;
 use Filament\Actions\Action;
+use Filament\Actions\BulkAction;
+use Filament\Actions\BulkActionGroup;
 use Filament\Forms\Components\Textarea;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
@@ -15,8 +17,8 @@ use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
-use UnitEnum;
 use ToneGabes\Filament\Icons\Enums\Phosphor;
+use UnitEnum;
 
 class TimeTrackingValidationPage extends Page implements HasTable
 {
@@ -147,8 +149,8 @@ class TimeTrackingValidationPage extends Page implements HasTable
                     }),
             ])
             ->bulkActions([
-                \Filament\Actions\BulkActionGroup::make([
-                    \Filament\Actions\BulkAction::make('approve_all')
+                BulkActionGroup::make([
+                    BulkAction::make('approve_all')
                         ->label('Tout approuver')
                         ->icon(Phosphor::CheckCircle)
                         ->color('success')

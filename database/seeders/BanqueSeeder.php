@@ -15,6 +15,10 @@ class BanqueSeeder extends Seeder
 {
     public function run(): void
     {
+        if (BankAccount::count() > 0) {
+            return;
+        }
+
         $company = Company::first();
 
         // Comptes bancaires

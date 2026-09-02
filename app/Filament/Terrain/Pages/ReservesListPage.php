@@ -9,17 +9,15 @@ use App\Models\Chantiers\ChantierReserve;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Forms\Components\DatePicker;
-use Filament\Forms\Components\Select;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
-use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
-use UnitEnum;
 use ToneGabes\Filament\Icons\Enums\Phosphor;
+use UnitEnum;
 
 class ReservesListPage extends Page implements HasTable
 {
@@ -149,5 +147,4 @@ class ReservesListPage extends Page implements HasTable
             ])
             ->paginated([10, 25, 50]);
     }
-
 }

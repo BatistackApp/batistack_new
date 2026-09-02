@@ -15,6 +15,10 @@ class FlotteSeeder extends Seeder
 {
     public function run(): void
     {
+        if (Vehicle::count() > 0) {
+            return;
+        }
+
         $employee = Employee::first() ?? Employee::factory()->create();
         $garage = ThirdParty::where('type', 'supplier')->first() ?? ThirdParty::factory()->create(['type' => 'supplier', 'name' => 'Garage Central BTP']);
         $insurer = ThirdParty::where('type', 'supplier')->skip(1)->first() ?? ThirdParty::factory()->create(['type' => 'supplier', 'name' => 'Assurances Pro-BTP']);

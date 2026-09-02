@@ -2,15 +2,14 @@
 
 namespace App\Filament\Terrain\Pages;
 
+use App\Enums\Chantiers\ChantierStatus;
 use App\Models\Chantiers\Chantier;
 use App\Models\Vision3D\BimModel;
 use BackedEnum;
 use Filament\Pages\Page;
-use UnitEnum;
-use Filament\Schemas\Components\Grid;
-use Filament\Schemas\Components\Section;
 use Illuminate\Support\Facades\Storage;
 use ToneGabes\Filament\Icons\Enums\Phosphor;
+use UnitEnum;
 
 class BimViewerPage extends Page
 {
@@ -44,9 +43,9 @@ class BimViewerPage extends Page
 
         $this->chantiers = Chantier::forEmployee($employee)
             ->whereIn('status', [
-                \App\Enums\Chantiers\ChantierStatus::IN_PROGRESS,
-                \App\Enums\Chantiers\ChantierStatus::AWAITING_RECEPTION,
-                \App\Enums\Chantiers\ChantierStatus::PLANNED,
+                ChantierStatus::IN_PROGRESS,
+                ChantierStatus::AWAITING_RECEPTION,
+                ChantierStatus::PLANNED,
             ])
             ->with(['bimModels' => function ($query) {
                 $query->orderBy('name');

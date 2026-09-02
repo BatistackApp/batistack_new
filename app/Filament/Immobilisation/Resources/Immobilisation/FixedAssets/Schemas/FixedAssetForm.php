@@ -4,6 +4,7 @@ namespace App\Filament\Immobilisation\Resources\Immobilisation\FixedAssets\Schem
 
 use App\Enums\Immobilisation\AssetStatus;
 use App\Enums\Immobilisation\DepreciationMethod;
+use App\Enums\Immobilisation\GrantMethod;
 use App\Enums\Locations\RentalBillingPeriod;
 use App\Services\RH\OcrServiceInterface;
 use Filament\Forms\Components\DatePicker;
@@ -12,6 +13,7 @@ use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
@@ -117,6 +119,12 @@ class FixedAssetForm
                         TextInput::make('grant_name')
                             ->label('Origine de la subvention (Ex: BPI, Région)')
                             ->maxLength(255),
+                        Select::make('grant_method')
+                            ->label('Traitement de la subvention')
+                            ->options(GrantMethod::class)
+                            ->default(GrantMethod::PROPORTIONAL_REVERSAL)
+                            ->visible(fn (Get $get) => (float) ($get('grant_amount') ?? 0) > 0)
+                            ->helperText('Choisissez comment la subvention doit être traitée dans l\'amortissement.'),
                     ])->columns(2),
                 Select::make('supplier_invoice_id')
                     ->label('Facture d\'achat liée')

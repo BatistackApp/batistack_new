@@ -9,6 +9,7 @@ use App\Models\Articles\Stock;
 use App\Models\Commerce\PurchaseOrder;
 use App\Models\Commerce\PurchaseOrderItem;
 use App\Models\Gpao\ManufacturingRequirement;
+use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Queue\InteractsWithQueue;
@@ -16,9 +17,14 @@ use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
-class GeneratePurchaseOrdersForShortagesJob implements ShouldQueue
+class GeneratePurchaseOrdersForShortagesJob implements ShouldBeUnique, ShouldQueue
 {
     use InteractsWithQueue, Queueable, SerializesModels;
+
+    public function uniqueId(): string
+    {
+        return 'mrp_shortage_scan';
+    }
 
     /**
      * Execute the job.

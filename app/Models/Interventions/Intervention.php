@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\MediaLibrary\HasMedia;
@@ -39,6 +40,9 @@ class Intervention extends Model implements HasMedia
         'maintenance_contract_id',
         'report_template_id',
         'report_data',
+        'last_latitude',
+        'last_longitude',
+        'last_gps_at',
     ];
 
     protected $casts = [
@@ -48,6 +52,9 @@ class Intervention extends Model implements HasMedia
         'completed_at' => 'datetime',
         'flat_rate_price' => 'decimal:2',
         'report_data' => 'array',
+        'last_latitude' => 'float',
+        'last_longitude' => 'float',
+        'last_gps_at' => 'datetime',
     ];
 
     public function company(): BelongsTo
@@ -93,6 +100,16 @@ class Intervention extends Model implements HasMedia
     public function reportTemplate(): BelongsTo
     {
         return $this->belongsTo(InterventionReportTemplate::class);
+    }
+
+    public function gpsTracks(): HasMany
+    {
+        return $this->hasMany(InterventionGpsTrack::class);
+    }
+
+    public function latestGpsTrack(): HasOne
+    {
+        return $this->hasOne(InterventionGpsTrack::class)->latestOfMany('recorded_at');
     }
 
     /**

@@ -2,10 +2,12 @@
 
 use App\Enums\Gpao\MachineMaintenanceTicketStatus;
 use App\Enums\Gpao\MachineMaintenanceTicketType;
+use App\Enums\Gpao\MachineStatus;
 use App\Models\Gpao\Machine;
 use App\Models\Gpao\MachineMaintenanceTicket;
-use App\Services\Gpao\MachineMaintenanceTicketService;
 use App\Models\User;
+use App\Notifications\Gpao\MachineMaintenanceTicketNotification;
+use App\Services\Gpao\MachineMaintenanceTicketService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
@@ -70,7 +72,7 @@ describe('MachineMaintenanceTicketService', function () {
         ]);
 
         $this->service->start($ticket);
-    })->throws(\LogicException::class, 'Transition de statut non autorisée');
+    })->throws(LogicException::class, 'Transition de statut non autorisée');
 
     test('resolve transitions OPEN to RESOLVED with cost and provider', function () {
         $ticket = MachineMaintenanceTicket::factory()->create([
@@ -107,10 +109,10 @@ describe('MachineMaintenanceTicketService', function () {
         ]);
 
         $this->service->resolve($ticket);
-    })->throws(\LogicException::class);
+    })->throws(LogicException::class);
 
     test('resolve restores machine to OPERATIONAL when no more open tickets', function () {
-        $this->machine->update(['status' => \App\Enums\Gpao\MachineStatus::MAINTENANCE]);
+        $this->machine->update(['status' => MachineStatus::MAINTENANCE]);
 
         $ticket = MachineMaintenanceTicket::factory()->create([
             'machine_id' => $this->machine->id,
@@ -120,11 +122,11 @@ describe('MachineMaintenanceTicketService', function () {
         $this->service->resolve($ticket);
 
         $this->machine->refresh();
-        expect($this->machine->status)->toBe(\App\Enums\Gpao\MachineStatus::OPERATIONAL);
+        expect($this->machine->status)->toBe(MachineStatus::OPERATIONAL);
     });
 
     test('resolve does not restore machine status if other open tickets remain', function () {
-        $this->machine->update(['status' => \App\Enums\Gpao\MachineStatus::MAINTENANCE]);
+        $this->machine->update(['status' => MachineStatus::MAINTENANCE]);
 
         $ticket1 = MachineMaintenanceTicket::factory()->create([
             'machine_id' => $this->machine->id,
@@ -139,7 +141,7 @@ describe('MachineMaintenanceTicketService', function () {
         $this->service->resolve($ticket1);
 
         $this->machine->refresh();
-        expect($this->machine->status)->toBe(\App\Enums\Gpao\MachineStatus::MAINTENANCE);
+        expect($this->machine->status)->toBe(MachineStatus::MAINTENANCE);
     });
 
     test('cancel transitions OPEN to CANCELED', function () {
@@ -161,10 +163,10 @@ describe('MachineMaintenanceTicketService', function () {
         ]);
 
         $this->service->cancel($ticket);
-    })->throws(\LogicException::class);
+    })->throws(LogicException::class);
 
     test('cancel restores machine to OPERATIONAL when no more open tickets', function () {
-        $this->machine->update(['status' => \App\Enums\Gpao\MachineStatus::MAINTENANCE]);
+        $this->machine->update(['status' => MachineStatus::MAINTENANCE]);
 
         $ticket = MachineMaintenanceTicket::factory()->create([
             'machine_id' => $this->machine->id,
@@ -174,7 +176,7 @@ describe('MachineMaintenanceTicketService', function () {
         $this->service->cancel($ticket);
 
         $this->machine->refresh();
-        expect($this->machine->status)->toBe(\App\Enums\Gpao\MachineStatus::OPERATIONAL);
+        expect($this->machine->status)->toBe(MachineStatus::OPERATIONAL);
     });
 
     test('notifyAdmins sends notification to admin users', function () {
@@ -189,7 +191,7 @@ describe('MachineMaintenanceTicketService', function () {
 
         $this->assertDatabaseHas('notifications', [
             'notifiable_id' => $admin->id,
-            'type' => \App\Notifications\Gpao\MachineMaintenanceTicketNotification::class,
+            'type' => MachineMaintenanceTicketNotification::class,
         ]);
         $this->assertDatabaseMissing('notifications', [
             'notifiable_id' => $regular->id,

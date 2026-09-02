@@ -30,7 +30,7 @@ class SupplierInvoiceResource extends Resource
 
     protected static ?string $pluralModelLabel = 'Factures Fournisseur';
 
-    protected static string | UnitEnum | null $navigationGroup = 'Achats';
+    protected static string|UnitEnum|null $navigationGroup = 'Achats';
 
     protected static ?int $navigationSort = 7;
 
