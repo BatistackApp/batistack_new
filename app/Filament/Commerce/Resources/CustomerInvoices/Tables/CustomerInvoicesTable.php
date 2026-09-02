@@ -227,7 +227,21 @@ class CustomerInvoicesTable
                         }),
                     DeleteBulkAction::make()
                         ->requiresConfirmation()
-                        ->check(fn ($records) => $records->every(fn ($r) => $r->status === \App\Enums\Commerce\InvoiceStatus::DRAFT)),
+                        ->action(function (\Illuminate\Database\Eloquent\Collection $records) {
+                            $nonDraft = $records->filter(fn ($r) => $r->status !== \App\Enums\Commerce\InvoiceStatus::DRAFT);
+
+                            if ($nonDraft->isNotEmpty()) {
+                                Notification::make()
+                                    ->title('Suppression impossible')
+                                    ->body($nonDraft->count() . ' facture(s) n\'est/sont plus en brouillon.')
+                                    ->danger()
+                                    ->send();
+
+                                return;
+                            }
+
+                            $records->each->delete();
+                        }),
                 ]),
             ]);
     }

@@ -319,6 +319,17 @@ class FixedAssetsTable
                             }
                         })
                         ->visible(fn (FixedAsset $record) => $record->status !== AssetStatus::DISPOSED),
+                    Action::make('print_disposal_certificate')
+                        ->label('Télécharger PV de cession')
+                        ->icon('heroicon-o-document-text')
+                        ->color('warning')
+                        ->action(function (FixedAsset $record) {
+                            $service = new ImmobilisationDocumentService;
+                            $path = $service->generateDisposalCertificate($record);
+
+                            return $service->download($path);
+                        })
+                        ->visible(fn (FixedAsset $record) => $record->status === AssetStatus::DISPOSED),
                 ]),
             ])
             ->toolbarActions([
