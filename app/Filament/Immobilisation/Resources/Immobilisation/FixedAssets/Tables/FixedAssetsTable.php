@@ -10,6 +10,7 @@ use App\Services\Immobilisation\AssetDisposalService;
 use App\Services\Immobilisation\AssetQrCodeService;
 use App\Services\Immobilisation\ImmobilisationDocumentService;
 use Filament\Actions\Action;
+use Illuminate\Support\Facades\Storage;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
@@ -26,6 +27,7 @@ use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Str;
 
 class FixedAssetsTable
 {
@@ -141,7 +143,7 @@ class FixedAssetsTable
                         $service = new ImmobilisationDocumentService;
                         $path = $service->generateGlobalDepreciationSchedule($data['year']);
 
-                        return response()->download($path);
+                        return $service->download($path);
                     }),
                 Action::make('inventory_pdf')
                     ->label('Fiche Inventaire (PDF)')
@@ -159,7 +161,7 @@ class FixedAssetsTable
                         $service = new ImmobilisationDocumentService;
                         $path = $service->generateInventoryChecklist($chantier);
 
-                        return response()->download($path);
+                        return $service->download($path);
                     }),
                 Action::make('export_fec')
                     ->label('Export FEC (Amortissements)')
@@ -182,9 +184,10 @@ class FixedAssetsTable
                     ])
                     ->action(function (array $data) {
                         $service = new FecExportService;
-                        $path = $service->exportDepreciationsFec($data['year']);
+                        $absolutePath = $service->exportDepreciationsFec($data['year']);
+                        $relativePath = Str::after($absolutePath, Storage::disk('local')->path(''));
 
-                        return response()->download($path);
+                        return Storage::disk('local')->download($relativePath);
                     }),
             ])
             ->recordActions([
@@ -199,7 +202,7 @@ class FixedAssetsTable
                             $service = new ImmobilisationDocumentService;
                             $path = $service->generateAssetSheet($record);
 
-                            return response()->download($path);
+                            return $service->download($path);
                         }),
                     Action::make('print_qr')
                         ->label('Imprimer QR')
@@ -234,7 +237,7 @@ class FixedAssetsTable
                             $docService = new ImmobilisationDocumentService;
                             $path = $docService->generateDisposalCertificate($record);
 
-                            return response()->download($path);
+                            return $docService->download($path);
                         })
                         ->visible(fn (FixedAsset $record) => $record->status !== AssetStatus::DISPOSED),
                 ]),
@@ -249,7 +252,7 @@ class FixedAssetsTable
                             $service = new ImmobilisationDocumentService;
                             $path = $service->generateQrCodeSheet($records);
 
-                            return response()->download($path);
+                            return $service->download($path);
                         }),
                     DeleteBulkAction::make(),
                 ]),
