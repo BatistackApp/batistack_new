@@ -11,8 +11,8 @@ use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\Page;
 use Filament\Tables;
-use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Table;
 use Illuminate\Support\Facades\DB;
 use ToneGabes\Filament\Icons\Enums\Phosphor;
@@ -20,6 +20,7 @@ use ToneGabes\Filament\Icons\Enums\Phosphor;
 class BinInventoryPage extends Page implements Tables\Contracts\HasTable
 {
     use InteractsWithTable;
+
     protected static string $resource = WarehouseResource::class;
 
     protected static string|null|\BackedEnum $navigationIcon = Phosphor::Scan;

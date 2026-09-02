@@ -2,6 +2,7 @@
 
 namespace App\Filament\Immobilisation\Resources\Immobilisation\FixedAssets\Schemas;
 
+use App\Enums\Immobilisation\AssetStatus;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Components\ViewEntry;
 use Filament\Schemas\Components\Section;
@@ -58,6 +59,25 @@ class FixedAssetInfolist
                         ViewEntry::make('depreciations')
                             ->view('filament.immobilisation.infolists.components.depreciations-table'),
                     ]),
+
+                Section::make('Cession / Sortie définitive')
+                    ->schema([
+                        TextEntry::make('disposal.disposal_date')
+                            ->label('Date de cession')
+                            ->date('d/m/Y'),
+                        TextEntry::make('disposal.reason')
+                            ->label('Motif'),
+                        TextEntry::make('disposal.sale_price')
+                            ->label('Prix de cession')
+                            ->money('EUR'),
+                        TextEntry::make('disposal.profit_or_loss')
+                            ->label('Résultat (PV / MV)')
+                            ->money('EUR')
+                            ->color(fn ($state) => $state >= 0 ? 'success' : 'danger')
+                            ->formatStateUsing(fn ($state) => ($state >= 0 ? '+' : '').number_format($state, 2, ',', ' ').' €'),
+                    ])
+                    ->columns(2)
+                    ->visible(fn ($record) => $record->status === AssetStatus::DISPOSED),
             ]);
     }
 }

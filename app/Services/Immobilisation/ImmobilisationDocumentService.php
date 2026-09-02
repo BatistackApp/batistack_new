@@ -95,12 +95,13 @@ class ImmobilisationDocumentService extends DocumentService
      */
     public function generateDisposalCertificate(FixedAsset $asset): string
     {
-        $asset->load('category');
+        $asset->load(['category', 'disposal']);
 
         return $this->generate(
             view: 'documents.immobilisations.disposal_certificate',
             data: [
                 'asset' => $asset,
+                'disposal' => $asset->disposal,
                 'position' => 'portrait',
             ],
             filename: 'pv_cession_'.$asset->id,

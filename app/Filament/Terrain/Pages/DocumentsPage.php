@@ -7,9 +7,10 @@ use App\Services\Chantiers\ChantierDocumentService;
 use App\Services\Core\DocumentService;
 use BackedEnum;
 use Filament\Pages\Page;
-use UnitEnum;
 use Illuminate\Support\Facades\Storage;
+use Symfony\Component\HttpFoundation\Response;
 use ToneGabes\Filament\Icons\Enums\Phosphor;
+use UnitEnum;
 
 class DocumentsPage extends Page
 {
@@ -41,7 +42,7 @@ class DocumentsPage extends Page
         return 'Documents — '.$this->record?->name;
     }
 
-    public function downloadDocument(string $type): \Symfony\Component\HttpFoundation\Response
+    public function downloadDocument(string $type): Response
     {
         $record = $this->record;
 

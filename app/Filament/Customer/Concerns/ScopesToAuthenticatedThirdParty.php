@@ -3,7 +3,6 @@
 namespace App\Filament\Customer\Concerns;
 
 use App\Models\Tiers\Contact;
-use Illuminate\Database\Eloquent\Builder;
 
 trait ScopesToAuthenticatedThirdParty
 {

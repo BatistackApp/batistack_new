@@ -2,8 +2,8 @@
 
 namespace App\Models\Chantiers;
 
-use App\Models\RH\Equipement;
 use App\Models\Immobilisation\FixedAsset;
+use App\Models\RH\Equipement;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;

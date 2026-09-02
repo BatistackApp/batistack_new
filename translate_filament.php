@@ -32,14 +32,14 @@ foreach ($iterator as $file) {
     if ($file->isFile() && $file->getExtension() === 'php') {
         $content = file_get_contents($file->getPathname());
         $original = $content;
-        
+
         foreach ($translations as $search => $replace) {
-            $content = preg_replace("/" . preg_quote($search) . "(?!->label)/", $replace, $content);
+            $content = preg_replace('/'.preg_quote($search).'(?!->label)/', $replace, $content);
         }
-        
+
         if ($content !== $original) {
             file_put_contents($file->getPathname(), $content);
-            echo "Translated: " . $file->getPathname() . "\n";
+            echo 'Translated: '.$file->getPathname()."\n";
         }
     }
 }

@@ -12,6 +12,10 @@ class ComptaSeeder extends Seeder
 {
     public function run(): void
     {
+        if (EcritureComptable::count() > 0) {
+            return;
+        }
+
         $comptes = CompteComptable::all();
         if ($comptes->isEmpty()) {
             return;

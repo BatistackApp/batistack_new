@@ -4,17 +4,17 @@ namespace App\Filament\Terrain\Pages;
 
 use App\Models\Chantiers\Chantier;
 use App\Models\Chantiers\ChantierEquipmentTracking;
-use App\Models\RH\Equipement;
 use App\Models\Immobilisation\FixedAsset;
+use App\Models\RH\Equipement;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
-use Filament\Forms\Components\ToggleButtons;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Marcelorodrigo\FilamentBarcodeScannerField\Forms\Components\BarcodeInput;
 use ToneGabes\Filament\Icons\Enums\Phosphor;
@@ -207,7 +207,7 @@ class ScanChantierEquipmentPage extends Page implements HasForms
         Notification::make()
             ->success()
             ->title("{$label} marqué présent")
-            ->body("Arrivée enregistrée sur le chantier.")
+            ->body('Arrivée enregistrée sur le chantier.')
             ->send();
 
         $this->scanResult = "✓ {$label} — Arrivée enregistrée";
@@ -244,7 +244,7 @@ class ScanChantierEquipmentPage extends Page implements HasForms
         $this->form->fill(['chantier_id' => $data['chantier_id']]);
     }
 
-    public function getTodayPresences(): \Illuminate\Support\Collection
+    public function getTodayPresences(): Collection
     {
         $chantierId = $this->data['chantier_id'] ?? null;
 

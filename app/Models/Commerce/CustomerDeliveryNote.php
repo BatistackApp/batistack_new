@@ -4,6 +4,7 @@ namespace App\Models\Commerce;
 
 use App\Enums\Commerce\DeliveryStatus;
 use App\Models\Chantiers\Chantier;
+use App\Models\Commerce\Concerns\DeletableWhenDraft;
 use App\Models\Tiers\ThirdParty;
 use App\Models\User;
 use App\Observers\Commerce\CustomerDeliveryNoteObserver;
@@ -16,7 +17,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 #[ObservedBy([CustomerDeliveryNoteObserver::class])]
 class CustomerDeliveryNote extends Model
 {
-    use HasFactory;
+    use DeletableWhenDraft, HasFactory;
 
     protected $fillable = [
         'client_id',

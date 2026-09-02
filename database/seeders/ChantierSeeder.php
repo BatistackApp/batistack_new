@@ -18,6 +18,10 @@ class ChantierSeeder extends Seeder
 {
     public function run(): void
     {
+        if (Chantier::count() > 0) {
+            return;
+        }
+
         $employees = Employee::all();
         $clients = ThirdParty::where('type', 'client')->get();
         $suppliers = ThirdParty::where('type', 'supplier')->get();

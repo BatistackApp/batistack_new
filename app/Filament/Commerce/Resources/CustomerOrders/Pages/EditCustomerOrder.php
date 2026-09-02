@@ -32,7 +32,9 @@ class EditCustomerOrder extends EditRecord
                 })
                 ->visible(fn () => $this->record->status === OrderStatus::CONFIRMED && $this->record->manufacturingOrders()->count() === 0),
             ViewAction::make(),
-            DeleteAction::make(),
+            DeleteAction::make()
+                ->requiresConfirmation()
+                ->visible(fn () => $this->record->canBeDeleted()),
         ];
     }
 }

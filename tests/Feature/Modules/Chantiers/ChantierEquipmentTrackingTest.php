@@ -2,10 +2,11 @@
 
 use App\Models\Chantiers\Chantier;
 use App\Models\Chantiers\ChantierEquipmentTracking;
-use App\Models\Immobilisation\FixedAsset;
 use App\Models\Immobilisation\AssetCategory;
+use App\Models\Immobilisation\FixedAsset;
 use App\Models\RH\Equipement;
 use App\Models\User;
+use App\Services\Chantiers\ChantierAnalyticService;
 
 beforeEach(function () {
     $this->user = User::factory()->create();
@@ -314,7 +315,7 @@ test('getTrackableLabel retourne Inconnu pour trackable non trouvé', function (
 });
 
 test('getTrackableTypeLabel retourne Autre pour type inconnu', function () {
-    $tracking = new ChantierEquipmentTracking();
+    $tracking = new ChantierEquipmentTracking;
     $tracking->trackable_type = 'App\\Models\\Inconnu';
 
     expect($tracking->getTrackableTypeLabel())->toBe('Autre');
@@ -407,7 +408,7 @@ test('ChantierAnalyticService intègre le coût de tracking matériel', function
         'check_out_at' => now(),
     ]);
 
-    $service = app(\App\Services\Chantiers\ChantierAnalyticService::class);
+    $service = app(ChantierAnalyticService::class);
     $metrics = $service->getPerformanceMetrics($chantier);
 
     expect($metrics['financials']['equipment_cost_real'])->toBeGreaterThanOrEqual(300.00)

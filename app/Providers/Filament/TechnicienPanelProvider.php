@@ -2,18 +2,16 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Technicien\Pages\TechDashboard as Dashboard;
 use App\Http\Middleware\EnsureUserIsTechnician;
 use App\Providers\Filament\Traits\HasKnowledgeBaseCompanion;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
-use App\Filament\Technicien\Pages\TechDashboard as Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
-use Filament\Widgets\AccountWidget;
-use Filament\Widgets\FilamentInfoWidget;
 use Guava\FilamentKnowledgeBase\Plugins\KnowledgeBaseCompanionPlugin;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;

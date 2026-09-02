@@ -5,10 +5,10 @@ namespace App\Services\Gpao;
 use App\Enums\Gpao\MachineMaintenanceTicketStatus;
 use App\Enums\Gpao\MachineStatus;
 use App\Models\Gpao\MachineMaintenanceTicket;
+use App\Models\User;
 use App\Notifications\Gpao\MachineMaintenanceTicketNotification;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
-use App\Models\User;
 
 class MachineMaintenanceTicketService
 {

@@ -2,6 +2,7 @@
 
 namespace App\Filament\Terrain\Widgets;
 
+use App\Enums\Chantiers\ChantierStatus;
 use App\Models\Chantiers\Chantier;
 use App\Services\Chantiers\ChantierComplianceService;
 use Filament\Widgets\StatsOverviewWidget;
@@ -27,7 +28,7 @@ class TeamComplianceWidget extends StatsOverviewWidget
         $complianceService = app(ChantierComplianceService::class);
 
         $activeChantiers = Chantier::forEmployee($employee)
-            ->whereIn('status', [\App\Enums\Chantiers\ChantierStatus::IN_PROGRESS, \App\Enums\Chantiers\ChantierStatus::AWAITING_RECEPTION])
+            ->whereIn('status', [ChantierStatus::IN_PROGRESS, ChantierStatus::AWAITING_RECEPTION])
             ->get();
 
         $totalMembers = 0;

@@ -5,10 +5,9 @@ namespace App\Filament\Terrain\Widgets;
 use App\Enums\Chantiers\ChantierStatus;
 use App\Models\Chantiers\Chantier;
 use App\Services\Chantiers\ChantierAnalyticService;
-use Filament\Widgets\TableWidget;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
-use ToneGabes\Filament\Icons\Enums\Phosphor;
+use Filament\Widgets\TableWidget;
 
 class ChantierProgressWidget extends TableWidget
 {

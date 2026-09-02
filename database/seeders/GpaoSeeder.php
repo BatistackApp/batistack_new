@@ -15,6 +15,10 @@ class GpaoSeeder extends Seeder
 {
     public function run(): void
     {
+        if (ManufacturingOrder::count() > 0) {
+            return;
+        }
+
         $items = Item::all();
         $chantiers = Chantier::all();
 

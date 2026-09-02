@@ -17,6 +17,10 @@ class RHSeeder extends Seeder
 {
     public function run(): void
     {
+        if (TimeEntry::count() > 0) {
+            return;
+        }
+
         $users = User::factory(12)->create();
 
         foreach ($users as $user) {

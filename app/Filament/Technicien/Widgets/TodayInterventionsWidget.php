@@ -4,10 +4,9 @@ namespace App\Filament\Technicien\Widgets;
 
 use App\Enums\Interventions\InterventionStatus;
 use App\Models\Interventions\Intervention;
-use Filament\Widgets\TableWidget;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
-use ToneGabes\Filament\Icons\Enums\Phosphor;
+use Filament\Widgets\TableWidget;
 
 class TodayInterventionsWidget extends TableWidget
 {

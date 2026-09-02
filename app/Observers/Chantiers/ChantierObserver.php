@@ -27,9 +27,7 @@ class ChantierObserver
 
     public function saved(Chantier $chantier): void
     {
-        // On vérifie si l'un des composants de l'adresse a changé ou si c'est une création
-        if ($chantier->wasRecentlyCreated || $chantier->wasChanged(['address', 'zip_code', 'city'])) {
-            // Le job est dispatché vers la file d'attente pour ne pas ralentir l'UI
+        if ($chantier->wasChanged(['address', 'zip_code', 'city'])) {
             GeocodeChantierAddressJob::dispatch($chantier);
         }
     }

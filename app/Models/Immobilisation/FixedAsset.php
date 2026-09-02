@@ -31,6 +31,10 @@ class FixedAsset extends Model implements HasMedia
      */
     public ?string $release_reason = null;
 
+    protected $hidden = [
+        'media',
+    ];
+
     protected $fillable = [
         'asset_category_id',
         'name',
@@ -173,5 +177,44 @@ class FixedAsset extends Model implements HasMedia
         }
 
         return 'ok';
+    }
+
+    public function getVncAtDate(?string $date): float
+    {
+        $carbonDate = Carbon::parse($date ?? now());
+        $totalDepreciable = (float) $this->purchase_price - (float) $this->salvage_value;
+
+        $depreciations = $this->depreciations()
+            ->orderBy('period_date')
+            ->get();
+
+        if ($depreciations->isEmpty()) {
+            return $totalDepreciable;
+        }
+
+        $previousVnc = $totalDepreciable;
+        $prevPeriodDate = $this->purchase_date ? Carbon::parse($this->purchase_date) : null;
+
+        foreach ($depreciations as $dep) {
+            $periodDate = Carbon::parse($dep->period_date);
+
+            if ($periodDate->lte($carbonDate)) {
+                $previousVnc = (float) $dep->remaining_vnc;
+                $prevPeriodDate = $periodDate;
+
+                continue;
+            }
+
+            $start = $prevPeriodDate ?? $periodDate->copy()->subYear();
+            $elapsedDays = max(1, $start->diffInDays($carbonDate));
+            $totalDays = max(1, $start->diffInDays($periodDate));
+
+            $periodDepreciation = $previousVnc - (float) $dep->remaining_vnc;
+            $interpolatedDepreciation = $periodDepreciation * ($elapsedDays / $totalDays);
+
+            return max(0, $previousVnc - $interpolatedDepreciation);
+        }
+
+        return max(0, $previousVnc);
     }
 }

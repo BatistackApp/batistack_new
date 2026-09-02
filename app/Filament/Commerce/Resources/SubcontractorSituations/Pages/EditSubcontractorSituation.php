@@ -13,7 +13,9 @@ class EditSubcontractorSituation extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
-            DeleteAction::make(),
+            DeleteAction::make()
+                ->requiresConfirmation()
+                ->visible(fn () => $this->record->canBeDeleted()),
         ];
     }
 }

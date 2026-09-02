@@ -16,6 +16,7 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
+use Filament\Schemas\Components\Html;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use ToneGabes\Filament\Icons\Enums\Phosphor;
@@ -111,7 +112,7 @@ class SaisieHeuresCollective extends Page
                     ->description('5 derniers jours de pointage pour ce chantier')
                     ->columnSpanFull()
                     ->schema([
-                        \Filament\Schemas\Components\Html::make(fn () => $this->getHistoryHtml()),
+                        Html::make(fn () => $this->getHistoryHtml()),
                     ])
                     ->visible(fn () => ! empty($this->recentEntries)),
             ])

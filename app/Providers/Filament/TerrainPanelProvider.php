@@ -2,14 +2,13 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Terrain\Pages\TerrainDashboard as Dashboard;
 use App\Http\Middleware\EnsureUserIsChefDeChantier;
 use App\Providers\Filament\Traits\HasKnowledgeBaseCompanion;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
-use App\Filament\Terrain\Pages\ReservesOfflinePage;
-use App\Filament\Terrain\Pages\TerrainDashboard as Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;

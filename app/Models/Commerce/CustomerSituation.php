@@ -4,6 +4,7 @@ namespace App\Models\Commerce;
 
 use App\Enums\Commerce\InvoiceStatus;
 use App\Models\Chantiers\Chantier;
+use App\Models\Commerce\Concerns\DeletableWhenDraft;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -15,7 +16,7 @@ use Illuminate\Support\Carbon;
 
 class CustomerSituation extends Model
 {
-    use HasFactory;
+    use DeletableWhenDraft, HasFactory;
 
     protected $fillable = [
         'customer_order_id',
