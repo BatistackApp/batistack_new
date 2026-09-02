@@ -225,7 +225,9 @@ class CustomerInvoicesTable
                                 ->success()
                                 ->send();
                         }),
-                    DeleteBulkAction::make(),
+                    DeleteBulkAction::make()
+                        ->requiresConfirmation()
+                        ->check(fn ($records) => $records->every(fn ($r) => $r->status === \App\Enums\Commerce\InvoiceStatus::DRAFT)),
                 ]),
             ]);
     }

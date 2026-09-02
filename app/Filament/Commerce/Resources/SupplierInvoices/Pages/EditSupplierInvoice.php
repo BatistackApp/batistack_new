@@ -15,7 +15,9 @@ class EditSupplierInvoice extends EditRecord
     {
         return [
             ViewAction::make(),
-            DeleteAction::make(),
+            DeleteAction::make()
+                ->requiresConfirmation()
+                ->visible(fn () => $this->record->status === \App\Enums\Commerce\InvoiceStatus::DRAFT),
         ];
     }
 }

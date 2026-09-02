@@ -2,17 +2,24 @@
 
 namespace App\Filament\Immobilisation\Resources\Immobilisation\FixedAssets\Pages;
 
+use App\Enums\Commerce\InvoiceStatus;
+use App\Enums\Commerce\InvoiceType;
 use App\Enums\Immobilisation\AssetStatus;
 use App\Enums\Immobilisation\DepreciationMethod;
 use App\Filament\Immobilisation\Resources\Immobilisation\AssetMaintenances\Schemas\AssetMaintenanceForm;
 use App\Filament\Immobilisation\Resources\Immobilisation\FixedAssets\FixedAssetResource;
+use App\Models\Commerce\CustomerInvoice;
+use App\Models\Commerce\CustomerInvoiceItem;
+use App\Models\Tiers\ThirdParty;
 use App\Services\Immobilisation\AssetDisposalService;
 use App\Services\Immobilisation\AssetImpairmentService;
 use App\Services\Immobilisation\ImmobilisationDocumentService;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\EditAction;
+use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
@@ -121,9 +128,49 @@ class ViewFixedAsset extends ViewRecord
                         ->modalHeading('Sortie définitive de l\'actif')
                         ->modalDescription('Cette action va définitivement sortir l\'actif du parc et générer les écritures comptables correspondantes.')
                         ->schema([
-                            DatePicker::make('disposal_date')->label('Date de sortie')->required()->default(now()),
-                            TextInput::make('sale_price')->label('Prix de cession')->numeric()->default(0)->required()->prefix('€'),
+                            DatePicker::make('disposal_date')
+                                ->label('Date de sortie')
+                                ->required()
+                                ->default(now())
+                                ->live()
+                                ->afterStateUpdated(function ($state, $set) {
+                                    if (blank($state)) return;
+                                    $record = $this->getRecord();
+                                    $vnc = $record->getVncAtDate($state);
+                                    $set('sale_price', round($vnc, 2));
+                                }),
+                            TextInput::make('sale_price')
+                                ->label('Prix de cession')
+                                ->numeric()
+                                ->afterStateHydrated(function ($component) {
+                                    $record = $this->getRecord();
+                                    if ($record) {
+                                        $component->state(round($record->getVncAtDate(now()->format('Y-m-d')), 2));
+                                    }
+                                })
+                                ->required()
+                                ->prefix('€'),
                             TextInput::make('reason')->label('Motif (Revente, Vol, Rebut)')->required(),
+
+                            Checkbox::make('create_invoice')
+                                ->label('Générer une facture de revente')
+                                ->live()
+                                ->default(false),
+
+                            Select::make('client_id')
+                                ->label('Acheteur (Tiers)')
+                                ->options(fn () => ThirdParty::where('is_active', true)->pluck('name', 'id'))
+                                ->searchable()
+                                ->required()
+                                ->visible(fn ($get) => $get('create_invoice') === true),
+
+                            TextInput::make('invoice_amount')
+                                ->label('Montant HT de la facture')
+                                ->numeric()
+                                ->default(fn () => round($this->getRecord()->getVncAtDate(now()->format('Y-m-d')), 2))
+                                ->required()
+                                ->prefix('€')
+                                ->visible(fn ($get) => $get('create_invoice') === true),
                         ])
                         ->action(function (array $data) {
                             $record = $this->getRecord();
@@ -135,6 +182,40 @@ class ViewFixedAsset extends ViewRecord
                                 ->body('L\'actif a été sorti du parc et les écritures comptables ont été générées.')
                                 ->success()
                                 ->send();
+
+                            if (! empty($data['create_invoice']) && ! empty($data['client_id'])) {
+                                $invoice = CustomerInvoice::create([
+                                    'client_id' => $data['client_id'],
+                                    'reference' => 'FV-'.now()->format('Ym').'-'.$record->id,
+                                    'type' => InvoiceType::SIMPLE,
+                                    'status' => InvoiceStatus::DRAFT,
+                                    'total_ht' => $data['invoice_amount'],
+                                    'total_ttc' => $data['invoice_amount'],
+                                    'responsable_id' => auth()->id(),
+                                ]);
+
+                                $vatRate = \App\Models\Core\VatRate::getDefault();
+                                CustomerInvoiceItem::create([
+                                    'customer_invoice_id' => $invoice->id,
+                                    'name' => "Cession immobilisation: {$record->name}",
+                                    'quantity' => 1,
+                                    'price_unit' => $data['invoice_amount'],
+                                    'vat_rate_id' => $vatRate?->id,
+                                    'total_ht' => $data['invoice_amount'],
+                                ]);
+
+                                $invoice->update([
+                                    'total_ht' => $invoice->items()->sum(\DB::raw('customer_invoice_items.quantity * customer_invoice_items.price_unit')),
+                                    'total_tva' => $invoice->items()->sum(\DB::raw('customer_invoice_items.quantity * customer_invoice_items.price_unit * ((SELECT rate FROM vat_rates WHERE id = customer_invoice_items.vat_rate_id) / 100)')),
+                                    'total_ttc' => $invoice->items()->sum(\DB::raw('customer_invoice_items.quantity * customer_invoice_items.price_unit * (1 + (SELECT rate FROM vat_rates WHERE id = customer_invoice_items.vat_rate_id) / 100)')),
+                                ]);
+
+                                Notification::make()
+                                    ->title('Facture créée')
+                                    ->body("Facture de revente {$invoice->reference} créée pour {$invoice->total_ht} € HT")
+                                    ->success()
+                                    ->send();
+                            }
                         })
                         ->visible(fn () => $this->getRecord()->status !== AssetStatus::DISPOSED),
                 ]),

@@ -13,7 +13,9 @@ class EditCustomerDeliveryNote extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
-            DeleteAction::make(),
+            DeleteAction::make()
+                ->requiresConfirmation()
+                ->visible(fn () => $this->record->status === \App\Enums\Commerce\DeliveryStatus::DRAFT),
         ];
     }
 }

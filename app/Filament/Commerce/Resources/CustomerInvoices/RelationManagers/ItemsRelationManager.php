@@ -145,7 +145,7 @@ class ItemsRelationManager extends RelationManager
                     ->label('Référence'),
 
                 TextColumn::make('name')->label('Nom')
-                    ->description(fn (Model $record) => $record->item->description)
+                    ->description(fn (Model $record) => $record->item?->description)
                     ->label('Nom'),
 
                 TextColumn::make('quantity')->label('Quantité')
