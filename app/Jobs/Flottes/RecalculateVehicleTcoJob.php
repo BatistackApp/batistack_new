@@ -7,17 +7,23 @@ use App\Services\Flottes\FleetCostService;
 use Cache;
 use Exception;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Log;
 
-class RecalculateVehicleTcoJob implements ShouldQueue
+class RecalculateVehicleTcoJob implements ShouldBeUnique, ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public function __construct(protected Vehicle $vehicle) {}
+
+    public function uniqueId(): string
+    {
+        return "vehicle_tco_{$this->vehicle->id}";
+    }
 
     public function handle(FleetCostService $costService): void
     {
