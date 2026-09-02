@@ -229,19 +229,18 @@ class CustomerInvoicesTable
                     DeleteBulkAction::make()
                         ->requiresConfirmation()
                         ->action(function (Collection $records) {
-                            $nonDraft = $records->filter(fn ($r) => ! $r->canBeDeleted());
+                            $deletable = $records->filter->canBeDeleted();
+                            $skipped = $records->count() - $deletable->count();
 
-                            if ($nonDraft->isNotEmpty()) {
+                            $deletable->each->delete();
+
+                            if ($skipped > 0) {
                                 Notification::make()
-                                    ->title('Suppression impossible')
-                                    ->body($nonDraft->count().' facture(s) n\'est/sont plus en brouillon.')
-                                    ->danger()
+                                    ->title("{$deletable->count()} facture(s) supprimée(s)")
+                                    ->body("{$skipped} facture(s) ignorée(s) car non en brouillon.")
+                                    ->success()
                                     ->send();
-
-                                return;
                             }
-
-                            $records->each->delete();
                         }),
                 ]),
             ]);
