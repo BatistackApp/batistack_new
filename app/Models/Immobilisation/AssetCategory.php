@@ -14,6 +14,7 @@ class AssetCategory extends Model
     protected $fillable = [
         'name',
         'account_code',
+        'compte_amortissement',
         'default_depreciation_years',
         'default_method',
     ];

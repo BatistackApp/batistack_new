@@ -230,7 +230,7 @@ class FixedAssetsTable
                             TextInput::make('reason')->label('Raison (Revente, Vol, Rebut)')->required(),
                         ])
                         ->action(function (FixedAsset $record, array $data) {
-                            $service = new AssetDisposalService;
+                            $service = app(AssetDisposalService::class);
                             $service->dispose($record, $data['disposal_date'], $data['sale_price'], $data['reason']);
 
                             // Génération du PV
