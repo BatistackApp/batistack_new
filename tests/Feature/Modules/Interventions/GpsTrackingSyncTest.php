@@ -189,3 +189,136 @@ it('links GPS track to the correct employee via auth', function () {
     $track = InterventionGpsTrack::first();
     expect($track->employee_id)->toEqual($this->employee->id);
 });
+
+it('has intervention relationship', function () {
+    $track = InterventionGpsTrack::create([
+        'intervention_id' => $this->intervention->id,
+        'employee_id' => $this->employee->id,
+        'latitude' => 48.8566,
+        'longitude' => 2.3522,
+        'recorded_at' => now(),
+    ]);
+
+    expect($track->intervention)->toBeInstanceOf(Intervention::class);
+    expect($track->intervention->id)->toEqual($this->intervention->id);
+});
+
+it('has employee relationship', function () {
+    $track = InterventionGpsTrack::create([
+        'intervention_id' => $this->intervention->id,
+        'employee_id' => $this->employee->id,
+        'latitude' => 48.8566,
+        'longitude' => 2.3522,
+        'recorded_at' => now(),
+    ]);
+
+    expect($track->employee)->not->toBeNull();
+    expect($track->employee->id)->toEqual($this->employee->id);
+});
+
+it('has nullable vehicle relationship', function () {
+    $track = InterventionGpsTrack::create([
+        'intervention_id' => $this->intervention->id,
+        'employee_id' => $this->employee->id,
+        'latitude' => 48.8566,
+        'longitude' => 2.3522,
+        'recorded_at' => now(),
+    ]);
+
+    expect($track->vehicle)->toBeNull();
+});
+
+it('scopes forIntervention filters correctly', function () {
+    $otherIntervention = Intervention::create([
+        'company_id' => $this->company->id,
+        'third_party_id' => $this->client->id,
+        'type' => InterventionType::FORFAIT,
+        'status' => InterventionStatus::EN_COURS,
+        'reference' => 'INT-GPS-02',
+    ]);
+
+    InterventionGpsTrack::create([
+        'intervention_id' => $this->intervention->id,
+        'employee_id' => $this->employee->id,
+        'latitude' => 48.8566,
+        'longitude' => 2.3522,
+        'recorded_at' => now(),
+    ]);
+
+    InterventionGpsTrack::create([
+        'intervention_id' => $otherIntervention->id,
+        'employee_id' => $this->employee->id,
+        'latitude' => 49.0,
+        'longitude' => 2.0,
+        'recorded_at' => now(),
+    ]);
+
+    $tracks = InterventionGpsTrack::forIntervention($this->intervention->id)->get();
+    expect($tracks)->toHaveCount(1);
+    expect($tracks->first()->intervention_id)->toEqual($this->intervention->id);
+});
+
+it('scopes recent filters by minutes', function () {
+    InterventionGpsTrack::create([
+        'intervention_id' => $this->intervention->id,
+        'employee_id' => $this->employee->id,
+        'latitude' => 48.8566,
+        'longitude' => 2.3522,
+        'recorded_at' => now(),
+    ]);
+
+    InterventionGpsTrack::create([
+        'intervention_id' => $this->intervention->id,
+        'employee_id' => $this->employee->id,
+        'latitude' => 49.0,
+        'longitude' => 2.0,
+        'recorded_at' => now()->subHours(2),
+    ]);
+
+    $recentTracks = InterventionGpsTrack::recent(60)->get();
+    expect($recentTracks)->toHaveCount(1);
+});
+
+it('intervention has gpsTracks relationship', function () {
+    InterventionGpsTrack::create([
+        'intervention_id' => $this->intervention->id,
+        'employee_id' => $this->employee->id,
+        'latitude' => 48.8566,
+        'longitude' => 2.3522,
+        'recorded_at' => now()->subMinutes(10),
+    ]);
+
+    InterventionGpsTrack::create([
+        'intervention_id' => $this->intervention->id,
+        'employee_id' => $this->employee->id,
+        'latitude' => 48.8600,
+        'longitude' => 2.3600,
+        'recorded_at' => now(),
+    ]);
+
+    expect($this->intervention->gpsTracks)->toHaveCount(2);
+});
+
+it('intervention has latestGpsTrack relationship', function () {
+    $older = InterventionGpsTrack::create([
+        'intervention_id' => $this->intervention->id,
+        'employee_id' => $this->employee->id,
+        'latitude' => 48.8566,
+        'longitude' => 2.3522,
+        'recorded_at' => now()->subMinutes(10),
+    ]);
+
+    $latest = InterventionGpsTrack::create([
+        'intervention_id' => $this->intervention->id,
+        'employee_id' => $this->employee->id,
+        'latitude' => 48.8600,
+        'longitude' => 2.3600,
+        'recorded_at' => now(),
+    ]);
+
+    expect($this->intervention->latestGpsTrack->id)->toEqual($latest->id);
+});
+
+it('intervention latestGpsTrack is null when no tracks', function () {
+    expect($this->intervention->latestGpsTrack)->toBeNull();
+});
