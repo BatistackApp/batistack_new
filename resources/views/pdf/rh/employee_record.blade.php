@@ -33,7 +33,7 @@
 
     <div class="grid grid-cols-2 gap-8 mb-8">
         <!-- BLOC 1 : ÉTAT CIVIL & CONTACT -->
-        <section class="bg-gray-header p-5 rounded-2xl border border-slate-200">
+        <section class="bg-gray-header p-5 rounded-2xl border border-slate-200 avoid-break section-page-break">
             <h2 class="text-sm font-bold text-blue-batistack uppercase mb-4 border-b border-slate-300 pb-2">Identité & Contact</h2>
             <table class="text-[10px] w-full">
                 <tr class="h-8">
@@ -56,7 +56,7 @@
         </section>
 
         <!-- BLOC 2 : CONTRAT ACTUEL -->
-        <section class="bg-blue-50 p-5 rounded-2xl border border-blue-100">
+        <section class="bg-blue-50 p-5 rounded-2xl border border-blue-100 avoid-break section-page-break">
             <h2 class="text-sm font-bold text-blue-batistack uppercase mb-4 border-b border-blue-200 pb-2">Conditions de Travail</h2>
             @if($contract = $employee->currentContract)
                 <table class="text-[10px] w-full">
@@ -116,7 +116,7 @@
 
     <!-- SECTION : HABILITATIONS & MÉDICAL (Synthèse) -->
     <div class="grid grid-cols-2 gap-8">
-        <section>
+        <section class="avoid-break section-page-break">
             <h2 class="text-xs font-bold bg-blue-batistack text-white p-2 mb-4 uppercase">Habilitations Actives</h2>
             <table class="text-[9px]">
                 @foreach($employee->qualifications()->where('expires_at', '>', now())->get() as $q)
@@ -128,7 +128,7 @@
             </table>
         </section>
 
-        <section>
+        <section class="avoid-break section-page-break">
             <h2 class="text-xs font-bold bg-blue-batistack text-white p-2 mb-4 uppercase">Suivi Médical</h2>
             @php $lastVisit = $employee->medicalVisits()->latest('visit_date')->first(); @endphp
             @if($lastVisit)

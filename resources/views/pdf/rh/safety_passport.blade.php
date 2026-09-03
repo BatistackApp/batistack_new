@@ -31,7 +31,7 @@
 
     <div class="grid grid-cols-2 gap-10">
         <!-- Aptitude Médicale -->
-        <section>
+        <section class="avoid-break section-page-break">
             <h2 class="text-xs font-bold bg-blue-batistack text-white p-2 mb-4 uppercase flex justify-between">
                 <span>Suivi Médical Réglementaire</span>
                 <i class="fa-solid fa-heart-pulse"></i>
@@ -70,7 +70,7 @@
         </section>
 
         <!-- Habilitations & CACES -->
-        <section>
+        <section class="avoid-break section-page-break">
             <h2 class="text-xs font-bold bg-blue-batistack text-white p-2 mb-4 uppercase flex justify-between">
                 <span>Habilitations Techniques & CACES</span>
                 <i class="fa-solid fa-certificate"></i>

@@ -14,7 +14,7 @@
 
     <div class="grid grid-cols-2 gap-8 mb-8">
         <!-- INFORMATIONS CHANTIER -->
-        <section class="bg-gray-header p-5 rounded-2xl border border-slate-200">
+        <section class="bg-gray-header p-5 rounded-2xl border border-slate-200 avoid-break section-page-break">
             <h2 class="text-sm font-bold text-blue-batistack uppercase mb-4 border-b border-slate-300 pb-2">Détails du Projet</h2>
             <table class="text-[10px] w-full">
                 <tr class="h-8">
@@ -41,7 +41,7 @@
         </section>
 
         <!-- ENCADREMENT -->
-        <section class="bg-blue-50 p-5 rounded-2xl border border-blue-100">
+        <section class="bg-blue-50 p-5 rounded-2xl border border-blue-100 avoid-break section-page-break">
             <h2 class="text-sm font-bold text-blue-batistack uppercase mb-4 border-b border-blue-200 pb-2">Responsable de Site</h2>
             @if($chantier->manager)
                 <div class="flex items-center space-x-4">

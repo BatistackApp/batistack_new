@@ -8,8 +8,8 @@ use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
-use Filament\Tables\Filters\TerminatorFilter;
 use Filament\Tables\Table;
+use ToneGabes\Filament\Icons\Enums\Phosphor;
 
 class GeneratedDocumentTable
 {
@@ -61,8 +61,6 @@ class GeneratedDocumentTable
             ])
             ->defaultSort('generated_at', 'desc')
             ->filters([
-                TerminatorFilter::make()
-                    ->autoOpenAbove(),
                 SelectFilter::make('module')
                     ->label('Module')
                     ->options([

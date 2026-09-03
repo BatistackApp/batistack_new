@@ -58,10 +58,10 @@
     </div>
 
     {{-- Articles --}}
-    <div class="space-y-6 text-justify text-sm leading-relaxed">
+    <div class="space-y-0 text-justify text-sm leading-relaxed">
 
         {{-- Article 1 --}}
-        <section>
+        <section class="avoid-break section-page-break">
             <h3 class="font-bold uppercase text-blue-batistack underline mb-2">Article 1 : Objet du contrat – Engagement et Fonctions</h3>
             <p>
                 Le salarié est engagé à compter du <strong>{{ $contract->start_date->format('d/m/Y') }}</strong> en qualité de
@@ -85,7 +85,7 @@
         </section>
 
         {{-- Article 2 --}}
-        <section>
+        <section class="avoid-break section-page-break">
             <h3 class="font-bold uppercase text-blue-batistack underline mb-2">Article 2 : Classification et Convention Collective</h3>
             <p>
                 Le salarié est classé dans la catégorie professionnelle de
@@ -104,7 +104,7 @@
         </section>
 
         {{-- Article 3 --}}
-        <section>
+        <section class="avoid-break section-page-break">
             <h3 class="font-bold uppercase text-blue-batistack underline mb-2">Article 3 : Type de contrat et Durée</h3>
             <p>
                 Le présent contrat est conclu sous la forme d'un <strong>{{ $contract->type->getDescription() }}</strong>.
@@ -137,7 +137,7 @@
         </section>
 
         {{-- Article 4 --}}
-        <section>
+        <section class="avoid-break section-page-break">
             <h3 class="font-bold uppercase text-blue-batistack underline mb-2">Article 4 : Période d'essai</h3>
             @if($contract->trial_end_date)
                 <p>
@@ -164,7 +164,7 @@
         </section>
 
         {{-- Article 5 --}}
-        <section>
+        <section class="avoid-break section-page-break">
             <h3 class="font-bold uppercase text-blue-batistack underline mb-2">Article 5 : Lieu de travail</h3>
             <p>
                 Le lieu de travail habituel est fixé au siège de l'entreprise ou sur les chantiers situés dans le ressort
@@ -180,7 +180,7 @@
         </section>
 
         {{-- Article 6 --}}
-        <section>
+        <section class="avoid-break section-page-break">
             <h3 class="font-bold uppercase text-blue-batistack underline mb-2">Article 6 : Mobilité et Déplacements</h3>
             <p>
                 Le salarié s'engage à accepter les déplacements nécessaires à l'accomplissement de ses missions, tant en
@@ -195,7 +195,7 @@
         </section>
 
         {{-- Article 7 --}}
-        <section>
+        <section class="avoid-break section-page-break">
             <h3 class="font-bold uppercase text-blue-batistack underline mb-2">Article 7 : Durée du travail</h3>
             <p>
                 La durée de travail conventionnelle est fixée à <strong>{{ $contract->weekly_hours }} heures</strong>
@@ -221,7 +221,7 @@
         </section>
 
         {{-- Article 8 --}}
-        <section>
+        <section class="avoid-break section-page-break">
             <h3 class="font-bold uppercase text-blue-batistack underline mb-2">Article 8 : Rémunération</h3>
             <p>
                 En contrepartie de son travail, le salarié percevra une rémunération horaire brute de
@@ -246,7 +246,7 @@
         </section>
 
         {{-- Article 9 --}}
-        <section>
+        <section class="avoid-break section-page-break">
             <h3 class="font-bold uppercase text-blue-batistack underline mb-2">Article 9 : Primes et Indemnités</h3>
             <p>
                 Le salarié pourra bénéficier des primes et indemnités suivantes, sous réserve des conditions d'attribution
@@ -261,7 +261,7 @@
         </section>
 
         {{-- Article 10 --}}
-        <section>
+        <section class="avoid-break section-page-break">
             <h3 class="font-bold uppercase text-blue-batistack underline mb-2">Article 10 : Congés Payés</h3>
             <p>
                 Le salarié bénéficie de congés payés annuels conformément aux dispositions légales (Code du travail,
@@ -281,7 +281,7 @@
         </section>
 
         {{-- Article 11 --}}
-        <section>
+        <section class="avoid-break section-page-break">
             <h3 class="font-bold uppercase text-blue-batistack underline mb-2">Article 11 : Jours Fractionnés et RTT</h3>
             <p>
                 Le salarié pourra bénéficier de jours fractionnés de congés payés et de jours de réduction du temps de
@@ -291,7 +291,7 @@
         </section>
 
         {{-- Article 12 --}}
-        <section>
+        <section class="avoid-break section-page-break">
             <h3 class="font-bold uppercase text-blue-batistack underline mb-2">Article 12 : Frais Professionnels</h3>
             <p>
                 Les frais professionnels engagés par le salarié dans l'exercice de ses fonctions, avec l'accord préalable
@@ -313,7 +313,7 @@
         </section>
 
         {{-- Article 13 --}}
-        <section>
+        <section class="avoid-break section-page-break">
             <h3 class="font-bold uppercase text-blue-batistack underline mb-2">Article 13 : Maladie et Accident du travail</h3>
             <p>
                 <strong>En cas d'absence pour maladie ou accident :</strong>
@@ -333,7 +333,7 @@
         </section>
 
         {{-- Article 14 --}}
-        <section>
+        <section class="avoid-break section-page-break">
             <h3 class="font-bold uppercase text-blue-batistack underline mb-2">Article 14 : Prévoyance et Mutuelle</h3>
             <p>
                 Le salarié sera affilié obligatoirement aux régimes collectifs suivants :
@@ -350,7 +350,7 @@
         </section>
 
         {{-- Article 15 --}}
-        <section>
+        <section class="avoid-break section-page-break">
             <h3 class="font-bold uppercase text-blue-batistack underline mb-2">Article 15 : Obligation de Loyauté et d'Exclusivité</h3>
             <p>
                 Le salarié s'engage à consacrer l'intégralité de son temps de travail à l'entreprise et s'interdit
@@ -366,7 +366,7 @@
         </section>
 
         {{-- Article 16 --}}
-        <section>
+        <section class="avoid-break section-page-break">
             <h3 class="font-bold uppercase text-blue-batistack underline mb-2">Article 16 : Clause de Confidentialité</h3>
             <p>
                 Le salarié est tenu au secret professionnel et à une obligation de discrétion absolue sur tout ce
@@ -385,7 +385,7 @@
         </section>
 
         {{-- Article 17 --}}
-        <section>
+        <section class="avoid-break section-page-break">
             <h3 class="font-bold uppercase text-blue-batistack underline mb-2">Article 17 : Clause de Non-Concurrence</h3>
             <p>
                 En cas de rupture du contrat de travail, et selon les fonctions exercées par le salarié, une clause
@@ -404,7 +404,7 @@
         </section>
 
         {{-- Article 18 --}}
-        <section>
+        <section class="avoid-break section-page-break">
             <h3 class="font-bold uppercase text-blue-batistack underline mb-2">Article 18 : Obligations Professionnelles</h3>
             <p>
                 Le salarié s'engage à :
@@ -421,7 +421,7 @@
         </section>
 
         {{-- Article 19 --}}
-        <section>
+        <section class="avoid-break section-page-break">
             <h3 class="font-bold uppercase text-blue-batistack underline mb-2">Article 19 : Utilisation du Matériel de l'Entreprise</h3>
             <p>
                 Le matériel mis à disposition du salarié (téléphone, ordinateur, outillage, véhicule, vêtements de
@@ -445,7 +445,7 @@
         </section>
 
         {{-- Article 20 --}}
-        <section>
+        <section class="avoid-break section-page-break">
             <h3 class="font-bold uppercase text-blue-batistack underline mb-2">Article 20 : Sécurité et Port des Équipements de Protection Individuelle (EPI)</h3>
             <p>
                 Le salarié s'engage à respecter scrupuleusement les consignes de sécurité, les règles de l'art et les
@@ -466,7 +466,7 @@
         </section>
 
         {{-- Article 21 --}}
-        <section>
+        <section class="avoid-break section-page-break">
             <h3 class="font-bold uppercase text-blue-batistack underline mb-2">Article 21 : Santé et Sécurité au Travail</h3>
             <p>
                 L'Employeur s'engage à assurer la santé et la sécurité du salarié conformément aux dispositions du
@@ -485,7 +485,7 @@
         </section>
 
         {{-- Article 22 --}}
-        <section>
+        <section class="avoid-break section-page-break">
             <h3 class="font-bold uppercase text-blue-batistack underline mb-2">Article 22 : Règlement Intérieur</h3>
             <p>
                 Le salarié déclare avoir pris connaissance et accepté le règlement intérieur de l'entreprise, qui lui
@@ -499,7 +499,7 @@
         </section>
 
         {{-- Article 23 --}}
-        <section>
+        <section class="avoid-break section-page-break">
             <h3 class="font-bold uppercase text-blue-batistack underline mb-2">Article 23 : Véhicule de l'Entreprise</h3>
             <p>
                 Si un véhicule est confié au salarié dans le cadre de ses fonctions, celui-ci s'engage à :
@@ -519,7 +519,7 @@
         </section>
 
         {{-- Article 24 --}}
-        <section>
+        <section class="avoid-break section-page-break">
             <h3 class="font-bold uppercase text-blue-batistack underline mb-2">Article 24 : Informatique et Libertés (RGPD)</h3>
             <p>
                 Les données à caractère personnel du salarié sont collectées et traitées par l'Employeur pour les
@@ -546,7 +546,7 @@
         </section>
 
         {{-- Article 25 --}}
-        <section>
+        <section class="avoid-break section-page-break">
             <h3 class="font-bold uppercase text-blue-batistack underline mb-2">Article 25 : Formation Professionnelle</h3>
             <p>
                 Le salarié benefit du droit à la formation professionnelle continue, conformément aux dispositions
@@ -567,7 +567,7 @@
         </section>
 
         {{-- Article 26 --}}
-        <section>
+        <section class="avoid-break section-page-break">
             <h3 class="font-bold uppercase text-blue-batistack underline mb-2">Article 26 : Protection Sociale</h3>
             <p>
                 Le salarié benefit des garanties collectives de protection sociale mises en place par l'entreprise,
@@ -586,7 +586,7 @@
         </section>
 
         {{-- Article 27 --}}
-        <section>
+        <section class="avoid-break section-page-break">
             <h3 class="font-bold uppercase text-blue-batistack underline mb-2">Article 27 : Disciplinaire et Sanctions</h3>
             <p>
                 En cas de manquement du salarié à ses obligations contractuelles ou professionnelle, l'Employeur
@@ -608,7 +608,7 @@
         </section>
 
         {{-- Article 28 --}}
-        <section>
+        <section class="avoid-break section-page-break">
             <h3 class="font-bold uppercase text-blue-batistack underline mb-2">Article 28 : Rupture du Contrat</h3>
             <p>
                 <strong>Pendant la période d'essai :</strong> chacune des Parties pourra rompre le contrat dans les
@@ -631,7 +631,7 @@
         </section>
 
         {{-- Article 29 --}}
-        <section>
+        <section class="avoid-break section-page-break">
             <h3 class="font-bold uppercase text-blue-batistack underline mb-2">Article 29 : Conventions et Accords Collectifs</h3>
             <p>
                 Les relations entre les parties sont régies par le présent contrat, la <strong>Convention Collective
@@ -649,7 +649,7 @@
         </section>
 
         {{-- Article 30 --}}
-        <section>
+        <section class="avoid-break section-page-break">
             <h3 class="font-bold uppercase text-blue-batistack underline mb-2">Article 30 : Litiges et Juridiction Compétente</h3>
             <p>
                 Tout litige relatif à l'interprétation ou à l'exécution du présent contrat, ou à la rupture de celui-ci,
@@ -664,7 +664,7 @@
         </section>
 
         {{-- Article 31 --}}
-        <section>
+        <section class="avoid-break section-page-break">
             <h3 class="font-bold uppercase text-blue-batistack underline mb-2">Article 31 : Dispositions Diverses</h3>
             <p>
                 Le présent contrat a été établi en deux (2) exemplaires originaux, dont un pour chaque Partie.
@@ -685,7 +685,7 @@
     </div>
 
     {{-- Signatures --}}
-    <div class="mt-16">
+    <div class="mt-16 avoid-break">
         <p class="font-bold mb-8 text-xs uppercase text-center">
             Fait à {{ $company->city }}, le {{ now()->format('d/m/Y') }}, en deux exemplaires originaux
         </p>
