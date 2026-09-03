@@ -103,18 +103,20 @@ class DocumentService
         try {
             $fileSize = Storage::disk($disk)->size($relativePath);
 
-            GeneratedDocument::create([
-                'module' => $this->extractModuleFromPath($type),
-                'type' => $documentType ?? $type,
-                'entity_type' => $entity ? get_class($entity) : null,
-                'entity_id' => $entity?->id,
-                'file_path' => $relativePath,
-                'file_disk' => $disk,
-                'file_name' => $filename,
-                'file_size' => $fileSize,
-                'generated_by' => auth()->id(),
-                'generated_at' => now(),
-            ]);
+            GeneratedDocument::updateOrCreate(
+                ['file_path' => $relativePath],
+                [
+                    'module' => $this->extractModuleFromPath($type),
+                    'type' => $documentType ?? $type,
+                    'entity_type' => $entity ? get_class($entity) : null,
+                    'entity_id' => $entity?->id,
+                    'file_disk' => $disk,
+                    'file_name' => $filename,
+                    'file_size' => $fileSize,
+                    'generated_by' => auth()->id(),
+                    'generated_at' => now(),
+                ]
+            );
         } catch (\Exception $e) {
             Log::error("DocumentService: échec d'indexation pour {$relativePath}: ".$e->getMessage());
         }

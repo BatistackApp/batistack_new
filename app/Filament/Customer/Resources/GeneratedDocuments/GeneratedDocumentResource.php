@@ -45,17 +45,15 @@ class GeneratedDocumentResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        $contact = Contact::where('user_id', auth()->id())->first();
+        $contact = Contact::with('thirdParty')->where('user_id', auth()->id())->first();
 
         $query = parent::getEloquentQuery();
 
-        if (! $contact) {
+        if (! $contact?->thirdParty) {
             return $query->whereRaw('1 = 0');
         }
 
-        $thirdPartyClass = get_class($contact->thirdParty);
-
-        return $query->where('entity_type', $thirdPartyClass)
+        return $query->where('entity_type', get_class($contact->thirdParty))
             ->where('entity_id', $contact->third_party_id);
     }
 

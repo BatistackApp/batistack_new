@@ -99,23 +99,15 @@ class IndexGeneratedDocumentsCommand extends Command
         return self::SUCCESS;
     }
 
-    private function getAllPdfFiles(string $disk, string $directory): array
+    private function getAllPdfFiles(string $disk, string $directory): \Generator
     {
-        $files = [];
-        $diskFiles = Storage::disk($disk)->files($directory);
+        $storage = Storage::disk($disk);
 
-        foreach ($diskFiles as $file) {
+        foreach ($storage->allFiles($directory) as $file) {
             if (str_ends_with($file, '.pdf')) {
-                $files[] = $file;
+                yield $file;
             }
         }
-
-        $subDirectories = Storage::disk($disk)->directories($directory);
-        foreach ($subDirectories as $subDirectory) {
-            $files = array_merge($files, $this->getAllPdfFiles($disk, $subDirectory));
-        }
-
-        return $files;
     }
 
     private function extractSubType(string $filePath): string
