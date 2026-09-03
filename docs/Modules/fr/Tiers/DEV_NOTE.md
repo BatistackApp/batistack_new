@@ -22,6 +22,7 @@ Le module **Tiers** est le cœur de la relation externe de Batistack. Il central
     *   `PappersService` / `Core\SirenService` pour récupérer les données INSEE.
     *   `VigilanceService` pour l'évaluation financière et de solvabilité en temps réel (via `recherche-entreprises.api.gouv.fr`) afin de détecter les liquidations ou redressements judiciaires et afficher des alertes visuelles.
 *   **Statut Juridique Granulaire** : `PappersService::determineLegalStatus()` parse `procedures_collectives` et `etat_administratif` pour alimenter la colonne `legal_status` (`LegalStatus` : Sain / Sauvegarde / Redressement judiciaire / Liquidation judiciaire / Cessation).
+*   **Rafraîchissement Périodique du Statut Juridique (#344)** : Job planifié quotidien (`tiers:refresh-legal-status` à 03h00) qui rafraîchit le `legal_status` de tous les tiers actifs. Envoie une notification (email + database) aux administrateurs en cas de changement vers RJ/LJ.
 *   **Garde-Fou de Contractualisation** : `ContractingGuardService` (blocage dur RJ/LJ, avertissement Sauvegarde/Cessation/non-vérifié) appliqué à la génération des contrats de sous-traitance (`GenerateContractAction`), à la création des bons de commande (`PurchaseService::convertRequestToOrder` + page `CreatePurchaseOrder`) et à l'affectation de sous-traitants aux chantiers (`SubcontractorsRelationManager`).
 *   **Scoring** : `SupplierScoringService` (Scoring Fournisseur basé sur la qualité, délais, litiges).
 *   **Gestion Documentaire** : `TiersDocumentService` centralise les documents obligatoires avec suivi des expirations (notifications automatisées à J-30 et J-7).
@@ -43,7 +44,6 @@ Le module **Tiers** est le cœur de la relation externe de Batistack. Il central
 *   Suite ultra-complète validée à 100% (plus de 233 tests PestPHP pour le module Tiers).
 
 ## 🚧 Ce qu'il reste à faire
-*   **Nouveauté (#294)** : Le statut juridique et le garde-fou de contractualisation sont implémentés. L'actualisation du `legal_status` repose sur la synchro « Actualiser Solvabilité » (`SyncFinancialAction`) ; un job planifié pour rafraîchir périodiquement le statut des sous-traitants pourrait être ajouté pour fiabiliser le blocage sans action manuelle.
 
 ## 💡 Idées d'amélioration et Nouvelles Fonctionnalités
 *   **Collecte Automatique des Documents Légaux** : Connecter l'ERP à une API légale tierce (e-Attestations ou Provigis) pour télécharger et mettre à jour automatiquement les Kbis et attestations URSSAF des sous-traitants, annulant le besoin de relance manuelle.

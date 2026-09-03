@@ -29,7 +29,7 @@
     </div>
 
     <div class="grid grid-cols-2 gap-8 mb-8">
-        <section>
+        <section class="avoid-break section-page-break">
             <h2 class="text-sm font-bold bg-blue-batistack text-white p-2 mb-4 uppercase">Siège & Adresses</h2>
             @foreach($thirdParty->addresses as $address)
                 <div class="mb-3 pb-2 border-b border-slate-100 last:border-0">
@@ -42,7 +42,7 @@
             @endforeach
         </section>
 
-        <section>
+        <section class="avoid-break section-page-break">
             <h2 class="text-sm font-bold bg-blue-batistack text-white p-2 mb-4 uppercase">Interlocuteurs</h2>
             @foreach($thirdParty->contacts as $contact)
                 <div class="mb-3 pb-2 border-b border-slate-100 last:border-0">
@@ -58,7 +58,7 @@
     </div>
 
     @if($thirdParty->type->value === \App\Enums\Tiers\ThirdPartyType::SUBCONTRACTOR->value)
-        <section class="mb-8">
+        <section class="mb-8 avoid-break section-page-break">
             <h2 class="text-sm font-bold bg-blue-batistack text-white p-2 mb-4 uppercase">Analyse de Conformité
                 détaillée</h2>
             @if(empty($compliance['issues']))

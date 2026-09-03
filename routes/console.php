@@ -31,6 +31,12 @@ Schedule::command('tiers:process-email-campaigns')
 Schedule::command('tiers:verify-vigilance')
     ->weeklyOn(1, '04:00');
 
+Schedule::command('tiers:refresh-legal-status')
+    ->dailyAt('03:00')
+    ->timezone('Europe/Paris')
+    ->withoutOverlapping()
+    ->onFailure(fn () => logger()->error('Erreur lors du rafraîchissement du statut juridique des tiers'));
+
 // Articles
 Schedule::command('articles:check-stocks')
     ->dailyAt('07:00');

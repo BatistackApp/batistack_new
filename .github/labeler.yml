@@ -1,0 +1,205 @@
+# Configuration pour actions/labeler
+# Labels automatiques basés sur les chemins de fichiers modifiés
+
+# ============================================
+# CORE
+# ============================================
+core:
+  - changed-files:
+      - any-glob-to-any-file:
+          - app/Models/Core/**
+          - app/Services/Core/**
+          - app/Console/Commands/Core/**
+          - app/Filament/Resources/**
+          - app/Filament/Pages/**
+          - app/Filament/Widgets/**
+          - config/**
+          - database/migrations/*core*
+          - docs/Modules/fr/Core/**
+
+# ============================================
+# MODULES
+# ============================================
+
+# Commerce
+commerce:
+  - changed-files:
+      - any-glob-to-any-file:
+          - app/Models/Commerce/**
+          - app/Services/Commerce/**
+          - app/Console/Commands/Commerce/**
+          - app/Filament/Commerce/**
+          - docs/Modules/fr/Commerce/**
+
+# RH / Ressources Humaines
+rh:
+  - changed-files:
+      - any-glob-to-any-file:
+          - app/Models/RH/**
+          - app/Services/RH/**
+          - app/Console/Commands/RH/**
+          - app/Filament/RH/**
+          - app/Filament/Paie/**
+          - app/Services/Paie/**
+          - docs/Modules/fr/RH/**
+          - docs/Modules/fr/Paie/**
+
+# Chantiers
+chantiers:
+  - changed-files:
+      - any-glob-to-any-file:
+          - app/Models/Chantiers/**
+          - app/Services/Chantiers/**
+          - app/Console/Commands/Chantiers/**
+          - app/Filament/Chantier/**
+          - app/Filament/Terrain/**
+          - docs/Modules/fr/Chantiers/**
+
+# Tiers / CRM
+tiers:
+  - changed-files:
+      - any-glob-to-any-file:
+          - app/Models/Tiers/**
+          - app/Services/Tiers/**
+          - app/Console/Commands/Tiers/**
+          - app/Filament/Tiers/**
+          - app/Filament/Customer/**
+          - app/Filament/Subcontractor/**
+          - docs/Modules/fr/Tiers/**
+
+# Articles / Stocks
+articles:
+  - changed-files:
+      - any-glob-to-any-file:
+          - app/Models/Articles/**
+          - app/Services/Articles/**
+          - app/Console/Commands/Articles/**
+          - app/Filament/Articles/**
+          - docs/Modules/fr/Articles/**
+
+# GPAO / Production
+gpao:
+  - changed-files:
+      - any-glob-to-any-file:
+          - app/Models/Gpao/**
+          - app/Services/Gpao/**
+          - app/Console/Commands/Gpao/**
+          - app/Filament/Gpao/**
+          - docs/Modules/fr/Gpao/**
+
+# Flottes
+flottes:
+  - changed-files:
+      - any-glob-to-any-file:
+          - app/Models/Flottes/**
+          - app/Services/Flottes/**
+          - app/Console/Commands/Flottes/**
+          - app/Filament/Flottes/**
+          - docs/Modules/fr/Flottes/**
+
+# Immobilisations
+immobilisation:
+  - changed-files:
+      - any-glob-to-any-file:
+          - app/Models/Immobilisation/**
+          - app/Services/Immobilisation/**
+          - app/Console/Commands/Immobilisation/**
+          - app/Filament/Immobilisation/**
+          - docs/Modules/fr/Immobilisation/**
+
+# Interventions
+interventions:
+  - changed-files:
+      - any-glob-to-any-file:
+          - app/Models/Interventions/**
+          - app/Services/Interventions/**
+          - app/Console/Commands/Interventions/**
+          - app/Filament/Interventions/**
+          - docs/Modules/fr/Interventions/**
+
+# Locations
+locations:
+  - changed-files:
+      - any-glob-to-any-file:
+          - app/Models/Locations/**
+          - app/Services/Locations/**
+          - app/Console/Commands/Locations/**
+          - app/Filament/Locations/**
+          - docs/Modules/fr/Locations/**
+
+# Banque
+banque:
+  - changed-files:
+      - any-glob-to-any-file:
+          - app/Models/Banque/**
+          - app/Services/Banque/**
+          - app/Console/Commands/Banque/**
+          - app/Filament/Banque/**
+          - docs/Modules/fr/Banque/**
+
+# Vision3D
+vision3d:
+  - changed-files:
+      - any-glob-to-any-file:
+          - app/Filament/Vision3D/**
+          - docs/Modules/fr/Vision3D/**
+
+# ============================================
+# TYPES DE CHANGEMENTS
+# ============================================
+
+# Dépendances
+dependencies:
+  - changed-files:
+      - any-glob-to-any-file:
+          - composer.json
+          - composer.lock
+          - package.json
+          - package-lock.json
+
+# Base de données
+database:
+  - changed-files:
+      - any-glob-to-any-file:
+          - database/**
+          - app/Models/**
+
+# Tests
+tests:
+  - changed-files:
+      - any-glob-to-any-file:
+          - tests/**
+
+# Documentation
+documentation:
+  - changed-files:
+      - any-glob-to-any-file:
+          - docs/**
+          - README.md
+          - CHANGELOG.md
+
+# Configuration
+config:
+  - changed-files:
+      - any-glob-to-any-file:
+          - config/**
+          - .env*
+          - docker-compose*.yml
+
+# CI/CD
+ci:
+  - changed-files:
+      - any-glob-to-any-file:
+          - .github/**
+
+# ============================================
+# PRIORITÉS
+# ============================================
+
+# Nouvelle feature
+feature:
+  - changed-files:
+      - any-glob-to-any-file:
+          - app/Filament/**
+          - app/Services/**
+          - database/migrations/**
