@@ -2,6 +2,9 @@
 
 namespace App\Services\Core;
 
+use App\Models\Core\GeneratedDocument;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Spatie\Browsershot\Browsershot;
 
@@ -14,8 +17,10 @@ class DocumentService
      * @param  array  $data  Les données à passer à la vue.
      * @param  string  $filename  Le nom du fichier de sortie (sans extension).
      * @param  string  $type  Le sous-répertoire dans lequel stocker le document.
-     * @return string Le chemin absolu vers le fichier PDF généré.
-     * @return string Le chemin relatif vers le fichier PDF généré.
+     * @param  bool  $pdfView  Si true, retourne le contenu brut du PDF au lieu du chemin.
+     * @param  Model|null  $entity  L'entité Eloquent liée au document (optionnel).
+     * @param  string|null  $documentType  Le type de document pour l'index (ex: 'devis', 'facture').
+     * @return string Le chemin relatif vers le fichier PDF généré ou le contenu brut.
      */
     public static function getDisk(): string
     {
@@ -27,8 +32,15 @@ class DocumentService
         return Storage::disk(static::getDisk())->download($relativePath, $filename);
     }
 
-    public function generate(string $view, array $data, string $filename, string $type = 'other', bool $pdfView = false): mixed
-    {
+    public function generate(
+        string $view,
+        array $data,
+        string $filename,
+        string $type = 'other',
+        bool $pdfView = false,
+        ?Model $entity = null,
+        ?string $documentType = null
+    ): mixed {
         $browsershot = Browsershot::html(view($view, $data)->render())
             ->setNodeBinary(config('browsershot.node_binary_path'))
             ->setNpmBinary(config('browsershot.npm_binary_path'))
@@ -67,10 +79,53 @@ class DocumentService
 
         Storage::disk($disk)->put($relativePath, $pdfContent);
 
+        // Indexer le document généré
+        $this->indexDocument($relativePath, $disk, $filename, $type, $entity, $documentType);
+
         if ($pdfView) {
             return $pdfContent;
         }
 
         return $relativePath;
+    }
+
+    /**
+     * Indexe un document généré dans la table generated_documents.
+     */
+    protected function indexDocument(
+        string $relativePath,
+        string $disk,
+        string $filename,
+        string $type,
+        ?Model $entity,
+        ?string $documentType
+    ): void {
+        try {
+            $fileSize = Storage::disk($disk)->size($relativePath);
+
+            GeneratedDocument::create([
+                'module' => $this->extractModuleFromPath($type),
+                'type' => $documentType ?? $type,
+                'entity_type' => $entity ? get_class($entity) : null,
+                'entity_id' => $entity?->id,
+                'file_path' => $relativePath,
+                'file_disk' => $disk,
+                'file_name' => $filename,
+                'file_size' => $fileSize,
+                'generated_by' => auth()->id(),
+                'generated_at' => now(),
+            ]);
+        } catch (\Exception $e) {
+            Log::error("DocumentService: échec d'indexation pour {$relativePath}: ".$e->getMessage());
+        }
+    }
+
+    /**
+     * Extrait le nom du module à partir du chemin de type.
+     * Ex: 'commerce/quotes' → 'commerce', 'rh' → 'rh'.
+     */
+    protected function extractModuleFromPath(string $type): string
+    {
+        return explode('/', $type)[0];
     }
 }

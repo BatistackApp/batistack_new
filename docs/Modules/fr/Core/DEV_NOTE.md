@@ -40,6 +40,7 @@ Le cœur regorge de services essentiels déjà implémentés et fonctionnels :
 ### 4. Interface Utilisateur (Filament)
 *   **Paramétrage Filament (UI)** : Les interfaces pour administrer les Taux de TVA, les Unités, les Paramètres Globaux et les Entreprises sont implémentées.
 *   **Dashboard** : Tableau de bord de base configurable.
+*   **GED - Gestion Documentaire (#345)** : Interface de visualisation et classement des PDF générés par `DocumentService`. Table `generated_documents` avec indexation automatique à la génération. Multi-panels : Core (admin CRUD complet), Salarie (lecture ses docs RH), Customer (lecture ses docs), Sous-traitant (lecture ses docs). Commande `core:index-generated-documents` pour ré-indexer les documents existants.
 
 ### 5. Tests
 *   Les Observers (`CompanyObserver`, `SettingObserver`, `UnitObserver`, `VatRateObserver`) garantissent l'intégrité des données, avec une couverture de tests validant la sécurité et l'invalidation du cache.
@@ -62,5 +63,4 @@ Le cœur regorge de services essentiels déjà implémentés et fonctionnels :
 *   **Dashboard (Issue #185)** : Les widgets avancés (`laboiteacode`) sont implémentés et affichés sur le Dashboard par défaut (via `discoverWidgets`), mais **aucune page Dashboard personnalisée** n'existe (le panel utilise le `Dashboard::class` par défaut). Une page dédiée permettrait une disposition optimisée (KPIs en haut, listes d'alertes en pleine largeur).
 
 ## 💡 Idées d'amélioration et Nouvelles Fonctionnalités
-*   **Gestion Documentaire Complète** : Interface d'arborescence GED pour visualiser et classer facilement tous les PDF générés par le `DocumentService`.
 *   **Workflow Approbations Multiples** : Permettre d'avoir plusieurs signataires sur un même document via le `SignatureService` (actuellement **un seul** signataire : `Signature.user_id`, `SignatureProviderInterface` à email unique, `DocusealProvider` avec un seul `submitter`).
