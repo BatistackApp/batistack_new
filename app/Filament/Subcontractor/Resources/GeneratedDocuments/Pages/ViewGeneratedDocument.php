@@ -1,11 +1,10 @@
 <?php
 
-namespace App\Filament\Resources\GeneratedDocuments\Pages;
+namespace App\Filament\Subcontractor\Resources\GeneratedDocuments\Pages;
 
-use App\Filament\Resources\GeneratedDocuments\GeneratedDocumentResource;
+use App\Filament\Subcontractor\Resources\GeneratedDocuments\GeneratedDocumentResource;
 use App\Models\Core\GeneratedDocument;
 use Filament\Actions\Action;
-use Filament\Actions\DeleteAction;
 use Filament\Resources\Pages\ViewRecord;
 use Illuminate\Support\Facades\Storage;
 use ToneGabes\Filament\Icons\Enums\Phosphor;
@@ -47,15 +46,6 @@ class ViewGeneratedDocument extends ViewRecord
 
                     return Storage::disk($record->file_disk)->download($record->file_path, $record->file_name.'.pdf');
                 }),
-
-            DeleteAction::make()
-                ->label('Supprimer')
-                ->icon(Phosphor::Trash)
-                ->color('danger')
-                ->requiresConfirmation()
-                ->modalHeading('Supprimer le document')
-                ->modalDescription('Êtes-vous sûr de vouloir supprimer ce document ? Cette action est irréversible.')
-                ->action(fn () => $this->record->deleteFile()),
         ];
     }
 }

@@ -106,7 +106,7 @@
     <!-- CONTRATS D'ASSURANCE & AMENDES ASSOCIÉES -->
     <div class="grid grid-cols-2 gap-8">
         <!-- COUVERTURE & ASSURANCE -->
-        <section>
+        <section class="avoid-break section-page-break">
             <h2 class="text-xs font-bold bg-slate-800 text-white p-2 mb-3 uppercase">Contrats & Assurances actifs</h2>
             <table class="text-[9px]">
                 <thead>
@@ -133,7 +133,7 @@
         </section>
 
         <!-- CONTRAVENTIONS SIGNALÉES -->
-        <section>
+        <section class="avoid-break section-page-break">
             <h2 class="text-xs font-bold bg-slate-800 text-white p-2 mb-3 uppercase">Contraventions & PV rattachés</h2>
             <table class="text-[9px]">
                 <thead>

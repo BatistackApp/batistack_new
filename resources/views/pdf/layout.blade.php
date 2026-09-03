@@ -25,6 +25,12 @@
         .avoid-break {
             page-break-inside: avoid;
         }
+        .section-page-break {
+            page-break-before: always;
+        }
+        .section-page-break:first-of-type {
+            page-break-before: auto;
+        }
         .text-blue-batistack {
             color: #002157;
         }
@@ -313,7 +319,7 @@
     </div>
     @yield("header_right")
 </header>
-<main style="padding-bottom: 30mm;">
+<main style="padding-bottom: 40mm;">
     @yield('content')
 </main>
 <div class="footer">
