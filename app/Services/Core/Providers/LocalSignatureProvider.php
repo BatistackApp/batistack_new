@@ -5,11 +5,17 @@ namespace App\Services\Core\Providers;
 use App\Contracts\Core\SignatureProviderInterface;
 use App\Enums\Core\SignatureStatus;
 use App\Enums\Core\SignatureType;
-use App\Mail\Core\SignatureRequestedMail;
+use App\Mail\Core\MultiSignatureRequestedMail;
 use App\Models\Core\Signature;
+use App\Models\Core\SignatureSigner;
+use App\Models\User;
+use App\Notifications\Core\SignatureCompletedNotification;
+use App\Notifications\Core\SignatureRefusedNotification;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Str;
 
 /**
@@ -20,11 +26,6 @@ class LocalSignatureProvider implements SignatureProviderInterface
 {
     /**
      * Enregistre une signature finalisée pour un document donné.
-     *
-     * * @param Model $model Le document à signer (Devis, Facture, etc.)
-     * @param  string|null  $signatureData  Données de signature (Base64 pour autographe, ou log)
-     * @param  SignatureType  $type  Le mode de signature utilisé
-     * @param  array  $additionalMetadata  Métadonnées supplémentaires
      */
     public function sign(
         Model $model,
@@ -51,7 +52,7 @@ class LocalSignatureProvider implements SignatureProviderInterface
     }
 
     /**
-     * Crée une demande de signature en attente.
+     * Crée une demande de signature en attente (single signer - legacy).
      */
     public function requestSignature(
         Model $model,
@@ -73,16 +74,155 @@ class LocalSignatureProvider implements SignatureProviderInterface
             ],
         ]);
 
+        // Create a single signer for backward compatibility
         if ($email && $name) {
-            Mail::to($email)->send(new SignatureRequestedMail($signature, $name, $documentPath));
+            $signer = SignatureSigner::create([
+                'signature_id' => $signature->id,
+                'name' => $name,
+                'email' => $email,
+                'user_id' => Auth::id(),
+                'role' => 'Signataire',
+                'status' => SignatureStatus::PENDING,
+                'token' => Str::uuid()->toString(),
+                'metadata' => [
+                    'requested_at' => now()->toDateTimeString(),
+                ],
+            ]);
+
+            Mail::to($email)->send(new MultiSignatureRequestedMail($signer, $documentPath));
         }
 
         return $signature;
     }
 
     /**
+     * Crée une demande de signature multi-signataires (workflow parallèle).
+     *
+     * @param  array<array{name: string, email: string, role?: string, user_id?: int}>  $signers
+     */
+    public function requestMultiSignature(
+        Model $model,
+        SignatureType $type,
+        array $signers,
+        ?string $documentPath = null
+    ): Signature {
+        return DB::transaction(function () use ($model, $type, $signers, $documentPath) {
+            $signature = Signature::create([
+                'token' => Str::uuid()->toString(),
+                'signable_type' => $model->getMorphClass(),
+                'signable_id' => $model->id,
+                'user_id' => Auth::id(),
+                'status' => SignatureStatus::PENDING,
+                'type' => $type,
+                'checksum' => $this->generateChecksum($model),
+                'metadata' => [
+                    'requested_at' => now()->toDateTimeString(),
+                    'signers_count' => count($signers),
+                ],
+            ]);
+
+            foreach ($signers as $signerData) {
+                $signer = SignatureSigner::create([
+                    'signature_id' => $signature->id,
+                    'name' => $signerData['name'],
+                    'email' => $signerData['email'],
+                    'user_id' => $signerData['user_id'] ?? null,
+                    'role' => $signerData['role'] ?? 'Signataire',
+                    'status' => SignatureStatus::PENDING,
+                    'token' => Str::uuid()->toString(),
+                    'metadata' => [
+                        'requested_at' => now()->toDateTimeString(),
+                    ],
+                ]);
+
+                Mail::to($signerData['email'])->send(new MultiSignatureRequestedMail($signer, $documentPath));
+            }
+
+            return $signature;
+        });
+    }
+
+    /**
+     * Signe en tant que signataire via le portail public.
+     */
+    public function signAsSigner(
+        string $token,
+        string $signatureData,
+        string $ipAddress,
+        string $userAgent
+    ): SignatureSigner {
+        $signer = SignatureSigner::where('token', $token)
+            ->where('status', SignatureStatus::PENDING)
+            ->firstOrFail();
+
+        $signer->update([
+            'status' => SignatureStatus::SIGNED,
+            'signature_data' => $signatureData,
+            'ip_address' => $ipAddress,
+            'signed_at' => now(),
+            'metadata' => array_merge($signer->metadata ?? [], [
+                'user_agent' => $userAgent,
+                'source' => 'external_public_link',
+            ]),
+        ]);
+
+        // Check if all signers have signed
+        $signature = $signer->signature;
+        $allSigned = ! $signature->signers()
+            ->where('status', '!=', SignatureStatus::SIGNED)
+            ->exists();
+
+        if ($allSigned) {
+            $signature->update([
+                'status' => SignatureStatus::SIGNED,
+                'signed_at' => now(),
+            ]);
+
+            // Dispatch completion notification
+            $this->dispatchCompletionNotification($signature);
+        }
+
+        return $signer;
+    }
+
+    /**
+     * Refuse en tant que signataire via le portail public.
+     */
+    public function refuseAsSigner(
+        string $token,
+        ?string $reason = null
+    ): SignatureSigner {
+        $signer = SignatureSigner::where('token', $token)
+            ->where('status', SignatureStatus::PENDING)
+            ->firstOrFail();
+
+        $signer->update([
+            'status' => SignatureStatus::REFUSED,
+            'metadata' => array_merge($signer->metadata ?? [], [
+                'refused_at' => now()->toDateTimeString(),
+                'refusal_reason' => $reason,
+            ]),
+        ]);
+
+        // The whole workflow is stopped
+        $signature = $signer->signature;
+        $signature->update([
+            'status' => SignatureStatus::REFUSED,
+        ]);
+
+        // Notify admin/owner
+        if ($signature->user_id) {
+            $user = User::find($signature->user_id);
+            if ($user) {
+                Notification::send($user, new SignatureRefusedNotification($signature, $signer));
+            }
+        }
+
+        return $signer;
+    }
+
+    /**
      * Vérifie si la signature est toujours valide par rapport à l'état actuel du document.
-     * Si le document a été modifié depuis la signature, le checksum ne correspondra plus.
      */
     public function verify(Signature $signature): bool
     {
@@ -96,12 +236,23 @@ class LocalSignatureProvider implements SignatureProviderInterface
     }
 
     /**
+     * Dispatch la notification de complétion du workflow.
+     */
+    protected function dispatchCompletionNotification(Signature $signature): void
+    {
+        if ($signature->user_id) {
+            $user = User::find($signature->user_id);
+            if ($user) {
+                Notification::send($user, new SignatureCompletedNotification($signature));
+            }
+        }
+    }
+
+    /**
      * Génère une empreinte unique (SHA-256) basée sur les attributs du modèle.
      */
     protected function generateChecksum(Model $model): string
     {
-        // On sérialise les données du modèle pour détecter toute modification ultérieure
-        // Note : On pourrait exclure certains champs comme 'updated_at' si nécessaire
         return hash('sha256', json_encode($model->toArray()));
     }
 }

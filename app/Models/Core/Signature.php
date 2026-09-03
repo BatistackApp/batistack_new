@@ -8,6 +8,7 @@ use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 class Signature extends Model
@@ -49,6 +50,38 @@ class Signature extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * Les signataires configurés pour cette demande de signature.
+     */
+    public function signers(): HasMany
+    {
+        return $this->hasMany(SignatureSigner::class);
+    }
+
+    /**
+     * Vérifie si c'est un workflow multi-signataires.
+     */
+    public function getIsMultiSignatoryAttribute(): bool
+    {
+        return $this->signers()->count() > 0;
+    }
+
+    /**
+     * Nombre de signataires ayant signé.
+     */
+    public function getSignedCountAttribute(): int
+    {
+        return $this->signers()->where('status', SignatureStatus::SIGNED)->count();
+    }
+
+    /**
+     * Nombre total de signataires.
+     */
+    public function getTotalSignersAttribute(): int
+    {
+        return $this->signers()->count();
     }
 
     /**

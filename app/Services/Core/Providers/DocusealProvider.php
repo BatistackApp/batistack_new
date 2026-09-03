@@ -6,10 +6,14 @@ use App\Contracts\Core\SignatureProviderInterface;
 use App\Enums\Core\SignatureStatus;
 use App\Enums\Core\SignatureType;
 use App\Models\Core\Signature;
+use App\Models\Core\SignatureSigner;
+use App\Models\User;
+use App\Notifications\Core\SignatureRefusedNotification;
 use App\Services\Core\DocumentService;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -26,7 +30,7 @@ class DocusealProvider implements SignatureProviderInterface
     }
 
     /**
-     * Initiate a signature request with DocuSeal.
+     * Initiate a signature request with DocuSeal (single signer - legacy).
      */
     public function requestSignature(
         Model $model,
@@ -35,7 +39,23 @@ class DocusealProvider implements SignatureProviderInterface
         ?string $name = null,
         ?string $documentPath = null
     ): Signature {
-        // Create pending signature record
+        return $this->requestMultiSignature(
+            $model,
+            $type,
+            $email && $name ? [['name' => $name, 'email' => $email, 'role' => 'Signataire']] : [],
+            $documentPath
+        );
+    }
+
+    /**
+     * Initiate a multi-signature request with DocuSeal (parallel workflow).
+     */
+    public function requestMultiSignature(
+        Model $model,
+        SignatureType $type,
+        array $signers,
+        ?string $documentPath = null
+    ): Signature {
         $signature = Signature::create([
             'token' => Str::uuid()->toString(),
             'signable_type' => $model->getMorphClass(),
@@ -47,20 +67,35 @@ class DocusealProvider implements SignatureProviderInterface
             'metadata' => [
                 'provider' => 'docuseal',
                 'requested_at' => now()->toDateTimeString(),
+                'signers_count' => count($signers),
             ],
         ]);
+
+        // Create local signer records
+        foreach ($signers as $signerData) {
+            SignatureSigner::create([
+                'signature_id' => $signature->id,
+                'name' => $signerData['name'],
+                'email' => $signerData['email'],
+                'user_id' => $signerData['user_id'] ?? null,
+                'role' => $signerData['role'] ?? 'Signataire',
+                'status' => SignatureStatus::PENDING,
+                'token' => Str::uuid()->toString(),
+                'metadata' => [
+                    'requested_at' => now()->toDateTimeString(),
+                ],
+            ]);
+        }
 
         if (! $this->apiToken) {
             throw new \Exception("Le Token API DocuSeal n'est pas configuré dans votre fichier .env (DOCUSEAL_API_TOKEN).");
         }
 
-        if (! $email || ! $documentPath) {
-            throw new \Exception("L'adresse e-mail ou le document PDF est manquant pour l'envoi à DocuSeal.");
+        if (empty($signers) || ! $documentPath) {
+            throw new \Exception("Les signataires ou le document PDF sont manquants pour l'envoi à DocuSeal.");
         }
 
         try {
-            // Read and encode the document to base64
-            // We use DocumentService::getDisk() to be fully compatible with S3/Cloud Storage.
             $disk = DocumentService::getDisk();
             $fileContent = Storage::disk($disk)->get($documentPath);
             if (! $fileContent) {
@@ -78,7 +113,6 @@ class DocusealProvider implements SignatureProviderInterface
             ]);
 
             // 1. Create a Template from the PDF
-            // This is allowed in the free Community Edition (unlike /submissions/pdf)
             $templateResponse = $http->post("{$this->apiUrl}/templates/pdf", [
                 'name' => 'Template - '.$documentName,
                 'documents' => [
@@ -95,21 +129,20 @@ class DocusealProvider implements SignatureProviderInterface
 
             $templateId = $templateResponse->json('id');
 
-            // 2. Create a Submission from the created Template
+            // 2. Create a Submission with all submitters (parallel)
+            $submitters = array_map(fn ($s) => [
+                'role' => $s['role'] ?? 'Signataire',
+                'email' => $s['email'],
+                'name' => $s['name'],
+            ], $signers);
+
             $response = $http->post("{$this->apiUrl}/submissions", [
                 'template_id' => $templateId,
                 'send_email' => true,
-                'submitters' => [
-                    [
-                        'role' => 'Signataire',
-                        'email' => $email,
-                        'name' => $name,
-                    ],
-                ],
+                'submitters' => $submitters,
             ]);
 
             if ($response->successful()) {
-                // The API returns an array of submitters. We take the submission ID from the first one.
                 $responseData = $response->json();
                 $submissionId = $responseData[0]['submission_id'] ?? null;
 
@@ -130,22 +163,96 @@ class DocusealProvider implements SignatureProviderInterface
         return $signature;
     }
 
+    /**
+     * Sign as a specific signer via the public portal.
+     */
+    public function signAsSigner(
+        string $token,
+        string $signatureData,
+        string $ipAddress,
+        string $userAgent
+    ): SignatureSigner {
+        $signer = SignatureSigner::where('token', $token)
+            ->where('status', SignatureStatus::PENDING)
+            ->firstOrFail();
+
+        $signer->update([
+            'status' => SignatureStatus::SIGNED,
+            'signature_data' => $signatureData,
+            'ip_address' => $ipAddress,
+            'signed_at' => now(),
+            'metadata' => array_merge($signer->metadata ?? [], [
+                'user_agent' => $userAgent,
+                'source' => 'external_public_link',
+            ]),
+        ]);
+
+        // Check if all signers have signed
+        $signature = $signer->signature;
+        $allSigned = ! $signature->signers()
+            ->where('status', '!=', SignatureStatus::SIGNED)
+            ->exists();
+
+        if ($allSigned) {
+            $signature->update([
+                'status' => SignatureStatus::SIGNED,
+                'signed_at' => now(),
+            ]);
+        }
+
+        return $signer;
+    }
+
+    /**
+     * Refuse as a specific signer via the public portal.
+     */
+    public function refuseAsSigner(
+        string $token,
+        ?string $reason = null
+    ): SignatureSigner {
+        $signer = SignatureSigner::where('token', $token)
+            ->where('status', SignatureStatus::PENDING)
+            ->firstOrFail();
+
+        $signer->update([
+            'status' => SignatureStatus::REFUSED,
+            'metadata' => array_merge($signer->metadata ?? [], [
+                'refused_at' => now()->toDateTimeString(),
+                'refusal_reason' => $reason,
+            ]),
+        ]);
+
+        $signature = $signer->signature;
+        $signature->update([
+            'status' => SignatureStatus::REFUSED,
+        ]);
+
+        // Notify admin
+        if ($signature->user_id) {
+            $user = User::find($signature->user_id);
+            if ($user) {
+                Notification::send(
+                    $user,
+                    new SignatureRefusedNotification($signature, $signer)
+                );
+            }
+        }
+
+        return $signer;
+    }
+
     public function sign(
         Model $model,
         ?string $signatureData,
         SignatureType $type = SignatureType::AUTOGRAPH,
         array $additionalMetadata = []
     ): Signature {
-        // DocuSeal handles the actual signing process via its UI.
-        // This method might be called by the webhook to finalize the process internally.
-
         $signature = Signature::where('signable_type', $model->getMorphClass())
             ->where('signable_id', $model->id)
             ->where('status', SignatureStatus::PENDING)
             ->first();
 
         if (! $signature) {
-            // Fallback: create a new one if it wasn't tracked
             $signature = Signature::create([
                 'token' => Str::uuid()->toString(),
                 'signable_type' => $model->getMorphClass(),
@@ -163,7 +270,7 @@ class DocusealProvider implements SignatureProviderInterface
         } else {
             $signature->update([
                 'status' => SignatureStatus::SIGNED,
-                'signature_data' => $signatureData, // Could be the signed PDF URL or external ID
+                'signature_data' => $signatureData,
                 'signed_at' => now(),
                 'metadata' => array_merge($signature->metadata ?? [], [
                     'source' => 'docuseal_webhook',
@@ -176,8 +283,6 @@ class DocusealProvider implements SignatureProviderInterface
 
     public function verify(Signature $signature): bool
     {
-        // For eIDAS, verification relies on the external provider's cryptographical seal
-        // on the downloaded PDF, or by calling their API to check status.
         if ($signature->status !== SignatureStatus::SIGNED) {
             return false;
         }
