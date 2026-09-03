@@ -44,4 +44,32 @@ class ThirdPartyDocument extends Model implements HasMedia
     {
         return $this->morphMany(Signature::class, 'signable');
     }
+
+    public function getSignatureUrl(Signature $signature): ?string
+    {
+        return $this->getFirstMediaUrl('third_party_documents');
+    }
+
+    public function getSignaturePath(): ?string
+    {
+        return $this->getFirstMedia('third_party_documents')?->getPath();
+    }
+
+    public function getSignatoryDisplayName(): ?string
+    {
+        return $this->thirdParty->name ?? null;
+    }
+
+    public function onPostSignature(Signature $signature): void
+    {
+        $this->update([
+            'status' => ThirdPartyDocumentStatus::VALID,
+            'signed_at' => now(),
+        ]);
+    }
+
+    protected function getSignatureMediaCollection(): ?string
+    {
+        return 'third_party_documents';
+    }
 }

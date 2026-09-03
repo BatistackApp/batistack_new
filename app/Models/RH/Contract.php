@@ -9,12 +9,14 @@ use App\Enums\RH\TerminationType;
 use App\Models\Core\Signature;
 use App\Models\Paie\PayrollContributionProfile;
 use App\Observers\RH\ContractObserver;
+use App\Services\RH\RHDocumentService;
 use App\Traits\Core\HasSignature;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\Storage;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 
@@ -156,5 +158,21 @@ class Contract extends Model implements HasMedia
     public function getWeeklyHours(): float
     {
         return (float) $this->weekly_hours;
+    }
+
+    public function getSignatureUrl(Signature $signature): ?string
+    {
+        return Storage::disk('public')->url('documents/rh/contrat_'.$this->employee->registration_number.'.pdf');
+    }
+
+    public function getSignatoryDisplayName(): ?string
+    {
+        return $this->employee->full_name ?? null;
+    }
+
+    public function onPostSignature(Signature $signature): void
+    {
+        $this->update(['signature_status' => SignatureStatus::SIGNED]);
+        app(RHDocumentService::class)->generateContract($this);
     }
 }

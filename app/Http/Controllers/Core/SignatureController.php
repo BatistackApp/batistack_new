@@ -75,14 +75,17 @@ class SignatureController extends Controller
                 $request->userAgent()
             );
 
-            // Post-signature logic for the parent model
             $this->handlePostSignature($signer->signature);
 
             return redirect()->route('signature.show', $token)->with('success', 'Document signé avec succès !');
         }
 
         // Legacy single-signer
-        $signature = Signature::where('token', $token)->firstOrFail();
+        $signature = Signature::where('token', $token)->first();
+
+        if (! $signature) {
+            return redirect()->route('home')->with('error', 'Lien de signature invalide ou expiré.');
+        }
 
         if (! $signature->signable) {
             abort(404, 'Le document associé est introuvable ou a été supprimé.');

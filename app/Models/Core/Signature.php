@@ -66,38 +66,35 @@ class Signature extends Model
      */
     public function getIsMultiSignatoryAttribute(): bool
     {
-        // If signers_count is eager-loaded via withCount, use it directly
-        if (isset($this->attributes['signers_count'])) {
-            return (int) $this->attributes['signers_count'] > 0;
+        if ($this->relationLoaded('signers')) {
+            return $this->signers->count() > 0;
         }
 
-        return $this->signers()->count() > 0;
+        return (int) ($this->attributes['signers_count'] ?? $this->signers()->count()) > 0;
     }
 
     /**
      * Nombre de signataires ayant signé.
-     * Uses signed_signers_count if eager-loaded via withCount, otherwise falls back to query.
      */
     public function getSignedCountAttribute(): int
     {
-        if (isset($this->attributes['signed_signers_count'])) {
-            return (int) $this->attributes['signed_signers_count'];
+        if ($this->relationLoaded('signers')) {
+            return $this->signers->where('status', SignatureStatus::SIGNED)->count();
         }
 
-        return $this->signers()->where('status', SignatureStatus::SIGNED)->count();
+        return (int) ($this->attributes['signed_signers_count'] ?? $this->signers()->where('status', SignatureStatus::SIGNED)->count());
     }
 
     /**
      * Nombre total de signataires.
-     * Uses signers_count if eager-loaded via withCount, otherwise falls back to query.
      */
     public function getTotalSignersAttribute(): int
     {
-        if (isset($this->attributes['signers_count'])) {
-            return (int) $this->attributes['signers_count'];
+        if ($this->relationLoaded('signers')) {
+            return $this->signers->count();
         }
 
-        return $this->signers()->count();
+        return (int) ($this->attributes['signers_count'] ?? $this->signers()->count());
     }
 
     /**
