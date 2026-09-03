@@ -77,20 +77,25 @@ class IndexGeneratedDocumentsCommand extends Command
                 $subType = $this->extractSubType($filePath);
                 $fileSize = Storage::disk($disk)->size($relativePath);
 
-                GeneratedDocument::create([
-                    'module' => $mappedModule,
-                    'type' => $subType,
-                    'entity_type' => null,
-                    'entity_id' => null,
-                    'file_path' => $relativePath,
-                    'file_disk' => $disk,
-                    'file_name' => $fileName,
-                    'file_size' => $fileSize,
-                    'generated_by' => null,
-                    'generated_at' => Storage::disk($disk)->lastModified($relativePath),
-                ]);
-
-                $totalIndexed++;
+                try {
+                    GeneratedDocument::updateOrCreate(
+                        ['file_path' => $relativePath],
+                        [
+                            'module' => $mappedModule,
+                            'type' => $subType,
+                            'entity_type' => null,
+                            'entity_id' => null,
+                            'file_disk' => $disk,
+                            'file_name' => $fileName,
+                            'file_size' => $fileSize,
+                            'generated_by' => null,
+                            'generated_at' => Storage::disk($disk)->lastModified($relativePath),
+                        ]
+                    );
+                    $totalIndexed++;
+                } catch (\Exception $e) {
+                    $this->error("Erreur lors de l'indexation de {$relativePath}: ".$e->getMessage());
+                }
             }
         }
 

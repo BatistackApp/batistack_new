@@ -113,7 +113,7 @@ class DocumentService
                     'file_disk' => $disk,
                     'file_name' => $filename,
                     'file_size' => $fileSize,
-                    'generated_by' => auth()->id(),
+                    'generated_by' => auth()->check() ? auth()->id() : null,
                     'generated_at' => now(),
                 ]
             );

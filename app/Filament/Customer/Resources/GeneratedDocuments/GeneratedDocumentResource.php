@@ -5,6 +5,7 @@ namespace App\Filament\Customer\Resources\GeneratedDocuments;
 use App\Filament\Customer\Resources\GeneratedDocuments\Pages\ListGeneratedDocuments;
 use App\Models\Core\GeneratedDocument;
 use App\Models\Tiers\Contact;
+use App\Models\Tiers\ThirdParty;
 use BackedEnum;
 use Filament\Actions\ViewAction;
 use Filament\Resources\Resource;
@@ -45,16 +46,17 @@ class GeneratedDocumentResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        $contact = Contact::with('thirdParty')->where('user_id', auth()->id())->first();
+        $thirdPartyIds = Contact::where('user_id', auth()->id())
+            ->pluck('third_party_id');
 
         $query = parent::getEloquentQuery();
 
-        if (! $contact?->thirdParty) {
+        if ($thirdPartyIds->isEmpty()) {
             return $query->whereRaw('1 = 0');
         }
 
-        return $query->where('entity_type', get_class($contact->thirdParty))
-            ->where('entity_id', $contact->third_party_id);
+        return $query->where('entity_type', ThirdParty::class)
+            ->whereIn('entity_id', $thirdPartyIds);
     }
 
     public static function table(Table $table): Table

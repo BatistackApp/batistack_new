@@ -210,4 +210,3 @@ feature:
       - any-glob-to-any-file:
           - app/Filament/**
           - app/Services/**
-          - app/Models/**
