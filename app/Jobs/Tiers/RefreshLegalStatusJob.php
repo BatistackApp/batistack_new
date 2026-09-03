@@ -70,8 +70,12 @@ class RefreshLegalStatusJob implements ShouldQueue
                     if ($thirdParty->legal_status === LegalStatus::REDRESSEMENT_JUDICIAIRE
                         || $thirdParty->legal_status === LegalStatus::LIQUIDATION_JUDICIAIRE
                     ) {
-                        $managers = User::where('is_admin', true)->get();
-                        Notification::send($managers, new LegalStatusChangedNotification($thirdParty, $oldStatus, $thirdParty->legal_status));
+                        try {
+                            $managers = User::where('is_admin', true)->get();
+                            Notification::send($managers, new LegalStatusChangedNotification($thirdParty, $oldStatus, $thirdParty->legal_status));
+                        } catch (\Exception $e) {
+                            Log::error("RefreshLegalStatusJob: échec notification admin pour le tiers {$thirdParty->id}: ".$e->getMessage());
+                        }
                     }
                 }
             } catch (\Exception $e) {
