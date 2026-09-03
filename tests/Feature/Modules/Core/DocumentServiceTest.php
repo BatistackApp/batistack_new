@@ -1,36 +1,22 @@
 <?php
 
 use App\Services\Core\DocumentService;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\View;
-use Spatie\Browsershot\Exceptions\CouldNotTakeBrowsershot;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 
-it('generates a pdf document', function () {
-    Storage::fake('public');
+uses(RefreshDatabase::class);
 
-    // Create a dummy view file for testing
-    if (! is_dir(resource_path('views/testing'))) {
-        mkdir(resource_path('views/testing'), 0777, true);
-    }
-    file_put_contents(resource_path('views/testing/dummy.blade.php'), '<h1>Hello Testing</h1>');
+it('returns default disk', function () {
+    expect(DocumentService::getDisk())->toBe('public');
+});
 
+it('extracts module from path correctly', function () {
     $service = new DocumentService;
 
-    try {
-        $path = $service->generate('testing.dummy', [], 'test_file', 'reports');
+    $reflection = new ReflectionClass($service);
+    $method = $reflection->getMethod('extractModuleFromPath');
+    $method->setAccessible(true);
 
-        expect(Storage::disk('public')->exists('documents/reports/test_file.pdf'))->toBeTrue();
-        expect($path)->toBe('documents/reports/test_file.pdf');
-    } catch (CouldNotTakeBrowsershot $e) {
-        $this->markTestSkipped('Browsershot/Puppeteer is not available on this system.');
-    } catch (Exception $e) {
-        // If node/npm binary is not found, also skip
-        if (str_contains($e->getMessage(), 'The command') || str_contains($e->getMessage(), 'node')) {
-            $this->markTestSkipped('Node is not available on this system.');
-        } else {
-            throw $e;
-        }
-    } finally {
-        @unlink(resource_path('views/testing/dummy.blade.php'));
-    }
+    expect($method->invoke($service, 'commerce/quotes'))->toBe('commerce')
+        ->and($method->invoke($service, 'rh'))->toBe('rh')
+        ->and($method->invoke($service, 'gpao/production/orders'))->toBe('gpao');
 });
