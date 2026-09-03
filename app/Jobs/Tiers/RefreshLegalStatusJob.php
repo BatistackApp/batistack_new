@@ -14,6 +14,7 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Notification;
 
 class RefreshLegalStatusJob implements ShouldQueue
 {
@@ -41,6 +42,7 @@ class RefreshLegalStatusJob implements ShouldQueue
 
             if ($thirdParty->last_financial_sync_at && $thirdParty->last_financial_sync_at->isAfter($threshold)) {
                 $skipped++;
+
                 continue;
             }
 
@@ -52,6 +54,7 @@ class RefreshLegalStatusJob implements ShouldQueue
                 if (! $success) {
                     Log::warning("RefreshLegalStatusJob: échec de la synchro pour le tiers {$thirdParty->id} ({$thirdParty->name})");
                     $errors++;
+
                     continue;
                 }
 
@@ -68,10 +71,7 @@ class RefreshLegalStatusJob implements ShouldQueue
                         || $thirdParty->legal_status === LegalStatus::LIQUIDATION_JUDICIAIRE
                     ) {
                         $managers = User::where('is_admin', true)->get();
-
-                        foreach ($managers as $manager) {
-                            $manager->notify(new LegalStatusChangedNotification($thirdParty, $oldStatus, $thirdParty->legal_status));
-                        }
+                        Notification::send($managers, new LegalStatusChangedNotification($thirdParty, $oldStatus, $thirdParty->legal_status));
                     }
                 }
             } catch (\Exception $e) {
