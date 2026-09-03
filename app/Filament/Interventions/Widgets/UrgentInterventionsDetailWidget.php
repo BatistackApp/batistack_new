@@ -3,7 +3,7 @@
 namespace App\Filament\Interventions\Widgets;
 
 use App\Enums\Interventions\InterventionStatus;
-use App\Filament\Interventions\Resources\InterventionResource;
+use App\Filament\Interventions\InterventionResource;
 use App\Models\Interventions\Intervention;
 use LaBoiteACode\FilamentDashboardWidgets\Data\Detail;
 use LaBoiteACode\FilamentDashboardWidgets\Widgets\DetailListWidget;
