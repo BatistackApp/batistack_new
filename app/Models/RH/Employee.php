@@ -7,6 +7,7 @@ use App\Models\Chantiers\Chantier;
 use App\Models\Chantiers\ResourceAllocation;
 use App\Models\User;
 use App\Observers\RH\EmployeeObserver;
+use App\Traits\Core\HasSignature;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -22,7 +23,7 @@ use Spatie\MediaLibrary\InteractsWithMedia;
 #[ObservedBy([EmployeeObserver::class])]
 class Employee extends Model implements HasMedia
 {
-    use HasFactory, InteractsWithMedia, Notifiable;
+    use HasFactory, HasSignature, InteractsWithMedia, Notifiable;
 
     protected $fillable = [
         'registration_number',

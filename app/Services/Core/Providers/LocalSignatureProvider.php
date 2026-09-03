@@ -8,7 +8,6 @@ use App\Enums\Core\SignatureType;
 use App\Mail\Core\MultiSignatureRequestedMail;
 use App\Models\Core\Signature;
 use App\Models\Core\SignatureSigner;
-use App\Models\User;
 use App\Notifications\Core\SignatureCompletedNotification;
 use App\Notifications\Core\SignatureRefusedNotification;
 use Illuminate\Database\Eloquent\Model;
@@ -61,35 +60,48 @@ class LocalSignatureProvider implements SignatureProviderInterface
         ?string $name = null,
         ?string $documentPath = null
     ): Signature {
-        $signature = Signature::create([
-            'token' => Str::uuid()->toString(),
-            'signable_type' => $model->getMorphClass(),
-            'signable_id' => $model->id,
-            'user_id' => Auth::id(),
-            'status' => SignatureStatus::PENDING,
-            'type' => $type,
-            'checksum' => $this->generateChecksum($model),
-            'metadata' => [
-                'requested_at' => now()->toDateTimeString(),
-            ],
-        ]);
+        $emailToSend = null;
 
-        // Create a single signer for backward compatibility
-        if ($email && $name) {
-            $signer = SignatureSigner::create([
-                'signature_id' => $signature->id,
-                'name' => $name,
-                'email' => $email,
-                'user_id' => Auth::id(),
-                'role' => 'Signataire',
-                'status' => SignatureStatus::PENDING,
+        $signature = DB::transaction(function () use ($model, $type, $email, $name, &$emailToSend) {
+            $signature = Signature::create([
                 'token' => Str::uuid()->toString(),
+                'signable_type' => $model->getMorphClass(),
+                'signable_id' => $model->id,
+                'user_id' => Auth::id(),
+                'status' => SignatureStatus::PENDING,
+                'type' => $type,
+                'checksum' => $this->generateChecksum($model),
                 'metadata' => [
                     'requested_at' => now()->toDateTimeString(),
                 ],
             ]);
 
-            Mail::to($email)->send(new MultiSignatureRequestedMail($signer, $documentPath));
+            // Create a single signer for backward compatibility
+            if ($email && $name) {
+                $signer = SignatureSigner::create([
+                    'signature_id' => $signature->id,
+                    'name' => $name,
+                    'email' => $email,
+                    'user_id' => Auth::id(),
+                    'role' => 'Signataire',
+                    'status' => SignatureStatus::PENDING,
+                    'token' => Str::uuid()->toString(),
+                    'metadata' => [
+                        'requested_at' => now()->toDateTimeString(),
+                    ],
+                ]);
+
+                $emailToSend = ['email' => $email, 'signer' => $signer];
+            }
+
+            return $signature;
+        });
+
+        // Dispatch email AFTER transaction commits
+        if ($emailToSend) {
+            DB::afterCommit(function () use ($emailToSend, $documentPath) {
+                Mail::to($emailToSend['email'])->send(new MultiSignatureRequestedMail($emailToSend['signer'], $documentPath));
+            });
         }
 
         return $signature;
@@ -106,7 +118,9 @@ class LocalSignatureProvider implements SignatureProviderInterface
         array $signers,
         ?string $documentPath = null
     ): Signature {
-        return DB::transaction(function () use ($model, $type, $signers, $documentPath) {
+        $emailsToSend = [];
+
+        $signature = DB::transaction(function () use ($model, $type, $signers, &$emailsToSend) {
             $signature = Signature::create([
                 'token' => Str::uuid()->toString(),
                 'signable_type' => $model->getMorphClass(),
@@ -135,11 +149,20 @@ class LocalSignatureProvider implements SignatureProviderInterface
                     ],
                 ]);
 
-                Mail::to($signerData['email'])->send(new MultiSignatureRequestedMail($signer, $documentPath));
+                $emailsToSend[] = ['email' => $signerData['email'], 'signer' => $signer];
             }
 
             return $signature;
         });
+
+        // Dispatch emails AFTER transaction commits
+        DB::afterCommit(function () use ($emailsToSend, $documentPath) {
+            foreach ($emailsToSend as $item) {
+                Mail::to($item['email'])->send(new MultiSignatureRequestedMail($item['signer'], $documentPath));
+            }
+        });
+
+        return $signature;
     }
 
     /**
@@ -210,12 +233,9 @@ class LocalSignatureProvider implements SignatureProviderInterface
             'status' => SignatureStatus::REFUSED,
         ]);
 
-        // Notify admin/owner
-        if ($signature->user_id) {
-            $user = User::find($signature->user_id);
-            if ($user) {
-                Notification::send($user, new SignatureRefusedNotification($signature, $signer));
-            }
+        // Notify admin/owner via relationship
+        if ($signature->user) {
+            Notification::send($signature->user, new SignatureRefusedNotification($signature, $signer));
         }
 
         return $signer;
@@ -240,11 +260,8 @@ class LocalSignatureProvider implements SignatureProviderInterface
      */
     protected function dispatchCompletionNotification(Signature $signature): void
     {
-        if ($signature->user_id) {
-            $user = User::find($signature->user_id);
-            if ($user) {
-                Notification::send($user, new SignatureCompletedNotification($signature));
-            }
+        if ($signature->user) {
+            Notification::send($signature->user, new SignatureCompletedNotification($signature));
         }
     }
 

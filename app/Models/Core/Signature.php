@@ -62,26 +62,53 @@ class Signature extends Model
 
     /**
      * Vérifie si c'est un workflow multi-signataires.
+     * Uses withCount('signers') if eager-loaded, otherwise falls back to query.
      */
     public function getIsMultiSignatoryAttribute(): bool
     {
+        // If signers_count is eager-loaded via withCount, use it directly
+        if (isset($this->attributes['signers_count'])) {
+            return (int) $this->attributes['signers_count'] > 0;
+        }
+
         return $this->signers()->count() > 0;
     }
 
     /**
      * Nombre de signataires ayant signé.
+     * Uses signed_signers_count if eager-loaded via withCount, otherwise falls back to query.
      */
     public function getSignedCountAttribute(): int
     {
+        if (isset($this->attributes['signed_signers_count'])) {
+            return (int) $this->attributes['signed_signers_count'];
+        }
+
         return $this->signers()->where('status', SignatureStatus::SIGNED)->count();
     }
 
     /**
      * Nombre total de signataires.
+     * Uses signers_count if eager-loaded via withCount, otherwise falls back to query.
      */
     public function getTotalSignersAttribute(): int
     {
+        if (isset($this->attributes['signers_count'])) {
+            return (int) $this->attributes['signers_count'];
+        }
+
         return $this->signers()->count();
+    }
+
+    /**
+     * Scope to eager-load signer counts (avoids N+1).
+     */
+    public function scopeWithSignerCounts($query)
+    {
+        return $query->withCount([
+            'signers',
+            'signers as signed_signers_count' => fn ($q) => $q->where('status', SignatureStatus::SIGNED),
+        ]);
     }
 
     /**

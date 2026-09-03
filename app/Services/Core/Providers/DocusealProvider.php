@@ -7,7 +7,6 @@ use App\Enums\Core\SignatureStatus;
 use App\Enums\Core\SignatureType;
 use App\Models\Core\Signature;
 use App\Models\Core\SignatureSigner;
-use App\Models\User;
 use App\Notifications\Core\SignatureRefusedNotification;
 use App\Services\Core\DocumentService;
 use Illuminate\Database\Eloquent\Model;
@@ -228,14 +227,11 @@ class DocusealProvider implements SignatureProviderInterface
         ]);
 
         // Notify admin
-        if ($signature->user_id) {
-            $user = User::find($signature->user_id);
-            if ($user) {
-                Notification::send(
-                    $user,
-                    new SignatureRefusedNotification($signature, $signer)
-                );
-            }
+        if ($signature->user) {
+            Notification::send(
+                $signature->user,
+                new SignatureRefusedNotification($signature, $signer)
+            );
         }
 
         return $signer;

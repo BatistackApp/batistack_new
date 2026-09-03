@@ -9,6 +9,7 @@ use App\Enums\RH\TerminationType;
 use App\Models\Core\Signature;
 use App\Models\Paie\PayrollContributionProfile;
 use App\Observers\RH\ContractObserver;
+use App\Traits\Core\HasSignature;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -20,7 +21,7 @@ use Spatie\MediaLibrary\InteractsWithMedia;
 #[ObservedBy([ContractObserver::class])]
 class Contract extends Model implements HasMedia
 {
-    use HasFactory, InteractsWithMedia;
+    use HasFactory, HasSignature, InteractsWithMedia;
 
     protected $fillable = [
         'employee_id',

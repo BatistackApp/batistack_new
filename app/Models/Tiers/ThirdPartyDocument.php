@@ -5,6 +5,7 @@ namespace App\Models\Tiers;
 use App\Enums\Tiers\ThirdPartyDocumentStatus;
 use App\Enums\Tiers\ThirdPartyDocumentType;
 use App\Models\Core\Signature;
+use App\Traits\Core\HasSignature;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -13,7 +14,7 @@ use Spatie\MediaLibrary\InteractsWithMedia;
 
 class ThirdPartyDocument extends Model implements HasMedia
 {
-    use HasFactory, InteractsWithMedia;
+    use HasFactory, HasSignature, InteractsWithMedia;
 
     protected $fillable = [
         'third_party_id',

@@ -2,25 +2,13 @@
 
 namespace App\Http\Controllers\Core;
 
-use App\Enums\Commerce\QuoteStatus;
 use App\Enums\Core\SignatureStatus;
-use App\Enums\Tiers\ThirdPartyDocumentStatus;
 use App\Http\Controllers\Controller;
-use App\Models\Commerce\CustomerQuote;
 use App\Models\Core\Signature;
 use App\Models\Core\SignatureSigner;
-use App\Models\RH\Contract;
-use App\Models\RH\Employee;
-use App\Models\Tiers\ThirdPartyDocument;
-use App\Models\User;
-use App\Services\Commerce\QuoteService;
-use App\Services\Core\PdfStamperService;
 use App\Services\Core\SignatureService;
-use App\Services\RH\RHDocumentService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
 
 class SignatureController extends Controller
 {
@@ -33,7 +21,7 @@ class SignatureController extends Controller
         // Try multi-signer first
         $signer = SignatureSigner::where('token', $token)->first();
         if ($signer) {
-            if ($signer->status !== SignatureStatus::PENDING) {
+            if ($signer->status->value !== 'pending') {
                 return view('signature.completed', ['signer' => $signer]);
             }
 
@@ -42,7 +30,7 @@ class SignatureController extends Controller
                 abort(404, 'Le document associé est introuvable ou a été supprimé.');
             }
 
-            $documentUrl = $this->resolveDocumentUrl($signature);
+            $documentUrl = $signature->signable->getSignatureDocumentUrl($signature);
             $allSigners = $signature->signers;
 
             return view('signature.show', compact('signer', 'signature', 'documentUrl', 'allSigners'));
@@ -55,11 +43,11 @@ class SignatureController extends Controller
             abort(404, 'Le document associé est introuvable ou a été supprimé.');
         }
 
-        if ($signature->status !== SignatureStatus::PENDING) {
+        if ($signature->status->value !== 'pending') {
             return view('signature.completed', ['signature' => $signature]);
         }
 
-        $documentUrl = $this->resolveDocumentUrl($signature);
+        $documentUrl = $signature->signable->getSignatureDocumentUrl($signature);
 
         return view('signature.show', compact('signature', 'documentUrl'));
     }
@@ -76,7 +64,7 @@ class SignatureController extends Controller
         // Try multi-signer first
         $signer = SignatureSigner::where('token', $token)->first();
         if ($signer) {
-            if ($signer->status !== SignatureStatus::PENDING) {
+            if ($signer->status->value !== 'pending') {
                 return redirect()->route('signature.show', $token)->with('error', 'Vous avez déjà signé ce document.');
             }
 
@@ -100,7 +88,7 @@ class SignatureController extends Controller
             abort(404, 'Le document associé est introuvable ou a été supprimé.');
         }
 
-        if ($signature->status !== SignatureStatus::PENDING) {
+        if ($signature->status->value !== 'pending') {
             return redirect()->route('signature.show', $token)->with('error', 'Ce document a déjà été signé.');
         }
 
@@ -144,111 +132,15 @@ class SignatureController extends Controller
         }
 
         // For multi-signature, only run post-signature when ALL have signed
-        if ($signature->is_multi_signatory && $signature->status !== SignatureStatus::SIGNED) {
+        if ($signature->is_multi_signatory && $signature->status->value !== 'signed') {
             return;
         }
 
-        $updates = [];
-        if ($signature->signable_type === Contract::class) {
-            $updates['signature_status'] = SignatureStatus::SIGNED;
-        } elseif ($signature->signable_type === ThirdPartyDocument::class) {
-            $updates['status'] = ThirdPartyDocumentStatus::VALID;
-            $updates['signed_at'] = now();
-        } elseif ($signature->signable_type === CustomerQuote::class) {
-            try {
-                $responsable = User::find($signature->user_id);
-                if ($responsable) {
-                    app(QuoteService::class)->acceptQuote($signature->signable, $responsable);
-                } else {
-                    $signature->signable->update([
-                        'status' => QuoteStatus::SIGNED,
-                        'signed_at' => now(),
-                    ]);
-                }
-            } catch (\Exception $e) {
-                Log::error("Erreur lors de l'acceptation automatique du devis post-signature : ".$e->getMessage());
-            }
+        try {
+            $signature->signable->handlePostSignature($signature);
+            $signature->signable->stampSignatureDocument($signature);
+        } catch (\Exception $e) {
+            Log::error('Erreur post-signature pour '.class_basename($signature->signable).': '.$e->getMessage());
         }
-
-        if (! empty($updates)) {
-            $signature->signable->update($updates);
-        }
-
-        // PDF stamping
-        if ($signature->signable_type === Contract::class) {
-            app(RHDocumentService::class)->generateContract($signature->signable);
-        } else {
-            $this->stampDocument($signature);
-        }
-    }
-
-    /**
-     * Stamp the document PDF with the signature certificate.
-     */
-    protected function stampDocument(Signature $signature): void
-    {
-        $documentPath = null;
-        $signatoryName = null;
-        $media = null;
-
-        if ($signature->signable_type === ThirdPartyDocument::class) {
-            $media = $signature->signable->getFirstMedia('third_party_documents');
-            if ($media) {
-                $documentPath = $media->getPath();
-            }
-            $signatoryName = $signature->signable->thirdParty->name ?? null;
-        } elseif ($signature->signable_type === Employee::class) {
-            $media = $signature->signable->getMedia('rh_documents')->filter(function ($item) {
-                return str_contains($item->file_name, 'affiliation_probtp');
-            })->last();
-            if ($media) {
-                $documentPath = $media->getPath();
-            }
-            $signatoryName = $signature->signable->full_name;
-        } elseif ($signature->signable_type === CustomerQuote::class) {
-            $documentPath = Storage::disk('public')->path('documents/commerce/quotes/devis_'.$signature->signable->reference.'.pdf');
-            $signatoryName = $signature->signable->client->name ?? null;
-        }
-
-        if ($documentPath && file_exists($documentPath)) {
-            $stamper = app(PdfStamperService::class);
-            $stampedPdfPath = $stamper->stamp($documentPath, $signature, $signatoryName);
-
-            try {
-                if ($signature->signable_type === ThirdPartyDocument::class) {
-                    $signature->signable->clearMediaCollection('third_party_documents');
-                    $signature->signable->addMedia($stampedPdfPath)->toMediaCollection('third_party_documents');
-                } elseif ($signature->signable_type === Employee::class) {
-                    if ($media) {
-                        $media->delete();
-                    }
-                    $signature->signable->addMedia($stampedPdfPath)->toMediaCollection('rh_documents');
-                } else {
-                    File::copy($stampedPdfPath, $documentPath);
-                }
-            } finally {
-                if (file_exists($stampedPdfPath)) {
-                    @unlink($stampedPdfPath);
-                }
-            }
-        }
-    }
-
-    /**
-     * Resolve the document URL based on the signable model type.
-     */
-    protected function resolveDocumentUrl(Signature $signature): ?string
-    {
-        if ($signature->signable_type === ThirdPartyDocument::class) {
-            return $signature->signable->getFirstMediaUrl('third_party_documents');
-        } elseif ($signature->signable_type === Contract::class) {
-            return Storage::disk('public')->url('documents/rh/contrat_'.$signature->signable->employee->registration_number.'.pdf');
-        } elseif ($signature->signable_type === Employee::class) {
-            return Storage::disk('public')->url("documents/rh/onboarding/affiliation_probtp_{$signature->signable->id}_{$signature->signable->registration_number}.pdf");
-        } elseif ($signature->signable_type === CustomerQuote::class) {
-            return Storage::disk('public')->url('documents/commerce/quotes/devis_'.$signature->signable->reference.'.pdf');
-        }
-
-        return null;
     }
 }

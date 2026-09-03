@@ -10,6 +10,7 @@ use App\Models\Core\Signature;
 use App\Models\Tiers\ThirdParty;
 use App\Models\User;
 use App\Observers\Commerce\CustomerQuoteObserver;
+use App\Traits\Core\HasSignature;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -26,7 +27,7 @@ use Spatie\Activitylog\Support\LogOptions;
 #[ObservedBy([CustomerQuoteObserver::class])]
 class CustomerQuote extends Model implements HasTimeline
 {
-    use DeletableWhenDraft, HasFactory, InteractsWithTimeline, LogsActivity, RecalculatesTotals;
+    use DeletableWhenDraft, HasFactory, HasSignature, InteractsWithTimeline, LogsActivity, RecalculatesTotals;
 
     protected $fillable = [
         'client_id',
