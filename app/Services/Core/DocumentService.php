@@ -20,6 +20,7 @@ class DocumentService
      * @param  bool  $pdfView  Si true, retourne le contenu brut du PDF au lieu du chemin.
      * @param  Model|null  $entity  L'entité Eloquent liée au document (optionnel).
      * @param  string|null  $documentType  Le type de document pour l'index (ex: 'devis', 'facture').
+     * @param  int|null  $userId  L'ID de l'utilisateur qui génère le document (optionnel, fallback sur auth).
      * @return string Le chemin relatif vers le fichier PDF généré ou le contenu brut.
      */
     public static function getDisk(): string
@@ -39,7 +40,8 @@ class DocumentService
         string $type = 'other',
         bool $pdfView = false,
         ?Model $entity = null,
-        ?string $documentType = null
+        ?string $documentType = null,
+        ?int $userId = null
     ): mixed {
         $browsershot = Browsershot::html(view($view, $data)->render())
             ->setNodeBinary(config('browsershot.node_binary_path'))
@@ -80,7 +82,7 @@ class DocumentService
         Storage::disk($disk)->put($relativePath, $pdfContent);
 
         // Indexer le document généré
-        $this->indexDocument($relativePath, $disk, $filename, $type, $entity, $documentType);
+        $this->indexDocument($relativePath, $disk, $filename, $type, $entity, $documentType, $userId);
 
         if ($pdfView) {
             return $pdfContent;
@@ -98,7 +100,8 @@ class DocumentService
         string $filename,
         string $type,
         ?Model $entity,
-        ?string $documentType
+        ?string $documentType,
+        ?int $userId = null
     ): void {
         try {
             $fileSize = Storage::disk($disk)->size($relativePath);
@@ -113,7 +116,7 @@ class DocumentService
                     'file_disk' => $disk,
                     'file_name' => $filename,
                     'file_size' => $fileSize,
-                    'generated_by' => auth()->check() ? auth()->id() : null,
+                    'generated_by' => $userId ?? (auth()->check() ? auth()->id() : null),
                     'generated_at' => now(),
                 ]
             );

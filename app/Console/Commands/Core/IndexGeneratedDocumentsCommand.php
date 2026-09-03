@@ -75,6 +75,13 @@ class IndexGeneratedDocumentsCommand extends Command
                 }
 
                 $subType = $this->extractSubType($filePath);
+
+                if (! Storage::disk($disk)->exists($relativePath)) {
+                    $this->error("Fichier introuvable : {$relativePath}");
+
+                    continue;
+                }
+
                 $fileSize = Storage::disk($disk)->size($relativePath);
 
                 try {

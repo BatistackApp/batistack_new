@@ -196,17 +196,10 @@ ci:
 # PRIORITÉS
 # ============================================
 
-# Bug fix
-bugfix:
-  - changed-files:
-      - any-glob-to-any-file:
-          - '**/*.php'
-          - '**/*.js'
-          - '**/*.ts'
-
 # Nouvelle feature
 feature:
   - changed-files:
       - any-glob-to-any-file:
           - app/Filament/**
           - app/Services/**
+          - database/migrations/**
