@@ -7,16 +7,29 @@ use App\Enums\Articles\StockMouvementType;
 use App\Filament\Articles\Resources\Store\StoreResource;
 use App\Models\Articles\Item;
 use App\Services\Articles\StoreService;
+use Filament\Forms\Components\DatePicker;
 use Filament\Resources\Pages\Page;
+use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Filters\DatePickerFilter;
+use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Table;
+use ToneGabes\Filament\Icons\Enums\Phosphor;
 
-class StoreMovementHistory extends Page
+class StoreMovementHistory extends Page implements Tables\Contracts\HasTable
 {
+    use InteractsWithTable;
+
     protected static string $resource = StoreResource::class;
 
+    protected static string|null|\BackedEnum $navigationIcon = Phosphor::ClockCounterClockwise;
+
+    protected static string|null|\UnitEnum $navigationGroup = 'Magasin';
+
+    protected static ?int $navigationSort = 3;
+
     protected static ?string $title = 'Historique des mouvements';
+
+    protected string $view = 'filament.articles.resources.store.pages.store-movement-history';
 
     public ?int $item = null;
 
@@ -74,14 +87,16 @@ class StoreMovementHistory extends Page
             ])
             ->defaultSort('created_at', 'desc')
             ->filters([
-                DatePickerFilter::make('start_date')
-                    ->label('Du')
-                    ->query(fn ($query, $value) => $query->where('created_at', '>=', $value)),
-                DatePickerFilter::make('end_date')
-                    ->label('Au')
-                    ->query(fn ($query, $value) => $query->where('created_at', '<=', $value)),
-            ])
-            ->actions([])
-            ->bulkActions([]);
+                Tables\Filters\Filter::make('date')
+                    ->label('Plage de date')
+                    ->schema([
+                        DatePicker::make('start_date')->label('Du'),
+                        DatePicker::make('end_date')->label('Au'),
+                    ])
+                    ->query(fn ($query, array $data) => $query
+                        ->when($data['start_date'], fn ($query, $date) => $query->where('created_at', '>=', $date))
+                        ->when($data['end_date'], fn ($query, $date) => $query->where('created_at', '<=', $date))
+                    )
+            ]);
     }
 }

@@ -28,7 +28,7 @@ class WarehousesTable
                     ->label('Inventaire bins')
                     ->icon(Phosphor::Scan)
                     ->color('info')
-                    ->url(fn ($record) => BinInventoryPage::getUrl('bin-inventory', ['record' => $record->id])),
+                    ->url(fn ($record) => BinInventoryPage::getUrl(['record' => $record->id])),
                 EditAction::make(),
                 DeleteAction::make(),
             ])

@@ -63,6 +63,21 @@ it('restock increments stock', function () {
     expect($stock->quantity)->toBe(35);
 });
 
+it('restock creates a stock mouvement with STORE source', function () {
+    $item = Item::factory()->create(['type' => ItemType::STORE_ITEM, 'purchase_price' => 10.0]);
+    Stock::create([
+        'item_id' => $item->id,
+        'warehouse_id' => $this->warehouse->id,
+        'quantity' => 20,
+    ]);
+
+    $this->service->restock($item, 15, 12.5);
+
+    $mouvement = $item->stockMouvements()->latest()->first();
+    expect($mouvement)->not->toBeNull()
+        ->and($mouvement->reference_type)->toBe(StockMouvementSource::STORE);
+});
+
 it('get store items returns only store items', function () {
     Item::factory()->create(['type' => ItemType::STORE_ITEM, 'is_active' => true]);
     Item::factory()->create(['type' => ItemType::STORE_ITEM, 'is_active' => true]);

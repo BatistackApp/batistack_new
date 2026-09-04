@@ -54,6 +54,7 @@ class StoreService
             quantity: $quantity,
             purchasePrice: $purchasePrice,
             batchNumber: $batchNumber,
+            source: StockMouvementSource::STORE,
         );
     }
 
@@ -128,6 +129,6 @@ class StoreService
             $query->where('created_at', '<=', $endDate);
         }
 
-        return $query->get();
+        return $query;
     }
 }

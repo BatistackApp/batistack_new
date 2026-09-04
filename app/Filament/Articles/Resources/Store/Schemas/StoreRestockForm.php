@@ -3,8 +3,8 @@
 namespace App\Filament\Articles\Resources\Store\Schemas;
 
 use App\Models\Articles\Item;
-use Filament\Forms\Components\Section;
 use Filament\Forms\Components\TextInput;
+use Filament\Schemas\Components\Section;
 
 class StoreRestockForm
 {

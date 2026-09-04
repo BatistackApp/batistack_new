@@ -4,6 +4,8 @@ namespace App\Filament\Articles\Resources\Store;
 
 use App\Enums\Articles\StoreCategory;
 use App\Filament\Articles\Resources\Items\ItemResource;
+use App\Filament\Articles\Resources\Store\Schemas\StoreItemForm;
+use App\Filament\Articles\Resources\Store\Schemas\StoreRestockForm;
 use App\Models\Articles\Item;
 use App\Services\Articles\StoreService;
 use Filament\Actions\Action;
@@ -68,24 +70,24 @@ class StoreTable
                 Filter::make('search')
                     ->label('Recherche')
                     ->query(fn ($query, $value) => filled($value) ? $query->search($value) : $query)
-                    ->form([
+                    ->schema([
                         TextInput::make('value')
                             ->placeholder('Nom, référence...'),
                     ]),
             ])
-            ->actions([
+            ->recordActions([
                 ActionGroup::make([
                     Action::make('withdraw')
                         ->label('Déstockage rapide')
                         ->icon(Phosphor::MinusCircle)
                         ->color('warning')
-                        ->form(fn (Item $record) => StoreItemForm::configure($record))
+                        ->schema(fn (Item $record) => StoreItemForm::configure($record))
                         ->action(fn (Item $record, array $data) => self::withdraw($record, $data)),
                     Action::make('restock')
                         ->label('Réapprovisionner')
                         ->icon(Phosphor::PlusCircle)
                         ->color('success')
-                        ->form(fn (Item $record) => StoreRestockForm::configure($record))
+                        ->schema(fn (Item $record) => StoreRestockForm::configure($record))
                         ->action(fn (Item $record, array $data) => self::restock($record, $data)),
                     Action::make('history')
                         ->label('Historique')
@@ -97,8 +99,7 @@ class StoreTable
                         ->icon(Phosphor::Eye)
                         ->url(fn (Item $record) => ItemResource::getUrl('view', ['record' => $record])),
                 ]),
-            ])
-            ->bulkActions([]);
+            ]);
     }
 
     protected static function withdraw(Item $item, array $data): void
