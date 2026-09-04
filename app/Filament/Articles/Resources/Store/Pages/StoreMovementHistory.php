@@ -2,8 +2,10 @@
 
 namespace App\Filament\Articles\Resources\Store\Pages;
 
+use App\Enums\Articles\ItemType;
 use App\Enums\Articles\StockMouvementType;
 use App\Filament\Articles\Resources\Store\StoreResource;
+use App\Models\Articles\Item;
 use App\Services\Articles\StoreService;
 use Filament\Resources\Pages\Page;
 use Filament\Tables\Columns\TextColumn;
@@ -20,7 +22,12 @@ class StoreMovementHistory extends Page
 
     public function mount(): void
     {
-        $this->item = request()->query('item');
+        $itemId = request()->query('item');
+
+        if ($itemId) {
+            $item = Item::find($itemId);
+            $this->item = $item && $item->type === ItemType::STORE_ITEM ? $item->id : null;
+        }
     }
 
     public function getTable(): TableBuilder

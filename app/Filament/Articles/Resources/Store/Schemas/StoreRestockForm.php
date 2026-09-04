@@ -2,12 +2,13 @@
 
 namespace App\Filament\Articles\Resources\Store\Schemas;
 
+use App\Models\Articles\Item;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\TextInput;
 
 class StoreRestockForm
 {
-    public static function configure(): array
+    public static function configure(?Item $record = null): array
     {
         return [
             Section::make()
@@ -23,7 +24,7 @@ class StoreRestockForm
                         ->numeric()
                         ->required()
                         ->prefix('€')
-                        ->default(fn () => request()->route('record')?->purchase_price ?? 0),
+                        ->default(fn () => $record?->purchase_price ?? 0),
                     TextInput::make('batch_number')
                         ->label('Numéro de lot (optionnel)')
                         ->nullable()

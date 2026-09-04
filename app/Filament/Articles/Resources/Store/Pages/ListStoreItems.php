@@ -82,13 +82,13 @@ class ListStoreItems extends ListRecords
                         ->label('Déstockage rapide')
                         ->icon(Phosphor::MinusCircle)
                         ->color('warning')
-                        ->form(StoreItemForm::configure())
+                        ->form(fn (Item $record) => StoreItemForm::configure($record))
                         ->action(fn (Item $record, array $data) => $this->withdraw($record, $data)),
                     Action::make('restock')
                         ->label('Réapprovisionner')
                         ->icon(Phosphor::PlusCircle)
                         ->color('success')
-                        ->form(StoreRestockForm::configure())
+                        ->form(fn (Item $record) => StoreRestockForm::configure($record))
                         ->action(fn (Item $record, array $data) => $this->restock($record, $data)),
                     Action::make('history')
                         ->label('Historique')

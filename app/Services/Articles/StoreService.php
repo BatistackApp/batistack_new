@@ -22,7 +22,7 @@ class StoreService
      */
     public function getWarehouse(): Warehouse
     {
-        return Warehouse::byName('Magasin');
+        return Warehouse::where('name', 'Magasin')->firstOrFail();
     }
 
     /**
