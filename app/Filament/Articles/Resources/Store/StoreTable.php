@@ -26,15 +26,12 @@ class StoreTable
         return $table
             ->query(
                 Item::storeItems()
-                    ->active()
                     ->with(['stocks' => fn ($q) => $q->where('warehouse_id', $warehouse->id)])
             )
             ->columns([
-                ImageColumn::make('getFirstMediaUrl')
+                ImageColumn::make('image')
                     ->label('Photo')
-                    ->disk('public')
                     ->circular()
-                    ->defaultImageUrl(url('/images/placeholder.png'))
                     ->grow(false),
                 TextColumn::make('reference')
                     ->label('Référence')
@@ -48,7 +45,7 @@ class StoreTable
                 TextColumn::make('store_category')
                     ->label('Catégorie')
                     ->badge()
-                    ->formatStateUsing(fn ($state) => StoreCategory::tryFrom($state)?->getLabel() ?? $state),
+                    ->formatStateUsing(fn ($state) => $state instanceof StoreCategory ? $state->getLabel() : StoreCategory::tryFrom($state)?->getLabel() ?? $state),
                 TextColumn::make('stock')
                     ->label('Stock Magasin')
                     ->getStateUsing(fn (Item $record) => number_format($record->getStockForStore($warehouse), 0, ',', ' '))
