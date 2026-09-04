@@ -5,6 +5,7 @@ namespace App\Filament\Articles\Resources\Items\Schemas;
 use App\Enums\Articles\GhsPictogram;
 use App\Enums\Articles\HazardCategory;
 use App\Enums\Articles\ItemType;
+use App\Enums\Articles\StoreCategory;
 use App\Enums\Tiers\ThirdPartyType;
 use App\Models\Core\Unit;
 use App\Models\Core\VatRate;
@@ -59,6 +60,18 @@ class ItemForm
                                             ->required()
                                             ->live()
                                             ->native(false),
+                                        Select::make('store_category')
+                                            ->label('Catégorie Magasin')
+                                            ->options(StoreCategory::class)
+                                            ->visible(fn (Get $get) => $get('type') instanceof ItemType && $get('type') === ItemType::STORE_ITEM)
+                                            ->required(fn (Get $get) => $get('type') instanceof ItemType && $get('type') === ItemType::STORE_ITEM)
+                                            ->native(false),
+                                        TextInput::make('store_reorder_qty')
+                                            ->label('Seuil de réappro. magasin')
+                                            ->numeric()
+                                            ->default(0)
+                                            ->minValue(0)
+                                            ->visible(fn (Get $get) => $get('type') instanceof ItemType && $get('type') === ItemType::STORE_ITEM),
                                         Select::make('unit_id')
                                             ->label('Unité de mesure')
                                             ->options(Unit::pluck('name', 'id'))
@@ -84,11 +97,11 @@ class ItemForm
                                     ->columns(2)
                                     ->schema([
                                         TextInput::make('purchase_price')
-                                            ->label(fn (Get $get) => $get('type') === ItemType::WORK->value ? 'Coût de revient estimé' : 'Prix d\'achat / PUMP')
+                                            ->label(fn (Get $get) => $get('type') instanceof ItemType && $get('type') === ItemType::WORK ? 'Coût de revient estimé' : 'Prix d\'achat / PUMP')
                                             ->numeric()
                                             ->prefix('€')
                                             ->suffixAction(CalculatorAction::make())
-                                            ->disabled(fn (Get $get) => $get('type') === ItemType::WORK->value)
+                                            ->disabled(fn (Get $get) => $get('type') instanceof ItemType && $get('type') === ItemType::WORK)
                                             ->helperText('Pour les ouvrages, le coût est calculé dynamiquement.'),
                                         TextInput::make('selling_price')
                                             ->label('Prix de vente HT')
@@ -115,6 +128,7 @@ class ItemForm
                         // --- SÉCURITÉ & FDS ---
                         Tabs\Tab::make('Sécurité & FDS')
                             ->icon(Phosphor::HardHat)
+                            ->hidden(fn (Get $get) => $get('type') instanceof ItemType && $get('type') === ItemType::STORE_ITEM)
                             ->schema([
                                 Section::make('Fiche de données de sécurité (FDS)')
                                     ->description('Renseignez les dangers CLP pour permettre la génération automatique du PPSPS.')

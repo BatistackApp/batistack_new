@@ -13,6 +13,7 @@ enum StockMouvementSource: string implements HasLabel
     case RETURN = 'return';       // Retour de chantier
     case INTERVENTION = 'intervention'; // Consommation Intervention
     case SCRAP = 'scrap';         // Rebut production
+    case STORE = 'store';         // Prélèvement magasin interne
 
     public function getLabel(): ?string
     {
@@ -24,6 +25,7 @@ enum StockMouvementSource: string implements HasLabel
             self::RETURN => 'Retour Chantier',
             self::INTERVENTION => 'Consommation Intervention',
             self::SCRAP => 'Rebut Production',
+            self::STORE => 'Prélèvement Magasin',
         };
     }
 }

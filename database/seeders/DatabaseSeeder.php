@@ -38,6 +38,7 @@ class DatabaseSeeder extends Seeder
         }
 
         $this->call(CoreSeeder::class);
+        $this->call(StoreWarehouseSeeder::class);
 
         Employee::create([
             'user_id' => 1,

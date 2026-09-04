@@ -5,6 +5,7 @@ namespace App\Models\Articles;
 use App\Enums\Articles\GhsPictogram;
 use App\Enums\Articles\HazardCategory;
 use App\Enums\Articles\ItemType;
+use App\Enums\Articles\StoreCategory;
 use App\Models\Core\Unit;
 use App\Models\Core\VatRate;
 use App\Models\Tiers\ThirdParty;
@@ -46,6 +47,8 @@ class Item extends Model implements HasMedia
         'min_stock',
         'parent_id',
         'supplier_id',
+        'store_category',
+        'store_reorder_qty',
     ];
 
     public function unit(): BelongsTo
@@ -98,6 +101,7 @@ class Item extends Model implements HasMedia
     {
         return [
             'type' => ItemType::class,
+            'store_category' => StoreCategory::class,
             'hazard_category' => HazardCategory::class,
             'ghs_pictograms' => 'array',
             'h_phrases' => 'array',
@@ -160,6 +164,14 @@ class Item extends Model implements HasMedia
     public function scopeWorks(Builder $query): Builder
     {
         return $query->where('type', ItemType::WORK);
+    }
+
+    /**
+     * Scope: Récupérer articles magasin
+     */
+    public function scopeStoreItems(Builder $query): Builder
+    {
+        return $query->where('type', ItemType::STORE_ITEM);
     }
 
     /**
@@ -289,6 +301,14 @@ class Item extends Model implements HasMedia
     }
 
     /**
+     * Vérifier si c'est un article magasin
+     */
+    public function isStoreItem(): bool
+    {
+        return $this->type === ItemType::STORE_ITEM;
+    }
+
+    /**
      * Vérifier si l'article possède une fiche de sécurité / présente un danger.
      */
     public function isHazardous(): bool
@@ -316,6 +336,20 @@ class Item extends Model implements HasMedia
     public function getTotalStock(): float
     {
         return $this->stocks()->sum('quantity');
+    }
+
+    /**
+     * Récupérer le stock dans le magasin interne
+     */
+    public function getStockForStore(?Warehouse $warehouse = null): float
+    {
+        $warehouse ??= Warehouse::where('name', 'Magasin')->first();
+
+        if (! $warehouse) {
+            return 0;
+        }
+
+        return $this->getStockInWarehouse($warehouse);
     }
 
     /**

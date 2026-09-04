@@ -5,6 +5,7 @@ namespace App\Filament\Articles\Resources\Items\Pages;
 use App\Filament\Articles\Actions\DestockKitAction;
 use App\Filament\Articles\Resources\Items\ItemResource;
 use App\Services\Articles\InventoryService;
+use App\Services\Core\DocumentService;
 use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
 use Filament\Resources\Pages\ListRecords;
@@ -36,7 +37,7 @@ class ListItems extends ListRecords
                 ->action(function (InventoryService $service) {
                     $path = $service->generateValuationPdf();
 
-                    return response()->download($path);
+                    return app(DocumentService::class)->download($path);
                 }),
 
             DestockKitAction::make(),

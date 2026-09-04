@@ -40,7 +40,7 @@ class StockService
      *
      * @throws Throwable
      */
-    public function entry(Item $item, Warehouse $warehouse, float $quantity, float $purchasePrice, ?string $batchNumber = null, ?string $expirationDate = null, ?string $locationCode = null): void
+    public function entry(Item $item, Warehouse $warehouse, float $quantity, float $purchasePrice, ?string $batchNumber = null, ?string $expirationDate = null, ?string $locationCode = null, ?StockMouvementSource $source = null): void
     {
         if ($item->is_sensitive && (empty($batchNumber) || empty($expirationDate))) {
             throw new ArticlesModuleException(
@@ -49,7 +49,7 @@ class StockService
             );
         }
 
-        DB::transaction(function () use ($item, $warehouse, $quantity, $purchasePrice, $batchNumber, $expirationDate, $locationCode) {
+        DB::transaction(function () use ($item, $warehouse, $quantity, $purchasePrice, $batchNumber, $expirationDate, $locationCode, $source) {
             $currentGlobalStock = $item->stocks()->sum('quantity');
             $oldPump = (float) $item->purchase_price;
 
@@ -83,7 +83,7 @@ class StockService
                 'stock_id' => $stock->id,
                 'user_id' => auth()->id(),
                 'type' => StockMouvementType::IN,
-                'reference_type' => StockMouvementSource::INTERNAL,
+                'reference_type' => $source ?? StockMouvementSource::INTERNAL,
                 'reference_id' => null,
                 'quantity_before' => $quantityBefore,
                 'quantity_delta' => $quantity,
