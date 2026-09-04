@@ -31,6 +31,6 @@ class SignatureCompletedNotification extends Notification implements ShouldQueue
             ->line('Tous les signataires ont signé le document.')
             ->line('Type : '.$modelLabel.' #'.$model->id)
             ->line('Date : '.$this->signature->signed_at->format('d/m/Y H:i'))
-            ->action('Voir le document', route('filament.core.resources.signatures.view', $this->signature));
+            ->action('Voir le document', route('filament.signatures.resources.signatures.view', $this->signature));
     }
 }

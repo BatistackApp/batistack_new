@@ -226,36 +226,80 @@ class ViewChantier extends ViewRecord
                 ->color('warning')
                 ->requiresConfirmation()
                 ->modalHeading('Générer le Procès-Verbal de Réception')
-                ->modalDescription('Le PV sera généré et une demande de signature sera automatiquement envoyée par email au client.')
-                ->action(function (Chantier $record, ChantierDocumentService $service, SignatureService $signatureService) {
+                ->modalDescription('Le PV sera généré et une demande de signature sera envoyée par email.')
+                ->form([
+                    Filament\Forms\Components\Toggle::make('is_multi')
+                        ->label('Signature multi-signataires')
+                        ->default(false)
+                        ->live(),
+                    Filament\Forms\Components\Repeater::make('signers')
+                        ->label('Signataires')
+                        ->schema([
+                            Filament\Forms\Components\TextInput::make('name')
+                                ->label('Nom')
+                                ->required(),
+                            Filament\Forms\Components\TextInput::make('email')
+                                ->label('Email')
+                                ->email()
+                                ->required(),
+                            Filament\Forms\Components\Select::make('role')
+                                ->label('Rôle')
+                                ->options([
+                                    'Signataire' => 'Signataire',
+                                    'Client' => 'Client',
+                                    'Maître d\'ouvrage' => 'Maître d\'ouvrage',
+                                    'Autre' => 'Autre',
+                                ])
+                                ->default('Client'),
+                        ])
+                        ->columns(3)
+                        ->defaultItems(0)
+                        ->addActionLabel('Ajouter un signataire')
+                        ->visible(fn (Filament\Forms\Components\Get $get) => $get('is_multi')),
+                ])
+                ->action(function (Chantier $record, array $data, ChantierDocumentService $service, SignatureService $signatureService) {
                     $relativePath = $service->generateHandoverProtocol($record);
-                    $disk = DocumentService::getDisk();
 
-                    $client = $record->client;
-                    $contact = $client?->getPrimaryContact();
-                    $email = $contact?->email ?? $client?->email;
-                    $name = $contact ? trim("{$contact->first_name} {$contact->last_name}") : ($client?->name ?? 'Client');
-
-                    if ($email) {
-                        $signatureService->driver()->requestSignature(
+                    if ($data['is_multi'] ?? false) {
+                        $signatureService->requestMultiSignature(
                             model: $record,
                             type: SignatureType::AUTOGRAPH,
-                            email: $email,
-                            name: $name,
+                            signers: $data['signers'],
                             documentPath: $relativePath
                         );
 
                         Notification::make()
                             ->title('PV de Réception généré')
-                            ->body("Une demande de signature a été envoyée au client ({$email}).")
+                            ->body('Une demande de signature multi-signataires a été envoyée.')
                             ->success()
                             ->send();
                     } else {
-                        Notification::make()
-                            ->title('PV de Réception généré')
-                            ->body("Le PV a été généré, mais le client n'a pas d'adresse email renseignée pour l'envoi de la signature.")
-                            ->warning()
-                            ->send();
+                        $client = $record->client;
+                        $contact = $client?->getPrimaryContact();
+                        $email = $contact?->email ?? $client?->email;
+                        $name = $contact ? trim("{$contact->first_name} {$contact->last_name}") : ($client?->name ?? 'Client');
+
+                        if ($email) {
+                            $signatureService->driver()->requestSignature(
+                                model: $record,
+                                type: SignatureType::AUTOGRAPH,
+                                email: $email,
+                                name: $name,
+                                documentPath: $relativePath
+                            );
+
+                            Notification::make()
+                                ->title('PV de Réception généré')
+                                ->body("Une demande de signature a été envoyée au client ({$email}).")
+                                ->success()
+                                ->send();
+                        } else {
+                            Notification::make()
+                                ->title('PV de Réception généré')
+                                ->body("Le PV a été généré, mais le client n'a pas d'adresse email renseignée pour l'envoi de la signature.")
+                                ->warning()
+                                ->send();
+                        }
                     }
 
                     return response()->download(Storage::disk($disk)->path($relativePath));

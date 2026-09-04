@@ -34,10 +34,41 @@ class ViewCustomerQuote extends ViewRecord
                 ->visible(fn (CustomerQuote $record) => $record->status === QuoteStatus::DRAFT || $record->status === QuoteStatus::SENT)
                 ->requiresConfirmation()
                 ->modalHeading('Envoyer le devis')
-                ->modalDescription('Envoyer le devis au client va valider automatiquement le devis, vous ne pourrez plus le modifier, Etes-vous sur ?')
+                ->modalDescription('Envoyer le devis au client va valider automatiquement le devis, vous ne pourrez plus le modifier.')
                 ->modalIconColor('warning')
                 ->color('warning')
-                ->action(function (CustomerQuote $record) {
+                ->form([
+                    Filament\Forms\Components\Toggle::make('is_multi')
+                        ->label('Signature multi-signataires')
+                        ->default(false)
+                        ->live(),
+                    Filament\Forms\Components\Repeater::make('signers')
+                        ->label('Signataires')
+                        ->schema([
+                            Filament\Forms\Components\TextInput::make('name')
+                                ->label('Nom')
+                                ->required(),
+                            Filament\Forms\Components\TextInput::make('email')
+                                ->label('Email')
+                                ->email()
+                                ->required(),
+                            Filament\Forms\Components\Select::make('role')
+                                ->label('Rôle')
+                                ->options([
+                                    'Signataire' => 'Signataire',
+                                    'Client' => 'Client',
+                                    'Manager' => 'Manager',
+                                    'Comptable' => 'Comptable',
+                                    'Autre' => 'Autre',
+                                ])
+                                ->default('Signataire'),
+                        ])
+                        ->columns(3)
+                        ->defaultItems(0)
+                        ->addActionLabel('Ajouter un signataire')
+                        ->visible(fn (Filament\Forms\Components\Get $get) => $get('is_multi')),
+                ])
+                ->action(function (CustomerQuote $record, array $data) {
                     if ($record->items()->count() === 0) {
                         Notification::make()
                             ->danger()
@@ -52,29 +83,45 @@ class ViewCustomerQuote extends ViewRecord
                     try {
                         $path = app(CommerceDocumentationService::class)->generateQuotePdf($record);
 
-                        $client = $record->client;
-                        $contact = $client?->getPrimaryContact();
-                        $email = $contact?->email ?? $client?->email;
-                        $name = $contact ? trim("{$contact->first_name} {$contact->last_name}") : ($client?->name ?? 'Client');
+                        $service = app(SignatureService::class);
 
-                        if ($email) {
-                            app(SignatureService::class)->driver('local')->requestSignature(
-                                model: $record,
-                                type: SignatureType::AUTOGRAPH,
-                                email: $email,
-                                name: $name,
-                                documentPath: $path
+                        if ($data['is_multi'] ?? false) {
+                            $service->requestMultiSignature(
+                                $record,
+                                SignatureType::AUTOGRAPH,
+                                $data['signers'],
+                                $path
                             );
 
                             Notification::make()
                                 ->success()
-                                ->title('Devis envoyé avec demande de signature au client')
+                                ->title('Devis envoyé avec demande de signature multi-signataires')
                                 ->send();
                         } else {
-                            Notification::make()
-                                ->warning()
-                                ->title('Devis généré mais le client n\'a pas d\'email pour la signature')
-                                ->send();
+                            $client = $record->client;
+                            $contact = $client?->getPrimaryContact();
+                            $email = $contact?->email ?? $client?->email;
+                            $name = $contact ? trim("{$contact->first_name} {$contact->last_name}") : ($client?->name ?? 'Client');
+
+                            if ($email) {
+                                $service->requestSignature(
+                                    model: $record,
+                                    type: SignatureType::AUTOGRAPH,
+                                    email: $email,
+                                    name: $name,
+                                    documentPath: $path
+                                );
+
+                                Notification::make()
+                                    ->success()
+                                    ->title('Devis envoyé avec demande de signature au client')
+                                    ->send();
+                            } else {
+                                Notification::make()
+                                    ->warning()
+                                    ->title('Devis généré mais le client n\'a pas d\'email pour la signature')
+                                    ->send();
+                            }
                         }
                     } catch (\Exception $e) {
                         Notification::make()

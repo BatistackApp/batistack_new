@@ -35,6 +35,6 @@ class SignatureRefusedNotification extends Notification implements ShouldQueue
             ->line('Rôle : '.$this->signer->role)
             ->line('Type : '.$modelLabel.' #'.$model->id)
             ->line('Le workflow de signature a été arrêté.')
-            ->action('Voir le document', route('filament.core.resources.signatures.view', $this->signature));
+            ->action('Voir le document', route('filament.signatures.resources.signatures.view', $this->signature));
     }
 }
