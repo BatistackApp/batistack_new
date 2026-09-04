@@ -28,35 +28,80 @@ class ViewMaintenanceContract extends ViewRecord
                     ->color('primary')
                     ->requiresConfirmation()
                     ->modalHeading('Envoyer le contrat d\'entretien')
-                    ->modalDescription('Le contrat PDF sera généré et une demande de signature sera envoyée au client.')
-                    ->action(function (MaintenanceContract $record, MaintenanceContractDocumentService $service, SignatureService $signatureService) {
+                    ->modalDescription('Le contrat PDF sera généré et une demande de signature sera envoyée.')
+                    ->form([
+                        Filament\Forms\Components\Toggle::make('is_multi')
+                            ->label('Signature multi-signataires')
+                            ->default(false)
+                            ->live(),
+                        Filament\Forms\Components\Repeater::make('signers')
+                            ->label('Signataires')
+                            ->schema([
+                                Filament\Forms\Components\TextInput::make('name')
+                                    ->label('Nom')
+                                    ->required(),
+                                Filament\Forms\Components\TextInput::make('email')
+                                    ->label('Email')
+                                    ->email()
+                                    ->required(),
+                                Filament\Forms\Components\Select::make('role')
+                                    ->label('Rôle')
+                                    ->options([
+                                        'Signataire' => 'Signataire',
+                                        'Client' => 'Client',
+                                        'Manager' => 'Manager',
+                                        'Autre' => 'Autre',
+                                    ])
+                                    ->default('Signataire'),
+                            ])
+                            ->columns(3)
+                            ->defaultItems(0)
+                            ->addActionLabel('Ajouter un signataire')
+                            ->visible(fn (Filament\Forms\Components\Get $get) => $get('is_multi')),
+                    ])
+                    ->action(function (MaintenanceContract $record, array $data, MaintenanceContractDocumentService $service, SignatureService $signatureService) {
                         $path = $service->generateContractPdf($record);
 
-                        $client = $record->thirdParty;
-                        $contact = $client?->getPrimaryContact();
-                        $email = $contact?->email ?: $client?->email;
-                        $name = $contact ? trim("{$contact->first_name} {$contact->last_name}") : ($client?->name ?? 'Client');
-
-                        if ($email) {
-                            $signatureService->requestSignature(
+                        if ($data['is_multi'] ?? false) {
+                            $signatureService->requestMultiSignature(
                                 model: $record,
                                 type: SignatureType::AUTOGRAPH,
-                                email: $email,
-                                name: $name,
+                                signers: $data['signers'],
                                 documentPath: $path,
                             );
 
                             Notification::make()
                                 ->title('Contrat envoyé')
-                                ->body("Une demande de signature a été envoyée au client ({$email}).")
+                                ->body('Une demande de signature multi-signataires a été envoyée.')
                                 ->success()
                                 ->send();
                         } else {
-                            Notification::make()
-                                ->title('Contrat généré')
-                                ->body("Le contrat a été généré, mais le client n'a pas d'adresse email renseignée pour l'envoi de la signature.")
-                                ->warning()
-                                ->send();
+                            $client = $record->thirdParty;
+                            $contact = $client?->getPrimaryContact();
+                            $email = $contact?->email ?: $client?->email;
+                            $name = $contact ? trim("{$contact->first_name} {$contact->last_name}") : ($client?->name ?? 'Client');
+
+                            if ($email) {
+                                $signatureService->requestSignature(
+                                    model: $record,
+                                    type: SignatureType::AUTOGRAPH,
+                                    email: $email,
+                                    name: $name,
+                                    documentPath: $path,
+                                );
+
+                                Notification::make()
+                                    ->title('Contrat envoyé')
+                                    ->body("Une demande de signature a été envoyée au client ({$email}).")
+                                    ->success()
+                                    ->send();
+                            } else {
+                                Notification::make()
+                                    ->title('Contrat généré')
+                                    ->body("Le contrat a été généré, mais le client n'a pas d'adresse email renseignée pour l'envoi de la signature.")
+                                    ->warning()
+                                    ->send();
+                            }
                         }
                     }),
 

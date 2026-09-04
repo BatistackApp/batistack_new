@@ -17,7 +17,6 @@ use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
-use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Support\Enums\Width;
 use Filament\Tables\Columns\TextColumn;
@@ -172,35 +171,77 @@ class CustomerQuotesTable
                         ->icon(Phosphor::SealCheck)
                         ->color('info')
                         ->form([
-                            TextInput::make('name')->label('Nom')
+                            Filament\Forms\Components\Toggle::make('is_multi')
+                                ->label('Signature multi-signataires')
+                                ->default(false)
+                                ->live(),
+                            Filament\Forms\Components\TextInput::make('name')
                                 ->label('Nom du signataire')
                                 ->required()
-                                ->default(fn (CustomerQuote $record) => optional($record->client)->name),
-                            TextInput::make('email')->label('Email')
+                                ->default(fn (CustomerQuote $record) => optional($record->client)->name)
+                                ->visible(fn (Filament\Forms\Components\Get $get) => ! $get('is_multi')),
+                            Filament\Forms\Components\TextInput::make('email')
                                 ->label('Email du signataire')
                                 ->email()
                                 ->required()
-                                ->default(fn (CustomerQuote $record) => optional($record->client)->email),
+                                ->default(fn (CustomerQuote $record) => optional($record->client)->email)
+                                ->visible(fn (Filament\Forms\Components\Get $get) => ! $get('is_multi')),
+                            Filament\Forms\Components\Repeater::make('signers')
+                                ->label('Signataires')
+                                ->schema([
+                                    Filament\Forms\Components\TextInput::make('name')
+                                        ->label('Nom')
+                                        ->required(),
+                                    Filament\Forms\Components\TextInput::make('email')
+                                        ->label('Email')
+                                        ->email()
+                                        ->required(),
+                                    Filament\Forms\Components\Select::make('role')
+                                        ->label('Rôle')
+                                        ->options([
+                                            'Signataire' => 'Signataire',
+                                            'Client' => 'Client',
+                                            'Manager' => 'Manager',
+                                            'Comptable' => 'Comptable',
+                                            'Autre' => 'Autre',
+                                        ])
+                                        ->default('Signataire'),
+                                ])
+                                ->columns(3)
+                                ->defaultItems(0)
+                                ->addActionLabel('Ajouter un signataire')
+                                ->visible(fn (Filament\Forms\Components\Get $get) => $get('is_multi'))
+                                ->required(fn (Filament\Forms\Components\Get $get) => $get('is_multi')),
                         ])
                         ->modalHeading('Demande de signature DocuSeal')
-                        ->modalDescription('Un e-mail certifié sera envoyé au client avec le devis.')
+                        ->modalDescription('Un e-mail certifié sera envoyé pour signature.')
                         ->action(function (CustomerQuote $record, array $data) {
                             try {
                                 $path = 'commerce/quotes/devis_'.$record->reference.'.pdf';
                                 $disk = DocumentService::getDisk();
 
-                                // S'assurer que le PDF est généré
                                 if (! Storage::disk($disk)->exists('documents/'.$path)) {
                                     app(CommerceDocumentationService::class)->generateQuotePdf($record);
                                 }
 
-                                app(SignatureService::class)->requestSignature(
-                                    $record,
-                                    SignatureType::EIDAS,
-                                    $data['email'],
-                                    $data['name'],
-                                    'documents/'.$path
-                                );
+                                $service = app(SignatureService::class);
+
+                                if ($data['is_multi'] ?? false) {
+                                    $service->requestMultiSignature(
+                                        $record,
+                                        SignatureType::EIDAS,
+                                        $data['signers'],
+                                        'documents/'.$path
+                                    );
+                                } else {
+                                    $service->requestSignature(
+                                        $record,
+                                        SignatureType::EIDAS,
+                                        $data['email'],
+                                        $data['name'],
+                                        'documents/'.$path
+                                    );
+                                }
 
                                 Notification::make()
                                     ->success()

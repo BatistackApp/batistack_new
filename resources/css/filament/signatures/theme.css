@@ -1,0 +1,6 @@
+@import '../../../../vendor/filament/filament/resources/css/theme.css';
+@plugin "@tailwindcss/typography";
+@source '../../../../vendor/guava/filament-knowledge-base/resources/**/*.blade.php';
+
+@source '../../../../app/Filament/Signatures/**/*';
+@source '../../../../resources/views/filament/**/*';

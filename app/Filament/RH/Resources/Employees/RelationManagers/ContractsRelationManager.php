@@ -170,29 +170,81 @@ class ContractsRelationManager extends RelationManager
                         ->color('info')
                         ->label('Demander Signature')
                         ->visible(fn (Contract $record) => $record->signature_status === SignatureStatus::PENDING)
-                        ->action(function (Contract $record, SignatureService $signatureService, RHDocumentService $documentService) {
-                            $email = $record->employee->email;
-                            $name = $record->employee->full_name;
+                        ->form([
+                            Filament\Forms\Components\Toggle::make('is_multi')
+                                ->label('Signature multi-signataires')
+                                ->default(false)
+                                ->live(),
+                            Filament\Forms\Components\TextInput::make('name')
+                                ->label('Nom du signataire')
+                                ->required()
+                                ->default(fn (Contract $record) => $record->employee->full_name)
+                                ->visible(fn (Filament\Forms\Components\Get $get) => ! $get('is_multi')),
+                            Filament\Forms\Components\TextInput::make('email')
+                                ->label('Email du signataire')
+                                ->email()
+                                ->required()
+                                ->default(fn (Contract $record) => $record->employee->email)
+                                ->visible(fn (Filament\Forms\Components\Get $get) => ! $get('is_multi')),
+                            Filament\Forms\Components\Repeater::make('signers')
+                                ->label('Signataires')
+                                ->schema([
+                                    Filament\Forms\Components\TextInput::make('name')
+                                        ->label('Nom')
+                                        ->required(),
+                                    Filament\Forms\Components\TextInput::make('email')
+                                        ->label('Email')
+                                        ->email()
+                                        ->required(),
+                                    Filament\Forms\Components\Select::make('role')
+                                        ->label('Rôle')
+                                        ->options([
+                                            'Signataire' => 'Signataire',
+                                            'Manager' => 'Manager',
+                                            'DRH' => 'DRH',
+                                            'Autre' => 'Autre',
+                                        ])
+                                        ->default('Signataire'),
+                                ])
+                                ->columns(3)
+                                ->defaultItems(0)
+                                ->addActionLabel('Ajouter un signataire')
+                                ->visible(fn (Filament\Forms\Components\Get $get) => $get('is_multi'))
+                                ->required(fn (Filament\Forms\Components\Get $get) => $get('is_multi')),
+                        ])
+                        ->action(function (Contract $record, array $data, SignatureService $signatureService, RHDocumentService $documentService) {
                             $relativePath = 'documents/rh/contrat_'.$record->employee->registration_number.'.pdf';
-
-                            if (! $email) {
-                                Notification::make()->title('Erreur : Le salarié n\'a pas d\'adresse email')->danger()->send();
-
-                                return;
-                            }
 
                             $disk = DocumentService::getDisk();
                             if (! Storage::disk($disk)->exists($relativePath)) {
                                 $relativePath = $documentService->generateContract($record);
                             }
 
-                            $signatureService->requestSignature(
-                                model: $record,
-                                type: SignatureType::AUTOGRAPH,
-                                email: $email,
-                                name: $name,
-                                documentPath: $relativePath,
-                            );
+                            if ($data['is_multi'] ?? false) {
+                                $signatureService->requestMultiSignature(
+                                    model: $record,
+                                    type: SignatureType::AUTOGRAPH,
+                                    signers: $data['signers'],
+                                    documentPath: $relativePath,
+                                );
+                            } else {
+                                $email = $data['email'];
+                                $name = $data['name'];
+
+                                if (! $email) {
+                                    Notification::make()->title('Erreur : Le salarié n\'a pas d\'adresse email')->danger()->send();
+
+                                    return;
+                                }
+
+                                $signatureService->requestSignature(
+                                    model: $record,
+                                    type: SignatureType::AUTOGRAPH,
+                                    email: $email,
+                                    name: $name,
+                                    documentPath: $relativePath,
+                                );
+                            }
 
                             Notification::make()->title('Demande de signature envoyée par email')->success()->send();
                         }),
