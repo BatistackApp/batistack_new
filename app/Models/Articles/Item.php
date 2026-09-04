@@ -341,9 +341,9 @@ class Item extends Model implements HasMedia
     /**
      * Récupérer le stock dans le magasin interne
      */
-    public function getStockForStore(): float
+    public function getStockForStore(?Warehouse $warehouse = null): float
     {
-        $warehouse = Warehouse::where('name', 'Magasin')->first();
+        $warehouse ??= Warehouse::where('name', 'Magasin')->first();
 
         if (! $warehouse) {
             return 0;

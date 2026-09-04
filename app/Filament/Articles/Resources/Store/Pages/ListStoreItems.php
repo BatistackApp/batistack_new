@@ -26,11 +26,13 @@ class ListStoreItems extends ListRecords
 
     public function getTable(): Table
     {
+        $warehouse = app(StoreService::class)->getWarehouse();
+
         return Table::make()
             ->query(
                 Item::storeItems()
                     ->active()
-                    ->with('stocks.warehouse')
+                    ->with(['stocks' => fn ($q) => $q->where('warehouse_id', $warehouse->id)])
             )
             ->columns([
                 ImageColumn::make('getFirstMediaUrl')
@@ -54,9 +56,9 @@ class ListStoreItems extends ListRecords
                     ->formatStateUsing(fn ($state) => StoreCategory::tryFrom($state)?->getLabel() ?? $state),
                 TextColumn::make('stock')
                     ->label('Stock Magasin')
-                    ->getStateUsing(fn (Item $record) => number_format($record->getStockForStore(), 0, ',', ' '))
+                    ->getStateUsing(fn (Item $record) => number_format($record->getStockForStore($warehouse), 0, ',', ' '))
                     ->badge()
-                    ->color(fn (Item $record) => $record->getStockForStore() <= $record->store_reorder_qty ? 'danger' : 'success'),
+                    ->color(fn (Item $record) => $record->getStockForStore($warehouse) <= $record->store_reorder_qty ? 'danger' : 'success'),
                 TextColumn::make('store_reorder_qty')
                     ->label('Seuil réappro.')
                     ->numeric()

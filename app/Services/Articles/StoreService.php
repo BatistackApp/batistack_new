@@ -9,20 +9,27 @@ use App\Models\Articles\Stock;
 use App\Models\Articles\StockMouvement;
 use App\Models\Articles\Warehouse;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 class StoreService
 {
+    public const STORE_WAREHOUSE_NAME = 'Magasin';
+
     public function __construct(
         protected StockService $stockService,
     ) {}
 
     /**
-     * Récupérer le warehouse "Magasin".
+     * Récupérer le warehouse "Magasin" (cached).
      */
     public function getWarehouse(): Warehouse
     {
-        return Warehouse::where('name', 'Magasin')->firstOrFail();
+        return Cache::remember(
+            'store_warehouse',
+            3600,
+            fn () => Warehouse::where('name', self::STORE_WAREHOUSE_NAME)->firstOrFail()
+        );
     }
 
     /**
@@ -30,11 +37,9 @@ class StoreService
      */
     public function quickWithdrawal(Item $item, float $quantity, ?string $note = null): void
     {
-        $warehouse = $this->getWarehouse();
-
         $this->stockService->exit(
             item: $item,
-            warehouse: $warehouse,
+            warehouse: $this->getWarehouse(),
             quantity: $quantity,
             reason: $note ?? 'Prélèvement magasin',
             source: StockMouvementSource::STORE,
@@ -46,11 +51,9 @@ class StoreService
      */
     public function restock(Item $item, float $quantity, float $purchasePrice, ?string $batchNumber = null): void
     {
-        $warehouse = $this->getWarehouse();
-
         $this->stockService->entry(
             item: $item,
-            warehouse: $warehouse,
+            warehouse: $this->getWarehouse(),
             quantity: $quantity,
             purchasePrice: $purchasePrice,
             batchNumber: $batchNumber,
@@ -62,9 +65,11 @@ class StoreService
      */
     public function getStoreItems()
     {
+        $warehouse = $this->getWarehouse();
+
         return Item::storeItems()
             ->active()
-            ->with('stocks.warehouse')
+            ->with(['stocks' => fn ($q) => $q->where('warehouse_id', $warehouse->id)])
             ->get();
     }
 
@@ -79,20 +84,17 @@ class StoreService
 
         $totalRefs = $items->count();
 
-        $lowStockItems = $items->filter(fn (Item $item) => $item->getStockForStore() <= $item->store_reorder_qty)->count();
+        $lowStockItems = $items
+            ->filter(fn (Item $item) => $item->getStockForStore($warehouse) <= $item->store_reorder_qty)
+            ->count();
 
-        $stockValue = 0;
-        if ($warehouse) {
-            $stockValue = DB::table('stocks')
-                ->join('items', 'stocks.item_id', '=', 'items.id')
-                ->where('stocks.warehouse_id', $warehouse->id)
-                ->where('items.type', ItemType::STORE_ITEM->value)
-                ->sum(DB::raw('stocks.quantity * items.purchase_price'));
-        }
+        $stockValue = DB::table('stocks')
+            ->join('items', 'stocks.item_id', '=', 'items.id')
+            ->where('stocks.warehouse_id', $warehouse->id)
+            ->where('items.type', ItemType::STORE_ITEM->value)
+            ->sum(DB::raw('stocks.quantity * items.purchase_price'));
 
-        $todayMovements = StockMouvement::whereHas('stock', function ($query) use ($warehouse) {
-            $query->where('warehouse_id', $warehouse?->id);
-        })
+        $todayMovements = StockMouvement::whereHas('stock', fn ($q) => $q->where('warehouse_id', $warehouse->id))
             ->where('reference_type', StockMouvementSource::STORE)
             ->whereDate('created_at', Carbon::today())
             ->count();
@@ -111,10 +113,6 @@ class StoreService
     public function getMovementHistory(?int $itemId = null, ?Carbon $startDate = null, ?Carbon $endDate = null)
     {
         $warehouse = $this->getWarehouse();
-
-        if (! $warehouse) {
-            return collect();
-        }
 
         $query = StockMouvement::with(['stock.item', 'stock.warehouse'])
             ->whereHas('stock', fn ($q) => $q->where('warehouse_id', $warehouse->id))
