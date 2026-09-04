@@ -57,9 +57,7 @@ class SignatureController extends Controller
      */
     public function sign(Request $request, string $token, SignatureService $service)
     {
-        $request->validate([
-            'signature_data' => ['required', 'string', 'max:2000000', 'regex:/^data:image\/(png|jpe?g);base64,[A-Za-z0-9+\/=]+$/'],
-        ]);
+        $signatureData = $this->validateSignatureData($request);
 
         // Try multi-signer first
         $signer = SignatureSigner::where('token', $token)->first();
@@ -70,7 +68,7 @@ class SignatureController extends Controller
 
             $service->signAsSigner(
                 $token,
-                $request->signature_data,
+                $signatureData,
                 $request->ip(),
                 $request->userAgent()
             );
@@ -97,7 +95,7 @@ class SignatureController extends Controller
 
         $signature->update([
             'status' => SignatureStatus::SIGNED,
-            'signature_data' => $request->signature_data,
+            'signature_data' => $signatureData,
             'ip_address' => $request->ip(),
             'signed_at' => now(),
             'metadata' => array_merge($signature->metadata ?? [], [
@@ -151,5 +149,17 @@ class SignatureController extends Controller
         } catch (\Exception $e) {
             Log::error('Erreur post-signature pour '.class_basename($signature->signable).': '.$e->getMessage());
         }
+    }
+
+    /**
+     * Validate and return the signature data from the request.
+     */
+    protected function validateSignatureData(Request $request): string
+    {
+        $request->validate([
+            'signature_data' => ['required', 'string', 'max:2000000', 'regex:/^data:image\/(png|jpe?g);base64,[A-Za-z0-9+\/=]+$/'],
+        ]);
+
+        return $request->signature_data;
     }
 }

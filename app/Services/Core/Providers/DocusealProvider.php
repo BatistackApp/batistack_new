@@ -10,6 +10,7 @@ use App\Models\Core\SignatureSigner;
 use App\Notifications\Core\SignatureRefusedNotification;
 use App\Services\Core\DocumentService;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
@@ -59,36 +60,39 @@ class DocusealProvider implements SignatureProviderInterface
         array $signers,
         ?string $documentPath = null
     ): Signature {
-        $signature = Signature::create([
-            'token' => Str::uuid()->toString(),
-            'signable_type' => $model->getMorphClass(),
-            'signable_id' => $model->id,
-            'user_id' => auth()->id(),
-            'status' => SignatureStatus::PENDING,
-            'type' => $type,
-            'checksum' => hash('sha256', json_encode($model->toArray())),
-            'metadata' => [
-                'provider' => 'docuseal',
-                'requested_at' => now()->toDateTimeString(),
-                'signers_count' => count($signers),
-            ],
-        ]);
-
-        // Create local signer records
-        foreach ($signers as $signerData) {
-            SignatureSigner::create([
-                'signature_id' => $signature->id,
-                'name' => $signerData['name'],
-                'email' => $signerData['email'],
-                'user_id' => $signerData['user_id'] ?? null,
-                'role' => $signerData['role'] ?? 'Signataire',
-                'status' => SignatureStatus::PENDING,
+        $signature = DB::transaction(function () use ($model, $type, $signers) {
+            $signature = Signature::create([
                 'token' => Str::uuid()->toString(),
+                'signable_type' => $model->getMorphClass(),
+                'signable_id' => $model->id,
+                'user_id' => auth()->id(),
+                'status' => SignatureStatus::PENDING,
+                'type' => $type,
+                'checksum' => hash('sha256', json_encode($model->toArray())),
                 'metadata' => [
+                    'provider' => 'docuseal',
                     'requested_at' => now()->toDateTimeString(),
+                    'signers_count' => count($signers),
                 ],
             ]);
-        }
+
+            foreach ($signers as $signerData) {
+                SignatureSigner::create([
+                    'signature_id' => $signature->id,
+                    'name' => $signerData['name'],
+                    'email' => $signerData['email'],
+                    'user_id' => $signerData['user_id'] ?? null,
+                    'role' => $signerData['role'] ?? 'Signataire',
+                    'status' => SignatureStatus::PENDING,
+                    'token' => Str::uuid()->toString(),
+                    'metadata' => [
+                        'requested_at' => now()->toDateTimeString(),
+                    ],
+                ]);
+            }
+
+            return $signature;
+        });
 
         if (! $this->apiToken) {
             throw new \Exception("Le Token API DocuSeal n'est pas configuré dans votre fichier .env (DOCUSEAL_API_TOKEN).");

@@ -65,10 +65,6 @@ class SignersRelationManager extends RelationManager
                     ->action(function ($record) {
                         $url = route('signature.show', $record->token);
 
-                        return response()->json(['url' => $url]);
-                    })
-                    ->after(function ($record) {
-                        $url = route('signature.show', $record->token);
                         Notification::make()
                             ->title('Lien copié')
                             ->body($url)
