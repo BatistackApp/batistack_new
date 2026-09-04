@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Core\Signature;
 use App\Services\Core\SignatureService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class SignatureWebhookController extends Controller
@@ -64,29 +65,31 @@ class SignatureWebhookController extends Controller
      */
     protected function handleMultiSignerWebhook(Signature $signature, array $data, SignatureService $signatureService): void
     {
-        $submitters = $data['submitters'] ?? [];
+        DB::transaction(function () use ($signature, $data, $signatureService) {
+            $submitters = $data['submitters'] ?? [];
 
-        foreach ($submitters as $submitter) {
-            $email = $submitter['email'] ?? null;
-            if (! $email) {
-                continue;
+            foreach ($submitters as $submitter) {
+                $email = $submitter['email'] ?? null;
+                if (! $email) {
+                    continue;
+                }
+
+                $signer = $signature->signers()
+                    ->where('email', $email)
+                    ->where('status', SignatureStatus::PENDING)
+                    ->first();
+
+                if ($signer) {
+                    $signatureService->driver('docuseal')->signAsSigner(
+                        $signer->token,
+                        $data['document_url'] ?? 'docuseal_signed',
+                        '0.0.0.0',
+                        'docuseal_webhook'
+                    );
+
+                    Log::info("Signer {$signer->id} ({$email}) marked as signed via DocuSeal webhook.");
+                }
             }
-
-            $signer = $signature->signers()
-                ->where('email', $email)
-                ->where('status', SignatureStatus::PENDING)
-                ->first();
-
-            if ($signer) {
-                $signatureService->driver('docuseal')->signAsSigner(
-                    $signer->token,
-                    $data['document_url'] ?? 'docuseal_signed',
-                    '0.0.0.0',
-                    'docuseal_webhook'
-                );
-
-                Log::info("Signer {$signer->id} ({$email}) marked as signed via DocuSeal webhook.");
-            }
-        }
+        });
     }
 }

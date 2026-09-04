@@ -12,6 +12,7 @@ use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use ToneGabes\Filament\Icons\Enums\Phosphor;
 
 class SignatureResource extends Resource
@@ -29,6 +30,11 @@ class SignatureResource extends Resource
     protected static ?string $recordTitleAttribute = 'token';
 
     protected static ?int $navigationSort = 1;
+
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()->withSignerCounts();
+    }
 
     public static function infolist(Schema $schema): Schema
     {

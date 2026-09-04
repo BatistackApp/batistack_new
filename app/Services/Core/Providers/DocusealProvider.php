@@ -65,7 +65,7 @@ class DocusealProvider implements SignatureProviderInterface
                 'token' => Str::uuid()->toString(),
                 'signable_type' => $model->getMorphClass(),
                 'signable_id' => $model->id,
-                'user_id' => auth()->id(),
+                'user_id' => auth()->id() ?? 1,
                 'status' => SignatureStatus::PENDING,
                 'type' => $type,
                 'checksum' => hash('sha256', json_encode($model->toArray())),

@@ -9,12 +9,29 @@ use App\Models\Core\Signature;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
+use Filament\Schemas\Components\Placeholder;
 use Illuminate\Support\Facades\Mail;
 use ToneGabes\Filament\Icons\Enums\Phosphor;
 
 class ViewSignature extends ViewRecord
 {
     protected static string $resource = SignatureResource::class;
+
+    protected function getHeaderWidgets(): array
+    {
+        return [
+            Placeholder::make('signature_progress')
+                ->label('Progression des signatures')
+                ->content(function (Signature $record) {
+                    $total = $record->signers()->count();
+                    $signed = $record->signers()->where('status', SignatureStatus::SIGNED)->count();
+                    $pending = $record->signers()->where('status', SignatureStatus::PENDING)->count();
+
+                    return "{$signed}/{$total} signée(s) — {$pending} en attente";
+                })
+                ->columnSpanFull(),
+        ];
+    }
 
     protected function getHeaderActions(): array
     {
