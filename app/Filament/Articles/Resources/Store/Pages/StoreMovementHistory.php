@@ -10,7 +10,7 @@ use App\Services\Articles\StoreService;
 use Filament\Resources\Pages\Page;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\DatePickerFilter;
-use Filament\Tables\Table as TableBuilder;
+use Filament\Tables\Table;
 
 class StoreMovementHistory extends Page
 {
@@ -30,11 +30,11 @@ class StoreMovementHistory extends Page
         }
     }
 
-    public function getTable(): TableBuilder
+    public function table(Table $table): Table
     {
         $storeId = $this->item;
 
-        return TableBuilder::make()
+        return $table
             ->query(
                 app(StoreService::class)->getMovementHistory(
                     itemId: $storeId ? (int) $storeId : null,

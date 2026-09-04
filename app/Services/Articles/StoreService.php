@@ -9,27 +9,24 @@ use App\Models\Articles\Stock;
 use App\Models\Articles\StockMouvement;
 use App\Models\Articles\Warehouse;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 class StoreService
 {
     public const STORE_WAREHOUSE_NAME = 'Magasin';
 
+    protected ?Warehouse $warehouseInstance = null;
+
     public function __construct(
         protected StockService $stockService,
     ) {}
 
     /**
-     * Récupérer le warehouse "Magasin" (cached).
+     * Récupérer le warehouse "Magasin" (instance memoisée par requête).
      */
     public function getWarehouse(): Warehouse
     {
-        return Cache::remember(
-            'store_warehouse',
-            3600,
-            fn () => Warehouse::where('name', self::STORE_WAREHOUSE_NAME)->firstOrFail()
-        );
+        return $this->warehouseInstance ??= Warehouse::where('name', self::STORE_WAREHOUSE_NAME)->firstOrFail();
     }
 
     /**
