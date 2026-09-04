@@ -343,7 +343,8 @@ class Item extends Model implements HasMedia
      */
     public function getStockForStore(): float
     {
-        $warehouse = Warehouse::byName('Magasin');
+        static $warehouse;
+        $warehouse ??= Warehouse::byName('Magasin');
 
         if (! $warehouse) {
             return 0;

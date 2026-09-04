@@ -3,6 +3,7 @@
 namespace App\Filament\Articles\Resources\Store\Pages;
 
 use App\Enums\Articles\StoreCategory;
+use App\Filament\Articles\Resources\Items\ItemResource;
 use App\Filament\Articles\Resources\Store\Schemas\StoreItemForm;
 use App\Filament\Articles\Resources\Store\Schemas\StoreRestockForm;
 use App\Filament\Articles\Resources\Store\StoreResource;
@@ -97,7 +98,7 @@ class ListStoreItems extends ListRecords
                     Action::make('view')
                         ->label('Fiche article')
                         ->icon(Phosphor::Eye)
-                        ->url(fn (Item $record) => route('filament.articles.resources.items.view', ['record' => $record->id])),
+                        ->url(fn (Item $record) => ItemResource::getUrl('view', ['record' => $record])),
                 ]),
             ])
             ->bulkActions([]);

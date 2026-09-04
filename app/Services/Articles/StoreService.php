@@ -2,6 +2,7 @@
 
 namespace App\Services\Articles;
 
+use App\Enums\Articles\ItemType;
 use App\Enums\Articles\StockMouvementSource;
 use App\Models\Articles\Item;
 use App\Models\Articles\Stock;
@@ -85,7 +86,7 @@ class StoreService
             $stockValue = DB::table('stocks')
                 ->join('items', 'stocks.item_id', '=', 'items.id')
                 ->where('stocks.warehouse_id', $warehouse->id)
-                ->where('items.type', 'store_item')
+                ->where('items.type', ItemType::STORE_ITEM->value)
                 ->sum(DB::raw('stocks.quantity * items.purchase_price'));
         }
 

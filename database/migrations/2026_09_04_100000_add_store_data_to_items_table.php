@@ -9,7 +9,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('items', function (Blueprint $table) {
-            $table->string('store_category')->nullable()->after('type');
+            $table->string('store_category')->nullable()->after('type')->index();
             $table->decimal('store_reorder_qty', 10, 2)->default(0)->after('store_category');
         });
     }
