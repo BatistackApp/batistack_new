@@ -2,6 +2,7 @@
 
 namespace App\Models\Commerce;
 
+use App\Contracts\Core\Signable;
 use App\Enums\Commerce\QuoteStatus;
 use App\Models\Chantiers\Chantier;
 use App\Models\Commerce\Concerns\DeletableWhenDraft;
@@ -28,7 +29,7 @@ use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Spatie\Activitylog\Support\LogOptions;
 
 #[ObservedBy([CustomerQuoteObserver::class])]
-class CustomerQuote extends Model implements HasTimeline
+class CustomerQuote extends Model implements HasTimeline, Signable
 {
     use DeletableWhenDraft, HasFactory, HasSignature, InteractsWithTimeline, LogsActivity, RecalculatesTotals;
 

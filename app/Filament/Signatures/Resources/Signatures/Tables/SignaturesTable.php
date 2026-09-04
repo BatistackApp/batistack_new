@@ -42,20 +42,10 @@ class SignaturesTable
                     ->badge(),
 
                 TextColumn::make('signers_count')
-                    ->label('Signataires')
-                    ->state(function (Signature $record) {
-                        $total = $record->total_signers;
-                        $signed = $record->signed_count;
-
-                        return "{$signed}/{$total}";
-                    })
-                    ->color(function (Signature $record) {
-                        if ($record->signed_count === 0) {
-                            return 'warning';
-                        }
-
-                        return $record->signed_count === $record->total_signers ? 'success' : 'info';
-                    }),
+                    ->label('Progression')
+                    ->badge()
+                    ->formatStateUsing(fn (Signature $record) => "{$record->signed_count}/{$record->total_signers}")
+                    ->color(fn (Signature $record) => $record->signed_count === $record->total_signers ? 'success' : ($record->signed_count > 0 ? 'info' : 'warning')),
 
                 TextColumn::make('user.name')
                     ->label('Créé par')

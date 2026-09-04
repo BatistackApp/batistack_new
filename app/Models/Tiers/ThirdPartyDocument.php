@@ -2,6 +2,7 @@
 
 namespace App\Models\Tiers;
 
+use App\Contracts\Core\Signable;
 use App\Enums\Tiers\ThirdPartyDocumentStatus;
 use App\Enums\Tiers\ThirdPartyDocumentType;
 use App\Models\Core\Signature;
@@ -12,7 +13,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 
-class ThirdPartyDocument extends Model implements HasMedia
+class ThirdPartyDocument extends Model implements HasMedia, Signable
 {
     use HasFactory, HasSignature, InteractsWithMedia;
 

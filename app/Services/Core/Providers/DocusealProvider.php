@@ -38,10 +38,14 @@ class DocusealProvider implements SignatureProviderInterface
         ?string $name = null,
         ?string $documentPath = null
     ): Signature {
+        if (! $email || ! $name) {
+            throw new \InvalidArgumentException('Email et Nom requis pour signature legacy.');
+        }
+
         return $this->requestMultiSignature(
             $model,
             $type,
-            $email && $name ? [['name' => $name, 'email' => $email, 'role' => 'Signataire']] : [],
+            [['name' => $name, 'email' => $email, 'role' => 'Signataire']],
             $documentPath
         );
     }

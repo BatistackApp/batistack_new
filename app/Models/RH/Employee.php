@@ -2,6 +2,7 @@
 
 namespace App\Models\RH;
 
+use App\Contracts\Core\Signable;
 use App\Enums\RH\TimeEntryStatus;
 use App\Models\Chantiers\Chantier;
 use App\Models\Chantiers\ResourceAllocation;
@@ -22,7 +23,7 @@ use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 
 #[ObservedBy([EmployeeObserver::class])]
-class Employee extends Model implements HasMedia
+class Employee extends Model implements HasMedia, Signable
 {
     use HasFactory, HasSignature, InteractsWithMedia, Notifiable;
 

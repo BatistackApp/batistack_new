@@ -127,6 +127,7 @@ class SignatureController extends Controller
 
     /**
      * Handle post-signature logic based on model type.
+     * For multi-signature, only runs when ALL signers have signed.
      */
     protected function handlePostSignature(Signature $signature): void
     {
@@ -134,14 +135,19 @@ class SignatureController extends Controller
             return;
         }
 
-        // For multi-signature, only run post-signature when ALL have signed
-        if ($signature->is_multi_signatory && $signature->status->value !== 'signed') {
+        // Multi-signature : on attend que tous les signataires aient terminé
+        if ($signature->is_multi_signatory && $signature->signers()->where('status', '!=', SignatureStatus::SIGNED)->exists()) {
             return;
         }
 
         try {
+            // Logique métier (ex: Acceptation devis)
             $signature->signable->handlePostSignature($signature);
-            $signature->signable->stampSignatureDocument($signature);
+
+            // Stamping PDF via le trait HasSignature
+            if (method_exists($signature->signable, 'stampSignatureDocument')) {
+                $signature->signable->stampSignatureDocument($signature);
+            }
         } catch (\Exception $e) {
             Log::error('Erreur post-signature pour '.class_basename($signature->signable).': '.$e->getMessage());
         }

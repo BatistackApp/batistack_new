@@ -2,6 +2,7 @@
 
 namespace App\Models\RH;
 
+use App\Contracts\Core\Signable;
 use App\Enums\Core\SignatureStatus;
 use App\Enums\RH\ContractType;
 use App\Enums\RH\EmployeeCategory;
@@ -21,7 +22,7 @@ use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 
 #[ObservedBy([ContractObserver::class])]
-class Contract extends Model implements HasMedia
+class Contract extends Model implements HasMedia, Signable
 {
     use HasFactory, HasSignature, InteractsWithMedia;
 
