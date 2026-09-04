@@ -5,6 +5,7 @@ namespace App\Filament\Articles\Resources\Items\Schemas;
 use App\Enums\Articles\GhsPictogram;
 use App\Enums\Articles\HazardCategory;
 use App\Enums\Articles\ItemType;
+use App\Enums\Articles\StoreCategory;
 use App\Enums\Tiers\ThirdPartyType;
 use App\Models\Core\Unit;
 use App\Models\Core\VatRate;
@@ -59,6 +60,18 @@ class ItemForm
                                             ->required()
                                             ->live()
                                             ->native(false),
+                                        Select::make('store_category')
+                                            ->label('Catégorie Magasin')
+                                            ->options(StoreCategory::class)
+                                            ->visible(fn (Get $get) => $get('type') === ItemType::STORE_ITEM->value)
+                                            ->required(fn (Get $get) => $get('type') === ItemType::STORE_ITEM->value)
+                                            ->native(false),
+                                        TextInput::make('store_reorder_qty')
+                                            ->label('Seuil de réappro. magasin')
+                                            ->numeric()
+                                            ->default(0)
+                                            ->minValue(0)
+                                            ->visible(fn (Get $get) => $get('type') === ItemType::STORE_ITEM->value),
                                         Select::make('unit_id')
                                             ->label('Unité de mesure')
                                             ->options(Unit::pluck('name', 'id'))
@@ -115,6 +128,7 @@ class ItemForm
                         // --- SÉCURITÉ & FDS ---
                         Tabs\Tab::make('Sécurité & FDS')
                             ->icon(Phosphor::HardHat)
+                            ->hidden(fn (Get $get) => $get('type') === ItemType::STORE_ITEM->value)
                             ->schema([
                                 Section::make('Fiche de données de sécurité (FDS)')
                                     ->description('Renseignez les dangers CLP pour permettre la génération automatique du PPSPS.')

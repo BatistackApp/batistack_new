@@ -13,6 +13,7 @@ enum ItemType: string implements HasColor, HasIcon, HasLabel
     case CONSUMABLE = 'consumable';   // Fournitures sans inventaire strict
     case LABOR = 'labor';             // Main d'œuvre (Heures de pose)
     case WORK = 'work';               // Ouvrage (Composite matériel + MO)
+    case STORE_ITEM = 'store_item';   // Consommable magasin interne
 
     public function getLabel(): ?string
     {
@@ -21,6 +22,7 @@ enum ItemType: string implements HasColor, HasIcon, HasLabel
             self::CONSUMABLE => 'Consommable',
             self::LABOR => 'Main d\'œuvre',
             self::WORK => 'Ouvrage / Recette',
+            self::STORE_ITEM => 'Consommable Magasin',
         };
     }
 
@@ -31,6 +33,7 @@ enum ItemType: string implements HasColor, HasIcon, HasLabel
             self::CONSUMABLE => 'warning',
             self::LABOR => 'info',
             self::WORK => 'primary',
+            self::STORE_ITEM => 'info',
         };
     }
 
@@ -41,6 +44,7 @@ enum ItemType: string implements HasColor, HasIcon, HasLabel
             self::CONSUMABLE => Phosphor::Drop,
             self::LABOR => Phosphor::HardHat,
             self::WORK => Phosphor::Stack,
+            self::STORE_ITEM => Phosphor::ShoppingBag,
         };
     }
 }
