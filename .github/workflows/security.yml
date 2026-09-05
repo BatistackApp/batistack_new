@@ -736,7 +736,7 @@ jobs:
 
       - name: 🚨 Create critical security issue
         if: (needs.security-deep-scan.outputs.critical-vulnerabilities > 0 || needs.dependency-check.outputs.critical-vuln-count > 0 || needs.security-deep-scan.outputs.secrets-found > 0) && (github.event.inputs.create_issue == 'true' || github.event.inputs.create_issue == '')
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         env:
           EXECUTIVE_SUMMARY: ${{ env.EXECUTIVE_SUMMARY }}
           SECRETS_DETAILS: ${{ env.SECRETS_DETAILS }}
