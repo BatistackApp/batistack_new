@@ -202,12 +202,8 @@
     @endif
     <div style="clear: both;"></div>
 
-    <!-- Pied de page -->
-    <div class="footer">
-        <div>{{ $company->name }} - SIRET: {{ $company->siret }} - Généré le {{ $generated_at }}</div>
-        <div>Facture de référence : {{ $invoice->reference }}</div>
-        <div class="footer-note">
-            Conformément aux dispositions légales, cette facture a été légalisée selon la norme NF525.
-        </div>
+    <!-- Mention légale NF525 -->
+    <div style="margin-top: 15px; font-size: 9px; color: #666; text-align: center;">
+        Conformément aux dispositions légales, cette facture a été légalisée selon la norme NF525.
     </div>
 @endsection

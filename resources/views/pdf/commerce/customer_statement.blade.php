@@ -13,9 +13,9 @@
         <div class="value">{{ $client->name }}</div>
         <hr style="border: none; border-top: 1px solid #ddd; margin: 5px 0;">
         <div style="font-size: 10px; margin-top: 10px;">
-            <div><strong>Periode :</strong> {{ $startDate->format('d/m/Y') }} - {{ $endDate->format('d/m/Y') }}</div>
+            <div><strong>Période :</strong> {{ $startDate->format('d/m/Y') }} - {{ $endDate->format('d/m/Y') }}</div>
             <div><strong>Statut :</strong> {{ $statusLabel }}</div>
-            <div><strong>Genere le :</strong> {{ $generated_at }}</div>
+            <div><strong>Généré le :</strong> {{ $generated_at }}</div>
         </div>
     </div>
 @endsection
@@ -93,15 +93,15 @@
     <div class="statement-summary">
         <div class="summary-box">
             <div class="summary-label">Total facture</div>
-            <div class="summary-value">{{ number_format($totalInvoices, 2, ',', ' ') }} EUR</div>
+            <div class="summary-value">{{ number_format($totalInvoices, 2, ',', ' ') }} €</div>
         </div>
         <div class="summary-box">
-            <div class="summary-label">Paiements recus</div>
-            <div class="summary-value">{{ number_format($totalPayments, 2, ',', ' ') }} EUR</div>
+            <div class="summary-label">Paiements reçus</div>
+            <div class="summary-value">{{ number_format($totalPayments, 2, ',', ' ') }} €</div>
         </div>
         <div class="summary-box">
             <div class="summary-label">Solde indicatif</div>
-            <div class="summary-value">{{ number_format($balance, 2, ',', ' ') }} EUR</div>
+            <div class="summary-value">{{ number_format($balance, 2, ',', ' ') }} €</div>
         </div>
     </div>
 
@@ -109,9 +109,9 @@
     <table class="items-table">
         <thead>
         <tr>
-            <th>Reference</th>
+            <th>Référence</th>
             <th>Date</th>
-            <th>Echeance</th>
+            <th>Échéance</th>
             <th>Statut</th>
             <th class="text-right">Montant TTC</th>
         </tr>
@@ -123,7 +123,7 @@
                 <td>{{ $invoice->created_at?->format('d/m/Y') }}</td>
                 <td>{{ $invoice->due_date?->format('d/m/Y') }}</td>
                 <td>{{ $invoice->status?->getLabel() }}</td>
-                <td class="text-right">{{ number_format((float) $invoice->total_ttc, 2, ',', ' ') }} EUR</td>
+                <td class="text-right">{{ number_format((float) $invoice->total_ttc, 2, ',', ' ') }} €</td>
             </tr>
         @empty
             <tr>
@@ -137,9 +137,9 @@
     <table class="items-table">
         <thead>
         <tr>
-            <th>Reference</th>
+            <th>Référence</th>
             <th>Date</th>
-            <th>Methode</th>
+            <th>Méthode</th>
             <th>Statut</th>
             <th class="text-right">Montant</th>
         </tr>
@@ -151,7 +151,7 @@
                 <td>{{ $payment->payment_date?->format('d/m/Y') }}</td>
                 <td>{{ $payment->method?->getLabel() ?? $payment->method?->value }}</td>
                 <td>{{ $payment->status?->getLabel() ?? $payment->status?->value }}</td>
-                <td class="text-right">{{ number_format((float) $payment->amount, 2, ',', ' ') }} EUR</td>
+                <td class="text-right">{{ number_format((float) $payment->amount, 2, ',', ' ') }} €</td>
             </tr>
         @empty
             <tr>
@@ -161,8 +161,7 @@
         </tbody>
     </table>
 
-    <div class="footer">
-        <div>{{ $company->name }} - Genere le {{ $generated_at }}</div>
-        <div>Ce releve est fourni a titre informatif et ne remplace pas les factures legales.</div>
+    <div style="margin-top: 20px; font-size: 9px; color: #666; text-align: center;">
+        Ce relevé est fourni à titre informatif et ne remplace pas les factures légales.
     </div>
 @endsection
