@@ -55,7 +55,7 @@ class GenerateBimThumbnailJob implements ShouldQueue
             ->windowSize(800, 600);
 
         if (env('CI')) {
-            $browsershot->addChromiumArguments(['--no-sandbox']);
+            $browsershot->addChromiumArguments(['no-sandbox']);
         }
 
         $browsershot->save($fullPath);
