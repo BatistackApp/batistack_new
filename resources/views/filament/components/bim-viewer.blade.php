@@ -132,13 +132,13 @@
             </svg>
             <span x-text="annotationMode ? 'Mode Annotation Actif' : 'Ajouter Punaise'"></span>
         </button>
-        <button type="button" x-show="format === 'ifc'" @click="toggleMeasurementMode" :class="measurementMode ? 'bg-indigo-600 hover:bg-indigo-500' : 'bg-gray-800 hover:bg-gray-700'" class="text-white px-3 py-1.5 rounded-lg shadow text-sm transition flex items-center gap-1">
+        <button type="button" x-show="format === 'ifc' || format === 'dxf'" @click="toggleMeasurementMode" :class="measurementMode ? 'bg-indigo-600 hover:bg-indigo-500' : 'bg-gray-800 hover:bg-gray-700'" class="text-white px-3 py-1.5 rounded-lg shadow text-sm transition flex items-center gap-1">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M14.121 14.121L19 19m-4.879-4.879l-4.242-4.243m4.242 4.243l-4.243-4.242m4.243 4.242l3.536-3.536m-7.779 3.536L5 9.879m4.879 4.879l4.242-4.243M9.879 14.757l3.536-3.535" />
             </svg>
             <span x-text="measurementMode ? 'Mode Mesure Actif' : 'Mesurer'"></span>
         </button>
-        <button type="button" x-show="format === 'ifc' && hasMeasurements" @click="clearMeasurements" class="bg-red-600 text-white px-3 py-1.5 rounded-lg shadow text-sm hover:bg-red-500 transition flex items-center gap-1">
+        <button type="button" x-show="(format === 'ifc' || format === 'dxf') && hasMeasurements" @click="clearMeasurements" class="bg-red-600 text-white px-3 py-1.5 rounded-lg shadow text-sm hover:bg-red-500 transition flex items-center gap-1">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                 <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
             </svg>
@@ -252,6 +252,11 @@ document.addEventListener('alpine:init', () => {
         annotationMode: false,
         measurementMode: false,
         hasMeasurements: false,
+        dxfMeasureMode: false,
+        dxfPointA: null,
+        dxfMeasurements: [],
+        dxfMeasureGroup: null,
+        dxfPointerHandler: null,
         showLayers: false,
         showDxfLayers: false,
         spatialTree: null,
@@ -515,24 +520,143 @@ document.addEventListener('alpine:init', () => {
             this.measurementMode = !this.measurementMode;
             if (this.measurementMode) {
                 if (this.annotationMode) this.annotationMode = false;
-                this.viewer.dimensions.active = true;
-                this.viewer.dimensions.previewActive = true;
-                this.hasMeasurements = true; // On affiche le bouton effacer dès l'activation
+                if (this.format === 'ifc') {
+                    this.viewer.dimensions.active = true;
+                    this.viewer.dimensions.previewActive = true;
+                } else if (this.format === 'dxf') {
+                    this.enableDxfMeasurement();
+                }
+                this.hasMeasurements = this.format === 'ifc'; // IFC: affiche le bouton effacer dès activation
             } else {
-                this.viewer.dimensions.active = false;
-                this.viewer.dimensions.previewActive = false;
+                if (this.format === 'ifc') {
+                    this.viewer.dimensions.active = false;
+                    this.viewer.dimensions.previewActive = false;
+                } else if (this.format === 'dxf') {
+                    this.disableDxfMeasurement();
+                }
             }
         },
 
+        enableDxfMeasurement() {
+            if (this.dxfMeasureGroup) return;
+            this.dxfMeasureMode = true;
+            this.dxfPointA = null;
+            this.dxfMeasureGroup = new window.THREE.Group();
+            this.viewer.GetScene().add(this.dxfMeasureGroup);
+            this.dxfPointerHandler = (e) => this.onDxfPointerDown(e);
+            this.viewer.Subscribe('pointerdown', this.dxfPointerHandler);
+        },
+
+        disableDxfMeasurement() {
+            this.dxfMeasureMode = false;
+            this.dxfPointA = null;
+            if (this.dxfPointerHandler) {
+                this.viewer.Unsubscribe('pointerdown', this.dxfPointerHandler);
+                this.dxfPointerHandler = null;
+            }
+            if (this.dxfMeasureGroup) {
+                this.viewer.GetScene().remove(this.dxfMeasureGroup);
+                this.dxfMeasureGroup = null;
+            }
+        },
+
+        onDxfPointerDown(e) {
+            if (!this.dxfMeasureMode || !e || !e.detail || !e.detail.position) return;
+            const { x, y } = e.detail.position;
+            if (this.dxfPointA === null) {
+                // 1er clic → point A
+                this.dxfPointA = { x, y };
+                return;
+            }
+            const a = this.dxfPointA;
+            const b = { x, y };
+            const distance = Math.hypot(b.x - a.x, b.y - a.y);
+            this.drawDxfMeasurement(a, b, distance);
+            this.dxfMeasurements.push({ a, b, distance });
+            this.hasMeasurements = true;
+            this.dxfPointA = null;
+        },
+
+        drawDxfMeasurement(a, b, distance) {
+            if (!this.dxfMeasureGroup || !window.THREE) return;
+
+            // Ligne entre A et B
+            const geometry = new window.THREE.BufferGeometry().setFromPoints([
+                new window.THREE.Vector3(a.x, a.y, 0),
+                new window.THREE.Vector3(b.x, b.y, 0)
+            ]);
+            const material = new window.THREE.LineBasicMaterial({ color: 0x10b981 });
+            const line = new window.THREE.Line(geometry, material);
+            this.dxfMeasureGroup.add(line);
+
+            // Sprite texte de la distance au milieu
+            const mid = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+            const canvas = document.createElement('canvas');
+            canvas.width = 256;
+            canvas.height = 64;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = 'rgba(17, 24, 39, 0.85)';
+            ctx.fillRect(0, 12, canvas.width, 44);
+            ctx.font = 'bold 28px sans-serif';
+            ctx.fillStyle = '#ffffff';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(distance.toFixed(2), canvas.width / 2, 36);
+
+            const texture = new window.THREE.CanvasTexture(canvas);
+            const spriteMat = new window.THREE.SpriteMaterial({ map: texture, transparent: true });
+            const sprite = new window.THREE.Sprite(spriteMat);
+            const spriteScale = Math.min(Math.max(distance * 0.1, 3), 20);
+            sprite.scale.set(spriteScale, spriteScale, 1);
+            sprite.position.set(mid.x, mid.y, 0);
+            this.dxfMeasureGroup.add(sprite);
+
+            this.viewer.Render();
+        },
+
+        deleteLastDxfMeasurement() {
+            if (!this.dxfMeasureGroup) return;
+            const children = this.dxfMeasureGroup.children;
+            if (children.length === 0) return;
+            children[children.length - 1].geometry?.dispose();
+            children[children.length - 1].material?.dispose?.();
+            this.dxfMeasureGroup.remove(children[children.length - 1]);
+            this.dxfMeasurements.pop();
+            if (this.dxfMeasurements.length === 0) this.hasMeasurements = false;
+            this.viewer.Render();
+        },
+
         clearMeasurements() {
-            if (this.viewer && this.viewer.dimensions) {
-                this.viewer.dimensions.deleteAll();
+            if (this.format === 'ifc') {
+                if (this.viewer && this.viewer.dimensions) {
+                    this.viewer.dimensions.deleteAll();
+                    this.hasMeasurements = false;
+                }
+            } else if (this.format === 'dxf') {
+                if (!this.dxfMeasureGroup) return;
+                this.dxfMeasureGroup.children.forEach(c => {
+                    c.geometry?.dispose();
+                    c.material?.map?.dispose?.();
+                    c.material?.dispose?.();
+                });
+                this.dxfMeasureGroup.clear();
+                this.dxfMeasurements = [];
+                this.dxfPointA = null;
                 this.hasMeasurements = false;
+                this.viewer.Render();
             }
         },
 
         handleKeyDown(event) {
             if (this.measurementMode && this.viewer) {
+                if (this.format === 'dxf') {
+                    if (event.key === 'Escape') {
+                        this.dxfPointA = null;
+                    } else if (event.key === 'Delete' || event.key === 'Backspace') {
+                        this.deleteLastDxfMeasurement();
+                    }
+                    return;
+                }
                 if (event.key === 'Escape') {
                     this.viewer.dimensions.cancelDrawing();
                 } else if (event.key === 'Delete' || event.key === 'Backspace') {
