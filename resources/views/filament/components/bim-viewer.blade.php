@@ -65,6 +65,40 @@
         </div>
     </div>
 
+    <!-- Calques DXF Overlay -->
+    <div x-show="showDxfLayers && format === 'dxf'"
+         class="absolute top-4 right-4 z-10 bg-gray-900/90 text-white p-4 rounded-xl shadow-lg border border-gray-700 w-80 max-h-[80%] overflow-y-auto backdrop-blur-sm"
+         x-transition>
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="font-bold text-lg">Calques (DXF)</h3>
+            <button @click="showDxfLayers = false" class="text-gray-400 hover:text-white">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                </svg>
+            </button>
+        </div>
+
+        <div x-show="dxfLayers.length === 0" class="text-sm text-gray-400 italic">
+            Aucun calque.
+        </div>
+
+        <template x-if="dxfLayers.length > 0">
+            <div class="text-sm space-y-1">
+                <template x-for="layer in dxfLayers" :key="layer.name">
+                    <div class="flex items-center gap-2 py-1">
+                        <input type="checkbox" checked @change="toggleDxfLayer(layer.name, $event.target.checked)" class="rounded bg-gray-800 border-gray-600 text-primary-600 focus:ring-primary-600">
+                        <span class="w-3 h-3 rounded-full border border-white/20 shrink-0" :style="'background-color: ' + dxfLayerColor(layer)"></span>
+                        <span class="truncate" x-text="layer.displayName || layer.name"></span>
+                    </div>
+                </template>
+            </div>
+        </template>
+
+        <button type="button" @click="showAllDxfLayers" x-show="dxfLayers.length > 0" class="mt-3 w-full bg-gray-800 hover:bg-gray-700 text-white px-3 py-1.5 rounded-lg text-sm transition">
+            Tout afficher
+        </button>
+    </div>
+
     <!-- UI Overlay (Loading) -->
     <div x-show="loading" class="absolute inset-0 flex items-center justify-center bg-gray-900 bg-opacity-75 z-10 transition-opacity">
         <div class="text-white text-center">
@@ -117,7 +151,7 @@
             </svg>
             Tout afficher
         </button>
-        <button type="button" x-show="format === 'ifc'" @click="showLayers = !showLayers" class="bg-gray-800 text-white px-3 py-1.5 rounded-lg shadow text-sm hover:bg-gray-700 transition flex items-center gap-1">
+        <button type="button" x-show="format === 'ifc' || format === 'dxf'" @click="toggleLayersPanel" class="bg-gray-800 text-white px-3 py-1.5 rounded-lg shadow text-sm hover:bg-gray-700 transition flex items-center gap-1">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
             </svg>
@@ -219,7 +253,9 @@ document.addEventListener('alpine:init', () => {
         measurementMode: false,
         hasMeasurements: false,
         showLayers: false,
+        showDxfLayers: false,
         spatialTree: null,
+        dxfLayers: [],
         hiddenElements: [],
         hasHiddenElements: false,
         modelID: 0,
@@ -353,6 +389,10 @@ document.addEventListener('alpine:init', () => {
                 this.loadingText = 'Chargement DXF en cours...';
                 await this.viewer.Load({ url: this.url });
                 
+                this.dxfLayers = (this.viewer.GetLayers(true) || []).sort((a, b) =>
+                    (a.displayName || a.name).localeCompare(b.displayName || b.name)
+                );
+                
                 this.loading = false;
                 
                 // dxf-viewer gère sa propre boucle de rendu, 
@@ -442,6 +482,30 @@ document.addEventListener('alpine:init', () => {
             if (this.annotationMode && this.measurementMode) {
                 this.toggleMeasurementMode(); // Désactiver le mode mesure
             }
+        },
+
+        // --- Calques DXF ---
+        toggleLayersPanel() {
+            if (this.format === 'ifc') {
+                this.showLayers = !this.showLayers;
+            } else if (this.format === 'dxf') {
+                this.showDxfLayers = !this.showDxfLayers;
+            }
+        },
+
+        toggleDxfLayer(layerName, visible) {
+            if (!this.viewer) return;
+            this.viewer.ShowLayer(layerName, visible);
+        },
+
+        showAllDxfLayers() {
+            if (!this.viewer) return;
+            this.dxfLayers.forEach(l => this.viewer.ShowLayer(l.name, true));
+        },
+
+        dxfLayerColor(layer) {
+            if (layer.color === null || layer.color === undefined) return '#ffffff';
+            return '#' + layer.color.toString(16).padStart(6, '0');
         },
 
         toggleMeasurementMode() {
