@@ -39,6 +39,7 @@ Route::middleware([
 
 Route::get('/signature/{token}', [SignatureController::class, 'show'])->name('signature.show');
 Route::post('/signature/{token}', [SignatureController::class, 'sign'])->name('signature.sign');
+Route::post('/signature/{token}/refuse', [SignatureController::class, 'refuse'])->name('signature.refuse');
 
 Route::get('/pay/invoice/{invoice}', [StripePaymentController::class, 'checkout'])->name('pay.invoice')->middleware('signed');
 Route::get('/payment/success', [StripePaymentController::class, 'success'])->name('payment.success');

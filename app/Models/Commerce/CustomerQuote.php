@@ -2,6 +2,7 @@
 
 namespace App\Models\Commerce;
 
+use App\Contracts\Core\Signable;
 use App\Enums\Commerce\QuoteStatus;
 use App\Models\Chantiers\Chantier;
 use App\Models\Commerce\Concerns\DeletableWhenDraft;
@@ -10,6 +11,8 @@ use App\Models\Core\Signature;
 use App\Models\Tiers\ThirdParty;
 use App\Models\User;
 use App\Observers\Commerce\CustomerQuoteObserver;
+use App\Services\Commerce\QuoteService;
+use App\Traits\Core\HasSignature;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -17,6 +20,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Relaticle\ActivityLog\Concerns\InteractsWithTimeline;
 use Relaticle\ActivityLog\Contracts\HasTimeline;
 use Relaticle\ActivityLog\Timeline\TimelineBuilder;
@@ -24,9 +29,9 @@ use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Spatie\Activitylog\Support\LogOptions;
 
 #[ObservedBy([CustomerQuoteObserver::class])]
-class CustomerQuote extends Model implements HasTimeline
+class CustomerQuote extends Model implements HasTimeline, Signable
 {
-    use DeletableWhenDraft, HasFactory, InteractsWithTimeline, LogsActivity, RecalculatesTotals;
+    use DeletableWhenDraft, HasFactory, HasSignature, InteractsWithTimeline, LogsActivity, RecalculatesTotals;
 
     protected $fillable = [
         'client_id',
@@ -122,5 +127,37 @@ class CustomerQuote extends Model implements HasTimeline
     public function timeline(): TimelineBuilder
     {
         return TimelineBuilder::make($this)->fromActivityLog();
+    }
+
+    public function getSignatureUrl(Signature $signature): ?string
+    {
+        return Storage::disk('public')->url('documents/commerce/quotes/devis_'.$this->reference.'.pdf');
+    }
+
+    public function getSignaturePath(): ?string
+    {
+        return Storage::disk('public')->path('documents/commerce/quotes/devis_'.$this->reference.'.pdf');
+    }
+
+    public function getSignatoryDisplayName(): ?string
+    {
+        return $this->client->name ?? null;
+    }
+
+    public function onPostSignature(Signature $signature): void
+    {
+        try {
+            $responsable = $signature->user;
+            if ($responsable) {
+                app(QuoteService::class)->acceptQuote($this, $responsable);
+            } else {
+                $this->update([
+                    'status' => QuoteStatus::SIGNED,
+                    'signed_at' => now(),
+                ]);
+            }
+        } catch (\Exception $e) {
+            Log::error("Erreur lors de l'acceptation automatique du devis post-signature : ".$e->getMessage());
+        }
     }
 }

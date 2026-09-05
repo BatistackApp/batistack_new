@@ -106,24 +106,78 @@ class DocumentsRelationManager extends RelationManager
                         $record->signatures()->where('status', SignatureStatus::PENDING)->doesntExist() &&
                         $record->signatures()->where('status', SignatureStatus::SIGNED)->doesntExist()
                     )
-                    ->action(function (ThirdPartyDocument $record, SignatureService $service) {
-                        $email = $record->thirdParty->email;
-                        $name = $record->thirdParty->name;
+                    ->form([
+                        Filament\Forms\Components\Toggle::make('is_multi')
+                            ->label('Signature multi-signataires')
+                            ->default(false)
+                            ->live(),
+                        Filament\Forms\Components\TextInput::make('name')
+                            ->label('Nom du signataire')
+                            ->required()
+                            ->default(fn (ThirdPartyDocument $record) => $record->thirdParty->name)
+                            ->visible(fn (Filament\Forms\Components\Get $get) => ! $get('is_multi')),
+                        Filament\Forms\Components\TextInput::make('email')
+                            ->label('Email du signataire')
+                            ->email()
+                            ->required()
+                            ->default(fn (ThirdPartyDocument $record) => $record->thirdParty->email)
+                            ->visible(fn (Filament\Forms\Components\Get $get) => ! $get('is_multi')),
+                        Filament\Forms\Components\Repeater::make('signers')
+                            ->label('Signataires')
+                            ->schema([
+                                Filament\Forms\Components\TextInput::make('name')
+                                    ->label('Nom')
+                                    ->required(),
+                                Filament\Forms\Components\TextInput::make('email')
+                                    ->label('Email')
+                                    ->email()
+                                    ->required(),
+                                Filament\Forms\Components\Select::make('role')
+                                    ->label('Rôle')
+                                    ->options([
+                                        'Signataire' => 'Signataire',
+                                        'Client' => 'Client',
+                                        'Manager' => 'Manager',
+                                        'Sous-traitant' => 'Sous-traitant',
+                                        'Autre' => 'Autre',
+                                    ])
+                                    ->default('Signataire'),
+                            ])
+                            ->columns(3)
+                            ->defaultItems(0)
+                            ->addActionLabel('Ajouter un signataire')
+                            ->visible(fn (Filament\Forms\Components\Get $get) => $get('is_multi'))
+                            ->required(fn (Filament\Forms\Components\Get $get) => $get('is_multi')),
+                    ])
+                    ->action(function (ThirdPartyDocument $record, array $data, SignatureService $service) {
                         $path = $record->getFirstMedia('third_party_documents')?->getPath();
 
-                        if (! $email) {
-                            Notification::make()->title('Erreur : Le tiers n\'a pas d\'adresse email')->danger()->send();
+                        if ($data['is_multi'] ?? false) {
+                            $service->requestMultiSignature(
+                                model: $record,
+                                type: SignatureType::AUTOGRAPH,
+                                signers: $data['signers'],
+                                documentPath: $path
+                            );
+                        } else {
+                            $email = $data['email'];
+                            $name = $data['name'];
 
-                            return;
+                            if (! $email) {
+                                Notification::make()->title('Erreur : Le tiers n\'a pas d\'adresse email')->danger()->send();
+
+                                return;
+                            }
+
+                            $service->requestSignature(
+                                model: $record,
+                                type: SignatureType::AUTOGRAPH,
+                                email: $email,
+                                name: $name,
+                                documentPath: $path
+                            );
                         }
 
-                        $service->requestSignature(
-                            model: $record,
-                            type: SignatureType::AUTOGRAPH,
-                            email: $email,
-                            name: $name,
-                            documentPath: $path
-                        );
                         Notification::make()->title('Demande de signature envoyée par email')->success()->send();
                     }),
                 Action::make('view_signature')

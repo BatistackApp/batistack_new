@@ -2,11 +2,13 @@
 
 namespace App\Models\RH;
 
+use App\Contracts\Core\Signable;
 use App\Enums\RH\TimeEntryStatus;
 use App\Models\Chantiers\Chantier;
 use App\Models\Chantiers\ResourceAllocation;
 use App\Models\User;
 use App\Observers\RH\EmployeeObserver;
+use App\Traits\Core\HasSignature;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -16,13 +18,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Storage;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 
 #[ObservedBy([EmployeeObserver::class])]
-class Employee extends Model implements HasMedia
+class Employee extends Model implements HasMedia, Signable
 {
-    use HasFactory, InteractsWithMedia, Notifiable;
+    use HasFactory, HasSignature, InteractsWithMedia, Notifiable;
 
     protected $fillable = [
         'registration_number',
@@ -306,5 +309,29 @@ class Employee extends Model implements HasMedia
     public function getFullAddressAttribute(): string
     {
         return $this->getFullAddress();
+    }
+
+    public function getSignatureUrl(Signature $signature): ?string
+    {
+        return Storage::disk('public')->url("documents/rh/onboarding/affiliation_probtp_{$this->id}_{$this->registration_number}.pdf");
+    }
+
+    public function getSignaturePath(): ?string
+    {
+        $media = $this->getMedia('rh_documents')->filter(function ($item) {
+            return str_contains($item->file_name, 'affiliation_probtp');
+        })->last();
+
+        return $media?->getPath();
+    }
+
+    public function getSignatoryDisplayName(): ?string
+    {
+        return $this->full_name;
+    }
+
+    protected function getSignatureMediaCollection(): ?string
+    {
+        return 'rh_documents';
     }
 }

@@ -2,17 +2,18 @@
 
 namespace App\Services\Core;
 
-use App\Contracts\Core\SignatureProviderInterface;
+use App\Enums\Core\SignatureType;
+use App\Models\Core\Signature;
+use App\Models\Core\SignatureSigner;
 use App\Services\Core\Providers\DocusealProvider;
 use App\Services\Core\Providers\LocalSignatureProvider;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Manager;
 
 class SignatureService extends Manager
 {
     /**
      * Get the default driver name.
-     *
-     * @return string
      */
     public function getDefaultDriver()
     {
@@ -21,21 +22,53 @@ class SignatureService extends Manager
 
     /**
      * Create an instance of the "local" signature driver.
-     *
-     * @return SignatureProviderInterface
      */
-    protected function createLocalDriver()
+    protected function createLocalDriver(): LocalSignatureProvider
     {
         return new LocalSignatureProvider;
     }
 
     /**
      * Create an instance of the "docuseal" signature driver.
-     *
-     * @return SignatureProviderInterface
      */
-    protected function createDocusealDriver()
+    protected function createDocusealDriver(): DocusealProvider
     {
         return new DocusealProvider;
+    }
+
+    /**
+     * Convenience: request a multi-signature workflow.
+     *
+     * @param  array<array{name: string, email: string, role?: string, user_id?: int}>  $signers
+     */
+    public function requestMultiSignature(
+        Model $model,
+        SignatureType $type,
+        array $signers,
+        ?string $documentPath = null
+    ): Signature {
+        return $this->driver()->requestMultiSignature($model, $type, $signers, $documentPath);
+    }
+
+    /**
+     * Convenience: sign as a specific signer via public portal.
+     */
+    public function signAsSigner(
+        string $token,
+        string $signatureData,
+        string $ipAddress,
+        string $userAgent
+    ): SignatureSigner {
+        return $this->driver()->signAsSigner($token, $signatureData, $ipAddress, $userAgent);
+    }
+
+    /**
+     * Convenience: refuse as a specific signer via public portal.
+     */
+    public function refuseAsSigner(
+        string $token,
+        ?string $reason = null
+    ): SignatureSigner {
+        return $this->driver()->refuseAsSigner($token, $reason);
     }
 }
