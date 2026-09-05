@@ -453,7 +453,7 @@ jobs:
 
       - name: 📥 Download security reports
         if: always()
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v8
         with:
           pattern: '*-${{ github.sha }}'
           path: ./security-reports/
