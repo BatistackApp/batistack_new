@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace App\Policies\Articles;
 
+use Illuminate\Foundation\Auth\User as AuthUser;
 use App\Models\Articles\InventoryCycle;
 use Illuminate\Auth\Access\HandlesAuthorization;
-use Illuminate\Foundation\Auth\User as AuthUser;
 
 class InventoryCyclePolicy
 {
     use HandlesAuthorization;
-
+    
     public function viewAny(AuthUser $authUser): bool
     {
         return $authUser->can('ViewAny:InventoryCycle');
@@ -71,4 +71,5 @@ class InventoryCyclePolicy
     {
         return $authUser->can('Reorder:InventoryCycle');
     }
+
 }
