@@ -259,6 +259,8 @@ document.addEventListener('alpine:init', () => {
         hiddenElements: [],
         hasHiddenElements: false,
         modelID: 0,
+        selectedElementId: null,
+        selectedSubsetId: 'bim-selected-subset',
         tooltip: { visible: false, x: 0, y: 0, title: '', targetTitle: '', targetStatus: '' },
         annotationMeshes: [],
         viewer: null,
@@ -536,6 +538,13 @@ document.addEventListener('alpine:init', () => {
                 } else if (event.key === 'Delete' || event.key === 'Backspace') {
                     this.viewer.dimensions.delete();
                 }
+                return;
+            }
+
+            if (event.key === 'Delete' || event.key === 'Backspace') {
+                this.hideSelectedElement();
+            } else if (event.key === 'Escape') {
+                this.clearSelection();
             }
         },
 
@@ -649,12 +658,56 @@ document.addEventListener('alpine:init', () => {
             // On cast le ray pour trouver l'élément
             const result = this.viewer.context.castRayIfc(event);
             if (result && result.expressID) {
-                const id = result.expressID;
-                if (!this.hiddenElements.includes(id)) {
-                    this.hiddenElements.push(id);
-                    this.updateVisibility();
-                }
+                this.selectElement(result.expressID);
             }
+        },
+
+        selectElement(expressID) {
+            if (!this.viewer || this.format !== 'ifc') return;
+            
+            // Retirer la sélection précédente
+            this.clearSelection();
+            
+            const ifcManager = this.viewer.IFC.loader.ifcManager;
+            const scene = this.viewer.context.getScene();
+            const matSelected = new window.THREE.MeshLambertMaterial({
+                color: 0xfacc15,
+                transparent: true,
+                opacity: 0.5
+            });
+
+            ifcManager.createSubset({
+                modelID: this.modelID,
+                ids: [expressID],
+                material: matSelected,
+                scene: scene,
+                removePrevious: true,
+                customID: this.selectedSubsetId
+            });
+
+            this.selectedElementId = expressID;
+        },
+
+        clearSelection() {
+            if (!this.viewer) return;
+            if (this.selectedElementId !== null) {
+                try {
+                    this.viewer.IFC.loader.ifcManager.removeSubset(this.modelID, undefined, this.selectedSubsetId);
+                } catch (e) {}
+                this.selectedElementId = null;
+            }
+        },
+
+        hideSelectedElement() {
+            if (!this.viewer || this.selectedElementId === null) return;
+            
+            const id = this.selectedElementId;
+            if (!this.hiddenElements.includes(id)) {
+                this.hiddenElements.push(id);
+            }
+            
+            this.clearSelection();
+            this.updateVisibility();
         },
 
         focusAnnotation(detail) {
