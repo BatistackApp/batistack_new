@@ -4,6 +4,7 @@
     $parentUrl = $record->parent_id ? \Illuminate\Support\Facades\Storage::disk('public')->url($record->parent->file_path) : null;
     $format = $record->format;
     $annotations = $record->annotations()->with('target')->get()->toArray();
+    $dxfFontUrl = \Illuminate\Support\Facades\URL::asset('fonts/roboto-regular.ttf');
 @endphp
 
 <div
@@ -65,6 +66,40 @@
         </div>
     </div>
 
+    <!-- Calques DXF Overlay -->
+    <div x-show="showDxfLayers && format === 'dxf'"
+         class="absolute top-4 right-4 z-10 bg-gray-900/90 text-white p-4 rounded-xl shadow-lg border border-gray-700 w-80 max-h-[80%] overflow-y-auto backdrop-blur-sm"
+         x-transition>
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="font-bold text-lg">Calques (DXF)</h3>
+            <button @click="showDxfLayers = false" class="text-gray-400 hover:text-white">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                </svg>
+            </button>
+        </div>
+
+        <div x-show="dxfLayers.length === 0" class="text-sm text-gray-400 italic">
+            Aucun calque.
+        </div>
+
+        <template x-if="dxfLayers.length > 0">
+            <div class="text-sm space-y-1">
+                <template x-for="layer in dxfLayers" :key="layer.name">
+                    <div class="flex items-center gap-2 py-1">
+                        <input type="checkbox" checked @change="toggleDxfLayer(layer.name, $event.target.checked)" class="rounded bg-gray-800 border-gray-600 text-primary-600 focus:ring-primary-600">
+                        <span class="w-3 h-3 rounded-full border border-white/20 shrink-0" :style="'background-color: ' + dxfLayerColor(layer)"></span>
+                        <span class="truncate" x-text="layer.displayName || layer.name"></span>
+                    </div>
+                </template>
+            </div>
+        </template>
+
+        <button type="button" @click="showAllDxfLayers" x-show="dxfLayers.length > 0" class="mt-3 w-full bg-gray-800 hover:bg-gray-700 text-white px-3 py-1.5 rounded-lg text-sm transition">
+            Tout afficher
+        </button>
+    </div>
+
     <!-- UI Overlay (Loading) -->
     <div x-show="loading" class="absolute inset-0 flex items-center justify-center bg-gray-900 bg-opacity-75 z-10 transition-opacity">
         <div class="text-white text-center">
@@ -76,6 +111,13 @@
         </div>
     </div>
     
+    <!-- Avertissement caractères manquants DXF -->
+    <div x-show="dxfMissingChars && format === 'dxf'"
+         class="absolute top-4 left-1/2 -translate-x-1/2 z-10 bg-amber-500/90 text-white px-4 py-2 rounded-lg shadow-lg text-sm font-medium backdrop-blur-sm"
+         x-transition>
+        ⚠️ Certains caractères du plan ne peuvent pas être affichés (police incomplète).
+    </div>
+
     <!-- Tooltip -->
     <div x-show="tooltip.visible" 
          class="absolute z-20 bg-gray-900/90 text-white p-3 rounded shadow-lg backdrop-blur-sm pointer-events-none border border-gray-700/50"
@@ -98,13 +140,13 @@
             </svg>
             <span x-text="annotationMode ? 'Mode Annotation Actif' : 'Ajouter Punaise'"></span>
         </button>
-        <button type="button" x-show="format === 'ifc'" @click="toggleMeasurementMode" :class="measurementMode ? 'bg-indigo-600 hover:bg-indigo-500' : 'bg-gray-800 hover:bg-gray-700'" class="text-white px-3 py-1.5 rounded-lg shadow text-sm transition flex items-center gap-1">
+        <button type="button" x-show="format === 'ifc' || format === 'dxf'" @click="toggleMeasurementMode" :class="measurementMode ? 'bg-indigo-600 hover:bg-indigo-500' : 'bg-gray-800 hover:bg-gray-700'" class="text-white px-3 py-1.5 rounded-lg shadow text-sm transition flex items-center gap-1">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M14.121 14.121L19 19m-4.879-4.879l-4.242-4.243m4.242 4.243l-4.243-4.242m4.243 4.242l3.536-3.536m-7.779 3.536L5 9.879m4.879 4.879l4.242-4.243M9.879 14.757l3.536-3.535" />
             </svg>
             <span x-text="measurementMode ? 'Mode Mesure Actif' : 'Mesurer'"></span>
         </button>
-        <button type="button" x-show="format === 'ifc' && hasMeasurements" @click="clearMeasurements" class="bg-red-600 text-white px-3 py-1.5 rounded-lg shadow text-sm hover:bg-red-500 transition flex items-center gap-1">
+        <button type="button" x-show="(format === 'ifc' || format === 'dxf') && hasMeasurements" @click="clearMeasurements" class="bg-red-600 text-white px-3 py-1.5 rounded-lg shadow text-sm hover:bg-red-500 transition flex items-center gap-1">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                 <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
             </svg>
@@ -117,7 +159,7 @@
             </svg>
             Tout afficher
         </button>
-        <button type="button" x-show="format === 'ifc'" @click="showLayers = !showLayers" class="bg-gray-800 text-white px-3 py-1.5 rounded-lg shadow text-sm hover:bg-gray-700 transition flex items-center gap-1">
+        <button type="button" x-show="format === 'ifc' || format === 'dxf'" @click="toggleLayersPanel" class="bg-gray-800 text-white px-3 py-1.5 rounded-lg shadow text-sm hover:bg-gray-700 transition flex items-center gap-1">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
             </svg>
@@ -218,11 +260,22 @@ document.addEventListener('alpine:init', () => {
         annotationMode: false,
         measurementMode: false,
         hasMeasurements: false,
+        dxfMeasureMode: false,
+        dxfPointA: null,
+        dxfMeasurements: [],
+        dxfMeasureGroup: null,
+        dxfPointerHandler: null,
+        dxfFontUrl: @js($dxfFontUrl),
+        dxfMissingChars: false,
         showLayers: false,
+        showDxfLayers: false,
         spatialTree: null,
+        dxfLayers: [],
         hiddenElements: [],
         hasHiddenElements: false,
         modelID: 0,
+        selectedElementId: null,
+        selectedSubsetId: 'bim-selected-subset',
         tooltip: { visible: false, x: 0, y: 0, title: '', targetTitle: '', targetStatus: '' },
         annotationMeshes: [],
         viewer: null,
@@ -351,7 +404,15 @@ document.addEventListener('alpine:init', () => {
                 });
                 
                 this.loadingText = 'Chargement DXF en cours...';
-                await this.viewer.Load({ url: this.url });
+                await this.viewer.Load({
+                    url: this.url,
+                    fonts: this.dxfFontUrl ? [this.dxfFontUrl] : null
+                });
+                this.dxfMissingChars = !!this.viewer.hasMissingChars;
+                
+                this.dxfLayers = (this.viewer.GetLayers(true) || []).sort((a, b) =>
+                    (a.displayName || a.name).localeCompare(b.displayName || b.name)
+                );
                 
                 this.loading = false;
                 
@@ -444,34 +505,184 @@ document.addEventListener('alpine:init', () => {
             }
         },
 
+        // --- Calques DXF ---
+        toggleLayersPanel() {
+            if (this.format === 'ifc') {
+                this.showLayers = !this.showLayers;
+            } else if (this.format === 'dxf') {
+                this.showDxfLayers = !this.showDxfLayers;
+            }
+        },
+
+        toggleDxfLayer(layerName, visible) {
+            if (!this.viewer) return;
+            this.viewer.ShowLayer(layerName, visible);
+        },
+
+        showAllDxfLayers() {
+            if (!this.viewer) return;
+            this.dxfLayers.forEach(l => this.viewer.ShowLayer(l.name, true));
+        },
+
+        dxfLayerColor(layer) {
+            if (layer.color === null || layer.color === undefined) return '#ffffff';
+            return '#' + layer.color.toString(16).padStart(6, '0');
+        },
+
         toggleMeasurementMode() {
             if (!this.viewer) return;
             this.measurementMode = !this.measurementMode;
             if (this.measurementMode) {
                 if (this.annotationMode) this.annotationMode = false;
-                this.viewer.dimensions.active = true;
-                this.viewer.dimensions.previewActive = true;
-                this.hasMeasurements = true; // On affiche le bouton effacer dès l'activation
+                if (this.format === 'ifc') {
+                    this.viewer.dimensions.active = true;
+                    this.viewer.dimensions.previewActive = true;
+                } else if (this.format === 'dxf') {
+                    this.enableDxfMeasurement();
+                }
+                this.hasMeasurements = this.format === 'ifc'; // IFC: affiche le bouton effacer dès activation
             } else {
-                this.viewer.dimensions.active = false;
-                this.viewer.dimensions.previewActive = false;
+                if (this.format === 'ifc') {
+                    this.viewer.dimensions.active = false;
+                    this.viewer.dimensions.previewActive = false;
+                } else if (this.format === 'dxf') {
+                    this.disableDxfMeasurement();
+                }
             }
         },
 
+        enableDxfMeasurement() {
+            if (this.dxfMeasureGroup) return;
+            this.dxfMeasureMode = true;
+            this.dxfPointA = null;
+            this.dxfMeasureGroup = new window.THREE.Group();
+            this.viewer.GetScene().add(this.dxfMeasureGroup);
+            this.dxfPointerHandler = (e) => this.onDxfPointerDown(e);
+            this.viewer.Subscribe('pointerdown', this.dxfPointerHandler);
+        },
+
+        disableDxfMeasurement() {
+            this.dxfMeasureMode = false;
+            this.dxfPointA = null;
+            if (this.dxfPointerHandler) {
+                this.viewer.Unsubscribe('pointerdown', this.dxfPointerHandler);
+                this.dxfPointerHandler = null;
+            }
+            if (this.dxfMeasureGroup) {
+                this.viewer.GetScene().remove(this.dxfMeasureGroup);
+                this.dxfMeasureGroup = null;
+            }
+        },
+
+        onDxfPointerDown(e) {
+            if (!this.dxfMeasureMode || !e || !e.detail || !e.detail.position) return;
+            const { x, y } = e.detail.position;
+            if (this.dxfPointA === null) {
+                // 1er clic → point A
+                this.dxfPointA = { x, y };
+                return;
+            }
+            const a = this.dxfPointA;
+            const b = { x, y };
+            const distance = Math.hypot(b.x - a.x, b.y - a.y);
+            this.drawDxfMeasurement(a, b, distance);
+            this.dxfMeasurements.push({ a, b, distance });
+            this.hasMeasurements = true;
+            this.dxfPointA = null;
+        },
+
+        drawDxfMeasurement(a, b, distance) {
+            if (!this.dxfMeasureGroup || !window.THREE) return;
+
+            // Ligne entre A et B
+            const geometry = new window.THREE.BufferGeometry().setFromPoints([
+                new window.THREE.Vector3(a.x, a.y, 0),
+                new window.THREE.Vector3(b.x, b.y, 0)
+            ]);
+            const material = new window.THREE.LineBasicMaterial({ color: 0x10b981 });
+            const line = new window.THREE.Line(geometry, material);
+            this.dxfMeasureGroup.add(line);
+
+            // Sprite texte de la distance au milieu
+            const mid = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+            const canvas = document.createElement('canvas');
+            canvas.width = 256;
+            canvas.height = 64;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = 'rgba(17, 24, 39, 0.85)';
+            ctx.fillRect(0, 12, canvas.width, 44);
+            ctx.font = 'bold 28px sans-serif';
+            ctx.fillStyle = '#ffffff';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(distance.toFixed(2), canvas.width / 2, 36);
+
+            const texture = new window.THREE.CanvasTexture(canvas);
+            const spriteMat = new window.THREE.SpriteMaterial({ map: texture, transparent: true });
+            const sprite = new window.THREE.Sprite(spriteMat);
+            const spriteScale = Math.min(Math.max(distance * 0.1, 3), 20);
+            sprite.scale.set(spriteScale, spriteScale, 1);
+            sprite.position.set(mid.x, mid.y, 0);
+            this.dxfMeasureGroup.add(sprite);
+
+            this.viewer.Render();
+        },
+
+        deleteLastDxfMeasurement() {
+            if (!this.dxfMeasureGroup) return;
+            const children = this.dxfMeasureGroup.children;
+            if (children.length === 0) return;
+            children[children.length - 1].geometry?.dispose();
+            children[children.length - 1].material?.dispose?.();
+            this.dxfMeasureGroup.remove(children[children.length - 1]);
+            this.dxfMeasurements.pop();
+            if (this.dxfMeasurements.length === 0) this.hasMeasurements = false;
+            this.viewer.Render();
+        },
+
         clearMeasurements() {
-            if (this.viewer && this.viewer.dimensions) {
-                this.viewer.dimensions.deleteAll();
+            if (this.format === 'ifc') {
+                if (this.viewer && this.viewer.dimensions) {
+                    this.viewer.dimensions.deleteAll();
+                    this.hasMeasurements = false;
+                }
+            } else if (this.format === 'dxf') {
+                if (!this.dxfMeasureGroup) return;
+                this.dxfMeasureGroup.children.forEach(c => {
+                    c.geometry?.dispose();
+                    c.material?.map?.dispose?.();
+                    c.material?.dispose?.();
+                });
+                this.dxfMeasureGroup.clear();
+                this.dxfMeasurements = [];
+                this.dxfPointA = null;
                 this.hasMeasurements = false;
+                this.viewer.Render();
             }
         },
 
         handleKeyDown(event) {
             if (this.measurementMode && this.viewer) {
+                if (this.format === 'dxf') {
+                    if (event.key === 'Escape') {
+                        this.dxfPointA = null;
+                    } else if (event.key === 'Delete' || event.key === 'Backspace') {
+                        this.deleteLastDxfMeasurement();
+                    }
+                    return;
+                }
                 if (event.key === 'Escape') {
                     this.viewer.dimensions.cancelDrawing();
                 } else if (event.key === 'Delete' || event.key === 'Backspace') {
                     this.viewer.dimensions.delete();
                 }
+                return;
+            }
+
+            if (event.key === 'Delete' || event.key === 'Backspace') {
+                this.hideSelectedElement();
+            } else if (event.key === 'Escape') {
+                this.clearSelection();
             }
         },
 
@@ -585,12 +796,56 @@ document.addEventListener('alpine:init', () => {
             // On cast le ray pour trouver l'élément
             const result = this.viewer.context.castRayIfc(event);
             if (result && result.expressID) {
-                const id = result.expressID;
-                if (!this.hiddenElements.includes(id)) {
-                    this.hiddenElements.push(id);
-                    this.updateVisibility();
-                }
+                this.selectElement(result.expressID);
             }
+        },
+
+        selectElement(expressID) {
+            if (!this.viewer || this.format !== 'ifc') return;
+            
+            // Retirer la sélection précédente
+            this.clearSelection();
+            
+            const ifcManager = this.viewer.IFC.loader.ifcManager;
+            const scene = this.viewer.context.getScene();
+            const matSelected = new window.THREE.MeshLambertMaterial({
+                color: 0xfacc15,
+                transparent: true,
+                opacity: 0.5
+            });
+
+            ifcManager.createSubset({
+                modelID: this.modelID,
+                ids: [expressID],
+                material: matSelected,
+                scene: scene,
+                removePrevious: true,
+                customID: this.selectedSubsetId
+            });
+
+            this.selectedElementId = expressID;
+        },
+
+        clearSelection() {
+            if (!this.viewer) return;
+            if (this.selectedElementId !== null) {
+                try {
+                    this.viewer.IFC.loader.ifcManager.removeSubset(this.modelID, undefined, this.selectedSubsetId);
+                } catch (e) {}
+                this.selectedElementId = null;
+            }
+        },
+
+        hideSelectedElement() {
+            if (!this.viewer || this.selectedElementId === null) return;
+            
+            const id = this.selectedElementId;
+            if (!this.hiddenElements.includes(id)) {
+                this.hiddenElements.push(id);
+            }
+            
+            this.clearSelection();
+            this.updateVisibility();
         },
 
         focusAnnotation(detail) {

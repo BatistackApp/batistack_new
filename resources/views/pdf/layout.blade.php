@@ -101,41 +101,26 @@
         }
 
         /* En-tête */
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            border-bottom: 3px solid #1e40af;
-            padding-bottom: 15px;
-            margin-bottom: 20px;
-        }
-
-        .company-info h1 {
-            font-size: 24px;
-            font-weight: bold;
-            color: #1e40af;
-            margin-bottom: 5px;
-        }
-
-        .company-details {
-            font-size: 10px;
-            color: #666;
-            line-height: 1.4;
-        }
-
-        .quote-info {
+        .quote-info, .invoice-info, .situation-info {
             text-align: right;
         }
 
-        .quote-info .label {
+        .quote-info .label, .invoice-info .label, .situation-info .label {
             font-weight: bold;
             color: #1e40af;
-            font-size: 11px;
+            font-size: 22px;
+            display: block;
+            margin-bottom: 8px;
         }
 
-        .quote-info .value {
+        .quote-info .value, .invoice-info .value, .situation-info .value {
             font-size: 13px;
             font-weight: bold;
+            background-color: #f3f4f6;
+            padding: 8px 12px;
+            border: 1px solid #e2e8f0;
+            display: inline-block;
+            margin-bottom: 8px;
         }
 
         /* Informations client */

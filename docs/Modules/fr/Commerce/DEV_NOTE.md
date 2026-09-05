@@ -38,6 +38,7 @@ Le module **Commerce** couvre l'intégralité du cycle de vente et d'achat de l'
 
 ### 5. Tests
 *   Validation complète du module avec 100% de succès sur la gigantesque suite de tests PestPHP (incluant les nouvelles fonctionnalités : rapports PDF, allocations de paiements, annulations, dé-lettrages et paiements Stripe en ligne avec webhooks). Le cycle de vie complet est garanti sans faille logicielle.
+*   **Harmonisation des exports PDF** (Issue #329) : En-têtes de documents standardisés (gros titre bleu `#1e40af` + référence) via `pdf.layout`, couleurs homogènes (bleu Batistack partout, suppression du `#575aff` dans la situation), devise unifiée en `€`, accents corrigés (relevé client), pieds de page dupliqués retirés (utilise celui du layout), CSS dupliqués nettoyés. **Implémentation complète des gabarits stubs** : Bon de Commande Fournisseur (`purchase_order`) et Rapport d'Audit Facture Fournisseur (`supplier_invoice_audit`).
 
 ## 🚧 Ce qu'il reste à faire
-*   Peaufiner potentiellement certains détails cosmétiques des exports PDF selon les retours utilisateurs finaux.
+*   *(Peaufiner les détails cosmétiques des exports PDF selon retours utilisateurs finaux — fait, voir Issue #329.)*

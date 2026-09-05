@@ -59,7 +59,10 @@ Passerelle Vision 3D → Articles → Achats pour générer des commandes d'acha
 
 - **Mesure de distances sur la maquette (IFC)** (#155) : Clic point A / Clic point B pour calculer et afficher la distance réelle entre eux (boutons actifs en format IFC, Escape = annuler, Suppr = supprimer une mesure).
 - **Système de calques (Layers) IFC** (#156) : Arborescence spatiale IFC permettant de cacher/afficher des couches spécifiques (cacher les murs, afficher la tuyauterie). *(Pas encore géré pour les DXF.)*
-- **Cacher temporairement un élément 3D** (#157) : Double-clic sur un élément de la maquette IFC pour le masquer pendant l'inspection, avec bouton de restauration globale. *(La combinaison "Suppr" prévue à l'origine n'est pas implémentée.)*
+- **Calques DXF** (Issue #316) : Extension du système de calques aux plans AutoCAD DXF via l'API `dxf-viewer` (`GetLayers`/`ShowLayer`). Liste plate triée (nom + pastille couleur + checkbox), bouton "Calques" disponible pour IFC **et** DXF, bouton "Tout afficher". État de session UI (non persisté). Les calques vides/frozen sont omis (`nonEmptyOnly=true`).
+- **Cacher un élément 3D (sélection + touche Suppr)** (Issue #317) : Double-clic sur un élément IFC pour le **sélectionner et le surligner** (sous-ensemble semi-transparent jaune), puis touche **Suppr/Backspace** pour le **masquer** pendant l'inspection. **Escape** désélectionne (retire la surbrillance). Le flux "Tout afficher" (`updateVisibility`) est conservé. En mode mesure, Suppr continue de supprimer une mesure.
+- **Mesure de distances sur les plans DXF** (Issue #318) : Extension de la mesure A → B aux plans AutoCAD DXF (réservée à l'IFC auparavant). Utilise `viewer.Subscribe("pointerdown")` pour capter les clics (coordonnées scène 2D), calcule la distance euclidienne en unités du fichier et dessine une ligne verte + un sprite texte de distance dans `GetScene()`. **Escape** annule le point courant, **Suppr** supprime la dernière mesure, bouton "Effacer" tout retire. Le flux IFC (web-ifc `dimensions`) est inchangé.
+- **Rendu DXF textes + épaisseur (v1)** (Issue #319) : Fourniture d'une police **TTF** (Roboto, `public/fonts/roboto-regular.ttf`) à `dxf-viewer` via `Load({ url, fonts })` pour restituer les **textes** des plans. Avertissement UI si des caractères manquent (`hasMissingChars`). Les **couleurs** (par calque/entité) et **linetypes** (pointillés) sont gérés par `dxf-viewer`. Épaisseurs uniformes en v1 ; les épaisseurs différentes par entité (vraie largeur de trait) sortent du périmètre `dxf-viewer` (pas de `lineweight`) et sont repoussées en v2.
 - **Miniature (Thumbnail) automatique** (#159) : Infrastructure en place (`GenerateBimThumbnailJob` + vue headless + colonne `thumbnail_path`). L'observer `BimModelObserver` déclenche le job à la création et à la modification du fichier. La vignette est affichée dans le tableau `BimModelResource` (Issue #315).
 - **Camera Focus au Clic** (#161) : Action "focus" sur chaque punaise du tableau → événement Livewire `focus-annotation` propagé à AlpineJS → la caméra zoome et se centre sur l'annotation (IFC et DXF).
 - **Réalité Augmentée AR / WebXR** (#249) : Session `immersive-ar` avec l'API Hit-Test native — réticule sur les surfaces détectées par la caméra du smartphone, placement de la maquette IFC à l'échelle 1:1, boucle de rendu XR dédiée.
@@ -71,10 +74,10 @@ Passerelle Vision 3D → Articles → Achats pour générer des commandes d'acha
 ## ⏳ Ce qu'il reste à faire (Next Steps)
 
 - **Optimisation des chargements de gros fichiers IFC** : Le moteur `web-ifc` peut être gourmand. Il faudra éventuellement configurer un web worker (Multithreading) si de très gros modèles sont uploadés pour ne pas figer l'interface le temps du parsing géométrique.
-- **Étendre les calques aux DXF** : Ajouter le parsing et la visibilité des calques DXF (aujourd'hui limités aux types IFC).
-- **Cacher un élément via la touche "Suppr"** : Compléter le double-clic par la combinaison prévue à l'origine (#157).
-- **Mesure de distances en DXF** : Étendre la mesure point A → point B aux plans AutoCAD (actuellement réservée aux IFC).
-- **Support complet de three-dxf** : Mappage fidèle des couleurs, épaisseurs de traits et textes des plans AutoCAD 2D (le rendu DXF actuel repose sur `dxf-viewer`).
+- **Étendre les calques aux DXF** : ~~Ajouter le parsing et la visibilité des calques DXF~~ *(Fait — voir Issue #316)*.
+- **Cacher un élément via la touche "Suppr"** : ~~Compléter le double-clic par la combinaison prévue à l'origine~~ *(Fait — voir Issue #317)*.
+- **Mesure de distances en DXF** : ~~Étendre la mesure point A → point B aux plans AutoCAD~~ *(Fait — voir Issue #318)*.
+- **Support complet de three-dxf** : Rendu DXF via `dxf-viewer` (+ police TTF fournie pour les textes — Issue #319). *V2 possible : mappage des épaisseurs de traits par entité (lineweight), non supporté nativement par `dxf-viewer`.*
 
 ---
 

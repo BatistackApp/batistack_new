@@ -2,8 +2,8 @@
 
 @section('header_right')
     <div class="quote-info">
-        <div class="label" style="font-size: 22px; color: #1e40af; font-weight: bold; margin-bottom: 10px;">BON DE COMMANDE</div>
-        <div class="value" style="background-color: #f3f4f6; padding: 8px 12px; border: 1px solid #e2e8f0; font-size: 14px; margin-bottom: 10px;">{{ $order->reference }}</div>
+        <div class="label">BON DE COMMANDE</div>
+        <div class="value">{{ $order->reference }}</div>
         <div style="font-size: 10px; text-align: right;">
             <div><strong>Date :</strong> {{ $order->created_at->format('d/m/Y') }}</div>
             @if($order->quote)
@@ -11,12 +11,6 @@
             @endif
         </div>
     </div>
-@endsection
-
-@section('styles')
-    <style>
-
-    </style>
 @endsection
 
 @section('content')
