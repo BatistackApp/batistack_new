@@ -60,7 +60,11 @@ Le cœur regorge de services essentiels déjà implémentés et fonctionnels :
 
 ## 🚧 Ce qu'il reste à faire
 *   Le module Core sert de socle pour l'ensemble du système. Sa maintenance se fait en continu à mesure que les autres modules évoluent.
-*   **Dashboard (Issue #185)** : Les widgets avancés (`laboiteacode`) sont implémentés et affichés sur le Dashboard par défaut (via `discoverWidgets`), mais **aucune page Dashboard personnalisée** n'existe (le panel utilise le `Dashboard::class` par défaut). Une page dédiée permettrait une disposition optimisée (KPIs en haut, listes d'alertes en pleine largeur).
+
+## ✅ Dashboard Core personnalisé (Issue #347)
+*   **Page Dashboard dédiée** : création de `app/Filament/Pages/Dashboard.php` (auto-découverte dans `app/Filament/Pages`, remplace le `Dashboard::class` Filament par défaut pour le panel `core`).
+*   **Disposition optimisée** : KPIs en haut (`CoreStatsOverview`, `CompanyOnboardingGoalWidget`, `ApiUsageLimitsWidget`, `SignatureTrendWidget`) + alertes/santé pleine largeur en bas (`SystemHealthWidget`, `SystemActivityRecentItemsWidget`, `StatsOverview`, `LatestChantiersWidget`) via `getWidgets()` explicite et `getColumns()` responsive.
+*   **Enregistrement sans conflit** : suppression du `->pages([Dashboard::class])` du `CorePanelProvider` (auto-découverte), exclusion de la classe Core dans `config/filament-shield.php`.
 
 ## 💡 Idées d'amélioration et Nouvelles Fonctionnalités
 *   **Workflow Approbations Multiples** : Permettre d'avoir plusieurs signataires sur un même document via le `SignatureService` (actuellement **un seul** signataire : `Signature.user_id`, `SignatureProviderInterface` à email unique, `DocusealProvider` avec un seul `submitter`).
