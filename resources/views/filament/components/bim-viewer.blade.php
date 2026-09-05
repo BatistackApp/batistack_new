@@ -4,6 +4,7 @@
     $parentUrl = $record->parent_id ? \Illuminate\Support\Facades\Storage::disk('public')->url($record->parent->file_path) : null;
     $format = $record->format;
     $annotations = $record->annotations()->with('target')->get()->toArray();
+    $dxfFontUrl = \Illuminate\Support\Facades\URL::asset('fonts/roboto-regular.ttf');
 @endphp
 
 <div
@@ -110,6 +111,13 @@
         </div>
     </div>
     
+    <!-- Avertissement caractères manquants DXF -->
+    <div x-show="dxfMissingChars && format === 'dxf'"
+         class="absolute top-4 left-1/2 -translate-x-1/2 z-10 bg-amber-500/90 text-white px-4 py-2 rounded-lg shadow-lg text-sm font-medium backdrop-blur-sm"
+         x-transition>
+        ⚠️ Certains caractères du plan ne peuvent pas être affichés (police incomplète).
+    </div>
+
     <!-- Tooltip -->
     <div x-show="tooltip.visible" 
          class="absolute z-20 bg-gray-900/90 text-white p-3 rounded shadow-lg backdrop-blur-sm pointer-events-none border border-gray-700/50"
@@ -257,6 +265,8 @@ document.addEventListener('alpine:init', () => {
         dxfMeasurements: [],
         dxfMeasureGroup: null,
         dxfPointerHandler: null,
+        dxfFontUrl: @js($dxfFontUrl),
+        dxfMissingChars: false,
         showLayers: false,
         showDxfLayers: false,
         spatialTree: null,
@@ -394,7 +404,11 @@ document.addEventListener('alpine:init', () => {
                 });
                 
                 this.loadingText = 'Chargement DXF en cours...';
-                await this.viewer.Load({ url: this.url });
+                await this.viewer.Load({
+                    url: this.url,
+                    fonts: this.dxfFontUrl ? [this.dxfFontUrl] : null
+                });
+                this.dxfMissingChars = !!this.viewer.hasMissingChars;
                 
                 this.dxfLayers = (this.viewer.GetLayers(true) || []).sort((a, b) =>
                     (a.displayName || a.name).localeCompare(b.displayName || b.name)
