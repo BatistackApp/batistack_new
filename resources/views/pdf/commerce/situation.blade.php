@@ -29,7 +29,7 @@
         text-align: left;
     }
     .details-table th {
-        background-color: #575aff;
+        background-color: #1e40af;
         font-weight: bold;
     }
     .details-table th:first-child { border-top-left-radius: 8px; }
