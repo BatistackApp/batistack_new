@@ -71,10 +71,16 @@ class DocumentService
             $browsershot->setChromePath($chromePath);
         }
 
-        // Set a writable cache directory for Puppeteer in case it needs to download Chrome
-        $browsershot->setEnvironmentVariable('PUPPETEER_CACHE_DIR', storage_path('puppeteer'));
-
-        $pdfContent = $browsershot->pdf();
+        try {
+            $pdfContent = $browsershot->pdf();
+        } catch (\Symfony\Component\Process\Exception\ProcessFailedException $e) {
+            Log::error('DocumentService: échec génération PDF — Chrome introuvable ou indisponible', [
+                'error' => $e->getMessage(),
+            ]);
+            throw new \RuntimeException(
+                'La génération du PDF a échoué. Vérifiez que Chrome/Chromium est installé sur le serveur (BROWSERSHOT_CHROME_PATH dans .env).'
+            );
+        }
 
         $relativePath = 'documents/'.$type.'/'.$filename.'.pdf';
         $disk = static::getDisk();
