@@ -115,4 +115,20 @@ class Signature extends Model
     {
         return $this->status === SignatureStatus::SIGNED;
     }
+
+    /**
+     * Get the URL of the stamped/signed document.
+     */
+    public function getStampedDocumentUrlAttribute(): ?string
+    {
+        if (! $this->relationLoaded('signable') && ! $this->signable) {
+            return null;
+        }
+
+        if (method_exists($this->signable, 'getSignatureDocumentUrl')) {
+            return $this->signable->getSignatureDocumentUrl($this);
+        }
+
+        return null;
+    }
 }

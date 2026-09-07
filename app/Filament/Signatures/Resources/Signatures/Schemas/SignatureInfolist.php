@@ -4,11 +4,13 @@ namespace App\Filament\Signatures\Resources\Signatures\Schemas;
 
 use App\Enums\Core\SignatureStatus;
 use App\Models\Core\Signature;
+use Filament\Infolists\Components\ImageEntry;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Forms\Components\Placeholder;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\HeroIcon;
+use ToneGabes\Filament\Icons\Enums\Phosphor;
 
 class SignatureInfolist
 {
@@ -53,6 +55,28 @@ class SignatureInfolist
                             ->copyable(),
                     ]),
 
+                Section::make('Document signé')
+                    ->icon(HeroIcon::DocumentCheck)
+                    ->visible(fn (Signature $record) => $record->status === SignatureStatus::SIGNED)
+                    ->schema([
+                        Placeholder::make('stamped_document_link')
+                            ->label('PDF signé')
+                            ->content(function (Signature $record) {
+                                $url = $record->stamped_document_url;
+
+                                if (! $url) {
+                                    return 'Document non disponible';
+                                }
+
+                                return new \Illuminate\Support\HtmlString(
+                                    '<a href="' . e($url) . '" target="_blank" class="text-primary-600 dark:text-primary-400 underline hover:no-underline">' .
+                                    '📄 Ouvrir le PDF signé' .
+                                    '</a>'
+                                );
+                            })
+                            ->columnSpanFull(),
+                    ]),
+
                 Section::make('Document associé')
                     ->icon(HeroIcon::DocumentText)
                     ->columns(2)
@@ -62,6 +86,42 @@ class SignatureInfolist
                             ->formatStateUsing(fn ($state) => class_basename($state)),
                         TextEntry::make('signable_id')
                             ->label('ID du document'),
+                    ]),
+
+                Section::make('Signatures manuscrites')
+                    ->icon(Phosphor::PencilSimpleLine)
+                    ->visible(fn (Signature $record) => $record->signers()->count() > 0)
+                    ->schema([
+                        Placeholder::make('signer_signatures')
+                            ->label('Signatures des signataires')
+                            ->content(function (Signature $record) {
+                                $signers = $record->signers()->where('status', SignatureStatus::SIGNED)->get();
+
+                                if ($signers->isEmpty()) {
+                                    return 'Aucune signature enregistrée.';
+                                }
+
+                                $html = '<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">';
+
+                                foreach ($signers as $signer) {
+                                    $html .= '<div class="border rounded-lg p-3 bg-white dark:bg-gray-800">';
+                                    $html .= '<p class="text-sm font-semibold mb-1">' . e($signer->name) . '</p>';
+                                    $html .= '<p class="text-xs text-gray-500 mb-2">' . e($signer->role) . ' — ' . $signer->signed_at->format('d/m/Y H:i') . '</p>';
+
+                                    if ($signer->signature_data) {
+                                        $html .= '<img src="' . e($signer->signature_data) . '" alt="Signature de ' . e($signer->name) . '" class="max-h-20 border bg-white" />';
+                                    } else {
+                                        $html .= '<p class="text-xs text-gray-400 italic">Pas d\'image</p>';
+                                    }
+
+                                    $html .= '</div>';
+                                }
+
+                                $html .= '</div>';
+
+                                return new \Illuminate\Support\HtmlString($html);
+                            })
+                            ->columnSpanFull(),
                     ]),
 
                 Section::make('Progression')

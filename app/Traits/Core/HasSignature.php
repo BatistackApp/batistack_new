@@ -75,8 +75,14 @@ trait HasSignature
         $signatoryName = $this->getSignatoryName();
 
         if ($documentPath && file_exists($documentPath)) {
+            // Load signed signers for multi-signer stamping
+            $signers = $signature->signers()
+                ->where('status', \App\Enums\Core\SignatureStatus::SIGNED)
+                ->get()
+                ->all();
+
             $stamper = app(PdfStamperService::class);
-            $stampedPdfPath = $stamper->stamp($documentPath, $signature, $signatoryName);
+            $stampedPdfPath = $stamper->stamp($documentPath, $signature, $signatoryName, $signers ?: null);
 
             try {
                 // Use Spatie Media for models that support it
