@@ -4,7 +4,6 @@ namespace App\Filament\Signatures\Resources\Signatures\Schemas;
 
 use App\Enums\Core\SignatureStatus;
 use App\Models\Core\Signature;
-use Filament\Infolists\Components\ImageEntry;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Forms\Components\Placeholder;
 use Filament\Schemas\Components\Section;
@@ -21,9 +20,10 @@ class SignatureInfolist
                 Placeholder::make('signature_progress')
                     ->label('Progression des signatures')
                     ->content(function (Signature $record) {
-                        $total = $record->signers()->count();
-                        $signed = $record->signers()->where('status', SignatureStatus::SIGNED)->count();
-                        $pending = $record->signers()->where('status', SignatureStatus::PENDING)->count();
+                        $signers = $record->loadMissing('signers')->signers;
+                        $total = $signers->count();
+                        $signed = $signers->where('status', SignatureStatus::SIGNED)->count();
+                        $pending = $signers->where('status', SignatureStatus::PENDING)->count();
 
                         return "{$signed}/{$total} signée(s) — {$pending} en attente";
                     })
@@ -90,12 +90,13 @@ class SignatureInfolist
 
                 Section::make('Signatures manuscrites')
                     ->icon(Phosphor::PencilSimpleLine)
-                    ->visible(fn (Signature $record) => $record->signers()->count() > 0)
+                    ->visible(fn (Signature $record) => $record->loadMissing('signers')->signers->count() > 0)
                     ->schema([
                         Placeholder::make('signer_signatures')
                             ->label('Signatures des signataires')
                             ->content(function (Signature $record) {
-                                $signers = $record->signers()->where('status', SignatureStatus::SIGNED)->get();
+                                $signers = $record->loadMissing('signers')->signers
+                                    ->where('status', SignatureStatus::SIGNED);
 
                                 if ($signers->isEmpty()) {
                                     return 'Aucune signature enregistrée.';
@@ -165,6 +166,12 @@ class SignatureInfolist
                             ->fontFamily('mono')
                             ->limit(64)
                             ->tooltip(fn (Signature $record) => $record->checksum),
+                        TextEntry::make('document_checksum')
+                            ->label('Empreinte document signé')
+                            ->fontFamily('mono')
+                            ->limit(64)
+                            ->placeholder('—')
+                            ->tooltip(fn (Signature $record) => $record->document_checksum),
                         TextEntry::make('metadata')
                             ->label('Métadonnées')
                             ->formatStateUsing(fn ($state) => json_encode($state, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE))

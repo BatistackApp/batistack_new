@@ -22,6 +22,20 @@ trait HasSignature
     }
 
     /**
+     * Get the URL of the final stamped/signed document.
+     * Models can override via getStampedUrl() method.
+     * Defaults to the source document URL when the model does not store a distinct stamped copy.
+     */
+    public function getStampedDocumentUrl(Signature $signature): ?string
+    {
+        if (method_exists($this, 'getStampedUrl')) {
+            return $this->getStampedUrl($signature);
+        }
+
+        return $this->getSignatureDocumentUrl($signature);
+    }
+
+    /**
      * Get the absolute path to the PDF for stamping.
      * Models can override via getSignaturePath() method.
      */
@@ -82,7 +96,12 @@ trait HasSignature
                 ->all();
 
             $stamper = app(PdfStamperService::class);
-            $stampedPdfPath = $stamper->stamp($documentPath, $signature, $signatoryName, $signers ?: null);
+            $documentChecksum = null;
+            $stampedPdfPath = $stamper->stamp($documentPath, $signature, $signatoryName, $signers ?: null, $documentChecksum);
+
+            if ($documentChecksum) {
+                $signature->update(['document_checksum' => $documentChecksum]);
+            }
 
             try {
                 // Use Spatie Media for models that support it

@@ -16,13 +16,17 @@ class PdfStamperService
      * @param  Signature  $signature  L'objet Signature complété
      * @param  string|null  $signatoryName  Nom du signataire (legacy single-signer)
      * @param  SignatureSigner[]|null  $signers  Collection de signataires ayant signé (multi-signer)
+     * @param  string|null  $documentChecksum  Empreinte SHA-256 du document signé (corps sans certificat), remplie par référence
      * @return string Chemin absolu vers le nouveau PDF généré (fichier temporaire)
      */
-    public function stamp(string $pdfPath, Signature $signature, ?string $signatoryName = null, ?array $signers = null): string
+    public function stamp(string $pdfPath, Signature $signature, ?string $signatoryName = null, ?array $signers = null, ?string &$documentChecksum = null): string
     {
+        // Empreinte du document signé (avant ajout du certificat)
+        $documentChecksum = $this->computeDocumentChecksum($pdfPath);
+
         // Préparer les images de signature
         $tempFiles = [];
-        $signatureImages = $this->prepareSignatureImages($signers, $signature, $tempFiles);
+        $signatureImages = $this->prepareSignatureImages($signers, $signature, $tempFiles, $signatoryName);
 
         try {
             // 1. Initialiser FPDI
@@ -40,6 +44,11 @@ class PdfStamperService
 
             // 3. Ajouter la page de certificat (A4 Portrait)
             $pdf->AddPage('P', 'A4');
+
+            // La pagination du certificat est gérée manuellement (grille) :
+            // on désactive le saut de page automatique pour éviter une page ajoutée
+            // implicitement par la mention légale en bas de page.
+            $pdf->SetAutoPageBreak(false);
 
             // Titre
             $pdf->SetFont('Arial', 'B', 16);
@@ -60,16 +69,21 @@ class PdfStamperService
             $this->addMetadataRow($pdf, 'Identifiant (Token)', $signature->token ?: 'N/A');
 
             $totalSigners = count($signatureImages);
-            if ($totalSigners > 0) {
-                $this->addMetadataRow($pdf, 'Nombre de signataires', (string) $totalSigners);
-            } elseif ($signatoryName) {
+            if ($totalSigners === 1 && empty($signers) && $signatoryName) {
+                // Legacy single-signer : on affiche le nom du signataire
                 $this->addMetadataRow($pdf, 'Signataire', $signatoryName);
+            } elseif ($totalSigners > 0) {
+                $this->addMetadataRow($pdf, 'Nombre de signataires', (string) $totalSigners);
             }
 
             $this->addMetadataRow($pdf, 'Date et heure (UTC)', $signature->signed_at->format('d/m/Y H:i:s'));
 
+            if ($documentChecksum) {
+                $this->addMetadataRow($pdf, 'Empreinte SHA-256 (document signé)', $documentChecksum);
+            }
+
             $hash = $signature->checksum;
-            $this->addMetadataRow($pdf, 'Empreinte SHA-256', $hash);
+            $this->addMetadataRow($pdf, 'Empreinte SHA-256 (état enregistré)', $hash);
 
             $metadata = $signature->metadata ?? [];
             if (isset($metadata['user_agent'])) {
@@ -111,7 +125,7 @@ class PdfStamperService
      *
      * @return array<int, array{name: string, role: string, date: string, imageFile: ?string}>
      */
-    private function prepareSignatureImages(?array $signers, Signature $signature, array &$tempFiles): array
+    private function prepareSignatureImages(?array $signers, Signature $signature, array &$tempFiles, ?string $signatoryName = null): array
     {
         $images = [];
 
@@ -143,7 +157,7 @@ class PdfStamperService
             }
 
             $images[] = [
-                'name' => 'Signataire',
+                'name' => $signatoryName ?? 'Signataire',
                 'role' => 'Signataire',
                 'date' => $signature->signed_at ? $signature->signed_at->format('d/m/Y H:i:s') : '—',
                 'imageFile' => $imageFile,
@@ -168,24 +182,26 @@ class PdfStamperService
         $marginX = 10;
         $gap = 10;
         $colWidth = $boxWidth + $gap;
+        $rowHeight = $boxHeight + 18;
+        $gridStartY = 20;
+        $pageLimit = 297 - 35;
         $total = count($signatureImages);
+
+        // Position verticale courante de la grille, suivie manuellement.
+        $pageY = max($pdf->GetY(), $gridStartY);
 
         for ($i = 0; $i < $total; $i++) {
             $item = $signatureImages[$i];
             $col = $i % 2;
 
-            // Nouvelle ligne si 2ème colonne ou premier élément
-            if ($col === 0 && $i > 0) {
-                $pdf->Ln($boxHeight + 18);
-            }
-
-            // Vérifier si on dépasse la page (marge basse ~35mm)
-            if ($pdf->GetY() + $boxHeight + 18 > 297 - 35) {
+            // Début d'une nouvelle ligne : on vérifie le débordement AVANT de dessiner.
+            if ($col === 0 && $pageY + $rowHeight > $pageLimit) {
                 $pdf->AddPage('P', 'A4');
+                $pageY = $gridStartY;
             }
 
             $startX = $marginX + ($col * $colWidth);
-            $startY = $pdf->GetY();
+            $startY = $pageY;
 
             // Cadre extérieur
             $pdf->SetDrawColor(0, 51, 102);
@@ -217,12 +233,15 @@ class PdfStamperService
                 $pdf->SetTextColor(160, 160, 160);
                 $pdf->Cell($boxWidth - 10, 6, $this->encodeText('Signature non disponible'), 0, 1, 'C');
             }
+
+            // Fin de ligne (2e colonne) : on avance la position verticale pour la ligne suivante.
+            if ($col === 1) {
+                $pageY += $rowHeight;
+            }
         }
 
-        // Si impair, on avance pour ne pas chevaucher la suite
-        if ($total % 2 !== 0) {
-            $pdf->Ln($boxHeight + 18);
-        }
+        // Positionner le curseur à la fin de la grille (pour la mention légale).
+        $pdf->SetY($pageY + $boxHeight);
     }
 
     /**
@@ -263,6 +282,20 @@ class PdfStamperService
 
         $pdf->SetFont('Arial', '', 11);
         $pdf->Cell(0, 8, $this->encodeText((string) $value), 0, 1);
+    }
+
+    /**
+     * Calcule l'empreinte SHA-256 du document signé (corps, avant ajout du certificat).
+     */
+    private function computeDocumentChecksum(string $pdfPath): ?string
+    {
+        if (! file_exists($pdfPath) || ! is_readable($pdfPath)) {
+            return null;
+        }
+
+        $hash = hash_file('sha256', $pdfPath);
+
+        return $hash === false ? null : $hash;
     }
 
     private function createTempSignatureImage(string $base64Data): ?string

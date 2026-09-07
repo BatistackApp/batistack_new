@@ -20,6 +20,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Storage;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 #[ObservedBy([ContractObserver::class])]
 class Contract extends Model implements HasMedia, Signable
@@ -60,6 +61,41 @@ class Contract extends Model implements HasMedia, Signable
     public function signatures()
     {
         return $this->morphMany(Signature::class, 'signable');
+    }
+
+    /**
+     * Collection média Spatie pour le contrat signé (tamponné).
+     */
+    public function registerMediaCollections(): void
+    {
+        $this->addMediaCollection('contract_documents')
+            ->singleFile()
+            ->useDisk('public');
+    }
+
+    /**
+     * Chemin du PDF source (généré) à tamponner.
+     */
+    public function getSignaturePath(): ?string
+    {
+        $path = 'documents/rh/contrat_'.$this->employee->registration_number.'.pdf';
+
+        return Storage::disk('public')->exists($path) ? Storage::disk('public')->path($path) : null;
+    }
+
+    protected function getSignatureMediaCollection(): ?string
+    {
+        return 'contract_documents';
+    }
+
+    /**
+     * URL du document final (tamponné), via la collection média.
+     */
+    public function getStampedUrl(Signature $signature): ?string
+    {
+        $media = $this->getMedia('contract_documents')->first();
+
+        return $media ? $media->getUrl() : $this->getSignatureUrl($signature);
     }
 
     protected function casts(): array

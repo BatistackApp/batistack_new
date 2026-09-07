@@ -316,6 +316,15 @@ class Employee extends Model implements HasMedia, Signable
         return Storage::disk('public')->url("documents/rh/onboarding/affiliation_probtp_{$this->id}_{$this->registration_number}.pdf");
     }
 
+    public function getStampedUrl(Signature $signature): ?string
+    {
+        $media = $this->getMedia('rh_documents')
+            ->filter(fn ($item) => str_contains($item->file_name, 'affiliation_probtp'))
+            ->last();
+
+        return $media ? $media->getUrl() : $this->getSignatureUrl($signature);
+    }
+
     public function getSignaturePath(): ?string
     {
         $media = $this->getMedia('rh_documents')->filter(function ($item) {

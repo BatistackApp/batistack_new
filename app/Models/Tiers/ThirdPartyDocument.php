@@ -51,6 +51,11 @@ class ThirdPartyDocument extends Model implements HasMedia, Signable
         return $this->getFirstMediaUrl('third_party_documents');
     }
 
+    public function getStampedUrl(Signature $signature): ?string
+    {
+        return $this->getFirstMediaUrl('third_party_documents');
+    }
+
     public function getSignaturePath(): ?string
     {
         return $this->getFirstMedia('third_party_documents')?->getPath();

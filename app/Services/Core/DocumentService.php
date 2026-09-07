@@ -28,6 +28,15 @@ class DocumentService
         return env('DOCUMENTS_DISK', 'public');
     }
 
+    /**
+     * Crée l'instance Browsershot pour le rendu HTML fourni.
+     * Méthode surchargée dans les tests pour injecter un faux.
+     */
+    protected function makeBrowsershot(string $html): Browsershot
+    {
+        return Browsershot::html($html);
+    }
+
     public function download(string $relativePath, ?string $filename = null)
     {
         return Storage::disk(static::getDisk())->download($relativePath, $filename);
@@ -43,7 +52,7 @@ class DocumentService
         ?string $documentType = null,
         ?int $userId = null
     ): mixed {
-        $browsershot = Browsershot::html(view($view, $data)->render())
+        $browsershot = $this->makeBrowsershot(view($view, $data)->render())
             ->setNodeBinary(config('browsershot.node_binary_path'))
             ->setNpmBinary(config('browsershot.npm_binary_path'))
             ->showBackground()
@@ -73,12 +82,14 @@ class DocumentService
 
         try {
             $pdfContent = $browsershot->pdf();
-        } catch (\Symfony\Component\Process\Exception\ProcessFailedException $e) {
-            Log::error('DocumentService: échec génération PDF — Chrome introuvable ou indisponible', [
+        } catch (\Throwable $e) {
+            Log::error('DocumentService: échec génération PDF', [
                 'error' => $e->getMessage(),
+                'exception' => $e,
             ]);
             throw new \RuntimeException(
-                'La génération du PDF a échoué. Vérifiez que Chrome/Chromium est installé sur le serveur (BROWSERSHOT_CHROME_PATH dans .env).'
+                'La génération du PDF a échoué. Vérifiez que Chrome/Chromium est installé sur le serveur (BROWSERSHOT_CHROME_PATH dans .env).',
+                previous: $e
             );
         }
 
