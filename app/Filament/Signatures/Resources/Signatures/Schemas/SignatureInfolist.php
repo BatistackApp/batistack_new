@@ -2,9 +2,11 @@
 
 namespace App\Filament\Signatures\Resources\Signatures\Schemas;
 
+use App\Enums\Core\SignatureStatus;
 use App\Models\Core\Signature;
-use Filament\Infolists\Components\Section;
 use Filament\Infolists\Components\TextEntry;
+use Filament\Forms\Components\Placeholder;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\HeroIcon;
 
@@ -14,6 +16,17 @@ class SignatureInfolist
     {
         return $schema
             ->components([
+                Placeholder::make('signature_progress')
+                    ->label('Progression des signatures')
+                    ->content(function (Signature $record) {
+                        $total = $record->signers()->count();
+                        $signed = $record->signers()->where('status', SignatureStatus::SIGNED)->count();
+                        $pending = $record->signers()->where('status', SignatureStatus::PENDING)->count();
+
+                        return "{$signed}/{$total} signée(s) — {$pending} en attente";
+                    })
+                    ->columnSpanFull(),
+
                 Section::make('Informations générales')
                     ->icon(HeroIcon::InformationCircle)
                     ->columns(3)
