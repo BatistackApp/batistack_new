@@ -22,6 +22,11 @@ interface Signable
     public function getSignatureDocumentPath(): ?string;
 
     /**
+     * Get the absolute path of the final stamped/signed document.
+     */
+    public function getStampedDocumentPath(?Signature $signature = null): ?string;
+
+    /**
      * Get the signatory display name.
      */
     public function getSignatoryName(): ?string;

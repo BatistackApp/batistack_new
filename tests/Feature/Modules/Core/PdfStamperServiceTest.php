@@ -201,7 +201,7 @@ it('preserves the original page count', function () {
     @unlink($stampedPath);
 });
 
-it('stamps the certificate grid with many signers', function (int $signerCount) {
+it('stamps the certificate grid with expected page count', function (int $signerCount, int $expectedPages) {
     $tempPdfPath = dummyPdf();
 
     $document = ThirdPartyDocument::create([
@@ -224,11 +224,26 @@ it('stamps the certificate grid with many signers', function (int $signerCount) 
 
     $checkPdf = new Fpdi;
     $pageCount = $checkPdf->setSourceFile($stampedPath);
-    expect($pageCount)->toBeGreaterThan(1);
+
+    // 1 page source + pages de certificat attendues selon la grille (2 colonnes).
+    expect($pageCount)->toBe($expectedPages);
 
     @unlink($tempPdfPath);
     @unlink($stampedPath);
-})->with([1, 2, 3, 4, 5, 6, 10]);
+})->with([
+    [1, 2],
+    [2, 2],
+    [3, 3],
+    [4, 3],
+    [5, 3],
+    [6, 3],
+    [7, 3],
+    [8, 3],
+    [9, 4],
+    [10, 4],
+    [11, 4],
+    [12, 4],
+]);
 
 it('renders a multi page certificate when signers overflow one page', function () {
     $tempPdfPath = dummyPdf();
@@ -252,8 +267,8 @@ it('renders a multi page certificate when signers overflow one page', function (
     $checkPdf = new Fpdi;
     $pageCount = $checkPdf->setSourceFile($stampedPath);
 
-    // 12 signers → 6 rows → 73mm/row → 3 pages (1 original + certificate pages)
-    expect($pageCount)->toBeGreaterThan(2);
+    // 12 signataires → 4 pages (1 source + 3 pages de certificat)
+    expect($pageCount)->toBe(4);
 
     @unlink($tempPdfPath);
     @unlink($stampedPath);

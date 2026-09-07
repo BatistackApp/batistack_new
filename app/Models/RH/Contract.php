@@ -20,7 +20,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Storage;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
-use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 #[ObservedBy([ContractObserver::class])]
 class Contract extends Model implements HasMedia, Signable
@@ -88,14 +87,9 @@ class Contract extends Model implements HasMedia, Signable
         return 'contract_documents';
     }
 
-    /**
-     * URL du document final (tamponné), via la collection média.
-     */
-    public function getStampedUrl(Signature $signature): ?string
+    protected function getStampedMediaCollection(): ?string
     {
-        $media = $this->getMedia('contract_documents')->first();
-
-        return $media ? $media->getUrl() : $this->getSignatureUrl($signature);
+        return 'contract_documents';
     }
 
     protected function casts(): array

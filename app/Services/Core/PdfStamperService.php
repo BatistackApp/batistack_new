@@ -79,7 +79,7 @@ class PdfStamperService
             $this->addMetadataRow($pdf, 'Date et heure (UTC)', $signature->signed_at->format('d/m/Y H:i:s'));
 
             if ($documentChecksum) {
-                $this->addMetadataRow($pdf, 'Empreinte SHA-256 (document signé)', $documentChecksum);
+                $this->addMetadataRow($pdf, 'Empreinte SHA-256 (document original, hors certificat)', $documentChecksum);
             }
 
             $hash = $signature->checksum;
@@ -104,7 +104,7 @@ class PdfStamperService
             $pdf->SetY(-30);
             $pdf->SetFont('Arial', 'I', 8);
             $pdf->SetTextColor(128, 128, 128);
-            $pdf->MultiCell(0, 5, $this->encodeText("Ce document constitue un certificat de signature électronique généré par le système Batistack.\nL'intégrité de ce document est garantie par l'empreinte cryptographique enregistrée dans notre base de données sécurisée."), 0, 'C');
+            $pdf->MultiCell(0, 5, $this->encodeText("Ce document constitue un certificat de signature électronique généré par le système Batistack.\nL'empreinte SHA-256 ci-dessus garantit l'intégrité du document original (hors page de certificat) au moment de la signature ; elle est enregistrée dans notre base de données sécurisée."), 0, 'C');
 
             // 6. Sauvegarder
             $tempPath = sys_get_temp_dir().'/stamped_'.Str::uuid().'.pdf';
