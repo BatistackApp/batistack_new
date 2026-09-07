@@ -64,10 +64,13 @@ class Contract extends Model implements HasMedia, Signable
 
     /**
      * Collection média Spatie pour le contrat signé (tamponné).
+     * La source vit sur le disque public (getSignaturePath) et est régénérée
+     * à chaque signature (onPostSignature → generateContract) : elle est donc
+     * conservée intacte et jamais confondue avec la copie tamponnée.
      */
     public function registerMediaCollections(): void
     {
-        $this->addMediaCollection('contract_documents')
+        $this->addMediaCollection('contract_documents_signed')
             ->singleFile()
             ->useDisk('public');
     }
@@ -82,14 +85,9 @@ class Contract extends Model implements HasMedia, Signable
         return Storage::disk('public')->exists($path) ? Storage::disk('public')->path($path) : null;
     }
 
-    protected function getSignatureMediaCollection(): ?string
-    {
-        return 'contract_documents';
-    }
-
     protected function getStampedMediaCollection(): ?string
     {
-        return 'contract_documents';
+        return 'contract_documents_signed';
     }
 
     protected function casts(): array
