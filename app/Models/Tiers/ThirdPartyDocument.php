@@ -46,6 +46,13 @@ class ThirdPartyDocument extends Model implements HasMedia, Signable
         return $this->morphMany(Signature::class, 'signable');
     }
 
+    public function registerMediaCollections(): void
+    {
+        $this->addMediaCollection('signed_documents')
+            ->singleFile()
+            ->useDisk('public');
+    }
+
     public function getSignatureUrl(Signature $signature): ?string
     {
         return $this->getFirstMediaUrl('third_party_documents');
@@ -72,5 +79,10 @@ class ThirdPartyDocument extends Model implements HasMedia, Signable
     protected function getSignatureMediaCollection(): ?string
     {
         return 'third_party_documents';
+    }
+
+    protected function getStampedMediaCollection(): ?string
+    {
+        return 'signed_documents';
     }
 }

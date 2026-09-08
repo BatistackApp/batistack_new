@@ -24,6 +24,7 @@ class Signature extends Model
         'type',
         'signature_data', // Image en base64 ou log de validation
         'checksum',       // Hash du document au moment de la signature
+        'document_checksum', // Empreinte SHA-256 du document signé (corps sans certificat)
         'ip_address',
         'signed_at',
         'metadata',       // Informations supplémentaires (User-Agent, etc.)
@@ -114,5 +115,23 @@ class Signature extends Model
     public function getIsValidAttribute(): bool
     {
         return $this->status === SignatureStatus::SIGNED;
+    }
+
+    /**
+     * Get the URL of the stamped/signed document.
+     */
+    public function getStampedDocumentUrlAttribute(): ?string
+    {
+        $signable = $this->signable;
+
+        if (! $signable) {
+            return null;
+        }
+
+        if (! method_exists($signable, 'getStampedDocumentUrl')) {
+            return null;
+        }
+
+        return $signable->getStampedDocumentUrl($this);
     }
 }

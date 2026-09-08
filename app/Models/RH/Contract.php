@@ -62,6 +62,34 @@ class Contract extends Model implements HasMedia, Signable
         return $this->morphMany(Signature::class, 'signable');
     }
 
+    /**
+     * Collection média Spatie pour le contrat signé (tamponné).
+     * La source vit sur le disque public (getSignaturePath) et est régénérée
+     * à chaque signature (onPostSignature → generateContract) : elle est donc
+     * conservée intacte et jamais confondue avec la copie tamponnée.
+     */
+    public function registerMediaCollections(): void
+    {
+        $this->addMediaCollection('contract_documents_signed')
+            ->singleFile()
+            ->useDisk('public');
+    }
+
+    /**
+     * Chemin du PDF source (généré) à tamponner.
+     */
+    public function getSignaturePath(): ?string
+    {
+        $path = 'documents/rh/contrat_'.$this->employee->registration_number.'.pdf';
+
+        return Storage::disk('public')->exists($path) ? Storage::disk('public')->path($path) : null;
+    }
+
+    protected function getStampedMediaCollection(): ?string
+    {
+        return 'contract_documents_signed';
+    }
+
     protected function casts(): array
     {
         return [

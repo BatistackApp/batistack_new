@@ -311,6 +311,13 @@ class Employee extends Model implements HasMedia, Signable
         return $this->getFullAddress();
     }
 
+    public function registerMediaCollections(): void
+    {
+        $this->addMediaCollection('rh_documents_signed')
+            ->singleFile()
+            ->useDisk('public');
+    }
+
     public function getSignatureUrl(Signature $signature): ?string
     {
         return Storage::disk('public')->url("documents/rh/onboarding/affiliation_probtp_{$this->id}_{$this->registration_number}.pdf");
@@ -333,5 +340,10 @@ class Employee extends Model implements HasMedia, Signable
     protected function getSignatureMediaCollection(): ?string
     {
         return 'rh_documents';
+    }
+
+    protected function getStampedMediaCollection(): ?string
+    {
+        return 'rh_documents_signed';
     }
 }
