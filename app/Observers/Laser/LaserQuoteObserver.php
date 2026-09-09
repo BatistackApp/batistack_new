@@ -36,7 +36,7 @@ class LaserQuoteObserver
 
     public function deleted(LaserQuote $quote): void
     {
-        $disk = LaserDocumentationService::getDisk();
+        $disk = $this->documentService::getDisk();
         Storage::disk($disk)->delete($this->documentService->getQuotePath($quote));
     }
 }

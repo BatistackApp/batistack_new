@@ -14,7 +14,7 @@ class LaserDocumentationService extends DocumentService
         $quote->load(['client', 'lines.material']);
 
         $data = [
-            'company' => Company::first(),
+            'company' => Company::firstOrFail(),
             'quote' => $quote,
             'title' => 'DEVIS LASER N° '.$quote->reference,
             'generated_at' => Carbon::now()->format('d/m/Y H:i'),

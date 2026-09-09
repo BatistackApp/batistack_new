@@ -61,24 +61,30 @@ class LaserQuoteLine extends Model
 
     public function calculateSurface(): float
     {
-        return (float) $this->length_mm * (float) $this->width_mm;
+        return static::computeSurface((float) $this->length_mm, (float) $this->width_mm);
     }
 
     public function calculateWeight(): float
     {
-        $surface = $this->calculateSurface();
-        $thickness = (float) $this->thickness_mm;
         $density = $this->material ? (float) $this->material->density_kg_m3 : 0;
 
-        return ($surface / 1_000_000) * $thickness * ($density / 1000);
+        return static::computeWeight(
+            (float) $this->length_mm,
+            (float) $this->width_mm,
+            (float) $this->thickness_mm,
+            $density,
+        );
     }
 
     public function calculateUnitPrice(): float
     {
-        $prixPoids = $this->calculateWeight() * (float) $this->price_per_kg;
-        $prixMetre = ((float) $this->cut_length_mm / 1000) * (float) $this->price_per_meter;
-
-        return max($prixPoids, $prixMetre) + (float) $this->programming_cost;
+        return static::computeUnitPrice(
+            $this->calculateWeight(),
+            (float) $this->price_per_kg,
+            (float) $this->cut_length_mm,
+            (float) $this->price_per_meter,
+            (float) $this->programming_cost,
+        );
     }
 
     public function calculateDiscount(): float
@@ -97,6 +103,26 @@ class LaserQuoteLine extends Model
             (int) $this->quantity,
             (float) $this->discount_pct,
         );
+    }
+
+    public static function computeSurface(float $lengthMm, float $widthMm): float
+    {
+        return $lengthMm * $widthMm;
+    }
+
+    public static function computeWeight(float $lengthMm, float $widthMm, float $thicknessMm, float $densityKgM3): float
+    {
+        $surface = static::computeSurface($lengthMm, $widthMm);
+
+        return ($surface / 1_000_000) * $thicknessMm * ($densityKgM3 / 1000);
+    }
+
+    public static function computeUnitPrice(float $weightKg, float $pricePerKg, float $cutLengthMm, float $pricePerMeter, float $programmingCost): float
+    {
+        $prixPoids = $weightKg * $pricePerKg;
+        $prixMetre = ($cutLengthMm / 1000) * $pricePerMeter;
+
+        return max($prixPoids, $prixMetre) + $programmingCost;
     }
 
     public function recalculate(): void

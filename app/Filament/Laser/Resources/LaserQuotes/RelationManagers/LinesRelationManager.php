@@ -4,6 +4,7 @@ namespace App\Filament\Laser\Resources\LaserQuotes\RelationManagers;
 
 use App\Enums\Laser\QuoteStatus;
 use App\Models\Laser\LaserMaterial;
+use App\Models\Laser\LaserQuoteLine;
 use App\Services\Laser\LaserQuoteService;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Select;
@@ -197,8 +198,8 @@ class LinesRelationManager extends RelationManager
         $pricePerMeter = (float) ($get('price_per_meter') ?? 0);
         $density = (float) ($get('_material_density') ?? 0);
 
-        $surface = $length * $width;
-        $weight = ($surface / 1_000_000) * $thickness * ($density / 1000);
+        $surface = LaserQuoteLine::computeSurface($length, $width);
+        $weight = LaserQuoteLine::computeWeight($length, $width, $thickness, $density);
 
         $discount = $quantity >= 5
             ? $service->applyDiscount($quantity)
@@ -214,7 +215,13 @@ class LinesRelationManager extends RelationManager
             $discount,
         );
 
-        $unitPrice = $quantity > 0 ? $totalHt / ($quantity * (1 - $discount / 100)) : 0;
+        $unitPrice = LaserQuoteLine::computeUnitPrice(
+            $weight,
+            $pricePerKg,
+            $cutLength,
+            $pricePerMeter,
+            $programmingCost,
+        );
 
         $set('surface_mm2', number_format($surface, 4, '.', ''));
         $set('weight_kg', number_format($weight, 4, '.', ''));
