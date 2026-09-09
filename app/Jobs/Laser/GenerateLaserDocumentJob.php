@@ -4,7 +4,7 @@ namespace App\Jobs\Laser;
 
 use App\Models\Laser\LaserQuote;
 use App\Services\Laser\LaserDocumentationService;
-use Carbon\Carbon;
+use Carbon\CarbonImmutable;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Database\Eloquent\Model;
@@ -19,7 +19,7 @@ class GenerateLaserDocumentJob implements ShouldQueue
     public function __construct(
         public string $namespace,
         public Model $model,
-        public ?Carbon $expectedUpdatedAt = null,
+        public ?CarbonImmutable $expectedUpdatedAt = null,
     ) {
         if ($this->expectedUpdatedAt === null && $this->model->exists) {
             $this->expectedUpdatedAt = $this->model->updated_at;

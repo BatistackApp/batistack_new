@@ -85,9 +85,9 @@ class LaserQuoteLine extends Model
     {
         return static::computeUnitPrice(
             $this->calculateWeight(),
-            (float) $this->price_per_kg,
+            (float) ($this->price_per_kg ?: $this->material?->price_per_kg),
             (float) $this->cut_length_mm,
-            (float) $this->price_per_meter,
+            (float) ($this->price_per_meter ?: $this->material?->price_per_meter),
             (float) $this->programming_cost,
         );
     }
@@ -101,9 +101,9 @@ class LaserQuoteLine extends Model
     {
         return app(LaserQuoteService::class)->calculateLineTotal(
             $this->calculateWeight(),
-            (float) $this->price_per_kg,
+            (float) ($this->price_per_kg ?: $this->material?->price_per_kg),
             (float) $this->cut_length_mm,
-            (float) $this->price_per_meter,
+            (float) ($this->price_per_meter ?: $this->material?->price_per_meter),
             (float) $this->programming_cost,
             (int) $this->quantity,
             $discountPct ?? (float) $this->discount_pct,
