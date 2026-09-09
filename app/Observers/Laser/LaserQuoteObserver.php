@@ -3,6 +3,7 @@
 namespace App\Observers\Laser;
 
 use App\Enums\Laser\QuoteStatus;
+use App\Jobs\Laser\GenerateLaserDocumentJob;
 use App\Models\Laser\LaserQuote;
 use App\Services\Laser\LaserDocumentationService;
 use Carbon\Carbon;
@@ -23,13 +24,13 @@ class LaserQuoteObserver
 
     public function created(LaserQuote $quote): void
     {
-        $this->documentService->generateQuotePdf($quote);
+        GenerateLaserDocumentJob::dispatch('laser_quote', $quote);
     }
 
     public function updated(LaserQuote $quote): void
     {
         if ($quote->isDirty('status')) {
-            $this->documentService->generateQuotePdf($quote);
+            GenerateLaserDocumentJob::dispatch('laser_quote', $quote);
         }
     }
 

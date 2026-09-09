@@ -13,7 +13,7 @@ return new class extends Migration
         Schema::create('laser_quote_lines', function (Blueprint $table) {
             $table->id();
             $table->foreignIdFor(LaserQuote::class)->constrained()->cascadeOnDelete();
-            $table->foreignIdFor(LaserMaterial::class, 'material_id')->constrained()->cascadeOnDelete();
+            $table->foreignIdFor(LaserMaterial::class, 'material_id')->constrained()->restrictOnDelete();
             $table->string('description')->nullable();
             $table->decimal('length_mm', 10, 2);
             $table->decimal('width_mm', 10, 2);

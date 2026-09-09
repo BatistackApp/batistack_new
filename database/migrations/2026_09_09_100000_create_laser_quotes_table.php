@@ -11,7 +11,7 @@ return new class extends Migration
     {
         Schema::create('laser_quotes', function (Blueprint $table) {
             $table->id();
-            $table->foreignIdFor(ThirdParty::class, 'client_id')->constrained()->cascadeOnDelete();
+            $table->foreignIdFor(ThirdParty::class, 'client_id')->constrained()->restrictOnDelete();
             $table->string('reference')->unique();
             $table->string('status')->default('draft');
             $table->decimal('total_ht', 15, 2)->default(0);

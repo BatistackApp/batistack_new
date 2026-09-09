@@ -4,6 +4,7 @@ namespace App\Filament\Laser\Resources\LaserQuotes\RelationManagers;
 
 use App\Enums\Laser\QuoteStatus;
 use App\Models\Laser\LaserMaterial;
+use App\Services\Laser\LaserQuoteService;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Get;
@@ -184,6 +185,8 @@ class LinesRelationManager extends RelationManager
 
     protected static function recalculateLine(Get $get, Set $set): void
     {
+        $service = app(LaserQuoteService::class);
+
         $length = (float) ($get('length_mm') ?? 0);
         $width = (float) ($get('width_mm') ?? 0);
         $thickness = (float) ($get('thickness_mm') ?? 0);
@@ -197,22 +200,21 @@ class LinesRelationManager extends RelationManager
         $surface = $length * $width;
         $weight = ($surface / 1_000_000) * $thickness * ($density / 1000);
 
-        $prixPoids = $weight * $pricePerKg;
-        $prixMetre = ($cutLength / 1000) * $pricePerMeter;
+        $discount = $quantity >= 5
+            ? $service->applyDiscount($quantity)
+            : (float) ($get('discount_pct') ?? 0);
 
-        $unitPrice = max($prixPoids, $prixMetre) + $programmingCost;
+        $totalHt = $service->calculateLineTotal(
+            $weight,
+            $pricePerKg,
+            $cutLength,
+            $pricePerMeter,
+            $programmingCost,
+            $quantity,
+            $discount,
+        );
 
-        if ($quantity >= 20) {
-            $discount = 15.0;
-        } elseif ($quantity >= 10) {
-            $discount = 10.0;
-        } elseif ($quantity >= 5) {
-            $discount = 5.0;
-        } else {
-            $discount = (float) ($get('discount_pct') ?? 0);
-        }
-
-        $totalHt = $unitPrice * $quantity * (1 - $discount / 100);
+        $unitPrice = $quantity > 0 ? $totalHt / ($quantity * (1 - $discount / 100)) : 0;
 
         $set('surface_mm2', number_format($surface, 4, '.', ''));
         $set('weight_kg', number_format($weight, 4, '.', ''));
