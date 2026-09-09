@@ -24,6 +24,10 @@ class LaserQuoteLineObserver
 
     private function refreshQuote(LaserQuoteLine $line): void
     {
+        LaserQuoteLine::withoutObserving(function () use ($line) {
+            $line->recalculate();
+        });
+
         $quote = $line->quote;
 
         $quote->recalculateTotals();
