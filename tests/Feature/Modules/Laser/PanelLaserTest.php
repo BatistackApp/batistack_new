@@ -10,10 +10,10 @@ it('renders the laser dashboard for admin', function () {
         ->assertOk();
 });
 
-it('redirects non-admin from laser panel', function () {
+it('denies non-admin from laser panel', function () {
     $user = User::factory()->create(['is_admin' => false]);
 
     $this->actingAs($user)
         ->get('/laser')
-        ->assertRedirect();
+        ->assertForbidden();
 });
