@@ -31,6 +31,7 @@ class LaserQuoteLine extends Model
         'discount_pct',
         'unit_price_ht',
         'total_ht',
+        'density_kg_m3',
     ];
 
     protected function casts(): array
@@ -49,6 +50,7 @@ class LaserQuoteLine extends Model
             'discount_pct' => 'decimal:2',
             'unit_price_ht' => 'decimal:4',
             'total_ht' => 'decimal:2',
+            'density_kg_m3' => 'decimal:2',
         ];
     }
 
@@ -69,7 +71,7 @@ class LaserQuoteLine extends Model
 
     public function calculateWeight(): float
     {
-        $density = $this->material ? (float) $this->material->density_kg_m3 : 0;
+        $density = (float) ($this->density_kg_m3 ?? ($this->material?->density_kg_m3 ?? 0));
 
         return static::computeWeight(
             (float) $this->length_mm,
@@ -133,6 +135,7 @@ class LaserQuoteLine extends Model
         $discount = $this->calculateDiscount();
 
         $this->update([
+            'density_kg_m3' => $this->material?->density_kg_m3 ?? $this->density_kg_m3,
             'surface_mm2' => $this->calculateSurface(),
             'weight_kg' => $this->calculateWeight(),
             'unit_price_ht' => $this->calculateUnitPrice(),

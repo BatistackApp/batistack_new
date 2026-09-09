@@ -46,6 +46,7 @@ class LinesRelationManager extends RelationManager
                             $set('price_per_kg', $material->price_per_kg);
                             $set('price_per_meter', $material->price_per_meter);
                             $set('_material_density', $material->density_kg_m3);
+                            $set('density_kg_m3', $material->density_kg_m3);
                             static::recalculateLine($get, $set);
                         }
                     }),
@@ -57,6 +58,11 @@ class LinesRelationManager extends RelationManager
                     ->label('Densité')
                     ->hidden()
                     ->dehydrated(false),
+
+                TextInput::make('density_kg_m3')
+                    ->label('Densité snapshot')
+                    ->hidden()
+                    ->dehydrated(true),
 
                 TextInput::make('length_mm')
                     ->label('Longueur (mm)')
@@ -108,11 +114,9 @@ class LinesRelationManager extends RelationManager
                     ->afterStateUpdated(fn (Get $get, Set $set) => static::recalculateLine($get, $set)),
 
                 TextInput::make('discount_pct')
-                    ->label('Remise (%)')
+                    ->label('Remise automatique (%)')
                     ->numeric()
-                    ->default(0)
-                    ->minValue(0)
-                    ->maxValue(100),
+                    ->readOnly(),
 
                 TextInput::make('weight_kg')
                     ->label('Poids (kg)')
@@ -204,9 +208,7 @@ class LinesRelationManager extends RelationManager
         $surface = LaserQuoteLine::computeSurface($length, $width);
         $weight = LaserQuoteLine::computeWeight($length, $width, $thickness, $density);
 
-        $discount = $quantity >= 5
-            ? $service->applyDiscount($quantity)
-            : (float) ($get('discount_pct') ?? 0);
+        $discount = $service->applyDiscount($quantity);
 
         $totalHt = $service->calculateLineTotal(
             $weight,
