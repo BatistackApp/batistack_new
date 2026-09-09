@@ -188,6 +188,8 @@ it('line observer dispatches job on created', function () {
 });
 
 it('line observer dispatches job on updated', function () {
+    Bus::fake();
+
     $material = LaserMaterial::create([
         'name' => 'Acier S235',
         'density_kg_m3' => 7850.00,
@@ -216,14 +218,14 @@ it('line observer dispatches job on updated', function () {
         'total_ht' => 100,
     ]);
 
-    Bus::fake();
-
     $line->update(['quantity' => 5]);
 
     Bus::assertDispatched(GenerateLaserDocumentJob::class);
 });
 
 it('line observer dispatches job on deleted', function () {
+    Bus::fake();
+
     $material = LaserMaterial::create([
         'name' => 'Acier S235',
         'density_kg_m3' => 7850.00,
@@ -251,8 +253,6 @@ it('line observer dispatches job on deleted', function () {
         'price_per_meter' => 0.8000,
         'total_ht' => 100,
     ]);
-
-    Bus::fake();
 
     $line->delete();
 
@@ -307,9 +307,9 @@ it('quote observer created dispatches job', function () {
 });
 
 it('quote observer updated dispatches job on status change', function () {
-    $quote = LaserQuote::factory()->create(['status' => QuoteStatus::DRAFT]);
-
     Bus::fake();
+
+    $quote = LaserQuote::factory()->create(['status' => QuoteStatus::DRAFT]);
 
     $quote->update(['status' => QuoteStatus::SENT]);
 
@@ -317,6 +317,8 @@ it('quote observer updated dispatches job on status change', function () {
 });
 
 it('quote observer updated does not dispatch job on non-status change', function () {
+    Bus::fake();
+
     $quote = LaserQuote::factory()->create(['status' => QuoteStatus::DRAFT]);
 
     Bus::fake();
@@ -351,6 +353,8 @@ it('quote observer deleted removes PDF file', function () {
 // ============================================================
 
 it('job handleQuote generates PDF when quote unchanged', function () {
+    Bus::fake();
+
     $quote = LaserQuote::factory()->create();
 
     $service = mock(LaserDocumentationService::class);
@@ -378,6 +382,8 @@ it('job handleQuote re-dispatches when quote was modified', function () {
 });
 
 it('job constructor captures expectedUpdatedAt from model', function () {
+    Bus::fake();
+
     $quote = LaserQuote::factory()->create();
 
     $job = new GenerateLaserDocumentJob('laser_quote', $quote);
@@ -387,6 +393,8 @@ it('job constructor captures expectedUpdatedAt from model', function () {
 });
 
 it('job constructor accepts explicit expectedUpdatedAt', function () {
+    Bus::fake();
+
     $quote = LaserQuote::factory()->create();
     $custom = now()->subHour();
 
@@ -400,6 +408,8 @@ it('job constructor accepts explicit expectedUpdatedAt', function () {
 // ============================================================
 
 it('recalculateTotals sums all line totals_ht', function () {
+    Queue::fake();
+
     $material = LaserMaterial::create([
         'name' => 'Acier S235',
         'density_kg_m3' => 7850.00,
@@ -447,6 +457,8 @@ it('recalculateTotals sums all line totals_ht', function () {
 });
 
 it('recalculateTotals with no lines sets zeros', function () {
+    Queue::fake();
+
     $client = ThirdParty::create(['name' => 'Client', 'type' => 'client']);
     $quote = LaserQuote::create([
         'client_id' => $client->id,
