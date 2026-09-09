@@ -8,7 +8,8 @@ trait RecalculatesLaserTotals
     {
         $lines = $this->lines()->get();
         $totalHt = (float) $lines->sum('total_ht');
-        $totalTva = round($totalHt * 0.20, 2);
+        $vatRate = (float) config('laser.vat_rate', 20);
+        $totalTva = round($totalHt * ($vatRate / 100), 2);
 
         $this->update([
             'total_ht'  => round($totalHt, 2),

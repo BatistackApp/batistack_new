@@ -23,11 +23,21 @@ class LaserDocumentationService extends DocumentService
         return $this->generate(
             'pdf.laser.quote',
             $data,
-            'devis_laser_'.$quote->reference,
+            $this->getQuoteFilename($quote),
             'laser/quotes',
             false,
             $quote,
             'laser_quote',
         );
+    }
+
+    public function getQuoteFilename(LaserQuote $quote): string
+    {
+        return 'devis_laser_'.$quote->reference;
+    }
+
+    public function getQuotePath(LaserQuote $quote): string
+    {
+        return 'laser/quotes/'.$this->getQuoteFilename($quote).'.pdf';
     }
 }

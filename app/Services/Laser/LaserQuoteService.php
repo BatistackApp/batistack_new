@@ -32,4 +32,20 @@ class LaserQuoteService
 
         return 0.0;
     }
+
+    public function calculateLineTotal(
+        float $weightKg,
+        float $pricePerKg,
+        float $cutLengthMm,
+        float $pricePerMeter,
+        float $programmingCost,
+        int $quantity,
+        float $discountPct,
+    ): float {
+        $prixPoids = $weightKg * $pricePerKg;
+        $prixMetre = ($cutLengthMm / 1000) * $pricePerMeter;
+        $unitPrice = max($prixPoids, $prixMetre) + $programmingCost;
+
+        return $unitPrice * $quantity * (1 - $discountPct / 100);
+    }
 }

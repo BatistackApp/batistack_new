@@ -2,6 +2,7 @@
 
 namespace App\Models\Laser;
 
+use App\Services\Laser\LaserQuoteService;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -72,54 +73,41 @@ class LaserQuoteLine extends Model
         return ($surface / 1_000_000) * $thickness * ($density / 1000);
     }
 
-    public function calculatePrixPoids(): float
-    {
-        return $this->calculateWeight() * (float) $this->price_per_kg;
-    }
-
-    public function calculatePrixMetre(): float
-    {
-        return ((float) $this->cut_length_mm / 1000) * (float) $this->price_per_meter;
-    }
-
     public function calculateUnitPrice(): float
     {
-        return max($this->calculatePrixPoids(), $this->calculatePrixMetre()) + (float) $this->programming_cost;
+        $prixPoids = $this->calculateWeight() * (float) $this->price_per_kg;
+        $prixMetre = ((float) $this->cut_length_mm / 1000) * (float) $this->price_per_meter;
+
+        return max($prixPoids, $prixMetre) + (float) $this->programming_cost;
     }
 
     public function calculateDiscount(): float
     {
-        $qty = (int) $this->quantity;
-
-        if ($qty >= 20) {
-            return 15.0;
-        }
-        if ($qty >= 10) {
-            return 10.0;
-        }
-        if ($qty >= 5) {
-            return 5.0;
-        }
-
-        return 0.0;
+        return app(LaserQuoteService::class)->applyDiscount((int) $this->quantity);
     }
 
     public function calculateTotalHt(): float
     {
-        $unitPrice = $this->calculateUnitPrice();
-        $qty = (int) $this->quantity;
-        $discount = $this->discount_pct / 100;
-
-        return $unitPrice * $qty * (1 - $discount);
+        return app(LaserQuoteService::class)->calculateLineTotal(
+            $this->calculateWeight(),
+            (float) $this->price_per_kg,
+            (float) $this->cut_length_mm,
+            (float) $this->price_per_meter,
+            (float) $this->programming_cost,
+            (int) $this->quantity,
+            (float) $this->discount_pct,
+        );
     }
 
     public function recalculate(): void
     {
+        $discount = $this->calculateDiscount();
+
         $this->update([
             'surface_mm2' => $this->calculateSurface(),
             'weight_kg' => $this->calculateWeight(),
             'unit_price_ht' => $this->calculateUnitPrice(),
-            'discount_pct' => $this->calculateDiscount(),
+            'discount_pct' => $discount,
             'total_ht' => $this->calculateTotalHt(),
         ]);
     }

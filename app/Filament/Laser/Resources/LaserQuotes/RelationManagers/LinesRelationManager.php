@@ -43,11 +43,17 @@ class LinesRelationManager extends RelationManager
                         if ($material) {
                             $set('price_per_kg', $material->price_per_kg);
                             $set('price_per_meter', $material->price_per_meter);
+                            $set('_material_density', $material->density_kg_m3);
                         }
                     }),
 
                 TextInput::make('description')
                     ->label('Description'),
+
+                TextInput::make('_material_density')
+                    ->label('Densité')
+                    ->hidden()
+                    ->dehydrated(false),
 
                 TextInput::make('length_mm')
                     ->label('Longueur (mm)')
@@ -186,9 +192,7 @@ class LinesRelationManager extends RelationManager
         $programmingCost = (float) ($get('programming_cost') ?? 0);
         $pricePerKg = (float) ($get('price_per_kg') ?? 0);
         $pricePerMeter = (float) ($get('price_per_meter') ?? 0);
-
-        $material = LaserMaterial::find($get('material_id'));
-        $density = $material ? (float) $material->density_kg_m3 : 0;
+        $density = (float) ($get('_material_density') ?? 0);
 
         $surface = $length * $width;
         $weight = ($surface / 1_000_000) * $thickness * ($density / 1000);

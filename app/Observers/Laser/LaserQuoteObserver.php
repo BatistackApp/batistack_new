@@ -36,6 +36,6 @@ class LaserQuoteObserver
     public function deleted(LaserQuote $quote): void
     {
         $disk = LaserDocumentationService::getDisk();
-        Storage::disk($disk)->delete("laser/quotes/devis_laser_{$quote->reference}.pdf");
+        Storage::disk($disk)->delete($this->documentService->getQuotePath($quote));
     }
 }
