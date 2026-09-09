@@ -58,6 +58,7 @@ class LaserMaterialForm
                             ->numeric()
                             ->required()
                             ->minValue(0)
+                            ->gte('min_thickness_mm')
                             ->suffix('mm'),
                     ]),
             ]);
