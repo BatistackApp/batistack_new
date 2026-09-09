@@ -13,6 +13,7 @@ return [
     App\Providers\Filament\GpaoPanelProvider::class,
     App\Providers\Filament\ImmobilisationPanelProvider::class,
     App\Providers\Filament\InterventionsPanelProvider::class,
+    App\Providers\Filament\LaserPanelProvider::class,
     App\Providers\Filament\LocationsPanelProvider::class,
     App\Providers\Filament\PaiePanelProvider::class,
     App\Providers\Filament\RHPanelProvider::class,

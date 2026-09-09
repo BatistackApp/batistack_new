@@ -144,6 +144,17 @@ vision3d:
           - app/Filament/Vision3D/**
           - docs/Modules/fr/Vision3D/**
 
+# Laser / Découpe Laser
+laser:
+  - changed-files:
+      - any-glob-to-any-file:
+          - app/Models/Laser/**
+          - app/Services/Laser/**
+          - app/Enums/Laser/**
+          - app/Observers/Laser/**
+          - app/Jobs/Laser/**
+          - docs/Modules/fr/Laser/**
+
 # ============================================
 # TYPES DE CHANGEMENTS
 # ============================================
