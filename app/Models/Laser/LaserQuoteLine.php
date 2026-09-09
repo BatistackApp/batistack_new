@@ -2,11 +2,14 @@
 
 namespace App\Models\Laser;
 
+use App\Observers\Laser\LaserQuoteLineObserver;
 use App\Services\Laser\LaserQuoteService;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+#[ObservedBy([LaserQuoteLineObserver::class])]
 class LaserQuoteLine extends Model
 {
     use HasFactory;
@@ -92,7 +95,7 @@ class LaserQuoteLine extends Model
         return app(LaserQuoteService::class)->applyDiscount((int) $this->quantity);
     }
 
-    public function calculateTotalHt(): float
+    public function calculateTotalHt(?float $discountPct = null): float
     {
         return app(LaserQuoteService::class)->calculateLineTotal(
             $this->calculateWeight(),
@@ -101,7 +104,7 @@ class LaserQuoteLine extends Model
             (float) $this->price_per_meter,
             (float) $this->programming_cost,
             (int) $this->quantity,
-            (float) $this->discount_pct,
+            $discountPct ?? (float) $this->discount_pct,
         );
     }
 
@@ -134,7 +137,7 @@ class LaserQuoteLine extends Model
             'weight_kg' => $this->calculateWeight(),
             'unit_price_ht' => $this->calculateUnitPrice(),
             'discount_pct' => $discount,
-            'total_ht' => $this->calculateTotalHt(),
+            'total_ht' => $this->calculateTotalHt($discount),
         ]);
     }
 }

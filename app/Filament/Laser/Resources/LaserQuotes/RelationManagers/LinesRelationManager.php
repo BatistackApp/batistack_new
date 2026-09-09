@@ -46,6 +46,7 @@ class LinesRelationManager extends RelationManager
                             $set('price_per_kg', $material->price_per_kg);
                             $set('price_per_meter', $material->price_per_meter);
                             $set('_material_density', $material->density_kg_m3);
+                            static::recalculateLine($get, $set);
                         }
                     }),
 
@@ -77,7 +78,9 @@ class LinesRelationManager extends RelationManager
                     ->label('Épaisseur (mm)')
                     ->numeric()
                     ->required()
-                    ->minValue(0),
+                    ->minValue(0)
+                    ->live()
+                    ->afterStateUpdated(fn (Get $get, Set $set) => static::recalculateLine($get, $set)),
 
                 TextInput::make('quantity')
                     ->label('Quantité')

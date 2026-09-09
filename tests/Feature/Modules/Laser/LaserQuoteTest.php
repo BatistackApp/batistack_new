@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\Laser\QuoteStatus;
+use App\Jobs\Laser\GenerateLaserDocumentJob;
 use App\Models\Laser\LaserMaterial;
 use App\Models\Laser\LaserQuote;
 use App\Models\Laser\LaserQuoteLine;
@@ -8,6 +9,7 @@ use App\Models\Tiers\ThirdParty;
 use App\Services\Laser\LaserDocumentationService;
 use App\Services\Laser\LaserQuoteService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Queue;
 
 uses(RefreshDatabase::class);
 
@@ -310,4 +312,312 @@ it('generates correct quote path', function () {
     $quote = LaserQuote::factory()->make(['reference' => 'LAQ-2026-0099']);
 
     expect($service->getQuotePath($quote))->toBe('laser/quotes/devis_laser_LAQ-2026-0099.pdf');
+});
+
+// ============================================================
+// WORKFLOW TESTS — Cycle de vie devis + lignes
+// ============================================================
+
+it('recalculates totals when a line is created', function () {
+    Queue::fake();
+
+    $material = LaserMaterial::create([
+        'name' => 'Acier S235',
+        'density_kg_m3' => 7850.00,
+        'price_per_kg' => 1.2000,
+        'price_per_meter' => 0.8000,
+        'min_thickness_mm' => 0.50,
+        'max_thickness_mm' => 25.00,
+    ]);
+
+    $client = ThirdParty::create(['name' => 'Client Test', 'type' => 'client']);
+    $quote = LaserQuote::create([
+        'client_id' => $client->id,
+        'reference' => 'LAQ-2026-0010',
+        'status' => QuoteStatus::DRAFT,
+    ]);
+
+    expect($quote->total_ht)->toBe('0.00');
+
+    LaserQuoteLine::create([
+        'laser_quote_id' => $quote->id,
+        'material_id' => $material->id,
+        'length_mm' => 1000,
+        'width_mm' => 500,
+        'thickness_mm' => 2,
+        'quantity' => 10,
+        'cut_length_mm' => 3000,
+        'programming_cost' => 50,
+        'price_per_kg' => 1.2000,
+        'price_per_meter' => 0.8000,
+        'unit_price_ht' => 59.42,
+        'discount_pct' => 10,
+        'total_ht' => 534.78,
+    ]);
+
+    $quote->refresh();
+
+    expect($quote->total_ht)->toBe('534.78')
+        ->and($quote->total_ttc)->toBe('641.74');
+});
+
+it('recalculates totals when a line is updated', function () {
+    $material = LaserMaterial::create([
+        'name' => 'Acier S235',
+        'density_kg_m3' => 7850.00,
+        'price_per_kg' => 1.2000,
+        'price_per_meter' => 0.8000,
+        'min_thickness_mm' => 0.50,
+        'max_thickness_mm' => 25.00,
+    ]);
+
+    $client = ThirdParty::create(['name' => 'Client Test', 'type' => 'client']);
+    $quote = LaserQuote::create([
+        'client_id' => $client->id,
+        'reference' => 'LAQ-2026-0011',
+        'status' => QuoteStatus::DRAFT,
+    ]);
+
+    $line = LaserQuoteLine::create([
+        'laser_quote_id' => $quote->id,
+        'material_id' => $material->id,
+        'length_mm' => 1000,
+        'width_mm' => 500,
+        'thickness_mm' => 2,
+        'quantity' => 10,
+        'cut_length_mm' => 3000,
+        'programming_cost' => 50,
+        'price_per_kg' => 1.2000,
+        'price_per_meter' => 0.8000,
+        'unit_price_ht' => 59.42,
+        'discount_pct' => 10,
+        'total_ht' => 534.78,
+    ]);
+
+    $quote->refresh();
+    expect($quote->total_ht)->toBe('534.78');
+
+    $line->update(['quantity' => 20, 'discount_pct' => 15, 'total_ht' => 1009.14]);
+    $quote->refresh();
+
+    expect($quote->total_ht)->toBe('1009.14')
+        ->and($quote->total_ttc)->toBe('1210.97');
+});
+
+it('recalculates totals when a line is deleted', function () {
+    $material = LaserMaterial::create([
+        'name' => 'Acier S235',
+        'density_kg_m3' => 7850.00,
+        'price_per_kg' => 1.2000,
+        'price_per_meter' => 0.8000,
+        'min_thickness_mm' => 0.50,
+        'max_thickness_mm' => 25.00,
+    ]);
+
+    $client = ThirdParty::create(['name' => 'Client Test', 'type' => 'client']);
+    $quote = LaserQuote::create([
+        'client_id' => $client->id,
+        'reference' => 'LAQ-2026-0012',
+        'status' => QuoteStatus::DRAFT,
+    ]);
+
+    LaserQuoteLine::create([
+        'laser_quote_id' => $quote->id,
+        'material_id' => $material->id,
+        'length_mm' => 1000,
+        'width_mm' => 500,
+        'thickness_mm' => 2,
+        'quantity' => 10,
+        'price_per_kg' => 1.2000,
+        'price_per_meter' => 0.8000,
+        'total_ht' => 534.78,
+    ]);
+
+    LaserQuoteLine::create([
+        'laser_quote_id' => $quote->id,
+        'material_id' => $material->id,
+        'length_mm' => 2000,
+        'width_mm' => 1000,
+        'thickness_mm' => 3,
+        'quantity' => 5,
+        'price_per_kg' => 1.2000,
+        'price_per_meter' => 0.8000,
+        'total_ht' => 200.00,
+    ]);
+
+    $quote->refresh();
+    expect($quote->total_ht)->toBe('734.78');
+
+    $quote->lines()->first()->delete();
+    $quote->refresh();
+
+    expect($quote->total_ht)->toBe('200.00');
+});
+
+it('dispatches GenerateLaserDocumentJob when a line is created', function () {
+    Queue::fake();
+
+    $material = LaserMaterial::create([
+        'name' => 'Acier S235',
+        'density_kg_m3' => 7850.00,
+        'price_per_kg' => 1.2000,
+        'price_per_meter' => 0.8000,
+        'min_thickness_mm' => 0.50,
+        'max_thickness_mm' => 25.00,
+    ]);
+
+    $client = ThirdParty::create(['name' => 'Client Test', 'type' => 'client']);
+    $quote = LaserQuote::create([
+        'client_id' => $client->id,
+        'reference' => 'LAQ-2026-0013',
+        'status' => QuoteStatus::DRAFT,
+    ]);
+
+    Queue::fake();
+
+    LaserQuoteLine::create([
+        'laser_quote_id' => $quote->id,
+        'material_id' => $material->id,
+        'length_mm' => 1000,
+        'width_mm' => 500,
+        'thickness_mm' => 2,
+        'quantity' => 1,
+        'price_per_kg' => 1.2000,
+        'price_per_meter' => 0.8000,
+        'total_ht' => 100,
+    ]);
+
+    Queue::assertDispatched(GenerateLaserDocumentJob::class);
+});
+
+it('dispatches GenerateLaserDocumentJob when a line is updated', function () {
+    $material = LaserMaterial::create([
+        'name' => 'Acier S235',
+        'density_kg_m3' => 7850.00,
+        'price_per_kg' => 1.2000,
+        'price_per_meter' => 0.8000,
+        'min_thickness_mm' => 0.50,
+        'max_thickness_mm' => 25.00,
+    ]);
+
+    $client = ThirdParty::create(['name' => 'Client Test', 'type' => 'client']);
+    $quote = LaserQuote::create([
+        'client_id' => $client->id,
+        'reference' => 'LAQ-2026-0014',
+        'status' => QuoteStatus::DRAFT,
+    ]);
+
+    $line = LaserQuoteLine::create([
+        'laser_quote_id' => $quote->id,
+        'material_id' => $material->id,
+        'length_mm' => 1000,
+        'width_mm' => 500,
+        'thickness_mm' => 2,
+        'quantity' => 1,
+        'price_per_kg' => 1.2000,
+        'price_per_meter' => 0.8000,
+        'total_ht' => 100,
+    ]);
+
+    Queue::fake();
+
+    $line->update(['quantity' => 5, 'total_ht' => 500]);
+
+    Queue::assertDispatched(GenerateLaserDocumentJob::class);
+});
+
+it('dispatches GenerateLaserDocumentJob when a line is deleted', function () {
+    $material = LaserMaterial::create([
+        'name' => 'Acier S235',
+        'density_kg_m3' => 7850.00,
+        'price_per_kg' => 1.2000,
+        'price_per_meter' => 0.8000,
+        'min_thickness_mm' => 0.50,
+        'max_thickness_mm' => 25.00,
+    ]);
+
+    $client = ThirdParty::create(['name' => 'Client Test', 'type' => 'client']);
+    $quote = LaserQuote::create([
+        'client_id' => $client->id,
+        'reference' => 'LAQ-2026-0015',
+        'status' => QuoteStatus::DRAFT,
+    ]);
+
+    $line = LaserQuoteLine::create([
+        'laser_quote_id' => $quote->id,
+        'material_id' => $material->id,
+        'length_mm' => 1000,
+        'width_mm' => 500,
+        'thickness_mm' => 2,
+        'quantity' => 1,
+        'price_per_kg' => 1.2000,
+        'price_per_meter' => 0.8000,
+        'total_ht' => 100,
+    ]);
+
+    Queue::fake();
+
+    $line->delete();
+
+    Queue::assertDispatched(GenerateLaserDocumentJob::class);
+});
+
+it('snapshots material prices on line and recalculates on thickness change', function () {
+    $material = LaserMaterial::create([
+        'name' => 'Inox 304',
+        'density_kg_m3' => 7900.00,
+        'price_per_kg' => 3.5000,
+        'price_per_meter' => 2.0000,
+        'min_thickness_mm' => 0.50,
+        'max_thickness_mm' => 15.00,
+    ]);
+
+    $line = new LaserQuoteLine([
+        'length_mm' => 1000,
+        'width_mm' => 500,
+        'thickness_mm' => 2,
+        'quantity' => 1,
+        'cut_length_mm' => 0,
+        'programming_cost' => 0,
+        'price_per_kg' => 3.5000,
+        'price_per_meter' => 2.0000,
+        'material_id' => $material->id,
+    ]);
+    $line->setRelation('material', $material);
+
+    $unitPrice2mm = $line->calculateUnitPrice();
+
+    $line->thickness_mm = 5;
+    $unitPrice5mm = $line->calculateUnitPrice();
+
+    expect($unitPrice5mm)->toBeGreaterThan($unitPrice2mm);
+});
+
+it('calculates explicit discount parameter in calculateTotalHt', function () {
+    $material = LaserMaterial::create([
+        'name' => 'Acier S235',
+        'density_kg_m3' => 7850.00,
+        'price_per_kg' => 1.2000,
+        'price_per_meter' => 0.8000,
+        'min_thickness_mm' => 0.50,
+        'max_thickness_mm' => 25.00,
+    ]);
+
+    $line = new LaserQuoteLine([
+        'length_mm' => 1000,
+        'width_mm' => 500,
+        'thickness_mm' => 2,
+        'cut_length_mm' => 3000,
+        'programming_cost' => 50,
+        'quantity' => 10,
+        'discount_pct' => 0,
+        'material_id' => $material->id,
+    ]);
+    $line->setRelation('material', $material);
+
+    $totalWithoutExplicit = $line->calculateTotalHt();
+    $totalWithExplicit = $line->calculateTotalHt(10.0);
+
+    expect($totalWithoutExplicit)->not->toBe($totalWithExplicit)
+        ->and($totalWithExplicit)->toBe(534.78);
 });
