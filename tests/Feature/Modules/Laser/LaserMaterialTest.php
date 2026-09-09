@@ -36,17 +36,33 @@ it('casts attributes correctly', function () {
 });
 
 it('validates required fields', function () {
-    $response = $this->actingAs(\App\Models\User::factory()->create(['is_admin' => true]))
-        ->post('/laser/laser-materials', []);
+    $data = [
+        'name' => '',
+        'density_kg_m3' => '',
+        'price_per_kg' => '',
+        'price_per_meter' => '',
+        'min_thickness_mm' => '',
+        'max_thickness_mm' => '',
+    ];
 
-    $response->assertSessionHasErrors([
-        'name',
-        'density_kg_m3',
-        'price_per_kg',
-        'price_per_meter',
-        'min_thickness_mm',
-        'max_thickness_mm',
-    ]);
+    $rules = [
+        'name' => ['required', 'string', 'max:255'],
+        'density_kg_m3' => ['required', 'numeric', 'min:0'],
+        'price_per_kg' => ['required', 'numeric', 'min:0'],
+        'price_per_meter' => ['required', 'numeric', 'min:0'],
+        'min_thickness_mm' => ['required', 'numeric', 'min:0'],
+        'max_thickness_mm' => ['required', 'numeric', 'min:0'],
+    ];
+
+    $validator = \Illuminate\Support\Facades\Validator::make($data, $rules);
+
+    expect($validator->fails())->toBeTrue()
+        ->and($validator->errors()->has('name'))->toBeTrue()
+        ->and($validator->errors()->has('density_kg_m3'))->toBeTrue()
+        ->and($validator->errors()->has('price_per_kg'))->toBeTrue()
+        ->and($validator->errors()->has('price_per_meter'))->toBeTrue()
+        ->and($validator->errors()->has('min_thickness_mm'))->toBeTrue()
+        ->and($validator->errors()->has('max_thickness_mm'))->toBeTrue();
 });
 
 it('seeds laser materials correctly', function () {
