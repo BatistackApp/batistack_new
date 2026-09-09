@@ -3,6 +3,7 @@
 namespace App\Filament\Laser\Resources\LaserQuotes\RelationManagers;
 
 use App\Enums\Laser\QuoteStatus;
+use App\Filament\Laser\Actions\ImportDxfAction;
 use App\Models\Laser\LaserMaterial;
 use App\Models\Laser\LaserQuoteLine;
 use App\Services\Laser\LaserQuoteService;
@@ -180,6 +181,7 @@ class LinesRelationManager extends RelationManager
                     ->summarized(),
             ])
             ->headerActions([
+                ImportDxfAction::make($this->getOwnerRecord()),
                 CreateAction::make()
                     ->label('Ajouter une ligne'),
             ])
