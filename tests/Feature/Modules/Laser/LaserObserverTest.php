@@ -128,29 +128,33 @@ it('line observer deleted recalculates quote totals', function () {
         'width_mm' => 500,
         'thickness_mm' => 2,
         'quantity' => 10,
+        'cut_length_mm' => 3000,
+        'programming_cost' => 50,
         'price_per_kg' => 1.2000,
         'price_per_meter' => 0.8000,
-        'total_ht' => 534.78,
+        'total_ht' => 0,
     ]);
 
     LaserQuoteLine::create([
         'laser_quote_id' => $quote->id,
         'material_id' => $material->id,
-        'length_mm' => 2000,
-        'width_mm' => 1000,
-        'thickness_mm' => 3,
-        'quantity' => 5,
+        'length_mm' => 1000,
+        'width_mm' => 500,
+        'thickness_mm' => 2,
+        'quantity' => 10,
+        'cut_length_mm' => 3000,
+        'programming_cost' => 50,
         'price_per_kg' => 1.2000,
         'price_per_meter' => 0.8000,
-        'total_ht' => 200.00,
+        'total_ht' => 0,
     ]);
 
-    expect($quote->fresh()->total_ht)->toBe('734.78');
+    expect($quote->fresh()->total_ht)->toBe('1069.56');
 
     $quote->lines()->first()->delete();
 
-    expect($quote->fresh()->total_ht)->toBe('200.00')
-        ->and($quote->fresh()->total_ttc)->toBe('240.00');
+    expect($quote->fresh()->total_ht)->toBe('534.78')
+        ->and($quote->fresh()->total_ttc)->toBe('641.74');
 });
 
 it('line observer dispatches job on created', function () {
@@ -330,7 +334,8 @@ it('quote observer updated does not dispatch job on non-status change', function
 
 it('quote observer deleted removes PDF file', function () {
     Bus::fake();
-    Storage::fake('local');
+    $disk = env('DOCUMENTS_DISK', 'public');
+    Storage::fake($disk);
 
     $client = ThirdParty::create(['name' => 'Client', 'type' => 'client']);
     $quote = LaserQuote::create([
@@ -341,11 +346,11 @@ it('quote observer deleted removes PDF file', function () {
 
     $service = app(LaserDocumentationService::class);
     $path = $service->getQuotePath($quote);
-    Storage::disk('local')->put($path, 'fake-pdf');
+    Storage::disk($disk)->put($path, 'fake-pdf');
 
     $quote->delete();
 
-    Storage::disk('local')->assertMissing($path);
+    Storage::disk($disk)->assertMissing($path);
 });
 
 // ============================================================
@@ -432,28 +437,32 @@ it('recalculateTotals sums all line totals_ht', function () {
         'length_mm' => 1000,
         'width_mm' => 500,
         'thickness_mm' => 2,
-        'quantity' => 1,
+        'quantity' => 10,
+        'cut_length_mm' => 3000,
+        'programming_cost' => 50,
         'price_per_kg' => 1.2000,
         'price_per_meter' => 0.8000,
-        'total_ht' => 100,
+        'total_ht' => 0,
     ]);
 
     LaserQuoteLine::create([
         'laser_quote_id' => $quote->id,
         'material_id' => $material->id,
-        'length_mm' => 2000,
-        'width_mm' => 1000,
-        'thickness_mm' => 3,
-        'quantity' => 2,
+        'length_mm' => 1000,
+        'width_mm' => 500,
+        'thickness_mm' => 2,
+        'quantity' => 10,
+        'cut_length_mm' => 3000,
+        'programming_cost' => 50,
         'price_per_kg' => 1.2000,
         'price_per_meter' => 0.8000,
-        'total_ht' => 250,
+        'total_ht' => 0,
     ]);
 
     $quote->recalculateTotals();
 
-    expect($quote->fresh()->total_ht)->toBe('350.00')
-        ->and($quote->fresh()->total_ttc)->toBe('420.00');
+    expect($quote->fresh()->total_ht)->toBe('1069.56')
+        ->and($quote->fresh()->total_ttc)->toBe('1283.47');
 });
 
 it('recalculateTotals with no lines sets zeros', function () {
@@ -475,6 +484,8 @@ it('recalculateTotals with no lines sets zeros', function () {
 });
 
 it('recalculateTotals applies configurable VAT rate', function () {
+    Queue::fake();
+
     config(['laser.vat_rate' => 10]);
 
     $client = ThirdParty::create(['name' => 'Client', 'type' => 'client']);
@@ -494,13 +505,14 @@ it('recalculateTotals applies configurable VAT rate', function () {
             'min_thickness_mm' => 0.5,
             'max_thickness_mm' => 25.0,
         ])->id,
-        'length_mm' => 100,
-        'width_mm' => 100,
-        'thickness_mm' => 1,
+        'length_mm' => 1,
+        'width_mm' => 1,
+        'thickness_mm' => 0.01,
         'quantity' => 1,
         'price_per_kg' => 1.0,
         'price_per_meter' => 1.0,
-        'total_ht' => 1000,
+        'programming_cost' => 1000,
+        'total_ht' => 0,
     ]);
 
     $quote->recalculateTotals();
