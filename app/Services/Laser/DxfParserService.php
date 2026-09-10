@@ -4,6 +4,8 @@ namespace App\Services\Laser;
 
 class DxfParserService
 {
+    public const DXF_UNIT = 'mm';
+
     private array $groupCodes = [];
 
     public function parse(string $content): DxfImportResult
@@ -281,7 +283,9 @@ class DxfParserService
 
         $checkAngles = [0, M_PI / 2, M_PI, 3 * M_PI / 2];
         foreach ($checkAngles as $angle) {
-            if ($this->isAngleOnArc($startAngle, $endAngle, $angle, $bulge > 0)) {
+            $arcStart = $bulge > 0 ? $endAngle : $startAngle;
+            $arcEnd = $bulge > 0 ? $startAngle : $endAngle;
+            if ($this->isAngleOnArc($arcStart, $arcEnd, $angle)) {
                 $updateBounds($cx + $radius * cos($angle), $cy + $radius * sin($angle));
             }
         }
@@ -320,6 +324,8 @@ class DxfParserService
 
     private function isAngleOnArc(float $startAngle, float $endAngle, float $angle, bool $ccw = true): bool
     {
+        $startAngle = $this->normalizeAngle($startAngle);
+        $endAngle = $this->normalizeAngle($endAngle);
         $angle = $this->normalizeAngle($angle);
 
         if ($ccw) {

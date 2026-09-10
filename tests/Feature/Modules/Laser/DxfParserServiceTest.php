@@ -1,7 +1,11 @@
 <?php
 
+use App\Models\Laser\LaserMaterial;
+use App\Models\Laser\LaserQuote;
+use App\Models\Laser\LaserQuoteLine;
 use App\Services\Laser\DxfImportResult;
 use App\Services\Laser\DxfParserService;
+use Illuminate\Support\Facades\Queue;
 
 // ============================================================
 // DXFImportResult DTO
@@ -365,4 +369,53 @@ it('handles old Mac line endings', function () {
 
     expect($result->isValid())->toBeTrue()
         ->and($result->lengthMm)->toBe(100.0);
+});
+
+// ============================================================
+// E2E Integration — DXF import → Quote line → Recalculate
+// ============================================================
+
+it('imports DXF and creates quote line with correct totals', function () {
+    Queue::fake();
+
+    $material = LaserMaterial::factory()->create([
+        'price_per_kg' => 1.20,
+        'price_per_meter' => 0.80,
+        'density_kg_m3' => 7850,
+    ]);
+
+    $quote = LaserQuote::factory()->create();
+
+    $parser = app(DxfParserService::class);
+    $dxf = "0\nSECTION\n2\nENTITIES\n0\nLINE\n8\nCUT\n10\n0.0\n20\n0.0\n11\n1000.0\n21\n500.0\n0\nENDSEC\n0\nEOF";
+    $result = $parser->parse($dxf);
+
+    expect($result->isValid())->toBeTrue();
+
+    $line = LaserQuoteLine::create([
+        'laser_quote_id' => $quote->id,
+        'material_id' => $material->id,
+        'description' => 'Pièce DXF test',
+        'length_mm' => $result->lengthMm,
+        'width_mm' => $result->widthMm,
+        'thickness_mm' => 5,
+        'quantity' => 2,
+        'cut_length_mm' => $result->totalCutLengthMm,
+        'programming_cost' => 50,
+        'price_per_kg' => $material->price_per_kg,
+        'price_per_meter' => $material->price_per_meter,
+        'density_kg_m3' => $material->density_kg_m3,
+        'discount_pct' => 0,
+        'total_ht' => 0,
+    ]);
+
+    $line->recalculate();
+
+    expect((float) $line->length_mm)->toBe(1000.0)
+        ->and((float) $line->width_mm)->toBe(500.0)
+        ->and((float) $line->cut_length_mm)->toBe((float) $result->totalCutLengthMm)
+        ->and((float) $line->total_ht)->toBeGreaterThan(0.0);
+
+    $quote->refresh();
+    expect($quote->total_ht)->toBeGreaterThan(0);
 });

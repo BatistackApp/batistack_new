@@ -23,13 +23,13 @@ class ImportDxfAction
             ->icon('heroicon-o-arrow-up-tray')
             ->color('primary')
             ->modalHeading('Importer un fichier DXF')
-            ->modalDescription('Extrait automatiquement les dimensions et le périmètre de découpe du fichier CAD.')
+            ->modalDescription('Extrait automatiquement les dimensions et le périmètre de découpe du fichier CAD. Les dimensions doivent être en millimètres.')
             ->modalSubmitActionLabel('Créer la ligne')
             ->form([
                 FileUpload::make('dxf_file')
                     ->label('Fichier DXF')
                     ->acceptedFileTypes(['application/dxf', 'application/x-dxf', 'text/plain'])
-                    ->helperText('Formats acceptés : .dxf (AutoCAD DXF)')
+                    ->helperText('Formats acceptés : .dxf (AutoCAD DXF). Les dimensions du fichier doivent être en millimètres.')
                     ->required()
                     ->maxSize(10240)
                     ->storeFiles(false)
@@ -154,27 +154,14 @@ class ImportDxfAction
                     ->dehydrated(true),
             ])
             ->action(function (array $data) use ($quote): void {
-                /** @var \Illuminate\Http\UploadedFile $file */
-                $file = $data['dxf_file'];
-                $content = file_get_contents($file->getRealPath());
+                $lengthMm = $data['dxf_length'] ?? null;
+                $widthMm = $data['dxf_width'] ?? null;
+                $cutLengthMm = $data['dxf_cut_length'] ?? null;
 
-                if ($content === false) {
+                if ($lengthMm === null || $widthMm === null || $cutLengthMm === null) {
                     Notification::make()
-                        ->title('Erreur de lecture du fichier')
-                        ->danger()
-                        ->send();
-
-                    return;
-                }
-
-                /** @var DxfParserService $parser */
-                $parser = app(DxfParserService::class);
-                $result = $parser->parse($content);
-
-                if (! $result->isValid()) {
-                    Notification::make()
-                        ->title('Erreur d\'analyse DXF')
-                        ->body($result->error)
+                        ->title('Données DXF manquantes')
+                        ->body('Veuillez sélectionner un fichier DXF valide.')
                         ->danger()
                         ->send();
 
@@ -200,11 +187,11 @@ class ImportDxfAction
                     'laser_quote_id' => $quote->id,
                     'material_id' => $material->id,
                     'description' => $data['description'] ?? null,
-                    'length_mm' => $result->lengthMm,
-                    'width_mm' => $result->widthMm,
+                    'length_mm' => $lengthMm,
+                    'width_mm' => $widthMm,
                     'thickness_mm' => $data['thickness_mm'],
                     'quantity' => $quantity,
-                    'cut_length_mm' => $result->totalCutLengthMm,
+                    'cut_length_mm' => $cutLengthMm,
                     'programming_cost' => $data['programming_cost'] ?? 0,
                     'price_per_kg' => $material->price_per_kg,
                     'price_per_meter' => $material->price_per_meter,
@@ -215,7 +202,7 @@ class ImportDxfAction
 
                 Notification::make()
                     ->title('Ligne créée depuis DXF')
-                    ->body("Longueur : {$result->lengthMm} mm | Largeur : {$result->widthMm} mm | Périmètre : {$result->totalCutLengthMm} mm")
+                    ->body("Longueur : {$lengthMm} mm | Largeur : {$widthMm} mm | Périmètre : {$cutLengthMm} mm")
                     ->success()
                     ->send();
             });
