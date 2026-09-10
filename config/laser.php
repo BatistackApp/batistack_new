@@ -24,6 +24,6 @@ return [
     |
     */
 
-    'dxf_cut_layers' => array_filter(explode(',', env('LASER_DXF_CUT_LAYERS', ''))),
+    'dxf_cut_layers' => array_filter(array_map('trim', explode(',', env('LASER_DXF_CUT_LAYERS', '')))),
 
 ];

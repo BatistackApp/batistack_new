@@ -302,7 +302,7 @@ class DxfParserService
         $radius = $chord * (1 + $bulge ** 2) / (4 * abs($bulge));
 
         $tangentAngle = atan2($dy, $dx);
-        $centerAngle = $tangentAngle + ($bulge > 0 ? M_PI / 2 : -M_PI / 2);
+        $centerAngle = $tangentAngle + ($bulge > 0 ? -M_PI / 2 : M_PI / 2);
         $centerDist = $radius * cos(2 * atan(abs($bulge)));
         $cx = ($start['x'] + $end['x']) / 2 + $centerDist * cos($centerAngle);
         $cy = ($start['y'] + $end['y']) / 2 + $centerDist * sin($centerAngle);
@@ -314,10 +314,9 @@ class DxfParserService
         $updateBounds($cx + $radius * cos($endAngle), $cy + $radius * sin($endAngle));
 
         $checkAngles = [0, M_PI / 2, M_PI, 3 * M_PI / 2];
+        $ccw = $bulge < 0;
         foreach ($checkAngles as $angle) {
-            $arcStart = $bulge > 0 ? $endAngle : $startAngle;
-            $arcEnd = $bulge > 0 ? $startAngle : $endAngle;
-            if ($this->isAngleOnArc($arcStart, $arcEnd, $angle)) {
+            if ($this->isAngleOnArc($startAngle, $endAngle, $angle, $ccw)) {
                 $updateBounds($cx + $radius * cos($angle), $cy + $radius * sin($angle));
             }
         }
