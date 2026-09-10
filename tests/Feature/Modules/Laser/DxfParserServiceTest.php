@@ -241,8 +241,7 @@ it('parses LWPOLYLINE with bulge arc segments', function () {
 
     expect($result->isValid())->toBeTrue()
         ->and($result->entityCount)->toBe(1)
-        ->and($result->totalCutLengthMm)->toBeGreaterThan(0.0)
-        ->and($result->totalCutLengthMm)->not->toBe(100.0);
+        ->and($result->totalCutLengthMm)->toBe(round(M_PI * 50, 2));
 });
 
 it('parses LWPOLYLINE with zero bulge (straight segments)', function () {
@@ -309,6 +308,28 @@ it('parses CIRCLE entity with bounding box', function () {
     expect($result->isValid())->toBeTrue()
         ->and($result->lengthMm)->toBe(100.0)
         ->and($result->widthMm)->toBe(100.0);
+});
+
+it('calculates bounding box for ARC crossing 0 degrees', function () {
+    $parser = app(DxfParserService::class);
+
+    $dxf = "0\nSECTION\n2\nENTITIES\n0\nARC\n8\nCUT\n10\n0.0\n20\n0.0\n40\n100.0\n50\n315.0\n51\n45.0\n0\nENDSEC\n0\nEOF";
+    $result = $parser->parse($dxf);
+
+    expect($result->isValid())->toBeTrue()
+        ->and(round($result->lengthMm, 2))->toBe(29.29)
+        ->and(round($result->widthMm, 2))->toBe(141.42);
+});
+
+it('calculates bounding box for LWPOLYLINE with bulge', function () {
+    $parser = app(DxfParserService::class);
+
+    $dxf = "0\nSECTION\n2\nENTITIES\n0\nLWPOLYLINE\n8\nCUT\n90\n2\n70\n0\n10\n0.0\n20\n0.0\n42\n1.0\n10\n100.0\n20\n0.0\n0\nENDSEC\n0\nEOF";
+    $result = $parser->parse($dxf);
+
+    expect($result->isValid())->toBeTrue()
+        ->and($result->lengthMm)->toBe(100.0)
+        ->and($result->widthMm)->toBe(50.0);
 });
 
 // ============================================================
