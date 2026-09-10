@@ -229,3 +229,223 @@ it('has one-to-one relationship between quote and order', function () {
         ->and($quote->order->id)->toBe($order->id)
         ->and($quote->fresh()->order()->exists())->toBeTrue();
 });
+
+// ============================================================
+// OrderStatus enum coverage
+// ============================================================
+
+it('covers all OrderStatus getLabel cases', function () {
+    expect(OrderStatus::DRAFT->getLabel())->toBe('Brouillon')
+        ->and(OrderStatus::CONFIRMED->getLabel())->toBe('Confirmée')
+        ->and(OrderStatus::IN_PROGRESS->getLabel())->toBe('En cours')
+        ->and(OrderStatus::DELIVERED->getLabel())->toBe('Livrée')
+        ->and(OrderStatus::BILLED->getLabel())->toBe('Facturée')
+        ->and(OrderStatus::CANCELLED->getLabel())->toBe('Annulée');
+});
+
+it('covers all OrderStatus getColor cases', function () {
+    expect(OrderStatus::DRAFT->getColor())->toBe('gray')
+        ->and(OrderStatus::CONFIRMED->getColor())->toBe('info')
+        ->and(OrderStatus::IN_PROGRESS->getColor())->toBe('warning')
+        ->and(OrderStatus::DELIVERED->getColor())->toBe('success')
+        ->and(OrderStatus::BILLED->getColor())->toBe('primary')
+        ->and(OrderStatus::CANCELLED->getColor())->toBe('gray');
+});
+
+it('covers all OrderStatus getIcon cases', function () {
+    expect(OrderStatus::DRAFT->getIcon())->not->toBeNull()
+        ->and(OrderStatus::CONFIRMED->getIcon())->not->toBeNull()
+        ->and(OrderStatus::IN_PROGRESS->getIcon())->not->toBeNull()
+        ->and(OrderStatus::DELIVERED->getIcon())->not->toBeNull()
+        ->and(OrderStatus::BILLED->getIcon())->not->toBeNull()
+        ->and(OrderStatus::CANCELLED->getIcon())->not->toBeNull();
+});
+
+// ============================================================
+// LaserOrder model coverage
+// ============================================================
+
+it('casts LaserOrder attributes correctly', function () {
+    $order = LaserOrder::withoutEvents(fn () => LaserOrder::factory()->create([
+        'status' => OrderStatus::CONFIRMED,
+        'total_ht' => 100,
+        'total_ttc' => 120,
+    ]));
+
+    expect($order->status)->toBeInstanceOf(OrderStatus::class)
+        ->and($order->status)->toBe(OrderStatus::CONFIRMED)
+        ->and((float) $order->total_ht)->toBe(100.0)
+        ->and((float) $order->total_ttc)->toBe(120.0);
+});
+
+it('LaserOrder has correct fillable fields', function () {
+    $order = new LaserOrder();
+    expect($order->getFillable())->toContain(
+        'client_id', 'laser_quote_id', 'reference', 'status',
+        'total_ht', 'total_ttc', 'terms'
+    );
+});
+
+it('LaserOrder client relationship works', function () {
+    $order = LaserOrder::withoutEvents(fn () => LaserOrder::factory()->create());
+
+    expect($order->client)->not->toBeNull()
+        ->and($order->client->id)->toBe($order->client_id);
+});
+
+it('LaserOrder quote relationship works', function () {
+    Queue::fake();
+
+    $quote = LaserQuote::withoutEvents(fn () => LaserQuote::factory()->create([
+        'status' => QuoteStatus::DRAFT,
+    ]));
+
+    $service = app(LaserQuoteService::class);
+    $order = $service->acceptQuote($quote);
+
+    expect($order->quote)->not->toBeNull()
+        ->and($order->quote->id)->toBe($quote->id);
+});
+
+// ============================================================
+// LaserOrderLine model coverage
+// ============================================================
+
+it('casts LaserOrderLine attributes correctly', function () {
+    $order = LaserOrder::withoutEvents(fn () => LaserOrder::factory()->create());
+    $material = LaserMaterial::factory()->create(['is_active' => true]);
+
+    $line = LaserOrderLine::create([
+        'laser_order_id' => $order->id,
+        'material_id' => $material->id,
+        'length_mm' => 100.50,
+        'width_mm' => 50.25,
+        'thickness_mm' => 2.5,
+        'quantity' => 3,
+        'surface_mm2' => 5050.1250,
+        'cut_length_mm' => 300.00,
+        'weight_kg' => 1.2345,
+        'price_per_kg' => 12.5000,
+        'price_per_meter' => 3.0000,
+        'programming_cost' => 25.00,
+        'discount_pct' => 5.00,
+        'unit_price_ht' => 50.0000,
+        'total_ht' => 142.50,
+        'density_kg_m3' => 7850.00,
+    ]);
+
+    expect((float) $line->length_mm)->toBe(100.50)
+        ->and((float) $line->width_mm)->toBe(50.25)
+        ->and((float) $line->thickness_mm)->toBe(2.5)
+        ->and((int) $line->quantity)->toBe(3)
+        ->and((float) $line->surface_mm2)->toBe(5050.1250)
+        ->and((float) $line->cut_length_mm)->toBe(300.0)
+        ->and((float) $line->weight_kg)->toBe(1.2345)
+        ->and((float) $line->price_per_kg)->toBe(12.5)
+        ->and((float) $line->price_per_meter)->toBe(3.0)
+        ->and((float) $line->programming_cost)->toBe(25.0)
+        ->and((float) $line->discount_pct)->toBe(5.0)
+        ->and((float) $line->unit_price_ht)->toBe(50.0)
+        ->and((float) $line->total_ht)->toBe(142.5)
+        ->and((float) $line->density_kg_m3)->toBe(7850.0);
+});
+
+it('LaserOrderLine has correct fillable fields', function () {
+    $line = new LaserOrderLine();
+    expect($line->getFillable())->toContain(
+        'laser_order_id', 'material_id', 'description', 'length_mm', 'width_mm',
+        'thickness_mm', 'quantity', 'surface_mm2', 'cut_length_mm', 'weight_kg',
+        'price_per_kg', 'price_per_meter', 'programming_cost', 'discount_pct',
+        'unit_price_ht', 'total_ht', 'density_kg_m3'
+    );
+});
+
+it('LaserOrderLine order relationship works', function () {
+    $order = LaserOrder::withoutEvents(fn () => LaserOrder::factory()->create());
+    $material = LaserMaterial::factory()->create(['is_active' => true]);
+
+    $line = LaserOrderLine::create([
+        'laser_order_id' => $order->id,
+        'material_id' => $material->id,
+        'total_ht' => 0,
+    ]);
+
+    expect($line->order)->not->toBeNull()
+        ->and($line->order->id)->toBe($order->id);
+});
+
+it('LaserOrderLine material relationship works', function () {
+    $order = LaserOrder::withoutEvents(fn () => LaserOrder::factory()->create());
+    $material = LaserMaterial::factory()->create(['is_active' => true]);
+
+    $line = LaserOrderLine::create([
+        'laser_order_id' => $order->id,
+        'material_id' => $material->id,
+        'total_ht' => 0,
+    ]);
+
+    expect($line->material)->not->toBeNull()
+        ->and($line->material->id)->toBe($material->id);
+});
+
+// ============================================================
+// LaserDocumentationService coverage
+// ============================================================
+
+it('generates correct order filename', function () {
+    $service = app(\App\Services\Laser\LaserDocumentationService::class);
+    $order = LaserOrder::withoutEvents(fn () => LaserOrder::factory()->make(['reference' => 'LAC-2026-0001']));
+
+    expect($service->getOrderFilename($order))->toBe('commande_laser_LAC-2026-0001');
+});
+
+it('generates correct order path', function () {
+    $service = app(\App\Services\Laser\LaserDocumentationService::class);
+    $order = LaserOrder::withoutEvents(fn () => LaserOrder::factory()->make(['reference' => 'LAC-2026-0001']));
+
+    expect($service->getOrderPath($order))->toBe('documents/laser/orders/commande_laser_LAC-2026-0001.pdf');
+});
+
+// ============================================================
+// GenerateLaserDocumentJob coverage
+// ============================================================
+
+it('dispatches generate order document job on order created', function () {
+    Queue::fake();
+
+    $quote = LaserQuote::withoutEvents(fn () => LaserQuote::factory()->create([
+        'status' => QuoteStatus::DRAFT,
+    ]));
+
+    $service = app(LaserQuoteService::class);
+    $order = $service->acceptQuote($quote);
+
+    Queue::assertPushed(\App\Jobs\Laser\GenerateLaserDocumentJob::class, function ($job) {
+        return $job->namespace === 'laser_order';
+    });
+});
+
+it('dispatches generate quote document job on quote created', function () {
+    Queue::fake();
+
+    LaserQuote::factory()->create();
+
+    Queue::assertPushed(\App\Jobs\Laser\GenerateLaserDocumentJob::class, function ($job) {
+        return $job->namespace === 'laser_quote';
+    });
+});
+
+it('GenerateLaserDocumentJob handles laser_order namespace', function () {
+    $job = new \App\Jobs\Laser\GenerateLaserDocumentJob('laser_quote', new LaserQuote());
+
+    expect($job->namespace)->toBe('laser_quote')
+        ->and($job->model)->toBeInstanceOf(LaserQuote::class);
+});
+
+it('LaserOrderObserver constructor accepts LaserDocumentationService', function () {
+    $observer = new \App\Observers\Laser\LaserOrderObserver(
+        app(\App\Services\Laser\LaserDocumentationService::class)
+    );
+
+    expect($observer)->toBeInstanceOf(\App\Observers\Laser\LaserOrderObserver::class);
+});
