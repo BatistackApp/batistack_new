@@ -228,3 +228,120 @@ it('calculates bounding box from multiple entities', function () {
         ->and($result->lengthMm)->toBe(220.0)
         ->and($result->widthMm)->toBe(90.0);
 });
+
+// ============================================================
+// DxfParserService — LWPOLYLINE with bulge (arc segments)
+// ============================================================
+
+it('parses LWPOLYLINE with bulge arc segments', function () {
+    $parser = app(DxfParserService::class);
+
+    $dxf = "0\nSECTION\n2\nENTITIES\n0\nLWPOLYLINE\n8\nCUT\n90\n2\n70\n0\n10\n0.0\n20\n0.0\n42\n1.0\n10\n100.0\n20\n0.0\n0\nENDSEC\n0\nEOF";
+    $result = $parser->parse($dxf);
+
+    expect($result->isValid())->toBeTrue()
+        ->and($result->entityCount)->toBe(1)
+        ->and($result->totalCutLengthMm)->toBeGreaterThan(0.0)
+        ->and($result->totalCutLengthMm)->not->toBe(100.0);
+});
+
+it('parses LWPOLYLINE with zero bulge (straight segments)', function () {
+    $parser = app(DxfParserService::class);
+
+    $dxf = "0\nSECTION\n2\nENTITIES\n0\nLWPOLYLINE\n8\nCUT\n90\n3\n70\n0\n10\n0.0\n20\n0.0\n42\n0.0\n10\n100.0\n20\n0.0\n42\n0.0\n10\n100.0\n20\n100.0\n0\nENDSEC\n0\nEOF";
+    $result = $parser->parse($dxf);
+
+    expect($result->isValid())->toBeTrue()
+        ->and($result->totalCutLengthMm)->toBe(200.0);
+});
+
+// ============================================================
+// DxfParserService — LWPOLYLINE edge cases
+// ============================================================
+
+it('handles LWPOLYLINE with single vertex', function () {
+    $parser = app(DxfParserService::class);
+
+    $dxf = "0\nSECTION\n2\nENTITIES\n0\nLWPOLYLINE\n8\nCUT\n90\n1\n70\n0\n10\n50.0\n20\n50.0\n0\nENDSEC\n0\nEOF";
+    $result = $parser->parse($dxf);
+
+    expect($result->isValid())->toBeTrue()
+        ->and($result->entityCount)->toBe(1)
+        ->and($result->totalCutLengthMm)->toBe(0.0);
+});
+
+// ============================================================
+// DxfParserService — Entity at EOF without ENDSEC
+// ============================================================
+
+it('parses entities until EOF without ENDSEC', function () {
+    $parser = app(DxfParserService::class);
+
+    $dxf = "0\nSECTION\n2\nENTITIES\n0\nLINE\n8\nCUT\n10\n0.0\n20\n0.0\n11\n100.0\n21\n50.0\n0\nEOF";
+    $result = $parser->parse($dxf);
+
+    expect($result->isValid())->toBeTrue()
+        ->and($result->entityCount)->toBe(1)
+        ->and($result->lengthMm)->toBe(100.0);
+});
+
+// ============================================================
+// DxfParserService — ARC bounding box with angles crossing quadrants
+// ============================================================
+
+it('calculates bounding box for ARC crossing quadrants', function () {
+    $parser = app(DxfParserService::class);
+
+    $dxf = "0\nSECTION\n2\nENTITIES\n0\nARC\n8\nCUT\n10\n0.0\n20\n0.0\n40\n100.0\n50\n45.0\n51\n315.0\n0\nENDSEC\n0\nEOF";
+    $result = $parser->parse($dxf);
+
+    expect($result->isValid())->toBeTrue()
+        ->and(round($result->lengthMm, 2))->toBe(170.71)
+        ->and($result->widthMm)->toBe(200.0);
+});
+
+it('parses CIRCLE entity with bounding box', function () {
+    $parser = app(DxfParserService::class);
+
+    $dxf = "0\nSECTION\n2\nENTITIES\n0\nCIRCLE\n8\nCUT\n10\n100.0\n20\n100.0\n40\n50.0\n0\nENDSEC\n0\nEOF";
+    $result = $parser->parse($dxf);
+
+    expect($result->isValid())->toBeTrue()
+        ->and($result->lengthMm)->toBe(100.0)
+        ->and($result->widthMm)->toBe(100.0);
+});
+
+// ============================================================
+// DxfParserService — parseGroupCodes odd lines
+// ============================================================
+
+it('handles odd number of lines in DXF content', function () {
+    $parser = app(DxfParserService::class);
+
+    $dxf = "0\nSECTION\n2\nENTITIES\n0\nLINE\n8\nCUT\n10\n0.0\n20\n0.0\n11\n50.0\n21\n50.0\n0\nENDSEC\n0\nEOF\n";
+    $result = $parser->parse($dxf);
+
+    expect($result->isValid())->toBeTrue()
+        ->and($result->entityCount)->toBe(1);
+});
+
+it('handles LWPOLYLINE with bulge on coincident points', function () {
+    $parser = app(DxfParserService::class);
+
+    $dxf = "0\nSECTION\n2\nENTITIES\n0\nLWPOLYLINE\n8\nCUT\n90\n2\n70\n0\n10\n50.0\n20\n50.0\n42\n1.0\n10\n50.0\n20\n50.0\n0\nENDSEC\n0\nEOF";
+    $result = $parser->parse($dxf);
+
+    expect($result->isValid())->toBeTrue()
+        ->and($result->entityCount)->toBe(1)
+        ->and($result->totalCutLengthMm)->toBe(0.0);
+});
+
+it('handles old Mac line endings', function () {
+    $parser = app(DxfParserService::class);
+
+    $dxf = "0\rSECTION\r2\rENTITIES\r0\rLINE\r8\rCUT\r10\r0.0\r20\r0.0\r11\r100.0\r21\r50.0\r0\rENDSEC\r0\rEOF";
+    $result = $parser->parse($dxf);
+
+    expect($result->isValid())->toBeTrue()
+        ->and($result->lengthMm)->toBe(100.0);
+});
