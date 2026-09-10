@@ -26,6 +26,8 @@ it('generates a valid LAQ reference', function () {
 });
 
 it('creates a laser quote via factory', function () {
+    Queue::fake();
+
     $quote = LaserQuote::factory()->create();
 
     expect($quote)->toBeInstanceOf(LaserQuote::class)
@@ -366,6 +368,8 @@ it('calculateLine delegates to recalculate on model', function () {
 // ============================================================
 
 it('recalculates totals with TVA 20%', function () {
+    Queue::fake();
+
     $material = LaserMaterial::create([
         'name' => 'Acier S235',
         'density_kg_m3' => 7850.00,
@@ -406,6 +410,8 @@ it('recalculates totals with TVA 20%', function () {
 });
 
 it('recalculates totals to zero when no lines', function () {
+    Queue::fake();
+
     $client = ThirdParty::create(['name' => 'Client', 'type' => 'client']);
     $quote = LaserQuote::create([
         'client_id' => $client->id,
@@ -426,12 +432,16 @@ it('recalculates totals to zero when no lines', function () {
 // ============================================================
 
 it('belongs to a client', function () {
+    Queue::fake();
+
     $quote = LaserQuote::factory()->create();
     expect($quote->client)->not->toBeNull()
         ->and($quote->client)->toBeInstanceOf(ThirdParty::class);
 });
 
 it('has many lines', function () {
+    Queue::fake();
+
     $material = LaserMaterial::create([
         'name' => 'Acier S235',
         'density_kg_m3' => 7850.00,
@@ -465,6 +475,8 @@ it('has many lines', function () {
 });
 
 it('deletable only when draft', function () {
+    Queue::fake();
+
     $quote = LaserQuote::factory()->create(['status' => QuoteStatus::DRAFT]);
     expect($quote->canBeDeleted())->toBeTrue();
 
@@ -473,11 +485,15 @@ it('deletable only when draft', function () {
 });
 
 it('detects expired quote', function () {
+    Queue::fake();
+
     $quote = LaserQuote::factory()->create(['expires_at' => now()->subDay()]);
     expect($quote->is_expired)->toBeTrue();
 });
 
 it('detects non-expired quote', function () {
+    Queue::fake();
+
     $quote = LaserQuote::factory()->create(['expires_at' => now()->addDays(10)]);
     expect($quote->is_expired)->toBeFalse();
 });
