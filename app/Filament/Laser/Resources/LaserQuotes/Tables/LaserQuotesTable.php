@@ -4,9 +4,14 @@ namespace App\Filament\Laser\Resources\LaserQuotes\Tables;
 
 use App\Enums\Laser\QuoteStatus;
 use App\Models\Laser\LaserQuote;
+use App\Services\Laser\LaserQuoteService;
+use Filament\Notifications\Notification;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Filament\Tables\Actions\Action;
+use Filament\Tables\Actions\ActionGroup;
+use Filament\Tables\Actions\ViewAction;
 
 class LaserQuotesTable
 {
@@ -47,6 +52,28 @@ class LaserQuotesTable
             ->filters([
                 SelectFilter::make('status')
                     ->options(QuoteStatus::class),
+            ])
+            ->recordActions([
+                ActionGroup::make([
+                    ViewAction::make(),
+
+                    Action::make('convertToOrder')
+                        ->label('Transformer en commande')
+                        ->icon('heroicon-o-shopping-bag')
+                        ->color('success')
+                        ->visible(fn (LaserQuote $record) => in_array($record->status, [QuoteStatus::DRAFT, QuoteStatus::SENT, QuoteStatus::ACCEPTED]))
+                        ->requiresConfirmation()
+                        ->modalHeading('Transformer en commande')
+                        ->modalDescription('Une commande sera créée avec les lignes du devis.')
+                        ->action(function (LaserQuote $record) {
+                            $order = app(LaserQuoteService::class)->acceptQuote($record);
+
+                            Notification::make()
+                                ->title('Commande créée : '.$order->reference)
+                                ->success()
+                                ->send();
+                        }),
+                ]),
             ]);
     }
 }
