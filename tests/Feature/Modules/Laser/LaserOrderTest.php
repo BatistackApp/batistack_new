@@ -199,3 +199,33 @@ it('can be deleted only in draft status', function () {
     ]));
     expect($confirmedOrder->canBeDeleted())->toBeFalse();
 });
+
+it('rejects duplicate order for same quote', function () {
+    Queue::fake();
+
+    $quote = LaserQuote::withoutEvents(fn () => LaserQuote::factory()->create([
+        'status' => QuoteStatus::DRAFT,
+    ]));
+
+    $service = app(LaserQuoteService::class);
+    $service->acceptQuote($quote);
+
+    $this->expectException(\Exception::class);
+    $this->expectExceptionMessage('Ce devis a déjà été converti en commande');
+    $service->acceptQuote($quote);
+});
+
+it('has one-to-one relationship between quote and order', function () {
+    Queue::fake();
+
+    $quote = LaserQuote::withoutEvents(fn () => LaserQuote::factory()->create([
+        'status' => QuoteStatus::DRAFT,
+    ]));
+
+    $service = app(LaserQuoteService::class);
+    $order = $service->acceptQuote($quote);
+
+    expect($quote->order)->not->toBeNull()
+        ->and($quote->order->id)->toBe($order->id)
+        ->and($quote->fresh()->order()->exists())->toBeTrue();
+});

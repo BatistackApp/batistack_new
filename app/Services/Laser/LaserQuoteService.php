@@ -29,6 +29,10 @@ class LaserQuoteService
         return DB::transaction(function () use ($quote) {
             $quote = LaserQuote::whereKey($quote->id)->lockForUpdate()->firstOrFail();
 
+            if ($quote->order()->exists()) {
+                throw new Exception('Ce devis a déjà été converti en commande.');
+            }
+
             if (! in_array($quote->status, [QuoteStatus::DRAFT, QuoteStatus::SENT, QuoteStatus::ACCEPTED], true)) {
                 throw new Exception('Ce devis ne peut pas être accepté dans son état actuel.');
             }

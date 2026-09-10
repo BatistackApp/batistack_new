@@ -61,7 +61,7 @@ class LaserQuotesTable
                         ->label('Transformer en commande')
                         ->icon('heroicon-o-shopping-bag')
                         ->color('success')
-                        ->visible(fn (LaserQuote $record) => in_array($record->status, [QuoteStatus::DRAFT, QuoteStatus::SENT, QuoteStatus::ACCEPTED]))
+                        ->visible(fn (LaserQuote $record) => ! $record->order()->exists() && in_array($record->status, [QuoteStatus::DRAFT, QuoteStatus::SENT, QuoteStatus::ACCEPTED]))
                         ->requiresConfirmation()
                         ->modalHeading('Transformer en commande')
                         ->modalDescription('Une commande sera créée avec les lignes du devis.')

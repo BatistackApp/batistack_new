@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 #[ObservedBy([LaserQuoteObserver::class])]
 class LaserQuote extends Model
@@ -45,6 +46,11 @@ class LaserQuote extends Model
     public function lines(): HasMany
     {
         return $this->hasMany(LaserQuoteLine::class);
+    }
+
+    public function order(): HasOne
+    {
+        return $this->hasOne(LaserOrder::class);
     }
 
     public function canBeDeleted(): bool

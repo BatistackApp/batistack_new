@@ -22,7 +22,7 @@ class ViewLaserQuote extends ViewRecord
                 ->label('Transformer en commande')
                 ->icon('heroicon-o-shopping-bag')
                 ->color('success')
-                ->visible(fn ($record) => in_array($record->status, [QuoteStatus::DRAFT, QuoteStatus::SENT, QuoteStatus::ACCEPTED]))
+                ->visible(fn ($record) => ! $record->order()->exists() && in_array($record->status, [QuoteStatus::DRAFT, QuoteStatus::SENT, QuoteStatus::ACCEPTED]))
                 ->requiresConfirmation()
                 ->modalHeading('Transformer ce devis en commande')
                 ->modalDescription('Une commande sera créée avec les lignes du devis. Cette action est irréversible.')

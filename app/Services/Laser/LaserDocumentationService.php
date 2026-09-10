@@ -61,7 +61,7 @@ class LaserDocumentationService extends DocumentService
 
     public function getQuotePath(LaserQuote $quote): string
     {
-        return 'laser/quotes/'.$this->getQuoteFilename($quote).'.pdf';
+        return 'documents/laser/quotes/'.$this->getQuoteFilename($quote).'.pdf';
     }
 
     public function getOrderFilename(LaserOrder $order): string
@@ -71,6 +71,6 @@ class LaserDocumentationService extends DocumentService
 
     public function getOrderPath(LaserOrder $order): string
     {
-        return 'laser/orders/'.$this->getOrderFilename($order).'.pdf';
+        return 'documents/laser/orders/'.$this->getOrderFilename($order).'.pdf';
     }
 }
