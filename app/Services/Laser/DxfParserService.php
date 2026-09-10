@@ -8,7 +8,7 @@ class DxfParserService
 
     private array $groupCodes = [];
 
-    public function parse(string $content): DxfImportResult
+    public function parse(string $content, array $allowedLayers = []): DxfImportResult
     {
         $content = $this->normalizeLineEndings($content);
 
@@ -29,8 +29,10 @@ class DxfParserService
         }
 
         $layers = $this->extractLayers($entities);
-        $bbox = $this->calculateBoundingBox($entities);
-        $totalCutLength = $this->calculateCutLength($entities);
+
+        $cutEntities = $this->filterEntitiesByLayers($entities, $allowedLayers);
+        $bbox = $this->calculateBoundingBox($cutEntities);
+        $totalCutLength = $this->calculateCutLength($cutEntities);
 
         $lengthMm = max(0, $bbox['max_x'] - $bbox['min_x']);
         $widthMm = max(0, $bbox['max_y'] - $bbox['min_y']);
@@ -39,7 +41,7 @@ class DxfParserService
             lengthMm: round($lengthMm, 2),
             widthMm: round($widthMm, 2),
             totalCutLengthMm: round($totalCutLength, 2),
-            entityCount: count($entities),
+            entityCount: count($cutEntities),
             layers: $layers,
         );
     }
@@ -184,6 +186,18 @@ class DxfParserService
         sort($layers);
 
         return $layers;
+    }
+
+    private function filterEntitiesByLayers(array $entities, array $allowedLayers): array
+    {
+        if (empty($allowedLayers)) {
+            return $entities;
+        }
+
+        return array_values(array_filter(
+            $entities,
+            fn (array $entity) => in_array($entity['layer'], $allowedLayers, true),
+        ));
     }
 
     /**

@@ -16,7 +16,7 @@ use Filament\Notifications\Notification;
 
 class ImportDxfAction
 {
-    public static function make(?LaserQuote $quote = null): Action
+    public static function make(LaserQuote $quote): Action
     {
         return Action::make('import_dxf')
             ->label('Importer DXF')
@@ -41,6 +41,7 @@ class ImportDxfAction
                             $set('dxf_width', null);
                             $set('dxf_cut_length', null);
                             $set('dxf_entity_count', null);
+                            $set('dxf_layers', null);
 
                             return;
                         }
@@ -51,16 +52,27 @@ class ImportDxfAction
 
                         if ($content === false) {
                             $set('dxf_preview', 'Erreur de lecture du fichier.');
+                            $set('dxf_length', null);
+                            $set('dxf_width', null);
+                            $set('dxf_cut_length', null);
+                            $set('dxf_entity_count', null);
+                            $set('dxf_layers', null);
 
                             return;
                         }
 
                         /** @var DxfParserService $parser */
                         $parser = app(DxfParserService::class);
-                        $result = $parser->parse($content);
+                        $allowedLayers = config('laser.dxf_cut_layers', []);
+                        $result = $parser->parse($content, $allowedLayers);
 
                         if (! $result->isValid()) {
                             $set('dxf_preview', 'Erreur : '.$result->error);
+                            $set('dxf_length', null);
+                            $set('dxf_width', null);
+                            $set('dxf_cut_length', null);
+                            $set('dxf_entity_count', null);
+                            $set('dxf_layers', null);
 
                             return;
                         }
@@ -105,7 +117,7 @@ class ImportDxfAction
                     ->required()
                     ->live()
                     ->afterStateUpdated(function ($get, $set) {
-                        $material = LaserMaterial::find($get('material_id'));
+                        $material = LaserMaterial::where('id', $get('material_id'))->where('is_active', true)->first();
                         if ($material) {
                             $set('price_per_kg', $material->price_per_kg);
                             $set('price_per_meter', $material->price_per_meter);
@@ -117,7 +129,7 @@ class ImportDxfAction
                     ->label('Épaisseur (mm)')
                     ->numeric()
                     ->required()
-                    ->minValue(0),
+                    ->minValue(0.1),
 
                 TextInput::make('quantity')
                     ->label('Quantité')
@@ -154,14 +166,44 @@ class ImportDxfAction
                     ->dehydrated(true),
             ])
             ->action(function (array $data) use ($quote): void {
-                $lengthMm = $data['dxf_length'] ?? null;
-                $widthMm = $data['dxf_width'] ?? null;
-                $cutLengthMm = $data['dxf_cut_length'] ?? null;
-
-                if ($lengthMm === null || $widthMm === null || $cutLengthMm === null) {
+                $file = $data['dxf_file'] ?? null;
+                if (! $file) {
                     Notification::make()
-                        ->title('Données DXF manquantes')
-                        ->body('Veuillez sélectionner un fichier DXF valide.')
+                        ->title('Fichier DXF manquant')
+                        ->danger()
+                        ->send();
+
+                    return;
+                }
+
+                $content = file_get_contents($file->getRealPath());
+                if ($content === false) {
+                    Notification::make()
+                        ->title('Erreur de lecture du fichier')
+                        ->danger()
+                        ->send();
+
+                    return;
+                }
+
+                $parser = app(DxfParserService::class);
+                $allowedLayers = config('laser.dxf_cut_layers', []);
+                $result = $parser->parse($content, $allowedLayers);
+
+                if (! $result->isValid()) {
+                    Notification::make()
+                        ->title('Erreur d\'analyse DXF')
+                        ->body($result->error)
+                        ->danger()
+                        ->send();
+
+                    return;
+                }
+
+                $material = LaserMaterial::where('id', $data['material_id'])->where('is_active', true)->first();
+                if (! $material) {
+                    Notification::make()
+                        ->title('Matériau introuvable ou inactif')
                         ->danger()
                         ->send();
 
@@ -169,17 +211,6 @@ class ImportDxfAction
                 }
 
                 $service = app(LaserQuoteService::class);
-
-                $material = LaserMaterial::find($data['material_id']);
-                if (! $material) {
-                    Notification::make()
-                        ->title('Matériau introuvable')
-                        ->danger()
-                        ->send();
-
-                    return;
-                }
-
                 $quantity = (int) ($data['quantity'] ?? 1);
                 $discount = $service->applyDiscount($quantity);
 
@@ -187,11 +218,11 @@ class ImportDxfAction
                     'laser_quote_id' => $quote->id,
                     'material_id' => $material->id,
                     'description' => $data['description'] ?? null,
-                    'length_mm' => $lengthMm,
-                    'width_mm' => $widthMm,
+                    'length_mm' => $result->lengthMm,
+                    'width_mm' => $result->widthMm,
                     'thickness_mm' => $data['thickness_mm'],
                     'quantity' => $quantity,
-                    'cut_length_mm' => $cutLengthMm,
+                    'cut_length_mm' => $result->totalCutLengthMm,
                     'programming_cost' => $data['programming_cost'] ?? 0,
                     'price_per_kg' => $material->price_per_kg,
                     'price_per_meter' => $material->price_per_meter,
@@ -202,7 +233,7 @@ class ImportDxfAction
 
                 Notification::make()
                     ->title('Ligne créée depuis DXF')
-                    ->body("Longueur : {$lengthMm} mm | Largeur : {$widthMm} mm | Périmètre : {$cutLengthMm} mm")
+                    ->body("Longueur : {$result->lengthMm} mm | Largeur : {$result->widthMm} mm | Périmètre : {$result->totalCutLengthMm} mm")
                     ->success()
                     ->send();
             });
