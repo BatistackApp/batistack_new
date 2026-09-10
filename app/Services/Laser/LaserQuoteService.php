@@ -46,6 +46,6 @@ class LaserQuoteService
         $prixMetre = ($cutLengthMm / 1000) * $pricePerMeter;
         $unitPrice = max($prixPoids, $prixMetre) + $programmingCost;
 
-        return $unitPrice * $quantity * (1 - $discountPct / 100);
+        return round($unitPrice * $quantity * (1 - $discountPct / 100), 2);
     }
 }

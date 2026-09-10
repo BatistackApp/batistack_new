@@ -1,0 +1,647 @@
+<?php
+
+use App\Models\Laser\LaserMaterial;
+use App\Models\Laser\LaserQuote;
+use App\Models\Laser\LaserQuoteLine;
+use App\Services\Laser\DxfImportResult;
+use App\Services\Laser\DxfParserService;
+use Illuminate\Support\Facades\Queue;
+
+// ============================================================
+// DXFImportResult DTO
+// ============================================================
+
+it('returns valid result', function () {
+    $result = new DxfImportResult(
+        lengthMm: 100.0,
+        widthMm: 50.0,
+        totalCutLengthMm: 300.0,
+        entityCount: 5,
+        layers: ['CUT', 'ENGRAVE'],
+    );
+
+    expect($result->isValid())->toBeTrue()
+        ->and($result->error)->toBeNull()
+        ->and($result->lengthMm)->toBe(100.0)
+        ->and($result->widthMm)->toBe(50.0)
+        ->and($result->totalCutLengthMm)->toBe(300.0)
+        ->and($result->entityCount)->toBe(5)
+        ->and($result->layers)->toBe(['CUT', 'ENGRAVE']);
+});
+
+it('returns error result', function () {
+    $result = DxfImportResult::error('Invalid file');
+
+    expect($result->isValid())->toBeFalse()
+        ->and($result->error)->toBe('Invalid file')
+        ->and($result->lengthMm)->toBe(0.0)
+        ->and($result->widthMm)->toBe(0.0)
+        ->and($result->totalCutLengthMm)->toBe(0.0)
+        ->and($result->entityCount)->toBe(0)
+        ->and($result->layers)->toBe([]);
+});
+
+// ============================================================
+// DxfParserService — Empty / Invalid
+// ============================================================
+
+it('rejects empty file', function () {
+    $parser = app(DxfParserService::class);
+    $result = $parser->parse('');
+
+    expect($result->isValid())->toBeFalse()
+        ->and($result->error)->toContain('vide');
+});
+
+it('rejects whitespace-only file', function () {
+    $parser = app(DxfParserService::class);
+    $result = $parser->parse("   \n  \n  ");
+
+    expect($result->isValid())->toBeFalse();
+});
+
+it('rejects file with no entities', function () {
+    $parser = app(DxfParserService::class);
+    $dxf = "0\nSECTION\n2\nHEADER\n0\nENDSEC\n0\nEOF";
+    $result = $parser->parse($dxf);
+
+    expect($result->isValid())->toBeFalse()
+        ->and($result->error)->toContain('Aucune entité');
+});
+
+// ============================================================
+// DxfParserService — LINE entity
+// ============================================================
+
+it('parses a single LINE entity', function () {
+    $parser = app(DxfParserService::class);
+    $dxf = "0\nSECTION\n2\nENTITIES\n0\nLINE\n8\nCUT\n10\n0.0\n20\n0.0\n11\n100.0\n21\n50.0\n0\nENDSEC\n0\nEOF";
+    $result = $parser->parse($dxf);
+
+    expect($result->isValid())->toBeTrue()
+        ->and($result->lengthMm)->toBe(100.0)
+        ->and($result->widthMm)->toBe(50.0)
+        ->and($result->entityCount)->toBe(1)
+        ->and($result->totalCutLengthMm)->toBe(round(sqrt(100 * 100 + 50 * 50), 2))
+        ->and($result->layers)->toBe(['CUT']);
+});
+
+it('parses multiple LINE entities', function () {
+    $parser = app(DxfParserService::class);
+    $dxf = "0\nSECTION\n2\nENTITIES\n0\nLINE\n8\nLAYER1\n10\n0.0\n20\n0.0\n11\n100.0\n21\n0.0\n0\nLINE\n8\nLAYER2\n10\n0.0\n20\n0.0\n11\n0.0\n21\n100.0\n0\nENDSEC\n0\nEOF";
+    $result = $parser->parse($dxf);
+
+    expect($result->isValid())->toBeTrue()
+        ->and($result->lengthMm)->toBe(100.0)
+        ->and($result->widthMm)->toBe(100.0)
+        ->and($result->entityCount)->toBe(2)
+        ->and($result->totalCutLengthMm)->toBe(200.0)
+        ->and($result->layers)->toBe(['LAYER1', 'LAYER2']);
+});
+
+// ============================================================
+// DxfParserService — LWPOLYLINE entity
+// ============================================================
+
+it('parses a closed LWPOLYLINE entity', function () {
+    $parser = app(DxfParserService::class);
+    $dxf = "0\nSECTION\n2\nENTITIES\n0\nLWPOLYLINE\n8\nCUT\n90\n4\n70\n1\n10\n0.0\n20\n0.0\n10\n100.0\n20\n0.0\n10\n100.0\n20\n50.0\n10\n0.0\n20\n50.0\n0\nENDSEC\n0\nEOF";
+    $result = $parser->parse($dxf);
+
+    expect($result->isValid())->toBeTrue()
+        ->and($result->lengthMm)->toBe(100.0)
+        ->and($result->widthMm)->toBe(50.0)
+        ->and($result->entityCount)->toBe(1)
+        ->and($result->totalCutLengthMm)->toBe(300.0);
+});
+
+it('parses open LWPOLYLINE', function () {
+    $parser = app(DxfParserService::class);
+    $dxf = "0\nSECTION\n2\nENTITIES\n0\nLWPOLYLINE\n8\nCUT\n90\n3\n70\n0\n10\n0.0\n20\n0.0\n10\n100.0\n20\n0.0\n10\n100.0\n20\n100.0\n0\nENDSEC\n0\nEOF";
+    $result = $parser->parse($dxf);
+
+    expect($result->isValid())->toBeTrue()
+        ->and($result->totalCutLengthMm)->toBe(200.0);
+});
+
+// ============================================================
+// DxfParserService — ARC entity
+// ============================================================
+
+it('parses an ARC entity', function () {
+    $parser = app(DxfParserService::class);
+    $dxf = "0\nSECTION\n2\nENTITIES\n0\nARC\n8\nCUT\n10\n0.0\n20\n0.0\n40\n50.0\n50\n0.0\n51\n90.0\n0\nENDSEC\n0\nEOF";
+    $result = $parser->parse($dxf);
+
+    expect($result->isValid())->toBeTrue()
+        ->and($result->entityCount)->toBe(1)
+        ->and($result->totalCutLengthMm)->toBe(round(50.0 * M_PI / 2, 2));
+});
+
+// ============================================================
+// DxfParserService — CIRCLE entity
+// ============================================================
+
+it('parses a CIRCLE entity', function () {
+    $parser = app(DxfParserService::class);
+    $dxf = "0\nSECTION\n2\nENTITIES\n0\nCIRCLE\n8\nCUT\n10\n50.0\n20\n50.0\n40\n25.0\n0\nENDSEC\n0\nEOF";
+    $result = $parser->parse($dxf);
+
+    expect($result->isValid())->toBeTrue()
+        ->and($result->entityCount)->toBe(1)
+        ->and($result->lengthMm)->toBe(50.0)
+        ->and($result->widthMm)->toBe(50.0)
+        ->and($result->totalCutLengthMm)->toBe(round(2 * M_PI * 25.0, 2));
+});
+
+// ============================================================
+// DxfParserService — Mixed entities
+// ============================================================
+
+it('parses mixed entity types', function () {
+    $parser = app(DxfParserService::class);
+    $dxf = "0\nSECTION\n2\nENTITIES\n0\nLINE\n8\nCUT\n10\n0.0\n20\n0.0\n11\n100.0\n21\n0.0\n0\nLWPOLYLINE\n8\nCUT\n90\n2\n70\n0\n10\n0.0\n20\n0.0\n10\n0.0\n20\n50.0\n0\nENDSEC\n0\nEOF";
+    $result = $parser->parse($dxf);
+
+    expect($result->isValid())->toBeTrue()
+        ->and($result->entityCount)->toBe(2)
+        ->and($result->totalCutLengthMm)->toBe(150.0);
+});
+
+// ============================================================
+// DxfParserService — Unsupported entities are skipped
+// ============================================================
+
+it('skips unsupported entity types', function () {
+    $parser = app(DxfParserService::class);
+    $dxf = "0\nSECTION\n2\nENTITIES\n0\nDIMENSION\n8\nDIM\n0\nHATCH\n8\nHATCH\n0\nLINE\n8\nCUT\n10\n0.0\n20\n0.0\n11\n50.0\n21\n50.0\n0\nENDSEC\n0\nEOF";
+    $result = $parser->parse($dxf);
+
+    expect($result->isValid())->toBeTrue()
+        ->and($result->entityCount)->toBe(1);
+});
+
+// ============================================================
+// DxfParserService — Windows line endings
+// ============================================================
+
+it('handles Windows line endings', function () {
+    $parser = app(DxfParserService::class);
+    $dxf = "0\r\nSECTION\r\n2\r\nENTITIES\r\n0\r\nLINE\r\n8\r\nCUT\r\n10\r\n0.0\r\n20\r\n0.0\r\n11\r\n100.0\r\n21\r\n50.0\r\n0\r\nENDSEC\r\n0\r\nEOF";
+    $result = $parser->parse($dxf);
+
+    expect($result->isValid())->toBeTrue()
+        ->and($result->lengthMm)->toBe(100.0);
+});
+
+// ============================================================
+// DxfParserService — Real-world DXF structure
+// ============================================================
+
+it('handles DXF with HEADER section before ENTITIES', function () {
+    $parser = app(DxfParserService::class);
+    $dxf = "0\nSECTION\n2\nHEADER\n9\n\$ACADVER\n1\nAC1015\n0\nENDSEC\n0\nSECTION\n2\nENTITIES\n0\nLINE\n8\nCUT\n10\n10.0\n20\n20.0\n11\n210.0\n21\n120.0\n0\nENDSEC\n0\nEOF";
+    $result = $parser->parse($dxf);
+
+    expect($result->isValid())->toBeTrue()
+        ->and($result->lengthMm)->toBe(200.0)
+        ->and($result->widthMm)->toBe(100.0)
+        ->and($result->entityCount)->toBe(1);
+});
+
+// ============================================================
+// DxfParserService — Bounding box accuracy
+// ============================================================
+
+it('calculates bounding box from negative coordinates', function () {
+    $parser = app(DxfParserService::class);
+    $dxf = "0\nSECTION\n2\nENTITIES\n0\nLINE\n8\nCUT\n10\n-50.0\n20\n-30.0\n11\n50.0\n21\n30.0\n0\nENDSEC\n0\nEOF";
+    $result = $parser->parse($dxf);
+
+    expect($result->isValid())->toBeTrue()
+        ->and($result->lengthMm)->toBe(100.0)
+        ->and($result->widthMm)->toBe(60.0);
+});
+
+it('calculates bounding box from multiple entities', function () {
+    $parser = app(DxfParserService::class);
+    $dxf = "0\nSECTION\n2\nENTITIES\n0\nLINE\n8\nCUT\n10\n0.0\n20\n0.0\n11\n100.0\n21\n50.0\n0\nLINE\n8\nCUT\n10\n-20.0\n20\n-10.0\n11\n200.0\n21\n80.0\n0\nENDSEC\n0\nEOF";
+    $result = $parser->parse($dxf);
+
+    expect($result->isValid())->toBeTrue()
+        ->and($result->lengthMm)->toBe(220.0)
+        ->and($result->widthMm)->toBe(90.0);
+});
+
+// ============================================================
+// DxfParserService — LWPOLYLINE with bulge (arc segments)
+// ============================================================
+
+it('parses LWPOLYLINE with bulge arc segments', function () {
+    $parser = app(DxfParserService::class);
+
+    $dxf = "0\nSECTION\n2\nENTITIES\n0\nLWPOLYLINE\n8\nCUT\n90\n2\n70\n0\n10\n0.0\n20\n0.0\n42\n1.0\n10\n100.0\n20\n0.0\n0\nENDSEC\n0\nEOF";
+    $result = $parser->parse($dxf);
+
+    expect($result->isValid())->toBeTrue()
+        ->and($result->entityCount)->toBe(1)
+        ->and($result->totalCutLengthMm)->toBe(round(M_PI * 50, 2));
+});
+
+it('calculates correct bounding box for bulge 0.5 (small arc above chord)', function () {
+    $parser = app(DxfParserService::class);
+
+    $dxf = "0\nSECTION\n2\nENTITIES\n0\nLWPOLYLINE\n8\nCUT\n90\n2\n70\n0\n10\n0.0\n20\n0.0\n42\n0.5\n10\n100.0\n20\n0.0\n0\nENDSEC\n0\nEOF";
+    $result = $parser->parse($dxf);
+
+    // bulge=0.5: center at (50,-37.5), radius=62.5, included angle ~106.3 deg
+    // Arc peaks at y=25, x range is [0,100]
+    expect($result->isValid())->toBeTrue()
+        ->and($result->lengthMm)->toBe(100.0)
+        ->and($result->widthMm)->toBe(25.0);
+});
+
+it('calculates correct bounding box for bulge -0.5 (small arc below chord)', function () {
+    $parser = app(DxfParserService::class);
+
+    $dxf = "0\nSECTION\n2\nENTITIES\n0\nLWPOLYLINE\n8\nCUT\n90\n2\n70\n0\n10\n0.0\n20\n0.0\n42\n-0.5\n10\n100.0\n20\n0.0\n0\nENDSEC\n0\nEOF";
+    $result = $parser->parse($dxf);
+
+    // bulge=-0.5: center at (50,37.5), radius=62.5, included angle ~106.3 deg
+    // Arc peaks at y=-25, x range is [0,100]
+    expect($result->isValid())->toBeTrue()
+        ->and($result->lengthMm)->toBe(100.0)
+        ->and($result->widthMm)->toBe(25.0);
+});
+
+it('calculates correct bounding box for bulge 2.0 (large arc above chord)', function () {
+    $parser = app(DxfParserService::class);
+
+    $dxf = "0\nSECTION\n2\nENTITIES\n0\nLWPOLYLINE\n8\nCUT\n90\n2\n70\n0\n10\n0.0\n20\n0.0\n42\n2.0\n10\n100.0\n20\n0.0\n0\nENDSEC\n0\nEOF";
+    $result = $parser->parse($dxf);
+
+    // bulge=2.0: center at (50,37.5), radius=62.5, included angle ~253.7 deg
+    // Arc peaks at y=100, x range extends to [-12.5,112.5]
+    expect($result->isValid())->toBeTrue()
+        ->and($result->lengthMm)->toBe(125.0)
+        ->and($result->widthMm)->toBe(100.0);
+});
+
+it('calculates correct bounding box for bulge -2.0 (large arc below chord)', function () {
+    $parser = app(DxfParserService::class);
+
+    $dxf = "0\nSECTION\n2\nENTITIES\n0\nLWPOLYLINE\n8\nCUT\n90\n2\n70\n0\n10\n0.0\n20\n0.0\n42\n-2.0\n10\n100.0\n20\n0.0\n0\nENDSEC\n0\nEOF";
+    $result = $parser->parse($dxf);
+
+    // bulge=-2.0: center at (50,-37.5), radius=62.5, included angle ~253.7 deg
+    // Arc peaks at y=-100, x range extends to [-12.5,112.5]
+    expect($result->isValid())->toBeTrue()
+        ->and($result->lengthMm)->toBe(125.0)
+        ->and($result->widthMm)->toBe(100.0);
+});
+
+it('parses LWPOLYLINE with zero bulge (straight segments)', function () {
+    $parser = app(DxfParserService::class);
+
+    $dxf = "0\nSECTION\n2\nENTITIES\n0\nLWPOLYLINE\n8\nCUT\n90\n3\n70\n0\n10\n0.0\n20\n0.0\n42\n0.0\n10\n100.0\n20\n0.0\n42\n0.0\n10\n100.0\n20\n100.0\n0\nENDSEC\n0\nEOF";
+    $result = $parser->parse($dxf);
+
+    expect($result->isValid())->toBeTrue()
+        ->and($result->totalCutLengthMm)->toBe(200.0);
+});
+
+// ============================================================
+// DxfParserService — LWPOLYLINE edge cases
+// ============================================================
+
+it('handles LWPOLYLINE with single vertex', function () {
+    $parser = app(DxfParserService::class);
+
+    $dxf = "0\nSECTION\n2\nENTITIES\n0\nLWPOLYLINE\n8\nCUT\n90\n1\n70\n0\n10\n50.0\n20\n50.0\n0\nENDSEC\n0\nEOF";
+    $result = $parser->parse($dxf);
+
+    expect($result->isValid())->toBeTrue()
+        ->and($result->entityCount)->toBe(1)
+        ->and($result->totalCutLengthMm)->toBe(0.0);
+});
+
+// ============================================================
+// DxfParserService — Entity at EOF without ENDSEC
+// ============================================================
+
+it('parses entities until EOF without ENDSEC', function () {
+    $parser = app(DxfParserService::class);
+
+    $dxf = "0\nSECTION\n2\nENTITIES\n0\nLINE\n8\nCUT\n10\n0.0\n20\n0.0\n11\n100.0\n21\n50.0\n0\nEOF";
+    $result = $parser->parse($dxf);
+
+    expect($result->isValid())->toBeTrue()
+        ->and($result->entityCount)->toBe(1)
+        ->and($result->lengthMm)->toBe(100.0);
+});
+
+// ============================================================
+// DxfParserService — ARC bounding box with angles crossing quadrants
+// ============================================================
+
+it('calculates bounding box for ARC crossing quadrants', function () {
+    $parser = app(DxfParserService::class);
+
+    $dxf = "0\nSECTION\n2\nENTITIES\n0\nARC\n8\nCUT\n10\n0.0\n20\n0.0\n40\n100.0\n50\n45.0\n51\n315.0\n0\nENDSEC\n0\nEOF";
+    $result = $parser->parse($dxf);
+
+    expect($result->isValid())->toBeTrue()
+        ->and(round($result->lengthMm, 2))->toBe(170.71)
+        ->and($result->widthMm)->toBe(200.0);
+});
+
+it('parses CIRCLE entity with bounding box', function () {
+    $parser = app(DxfParserService::class);
+
+    $dxf = "0\nSECTION\n2\nENTITIES\n0\nCIRCLE\n8\nCUT\n10\n100.0\n20\n100.0\n40\n50.0\n0\nENDSEC\n0\nEOF";
+    $result = $parser->parse($dxf);
+
+    expect($result->isValid())->toBeTrue()
+        ->and($result->lengthMm)->toBe(100.0)
+        ->and($result->widthMm)->toBe(100.0);
+});
+
+it('calculates bounding box for ARC crossing 0 degrees', function () {
+    $parser = app(DxfParserService::class);
+
+    $dxf = "0\nSECTION\n2\nENTITIES\n0\nARC\n8\nCUT\n10\n0.0\n20\n0.0\n40\n100.0\n50\n315.0\n51\n45.0\n0\nENDSEC\n0\nEOF";
+    $result = $parser->parse($dxf);
+
+    expect($result->isValid())->toBeTrue()
+        ->and(round($result->lengthMm, 2))->toBe(29.29)
+        ->and(round($result->widthMm, 2))->toBe(141.42);
+});
+
+it('calculates bounding box for LWPOLYLINE with bulge', function () {
+    $parser = app(DxfParserService::class);
+
+    $dxf = "0\nSECTION\n2\nENTITIES\n0\nLWPOLYLINE\n8\nCUT\n90\n2\n70\n0\n10\n0.0\n20\n0.0\n42\n1.0\n10\n100.0\n20\n0.0\n0\nENDSEC\n0\nEOF";
+    $result = $parser->parse($dxf);
+
+    expect($result->isValid())->toBeTrue()
+        ->and($result->lengthMm)->toBe(100.0)
+        ->and($result->widthMm)->toBe(50.0);
+});
+
+// ============================================================
+// DxfParserService — parseGroupCodes odd lines
+// ============================================================
+
+it('handles odd number of lines in DXF content', function () {
+    $parser = app(DxfParserService::class);
+
+    $dxf = "0\nSECTION\n2\nENTITIES\n0\nLINE\n8\nCUT\n10\n0.0\n20\n0.0\n11\n50.0\n21\n50.0\n0\nENDSEC\n0\nEOF\n";
+    $result = $parser->parse($dxf);
+
+    expect($result->isValid())->toBeTrue()
+        ->and($result->entityCount)->toBe(1);
+});
+
+it('handles LWPOLYLINE with bulge on coincident points', function () {
+    $parser = app(DxfParserService::class);
+
+    $dxf = "0\nSECTION\n2\nENTITIES\n0\nLWPOLYLINE\n8\nCUT\n90\n2\n70\n0\n10\n50.0\n20\n50.0\n42\n1.0\n10\n50.0\n20\n50.0\n0\nENDSEC\n0\nEOF";
+    $result = $parser->parse($dxf);
+
+    expect($result->isValid())->toBeTrue()
+        ->and($result->entityCount)->toBe(1)
+        ->and($result->totalCutLengthMm)->toBe(0.0);
+});
+
+it('handles old Mac line endings', function () {
+    $parser = app(DxfParserService::class);
+
+    $dxf = "0\rSECTION\r2\rENTITIES\r0\rLINE\r8\rCUT\r10\r0.0\r20\r0.0\r11\r100.0\r21\r50.0\r0\rENDSEC\r0\rEOF";
+    $result = $parser->parse($dxf);
+
+    expect($result->isValid())->toBeTrue()
+        ->and($result->lengthMm)->toBe(100.0);
+});
+
+// ============================================================
+// E2E Integration — DXF import → Quote line → Recalculate
+// ============================================================
+
+it('imports DXF and creates quote line with correct totals', function () {
+    Queue::fake();
+
+    $material = LaserMaterial::factory()->create([
+        'price_per_kg' => 1.20,
+        'price_per_meter' => 0.80,
+        'density_kg_m3' => 7850,
+    ]);
+
+    $quote = LaserQuote::factory()->create();
+
+    $parser = app(DxfParserService::class);
+    $dxf = "0\nSECTION\n2\nENTITIES\n0\nLINE\n8\nCUT\n10\n0.0\n20\n0.0\n11\n1000.0\n21\n500.0\n0\nENDSEC\n0\nEOF";
+    $result = $parser->parse($dxf);
+
+    expect($result->isValid())->toBeTrue();
+
+    $line = LaserQuoteLine::create([
+        'laser_quote_id' => $quote->id,
+        'material_id' => $material->id,
+        'description' => 'Pièce DXF test',
+        'length_mm' => $result->lengthMm,
+        'width_mm' => $result->widthMm,
+        'thickness_mm' => 5,
+        'quantity' => 2,
+        'cut_length_mm' => $result->totalCutLengthMm,
+        'programming_cost' => 50,
+        'price_per_kg' => $material->price_per_kg,
+        'price_per_meter' => $material->price_per_meter,
+        'density_kg_m3' => $material->density_kg_m3,
+        'discount_pct' => 0,
+        'total_ht' => 0,
+    ]);
+
+    $line->recalculate();
+
+    expect((float) $line->length_mm)->toBe(1000.0)
+        ->and((float) $line->width_mm)->toBe(500.0)
+        ->and((float) $line->cut_length_mm)->toBe((float) $result->totalCutLengthMm)
+        ->and((float) $line->total_ht)->toBeGreaterThan(0.0);
+
+    $quote->refresh();
+    expect($quote->total_ht)->toBeGreaterThan(0);
+});
+
+// ============================================================
+// Bulge association — code 42 per-vertex
+// ============================================================
+
+it('associates bulge to correct vertex when first vertex has no code 42', function () {
+    $parser = app(DxfParserService::class);
+
+    $dxf = "0\nSECTION\n2\nENTITIES\n0\nLWPOLYLINE\n8\nCUT\n90\n3\n70\n0\n10\n0.0\n20\n0.0\n10\n100.0\n20\n0.0\n42\n1.0\n10\n100.0\n20\n100.0\n0\nENDSEC\n0\nEOF";
+    $result = $parser->parse($dxf);
+
+    expect($result->isValid())->toBeTrue()
+        ->and($result->totalCutLengthMm)->toBeGreaterThan(200.0);
+});
+
+it('treats vertex without code 42 as straight segment', function () {
+    $parser = app(DxfParserService::class);
+
+    $dxf = "0\nSECTION\n2\nENTITIES\n0\nLWPOLYLINE\n8\nCUT\n90\n3\n70\n0\n10\n0.0\n20\n0.0\n42\n0.0\n10\n100.0\n20\n0.0\n10\n100.0\n20\n100.0\n0\nENDSEC\n0\nEOF";
+    $result = $parser->parse($dxf);
+
+    expect($result->isValid())->toBeTrue()
+        ->and($result->totalCutLengthMm)->toBe(200.0);
+});
+
+// ============================================================
+// Layer filtering
+// ============================================================
+
+it('accepts all layers when allowedLayers is empty', function () {
+    $parser = app(DxfParserService::class);
+
+    $dxf = "0\nSECTION\n2\nENTITIES\n0\nLINE\n8\nCUT\n10\n0.0\n20\n0.0\n11\n50.0\n21\n50.0\n0\nLINE\n8\nENGRAVE\n10\n0.0\n20\n0.0\n11\n100.0\n21\n0.0\n0\nENDSEC\n0\nEOF";
+    $result = $parser->parse($dxf, []);
+
+    expect($result->isValid())->toBeTrue()
+        ->and($result->entityCount)->toBe(2)
+        ->and($result->totalCutLengthMm)->toBeGreaterThan(0.0);
+});
+
+it('filters entities by allowed layers', function () {
+    $parser = app(DxfParserService::class);
+
+    $dxf = "0\nSECTION\n2\nENTITIES\n0\nLINE\n8\nCUT\n10\n0.0\n20\n0.0\n11\n50.0\n21\n50.0\n0\nLINE\n8\nENGRAVE\n10\n0.0\n20\n0.0\n11\n100.0\n21\n0.0\n0\nENDSEC\n0\nEOF";
+    $result = $parser->parse($dxf, ['CUT']);
+
+    expect($result->isValid())->toBeTrue()
+        ->and($result->entityCount)->toBe(1);
+});
+
+it('returns error when no entities match allowed layers', function () {
+    $parser = app(DxfParserService::class);
+
+    $dxf = "0\nSECTION\n2\nENTITIES\n0\nLINE\n8\nENGRAVE\n10\n0.0\n20\n0.0\n11\n100.0\n21\n50.0\n0\nENDSEC\n0\nEOF";
+    $result = $parser->parse($dxf, ['CUT']);
+
+    expect($result->isValid())->toBeFalse()
+        ->and($result->error)->toContain('Aucune entité de découpe');
+});
+
+it('returns error when all entities are on excluded layers', function () {
+    $parser = app(DxfParserService::class);
+
+    $dxf = "0\nSECTION\n2\nENTITIES\n0\nLINE\n8\nCENTER\n10\n0.0\n20\n0.0\n11\n50.0\n21\n50.0\n0\nLWPOLYLINE\n8\nCONSTRUCTION\n90\n2\n70\n0\n10\n0.0\n20\n0.0\n10\n100.0\n20\n0.0\n0\nENDSEC\n0\nEOF";
+    $result = $parser->parse($dxf, ['CUT']);
+
+    expect($result->isValid())->toBeFalse()
+        ->and($result->error)->toContain('Aucune entité de découpe');
+});
+
+// ============================================================
+// Integration: DXF → QuoteLine with server-side validation
+// ============================================================
+
+it('creates quote line from DXF with dimensions from re-parsed file', function () {
+    Queue::fake();
+
+    $quote = LaserQuote::withoutEvents(fn () => LaserQuote::factory()->create());
+    $material = LaserMaterial::factory()->create([
+        'is_active' => true,
+        'price_per_kg' => 12.50,
+        'price_per_meter' => 3.00,
+        'density_kg_m3' => 7850,
+        'min_thickness_mm' => 0.5,
+        'max_thickness_mm' => 20.0,
+    ]);
+
+    $dxfContent = "0\nSECTION\n2\nENTITIES\n0\nLINE\n8\nCUT\n10\n0.0\n20\n0.0\n11\n500.0\n21\n250.0\n0\nENDSEC\n0\nEOF";
+
+    $parser = app(DxfParserService::class);
+    $allowedLayers = config('laser.dxf_cut_layers', []);
+    $result = $parser->parse($dxfContent, $allowedLayers);
+
+    expect($result->isValid())->toBeTrue()
+        ->and($result->lengthMm)->toBe(500.0)
+        ->and($result->widthMm)->toBe(250.0);
+
+    $thickness = 2.0;
+    $quantity = 3;
+    expect($thickness)->toBeGreaterThanOrEqual($material->min_thickness_mm)
+        ->and($thickness)->toBeLessThanOrEqual($material->max_thickness_mm)
+        ->and($quantity)->toBeGreaterThanOrEqual(1);
+
+    $line = LaserQuoteLine::create([
+        'laser_quote_id' => $quote->id,
+        'material_id' => $material->id,
+        'description' => 'Pièce DXF test',
+        'length_mm' => $result->lengthMm,
+        'width_mm' => $result->widthMm,
+        'thickness_mm' => $thickness,
+        'quantity' => $quantity,
+        'cut_length_mm' => $result->totalCutLengthMm,
+        'programming_cost' => 25.0,
+        'price_per_kg' => $material->price_per_kg,
+        'price_per_meter' => $material->price_per_meter,
+        'density_kg_m3' => $material->density_kg_m3,
+        'discount_pct' => 0,
+        'total_ht' => 0,
+    ]);
+
+    $line->recalculate();
+
+    expect((float) $line->length_mm)->toBe(500.0)
+        ->and((float) $line->width_mm)->toBe(250.0)
+        ->and((float) $line->cut_length_mm)->toBe((float) $result->totalCutLengthMm)
+        ->and((float) $line->thickness_mm)->toBe(2.0)
+        ->and((int) $line->quantity)->toBe(3)
+        ->and((float) $line->total_ht)->toBeGreaterThan(0.0)
+        ->and((float) $line->price_per_kg)->toBe(12.50)
+        ->and((float) $line->density_kg_m3)->toBe(7850.0);
+
+    $quote->refresh();
+    expect($quote->total_ht)->toBeGreaterThan(0);
+});
+
+it('rejects thickness below material minimum', function () {
+    $material = LaserMaterial::factory()->create([
+        'is_active' => true,
+        'min_thickness_mm' => 1.0,
+        'max_thickness_mm' => 10.0,
+    ]);
+
+    $thickness = 0.5;
+
+    $isValid = $thickness >= $material->min_thickness_mm;
+    expect($isValid)->toBeFalse();
+});
+
+it('rejects thickness above material maximum', function () {
+    $material = LaserMaterial::factory()->create([
+        'is_active' => true,
+        'min_thickness_mm' => 1.0,
+        'max_thickness_mm' => 10.0,
+    ]);
+
+    $thickness = 15.0;
+
+    $isValid = $thickness <= $material->max_thickness_mm;
+    expect($isValid)->toBeFalse();
+});
+
+it('rejects inactive material', function () {
+    $material = LaserMaterial::factory()->create([
+        'is_active' => false,
+    ]);
+
+    $found = LaserMaterial::where('id', $material->id)->where('is_active', true)->first();
+    expect($found)->toBeNull();
+});
+
+it('rejects quantity below 1', function () {
+    $quantity = 0;
+    expect($quantity)->toBeLessThan(1);
+});

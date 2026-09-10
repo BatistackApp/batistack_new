@@ -71,7 +71,7 @@ class LaserQuoteLine extends Model
 
     public function calculateWeight(): float
     {
-        $density = (float) ($this->density_kg_m3 ?? ($this->material?->density_kg_m3 ?? 0));
+        $density = (float) ($this->density_kg_m3 ?? $this->material?->density_kg_m3 ?? 0);
 
         return static::computeWeight(
             (float) $this->length_mm,
@@ -85,9 +85,9 @@ class LaserQuoteLine extends Model
     {
         return static::computeUnitPrice(
             $this->calculateWeight(),
-            (float) $this->price_per_kg,
+            (float) ($this->price_per_kg ?? $this->material?->price_per_kg),
             (float) $this->cut_length_mm,
-            (float) $this->price_per_meter,
+            (float) ($this->price_per_meter ?? $this->material?->price_per_meter),
             (float) $this->programming_cost,
         );
     }
@@ -101,9 +101,9 @@ class LaserQuoteLine extends Model
     {
         return app(LaserQuoteService::class)->calculateLineTotal(
             $this->calculateWeight(),
-            (float) $this->price_per_kg,
+            (float) ($this->price_per_kg ?? $this->material?->price_per_kg),
             (float) $this->cut_length_mm,
-            (float) $this->price_per_meter,
+            (float) ($this->price_per_meter ?? $this->material?->price_per_meter),
             (float) $this->programming_cost,
             (int) $this->quantity,
             $discountPct ?? (float) $this->discount_pct,
@@ -135,7 +135,7 @@ class LaserQuoteLine extends Model
         $discount = $this->calculateDiscount();
 
         $this->update([
-            'density_kg_m3' => $this->material?->density_kg_m3 ?? $this->density_kg_m3,
+            'density_kg_m3' => $this->density_kg_m3 ?? $this->material?->density_kg_m3,
             'surface_mm2' => $this->calculateSurface(),
             'weight_kg' => $this->calculateWeight(),
             'unit_price_ht' => $this->calculateUnitPrice(),

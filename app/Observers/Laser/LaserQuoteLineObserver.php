@@ -24,9 +24,7 @@ class LaserQuoteLineObserver
 
     private function refreshQuote(LaserQuoteLine $line): void
     {
-        LaserQuoteLine::withoutObserving(function () use ($line) {
-            $line->recalculate();
-        });
+        $line->withoutEvents(fn () => $line->recalculate());
 
         $quote = $line->quote;
 
