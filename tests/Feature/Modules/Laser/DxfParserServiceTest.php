@@ -419,3 +419,72 @@ it('imports DXF and creates quote line with correct totals', function () {
     $quote->refresh();
     expect($quote->total_ht)->toBeGreaterThan(0);
 });
+
+// ============================================================
+// Bulge association — code 42 per-vertex
+// ============================================================
+
+it('associates bulge to correct vertex when first vertex has no code 42', function () {
+    $parser = app(DxfParserService::class);
+
+    $dxf = "0\nSECTION\n2\nENTITIES\n0\nLWPOLYLINE\n8\nCUT\n90\n3\n70\n0\n10\n0.0\n20\n0.0\n10\n100.0\n20\n0.0\n42\n1.0\n10\n100.0\n20\n100.0\n0\nENDSEC\n0\nEOF";
+    $result = $parser->parse($dxf);
+
+    expect($result->isValid())->toBeTrue()
+        ->and($result->totalCutLengthMm)->toBeGreaterThan(200.0);
+});
+
+it('treats vertex without code 42 as straight segment', function () {
+    $parser = app(DxfParserService::class);
+
+    $dxf = "0\nSECTION\n2\nENTITIES\n0\nLWPOLYLINE\n8\nCUT\n90\n3\n70\n0\n10\n0.0\n20\n0.0\n42\n0.0\n10\n100.0\n20\n0.0\n10\n100.0\n20\n100.0\n0\nENDSEC\n0\nEOF";
+    $result = $parser->parse($dxf);
+
+    expect($result->isValid())->toBeTrue()
+        ->and($result->totalCutLengthMm)->toBe(200.0);
+});
+
+// ============================================================
+// Layer filtering
+// ============================================================
+
+it('accepts all layers when allowedLayers is empty', function () {
+    $parser = app(DxfParserService::class);
+
+    $dxf = "0\nSECTION\n2\nENTITIES\n0\nLINE\n8\nCUT\n10\n0.0\n20\n0.0\n11\n50.0\n21\n50.0\n0\nLINE\n8\nENGRAVE\n10\n0.0\n20\n0.0\n11\n100.0\n21\n0.0\n0\nENDSEC\n0\nEOF";
+    $result = $parser->parse($dxf, []);
+
+    expect($result->isValid())->toBeTrue()
+        ->and($result->entityCount)->toBe(2)
+        ->and($result->totalCutLengthMm)->toBeGreaterThan(0.0);
+});
+
+it('filters entities by allowed layers', function () {
+    $parser = app(DxfParserService::class);
+
+    $dxf = "0\nSECTION\n2\nENTITIES\n0\nLINE\n8\nCUT\n10\n0.0\n20\n0.0\n11\n50.0\n21\n50.0\n0\nLINE\n8\nENGRAVE\n10\n0.0\n20\n0.0\n11\n100.0\n21\n0.0\n0\nENDSEC\n0\nEOF";
+    $result = $parser->parse($dxf, ['CUT']);
+
+    expect($result->isValid())->toBeTrue()
+        ->and($result->entityCount)->toBe(1);
+});
+
+it('returns error when no entities match allowed layers', function () {
+    $parser = app(DxfParserService::class);
+
+    $dxf = "0\nSECTION\n2\nENTITIES\n0\nLINE\n8\nENGRAVE\n10\n0.0\n20\n0.0\n11\n100.0\n21\n50.0\n0\nENDSEC\n0\nEOF";
+    $result = $parser->parse($dxf, ['CUT']);
+
+    expect($result->isValid())->toBeFalse()
+        ->and($result->error)->toContain('Aucune entité de découpe');
+});
+
+it('returns error when all entities are on excluded layers', function () {
+    $parser = app(DxfParserService::class);
+
+    $dxf = "0\nSECTION\n2\nENTITIES\n0\nLINE\n8\nCENTER\n10\n0.0\n20\n0.0\n11\n50.0\n21\n50.0\n0\nLWPOLYLINE\n8\nCONSTRUCTION\n90\n2\n70\n0\n10\n0.0\n20\n0.0\n10\n100.0\n20\n0.0\n0\nENDSEC\n0\nEOF";
+    $result = $parser->parse($dxf, ['CUT']);
+
+    expect($result->isValid())->toBeFalse()
+        ->and($result->error)->toContain('Aucune entité de découpe');
+});

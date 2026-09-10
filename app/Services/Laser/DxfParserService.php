@@ -31,6 +31,15 @@ class DxfParserService
         $layers = $this->extractLayers($entities);
 
         $cutEntities = $this->filterEntitiesByLayers($entities, $allowedLayers);
+
+        if (empty($cutEntities)) {
+            return DxfImportResult::error(
+                empty($allowedLayers)
+                    ? 'Aucune entité de découpe trouvée dans le fichier DXF.'
+                    : 'Aucune entité de découpe trouvée dans les couches autorisées ('.implode(', ', $allowedLayers).').'
+            );
+        }
+
         $bbox = $this->calculateBoundingBox($cutEntities);
         $totalCutLength = $this->calculateCutLength($cutEntities);
 
@@ -137,7 +146,7 @@ class DxfParserService
                 11 => $currentEntity['data']['end_x'] = (float) $value,
                 21 => $currentEntity['data']['end_y'] = (float) $value,
                 40 => $currentEntity['data']['radius'] = (float) $value,
-                42 => $currentEntity['data']['bulge'][] = (float) $value,
+                42 => $this->setLastVertexBulge($currentEntity, (float) $value),
                 50 => $currentEntity['data']['start_angle'] = (float) $value,
                 51 => $currentEntity['data']['end_angle'] = (float) $value,
                 90 => $currentEntity['data']['vertex_count'] = (int) $value,
@@ -152,6 +161,7 @@ class DxfParserService
                 $currentEntity['data']['vertices'][] = [
                     'x' => (float) $value,
                     'y' => 0,
+                    'bulge' => 0.0,
                 ];
             }
 
@@ -168,6 +178,15 @@ class DxfParserService
         }
 
         return $entities;
+    }
+
+    private function setLastVertexBulge(array &$entity, float $bulge): void
+    {
+        $vertices = &$entity['data']['vertices'];
+        $count = count($vertices ?? []);
+        if ($count > 0) {
+            $vertices[$count - 1]['bulge'] = $bulge;
+        }
     }
 
     /**
@@ -250,7 +269,6 @@ class DxfParserService
     private function boundingBoxForPolyline(array $entity, callable $updateBounds): void
     {
         $vertices = $entity['data']['vertices'] ?? [];
-        $bulges = $entity['data']['bulge'] ?? [];
         $count = count($vertices);
         $flags = $entity['data']['flags'] ?? 0;
         $isClosed = ($flags & 1) === 1;
@@ -263,7 +281,7 @@ class DxfParserService
         for ($i = 0; $i < $segmentCount; $i++) {
             $start = $vertices[$i];
             $end = $vertices[($i + 1) % $count];
-            $bulge = $bulges[$i] ?? 0;
+            $bulge = $start['bulge'] ?? 0.0;
 
             if (abs($bulge) >= 1e-10) {
                 $this->boundingBoxForBulgeArc($start, $end, $bulge, $updateBounds);
@@ -400,7 +418,6 @@ class DxfParserService
     private function polylineLength(array $entity): float
     {
         $vertices = $entity['data']['vertices'] ?? [];
-        $bulges = $entity['data']['bulge'] ?? [];
         $count = count($vertices);
         $flags = $entity['data']['flags'] ?? 0;
         $isClosed = ($flags & 1) === 1;
@@ -415,7 +432,7 @@ class DxfParserService
         for ($i = 0; $i < $segmentCount; $i++) {
             $start = $vertices[$i];
             $end = $vertices[($i + 1) % $count];
-            $bulge = $bulges[$i] ?? 0;
+            $bulge = $start['bulge'] ?? 0.0;
 
             if (abs($bulge) < 1e-10) {
                 $dx = $end['x'] - $start['x'];

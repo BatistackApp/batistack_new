@@ -106,7 +106,7 @@ class ImportDxfAction
                     ->content(fn (callable $get) => $get('dxf_entity_count') !== null ? (string) $get('dxf_entity_count') : '-'),
 
                 Placeholder::make('dxf_layers')
-                    ->label('Couches détectées')
+                    ->label('Couches détectées dans le DXF')
                     ->content(fn (callable $get) => $get('dxf_layers') ?? '-'),
 
                 Select::make('material_id')
@@ -210,8 +210,49 @@ class ImportDxfAction
                     return;
                 }
 
-                $service = app(LaserQuoteService::class);
+                $thickness = (float) ($data['thickness_mm'] ?? 0);
+                if ($thickness <= 0) {
+                    Notification::make()
+                        ->title('Épaisseur invalide')
+                        ->body('L\'épaisseur doit être strictement positive.')
+                        ->danger()
+                        ->send();
+
+                    return;
+                }
+
+                if ($material->min_thickness_mm !== null && $thickness < $material->min_thickness_mm) {
+                    Notification::make()
+                        ->title('Épaisseur trop faible')
+                        ->body("L'épaisseur minimale pour {$material->name} est {$material->min_thickness_mm} mm.")
+                        ->danger()
+                        ->send();
+
+                    return;
+                }
+
+                if ($material->max_thickness_mm !== null && $thickness > $material->max_thickness_mm) {
+                    Notification::make()
+                        ->title('Épaisseur trop élevée')
+                        ->body("L'épaisseur maximale pour {$material->name} est {$material->max_thickness_mm} mm.")
+                        ->danger()
+                        ->send();
+
+                    return;
+                }
+
                 $quantity = (int) ($data['quantity'] ?? 1);
+                if ($quantity < 1) {
+                    Notification::make()
+                        ->title('Quantité invalide')
+                        ->body('La quantité doit être au moins 1.')
+                        ->danger()
+                        ->send();
+
+                    return;
+                }
+
+                $service = app(LaserQuoteService::class);
                 $discount = $service->applyDiscount($quantity);
 
                 LaserQuoteLine::create([
@@ -220,10 +261,10 @@ class ImportDxfAction
                     'description' => $data['description'] ?? null,
                     'length_mm' => $result->lengthMm,
                     'width_mm' => $result->widthMm,
-                    'thickness_mm' => $data['thickness_mm'],
+                    'thickness_mm' => $thickness,
                     'quantity' => $quantity,
                     'cut_length_mm' => $result->totalCutLengthMm,
-                    'programming_cost' => $data['programming_cost'] ?? 0,
+                    'programming_cost' => max(0.0, (float) ($data['programming_cost'] ?? 0)),
                     'price_per_kg' => $material->price_per_kg,
                     'price_per_meter' => $material->price_per_meter,
                     'density_kg_m3' => $material->density_kg_m3,
