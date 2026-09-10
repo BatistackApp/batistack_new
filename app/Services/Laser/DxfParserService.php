@@ -25,7 +25,7 @@ class DxfParserService
         $entities = $this->extractEntities();
 
         if (empty($entities)) {
-            return DxfImportResult::error('Aucune entité géométrique trouvée (LINE, LWPOLYLINE, ARC).');
+            return DxfImportResult::error('Aucune entité géométrique trouvée (LINE, LWPOLYLINE, ARC, CIRCLE).');
         }
 
         $layers = $this->extractLayers($entities);

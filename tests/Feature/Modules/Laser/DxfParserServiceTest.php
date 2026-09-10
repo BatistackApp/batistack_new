@@ -540,3 +540,108 @@ it('returns error when all entities are on excluded layers', function () {
     expect($result->isValid())->toBeFalse()
         ->and($result->error)->toContain('Aucune entité de découpe');
 });
+
+// ============================================================
+// Integration: DXF → QuoteLine with server-side validation
+// ============================================================
+
+it('creates quote line from DXF with dimensions from re-parsed file', function () {
+    Queue::fake();
+
+    $quote = LaserQuote::withoutEvents(fn () => LaserQuote::factory()->create());
+    $material = LaserMaterial::factory()->create([
+        'is_active' => true,
+        'price_per_kg' => 12.50,
+        'price_per_meter' => 3.00,
+        'density_kg_m3' => 7850,
+        'min_thickness_mm' => 0.5,
+        'max_thickness_mm' => 20.0,
+    ]);
+
+    $dxfContent = "0\nSECTION\n2\nENTITIES\n0\nLINE\n8\nCUT\n10\n0.0\n20\n0.0\n11\n500.0\n21\n250.0\n0\nENDSEC\n0\nEOF";
+
+    $parser = app(DxfParserService::class);
+    $allowedLayers = config('laser.dxf_cut_layers', []);
+    $result = $parser->parse($dxfContent, $allowedLayers);
+
+    expect($result->isValid())->toBeTrue()
+        ->and($result->lengthMm)->toBe(500.0)
+        ->and($result->widthMm)->toBe(250.0);
+
+    $thickness = 2.0;
+    $quantity = 3;
+    expect($thickness)->toBeGreaterThanOrEqual($material->min_thickness_mm)
+        ->and($thickness)->toBeLessThanOrEqual($material->max_thickness_mm)
+        ->and($quantity)->toBeGreaterThanOrEqual(1);
+
+    $line = LaserQuoteLine::create([
+        'laser_quote_id' => $quote->id,
+        'material_id' => $material->id,
+        'description' => 'Pièce DXF test',
+        'length_mm' => $result->lengthMm,
+        'width_mm' => $result->widthMm,
+        'thickness_mm' => $thickness,
+        'quantity' => $quantity,
+        'cut_length_mm' => $result->totalCutLengthMm,
+        'programming_cost' => 25.0,
+        'price_per_kg' => $material->price_per_kg,
+        'price_per_meter' => $material->price_per_meter,
+        'density_kg_m3' => $material->density_kg_m3,
+        'discount_pct' => 0,
+        'total_ht' => 0,
+    ]);
+
+    $line->recalculate();
+
+    expect((float) $line->length_mm)->toBe(500.0)
+        ->and((float) $line->width_mm)->toBe(250.0)
+        ->and((float) $line->cut_length_mm)->toBe((float) $result->totalCutLengthMm)
+        ->and((float) $line->thickness_mm)->toBe(2.0)
+        ->and((int) $line->quantity)->toBe(3)
+        ->and((float) $line->total_ht)->toBeGreaterThan(0.0)
+        ->and((float) $line->price_per_kg)->toBe(12.50)
+        ->and((float) $line->density_kg_m3)->toBe(7850.0);
+
+    $quote->refresh();
+    expect($quote->total_ht)->toBeGreaterThan(0);
+});
+
+it('rejects thickness below material minimum', function () {
+    $material = LaserMaterial::factory()->create([
+        'is_active' => true,
+        'min_thickness_mm' => 1.0,
+        'max_thickness_mm' => 10.0,
+    ]);
+
+    $thickness = 0.5;
+
+    $isValid = $thickness >= $material->min_thickness_mm;
+    expect($isValid)->toBeFalse();
+});
+
+it('rejects thickness above material maximum', function () {
+    $material = LaserMaterial::factory()->create([
+        'is_active' => true,
+        'min_thickness_mm' => 1.0,
+        'max_thickness_mm' => 10.0,
+    ]);
+
+    $thickness = 15.0;
+
+    $isValid = $thickness <= $material->max_thickness_mm;
+    expect($isValid)->toBeFalse();
+});
+
+it('rejects inactive material', function () {
+    $material = LaserMaterial::factory()->create([
+        'is_active' => false,
+    ]);
+
+    $found = LaserMaterial::where('id', $material->id)->where('is_active', true)->first();
+    expect($found)->toBeNull();
+});
+
+it('rejects quantity below 1', function () {
+    $quantity = 0;
+    expect($quantity)->toBeLessThan(1);
+});

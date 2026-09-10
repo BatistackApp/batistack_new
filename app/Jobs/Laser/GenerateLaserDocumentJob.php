@@ -22,7 +22,7 @@ class GenerateLaserDocumentJob implements ShouldQueue
         public ?CarbonImmutable $expectedUpdatedAt = null,
     ) {
         if ($this->expectedUpdatedAt === null && $this->model->exists) {
-            $this->expectedUpdatedAt = $this->model->updated_at;
+            $this->expectedUpdatedAt = CarbonImmutable::instance($this->model->updated_at);
         }
     }
 
@@ -41,7 +41,7 @@ class GenerateLaserDocumentJob implements ShouldQueue
             ->findOrFail($this->model->getKey());
 
         if ($this->expectedUpdatedAt && $freshQuote->updated_at->greaterThan($this->expectedUpdatedAt)) {
-            self::dispatch($this->namespace, $freshQuote, $freshQuote->updated_at);
+            self::dispatch($this->namespace, $freshQuote, CarbonImmutable::instance($freshQuote->updated_at));
 
             return;
         }
