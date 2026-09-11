@@ -7,6 +7,7 @@ use App\Enums\Laser\OrderStatus;
 use App\Jobs\Laser\GenerateLaserDocumentJob;
 use App\Models\Laser\LaserCreditNote;
 use App\Models\Laser\LaserInvoice;
+use App\Models\Laser\LaserLegalizationSequence;
 use App\Models\Laser\LaserOrder;
 use App\Support\ReferenceGenerator;
 use Exception;
@@ -83,6 +84,8 @@ class LaserInvoiceService
                 'total_ttc' => $totalTtc,
             ]);
 
+            DB::afterCommit(fn () => GenerateLaserDocumentJob::dispatch('laser_invoice', $invoice));
+
             return $invoice;
         });
     }
@@ -113,15 +116,11 @@ class LaserInvoiceService
                 throw new Exception('Seule une facture en brouillon peut être légalisée.');
             }
 
+            $sequence = LaserLegalizationSequence::firstOrFail();
+            $sequence->lockForUpdate();
+
             $definitiveRef = $this->generateInvoiceReference();
-
-            $lastValidated = LaserInvoice::whereYear('created_at', now()->year)
-                ->where('status', '!=', InvoiceStatus::DRAFT)
-                ->whereNotNull('signature_hash')
-                ->orderBy('reference', 'desc')
-                ->first();
-
-            $previousHash = $lastValidated?->signature_hash ?? 'GENESIS';
+            $previousHash = $sequence->last_hash;
 
             $dataToHash = implode('|', [
                 $definitiveRef,
@@ -140,7 +139,12 @@ class LaserInvoiceService
                 'signature_hash' => $newHash,
             ]);
 
-            GenerateLaserDocumentJob::dispatch('laser_invoice', $invoice);
+            $sequence->update([
+                'last_hash' => $newHash,
+                'last_reference' => $definitiveRef,
+            ]);
+
+            DB::afterCommit(fn () => GenerateLaserDocumentJob::dispatch('laser_invoice', $invoice));
 
             $this->refreshOrderStatus($invoice->order()->with('lines')->first());
         });
@@ -148,26 +152,33 @@ class LaserInvoiceService
 
     public function createCreditNote(LaserInvoice $invoice, string $reason, ?float $totalHt = null): LaserCreditNote
     {
-        if (! in_array($invoice->status, [InvoiceStatus::VALIDATED, InvoiceStatus::PAID])) {
-            throw new Exception('Seules les factures validées ou payées peuvent faire l\'objet d\'un avoir.');
-        }
-
-        $tvaRate = config('laser.vat_rate', 20);
-
-        $requestedHt = $totalHt ?? $invoice->remaining_creditable_ht;
-        $requestedTva = round($requestedHt * $tvaRate / 100, 2);
-        $requestedTtc = $requestedHt + $requestedTva;
-
-        if ($requestedHt <= 0) {
-            throw new Exception('Le montant de l\'avoir doit être supérieur à zéro.');
-        }
-
-        if ($requestedHt > $invoice->remaining_creditable_ht) {
-            throw new Exception('Le montant de l\'avoir dépasse le solde restant à avoir. Solde disponible : '.number_format($invoice->remaining_creditable_ht, 2, ',', ' ').' € HT.');
-        }
-
-        return DB::transaction(function () use ($invoice, $reason, $requestedHt, $requestedTva, $requestedTtc) {
+        return DB::transaction(function () use ($invoice, $reason, $totalHt) {
             $invoice = LaserInvoice::whereKey($invoice->id)->lockForUpdate()->firstOrFail();
+
+            if (! in_array($invoice->status, [InvoiceStatus::VALIDATED, InvoiceStatus::PAID])) {
+                throw new Exception('Seules les factures validées ou payées peuvent faire l\'objet d\'un avoir.');
+            }
+
+            $tvaRate = config('laser.vat_rate', 20);
+
+            $remainingHt = (float) $invoice->total_ht - (float) $invoice->credited_amount_ht;
+
+            if ($remainingHt <= 0) {
+                throw new Exception('Cette facture a déjà été intégralement créditée.');
+            }
+
+            $requestedHt = $totalHt ?? $remainingHt;
+
+            if ($requestedHt <= 0) {
+                throw new Exception('Le montant de l\'avoir doit être supérieur à zéro.');
+            }
+
+            if ($requestedHt > $remainingHt) {
+                throw new Exception('Le montant de l\'avoir dépasse le solde restant à avoir. Solde disponible : '.number_format($remainingHt, 2, ',', ' ').' € HT.');
+            }
+
+            $requestedTva = round($requestedHt * $tvaRate / 100, 2);
+            $requestedTtc = $requestedHt + $requestedTva;
 
             $creditNote = LaserCreditNote::create([
                 'client_id' => $invoice->client_id,
@@ -183,6 +194,8 @@ class LaserInvoiceService
             $invoice->increment('credited_amount_ht', $requestedHt);
             $invoice->increment('credited_amount_tva', $requestedTva);
             $invoice->increment('credited_amount_ttc', $requestedTtc);
+
+            DB::afterCommit(fn () => GenerateLaserDocumentJob::dispatch('laser_credit_note', $creditNote));
 
             return $creditNote;
         });

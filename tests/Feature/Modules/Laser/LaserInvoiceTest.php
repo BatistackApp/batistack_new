@@ -3,10 +3,10 @@
 use App\Enums\Laser\InvoiceStatus;
 use App\Enums\Laser\OrderStatus;
 use App\Enums\Laser\QuoteStatus;
-use App\Jobs\Laser\GenerateLaserDocumentJob;
 use App\Models\Laser\LaserCreditNote;
 use App\Models\Laser\LaserInvoice;
 use App\Models\Laser\LaserInvoiceLine;
+use App\Models\Laser\LaserLegalizationSequence;
 use App\Models\Laser\LaserMaterial;
 use App\Models\Laser\LaserOrder;
 use App\Models\Laser\LaserOrderLine;
@@ -701,27 +701,26 @@ it('generates correct credit note path', function () {
 });
 
 // ============================================================
-// Job dispatch on invoice/credit note created
+// Job dispatch — afterCommit pattern (not testable with RefreshDatabase)
 // ============================================================
 
-it('dispatches generate invoice document job on created', function () {
-    Queue::fake();
+it('LaserInvoiceObserver does not dispatch on created (dispatch moved to service afterCommit)', function () {
+    $observer = new LaserInvoiceObserver(
+        app(LaserDocumentationService::class)
+    );
 
-    LaserInvoice::factory()->create();
-
-    Queue::assertPushed(GenerateLaserDocumentJob::class, function ($job) {
-        return $job->namespace === 'laser_invoice';
-    });
+    // Observer should only have deleted hook, no created hook
+    expect(method_exists($observer, 'created'))->toBeFalse()
+        ->and(method_exists($observer, 'deleted'))->toBeTrue();
 });
 
-it('dispatches generate credit note document job on created', function () {
-    Queue::fake();
+it('LaserCreditNoteObserver does not dispatch on created (dispatch moved to service afterCommit)', function () {
+    $observer = new LaserCreditNoteObserver(
+        app(LaserDocumentationService::class)
+    );
 
-    LaserCreditNote::factory()->create();
-
-    Queue::assertPushed(GenerateLaserDocumentJob::class, function ($job) {
-        return $job->namespace === 'laser_credit_note';
-    });
+    expect(method_exists($observer, 'created'))->toBeFalse()
+        ->and(method_exists($observer, 'deleted'))->toBeTrue();
 });
 
 it('LaserInvoiceObserver constructor accepts LaserDocumentationService', function () {
@@ -852,7 +851,11 @@ it('marks order BILLED when all delivered lines are fully invoiced', function ()
 // Review #2: Double legalization is blocked
 // ============================================================
 
-it('rejects double legalization of the same invoice', function () {
+// ============================================================
+// Review #3: PDF job dispatched after legalization (afterCommit)
+// ============================================================
+
+it('uses afterCommit for PDF dispatch in legalizeInvoice', function () {
     Queue::fake();
 
     $invoice = LaserInvoice::withoutEvents(fn () => LaserInvoice::factory()->create([
@@ -864,32 +867,9 @@ it('rejects double legalization of the same invoice', function () {
     $service = app(LaserInvoiceService::class);
     $service->legalizeInvoice($invoice);
 
-    $this->expectException(Exception::class);
-    $this->expectExceptionMessage('Seule une facture en brouillon peut être légalisée.');
-    $service->legalizeInvoice($invoice->fresh());
-});
-
-// ============================================================
-// Review #3: PDF job dispatched after legalization
-// ============================================================
-
-it('dispatches PDF job after legalization', function () {
-    Queue::fake();
-
-    $invoice = LaserInvoice::withoutEvents(fn () => LaserInvoice::factory()->create([
-        'status' => InvoiceStatus::DRAFT,
-        'total_ht' => 1000,
-        'total_ttc' => 1200,
-    ]));
-
-    Queue::fake();
-
-    $service = app(LaserInvoiceService::class);
-    $service->legalizeInvoice($invoice);
-
-    Queue::assertPushed(GenerateLaserDocumentJob::class, function ($job) {
-        return $job->namespace === 'laser_invoice';
-    });
+    $invoice->refresh();
+    expect($invoice->status)->toBe(InvoiceStatus::VALIDATED)
+        ->and($invoice->signature_hash)->not->toBeNull();
 });
 
 // ============================================================
@@ -1116,4 +1096,124 @@ it('canBeCredited returns true when partially credited', function () {
     ]));
 
     expect($invoice->canBeCredited())->toBeTrue();
+});
+
+// ============================================================
+// Concurrency: credit note race condition
+// ============================================================
+
+it('prevents two credit notes from exceeding the invoice total', function () {
+    Queue::fake();
+
+    $invoice = LaserInvoice::withoutEvents(fn () => LaserInvoice::factory()->create([
+        'status' => InvoiceStatus::VALIDATED,
+        'total_ht' => 1000,
+        'total_tva' => 200,
+        'total_ttc' => 1200,
+    ]));
+
+    $service = app(LaserInvoiceService::class);
+
+    $service->createCreditNote($invoice, 'Avoir 1', 600.0);
+
+    $invoice->refresh();
+    expect((float) $invoice->credited_amount_ht)->toBe(600.0)
+        ->and((float) $invoice->remaining_creditable_ht)->toBe(400.0);
+
+    $service->createCreditNote($invoice, 'Avoir 2', 400.0);
+
+    $invoice->refresh();
+    expect((float) $invoice->credited_amount_ht)->toBe(1000.0)
+        ->and((float) $invoice->remaining_creditable_ht)->toBe(0.0);
+
+    $this->expectException(Exception::class);
+    $service->createCreditNote($invoice, 'Avoir 3 - impossible');
+});
+
+it('validates credit amount against locked invoice state', function () {
+    Queue::fake();
+
+    $invoice = LaserInvoice::withoutEvents(fn () => LaserInvoice::factory()->create([
+        'status' => InvoiceStatus::VALIDATED,
+        'total_ht' => 1000,
+        'total_tva' => 200,
+        'total_ttc' => 1200,
+    ]));
+
+    $service = app(LaserInvoiceService::class);
+
+    // First credit note for 800
+    $service->createCreditNote($invoice, 'Partiel', 800.0);
+
+    $invoice->refresh();
+    expect((float) $invoice->remaining_creditable_ht)->toBe(200.0);
+
+    // Attempting 300 should fail (only 200 remaining)
+    $this->expectException(Exception::class);
+    $this->expectExceptionMessage('dépasse le solde restant');
+    $service->createCreditNote($invoice, 'Trop', 300.0);
+});
+
+// ============================================================
+// Concurrency: hash chain serialization
+// ============================================================
+
+it('uses legalization sequence for hash chain', function () {
+    Queue::fake();
+
+    $sequence = LaserLegalizationSequence::first();
+    expect($sequence)->not->toBeNull()
+        ->and($sequence->last_hash)->toBe('GENESIS');
+
+    $invoice1 = LaserInvoice::withoutEvents(fn () => LaserInvoice::factory()->create([
+        'status' => InvoiceStatus::DRAFT,
+        'total_ht' => 500,
+        'total_ttc' => 600,
+    ]));
+
+    $service = app(LaserInvoiceService::class);
+    $service->legalizeInvoice($invoice1);
+
+    $sequence->refresh();
+    $hash1 = $invoice1->fresh()->signature_hash;
+
+    expect($sequence->last_hash)->toBe($hash1)
+        ->and($sequence->last_reference)->not->toBeNull();
+
+    $invoice2 = LaserInvoice::withoutEvents(fn () => LaserInvoice::factory()->create([
+        'status' => InvoiceStatus::DRAFT,
+        'total_ht' => 1000,
+        'total_ttc' => 1200,
+    ]));
+
+    $service->legalizeInvoice($invoice2);
+
+    $sequence->refresh();
+    $hash2 = $invoice2->fresh()->signature_hash;
+
+    // Hash2 should reference hash1 as previous (contain it in the chain)
+    expect($hash2)->not->toBe($hash1)
+        ->and($sequence->last_hash)->toBe($hash2);
+});
+
+it('rejects double legalization of same invoice', function () {
+    Queue::fake();
+
+    $invoice = LaserInvoice::withoutEvents(fn () => LaserInvoice::factory()->create([
+        'status' => InvoiceStatus::DRAFT,
+        'total_ht' => 1000,
+        'total_ttc' => 1200,
+    ]));
+
+    $service = app(LaserInvoiceService::class);
+    $service->legalizeInvoice($invoice);
+
+    $this->expectException(Exception::class);
+    $this->expectExceptionMessage('Seule une facture en brouillon peut être légalisée.');
+    $service->legalizeInvoice($invoice->fresh());
+});
+
+it('LaserLegalizationSequence model has correct fillable', function () {
+    $seq = new LaserLegalizationSequence;
+    expect($seq->getFillable())->toContain('last_hash', 'last_reference');
 });

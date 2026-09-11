@@ -2,7 +2,6 @@
 
 namespace App\Observers\Laser;
 
-use App\Jobs\Laser\GenerateLaserDocumentJob;
 use App\Models\Laser\LaserCreditNote;
 use App\Services\Laser\LaserDocumentationService;
 use Illuminate\Support\Facades\Storage;
@@ -12,11 +11,6 @@ class LaserCreditNoteObserver
     public function __construct(
         protected LaserDocumentationService $documentService,
     ) {}
-
-    public function created(LaserCreditNote $creditNote): void
-    {
-        GenerateLaserDocumentJob::dispatch('laser_credit_note', $creditNote);
-    }
 
     public function deleted(LaserCreditNote $creditNote): void
     {
