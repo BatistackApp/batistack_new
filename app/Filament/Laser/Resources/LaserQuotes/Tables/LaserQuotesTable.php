@@ -6,12 +6,12 @@ use App\Enums\Laser\QuoteStatus;
 use App\Models\Laser\LaserQuote;
 use App\Services\Laser\LaserQuoteService;
 use Filament\Notifications\Notification;
-use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Filters\SelectFilter;
-use Filament\Tables\Table;
 use Filament\Tables\Actions\Action;
 use Filament\Tables\Actions\ActionGroup;
 use Filament\Tables\Actions\ViewAction;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Table;
 
 class LaserQuotesTable
 {

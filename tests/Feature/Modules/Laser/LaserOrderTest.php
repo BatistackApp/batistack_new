@@ -2,11 +2,14 @@
 
 use App\Enums\Laser\OrderStatus;
 use App\Enums\Laser\QuoteStatus;
+use App\Jobs\Laser\GenerateLaserDocumentJob;
 use App\Models\Laser\LaserMaterial;
 use App\Models\Laser\LaserOrder;
 use App\Models\Laser\LaserOrderLine;
 use App\Models\Laser\LaserQuote;
 use App\Models\Laser\LaserQuoteLine;
+use App\Observers\Laser\LaserOrderObserver;
+use App\Services\Laser\LaserDocumentationService;
 use App\Services\Laser\LaserQuoteService;
 use Illuminate\Support\Facades\Queue;
 
@@ -114,7 +117,7 @@ it('rejects quote in invalid status', function () {
 
     $service = app(LaserQuoteService::class);
 
-    $this->expectException(\Exception::class);
+    $this->expectException(Exception::class);
     $this->expectExceptionMessage('Ce devis ne peut pas être accepté');
     $service->acceptQuote($quote);
 });
@@ -126,7 +129,7 @@ it('rejects cancelled quote', function () {
 
     $service = app(LaserQuoteService::class);
 
-    $this->expectException(\Exception::class);
+    $this->expectException(Exception::class);
     $service->acceptQuote($quote);
 });
 
@@ -210,7 +213,7 @@ it('rejects duplicate order for same quote', function () {
     $service = app(LaserQuoteService::class);
     $service->acceptQuote($quote);
 
-    $this->expectException(\Exception::class);
+    $this->expectException(Exception::class);
     $this->expectExceptionMessage('Ce devis a déjà été converti en commande');
     $service->acceptQuote($quote);
 });
@@ -279,7 +282,7 @@ it('casts LaserOrder attributes correctly', function () {
 });
 
 it('LaserOrder has correct fillable fields', function () {
-    $order = new LaserOrder();
+    $order = new LaserOrder;
     expect($order->getFillable())->toContain(
         'client_id', 'laser_quote_id', 'reference', 'status',
         'total_ht', 'total_ttc', 'terms'
@@ -351,7 +354,7 @@ it('casts LaserOrderLine attributes correctly', function () {
 });
 
 it('LaserOrderLine has correct fillable fields', function () {
-    $line = new LaserOrderLine();
+    $line = new LaserOrderLine;
     expect($line->getFillable())->toContain(
         'laser_order_id', 'material_id', 'description', 'length_mm', 'width_mm',
         'thickness_mm', 'quantity', 'surface_mm2', 'cut_length_mm', 'weight_kg',
@@ -393,14 +396,14 @@ it('LaserOrderLine material relationship works', function () {
 // ============================================================
 
 it('generates correct order filename', function () {
-    $service = app(\App\Services\Laser\LaserDocumentationService::class);
+    $service = app(LaserDocumentationService::class);
     $order = LaserOrder::withoutEvents(fn () => LaserOrder::factory()->make(['reference' => 'LAC-2026-0001']));
 
     expect($service->getOrderFilename($order))->toBe('commande_laser_LAC-2026-0001');
 });
 
 it('generates correct order path', function () {
-    $service = app(\App\Services\Laser\LaserDocumentationService::class);
+    $service = app(LaserDocumentationService::class);
     $order = LaserOrder::withoutEvents(fn () => LaserOrder::factory()->make(['reference' => 'LAC-2026-0001']));
 
     expect($service->getOrderPath($order))->toBe('documents/laser/orders/commande_laser_LAC-2026-0001.pdf');
@@ -420,7 +423,7 @@ it('dispatches generate order document job on order created', function () {
     $service = app(LaserQuoteService::class);
     $order = $service->acceptQuote($quote);
 
-    Queue::assertPushed(\App\Jobs\Laser\GenerateLaserDocumentJob::class, function ($job) {
+    Queue::assertPushed(GenerateLaserDocumentJob::class, function ($job) {
         return $job->namespace === 'laser_order';
     });
 });
@@ -430,22 +433,22 @@ it('dispatches generate quote document job on quote created', function () {
 
     LaserQuote::factory()->create();
 
-    Queue::assertPushed(\App\Jobs\Laser\GenerateLaserDocumentJob::class, function ($job) {
+    Queue::assertPushed(GenerateLaserDocumentJob::class, function ($job) {
         return $job->namespace === 'laser_quote';
     });
 });
 
 it('GenerateLaserDocumentJob handles laser_order namespace', function () {
-    $job = new \App\Jobs\Laser\GenerateLaserDocumentJob('laser_quote', new LaserQuote());
+    $job = new GenerateLaserDocumentJob('laser_quote', new LaserQuote);
 
     expect($job->namespace)->toBe('laser_quote')
         ->and($job->model)->toBeInstanceOf(LaserQuote::class);
 });
 
 it('LaserOrderObserver constructor accepts LaserDocumentationService', function () {
-    $observer = new \App\Observers\Laser\LaserOrderObserver(
-        app(\App\Services\Laser\LaserDocumentationService::class)
+    $observer = new LaserOrderObserver(
+        app(LaserDocumentationService::class)
     );
 
-    expect($observer)->toBeInstanceOf(\App\Observers\Laser\LaserOrderObserver::class);
+    expect($observer)->toBeInstanceOf(LaserOrderObserver::class);
 });

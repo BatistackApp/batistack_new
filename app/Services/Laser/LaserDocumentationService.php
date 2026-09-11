@@ -3,7 +3,9 @@
 namespace App\Services\Laser;
 
 use App\Models\Core\Company;
+use App\Models\Laser\LaserCreditNote;
 use App\Models\Laser\LaserDeliveryNote;
+use App\Models\Laser\LaserInvoice;
 use App\Models\Laser\LaserOrder;
 use App\Models\Laser\LaserQuote;
 use App\Services\Core\DocumentService;
@@ -105,5 +107,69 @@ class LaserDocumentationService extends DocumentService
     public function getDeliveryNotePath(LaserDeliveryNote $delivery): string
     {
         return 'documents/laser/delivery_notes/'.$this->getDeliveryNoteFilename($delivery).'.pdf';
+    }
+
+    public function generateInvoicePdf(LaserInvoice $invoice): string
+    {
+        $invoice->load(['client', 'lines.material', 'order']);
+
+        $data = [
+            'company' => Company::firstOrFail(),
+            'invoice' => $invoice,
+            'title' => 'FACTURE N° '.$invoice->reference,
+            'generated_at' => Carbon::now()->format('d/m/Y H:i'),
+        ];
+
+        return $this->generate(
+            'pdf.laser.invoice',
+            $data,
+            $this->getInvoiceFilename($invoice),
+            'laser/invoices',
+            false,
+            $invoice,
+            'laser_invoice',
+        );
+    }
+
+    public function getInvoiceFilename(LaserInvoice $invoice): string
+    {
+        return 'facture_'.$invoice->reference;
+    }
+
+    public function getInvoicePath(LaserInvoice $invoice): string
+    {
+        return 'documents/laser/invoices/'.$this->getInvoiceFilename($invoice).'.pdf';
+    }
+
+    public function generateCreditNotePdf(LaserCreditNote $creditNote): string
+    {
+        $creditNote->load(['client', 'invoice']);
+
+        $data = [
+            'company' => Company::firstOrFail(),
+            'creditNote' => $creditNote,
+            'title' => 'AVOIR N° '.$creditNote->reference,
+            'generated_at' => Carbon::now()->format('d/m/Y H:i'),
+        ];
+
+        return $this->generate(
+            'pdf.laser.credit_note',
+            $data,
+            $this->getCreditNoteFilename($creditNote),
+            'laser/credit_notes',
+            false,
+            $creditNote,
+            'laser_credit_note',
+        );
+    }
+
+    public function getCreditNoteFilename(LaserCreditNote $creditNote): string
+    {
+        return 'avoir_'.$creditNote->reference;
+    }
+
+    public function getCreditNotePath(LaserCreditNote $creditNote): string
+    {
+        return 'documents/laser/credit_notes/'.$this->getCreditNoteFilename($creditNote).'.pdf';
     }
 }

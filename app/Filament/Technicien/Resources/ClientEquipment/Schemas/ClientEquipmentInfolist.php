@@ -2,8 +2,8 @@
 
 namespace App\Filament\Technicien\Resources\ClientEquipment\Schemas;
 
-use Filament\Schemas\Components\Section;
 use Filament\Infolists\Components\TextEntry;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 
 class ClientEquipmentInfolist

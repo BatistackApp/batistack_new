@@ -11,7 +11,7 @@ trait RecalculatesLaserTotals
         $totalTva = round($totalHt * ($vatRate / 100), 2);
 
         $this->update([
-            'total_ht'  => round($totalHt, 2),
+            'total_ht' => round($totalHt, 2),
             'total_ttc' => round($totalHt + $totalTva, 2),
         ]);
     }

@@ -73,7 +73,7 @@ class DxfParserService
             $codeLine = trim($lines[$i]);
             $valueLine = trim($lines[$i + 1] ?? '');
 
-            if ($codeLine === '' || !ctype_digit($codeLine)) {
+            if ($codeLine === '' || ! ctype_digit($codeLine)) {
                 continue;
             }
 
@@ -100,16 +100,17 @@ class DxfParserService
             $code = $this->groupCodes[$i]['code'];
             $value = $this->groupCodes[$i]['value'];
 
-            if ($code === 0 && $value === 'SECTION' && !$inEntities) {
+            if ($code === 0 && $value === 'SECTION' && ! $inEntities) {
                 $nextValue = $this->groupCodes[$i + 1]['value'] ?? '';
                 if ($nextValue === 'ENTITIES') {
                     $inEntities = true;
                     $i++;
                 }
+
                 continue;
             }
 
-            if (!$inEntities) {
+            if (! $inEntities) {
                 continue;
             }
 
@@ -155,7 +156,7 @@ class DxfParserService
             };
 
             if ($code === 10 && $currentEntity['type'] === 'LWPOLYLINE') {
-                if (!isset($currentEntity['data']['vertices'])) {
+                if (! isset($currentEntity['data']['vertices'])) {
                     $currentEntity['data']['vertices'] = [];
                 }
                 $currentEntity['data']['vertices'][] = [
@@ -190,7 +191,7 @@ class DxfParserService
     }
 
     /**
-     * @param list<array{type: string, layer: string, data: array}> $entities
+     * @param  list<array{type: string, layer: string, data: array}>  $entities
      * @return array<string>
      */
     private function extractLayers(array $entities): array
@@ -198,7 +199,7 @@ class DxfParserService
         $layers = [];
         foreach ($entities as $entity) {
             $layer = $entity['layer'];
-            if (!in_array($layer, $layers, true)) {
+            if (! in_array($layer, $layers, true)) {
                 $layers[] = $layer;
             }
         }
@@ -220,7 +221,7 @@ class DxfParserService
     }
 
     /**
-     * @param list<array{type: string, layer: string, data: array}> $entities
+     * @param  list<array{type: string, layer: string, data: array}>  $entities
      * @return array{min_x: float, max_x: float, min_y: float, max_y: float}
      */
     private function calculateBoundingBox(array $entities): array
@@ -386,7 +387,7 @@ class DxfParserService
     }
 
     /**
-     * @param list<array{type: string, layer: string, data: array}> $entities
+     * @param  list<array{type: string, layer: string, data: array}>  $entities
      */
     private function calculateCutLength(array $entities): float
     {

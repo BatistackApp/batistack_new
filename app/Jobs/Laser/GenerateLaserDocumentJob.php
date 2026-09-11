@@ -2,7 +2,9 @@
 
 namespace App\Jobs\Laser;
 
+use App\Models\Laser\LaserCreditNote;
 use App\Models\Laser\LaserDeliveryNote;
+use App\Models\Laser\LaserInvoice;
 use App\Models\Laser\LaserOrder;
 use App\Models\Laser\LaserQuote;
 use App\Services\Laser\LaserDocumentationService;
@@ -34,6 +36,8 @@ class GenerateLaserDocumentJob implements ShouldQueue
             'laser_quote' => $this->handleQuote(),
             'laser_order' => $this->handleOrder(),
             'laser_delivery_note' => $this->handleDeliveryNote(),
+            'laser_invoice' => $this->handleInvoice(),
+            'laser_credit_note' => $this->handleCreditNote(),
             default => throw new \InvalidArgumentException("Invalid namespace: {$this->namespace}"),
         };
     }
@@ -81,5 +85,35 @@ class GenerateLaserDocumentJob implements ShouldQueue
         }
 
         app(LaserDocumentationService::class)->generateDeliveryNotePdf($freshDelivery);
+    }
+
+    private function handleInvoice(): void
+    {
+        /** @var LaserInvoice $freshInvoice */
+        $freshInvoice = LaserInvoice::with(['client', 'lines.material', 'order'])
+            ->findOrFail($this->model->getKey());
+
+        if ($this->expectedUpdatedAt && $freshInvoice->updated_at->greaterThan($this->expectedUpdatedAt)) {
+            self::dispatch($this->namespace, $freshInvoice, CarbonImmutable::instance($freshInvoice->updated_at));
+
+            return;
+        }
+
+        app(LaserDocumentationService::class)->generateInvoicePdf($freshInvoice);
+    }
+
+    private function handleCreditNote(): void
+    {
+        /** @var LaserCreditNote $freshCreditNote */
+        $freshCreditNote = LaserCreditNote::with(['client', 'invoice'])
+            ->findOrFail($this->model->getKey());
+
+        if ($this->expectedUpdatedAt && $freshCreditNote->updated_at->greaterThan($this->expectedUpdatedAt)) {
+            self::dispatch($this->namespace, $freshCreditNote, CarbonImmutable::instance($freshCreditNote->updated_at));
+
+            return;
+        }
+
+        app(LaserDocumentationService::class)->generateCreditNotePdf($freshCreditNote);
     }
 }

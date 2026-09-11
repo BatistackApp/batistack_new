@@ -2,6 +2,7 @@
 
 use App\Enums\Laser\QuoteStatus;
 use App\Jobs\Laser\GenerateLaserDocumentJob;
+use App\Models\Core\Company;
 use App\Models\Laser\LaserMaterial;
 use App\Models\Laser\LaserQuote;
 use App\Models\Laser\LaserQuoteLine;
@@ -528,7 +529,7 @@ it('recalculateTotals applies configurable VAT rate', function () {
 // ============================================================
 
 it('generateQuotePdf loads relations and delegates to generate', function () {
-    $company = \App\Models\Core\Company::create([
+    $company = Company::create([
         'legal_name' => 'Test Company',
         'address' => '123 Rue Test',
         'city' => 'Paris',
@@ -577,7 +578,7 @@ it('generateQuotePdf loads relations and delegates to generate', function () {
 });
 
 it('generateQuotePdf builds correct data array', function () {
-    $company = \App\Models\Core\Company::create([
+    $company = Company::create([
         'legal_name' => 'Test Company',
         'address' => '123 Rue Test',
         'city' => 'Paris',

@@ -2,7 +2,6 @@
 
 namespace App\Observers\Laser;
 
-use App\Enums\Laser\QuoteStatus;
 use App\Jobs\Laser\GenerateLaserDocumentJob;
 use App\Models\Laser\LaserQuote;
 use App\Services\Laser\LaserDocumentationService;

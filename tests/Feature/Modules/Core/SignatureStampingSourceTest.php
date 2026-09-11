@@ -4,11 +4,11 @@ use App\Enums\Core\SignatureStatus;
 use App\Enums\Core\SignatureType;
 use App\Enums\Tiers\ThirdPartyDocumentStatus;
 use App\Enums\Tiers\ThirdPartyDocumentType;
+use App\Models\Commerce\CustomerQuote;
 use App\Models\Core\Signature;
 use App\Models\Tiers\ThirdParty;
 use App\Models\Tiers\ThirdPartyDocument;
 use App\Models\User;
-use App\Services\Core\PdfStamperService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -127,7 +127,7 @@ it('keeps a file-based stamped path distinct from the source for CustomerQuote',
     Storage::fake('public');
 
     $thirdParty = ThirdParty::factory()->create();
-    $quote = \App\Models\Commerce\CustomerQuote::factory()->create([
+    $quote = CustomerQuote::factory()->create([
         'client_id' => $thirdParty->id,
         'reference' => 'DEV-00123',
     ]);

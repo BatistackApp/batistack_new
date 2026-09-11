@@ -2,9 +2,11 @@
 
 namespace App\Traits\Core;
 
+use App\Enums\Core\SignatureStatus;
 use App\Models\Core\Signature;
 use App\Services\Core\PdfStamperService;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Storage;
 
 trait HasSignature
 {
@@ -39,7 +41,7 @@ trait HasSignature
 
         if (method_exists($this, 'getStampedPath')) {
             $relativePath = $this->getStampedPath();
-            if ($relativePath && \Illuminate\Support\Facades\Storage::disk($this->getStampedDisk())->exists($relativePath)) {
+            if ($relativePath && Storage::disk($this->getStampedDisk())->exists($relativePath)) {
                 return $this->getStampedUrlForPath($relativePath);
             }
         }
@@ -64,8 +66,8 @@ trait HasSignature
 
         if (method_exists($this, 'getStampedPath')) {
             $relativePath = $this->getStampedPath();
-            if ($relativePath && \Illuminate\Support\Facades\Storage::disk($this->getStampedDisk())->exists($relativePath)) {
-                return \Illuminate\Support\Facades\Storage::disk($this->getStampedDisk())->path($relativePath);
+            if ($relativePath && Storage::disk($this->getStampedDisk())->exists($relativePath)) {
+                return Storage::disk($this->getStampedDisk())->path($relativePath);
             }
         }
 
@@ -137,7 +139,7 @@ trait HasSignature
         if ($documentPath && file_exists($documentPath)) {
             // Load signed signers for multi-signer stamping
             $signers = $signature->signers()
-                ->where('status', \App\Enums\Core\SignatureStatus::SIGNED)
+                ->where('status', SignatureStatus::SIGNED)
                 ->get()
                 ->all();
 
@@ -162,9 +164,9 @@ trait HasSignature
                     $relativePath = $this->getStampedPath();
                     if ($relativePath) {
                         $stampedDisk = $this->getStampedDisk();
-                        \Illuminate\Support\Facades\Storage::disk($stampedDisk)->makeDirectory(dirname($relativePath));
+                        Storage::disk($stampedDisk)->makeDirectory(dirname($relativePath));
 
-                        $fullPath = \Illuminate\Support\Facades\Storage::disk($stampedDisk)->path($relativePath);
+                        $fullPath = Storage::disk($stampedDisk)->path($relativePath);
                         File::copy($stampedPdfPath, $fullPath);
                     }
                 } else {
