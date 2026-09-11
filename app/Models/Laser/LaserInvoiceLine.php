@@ -2,6 +2,7 @@
 
 namespace App\Models\Laser;
 
+use App\Enums\Laser\InvoiceStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -26,6 +27,25 @@ class LaserInvoiceLine extends Model
         'weight_kg',
         'density_kg_m3',
     ];
+
+    protected static function boot(): void
+    {
+        parent::boot();
+
+        static::updating(function (LaserInvoiceLine $line) {
+            $invoice = $line->invoice;
+            if ($invoice && in_array($invoice->status, [InvoiceStatus::VALIDATED, InvoiceStatus::PAID])) {
+                throw new \Exception('Les lignes d\'une facture validée ou payée ne peuvent pas être modifiées.');
+            }
+        });
+
+        static::deleting(function (LaserInvoiceLine $line) {
+            $invoice = $line->invoice;
+            if ($invoice && in_array($invoice->status, [InvoiceStatus::VALIDATED, InvoiceStatus::PAID])) {
+                throw new \Exception('Les lignes d\'une facture validée ou payée ne peuvent pas être supprimées.');
+            }
+        });
+    }
 
     protected function casts(): array
     {

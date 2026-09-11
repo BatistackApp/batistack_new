@@ -98,7 +98,7 @@
                     <td style="text-align: right; padding: 4px 0;">{{ number_format($invoice->total_ht, 2) }} €</td>
                 </tr>
                 <tr>
-                    <td style="padding: 4px 0;"><strong>TVA ({{ $vat_rate }}%) :</strong></td>
+                    <td style="padding: 4px 0;"><strong>TVA ({{ $invoice->vat_rate }}%) :</strong></td>
                     <td style="text-align: right; padding: 4px 0;">{{ number_format($invoice->total_tva, 2) }} €</td>
                 </tr>
                 <tr style="border-top: 2px solid #333;">

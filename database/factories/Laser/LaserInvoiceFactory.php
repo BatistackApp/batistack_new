@@ -23,6 +23,7 @@ class LaserInvoiceFactory extends Factory
             'total_ht' => 0,
             'total_tva' => 0,
             'total_ttc' => 0,
+            'vat_rate' => 20,
             'due_date' => now()->addDays(30),
             'signature_hash' => null,
         ];

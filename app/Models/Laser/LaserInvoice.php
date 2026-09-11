@@ -25,12 +25,34 @@ class LaserInvoice extends Model
         'total_ht',
         'total_tva',
         'total_ttc',
+        'vat_rate',
         'credited_amount_ht',
         'credited_amount_tva',
         'credited_amount_ttc',
         'due_date',
         'signature_hash',
     ];
+
+    protected static function boot(): void
+    {
+        parent::boot();
+
+        static::updating(function (LaserInvoice $invoice) {
+            if ($invoice->exists && in_array($invoice->status, [InvoiceStatus::VALIDATED, InvoiceStatus::PAID])) {
+                $dirtyKeys = array_keys($invoice->getDirty());
+                $allowedUpdates = ['credited_amount_ht', 'credited_amount_tva', 'credited_amount_ttc'];
+                if (count(array_diff($dirtyKeys, $allowedUpdates)) > 0) {
+                    throw new \Exception('Une facture validée ou payée ne peut pas être modifiée.');
+                }
+            }
+        });
+
+        static::deleting(function (LaserInvoice $invoice) {
+            if (in_array($invoice->status, [InvoiceStatus::VALIDATED, InvoiceStatus::PAID])) {
+                throw new \Exception('Une facture validée ou payée ne peut pas être supprimée.');
+            }
+        });
+    }
 
     protected function casts(): array
     {
@@ -39,6 +61,7 @@ class LaserInvoice extends Model
             'total_ht' => 'decimal:2',
             'total_tva' => 'decimal:2',
             'total_ttc' => 'decimal:2',
+            'vat_rate' => 'decimal:2',
             'credited_amount_ht' => 'decimal:2',
             'credited_amount_tva' => 'decimal:2',
             'credited_amount_ttc' => 'decimal:2',

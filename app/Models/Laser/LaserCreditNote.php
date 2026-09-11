@@ -22,6 +22,7 @@ class LaserCreditNote extends Model
         'total_ht',
         'total_tva',
         'total_ttc',
+        'vat_rate',
         'reason',
         'signature_hash',
     ];
@@ -32,6 +33,7 @@ class LaserCreditNote extends Model
             'total_ht' => 'decimal:2',
             'total_tva' => 'decimal:2',
             'total_ttc' => 'decimal:2',
+            'vat_rate' => 'decimal:2',
         ];
     }
 

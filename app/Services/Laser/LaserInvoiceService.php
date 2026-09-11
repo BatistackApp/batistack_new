@@ -44,15 +44,16 @@ class LaserInvoiceService
                 throw new Exception('Aucune ligne à facturer pour cette commande.');
             }
 
+            $tvaRate = config('laser.vat_rate', 20);
+
             $invoice = LaserInvoice::create([
                 'client_id' => $order->client_id,
                 'laser_order_id' => $order->id,
                 'reference' => $this->generateInvoiceReference(),
                 'status' => InvoiceStatus::DRAFT,
                 'due_date' => now()->addDays(30),
+                'vat_rate' => $tvaRate,
             ]);
-
-            $tvaRate = config('laser.vat_rate', 20);
 
             foreach ($linesToInvoice as $line) {
                 $qtyToInvoice = $line->delivered_quantity - $line->invoiced_quantity;
@@ -131,6 +132,7 @@ class LaserInvoiceService
             $linePayloads = $invoice->lines->map(function ($line) {
                 return implode(':', [
                     $line->material_id,
+                    $line->description,
                     $line->length_mm,
                     $line->width_mm,
                     $line->thickness_mm,
@@ -138,6 +140,8 @@ class LaserInvoiceService
                     number_format($line->unit_price_ht, 4, '.', ''),
                     $line->discount_pct,
                     number_format($line->total_ht, 2, '.', ''),
+                    number_format($line->weight_kg, 4, '.', ''),
+                    number_format($line->density_kg_m3, 2, '.', ''),
                 ]);
             })->implode('|');
 
@@ -180,7 +184,7 @@ class LaserInvoiceService
                 throw new Exception('Seules les factures validées ou payées peuvent faire l\'objet d\'un avoir.');
             }
 
-            $tvaRate = config('laser.vat_rate', 20);
+            $tvaRate = (float) $invoice->vat_rate;
 
             $remainingHt = (float) $invoice->total_ht - (float) $invoice->credited_amount_ht;
 
@@ -227,6 +231,7 @@ class LaserInvoiceService
                 'total_ht' => $requestedHt,
                 'total_tva' => $requestedTva,
                 'total_ttc' => $requestedTtc,
+                'vat_rate' => $tvaRate,
                 'reason' => $reason,
                 'signature_hash' => $newHash,
             ]);
@@ -260,11 +265,15 @@ class LaserInvoiceService
             return;
         }
 
+        $allFullyDelivered = $order->lines->every(
+            fn ($line) => $line->delivered_quantity >= $line->quantity
+        );
+
         $allBilled = $order->lines
             ->filter(fn ($line) => $line->delivered_quantity > 0)
             ->every(fn ($line) => $line->invoiced_quantity >= $line->delivered_quantity);
 
-        if ($allBilled && $order->status !== OrderStatus::BILLED) {
+        if ($allFullyDelivered && $allBilled && $order->status !== OrderStatus::BILLED) {
             $order->update(['status' => OrderStatus::BILLED]);
         }
     }

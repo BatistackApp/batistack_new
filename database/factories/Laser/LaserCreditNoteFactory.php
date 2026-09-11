@@ -22,6 +22,7 @@ class LaserCreditNoteFactory extends Factory
             'total_ht' => fake()->randomFloat(2, 10, 5000),
             'total_tva' => fake()->randomFloat(2, 2, 1000),
             'total_ttc' => fake()->randomFloat(2, 12, 6000),
+            'vat_rate' => 20,
             'reason' => fake()->sentence(),
         ];
     }
