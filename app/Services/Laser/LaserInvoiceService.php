@@ -130,32 +130,33 @@ class LaserInvoiceService
             $invoice->load('lines');
 
             $linePayloads = $invoice->lines->map(function ($line) {
-                return implode(':', [
-                    $line->material_id,
-                    $line->description,
-                    $line->length_mm,
-                    $line->width_mm,
-                    $line->thickness_mm,
-                    $line->quantity_invoiced,
-                    number_format($line->unit_price_ht, 4, '.', ''),
-                    $line->discount_pct,
-                    number_format($line->total_ht, 2, '.', ''),
-                    number_format($line->weight_kg, 4, '.', ''),
-                    number_format($line->density_kg_m3, 2, '.', ''),
-                ]);
-            })->implode('|');
+                return [
+                    'material_id' => (int) $line->material_id,
+                    'description' => $line->description,
+                    'length_mm' => $line->length_mm,
+                    'width_mm' => $line->width_mm,
+                    'thickness_mm' => $line->thickness_mm,
+                    'quantity_invoiced' => (int) $line->quantity_invoiced,
+                    'unit_price_ht' => number_format($line->unit_price_ht, 4, '.', ''),
+                    'discount_pct' => $line->discount_pct,
+                    'total_ht' => number_format($line->total_ht, 2, '.', ''),
+                    'weight_kg' => number_format($line->weight_kg, 4, '.', ''),
+                    'density_kg_m3' => number_format($line->density_kg_m3, 2, '.', ''),
+                ];
+            })->values()->all();
 
-            $dataToHash = implode('|', [
-                $definitiveRef,
-                $invoice->created_at->toIso8601String(),
-                number_format($invoice->total_ht, 2, '.', ''),
-                number_format($invoice->total_tva, 2, '.', ''),
-                number_format($invoice->total_ttc, 2, '.', ''),
-                number_format((float) $invoice->vat_rate, 2, '.', ''),
-                $invoice->client_id,
-                $invoice->laser_order_id,
-                $linePayloads,
-            ]).'|'.$previousHash;
+            $dataToHash = json_encode([
+                'reference' => $definitiveRef,
+                'created_at' => $invoice->created_at->toIso8601String(),
+                'total_ht' => number_format($invoice->total_ht, 2, '.', ''),
+                'total_tva' => number_format($invoice->total_tva, 2, '.', ''),
+                'total_ttc' => number_format($invoice->total_ttc, 2, '.', ''),
+                'vat_rate' => number_format((float) $invoice->vat_rate, 2, '.', ''),
+                'client_id' => (int) $invoice->client_id,
+                'laser_order_id' => (int) $invoice->laser_order_id,
+                'lines' => $linePayloads,
+                'previous_hash' => $previousHash,
+            ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 
             $newHash = hash('sha256', $dataToHash);
 
@@ -211,20 +212,6 @@ class LaserInvoiceService
             $definitiveRef = $this->generateCreditNoteReference();
             $previousHash = $sequence->last_hash;
 
-            $dataToHash = implode('|', [
-                $definitiveRef,
-                now()->toIso8601String(),
-                number_format($requestedHt, 2, '.', ''),
-                number_format($requestedTva, 2, '.', ''),
-                number_format($requestedTtc, 2, '.', ''),
-                number_format($tvaRate, 2, '.', ''),
-                $invoice->client_id,
-                $invoice->id,
-                $reason,
-            ]).'|'.$previousHash;
-
-            $newHash = hash('sha256', $dataToHash);
-
             $creditNote = LaserCreditNote::create([
                 'client_id' => $invoice->client_id,
                 'laser_invoice_id' => $invoice->id,
@@ -235,8 +222,24 @@ class LaserInvoiceService
                 'total_ttc' => $requestedTtc,
                 'vat_rate' => $tvaRate,
                 'reason' => $reason,
-                'signature_hash' => $newHash,
             ]);
+
+            $dataToHash = json_encode([
+                'reference' => $definitiveRef,
+                'created_at' => $creditNote->created_at->toIso8601String(),
+                'total_ht' => number_format($requestedHt, 2, '.', ''),
+                'total_tva' => number_format($requestedTva, 2, '.', ''),
+                'total_ttc' => number_format($requestedTtc, 2, '.', ''),
+                'vat_rate' => number_format($tvaRate, 2, '.', ''),
+                'client_id' => (int) $invoice->client_id,
+                'invoice_id' => (int) $invoice->id,
+                'reason' => $reason,
+                'previous_hash' => $previousHash,
+            ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+
+            $newHash = hash('sha256', $dataToHash);
+
+            $creditNote->updateQuietly(['signature_hash' => $newHash]);
 
             $sequence->update([
                 'last_hash' => $newHash,

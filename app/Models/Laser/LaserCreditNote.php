@@ -19,7 +19,8 @@ class LaserCreditNote extends Model
         parent::boot();
 
         static::updating(function (LaserCreditNote $creditNote) {
-            if ($creditNote->exists && $creditNote->status === 'validated') {
+            $originalStatus = $creditNote->getOriginal('status');
+            if ($creditNote->exists && $originalStatus === 'validated') {
                 $dirtyKeys = array_keys($creditNote->getDirty());
                 if (count($dirtyKeys) > 0) {
                     throw new \Exception('Un avoir validé ne peut pas être modifié.');
@@ -28,7 +29,8 @@ class LaserCreditNote extends Model
         });
 
         static::deleting(function (LaserCreditNote $creditNote) {
-            if ($creditNote->status === 'validated') {
+            $originalStatus = $creditNote->getOriginal('status');
+            if ($originalStatus === 'validated') {
                 throw new \Exception('Un avoir validé ne peut pas être supprimé.');
             }
         });

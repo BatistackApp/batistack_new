@@ -2179,43 +2179,38 @@ it('recalculates expected hash and verifies chain integrity for invoice', functi
     $service->legalizeInvoice($inv1);
     $inv1->refresh();
 
-    $previousHash = 'GENESIS';
-    $definitiveRef1 = $inv1->reference;
-    $createdAt1 = $inv1->created_at->toIso8601String();
-
-    $linePayloads1 = $inv1->lines->map(function ($line) {
-        return implode(':', [
-            $line->material_id,
-            $line->description,
-            $line->length_mm,
-            $line->width_mm,
-            $line->thickness_mm,
-            $line->quantity_invoiced,
-            number_format($line->unit_price_ht, 4, '.', ''),
-            $line->discount_pct,
-            number_format($line->total_ht, 2, '.', ''),
-            number_format($line->weight_kg, 4, '.', ''),
-            number_format($line->density_kg_m3, 2, '.', ''),
-        ]);
-    })->implode('|');
-
-    $expectedPayload1 = implode('|', [
-        $definitiveRef1,
-        $createdAt1,
-        number_format($inv1->total_ht, 2, '.', ''),
-        number_format($inv1->total_tva, 2, '.', ''),
-        number_format($inv1->total_ttc, 2, '.', ''),
-        number_format((float) $inv1->vat_rate, 2, '.', ''),
-        $inv1->client_id,
-        $inv1->laser_order_id,
-        $linePayloads1,
-    ]).'|'.$previousHash;
+    $expectedPayload1 = json_encode([
+        'reference' => $inv1->reference,
+        'created_at' => $inv1->created_at->toIso8601String(),
+        'total_ht' => number_format($inv1->total_ht, 2, '.', ''),
+        'total_tva' => number_format($inv1->total_tva, 2, '.', ''),
+        'total_ttc' => number_format($inv1->total_ttc, 2, '.', ''),
+        'vat_rate' => number_format((float) $inv1->vat_rate, 2, '.', ''),
+        'client_id' => (int) $inv1->client_id,
+        'laser_order_id' => (int) $inv1->laser_order_id,
+        'lines' => [
+            [
+                'material_id' => (int) $material->id,
+                'description' => 'Pièce A',
+                'length_mm' => $inv1->lines->first()->length_mm,
+                'width_mm' => $inv1->lines->first()->width_mm,
+                'thickness_mm' => $inv1->lines->first()->thickness_mm,
+                'quantity_invoiced' => 5,
+                'unit_price_ht' => '100.0000',
+                'discount_pct' => $inv1->lines->first()->discount_pct,
+                'total_ht' => '500.00',
+                'weight_kg' => '19.6250',
+                'density_kg_m3' => '7850.00',
+            ],
+        ],
+        'previous_hash' => 'GENESIS',
+    ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 
     $expectedHash1 = hash('sha256', $expectedPayload1);
     expect($inv1->signature_hash)->toBe($expectedHash1)
         ->and($sequence->fresh()->last_hash)->toBe($expectedHash1);
 
-    // Second invoice
+    // Second invoice — chain from first hash
     $inv2 = LaserInvoice::withoutEvents(fn () => LaserInvoice::factory()->create([
         'status' => InvoiceStatus::DRAFT,
         'total_ht' => 1000,
@@ -2243,36 +2238,32 @@ it('recalculates expected hash and verifies chain integrity for invoice', functi
     $service->legalizeInvoice($inv2);
     $inv2->refresh();
 
-    $definitiveRef2 = $inv2->reference;
-    $createdAt2 = $inv2->created_at->toIso8601String();
-
-    $linePayloads2 = $inv2->lines->map(function ($line) {
-        return implode(':', [
-            $line->material_id,
-            $line->description,
-            $line->length_mm,
-            $line->width_mm,
-            $line->thickness_mm,
-            $line->quantity_invoiced,
-            number_format($line->unit_price_ht, 4, '.', ''),
-            $line->discount_pct,
-            number_format($line->total_ht, 2, '.', ''),
-            number_format($line->weight_kg, 4, '.', ''),
-            number_format($line->density_kg_m3, 2, '.', ''),
-        ]);
-    })->implode('|');
-
-    $expectedPayload2 = implode('|', [
-        $definitiveRef2,
-        $createdAt2,
-        number_format($inv2->total_ht, 2, '.', ''),
-        number_format($inv2->total_tva, 2, '.', ''),
-        number_format($inv2->total_ttc, 2, '.', ''),
-        number_format((float) $inv2->vat_rate, 2, '.', ''),
-        $inv2->client_id,
-        $inv2->laser_order_id,
-        $linePayloads2,
-    ]).'|'.$expectedHash1;
+    $expectedPayload2 = json_encode([
+        'reference' => $inv2->reference,
+        'created_at' => $inv2->created_at->toIso8601String(),
+        'total_ht' => number_format($inv2->total_ht, 2, '.', ''),
+        'total_tva' => number_format($inv2->total_tva, 2, '.', ''),
+        'total_ttc' => number_format($inv2->total_ttc, 2, '.', ''),
+        'vat_rate' => number_format((float) $inv2->vat_rate, 2, '.', ''),
+        'client_id' => (int) $inv2->client_id,
+        'laser_order_id' => (int) $inv2->laser_order_id,
+        'lines' => [
+            [
+                'material_id' => (int) $material->id,
+                'description' => 'Pièce B',
+                'length_mm' => $inv2->lines->first()->length_mm,
+                'width_mm' => $inv2->lines->first()->width_mm,
+                'thickness_mm' => $inv2->lines->first()->thickness_mm,
+                'quantity_invoiced' => 10,
+                'unit_price_ht' => '100.0000',
+                'discount_pct' => $inv2->lines->first()->discount_pct,
+                'total_ht' => '1000.00',
+                'weight_kg' => '23.5500',
+                'density_kg_m3' => '7850.00',
+            ],
+        ],
+        'previous_hash' => $expectedHash1,
+    ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 
     $expectedHash2 = hash('sha256', $expectedPayload2);
     expect($inv2->signature_hash)->toBe($expectedHash2)
@@ -2300,17 +2291,58 @@ it('recalculates expected hash for credit note', function () {
     $service = app(LaserInvoiceService::class);
     $creditNote = $service->createCreditNote($invoice, 'Test hash avoir', 400.0);
 
-    $expectedPayload = implode('|', [
-        $creditNote->reference,
-        $creditNote->fresh()->created_at->toIso8601String(),
-        number_format(400.0, 2, '.', ''),
-        number_format(80.0, 2, '.', ''),
-        number_format(480.0, 2, '.', ''),
-        number_format(20.0, 2, '.', ''),
-        $invoice->client_id,
-        $invoice->id,
-        'Test hash avoir',
-    ]).'|'.$previousHash;
+    $expectedPayload = json_encode([
+        'reference' => $creditNote->reference,
+        'created_at' => $creditNote->fresh()->created_at->toIso8601String(),
+        'total_ht' => '400.00',
+        'total_tva' => '80.00',
+        'total_ttc' => '480.00',
+        'vat_rate' => '20.00',
+        'client_id' => (int) $invoice->client_id,
+        'invoice_id' => (int) $invoice->id,
+        'reason' => 'Test hash avoir',
+        'previous_hash' => $previousHash,
+    ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+
+    $expectedHash = hash('sha256', $expectedPayload);
+    expect($creditNote->fresh()->signature_hash)->toBe($expectedHash)
+        ->and($sequence->fresh()->last_hash)->toBe($expectedHash);
+});
+
+// ============================================================
+// 🔴 Hash: credit note with pipe character in reason
+// ============================================================
+
+it('recalculates expected hash for credit note with pipe in reason', function () {
+    Queue::fake();
+
+    $sequence = LaserLegalizationSequence::first();
+    $previousHash = $sequence->last_hash;
+
+    $invoice = LaserInvoice::withoutEvents(fn () => LaserInvoice::factory()->create([
+        'status' => InvoiceStatus::VALIDATED,
+        'total_ht' => 2000,
+        'total_tva' => 400,
+        'total_ttc' => 2400,
+        'vat_rate' => 20,
+    ]));
+
+    $service = app(LaserInvoiceService::class);
+    $reason = 'Erreur | corrective | partiel';
+    $creditNote = $service->createCreditNote($invoice, $reason, 600.0);
+
+    $expectedPayload = json_encode([
+        'reference' => $creditNote->reference,
+        'created_at' => $creditNote->fresh()->created_at->toIso8601String(),
+        'total_ht' => '600.00',
+        'total_tva' => '120.00',
+        'total_ttc' => '720.00',
+        'vat_rate' => '20.00',
+        'client_id' => (int) $invoice->client_id,
+        'invoice_id' => (int) $invoice->id,
+        'reason' => $reason,
+        'previous_hash' => $previousHash,
+    ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 
     $expectedHash = hash('sha256', $expectedPayload);
     expect($creditNote->fresh()->signature_hash)->toBe($expectedHash)
