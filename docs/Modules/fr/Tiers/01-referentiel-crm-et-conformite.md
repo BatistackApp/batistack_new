@@ -30,9 +30,14 @@ Batistack **bloque automatiquement la contractualisation** avec les entreprises 
 > [!NOTE]
 > Un tiers jamais synchronisé (`legal_status` vide) n'est **pas** bloqué : seul un simple avertissement « statut non vérifié » est émis.
 
+> [!TIP]
+> **Rafraîchissement automatique**
+> En plus de l'actualisation manuelle, une tâche planifiée met périodiquement à jour le statut juridique des tiers, pour que le garde-fou s'appuie toujours sur une donnée fraîche.
+
 ## 4. Gestion des Documents Obligatoires
 
 Travailler avec un sous-traitant nécessite de collecter des documents légaux (Kbis de moins de 3 mois, Attestation URSSAF de vigilance, Assurance Décennale).
 - Le module Tiers intègre un gestionnaire documentaire.
 - Vous renseignez la date de validité de chaque document. 
 - **Le système vous alerte automatiquement** (Dashboard et email) à J-30 et J-7 avant l'expiration d'un document critique, afin que vous puissiez relancer votre partenaire.
+- **Collecte automatisée** : Batistack peut récupérer **automatiquement** une partie de ces justificatifs (Kbis, attestations de vigilance) auprès des services en ligne (API Entreprise / e-Attestations), limitant la relance manuelle des partenaires.

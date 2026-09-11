@@ -43,3 +43,14 @@ Batistack surveille automatiquement les dates de péremption des lots en stock. 
 
 > [!NOTE]
 > Pour activer la traçabilité pour un article, cochez la case "Article sensible" lors de sa création ou de sa modification.
+
+## 5. Prévision des ruptures de stock
+
+Au-delà du simple seuil mini, Batistack dispose d'un **moteur de prévision** qui anticipe les ruptures.
+
+- Il croise la consommation historique de l'article avec les **besoins déjà planifiés** (chantiers à venir, ordres de fabrication).
+- Il projette la date à laquelle le disponible devrait passer sous le seuil, et signale les articles **à risque de rupture imminente**.
+
+> [!TIP]
+> **Passer du réactif à l'anticipé**
+> La prévision vous permet de commander le réassort *avant* la rupture, plutôt que de réagir une fois le stock à zéro.

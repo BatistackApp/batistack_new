@@ -32,3 +32,10 @@ Le moteur de relances (Dunning Process) s'en occupe pour vous chaque nuit :
 
 > [!TIP]
 > Vous gardez le contrôle : Vous pouvez désactiver ce processus automatique client par client si vous avez des accords commerciaux spécifiques avec l'un d'entre eux.
+
+## 4. Envoi des factures et relevés
+
+Là encore, l'automatisation vous évite la corvée d'e-mails :
+
+- **Envoi en masse** : depuis la liste des factures, sélectionnez plusieurs factures validées et envoyez-les par e-mail en une seule action (le PDF est joint ou lié de façon sécurisée).
+- **Relevé de compte client** : générez et adressez au client un relevé récapitulant ses factures, règlements et son solde restant dû — l'outil idéal pour déclencher un règlement en douceur avant la relance.

@@ -12,6 +12,8 @@ L'ERP ne se limite pas aux employés de bureau. Des portails dédiés simplifien
 
 Vos techniciens terrain disposent d'un espace sécurisé et épuré (accessible sur tablette et smartphone).
 - **Vue Restreinte** : Un technicien ne voit que les interventions qui lui sont assignées et planifiées.
+- **Planning** : un agenda de ses interventions à venir lui permet d'organiser sa journée et ses déplacements.
+- **Mode Hors-ligne (PWA)** : dans une zone sans réseau, le technicien peut consulter ses fiches et renseigner son travail **hors connexion**. Les saisies sont mises en file d'attente puis **synchronisées automatiquement** dès que la connexion revient.
 - **Scanner QR Code** : Il peut utiliser l'appareil photo de son smartphone pour scanner une pièce détachée dans son camion et l'ajouter instantanément au ticket.
 - **Signature Électronique** : À la fin des travaux, le technicien tend la tablette au client. Le client signe avec son doigt. La signature est **scellée cryptographiquement** au PDF du Bon de Travail (sans prix, pour ne pas gêner sur le terrain).
 - *Sécurité : Toute modification de l'intervention après signature invalidera automatiquement cette dernière.*
