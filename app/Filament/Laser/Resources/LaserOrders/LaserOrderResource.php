@@ -2,9 +2,9 @@
 
 namespace App\Filament\Laser\Resources\LaserOrders;
 
-use App\Filament\Laser\Resources\LaserOrders\Pages\CreateLaserOrder;
 use App\Filament\Laser\Resources\LaserOrders\Pages\ListLaserOrders;
 use App\Filament\Laser\Resources\LaserOrders\Pages\ViewLaserOrder;
+use App\Filament\Laser\Resources\LaserOrders\RelationManagers\DeliveryNotesRelationManager;
 use App\Filament\Laser\Resources\LaserOrders\RelationManagers\LinesRelationManager;
 use App\Filament\Laser\Resources\LaserOrders\Schemas\LaserOrderForm;
 use App\Filament\Laser\Resources\LaserOrders\Tables\LaserOrdersTable;
@@ -54,6 +54,7 @@ class LaserOrderResource extends Resource
     {
         return [
             LinesRelationManager::class,
+            DeliveryNotesRelationManager::class,
         ];
     }
 

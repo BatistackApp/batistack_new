@@ -51,6 +51,11 @@ class LaserOrder extends Model
         return $this->hasMany(LaserOrderLine::class);
     }
 
+    public function deliveryNotes(): HasMany
+    {
+        return $this->hasMany(LaserDeliveryNote::class);
+    }
+
     public function canBeDeleted(): bool
     {
         return $this->status->value === OrderStatus::DRAFT->value;

@@ -3,6 +3,7 @@
 namespace App\Services\Laser;
 
 use App\Models\Core\Company;
+use App\Models\Laser\LaserDeliveryNote;
 use App\Models\Laser\LaserOrder;
 use App\Models\Laser\LaserQuote;
 use App\Services\Core\DocumentService;
@@ -72,5 +73,37 @@ class LaserDocumentationService extends DocumentService
     public function getOrderPath(LaserOrder $order): string
     {
         return 'documents/laser/orders/'.$this->getOrderFilename($order).'.pdf';
+    }
+
+    public function generateDeliveryNotePdf(LaserDeliveryNote $delivery): string
+    {
+        $delivery->load(['client', 'lines.material', 'order']);
+
+        $data = [
+            'company' => Company::firstOrFail(),
+            'delivery' => $delivery,
+            'title' => 'BON DE LIVRAISON N° '.$delivery->reference,
+            'generated_at' => Carbon::now()->format('d/m/Y H:i'),
+        ];
+
+        return $this->generate(
+            'pdf.laser.delivery_note',
+            $data,
+            $this->getDeliveryNoteFilename($delivery),
+            'laser/delivery_notes',
+            false,
+            $delivery,
+            'laser_delivery_note',
+        );
+    }
+
+    public function getDeliveryNoteFilename(LaserDeliveryNote $delivery): string
+    {
+        return 'bon_de_livraison_'.$delivery->reference;
+    }
+
+    public function getDeliveryNotePath(LaserDeliveryNote $delivery): string
+    {
+        return 'documents/laser/delivery_notes/'.$this->getDeliveryNoteFilename($delivery).'.pdf';
     }
 }
