@@ -1,7 +1,7 @@
 <?php
 
 use App\Enums\Laser\QuoteStatus;
-use App\Jobs\Laser\GenerateLaserDocumentJob;
+use App\Models\Core\Company;
 use App\Models\Laser\LaserMaterial;
 use App\Models\Laser\LaserQuote;
 use App\Models\Laser\LaserQuoteLine;
@@ -634,7 +634,7 @@ it('generateQuotePdf loads relations and returns pdf path', function () {
     Queue::fake();
     Storage::fake('local');
 
-    $company = \App\Models\Core\Company::create([
+    $company = Company::create([
         'legal_name' => 'Test Company',
         'address' => '123 Rue Test',
         'city' => 'Paris',

@@ -34,8 +34,7 @@ it('returns null when the signable does not support signature stamping', functio
     ]);
 
     // A plain PHP object without the Signable interphace/methods.
-    $signable = new class {
-    };
+    $signable = new class {};
     $signature->setRelation('signable', $signable);
 
     expect($signature->stamped_document_url)->toBeNull();

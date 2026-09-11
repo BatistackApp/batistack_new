@@ -10,7 +10,9 @@ use App\Models\Laser\LaserMaterial;
 use App\Models\Laser\LaserOrder;
 use App\Models\Laser\LaserOrderLine;
 use App\Models\Laser\LaserQuote;
+use App\Observers\Laser\LaserDeliveryNoteObserver;
 use App\Services\Laser\LaserDeliveryNoteService;
+use App\Services\Laser\LaserDocumentationService;
 use App\Services\Laser\LaserQuoteService;
 use Illuminate\Support\Facades\Queue;
 
@@ -125,7 +127,7 @@ it('prevents over-delivery via multiple DRAFT BLs', function () {
     $blA = $service->createDeliveryNote($order);
     expect($blA->lines->first()->quantity_delivered)->toBe(10);
 
-    $this->expectException(\Exception::class);
+    $this->expectException(Exception::class);
     $this->expectExceptionMessage('Aucune ligne à livrer');
     $service->createDeliveryNote($order);
 });
@@ -207,7 +209,7 @@ it('rejects delivery creation when no remaining quantity', function () {
 
     $service = app(LaserDeliveryNoteService::class);
 
-    $this->expectException(\Exception::class);
+    $this->expectException(Exception::class);
     $this->expectExceptionMessage('Aucune ligne à livrer');
     $service->createDeliveryNote($order);
 });
@@ -354,7 +356,7 @@ it('rejects shipping an already shipped delivery note', function () {
 
     $service->shipDeliveryNote($delivery);
 
-    $this->expectException(\Exception::class);
+    $this->expectException(Exception::class);
     $this->expectExceptionMessage('Ce bon de livraison a déjà été expédié');
     $service->shipDeliveryNote($delivery);
 });
@@ -390,7 +392,7 @@ it('rejects shipping a delivered delivery note', function () {
     $delivery->refresh();
     $service->receiveDeliveryNote($delivery);
 
-    $this->expectException(\Exception::class);
+    $this->expectException(Exception::class);
     $this->expectExceptionMessage('Ce bon de livraison a déjà été expédié');
     $service->shipDeliveryNote($delivery);
 });
@@ -428,7 +430,7 @@ it('rejects shipping with zero quantity_delivered', function () {
 
     LaserDeliveryNoteLine::withoutEvents(fn () => $delivery->lines->first()->update(['quantity_delivered' => 0]));
 
-    $this->expectException(\Exception::class);
+    $this->expectException(Exception::class);
     $this->expectExceptionMessage('La quantité livrée doit être supérieure à zéro');
     $service->shipDeliveryNote($delivery);
 });
@@ -462,7 +464,7 @@ it('rejects shipping with quantity exceeding available', function () {
 
     LaserDeliveryNoteLine::withoutEvents(fn () => $delivery->lines->first()->update(['quantity_delivered' => 15]));
 
-    $this->expectException(\Exception::class);
+    $this->expectException(Exception::class);
     $this->expectExceptionMessage('La quantité livrée dépasse la quantité disponible');
     $service->shipDeliveryNote($delivery);
 });
@@ -540,7 +542,7 @@ it('rejects receiving a DRAFT delivery note', function () {
     $service = app(LaserDeliveryNoteService::class);
     $delivery = $service->createDeliveryNote($order);
 
-    $this->expectException(\Exception::class);
+    $this->expectException(Exception::class);
     $this->expectExceptionMessage('Seul un bon de livraison expédié peut être réceptionné');
     $service->receiveDeliveryNote($delivery);
 });
@@ -576,7 +578,7 @@ it('rejects receiving an already delivered delivery note', function () {
     $delivery->refresh();
     $service->receiveDeliveryNote($delivery);
 
-    $this->expectException(\Exception::class);
+    $this->expectException(Exception::class);
     $this->expectExceptionMessage('Seul un bon de livraison expédié peut être réceptionné');
     $service->receiveDeliveryNote($delivery);
 });
@@ -653,7 +655,7 @@ it('rejects deleting a shipped delivery note', function () {
 
     $delivery->refresh();
 
-    $this->expectException(\Exception::class);
+    $this->expectException(Exception::class);
     $this->expectExceptionMessage('Seul un bon de livraison brouillon peut être supprimé');
     $service->deleteDeliveryNote($delivery);
 });
@@ -689,7 +691,7 @@ it('rejects setting quantity_delivered to zero on BL line', function () {
     $service = app(LaserDeliveryNoteService::class);
     $delivery = $service->createDeliveryNote($order);
 
-    $this->expectException(\Exception::class);
+    $this->expectException(Exception::class);
     $this->expectExceptionMessage('La quantité livrée doit être supérieure à zéro');
     $delivery->lines->first()->update(['quantity_delivered' => 0]);
 });
@@ -721,7 +723,7 @@ it('rejects setting quantity_delivered to negative on BL line', function () {
     $service = app(LaserDeliveryNoteService::class);
     $delivery = $service->createDeliveryNote($order);
 
-    $this->expectException(\Exception::class);
+    $this->expectException(Exception::class);
     $this->expectExceptionMessage('La quantité livrée doit être supérieure à zéro');
     $delivery->lines->first()->update(['quantity_delivered' => -3]);
 });
@@ -753,7 +755,7 @@ it('rejects setting quantity_delivered exceeding available on BL line', function
     $service = app(LaserDeliveryNoteService::class);
     $delivery = $service->createDeliveryNote($order);
 
-    $this->expectException(\Exception::class);
+    $this->expectException(Exception::class);
     $this->expectExceptionMessage('dépasse la quantité disponible');
     $delivery->lines->first()->update(['quantity_delivered' => 15]);
 });
@@ -834,7 +836,7 @@ it('casts LaserDeliveryNote attributes correctly', function () {
 });
 
 it('LaserDeliveryNote has correct fillable fields', function () {
-    $delivery = new LaserDeliveryNote();
+    $delivery = new LaserDeliveryNote;
     expect($delivery->getFillable())->toContain(
         'client_id', 'laser_order_id', 'reference', 'status', 'delivery_date'
     );
@@ -926,7 +928,7 @@ it('casts LaserDeliveryNoteLine attributes correctly', function () {
 });
 
 it('LaserDeliveryNoteLine has correct fillable fields', function () {
-    $line = new LaserDeliveryNoteLine();
+    $line = new LaserDeliveryNoteLine;
     expect($line->getFillable())->toContain(
         'laser_delivery_note_id', 'laser_order_line_id', 'material_id',
         'description', 'length_mm', 'width_mm', 'thickness_mm',
@@ -1063,14 +1065,14 @@ it('generates unique delivery note references', function () {
 // ============================================================
 
 it('generates correct delivery note filename', function () {
-    $service = app(\App\Services\Laser\LaserDocumentationService::class);
+    $service = app(LaserDocumentationService::class);
     $delivery = LaserDeliveryNote::withoutEvents(fn () => LaserDeliveryNote::factory()->make(['reference' => 'LBL-2026-0001']));
 
     expect($service->getDeliveryNoteFilename($delivery))->toBe('bon_de_livraison_LBL-2026-0001');
 });
 
 it('generates correct delivery note path', function () {
-    $service = app(\App\Services\Laser\LaserDocumentationService::class);
+    $service = app(LaserDocumentationService::class);
     $delivery = LaserDeliveryNote::withoutEvents(fn () => LaserDeliveryNote::factory()->make(['reference' => 'LBL-2026-0001']));
 
     expect($service->getDeliveryNotePath($delivery))->toBe('documents/laser/delivery_notes/bon_de_livraison_LBL-2026-0001.pdf');
@@ -1101,9 +1103,9 @@ it('dispatches generate order document job on order created', function () {
 });
 
 it('LaserDeliveryNoteObserver constructor accepts LaserDocumentationService', function () {
-    $observer = new \App\Observers\Laser\LaserDeliveryNoteObserver(
-        app(\App\Services\Laser\LaserDocumentationService::class)
+    $observer = new LaserDeliveryNoteObserver(
+        app(LaserDocumentationService::class)
     );
 
-    expect($observer)->toBeInstanceOf(\App\Observers\Laser\LaserDeliveryNoteObserver::class);
+    expect($observer)->toBeInstanceOf(LaserDeliveryNoteObserver::class);
 });

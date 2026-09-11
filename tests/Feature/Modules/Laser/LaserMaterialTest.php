@@ -1,8 +1,10 @@
 <?php
 
 use App\Models\Laser\LaserMaterial;
+use App\Models\User;
 use Database\Seeders\LaserSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Validator;
 
 uses(RefreshDatabase::class);
 
@@ -54,7 +56,7 @@ it('validates required fields', function () {
         'max_thickness_mm' => ['required', 'numeric', 'min:0'],
     ];
 
-    $validator = \Illuminate\Support\Facades\Validator::make($data, $rules);
+    $validator = Validator::make($data, $rules);
 
     expect($validator->fails())->toBeTrue()
         ->and($validator->errors()->has('name'))->toBeTrue()
@@ -86,7 +88,7 @@ it('seeder is idempotent', function () {
 it('renders laser materials list for admin', function () {
     LaserMaterial::factory()->count(3)->create();
 
-    $user = \App\Models\User::factory()->create(['is_admin' => true]);
+    $user = User::factory()->create(['is_admin' => true]);
 
     $this->actingAs($user)
         ->get('/laser/laser-materials')

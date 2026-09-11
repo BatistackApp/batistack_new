@@ -2,8 +2,12 @@
 
 use App\Services\Core\DocumentService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\View;
 use Illuminate\Support\Str;
+use Spatie\Browsershot\Browsershot;
 use Symfony\Component\Process\Exception\ProcessFailedException;
+use Symfony\Component\Process\Process;
 
 uses(RefreshDatabase::class);
 
@@ -13,12 +17,12 @@ function simplePdfView(): void
     @mkdir($dir);
     file_put_contents($dir.'/simple.blade.php', '<html><body><h1>{{ $title ?? "PDF" }}</h1></body></html>');
 
-    \Illuminate\Support\Facades\View::addLocation($dir);
+    View::addLocation($dir);
 }
 
 function browsershotChain(string $pdfBehaviour): object
 {
-    $mock = Mockery::mock(Spatie\Browsershot\Browsershot::class);
+    $mock = Mockery::mock(Browsershot::class);
     $mock->shouldReceive('setNodeBinary')->withAnyArgs()->andReturnSelf();
     $mock->shouldReceive('setNpmBinary')->withAnyArgs()->andReturnSelf();
     $mock->shouldReceive('showBackground')->withAnyArgs()->andReturnSelf();
@@ -30,7 +34,7 @@ function browsershotChain(string $pdfBehaviour): object
     $mock->shouldReceive('setChromePath')->withAnyArgs()->andReturnSelf();
 
     if ($pdfBehaviour === 'throw') {
-        $process = new \Symfony\Component\Process\Process(['php', '-r', 'exit(1);']);
+        $process = new Process(['php', '-r', 'exit(1);']);
         $process->run();
         $mock->shouldReceive('pdf')->andThrow(new ProcessFailedException($process));
     } else {
@@ -44,11 +48,9 @@ function fakeDocumentService(string $pdfBehaviour): DocumentService
 {
     return new class($pdfBehaviour) extends DocumentService
     {
-        public function __construct(private string $behaviour)
-        {
-        }
+        public function __construct(private string $behaviour) {}
 
-        protected function makeBrowsershot(string $html): \Spatie\Browsershot\Browsershot
+        protected function makeBrowsershot(string $html): Browsershot
         {
             return $this->behaviour === 'throw'
                 ? browsershotChain('throw') : browsershotChain('ok');
@@ -64,7 +66,7 @@ it('wraps a browsershot failure into a RuntimeException and keeps previous', fun
     $previous = null;
     try {
         $service->generate('simple', ['title' => 'Test'], 'contrat_test_'.Str::random(4), 'rh');
-    } catch (\RuntimeException $e) {
+    } catch (RuntimeException $e) {
         $previous = $e->getPrevious();
         expect($e->getMessage())->toContain('La génération du PDF a échoué');
     }
@@ -79,7 +81,7 @@ it('returns a valid path after successful pdf generation', function () {
     $path = $service->generate('simple', ['title' => 'Test'], 'ok_'.Str::random(4), 'rh');
 
     expect($path)->toBeString()
-        ->and(\Illuminate\Support\Facades\Storage::disk('public')->exists($path))->toBeTrue();
+        ->and(Storage::disk('public')->exists($path))->toBeTrue();
 
-    \Illuminate\Support\Facades\Storage::disk('public')->delete($path);
+    Storage::disk('public')->delete($path);
 });

@@ -13,6 +13,7 @@ use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
+use Illuminate\Http\UploadedFile;
 
 class ImportDxfAction
 {
@@ -46,7 +47,7 @@ class ImportDxfAction
                             return;
                         }
 
-                        /** @var \Illuminate\Http\UploadedFile $file */
+                        /** @var UploadedFile $file */
                         $file = $state;
                         $content = file_get_contents($file->getRealPath());
 

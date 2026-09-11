@@ -4,7 +4,6 @@ namespace Database\Factories\Laser;
 
 use App\Enums\Laser\OrderStatus;
 use App\Models\Laser\LaserOrder;
-use App\Models\Laser\LaserQuote;
 use App\Models\Tiers\ThirdParty;
 use App\Support\ReferenceGenerator;
 use Illuminate\Database\Eloquent\Factories\Factory;

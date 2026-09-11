@@ -2,7 +2,6 @@
 
 namespace App\Filament\Laser\Resources\LaserMaterials\Tables;
 
-use App\Models\Laser\LaserMaterial;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\TernaryFilter;

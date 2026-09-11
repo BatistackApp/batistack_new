@@ -4,11 +4,12 @@ namespace App\Filament\Signatures\Resources\Signatures\Schemas;
 
 use App\Enums\Core\SignatureStatus;
 use App\Models\Core\Signature;
-use Filament\Infolists\Components\TextEntry;
 use Filament\Forms\Components\Placeholder;
+use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\HeroIcon;
+use Illuminate\Support\HtmlString;
 use ToneGabes\Filament\Icons\Enums\Phosphor;
 
 class SignatureInfolist
@@ -68,9 +69,9 @@ class SignatureInfolist
                                     return 'Document non disponible';
                                 }
 
-                                return new \Illuminate\Support\HtmlString(
-                                    '<a href="' . e($url) . '" target="_blank" class="text-primary-600 dark:text-primary-400 underline hover:no-underline">' .
-                                    '📄 Ouvrir le PDF signé' .
+                                return new HtmlString(
+                                    '<a href="'.e($url).'" target="_blank" class="text-primary-600 dark:text-primary-400 underline hover:no-underline">'.
+                                    '📄 Ouvrir le PDF signé'.
                                     '</a>'
                                 );
                             })
@@ -106,11 +107,11 @@ class SignatureInfolist
 
                                 foreach ($signers as $signer) {
                                     $html .= '<div class="border rounded-lg p-3 bg-white dark:bg-gray-800">';
-                                    $html .= '<p class="text-sm font-semibold mb-1">' . e($signer->name) . '</p>';
-                                    $html .= '<p class="text-xs text-gray-500 mb-2">' . e($signer->role) . ' — ' . $signer->signed_at->format('d/m/Y H:i') . '</p>';
+                                    $html .= '<p class="text-sm font-semibold mb-1">'.e($signer->name).'</p>';
+                                    $html .= '<p class="text-xs text-gray-500 mb-2">'.e($signer->role).' — '.$signer->signed_at->format('d/m/Y H:i').'</p>';
 
                                     if ($signer->signature_data) {
-                                        $html .= '<img src="' . e($signer->signature_data) . '" alt="Signature de ' . e($signer->name) . '" class="max-h-20 border bg-white" />';
+                                        $html .= '<img src="'.e($signer->signature_data).'" alt="Signature de '.e($signer->name).'" class="max-h-20 border bg-white" />';
                                     } else {
                                         $html .= '<p class="text-xs text-gray-400 italic">Pas d\'image</p>';
                                     }
@@ -120,7 +121,7 @@ class SignatureInfolist
 
                                 $html .= '</div>';
 
-                                return new \Illuminate\Support\HtmlString($html);
+                                return new HtmlString($html);
                             })
                             ->columnSpanFull(),
                     ]),

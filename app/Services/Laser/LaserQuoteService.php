@@ -5,7 +5,6 @@ namespace App\Services\Laser;
 use App\Enums\Laser\OrderStatus;
 use App\Enums\Laser\QuoteStatus;
 use App\Models\Laser\LaserOrder;
-use App\Models\Laser\LaserOrderLine;
 use App\Models\Laser\LaserQuote;
 use App\Models\Laser\LaserQuoteLine;
 use App\Support\ReferenceGenerator;

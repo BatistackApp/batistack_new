@@ -5,6 +5,7 @@ namespace App\Filament\Laser\Resources\LaserOrders\Pages;
 use App\Enums\Laser\OrderStatus;
 use App\Filament\Laser\Resources\LaserOrders\LaserOrderResource;
 use App\Services\Laser\LaserDeliveryNoteService;
+use App\Services\Laser\LaserInvoiceService;
 use Filament\Actions;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
@@ -59,6 +60,33 @@ class ViewLaserOrder extends ViewRecord
                         ->send();
 
                     return $this->redirect(route('filament.laser.resources.laser-delivery-notes.view', $bl));
+                }),
+
+            Actions\Action::make('generateInvoice')
+                ->label('Générer une Facture')
+                ->icon('heroicon-o-receipt')
+                ->color('warning')
+                ->visible(function ($record) {
+                    if (in_array($record->status, [OrderStatus::CANCELLED, OrderStatus::BILLED])) {
+                        return false;
+                    }
+
+                    $record->load('lines');
+
+                    return $record->lines->some(fn ($line) => $line->delivered_quantity > $line->invoiced_quantity);
+                })
+                ->requiresConfirmation()
+                ->modalHeading('Générer une Facture')
+                ->modalDescription('Une facture sera créée pour les lignes livrées non encore facturées.')
+                ->action(function ($record) {
+                    $invoice = app(LaserInvoiceService::class)->createInvoice($record);
+
+                    Notification::make()
+                        ->title('Facture créée : '.$invoice->reference)
+                        ->success()
+                        ->send();
+
+                    return $this->redirect(route('filament.laser.resources.laser-invoices.view', $invoice));
                 }),
 
             Actions\Action::make('cancel')

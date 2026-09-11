@@ -46,6 +46,28 @@ return [
 
     'delivery_note_prefix' => env('LASER_DELIVERY_NOTE_PREFIX', 'LBL'),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Préfixe de référence des factures
+    |--------------------------------------------------------------------------
+    |
+    | Le préfixe utilisé pour générer les références de factures laser.
+    |
+    */
+
+    'invoice_prefix' => env('LASER_INVOICE_PREFIX', 'LFAC'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Préfixe de référence des avoirs
+    |--------------------------------------------------------------------------
+    |
+    | Le préfixe utilisé pour générer les références d'avoirs laser.
+    |
+    */
+
+    'credit_note_prefix' => env('LASER_CREDIT_NOTE_PREFIX', 'LAVO'),
+
     'dxf_cut_layers' => array_filter(array_map('trim', explode(',', env('LASER_DXF_CUT_LAYERS', '')))),
 
 ];

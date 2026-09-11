@@ -14,6 +14,7 @@ use App\Http\Controllers\Core\SignatureDownloadController;
 use App\Http\Controllers\Core\SignatureWebhookController;
 use App\Http\Controllers\Public\PublicSafetyPassportController;
 use App\Http\Controllers\WebPushController;
+use App\Http\Middleware\EnsureUserIsAdmin;
 use App\Livewire\Kiosk\BiometricClock;
 use App\Livewire\Kiosk\BiometricEnrollment;
 use App\Livewire\Onboarding\CandidateForm;
@@ -43,7 +44,7 @@ Route::post('/signature/{token}', [SignatureController::class, 'sign'])->name('s
 Route::post('/signature/{token}/refuse', [SignatureController::class, 'refuse'])->name('signature.refuse');
 
 // Téléchargement du PDF signé (espace admin/signatures)
-Route::middleware(['auth', \App\Http\Middleware\EnsureUserIsAdmin::class])
+Route::middleware(['auth', EnsureUserIsAdmin::class])
     ->get('/signatures/{signature}/download', [SignatureDownloadController::class, 'download'])
     ->name('signatures.download');
 

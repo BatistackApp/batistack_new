@@ -21,6 +21,7 @@ class LaserOrderLine extends Model
         'quantity',
         'delivered_quantity',
         'reserved_quantity',
+        'invoiced_quantity',
         'surface_mm2',
         'cut_length_mm',
         'weight_kg',
@@ -42,6 +43,7 @@ class LaserOrderLine extends Model
             'quantity' => 'integer',
             'delivered_quantity' => 'integer',
             'reserved_quantity' => 'integer',
+            'invoiced_quantity' => 'integer',
             'surface_mm2' => 'decimal:4',
             'cut_length_mm' => 'decimal:2',
             'weight_kg' => 'decimal:4',
@@ -68,6 +70,11 @@ class LaserOrderLine extends Model
     public function deliveryNoteLines(): HasMany
     {
         return $this->hasMany(LaserDeliveryNoteLine::class, 'laser_order_line_id');
+    }
+
+    public function invoiceLines(): HasMany
+    {
+        return $this->hasMany(LaserInvoiceLine::class, 'laser_order_line_id');
     }
 
     public function getRemainingQuantityAttribute(): int
