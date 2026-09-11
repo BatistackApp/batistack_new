@@ -5,6 +5,7 @@ namespace App\Models\Laser;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class LaserOrderLine extends Model
 {
@@ -18,6 +19,7 @@ class LaserOrderLine extends Model
         'width_mm',
         'thickness_mm',
         'quantity',
+        'delivered_quantity',
         'surface_mm2',
         'cut_length_mm',
         'weight_kg',
@@ -37,6 +39,7 @@ class LaserOrderLine extends Model
             'width_mm' => 'decimal:2',
             'thickness_mm' => 'decimal:2',
             'quantity' => 'integer',
+            'delivered_quantity' => 'integer',
             'surface_mm2' => 'decimal:4',
             'cut_length_mm' => 'decimal:2',
             'weight_kg' => 'decimal:4',
@@ -58,5 +61,15 @@ class LaserOrderLine extends Model
     public function material(): BelongsTo
     {
         return $this->belongsTo(LaserMaterial::class, 'material_id');
+    }
+
+    public function deliveryNoteLines(): HasMany
+    {
+        return $this->hasMany(LaserDeliveryNoteLine::class, 'laser_order_line_id');
+    }
+
+    public function getRemainingQuantityAttribute(): int
+    {
+        return $this->quantity - $this->delivered_quantity;
     }
 }

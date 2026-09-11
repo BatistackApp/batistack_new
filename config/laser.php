@@ -35,6 +35,17 @@ return [
     |
     */
 
+    /*
+    |--------------------------------------------------------------------------
+    | Préfixe de référence des bons de livraison
+    |--------------------------------------------------------------------------
+    |
+    | Le préfixe utilisé pour générer les références de bons de livraison laser.
+    |
+    */
+
+    'delivery_note_prefix' => env('LASER_DELIVERY_NOTE_PREFIX', 'LBL'),
+
     'dxf_cut_layers' => array_filter(array_map('trim', explode(',', env('LASER_DXF_CUT_LAYERS', '')))),
 
 ];

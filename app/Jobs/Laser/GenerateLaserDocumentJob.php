@@ -2,6 +2,8 @@
 
 namespace App\Jobs\Laser;
 
+use App\Models\Laser\LaserDeliveryNote;
+use App\Models\Laser\LaserOrder;
 use App\Models\Laser\LaserQuote;
 use App\Services\Laser\LaserDocumentationService;
 use Carbon\CarbonImmutable;
@@ -31,6 +33,7 @@ class GenerateLaserDocumentJob implements ShouldQueue
         match ($this->namespace) {
             'laser_quote' => $this->handleQuote(),
             'laser_order' => $this->handleOrder(),
+            'laser_delivery_note' => $this->handleDeliveryNote(),
             default => throw new \InvalidArgumentException("Invalid namespace: {$this->namespace}"),
         };
     }
@@ -52,8 +55,8 @@ class GenerateLaserDocumentJob implements ShouldQueue
 
     private function handleOrder(): void
     {
-        /** @var \App\Models\Laser\LaserOrder $freshOrder */
-        $freshOrder = \App\Models\Laser\LaserOrder::with(['client', 'lines.material', 'quote'])
+        /** @var LaserOrder $freshOrder */
+        $freshOrder = LaserOrder::with(['client', 'lines.material', 'quote'])
             ->findOrFail($this->model->getKey());
 
         if ($this->expectedUpdatedAt && $freshOrder->updated_at->greaterThan($this->expectedUpdatedAt)) {
@@ -63,5 +66,20 @@ class GenerateLaserDocumentJob implements ShouldQueue
         }
 
         app(LaserDocumentationService::class)->generateOrderPdf($freshOrder);
+    }
+
+    private function handleDeliveryNote(): void
+    {
+        /** @var LaserDeliveryNote $freshDelivery */
+        $freshDelivery = LaserDeliveryNote::with(['client', 'lines.material', 'order'])
+            ->findOrFail($this->model->getKey());
+
+        if ($this->expectedUpdatedAt && $freshDelivery->updated_at->greaterThan($this->expectedUpdatedAt)) {
+            self::dispatch($this->namespace, $freshDelivery, CarbonImmutable::instance($freshDelivery->updated_at));
+
+            return;
+        }
+
+        app(LaserDocumentationService::class)->generateDeliveryNotePdf($freshDelivery);
     }
 }

@@ -4,7 +4,7 @@ namespace App\Filament\Laser\Resources\LaserOrders\Pages;
 
 use App\Enums\Laser\OrderStatus;
 use App\Filament\Laser\Resources\LaserOrders\LaserOrderResource;
-use App\Models\Laser\LaserOrder;
+use App\Services\Laser\LaserDeliveryNoteService;
 use Filament\Actions;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
@@ -32,6 +32,33 @@ class ViewLaserOrder extends ViewRecord
                         ->title('Commande confirmée')
                         ->success()
                         ->send();
+                }),
+
+            Actions\Action::make('generateDeliveryNote')
+                ->label('Générer un Bon de Livraison')
+                ->icon('heroicon-o-truck')
+                ->color('info')
+                ->visible(function ($record) {
+                    if (! in_array($record->status, [OrderStatus::CONFIRMED, OrderStatus::IN_PROGRESS])) {
+                        return false;
+                    }
+
+                    $record->load('lines');
+
+                    return $record->lines->some(fn ($line) => $line->remaining_quantity > 0);
+                })
+                ->requiresConfirmation()
+                ->modalHeading('Générer un Bon de Livraison')
+                ->modalDescription('Un bon de livraison sera créé avec les lignes restant à livrer.')
+                ->action(function ($record) {
+                    $bl = app(LaserDeliveryNoteService::class)->createDeliveryNote($record);
+
+                    Notification::make()
+                        ->title('BL créé : '.$bl->reference)
+                        ->success()
+                        ->send();
+
+                    return $this->redirect(route('filament.laser.resources.laser-delivery-notes.view', $bl));
                 }),
 
             Actions\Action::make('cancel')
