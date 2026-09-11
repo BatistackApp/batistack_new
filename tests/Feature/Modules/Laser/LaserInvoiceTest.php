@@ -1335,3 +1335,168 @@ it('rejects invoice creation for BILLED order', function () {
     $this->expectExceptionMessage('Cette commande ne peut pas être facturée.');
     $service->createInvoice($order);
 });
+
+// ============================================================
+// Review #2: CANCELLED order must NOT be overwritten by legalization
+// ============================================================
+
+it('does not overwrite CANCELLED order to BILLED when legalizing draft invoice', function () {
+    Queue::fake();
+
+    $material = LaserMaterial::factory()->create(['is_active' => true]);
+
+    $quote = LaserQuote::withoutEvents(fn () => LaserQuote::factory()->create([
+        'status' => QuoteStatus::DRAFT,
+    ]));
+
+    $order = app(LaserQuoteService::class)->acceptQuote($quote);
+
+    LaserOrderLine::withoutEvents(fn () => LaserOrderLine::create([
+        'laser_order_id' => $order->id,
+        'material_id' => $material->id,
+        'description' => 'Pièce cancelled',
+        'length_mm' => 500,
+        'width_mm' => 250,
+        'thickness_mm' => 2,
+        'quantity' => 10,
+        'delivered_quantity' => 10,
+        'invoiced_quantity' => 0,
+        'cut_length_mm' => 1500,
+        'weight_kg' => 19.625,
+        'unit_price_ht' => 250.00,
+        'density_kg_m3' => 7850,
+        'total_ht' => 2500.00,
+    ]));
+
+    $invoice = LaserInvoice::withoutEvents(fn () => LaserInvoice::factory()->create([
+        'laser_order_id' => $order->id,
+        'status' => InvoiceStatus::DRAFT,
+        'total_ht' => 2500,
+        'total_ttc' => 3000,
+    ]));
+
+    $order->update(['status' => OrderStatus::CANCELLED]);
+
+    $service = app(LaserInvoiceService::class);
+    $service->legalizeInvoice($invoice);
+
+    $order->refresh();
+    expect($order->status)->toBe(OrderStatus::CANCELLED);
+});
+
+// ============================================================
+// Review #3: Hash chain with previous_hash verification
+// ============================================================
+
+it('chain contains previous hash in hash2 payload', function () {
+    Queue::fake();
+
+    $sequence = LaserLegalizationSequence::first();
+    expect($sequence->last_hash)->toBe('GENESIS');
+
+    $invoice1 = LaserInvoice::withoutEvents(fn () => LaserInvoice::factory()->create([
+        'status' => InvoiceStatus::DRAFT,
+        'total_ht' => 500,
+        'total_ttc' => 600,
+    ]));
+
+    $service = app(LaserInvoiceService::class);
+    $service->legalizeInvoice($invoice1);
+
+    $sequence->refresh();
+    $hash1 = $invoice1->fresh()->signature_hash;
+    expect($sequence->last_hash)->toBe($hash1);
+
+    $invoice2 = LaserInvoice::withoutEvents(fn () => LaserInvoice::factory()->create([
+        'status' => InvoiceStatus::DRAFT,
+        'total_ht' => 1000,
+        'total_ttc' => 1200,
+    ]));
+
+    $service->legalizeInvoice($invoice2);
+
+    $sequence->refresh();
+    $hash2 = $invoice2->fresh()->signature_hash;
+
+    // Verify the chain: hash2 must differ from hash1, and sequence ends with hash2
+    expect($hash1)->not->toBe($hash2)
+        ->and($sequence->last_hash)->toBe($hash2)
+        ->and($sequence->last_reference)->toBe($invoice2->fresh()->reference);
+});
+
+// ============================================================
+// Review #4: Enriched hash payload detects line-level changes
+// ============================================================
+
+it('hash changes when line data differs between two identical totals', function () {
+    Queue::fake();
+
+    $service = app(LaserInvoiceService::class);
+
+    $order = LaserOrder::withoutEvents(fn () => LaserOrder::factory()->create());
+    $material = LaserMaterial::factory()->create(['is_active' => true]);
+
+    $orderLineA = LaserOrderLine::withoutEvents(fn () => LaserOrderLine::create([
+        'laser_order_id' => $order->id,
+        'material_id' => $material->id,
+        'quantity' => 10,
+    ]));
+
+    $inv1 = LaserInvoice::withoutEvents(fn () => LaserInvoice::factory()->create([
+        'status' => InvoiceStatus::DRAFT,
+        'total_ht' => 1000,
+        'total_ttc' => 1200,
+    ]));
+    LaserInvoiceLine::create([
+        'laser_invoice_id' => $inv1->id,
+        'laser_order_line_id' => $orderLineA->id,
+        'material_id' => $material->id,
+        'description' => 'Pièce A',
+        'length_mm' => 500,
+        'width_mm' => 250,
+        'thickness_mm' => 2,
+        'quantity' => 10,
+        'quantity_invoiced' => 10,
+        'unit_price_ht' => 100.00,
+        'discount_pct' => 0,
+        'total_ht' => 1000.00,
+        'weight_kg' => 19.625,
+        'density_kg_m3' => 7850,
+    ]);
+
+    $service->legalizeInvoice($inv1);
+    $hash1 = $inv1->fresh()->signature_hash;
+
+    $orderLineB = LaserOrderLine::withoutEvents(fn () => LaserOrderLine::create([
+        'laser_order_id' => $order->id,
+        'material_id' => $material->id,
+        'quantity' => 20,
+    ]));
+
+    $inv2 = LaserInvoice::withoutEvents(fn () => LaserInvoice::factory()->create([
+        'status' => InvoiceStatus::DRAFT,
+        'total_ht' => 1000,
+        'total_ttc' => 1200,
+    ]));
+    LaserInvoiceLine::create([
+        'laser_invoice_id' => $inv2->id,
+        'laser_order_line_id' => $orderLineB->id,
+        'material_id' => $material->id,
+        'description' => 'Pièce B',
+        'length_mm' => 300,
+        'width_mm' => 200,
+        'thickness_mm' => 5,
+        'quantity' => 20,
+        'quantity_invoiced' => 20,
+        'unit_price_ht' => 50.00,
+        'discount_pct' => 0,
+        'total_ht' => 1000.00,
+        'weight_kg' => 23.55,
+        'density_kg_m3' => 7850,
+    ]);
+
+    $service->legalizeInvoice($inv2);
+    $hash2 = $inv2->fresh()->signature_hash;
+
+    expect($hash1)->not->toBe($hash2);
+});

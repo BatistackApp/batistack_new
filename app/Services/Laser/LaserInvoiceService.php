@@ -126,13 +126,30 @@ class LaserInvoiceService
             $definitiveRef = $this->generateInvoiceReference();
             $previousHash = $sequence->last_hash;
 
+            $invoice->load('lines');
+
+            $linePayloads = $invoice->lines->map(function ($line) {
+                return implode(':', [
+                    $line->material_id,
+                    $line->length_mm,
+                    $line->width_mm,
+                    $line->thickness_mm,
+                    $line->quantity_invoiced,
+                    number_format($line->unit_price_ht, 4, '.', ''),
+                    $line->discount_pct,
+                    number_format($line->total_ht, 2, '.', ''),
+                ]);
+            })->implode('|');
+
             $dataToHash = implode('|', [
                 $definitiveRef,
                 $invoice->created_at->toIso8601String(),
                 number_format($invoice->total_ht, 2, '.', ''),
+                number_format($invoice->total_tva, 2, '.', ''),
                 number_format($invoice->total_ttc, 2, '.', ''),
                 $invoice->client_id,
                 $invoice->laser_order_id,
+                $linePayloads,
             ]).'|'.$previousHash;
 
             $newHash = hash('sha256', $dataToHash);
@@ -208,6 +225,10 @@ class LaserInvoiceService
     private function refreshOrderStatus(LaserOrder $order): void
     {
         $order->load('lines');
+
+        if ($order->status === OrderStatus::CANCELLED) {
+            return;
+        }
 
         $hasDeliveredLines = $order->lines->contains(fn ($line) => $line->delivered_quantity > 0);
 

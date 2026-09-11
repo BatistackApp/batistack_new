@@ -67,7 +67,11 @@
     <div style="margin-top: 30px;">
         <div class="section-title">MENTIONS LÉGALES</div>
         <div class="section-content" style="font-size: 9px; color: #666;">
-            <p>Avoir conforme aux exigences NF525.</p>
+            <p>Avoir émis conformément aux dispositions relatives à la facturation.</p>
+            <p>Avoir n° {{ $creditNote->reference }} émis le {{ $creditNote->created_at->format('d/m/Y') }}.</p>
+            @if($creditNote->invoice)
+                <p>Avoir rattaché à la facture n° {{ $creditNote->invoice->reference }}.</p>
+            @endif
         </div>
     </div>
 @endsection
