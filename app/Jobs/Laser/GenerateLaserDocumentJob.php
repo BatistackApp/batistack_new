@@ -30,6 +30,7 @@ class GenerateLaserDocumentJob implements ShouldQueue
     {
         match ($this->namespace) {
             'laser_quote' => $this->handleQuote(),
+            'laser_order' => $this->handleOrder(),
             default => throw new \InvalidArgumentException("Invalid namespace: {$this->namespace}"),
         };
     }
@@ -47,5 +48,20 @@ class GenerateLaserDocumentJob implements ShouldQueue
         }
 
         app(LaserDocumentationService::class)->generateQuotePdf($freshQuote);
+    }
+
+    private function handleOrder(): void
+    {
+        /** @var \App\Models\Laser\LaserOrder $freshOrder */
+        $freshOrder = \App\Models\Laser\LaserOrder::with(['client', 'lines.material', 'quote'])
+            ->findOrFail($this->model->getKey());
+
+        if ($this->expectedUpdatedAt && $freshOrder->updated_at->greaterThan($this->expectedUpdatedAt)) {
+            self::dispatch($this->namespace, $freshOrder, CarbonImmutable::instance($freshOrder->updated_at));
+
+            return;
+        }
+
+        app(LaserDocumentationService::class)->generateOrderPdf($freshOrder);
     }
 }

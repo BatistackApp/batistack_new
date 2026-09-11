@@ -546,7 +546,7 @@ it('generates correct quote path', function () {
     $service = app(LaserDocumentationService::class);
     $quote = LaserQuote::factory()->make(['reference' => 'LAQ-2026-0099']);
 
-    expect($service->getQuotePath($quote))->toBe('laser/quotes/devis_laser_LAQ-2026-0099.pdf');
+    expect($service->getQuotePath($quote))->toBe('documents/laser/quotes/devis_laser_LAQ-2026-0099.pdf');
 });
 
 // ============================================================

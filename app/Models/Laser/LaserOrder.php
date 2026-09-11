@@ -2,39 +2,37 @@
 
 namespace App\Models\Laser;
 
-use App\Enums\Laser\QuoteStatus;
+use App\Enums\Laser\OrderStatus;
 use App\Models\Laser\Concerns\RecalculatesLaserTotals;
 use App\Models\Tiers\ThirdParty;
-use App\Observers\Laser\LaserQuoteObserver;
+use App\Observers\Laser\LaserOrderObserver;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\HasOne;
 
-#[ObservedBy([LaserQuoteObserver::class])]
-class LaserQuote extends Model
+#[ObservedBy([LaserOrderObserver::class])]
+class LaserOrder extends Model
 {
     use HasFactory, RecalculatesLaserTotals;
 
     protected $fillable = [
         'client_id',
+        'laser_quote_id',
         'reference',
         'status',
         'total_ht',
         'total_ttc',
         'terms',
-        'expires_at',
     ];
 
     protected function casts(): array
     {
         return [
-            'status' => QuoteStatus::class,
+            'status' => OrderStatus::class,
             'total_ht' => 'decimal:2',
             'total_ttc' => 'decimal:2',
-            'expires_at' => 'datetime',
         ];
     }
 
@@ -43,23 +41,18 @@ class LaserQuote extends Model
         return $this->belongsTo(ThirdParty::class, 'client_id');
     }
 
-    public function lines(): HasMany
+    public function quote(): BelongsTo
     {
-        return $this->hasMany(LaserQuoteLine::class);
+        return $this->belongsTo(LaserQuote::class, 'laser_quote_id');
     }
 
-    public function order(): HasOne
+    public function lines(): HasMany
     {
-        return $this->hasOne(LaserOrder::class);
+        return $this->hasMany(LaserOrderLine::class);
     }
 
     public function canBeDeleted(): bool
     {
-        return $this->status->value === QuoteStatus::DRAFT->value;
-    }
-
-    public function getIsExpiredAttribute(): bool
-    {
-        return $this->expires_at && $this->expires_at->isPast();
+        return $this->status->value === OrderStatus::DRAFT->value;
     }
 }
