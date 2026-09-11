@@ -23,6 +23,7 @@ class LaserCreditNote extends Model
         'total_tva',
         'total_ttc',
         'reason',
+        'signature_hash',
     ];
 
     protected function casts(): array

@@ -22,7 +22,7 @@
         @endif
         @if($invoice->status->value === 'validated' || $invoice->status->value === 'paid')
             <div>
-                <span class="label">Signature :</span>
+                <span class="label">Empreinte :</span>
                 <span class="value" style="font-size: 8px;">{{ substr($invoice->signature_hash, 0, 16) }}...</span>
             </div>
         @endif
@@ -98,7 +98,7 @@
                     <td style="text-align: right; padding: 4px 0;">{{ number_format($invoice->total_ht, 2) }} €</td>
                 </tr>
                 <tr>
-                    <td style="padding: 4px 0;"><strong>TVA (20%) :</strong></td>
+                    <td style="padding: 4px 0;"><strong>TVA ({{ $vat_rate }}%) :</strong></td>
                     <td style="text-align: right; padding: 4px 0;">{{ number_format($invoice->total_tva, 2) }} €</td>
                 </tr>
                 <tr style="border-top: 2px solid #333;">
@@ -113,9 +113,9 @@
     <div style="margin-top: 30px;">
         <div class="section-title">MENTIONS LÉGALES</div>
         <div class="section-content" style="font-size: 9px; color: #666;">
-            <p>Facture conforme aux exigences NF525. Document signé électroniquement.</p>
+            <p>Facture émise conformément aux dispositions relatives à la facturation.</p>
             @if($invoice->status->value === 'validated' || $invoice->status->value === 'paid')
-                <p>Hash de signature : {{ $invoice->signature_hash }}</p>
+                <p>Facture n° {{ $invoice->reference }} — Empreinte SHA-256 : {{ $invoice->signature_hash }}</p>
             @endif
         </div>
     </div>

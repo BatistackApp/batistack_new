@@ -52,7 +52,7 @@
                     <td style="text-align: right; padding: 4px 0;">{{ number_format($creditNote->total_ht, 2) }} €</td>
                 </tr>
                 <tr>
-                    <td style="padding: 4px 0;"><strong>TVA (20%) :</strong></td>
+                    <td style="padding: 4px 0;"><strong>TVA ({{ $vat_rate }}%) :</strong></td>
                     <td style="text-align: right; padding: 4px 0;">{{ number_format($creditNote->total_tva, 2) }} €</td>
                 </tr>
                 <tr style="border-top: 2px solid #333;">
@@ -71,6 +71,9 @@
             <p>Avoir n° {{ $creditNote->reference }} émis le {{ $creditNote->created_at->format('d/m/Y') }}.</p>
             @if($creditNote->invoice)
                 <p>Avoir rattaché à la facture n° {{ $creditNote->invoice->reference }}.</p>
+            @endif
+            @if($creditNote->signature_hash)
+                <p>Empreinte SHA-256 : {{ $creditNote->signature_hash }}</p>
             @endif
         </div>
     </div>

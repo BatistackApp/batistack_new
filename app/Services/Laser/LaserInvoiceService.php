@@ -201,15 +201,39 @@ class LaserInvoiceService
             $requestedTva = round($requestedHt * $tvaRate / 100, 2);
             $requestedTtc = $requestedHt + $requestedTva;
 
+            $sequence = LaserLegalizationSequence::query()->lockForUpdate()->firstOrFail();
+
+            $definitiveRef = $this->generateCreditNoteReference();
+            $previousHash = $sequence->last_hash;
+
+            $dataToHash = implode('|', [
+                $definitiveRef,
+                now()->toIso8601String(),
+                number_format($requestedHt, 2, '.', ''),
+                number_format($requestedTva, 2, '.', ''),
+                number_format($requestedTtc, 2, '.', ''),
+                $invoice->client_id,
+                $invoice->id,
+                $reason,
+            ]).'|'.$previousHash;
+
+            $newHash = hash('sha256', $dataToHash);
+
             $creditNote = LaserCreditNote::create([
                 'client_id' => $invoice->client_id,
                 'laser_invoice_id' => $invoice->id,
-                'reference' => $this->generateCreditNoteReference(),
+                'reference' => $definitiveRef,
                 'status' => 'validated',
                 'total_ht' => $requestedHt,
                 'total_tva' => $requestedTva,
                 'total_ttc' => $requestedTtc,
                 'reason' => $reason,
+                'signature_hash' => $newHash,
+            ]);
+
+            $sequence->update([
+                'last_hash' => $newHash,
+                'last_reference' => $definitiveRef,
             ]);
 
             $invoice->increment('credited_amount_ht', $requestedHt);
