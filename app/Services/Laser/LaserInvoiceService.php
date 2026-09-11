@@ -29,6 +29,11 @@ class LaserInvoiceService
     {
         return DB::transaction(function () use ($order) {
             $order = LaserOrder::whereKey($order->id)->lockForUpdate()->firstOrFail();
+
+            if (in_array($order->status, [OrderStatus::CANCELLED, OrderStatus::BILLED])) {
+                throw new Exception('Cette commande ne peut pas être facturée.');
+            }
+
             $order->load('lines');
 
             $linesToInvoice = $order->lines->filter(
@@ -92,12 +97,12 @@ class LaserInvoiceService
 
     public function deleteInvoice(LaserInvoice $invoice): void
     {
-        if (! $invoice->canBeDeleted()) {
-            throw new Exception('Seule une facture en brouillon peut être supprimée.');
-        }
-
         DB::transaction(function () use ($invoice) {
             $invoice = LaserInvoice::whereKey($invoice->id)->lockForUpdate()->firstOrFail();
+
+            if ($invoice->status !== InvoiceStatus::DRAFT) {
+                throw new Exception('Seule une facture en brouillon peut être supprimée.');
+            }
 
             foreach ($invoice->lines as $line) {
                 $line->orderLine()->decrement('invoiced_quantity', $line->quantity_invoiced);
@@ -116,8 +121,7 @@ class LaserInvoiceService
                 throw new Exception('Seule une facture en brouillon peut être légalisée.');
             }
 
-            $sequence = LaserLegalizationSequence::firstOrFail();
-            $sequence->lockForUpdate();
+            $sequence = LaserLegalizationSequence::query()->lockForUpdate()->firstOrFail();
 
             $definitiveRef = $this->generateInvoiceReference();
             $previousHash = $sequence->last_hash;

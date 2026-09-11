@@ -1217,3 +1217,121 @@ it('LaserLegalizationSequence model has correct fillable', function () {
     $seq = new LaserLegalizationSequence;
     expect($seq->getFillable())->toContain('last_hash', 'last_reference');
 });
+
+// ============================================================
+// Review fixes: lockForUpdate, delete race, order status validation
+// ============================================================
+
+it('legalizeInvoice locks sequence via query builder', function () {
+    Queue::fake();
+
+    $invoice = LaserInvoice::withoutEvents(fn () => LaserInvoice::factory()->create([
+        'status' => InvoiceStatus::DRAFT,
+        'total_ht' => 1000,
+        'total_ttc' => 1200,
+    ]));
+
+    $service = app(LaserInvoiceService::class);
+    $service->legalizeInvoice($invoice);
+
+    $sequence = LaserLegalizationSequence::first();
+    $invoice->refresh();
+
+    expect($sequence->last_hash)->toBe($invoice->signature_hash)
+        ->and($sequence->last_reference)->toBe($invoice->reference);
+});
+
+it('deleteInvoice re-checks status after lockForUpdate', function () {
+    Queue::fake();
+
+    $invoice = LaserInvoice::withoutEvents(fn () => LaserInvoice::factory()->create([
+        'status' => InvoiceStatus::DRAFT,
+        'total_ht' => 1000,
+        'total_ttc' => 1200,
+    ]));
+
+    $service = app(LaserInvoiceService::class);
+
+    // Simulate: invoice becomes VALIDATED between canBeDeleted() and lockForUpdate()
+    // by legalizing it first inside a transaction, then trying to delete
+    $service->legalizeInvoice($invoice);
+
+    $invoice->refresh();
+    expect($invoice->status)->toBe(InvoiceStatus::VALIDATED);
+
+    $this->expectException(Exception::class);
+    $this->expectExceptionMessage('Seule une facture en brouillon peut être supprimée.');
+    $service->deleteInvoice($invoice);
+});
+
+it('rejects invoice creation for CANCELLED order', function () {
+    Queue::fake();
+
+    $material = LaserMaterial::factory()->create(['is_active' => true]);
+
+    $quote = LaserQuote::withoutEvents(fn () => LaserQuote::factory()->create([
+        'status' => QuoteStatus::DRAFT,
+    ]));
+
+    $order = app(LaserQuoteService::class)->acceptQuote($quote);
+
+    LaserOrderLine::withoutEvents(fn () => LaserOrderLine::create([
+        'laser_order_id' => $order->id,
+        'material_id' => $material->id,
+        'description' => 'Pièce cancelled',
+        'length_mm' => 500,
+        'width_mm' => 250,
+        'thickness_mm' => 2,
+        'quantity' => 10,
+        'delivered_quantity' => 10,
+        'cut_length_mm' => 1500,
+        'weight_kg' => 19.625,
+        'unit_price_ht' => 250.00,
+        'density_kg_m3' => 7850,
+        'total_ht' => 2500.00,
+    ]));
+
+    $order->update(['status' => OrderStatus::CANCELLED]);
+
+    $service = app(LaserInvoiceService::class);
+
+    $this->expectException(Exception::class);
+    $this->expectExceptionMessage('Cette commande ne peut pas être facturée.');
+    $service->createInvoice($order);
+});
+
+it('rejects invoice creation for BILLED order', function () {
+    Queue::fake();
+
+    $material = LaserMaterial::factory()->create(['is_active' => true]);
+
+    $quote = LaserQuote::withoutEvents(fn () => LaserQuote::factory()->create([
+        'status' => QuoteStatus::DRAFT,
+    ]));
+
+    $order = app(LaserQuoteService::class)->acceptQuote($quote);
+
+    LaserOrderLine::withoutEvents(fn () => LaserOrderLine::create([
+        'laser_order_id' => $order->id,
+        'material_id' => $material->id,
+        'description' => 'Pièce billed',
+        'length_mm' => 500,
+        'width_mm' => 250,
+        'thickness_mm' => 2,
+        'quantity' => 10,
+        'delivered_quantity' => 10,
+        'cut_length_mm' => 1500,
+        'weight_kg' => 19.625,
+        'unit_price_ht' => 250.00,
+        'density_kg_m3' => 7850,
+        'total_ht' => 2500.00,
+    ]));
+
+    $order->update(['status' => OrderStatus::BILLED]);
+
+    $service = app(LaserInvoiceService::class);
+
+    $this->expectException(Exception::class);
+    $this->expectExceptionMessage('Cette commande ne peut pas être facturée.');
+    $service->createInvoice($order);
+});
