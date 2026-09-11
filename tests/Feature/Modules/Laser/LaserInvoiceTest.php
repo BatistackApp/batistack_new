@@ -232,18 +232,39 @@ it('legalizes a DRAFT invoice and sets hash', function () {
         ->and(strlen($invoice->signature_hash))->toBe(64);
 });
 
-it('updates order status to BILLED after legalization', function () {
+it('updates order status to BILLED after legalization when all delivered lines invoiced', function () {
     Queue::fake();
 
-    $order = LaserOrder::withoutEvents(fn () => LaserOrder::factory()->create([
-        'status' => OrderStatus::DELIVERED,
+    $material = LaserMaterial::factory()->create(['is_active' => true]);
+
+    $quote = LaserQuote::withoutEvents(fn () => LaserQuote::factory()->create([
+        'status' => QuoteStatus::DRAFT,
+    ]));
+
+    $order = app(LaserQuoteService::class)->acceptQuote($quote);
+
+    LaserOrderLine::withoutEvents(fn () => LaserOrderLine::create([
+        'laser_order_id' => $order->id,
+        'material_id' => $material->id,
+        'description' => 'Pièce facturée',
+        'length_mm' => 500,
+        'width_mm' => 250,
+        'thickness_mm' => 2,
+        'quantity' => 10,
+        'delivered_quantity' => 10,
+        'invoiced_quantity' => 10,
+        'cut_length_mm' => 1500,
+        'weight_kg' => 19.625,
+        'unit_price_ht' => 250.00,
+        'density_kg_m3' => 7850,
+        'total_ht' => 2500.00,
     ]));
 
     $invoice = LaserInvoice::withoutEvents(fn () => LaserInvoice::factory()->create([
         'laser_order_id' => $order->id,
         'status' => InvoiceStatus::DRAFT,
-        'total_ht' => 1000,
-        'total_ttc' => 1200,
+        'total_ht' => 2500,
+        'total_ttc' => 3000,
     ]));
 
     $service = app(LaserInvoiceService::class);
@@ -717,4 +738,382 @@ it('LaserCreditNoteObserver constructor accepts LaserDocumentationService', func
     );
 
     expect($observer)->toBeInstanceOf(LaserCreditNoteObserver::class);
+});
+
+// ============================================================
+// Review #1: Partial invoice does NOT mark order BILLED
+// ============================================================
+
+it('does not mark order BILLED when some delivered lines are not yet invoiced', function () {
+    Queue::fake();
+
+    $material = LaserMaterial::factory()->create(['is_active' => true]);
+
+    $quote = LaserQuote::withoutEvents(fn () => LaserQuote::factory()->create([
+        'status' => QuoteStatus::DRAFT,
+    ]));
+
+    $order = app(LaserQuoteService::class)->acceptQuote($quote);
+
+    // Line 1: delivered 10, invoiced 10 (fully invoiced)
+    LaserOrderLine::withoutEvents(fn () => LaserOrderLine::create([
+        'laser_order_id' => $order->id,
+        'material_id' => $material->id,
+        'description' => 'Pièce A',
+        'length_mm' => 500,
+        'width_mm' => 250,
+        'thickness_mm' => 2,
+        'quantity' => 10,
+        'delivered_quantity' => 10,
+        'invoiced_quantity' => 10,
+        'cut_length_mm' => 1500,
+        'weight_kg' => 19.625,
+        'unit_price_ht' => 100.00,
+        'density_kg_m3' => 7850,
+        'total_ht' => 1000.00,
+    ]));
+
+    // Line 2: delivered 5, invoiced 0 (delivered but NOT yet invoiced)
+    LaserOrderLine::withoutEvents(fn () => LaserOrderLine::create([
+        'laser_order_id' => $order->id,
+        'material_id' => $material->id,
+        'description' => 'Pièce B',
+        'length_mm' => 300,
+        'width_mm' => 200,
+        'thickness_mm' => 3,
+        'quantity' => 10,
+        'delivered_quantity' => 5,
+        'invoiced_quantity' => 0,
+        'cut_length_mm' => 1000,
+        'weight_kg' => 14.13,
+        'unit_price_ht' => 80.00,
+        'density_kg_m3' => 7850,
+        'total_ht' => 400.00,
+    ]));
+
+    // Invoice only line 1 (partial invoice)
+    $invoice = LaserInvoice::withoutEvents(fn () => LaserInvoice::factory()->create([
+        'laser_order_id' => $order->id,
+        'status' => InvoiceStatus::DRAFT,
+        'total_ht' => 1000,
+        'total_ttc' => 1200,
+    ]));
+
+    $service = app(LaserInvoiceService::class);
+    $service->legalizeInvoice($invoice);
+
+    $order->refresh();
+    expect($order->status)->not->toBe(OrderStatus::BILLED);
+});
+
+it('marks order BILLED when all delivered lines are fully invoiced', function () {
+    Queue::fake();
+
+    $material = LaserMaterial::factory()->create(['is_active' => true]);
+
+    $quote = LaserQuote::withoutEvents(fn () => LaserQuote::factory()->create([
+        'status' => QuoteStatus::DRAFT,
+    ]));
+
+    $order = app(LaserQuoteService::class)->acceptQuote($quote);
+
+    LaserOrderLine::withoutEvents(fn () => LaserOrderLine::create([
+        'laser_order_id' => $order->id,
+        'material_id' => $material->id,
+        'description' => 'Pièce complète',
+        'length_mm' => 500,
+        'width_mm' => 250,
+        'thickness_mm' => 2,
+        'quantity' => 10,
+        'delivered_quantity' => 10,
+        'invoiced_quantity' => 10,
+        'cut_length_mm' => 1500,
+        'weight_kg' => 19.625,
+        'unit_price_ht' => 100.00,
+        'density_kg_m3' => 7850,
+        'total_ht' => 1000.00,
+    ]));
+
+    $invoice = LaserInvoice::withoutEvents(fn () => LaserInvoice::factory()->create([
+        'laser_order_id' => $order->id,
+        'status' => InvoiceStatus::DRAFT,
+        'total_ht' => 1000,
+        'total_ttc' => 1200,
+    ]));
+
+    $service = app(LaserInvoiceService::class);
+    $service->legalizeInvoice($invoice);
+
+    $order->refresh();
+    expect($order->status)->toBe(OrderStatus::BILLED);
+});
+
+// ============================================================
+// Review #2: Double legalization is blocked
+// ============================================================
+
+it('rejects double legalization of the same invoice', function () {
+    Queue::fake();
+
+    $invoice = LaserInvoice::withoutEvents(fn () => LaserInvoice::factory()->create([
+        'status' => InvoiceStatus::DRAFT,
+        'total_ht' => 1000,
+        'total_ttc' => 1200,
+    ]));
+
+    $service = app(LaserInvoiceService::class);
+    $service->legalizeInvoice($invoice);
+
+    $this->expectException(Exception::class);
+    $this->expectExceptionMessage('Seule une facture en brouillon peut être légalisée.');
+    $service->legalizeInvoice($invoice->fresh());
+});
+
+// ============================================================
+// Review #3: PDF job dispatched after legalization
+// ============================================================
+
+it('dispatches PDF job after legalization', function () {
+    Queue::fake();
+
+    $invoice = LaserInvoice::withoutEvents(fn () => LaserInvoice::factory()->create([
+        'status' => InvoiceStatus::DRAFT,
+        'total_ht' => 1000,
+        'total_ttc' => 1200,
+    ]));
+
+    Queue::fake();
+
+    $service = app(LaserInvoiceService::class);
+    $service->legalizeInvoice($invoice);
+
+    Queue::assertPushed(GenerateLaserDocumentJob::class, function ($job) {
+        return $job->namespace === 'laser_invoice';
+    });
+});
+
+// ============================================================
+// Review #4: Credit note cap
+// ============================================================
+
+it('creates a partial credit note', function () {
+    Queue::fake();
+
+    $invoice = LaserInvoice::withoutEvents(fn () => LaserInvoice::factory()->create([
+        'status' => InvoiceStatus::VALIDATED,
+        'total_ht' => 1000,
+        'total_tva' => 200,
+        'total_ttc' => 1200,
+    ]));
+
+    $service = app(LaserInvoiceService::class);
+    $creditNote = $service->createCreditNote($invoice, 'Annulation partielle', 400.0);
+
+    expect((float) $creditNote->total_ht)->toBe(400.0)
+        ->and((float) $creditNote->total_tva)->toBe(80.0)
+        ->and((float) $creditNote->total_ttc)->toBe(480.0);
+
+    $invoice->refresh();
+    expect((float) $invoice->credited_amount_ht)->toBe(400.0)
+        ->and((float) $invoice->remaining_creditable_ht)->toBe(600.0);
+});
+
+it('creates two successive credit notes up to full amount', function () {
+    Queue::fake();
+
+    $invoice = LaserInvoice::withoutEvents(fn () => LaserInvoice::factory()->create([
+        'status' => InvoiceStatus::VALIDATED,
+        'total_ht' => 1000,
+        'total_tva' => 200,
+        'total_ttc' => 1200,
+    ]));
+
+    $service = app(LaserInvoiceService::class);
+    $service->createCreditNote($invoice, 'Premier avoir', 600.0);
+
+    $invoice->refresh();
+    expect((float) $invoice->remaining_creditable_ht)->toBe(400.0);
+
+    $service->createCreditNote($invoice, 'Deuxième avoir', 400.0);
+
+    $invoice->refresh();
+    expect((float) $invoice->remaining_creditable_ht)->toBe(0.0)
+        ->and($invoice->canBeCredited())->toBeFalse();
+});
+
+it('rejects credit note exceeding remaining amount', function () {
+    Queue::fake();
+
+    $invoice = LaserInvoice::withoutEvents(fn () => LaserInvoice::factory()->create([
+        'status' => InvoiceStatus::VALIDATED,
+        'total_ht' => 1000,
+        'total_tva' => 200,
+        'total_ttc' => 1200,
+    ]));
+
+    $service = app(LaserInvoiceService::class);
+
+    $this->expectException(Exception::class);
+    $this->expectExceptionMessage('dépasse le solde restant');
+    $service->createCreditNote($invoice, 'Trop', 1500.0);
+});
+
+it('rejects credit note when invoice fully credited', function () {
+    Queue::fake();
+
+    $invoice = LaserInvoice::withoutEvents(fn () => LaserInvoice::factory()->create([
+        'status' => InvoiceStatus::VALIDATED,
+        'total_ht' => 1000,
+        'total_tva' => 200,
+        'total_ttc' => 1200,
+    ]));
+
+    $service = app(LaserInvoiceService::class);
+    $service->createCreditNote($invoice, 'Avoir complet');
+
+    $invoice->refresh();
+    expect($invoice->canBeCredited())->toBeFalse();
+
+    $this->expectException(Exception::class);
+    $service->createCreditNote($invoice, 'Deuxième avoir');
+});
+
+it('rejects credit note with zero amount', function () {
+    Queue::fake();
+
+    $invoice = LaserInvoice::withoutEvents(fn () => LaserInvoice::factory()->create([
+        'status' => InvoiceStatus::VALIDATED,
+        'total_ht' => 1000,
+        'total_tva' => 200,
+        'total_ttc' => 1200,
+    ]));
+
+    $service = app(LaserInvoiceService::class);
+
+    $this->expectException(Exception::class);
+    $this->expectExceptionMessage('supérieur à zéro');
+    $service->createCreditNote($invoice, 'Montant zéro', 0.0);
+});
+
+// ============================================================
+// Review #5: Delete DRAFT invoice restores invoiced_quantity
+// ============================================================
+
+it('deletes a DRAFT invoice and restores invoiced_quantity', function () {
+    Queue::fake();
+
+    $material = LaserMaterial::factory()->create(['is_active' => true]);
+
+    $quote = LaserQuote::withoutEvents(fn () => LaserQuote::factory()->create([
+        'status' => QuoteStatus::DRAFT,
+    ]));
+
+    $order = app(LaserQuoteService::class)->acceptQuote($quote);
+
+    $orderLine = LaserOrderLine::withoutEvents(fn () => LaserOrderLine::create([
+        'laser_order_id' => $order->id,
+        'material_id' => $material->id,
+        'description' => 'Pièce delete',
+        'length_mm' => 500,
+        'width_mm' => 250,
+        'thickness_mm' => 2,
+        'quantity' => 10,
+        'delivered_quantity' => 10,
+        'invoiced_quantity' => 10,
+        'cut_length_mm' => 1500,
+        'weight_kg' => 19.625,
+        'unit_price_ht' => 250.00,
+        'density_kg_m3' => 7850,
+        'total_ht' => 2500.00,
+    ]));
+
+    $invoice = LaserInvoice::withoutEvents(fn () => LaserInvoice::factory()->create([
+        'laser_order_id' => $order->id,
+        'status' => InvoiceStatus::DRAFT,
+        'total_ht' => 2500,
+        'total_ttc' => 3000,
+    ]));
+
+    LaserInvoiceLine::withoutEvents(fn () => LaserInvoiceLine::create([
+        'laser_invoice_id' => $invoice->id,
+        'laser_order_line_id' => $orderLine->id,
+        'material_id' => $material->id,
+        'length_mm' => 500,
+        'width_mm' => 250,
+        'thickness_mm' => 2,
+        'quantity' => 10,
+        'quantity_invoiced' => 10,
+        'unit_price_ht' => 250.00,
+        'discount_pct' => 0,
+        'total_ht' => 2500.00,
+        'weight_kg' => 19.625,
+        'density_kg_m3' => 7850,
+    ]));
+
+    $orderLine->refresh();
+    expect($orderLine->invoiced_quantity)->toBe(10);
+
+    $service = app(LaserInvoiceService::class);
+    $service->deleteInvoice($invoice);
+
+    $orderLine->refresh();
+    expect($orderLine->invoiced_quantity)->toBe(0);
+});
+
+it('rejects deleting a non-DRAFT invoice', function () {
+    Queue::fake();
+
+    $invoice = LaserInvoice::withoutEvents(fn () => LaserInvoice::factory()->create([
+        'status' => InvoiceStatus::VALIDATED,
+        'total_ht' => 1000,
+        'total_ttc' => 1200,
+    ]));
+
+    $service = app(LaserInvoiceService::class);
+
+    $this->expectException(Exception::class);
+    $this->expectExceptionMessage('Seule une facture en brouillon peut être supprimée.');
+    $service->deleteInvoice($invoice);
+});
+
+// ============================================================
+// Model computed attributes
+// ============================================================
+
+it('computes remaining_creditable_ht correctly', function () {
+    $invoice = LaserInvoice::withoutEvents(fn () => LaserInvoice::factory()->create([
+        'total_ht' => 1000,
+        'credited_amount_ht' => 300,
+    ]));
+
+    expect($invoice->remaining_creditable_ht)->toBe(700.0);
+});
+
+it('computes remaining_creditable_ttc correctly', function () {
+    $invoice = LaserInvoice::withoutEvents(fn () => LaserInvoice::factory()->create([
+        'total_ttc' => 1200,
+        'credited_amount_ttc' => 480,
+    ]));
+
+    expect($invoice->remaining_creditable_ttc)->toBe(720.0);
+});
+
+it('canBeCredited returns false when fully credited', function () {
+    $invoice = LaserInvoice::withoutEvents(fn () => LaserInvoice::factory()->create([
+        'status' => InvoiceStatus::VALIDATED,
+        'total_ht' => 1000,
+        'credited_amount_ht' => 1000,
+    ]));
+
+    expect($invoice->canBeCredited())->toBeFalse();
+});
+
+it('canBeCredited returns true when partially credited', function () {
+    $invoice = LaserInvoice::withoutEvents(fn () => LaserInvoice::factory()->create([
+        'status' => InvoiceStatus::VALIDATED,
+        'total_ht' => 1000,
+        'credited_amount_ht' => 400,
+    ]));
+
+    expect($invoice->canBeCredited())->toBeTrue();
 });

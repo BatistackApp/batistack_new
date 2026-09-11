@@ -25,6 +25,9 @@ class LaserInvoice extends Model
         'total_ht',
         'total_tva',
         'total_ttc',
+        'credited_amount_ht',
+        'credited_amount_tva',
+        'credited_amount_ttc',
         'due_date',
         'signature_hash',
     ];
@@ -36,6 +39,9 @@ class LaserInvoice extends Model
             'total_ht' => 'decimal:2',
             'total_tva' => 'decimal:2',
             'total_ttc' => 'decimal:2',
+            'credited_amount_ht' => 'decimal:2',
+            'credited_amount_tva' => 'decimal:2',
+            'credited_amount_ttc' => 'decimal:2',
             'due_date' => 'date',
         ];
     }
@@ -60,8 +66,24 @@ class LaserInvoice extends Model
         return $this->hasMany(LaserCreditNote::class);
     }
 
+    public function getRemainingCreditableHtAttribute(): float
+    {
+        return (float) $this->total_ht - (float) $this->credited_amount_ht;
+    }
+
+    public function getRemainingCreditableTtcAttribute(): float
+    {
+        return (float) $this->total_ttc - (float) $this->credited_amount_ttc;
+    }
+
     public function canBeDeleted(): bool
     {
         return $this->status->value === InvoiceStatus::DRAFT->value;
+    }
+
+    public function canBeCredited(): bool
+    {
+        return in_array($this->status, [InvoiceStatus::VALIDATED, InvoiceStatus::PAID])
+            && $this->remaining_creditable_ht > 0;
     }
 }

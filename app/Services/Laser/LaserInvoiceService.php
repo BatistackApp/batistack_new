@@ -4,6 +4,7 @@ namespace App\Services\Laser;
 
 use App\Enums\Laser\InvoiceStatus;
 use App\Enums\Laser\OrderStatus;
+use App\Jobs\Laser\GenerateLaserDocumentJob;
 use App\Models\Laser\LaserCreditNote;
 use App\Models\Laser\LaserInvoice;
 use App\Models\Laser\LaserOrder;
@@ -86,13 +87,32 @@ class LaserInvoiceService
         });
     }
 
-    public function legalizeInvoice(LaserInvoice $invoice): void
+    public function deleteInvoice(LaserInvoice $invoice): void
     {
-        if ($invoice->status !== InvoiceStatus::DRAFT) {
-            throw new Exception('Seule une facture en brouillon peut être légalisée.');
+        if (! $invoice->canBeDeleted()) {
+            throw new Exception('Seule une facture en brouillon peut être supprimée.');
         }
 
         DB::transaction(function () use ($invoice) {
+            $invoice = LaserInvoice::whereKey($invoice->id)->lockForUpdate()->firstOrFail();
+
+            foreach ($invoice->lines as $line) {
+                $line->orderLine()->decrement('invoiced_quantity', $line->quantity_invoiced);
+            }
+
+            $invoice->delete();
+        });
+    }
+
+    public function legalizeInvoice(LaserInvoice $invoice): void
+    {
+        DB::transaction(function () use ($invoice) {
+            $invoice = LaserInvoice::whereKey($invoice->id)->lockForUpdate()->firstOrFail();
+
+            if ($invoice->status !== InvoiceStatus::DRAFT) {
+                throw new Exception('Seule une facture en brouillon peut être légalisée.');
+            }
+
             $definitiveRef = $this->generateInvoiceReference();
 
             $lastValidated = LaserInvoice::whereYear('created_at', now()->year)
@@ -120,25 +140,70 @@ class LaserInvoiceService
                 'signature_hash' => $newHash,
             ]);
 
-            $invoice->order->update(['status' => OrderStatus::BILLED]);
+            GenerateLaserDocumentJob::dispatch('laser_invoice', $invoice);
+
+            $this->refreshOrderStatus($invoice->order()->with('lines')->first());
         });
     }
 
-    public function createCreditNote(LaserInvoice $invoice, string $reason): LaserCreditNote
+    public function createCreditNote(LaserInvoice $invoice, string $reason, ?float $totalHt = null): LaserCreditNote
     {
         if (! in_array($invoice->status, [InvoiceStatus::VALIDATED, InvoiceStatus::PAID])) {
             throw new Exception('Seules les factures validées ou payées peuvent faire l\'objet d\'un avoir.');
         }
 
-        return LaserCreditNote::create([
-            'client_id' => $invoice->client_id,
-            'laser_invoice_id' => $invoice->id,
-            'reference' => $this->generateCreditNoteReference(),
-            'status' => 'validated',
-            'total_ht' => $invoice->total_ht,
-            'total_tva' => $invoice->total_tva,
-            'total_ttc' => $invoice->total_ttc,
-            'reason' => $reason,
-        ]);
+        $tvaRate = config('laser.vat_rate', 20);
+
+        $requestedHt = $totalHt ?? $invoice->remaining_creditable_ht;
+        $requestedTva = round($requestedHt * $tvaRate / 100, 2);
+        $requestedTtc = $requestedHt + $requestedTva;
+
+        if ($requestedHt <= 0) {
+            throw new Exception('Le montant de l\'avoir doit être supérieur à zéro.');
+        }
+
+        if ($requestedHt > $invoice->remaining_creditable_ht) {
+            throw new Exception('Le montant de l\'avoir dépasse le solde restant à avoir. Solde disponible : '.number_format($invoice->remaining_creditable_ht, 2, ',', ' ').' € HT.');
+        }
+
+        return DB::transaction(function () use ($invoice, $reason, $requestedHt, $requestedTva, $requestedTtc) {
+            $invoice = LaserInvoice::whereKey($invoice->id)->lockForUpdate()->firstOrFail();
+
+            $creditNote = LaserCreditNote::create([
+                'client_id' => $invoice->client_id,
+                'laser_invoice_id' => $invoice->id,
+                'reference' => $this->generateCreditNoteReference(),
+                'status' => 'validated',
+                'total_ht' => $requestedHt,
+                'total_tva' => $requestedTva,
+                'total_ttc' => $requestedTtc,
+                'reason' => $reason,
+            ]);
+
+            $invoice->increment('credited_amount_ht', $requestedHt);
+            $invoice->increment('credited_amount_tva', $requestedTva);
+            $invoice->increment('credited_amount_ttc', $requestedTtc);
+
+            return $creditNote;
+        });
+    }
+
+    private function refreshOrderStatus(LaserOrder $order): void
+    {
+        $order->load('lines');
+
+        $hasDeliveredLines = $order->lines->contains(fn ($line) => $line->delivered_quantity > 0);
+
+        if (! $hasDeliveredLines) {
+            return;
+        }
+
+        $allBilled = $order->lines
+            ->filter(fn ($line) => $line->delivered_quantity > 0)
+            ->every(fn ($line) => $line->invoiced_quantity >= $line->delivered_quantity);
+
+        if ($allBilled && $order->status !== OrderStatus::BILLED) {
+            $order->update(['status' => OrderStatus::BILLED]);
+        }
     }
 }
