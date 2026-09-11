@@ -118,7 +118,6 @@ class LaserDocumentationService extends DocumentService
             'invoice' => $invoice,
             'title' => 'FACTURE N° '.$invoice->reference,
             'generated_at' => Carbon::now()->format('d/m/Y H:i'),
-            'vat_rate' => config('laser.vat_rate', 20),
         ];
 
         return $this->generate(
@@ -151,7 +150,6 @@ class LaserDocumentationService extends DocumentService
             'creditNote' => $creditNote,
             'title' => 'AVOIR N° '.$creditNote->reference,
             'generated_at' => Carbon::now()->format('d/m/Y H:i'),
-            'vat_rate' => config('laser.vat_rate', 20),
         ];
 
         return $this->generate(

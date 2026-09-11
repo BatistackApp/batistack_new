@@ -38,7 +38,8 @@ class LaserInvoice extends Model
         parent::boot();
 
         static::updating(function (LaserInvoice $invoice) {
-            if ($invoice->exists && in_array($invoice->status, [InvoiceStatus::VALIDATED, InvoiceStatus::PAID])) {
+            $originalStatus = $invoice->getOriginal('status');
+            if ($invoice->exists && in_array($originalStatus, [InvoiceStatus::VALIDATED, InvoiceStatus::PAID])) {
                 $dirtyKeys = array_keys($invoice->getDirty());
                 $allowedUpdates = ['credited_amount_ht', 'credited_amount_tva', 'credited_amount_ttc'];
                 if (count(array_diff($dirtyKeys, $allowedUpdates)) > 0) {
@@ -48,7 +49,8 @@ class LaserInvoice extends Model
         });
 
         static::deleting(function (LaserInvoice $invoice) {
-            if (in_array($invoice->status, [InvoiceStatus::VALIDATED, InvoiceStatus::PAID])) {
+            $originalStatus = $invoice->getOriginal('status');
+            if (in_array($originalStatus, [InvoiceStatus::VALIDATED, InvoiceStatus::PAID])) {
                 throw new \Exception('Une facture validée ou payée ne peut pas être supprimée.');
             }
         });

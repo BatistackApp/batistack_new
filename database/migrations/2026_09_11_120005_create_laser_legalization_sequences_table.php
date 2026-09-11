@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('laser_legalization_sequences', function (Blueprint $table) {
             $table->id();
-            $table->text('last_hash')->default('GENESIS');
+            $table->text('last_hash');
             $table->string('last_reference')->nullable();
             $table->timestamps();
         });

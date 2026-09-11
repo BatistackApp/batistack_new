@@ -14,6 +14,26 @@ class LaserCreditNote extends Model
 {
     use HasFactory;
 
+    protected static function boot(): void
+    {
+        parent::boot();
+
+        static::updating(function (LaserCreditNote $creditNote) {
+            if ($creditNote->exists && $creditNote->status === 'validated') {
+                $dirtyKeys = array_keys($creditNote->getDirty());
+                if (count($dirtyKeys) > 0) {
+                    throw new \Exception('Un avoir validé ne peut pas être modifié.');
+                }
+            }
+        });
+
+        static::deleting(function (LaserCreditNote $creditNote) {
+            if ($creditNote->status === 'validated') {
+                throw new \Exception('Un avoir validé ne peut pas être supprimé.');
+            }
+        });
+    }
+
     protected $fillable = [
         'client_id',
         'laser_invoice_id',

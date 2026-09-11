@@ -32,15 +32,22 @@ class LaserInvoiceLine extends Model
     {
         parent::boot();
 
+        static::creating(function (LaserInvoiceLine $line) {
+            $invoice = $line->invoice ?? LaserInvoice::find($line->laser_invoice_id);
+            if ($invoice && in_array($invoice->status, [InvoiceStatus::VALIDATED, InvoiceStatus::PAID])) {
+                throw new \Exception('Les lignes d\'une facture validée ou payée ne peuvent pas être ajoutées.');
+            }
+        });
+
         static::updating(function (LaserInvoiceLine $line) {
-            $invoice = $line->invoice;
+            $invoice = $line->invoice()->first();
             if ($invoice && in_array($invoice->status, [InvoiceStatus::VALIDATED, InvoiceStatus::PAID])) {
                 throw new \Exception('Les lignes d\'une facture validée ou payée ne peuvent pas être modifiées.');
             }
         });
 
         static::deleting(function (LaserInvoiceLine $line) {
-            $invoice = $line->invoice;
+            $invoice = $line->invoice()->first();
             if ($invoice && in_array($invoice->status, [InvoiceStatus::VALIDATED, InvoiceStatus::PAID])) {
                 throw new \Exception('Les lignes d\'une facture validée ou payée ne peuvent pas être supprimées.');
             }
