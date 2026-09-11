@@ -64,7 +64,73 @@ it('creates a delivery note from an order', function () {
         ->and((float) $line->weight_kg)->toBe(19.625);
 });
 
-it('creates multiple delivery notes for partial deliveries', function () {
+it('reserves quantity when creating a delivery note', function () {
+    Queue::fake();
+
+    $material = LaserMaterial::factory()->create(['is_active' => true]);
+
+    $quote = LaserQuote::withoutEvents(fn () => LaserQuote::factory()->create([
+        'status' => QuoteStatus::DRAFT,
+    ]));
+
+    $order = app(LaserQuoteService::class)->acceptQuote($quote);
+
+    $orderLine = LaserOrderLine::withoutEvents(fn () => LaserOrderLine::create([
+        'laser_order_id' => $order->id,
+        'material_id' => $material->id,
+        'description' => 'Pièce réservation',
+        'length_mm' => 500,
+        'width_mm' => 250,
+        'thickness_mm' => 2,
+        'quantity' => 20,
+        'cut_length_mm' => 1500,
+        'weight_kg' => 19.625,
+        'total_ht' => 1000,
+    ]));
+
+    $service = app(LaserDeliveryNoteService::class);
+    $delivery = $service->createDeliveryNote($order);
+
+    $orderLine->refresh();
+    expect($orderLine->reserved_quantity)->toBe(20)
+        ->and($orderLine->remaining_quantity)->toBe(0);
+});
+
+it('prevents over-delivery via multiple DRAFT BLs', function () {
+    Queue::fake();
+
+    $material = LaserMaterial::factory()->create(['is_active' => true]);
+
+    $quote = LaserQuote::withoutEvents(fn () => LaserQuote::factory()->create([
+        'status' => QuoteStatus::DRAFT,
+    ]));
+
+    $order = app(LaserQuoteService::class)->acceptQuote($quote);
+
+    LaserOrderLine::withoutEvents(fn () => LaserOrderLine::create([
+        'laser_order_id' => $order->id,
+        'material_id' => $material->id,
+        'description' => 'Pièce over',
+        'length_mm' => 500,
+        'width_mm' => 250,
+        'thickness_mm' => 2,
+        'quantity' => 10,
+        'cut_length_mm' => 1500,
+        'weight_kg' => 19.625,
+        'total_ht' => 500,
+    ]));
+
+    $service = app(LaserDeliveryNoteService::class);
+
+    $blA = $service->createDeliveryNote($order);
+    expect($blA->lines->first()->quantity_delivered)->toBe(10);
+
+    $this->expectException(\Exception::class);
+    $this->expectExceptionMessage('Aucune ligne à livrer');
+    $service->createDeliveryNote($order);
+});
+
+it('allows sequential partial deliveries with proper reservation', function () {
     Queue::fake();
 
     $material = LaserMaterial::factory()->create(['is_active' => true]);
@@ -90,23 +156,28 @@ it('creates multiple delivery notes for partial deliveries', function () {
 
     $service = app(LaserDeliveryNoteService::class);
 
-    $delivery1 = $service->createDeliveryNote($order);
-    expect($delivery1->lines->first()->quantity_delivered)->toBe(20);
-
-    $delivery1->lines->first()->update(['quantity_delivered' => 12]);
-    $service->shipDeliveryNote($delivery1);
+    $blA = $service->createDeliveryNote($order);
+    $blA->lines->first()->update(['quantity_delivered' => 12]);
+    $service->shipDeliveryNote($blA);
 
     $orderLine->refresh();
-    expect($orderLine->delivered_quantity)->toBe(12);
+    expect($orderLine->delivered_quantity)->toBe(12)
+        ->and($orderLine->reserved_quantity)->toBe(0)
+        ->and($orderLine->remaining_quantity)->toBe(8);
 
-    $delivery2 = $service->createDeliveryNote($order);
-    expect($delivery2->lines)->toHaveCount(1)
-        ->and($delivery2->lines->first()->quantity_delivered)->toBe(8);
+    $blB = $service->createDeliveryNote($order);
+    expect($blB->lines)->toHaveCount(1)
+        ->and($blB->lines->first()->quantity_delivered)->toBe(8);
 
-    $service->shipDeliveryNote($delivery2);
+    $service->shipDeliveryNote($blB);
 
     $orderLine->refresh();
-    expect($orderLine->delivered_quantity)->toBe(20);
+    expect($orderLine->delivered_quantity)->toBe(20)
+        ->and($orderLine->reserved_quantity)->toBe(0)
+        ->and($orderLine->remaining_quantity)->toBe(0);
+
+    $order->refresh();
+    expect($order->status)->toBe(OrderStatus::DELIVERED);
 });
 
 it('rejects delivery creation when no remaining quantity', function () {
@@ -177,7 +248,8 @@ it('ships a delivery note and updates delivered_quantity', function () {
     $service->shipDeliveryNote($delivery);
 
     $orderLine->refresh();
-    expect($orderLine->delivered_quantity)->toBe(10);
+    expect($orderLine->delivered_quantity)->toBe(10)
+        ->and($orderLine->reserved_quantity)->toBe(0);
 
     $delivery->refresh();
     expect($delivery->status)->toBe(DeliveryStatus::SHIPPED);
@@ -250,6 +322,152 @@ it('does not mark order as DELIVERED when partial delivery', function () {
 });
 
 // ============================================================
+// Ship idempotency (review fix #1)
+// ============================================================
+
+it('rejects shipping an already shipped delivery note', function () {
+    Queue::fake();
+
+    $material = LaserMaterial::factory()->create(['is_active' => true]);
+
+    $quote = LaserQuote::withoutEvents(fn () => LaserQuote::factory()->create([
+        'status' => QuoteStatus::DRAFT,
+    ]));
+
+    $order = app(LaserQuoteService::class)->acceptQuote($quote);
+
+    LaserOrderLine::withoutEvents(fn () => LaserOrderLine::create([
+        'laser_order_id' => $order->id,
+        'material_id' => $material->id,
+        'description' => 'Pièce double ship',
+        'length_mm' => 500,
+        'width_mm' => 250,
+        'thickness_mm' => 2,
+        'quantity' => 10,
+        'cut_length_mm' => 1500,
+        'weight_kg' => 19.625,
+        'total_ht' => 500,
+    ]));
+
+    $service = app(LaserDeliveryNoteService::class);
+    $delivery = $service->createDeliveryNote($order);
+
+    $service->shipDeliveryNote($delivery);
+
+    $this->expectException(\Exception::class);
+    $this->expectExceptionMessage('Ce bon de livraison a déjà été expédié');
+    $service->shipDeliveryNote($delivery);
+});
+
+it('rejects shipping a delivered delivery note', function () {
+    Queue::fake();
+
+    $material = LaserMaterial::factory()->create(['is_active' => true]);
+
+    $quote = LaserQuote::withoutEvents(fn () => LaserQuote::factory()->create([
+        'status' => QuoteStatus::DRAFT,
+    ]));
+
+    $order = app(LaserQuoteService::class)->acceptQuote($quote);
+
+    LaserOrderLine::withoutEvents(fn () => LaserOrderLine::create([
+        'laser_order_id' => $order->id,
+        'material_id' => $material->id,
+        'description' => 'Pièce ship delivered',
+        'length_mm' => 500,
+        'width_mm' => 250,
+        'thickness_mm' => 2,
+        'quantity' => 10,
+        'cut_length_mm' => 1500,
+        'weight_kg' => 19.625,
+        'total_ht' => 500,
+    ]));
+
+    $service = app(LaserDeliveryNoteService::class);
+    $delivery = $service->createDeliveryNote($order);
+    $service->shipDeliveryNote($delivery);
+
+    $delivery->refresh();
+    $service->receiveDeliveryNote($delivery);
+
+    $this->expectException(\Exception::class);
+    $this->expectExceptionMessage('Ce bon de livraison a déjà été expédié');
+    $service->shipDeliveryNote($delivery);
+});
+
+// ============================================================
+// Quantity validation (review fix #4)
+// ============================================================
+
+it('rejects shipping with zero quantity_delivered', function () {
+    Queue::fake();
+
+    $material = LaserMaterial::factory()->create(['is_active' => true]);
+
+    $quote = LaserQuote::withoutEvents(fn () => LaserQuote::factory()->create([
+        'status' => QuoteStatus::DRAFT,
+    ]));
+
+    $order = app(LaserQuoteService::class)->acceptQuote($quote);
+
+    LaserOrderLine::withoutEvents(fn () => LaserOrderLine::create([
+        'laser_order_id' => $order->id,
+        'material_id' => $material->id,
+        'description' => 'Pièce zero qty',
+        'length_mm' => 500,
+        'width_mm' => 250,
+        'thickness_mm' => 2,
+        'quantity' => 10,
+        'cut_length_mm' => 1500,
+        'weight_kg' => 19.625,
+        'total_ht' => 500,
+    ]));
+
+    $service = app(LaserDeliveryNoteService::class);
+    $delivery = $service->createDeliveryNote($order);
+
+    $delivery->lines->first()->update(['quantity_delivered' => 0]);
+
+    $this->expectException(\Exception::class);
+    $this->expectExceptionMessage('La quantité livrée doit être supérieure à zéro');
+    $service->shipDeliveryNote($delivery);
+});
+
+it('rejects shipping with quantity exceeding available', function () {
+    Queue::fake();
+
+    $material = LaserMaterial::factory()->create(['is_active' => true]);
+
+    $quote = LaserQuote::withoutEvents(fn () => LaserQuote::factory()->create([
+        'status' => QuoteStatus::DRAFT,
+    ]));
+
+    $order = app(LaserQuoteService::class)->acceptQuote($quote);
+
+    LaserOrderLine::withoutEvents(fn () => LaserOrderLine::create([
+        'laser_order_id' => $order->id,
+        'material_id' => $material->id,
+        'description' => 'Pièce over qty',
+        'length_mm' => 500,
+        'width_mm' => 250,
+        'thickness_mm' => 2,
+        'quantity' => 10,
+        'cut_length_mm' => 1500,
+        'weight_kg' => 19.625,
+        'total_ht' => 500,
+    ]));
+
+    $service = app(LaserDeliveryNoteService::class);
+    $delivery = $service->createDeliveryNote($order);
+
+    $delivery->lines->first()->update(['quantity_delivered' => 15]);
+
+    $this->expectException(\Exception::class);
+    $this->expectExceptionMessage('La quantité livrée dépasse la quantité disponible');
+    $service->shipDeliveryNote($delivery);
+});
+
+// ============================================================
 // Receive delivery note
 // ============================================================
 
@@ -289,6 +507,155 @@ it('receives a delivery note and sets delivery_date', function () {
     expect($delivery->status)->toBe(DeliveryStatus::DELIVERED)
         ->and($delivery->delivery_date)->not->toBeNull()
         ->and($delivery->delivery_date->isToday())->toBeTrue();
+});
+
+// ============================================================
+// Receive state guard (review fix #3)
+// ============================================================
+
+it('rejects receiving a DRAFT delivery note', function () {
+    Queue::fake();
+
+    $material = LaserMaterial::factory()->create(['is_active' => true]);
+
+    $quote = LaserQuote::withoutEvents(fn () => LaserQuote::factory()->create([
+        'status' => QuoteStatus::DRAFT,
+    ]));
+
+    $order = app(LaserQuoteService::class)->acceptQuote($quote);
+
+    LaserOrderLine::withoutEvents(fn () => LaserOrderLine::create([
+        'laser_order_id' => $order->id,
+        'material_id' => $material->id,
+        'description' => 'Pièce receive draft',
+        'length_mm' => 500,
+        'width_mm' => 250,
+        'thickness_mm' => 2,
+        'quantity' => 5,
+        'cut_length_mm' => 1500,
+        'weight_kg' => 19.625,
+        'total_ht' => 500,
+    ]));
+
+    $service = app(LaserDeliveryNoteService::class);
+    $delivery = $service->createDeliveryNote($order);
+
+    $this->expectException(\Exception::class);
+    $this->expectExceptionMessage('Seul un bon de livraison expédié peut être réceptionné');
+    $service->receiveDeliveryNote($delivery);
+});
+
+it('rejects receiving an already delivered delivery note', function () {
+    Queue::fake();
+
+    $material = LaserMaterial::factory()->create(['is_active' => true]);
+
+    $quote = LaserQuote::withoutEvents(fn () => LaserQuote::factory()->create([
+        'status' => QuoteStatus::DRAFT,
+    ]));
+
+    $order = app(LaserQuoteService::class)->acceptQuote($quote);
+
+    LaserOrderLine::withoutEvents(fn () => LaserOrderLine::create([
+        'laser_order_id' => $order->id,
+        'material_id' => $material->id,
+        'description' => 'Pièce receive delivered',
+        'length_mm' => 500,
+        'width_mm' => 250,
+        'thickness_mm' => 2,
+        'quantity' => 5,
+        'cut_length_mm' => 1500,
+        'weight_kg' => 19.625,
+        'total_ht' => 500,
+    ]));
+
+    $service = app(LaserDeliveryNoteService::class);
+    $delivery = $service->createDeliveryNote($order);
+    $service->shipDeliveryNote($delivery);
+
+    $delivery->refresh();
+    $service->receiveDeliveryNote($delivery);
+
+    $this->expectException(\Exception::class);
+    $this->expectExceptionMessage('Seul un bon de livraison expédié peut être réceptionné');
+    $service->receiveDeliveryNote($delivery);
+});
+
+// ============================================================
+// Delete delivery note
+// ============================================================
+
+it('deletes a DRAFT delivery note and releases reserved quantity', function () {
+    Queue::fake();
+
+    $material = LaserMaterial::factory()->create(['is_active' => true]);
+
+    $quote = LaserQuote::withoutEvents(fn () => LaserQuote::factory()->create([
+        'status' => QuoteStatus::DRAFT,
+    ]));
+
+    $order = app(LaserQuoteService::class)->acceptQuote($quote);
+
+    $orderLine = LaserOrderLine::withoutEvents(fn () => LaserOrderLine::create([
+        'laser_order_id' => $order->id,
+        'material_id' => $material->id,
+        'description' => 'Pièce delete',
+        'length_mm' => 500,
+        'width_mm' => 250,
+        'thickness_mm' => 2,
+        'quantity' => 15,
+        'cut_length_mm' => 1500,
+        'weight_kg' => 19.625,
+        'total_ht' => 500,
+    ]));
+
+    $service = app(LaserDeliveryNoteService::class);
+    $delivery = $service->createDeliveryNote($order);
+
+    $orderLine->refresh();
+    expect($orderLine->reserved_quantity)->toBe(15)
+        ->and($orderLine->remaining_quantity)->toBe(0);
+
+    $service->deleteDeliveryNote($delivery);
+
+    $orderLine->refresh();
+    expect($orderLine->reserved_quantity)->toBe(0)
+        ->and($orderLine->remaining_quantity)->toBe(15);
+});
+
+it('rejects deleting a shipped delivery note', function () {
+    Queue::fake();
+
+    $material = LaserMaterial::factory()->create(['is_active' => true]);
+
+    $quote = LaserQuote::withoutEvents(fn () => LaserQuote::factory()->create([
+        'status' => QuoteStatus::DRAFT,
+    ]));
+
+    $order = app(LaserQuoteService::class)->acceptQuote($quote);
+
+    LaserOrderLine::withoutEvents(fn () => LaserOrderLine::create([
+        'laser_order_id' => $order->id,
+        'material_id' => $material->id,
+        'description' => 'Pièce delete shipped',
+        'length_mm' => 500,
+        'width_mm' => 250,
+        'thickness_mm' => 2,
+        'quantity' => 5,
+        'cut_length_mm' => 1500,
+        'weight_kg' => 19.625,
+        'total_ht' => 500,
+    ]));
+
+    $service = app(LaserDeliveryNoteService::class);
+    $delivery = $service->createDeliveryNote($order);
+    $service->shipDeliveryNote($delivery);
+
+    $delivery->refresh();
+
+    $this->expectException(\Exception::class);
+    $this->expectExceptionMessage('Seul un bon de livraison brouillon peut être supprimé');
+    $service->deleteDeliveryNote($delivery);
 });
 
 // ============================================================
@@ -460,10 +827,10 @@ it('LaserDeliveryNoteLine relationships work', function () {
 });
 
 // ============================================================
-// LaserOrderLine remaining_quantity
+// LaserOrderLine remaining_quantity with reserved_quantity
 // ============================================================
 
-it('calculates remaining quantity correctly', function () {
+it('calculates remaining quantity without reserved', function () {
     $order = LaserOrder::withoutEvents(fn () => LaserOrder::factory()->create());
     $material = LaserMaterial::factory()->create(['is_active' => true]);
 
@@ -478,6 +845,22 @@ it('calculates remaining quantity correctly', function () {
     expect($line->remaining_quantity)->toBe(13);
 });
 
+it('calculates remaining quantity with reserved', function () {
+    $order = LaserOrder::withoutEvents(fn () => LaserOrder::factory()->create());
+    $material = LaserMaterial::factory()->create(['is_active' => true]);
+
+    $line = LaserOrderLine::create([
+        'laser_order_id' => $order->id,
+        'material_id' => $material->id,
+        'quantity' => 20,
+        'delivered_quantity' => 5,
+        'reserved_quantity' => 8,
+        'total_ht' => 0,
+    ]);
+
+    expect($line->remaining_quantity)->toBe(7);
+});
+
 it('remaining quantity is zero when fully delivered', function () {
     $order = LaserOrder::withoutEvents(fn () => LaserOrder::factory()->create());
     $material = LaserMaterial::factory()->create(['is_active' => true]);
@@ -487,6 +870,21 @@ it('remaining quantity is zero when fully delivered', function () {
         'material_id' => $material->id,
         'quantity' => 10,
         'delivered_quantity' => 10,
+        'total_ht' => 0,
+    ]);
+
+    expect($line->remaining_quantity)->toBe(0);
+});
+
+it('remaining quantity is zero when fully reserved', function () {
+    $order = LaserOrder::withoutEvents(fn () => LaserOrder::factory()->create());
+    $material = LaserMaterial::factory()->create(['is_active' => true]);
+
+    $line = LaserOrderLine::create([
+        'laser_order_id' => $order->id,
+        'material_id' => $material->id,
+        'quantity' => 10,
+        'reserved_quantity' => 10,
         'total_ht' => 0,
     ]);
 

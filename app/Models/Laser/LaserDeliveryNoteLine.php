@@ -2,10 +2,13 @@
 
 namespace App\Models\Laser;
 
+use App\Observers\Laser\LaserDeliveryNoteLineObserver;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+#[ObservedBy([LaserDeliveryNoteLineObserver::class])]
 class LaserDeliveryNoteLine extends Model
 {
     use HasFactory;

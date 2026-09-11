@@ -20,6 +20,7 @@ class LaserOrderLine extends Model
         'thickness_mm',
         'quantity',
         'delivered_quantity',
+        'reserved_quantity',
         'surface_mm2',
         'cut_length_mm',
         'weight_kg',
@@ -40,6 +41,7 @@ class LaserOrderLine extends Model
             'thickness_mm' => 'decimal:2',
             'quantity' => 'integer',
             'delivered_quantity' => 'integer',
+            'reserved_quantity' => 'integer',
             'surface_mm2' => 'decimal:4',
             'cut_length_mm' => 'decimal:2',
             'weight_kg' => 'decimal:4',
@@ -70,6 +72,6 @@ class LaserOrderLine extends Model
 
     public function getRemainingQuantityAttribute(): int
     {
-        return $this->quantity - $this->delivered_quantity;
+        return $this->quantity - $this->delivered_quantity - $this->reserved_quantity;
     }
 }

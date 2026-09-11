@@ -38,21 +38,25 @@ class LaserDeliveryNoteService
                 'status' => DeliveryStatus::DRAFT,
             ]);
 
-            $linesToCreate = $linesWithRemaining->map(fn ($line) => [
-                'laser_order_line_id' => $line->id,
-                'material_id' => $line->material_id,
-                'description' => $line->description,
-                'length_mm' => $line->length_mm,
-                'width_mm' => $line->width_mm,
-                'thickness_mm' => $line->thickness_mm,
-                'quantity' => $line->quantity,
-                'quantity_delivered' => $line->remaining_quantity,
-                'cut_length_mm' => $line->cut_length_mm,
-                'weight_kg' => $line->weight_kg,
-                'density_kg_m3' => $line->density_kg_m3,
-            ]);
+            foreach ($linesWithRemaining as $line) {
+                $quantityForBL = $line->remaining_quantity;
 
-            $deliveryNote->lines()->createMany($linesToCreate->all());
+                $deliveryNote->lines()->create([
+                    'laser_order_line_id' => $line->id,
+                    'material_id' => $line->material_id,
+                    'description' => $line->description,
+                    'length_mm' => $line->length_mm,
+                    'width_mm' => $line->width_mm,
+                    'thickness_mm' => $line->thickness_mm,
+                    'quantity' => $line->quantity,
+                    'quantity_delivered' => $quantityForBL,
+                    'cut_length_mm' => $line->cut_length_mm,
+                    'weight_kg' => $line->weight_kg,
+                    'density_kg_m3' => $line->density_kg_m3,
+                ]);
+
+                $line->increment('reserved_quantity', $quantityForBL);
+            }
 
             return $deliveryNote;
         });
@@ -64,7 +68,20 @@ class LaserDeliveryNoteService
             $delivery = LaserDeliveryNote::whereKey($delivery->id)->lockForUpdate()->firstOrFail();
             $delivery->load('lines.orderLine');
 
+            if ($delivery->status !== DeliveryStatus::DRAFT) {
+                throw new Exception('Ce bon de livraison a déjà été expédié.');
+            }
+
             foreach ($delivery->lines as $line) {
+                if ($line->quantity_delivered <= 0) {
+                    throw new Exception('La quantité livrée doit être supérieure à zéro.');
+                }
+
+                if ($line->quantity_delivered > $line->orderLine->quantity - $line->orderLine->delivered_quantity) {
+                    throw new Exception('La quantité livrée dépasse la quantité disponible pour la ligne "'.$line->description.'".');
+                }
+
+                $line->orderLine->decrement('reserved_quantity', $line->quantity_delivered);
                 $line->orderLine->increment('delivered_quantity', $line->quantity_delivered);
             }
 
@@ -76,10 +93,33 @@ class LaserDeliveryNoteService
 
     public function receiveDeliveryNote(LaserDeliveryNote $delivery): void
     {
+        if ($delivery->status !== DeliveryStatus::SHIPPED) {
+            throw new Exception('Seul un bon de livraison expédié peut être réceptionné.');
+        }
+
         $delivery->update([
             'status' => DeliveryStatus::DELIVERED,
             'delivery_date' => now()->toDateString(),
         ]);
+    }
+
+    public function deleteDeliveryNote(LaserDeliveryNote $delivery): void
+    {
+        DB::transaction(function () use ($delivery) {
+            $delivery = LaserDeliveryNote::whereKey($delivery->id)->lockForUpdate()->firstOrFail();
+
+            if ($delivery->status !== DeliveryStatus::DRAFT) {
+                throw new Exception('Seul un bon de livraison brouillon peut être supprimé.');
+            }
+
+            $delivery->load('lines.orderLine');
+
+            foreach ($delivery->lines as $line) {
+                $line->orderLine->decrement('reserved_quantity', $line->quantity_delivered);
+            }
+
+            $delivery->delete();
+        });
     }
 
     private function refreshOrderStatus(LaserOrder $order): void
