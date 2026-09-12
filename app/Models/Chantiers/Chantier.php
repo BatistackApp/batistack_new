@@ -2,6 +2,7 @@
 
 namespace App\Models\Chantiers;
 
+use App\Contracts\Core\Signable;
 use App\Enums\Chantiers\ChantierStatus;
 use App\Enums\RH\TimeEntryStatus;
 use App\Enums\Tiers\ThirdPartyType;
@@ -11,6 +12,7 @@ use App\Models\Banque\BankTransaction;
 use App\Models\Commerce\CustomerInvoice;
 use App\Models\Commerce\CustomerQuote;
 use App\Models\Commerce\Facture;
+use App\Models\Core\Signature;
 use App\Models\Immobilisation\FixedAsset;
 use App\Models\Locations\InternalRentalInvoice;
 use App\Models\Locations\RentalContract;
@@ -21,6 +23,7 @@ use App\Models\RH\TimeEntry;
 use App\Models\Tiers\ThirdParty;
 use App\Models\Vision3D\BimModel;
 use App\Observers\Chantiers\ChantierObserver;
+use App\Traits\Core\HasSignature;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -31,6 +34,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Relaticle\ActivityLog\Concerns\InteractsWithTimeline;
 use Relaticle\ActivityLog\Contracts\HasTimeline;
@@ -41,9 +45,9 @@ use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 
 #[ObservedBy([ChantierObserver::class])]
-class Chantier extends Model implements HasMedia, HasTimeline
+class Chantier extends Model implements HasMedia, HasTimeline, Signable
 {
-    use HasFactory, InteractsWithMedia, InteractsWithTimeline, LogsActivity;
+    use HasFactory, HasSignature, InteractsWithMedia, InteractsWithTimeline, LogsActivity;
 
     protected $fillable = [
         'uuid',
@@ -244,6 +248,33 @@ class Chantier extends Model implements HasMedia, HasTimeline
         return (float) $this->timeEntries()
             ->where('status', TimeEntryStatus::APPROVED)
             ->sum('hours');
+    }
+
+    public function getSignatureUrl(Signature $signature): ?string
+    {
+        return Storage::disk('public')->url('documents/chantiers/legal/pv_reception_'.$this->reference.'.pdf');
+    }
+
+    public function getSignaturePath(): ?string
+    {
+        return Storage::disk('public')->path('documents/chantiers/legal/pv_reception_'.$this->reference.'.pdf');
+    }
+
+    public function getSignatoryDisplayName(): ?string
+    {
+        return $this->client->name ?? null;
+    }
+
+    protected function getStampedPath(): ?string
+    {
+        return 'documents/chantiers/legal/signes/pv_reception_'.$this->reference.'.pdf';
+    }
+
+    protected function getStampedUrlForPath(string $stampedPath): ?string
+    {
+        $relative = ltrim(str_replace('\\', '/', $stampedPath), '/');
+
+        return Storage::disk('public')->url($relative);
     }
 
     public function getActivitylogOptions(): LogOptions

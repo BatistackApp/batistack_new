@@ -32,10 +32,13 @@ use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
+use Filament\Schemas\Components\Utilities\Get;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
@@ -228,21 +231,21 @@ class ViewChantier extends ViewRecord
                 ->modalHeading('Générer le Procès-Verbal de Réception')
                 ->modalDescription('Le PV sera généré et une demande de signature sera envoyée par email.')
                 ->form([
-                    Filament\Forms\Components\Toggle::make('is_multi')
+                    Toggle::make('is_multi')
                         ->label('Signature multi-signataires')
                         ->default(false)
                         ->live(),
-                    Filament\Forms\Components\Repeater::make('signers')
+                    Repeater::make('signers')
                         ->label('Signataires')
                         ->schema([
-                            Filament\Forms\Components\TextInput::make('name')
+                            TextInput::make('name')
                                 ->label('Nom')
                                 ->required(),
-                            Filament\Forms\Components\TextInput::make('email')
+                            TextInput::make('email')
                                 ->label('Email')
                                 ->email()
                                 ->required(),
-                            Filament\Forms\Components\Select::make('role')
+                            Select::make('role')
                                 ->label('Rôle')
                                 ->options([
                                     'Signataire' => 'Signataire',
@@ -255,7 +258,7 @@ class ViewChantier extends ViewRecord
                         ->columns(3)
                         ->defaultItems(0)
                         ->addActionLabel('Ajouter un signataire')
-                        ->visible(fn (Filament\Forms\Components\Get $get) => $get('is_multi')),
+                        ->visible(fn (Get $get) => $get('is_multi')),
                 ])
                 ->action(function (Chantier $record, array $data, ChantierDocumentService $service, SignatureService $signatureService) {
                     $relativePath = $service->generateHandoverProtocol($record);
@@ -302,7 +305,7 @@ class ViewChantier extends ViewRecord
                         }
                     }
 
-                    return response()->download(Storage::disk($disk)->path($relativePath));
+                    return response()->download(Storage::disk(ChantierDocumentService::getDisk())->path($relativePath));
                 }),
 
             Action::make('create_avenant')

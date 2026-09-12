@@ -10,8 +10,13 @@ use App\Services\Core\SignatureService;
 use App\Services\Interventions\MaintenanceContractDocumentService;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
+use Filament\Forms\Components\Repeater;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
+use Filament\Schemas\Components\Utilities\Get;
 use ToneGabes\Filament\Icons\Enums\Phosphor;
 
 class ViewMaintenanceContract extends ViewRecord
@@ -30,21 +35,21 @@ class ViewMaintenanceContract extends ViewRecord
                     ->modalHeading('Envoyer le contrat d\'entretien')
                     ->modalDescription('Le contrat PDF sera généré et une demande de signature sera envoyée.')
                     ->form([
-                        Filament\Forms\Components\Toggle::make('is_multi')
+                        Toggle::make('is_multi')
                             ->label('Signature multi-signataires')
                             ->default(false)
                             ->live(),
-                        Filament\Forms\Components\Repeater::make('signers')
+                        Repeater::make('signers')
                             ->label('Signataires')
                             ->schema([
-                                Filament\Forms\Components\TextInput::make('name')
+                                TextInput::make('name')
                                     ->label('Nom')
                                     ->required(),
-                                Filament\Forms\Components\TextInput::make('email')
+                                TextInput::make('email')
                                     ->label('Email')
                                     ->email()
                                     ->required(),
-                                Filament\Forms\Components\Select::make('role')
+                                Select::make('role')
                                     ->label('Rôle')
                                     ->options([
                                         'Signataire' => 'Signataire',
@@ -57,7 +62,7 @@ class ViewMaintenanceContract extends ViewRecord
                             ->columns(3)
                             ->defaultItems(0)
                             ->addActionLabel('Ajouter un signataire')
-                            ->visible(fn (Filament\Forms\Components\Get $get) => $get('is_multi')),
+                            ->visible(fn (Get $get) => $get('is_multi')),
                     ])
                     ->action(function (MaintenanceContract $record, array $data, MaintenanceContractDocumentService $service, SignatureService $signatureService) {
                         $path = $service->generateContractPdf($record);

@@ -117,7 +117,7 @@
     </div>
 
     <!-- SUIVI BANCAIRE -->
-    <section class="mb-8 avoid-break section-page-break">
+    <section class="mb-8 avoid-break">
         <h2 class="text-[10px] font-bold bg-slate-700 text-white p-2 mb-2 uppercase">Suivi Bancaire du Chantier</h2>
         <table class="text-[10px]">
             <thead>
@@ -144,9 +144,4 @@
             </tfoot>
         </table>
     </section>
-
-    <footer class="fixed bottom-0 left-0 w-full p-8 text-[7px] text-slate-400 border-t border-slate-100 flex justify-between">
-        <div>Bilan analytique confidentiel - Batistack ERP</div>
-        <div class="uppercase tracking-tighter">Généré le {{ $generated_at }}</div>
-    </footer>
 @endsection

@@ -1,7 +1,7 @@
 @extends('pdf.layout')
 
 @section('content')
-    <div class="flex justify-between items-center mb-8 border-b-4 border-blue-batistack pb-4">
+    <div class="flex justify-between items-center mb-6 border-b-4 border-blue-batistack pb-4">
         <div>
             <h1 class="text-3xl font-bold text-blue-batistack uppercase">Ordre de Service</h1>
             <p class="text-xl text-slate-600 font-medium">Référence : {{ $chantier->reference }}</p>
@@ -12,28 +12,28 @@
         </div>
     </div>
 
-    <div class="grid grid-cols-2 gap-8 mb-8">
+    <div class="grid grid-cols-2 gap-6 mb-6 avoid-break">
         <!-- INFORMATIONS CHANTIER -->
-        <section class="bg-gray-header p-5 rounded-2xl border border-slate-200 avoid-break">
-            <h2 class="text-sm font-bold text-blue-batistack uppercase mb-4 border-b border-slate-300 pb-2">Détails du Projet</h2>
+        <section class="bg-gray-header p-4 rounded-xl border border-slate-200">
+            <h2 class="text-xs font-bold text-blue-batistack uppercase mb-3 border-b border-slate-300 pb-2">Détails du Projet</h2>
             <table class="text-[10px] w-full">
-                <tr class="h-8">
+                <tr class="h-7">
                     <td class="text-slate-500 font-bold uppercase">Désignation :</td>
                     <td class="text-right font-bold">{{ $chantier->name }}</td>
                 </tr>
-                <tr class="h-8">
+                <tr class="h-7">
                     <td class="text-slate-500 font-bold uppercase">Client :</td>
                     <td class="text-right">{{ $chantier->client->name }}</td>
                 </tr>
-                <tr class="h-8">
+                <tr class="h-7">
                     <td class="text-slate-500 font-bold uppercase">Adresse :</td>
                     <td class="text-right">{{ $chantier->address }}, {{ $chantier->zip_code }} {{ $chantier->city }}</td>
                 </tr>
-                <tr class="h-8">
+                <tr class="h-7">
                     <td class="text-slate-500 font-bold uppercase">Démarrage prévu :</td>
                     <td class="text-right font-bold">{{ $chantier->start_date_preview?->format('d/m/Y') ?? 'À définir' }}</td>
                 </tr>
-                <tr class="h-8">
+                <tr class="h-7">
                     <td class="text-slate-500 font-bold uppercase">Délai d'exécution :</td>
                     <td class="text-right font-bold">{{ $chantier->start_date_preview?->diffInDays($chantier->end_date_preview).' Jours' ?? 'À définir' }}</td>
                 </tr>
@@ -41,8 +41,8 @@
         </section>
 
         <!-- ENCADREMENT -->
-        <section class="bg-blue-50 p-5 rounded-2xl border border-blue-100 avoid-break">
-            <h2 class="text-sm font-bold text-blue-batistack uppercase mb-4 border-b border-blue-200 pb-2">Responsable de Site</h2>
+        <section class="bg-blue-50 p-4 rounded-xl border border-blue-100">
+            <h2 class="text-xs font-bold text-blue-batistack uppercase mb-3 border-b border-blue-200 pb-2">Responsable de Site</h2>
             @if($chantier->manager)
                 <div class="flex items-center space-x-4">
                     <div>
@@ -59,8 +59,8 @@
     </div>
 
     <!-- ÉQUIPE ASSIGNÉE -->
-    <div class="mb-8">
-        <h2 class="text-xs font-bold bg-slate-800 text-white p-2 mb-4 uppercase">Composition de l'Équipe</h2>
+    <div class="mb-6 avoid-break">
+        <h2 class="text-xs font-bold bg-slate-800 text-white p-2 mb-3 uppercase">Composition de l'Équipe</h2>
         <table class="text-[10px]">
             <thead>
             <tr class="bg-slate-100 text-slate-700">
@@ -89,8 +89,8 @@
     </div>
 
     <!-- RESSOURCES DÉPLOYÉES -->
-    <div class="mb-8">
-        <h2 class="text-xs font-bold bg-slate-800 text-white p-2 mb-4 uppercase">Ressources Déployées (Propre, Location, Véhicules)</h2>
+    <div class="mb-6 avoid-break">
+        <h2 class="text-xs font-bold bg-slate-800 text-white p-2 mb-3 uppercase">Ressources Déployées (Propre, Location, Véhicules)</h2>
         <table class="text-[10px]">
             <thead>
             <tr class="bg-slate-100 text-slate-700">
@@ -119,41 +119,9 @@
         </table>
     </div>
 
-    <div class="p-6 border-2 border-dashed border-slate-300 rounded-xl bg-slate-50 text-[10px] text-justify mb-8">
+    <!-- INSTRUCTIONS DE SÉCURITÉ -->
+    <div class="p-4 border-2 border-dashed border-slate-300 rounded-xl bg-slate-50 text-[10px] text-justify avoid-break">
         <p class="font-bold uppercase mb-2">Instructions de Sécurité :</p>
         <p>Le personnel doit obligatoirement porter ses Équipements de Protection Individuelle (EPI). Tout incident ou anomalie sur le site doit être immédiatement rapporté au conducteur de travaux via le journal de bord numérique Batistack.</p>
     </div>
-
-    <!-- PLANNING GANTT -->
-    <div class="mb-8" style="page-break-inside: avoid;">
-        <h2 class="text-xs font-bold bg-slate-800 text-white p-2 mb-4 uppercase">Planning de Chantier (Gantt)</h2>
-        <svg id="gantt" width="100%" height="auto"></svg>
-        <script>
-            document.addEventListener('DOMContentLoaded', function() {
-                var tasks = {!! json_encode($ganttTasks ?? []) !!};
-                if (tasks.length > 0 && typeof Gantt !== 'undefined') {
-                    new Gantt('#gantt', tasks, {
-                        header_height: 50,
-                        column_width: 30,
-                        step: 24,
-                        view_modes: ['Quarter Day', 'Half Day', 'Day', 'Week', 'Month'],
-                        bar_height: 20,
-                        bar_corner_radius: 3,
-                        arrow_curve: 5,
-                        padding: 18,
-                        view_mode: 'Day',   
-                        date_format: 'YYYY-MM-DD',
-                        language: 'fr'
-                    });
-                } else if (tasks.length === 0) {
-                    document.getElementById('gantt').innerHTML = '<text x="10" y="20">Aucune donnée pour ce chantier.</text>';
-                }
-            });
-        </script>
-    </div>
-
-    <footer class="fixed bottom-0 left-0 w-full p-8 text-[8px] text-slate-400 border-t border-slate-100 flex justify-between">
-        <div>Document interne Batistack - Ordre de Service n°{{ $chantier->reference }}</div>
-        <div class="font-bold uppercase tracking-widest">Batistack OS v1.0</div>
-    </footer>
 @endsection
