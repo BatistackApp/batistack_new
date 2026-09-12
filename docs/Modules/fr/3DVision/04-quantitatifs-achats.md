@@ -1,7 +1,7 @@
 ---
 title: Quantitatifs & Achats (BOM)
 icon: heroicon-o-shopping-cart
-order: 4
+order: 5
 ---
 
 # 🛒 Quantitatifs (BOM) & Génération de Commandes

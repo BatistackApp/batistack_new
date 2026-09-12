@@ -1,3 +1,9 @@
+---
+title: Réalité Augmentée (AR)
+icon: heroicon-o-device-phone-mobile
+order: 4
+---
+
 # Réalité Augmentée (AR)
 
 Batistack permet d'utiliser la Réalité Augmentée pour visualiser les maquettes IFC (BIM) directement sur le terrain, superposées à l'environnement réel. Cette fonctionnalité est particulièrement utile pour comparer la maquette avec la réalisation, ou pour visualiser les réseaux (plomberie, électricité, gaines de ventilation) à travers les murs et plafonds avant travaux.
