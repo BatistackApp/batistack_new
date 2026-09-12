@@ -4,18 +4,18 @@ namespace App\Filament\Subcontractor\Pages;
 
 use App\Services\Tiers\VigilanceService;
 use Filament\Forms\Components\FileUpload;
-use Filament\Forms\Concerns\InteractsWithForms;
-use Filament\Forms\Contracts\HasForms;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Concerns\InteractsWithSchemas;
+use Filament\Schemas\Contracts\HasSchemas;
 use Filament\Schemas\Schema;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 
-class ManageDocuments extends Page implements HasForms
+class ManageDocuments extends Page implements HasSchemas
 {
-    use InteractsWithForms;
+    use InteractsWithSchemas;
 
     protected static string|null|\BackedEnum $navigationIcon = 'heroicon-o-document-check';
 

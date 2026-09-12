@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Modules\Tiers\Notifications;
 
+use App\Enums\Tiers\ThirdPartyType;
 use App\Models\Core\Company;
 use App\Models\Tiers\Contact;
 use App\Models\Tiers\ThirdParty;
@@ -17,7 +18,7 @@ beforeEach(function () {
 
 describe('WelcomeCustomerNotification', function () {
     test('notification est envoyée quand contact créé avec email', function () {
-        $thirdParty = ThirdParty::factory()->create();
+        $thirdParty = ThirdParty::factory()->create(['type' => ThirdPartyType::CLIENT]);
 
         $contact = Contact::create([
             'third_party_id' => $thirdParty->id,
@@ -32,7 +33,7 @@ describe('WelcomeCustomerNotification', function () {
     });
 
     test('notification n\'est pas envoyée sans email', function () {
-        $thirdParty = ThirdParty::factory()->create();
+        $thirdParty = ThirdParty::factory()->create(['type' => ThirdPartyType::CLIENT]);
 
         // Réinitialiser les fakes pour ignorer les notifications déclenchées par la création du Tiers
         NotificationFacade::fake();
@@ -48,7 +49,7 @@ describe('WelcomeCustomerNotification', function () {
     });
 
     test('notification contient les informations du contact', function () {
-        $thirdParty = ThirdParty::factory()->create();
+        $thirdParty = ThirdParty::factory()->create(['type' => ThirdPartyType::CLIENT]);
 
         $contact = Contact::create([
             'third_party_id' => $thirdParty->id,
@@ -69,7 +70,7 @@ describe('WelcomeCustomerNotification', function () {
     });
 
     test('notification crée un User avec données correctes', function () {
-        $thirdParty = ThirdParty::factory()->create();
+        $thirdParty = ThirdParty::factory()->create(['type' => ThirdPartyType::CLIENT]);
 
         Contact::create([
             'third_party_id' => $thirdParty->id,
@@ -88,7 +89,7 @@ describe('WelcomeCustomerNotification', function () {
     });
 
     test('plusieurs contacts créent plusieurs User et notifications', function () {
-        $thirdParty = ThirdParty::factory()->create();
+        $thirdParty = ThirdParty::factory()->create(['type' => ThirdPartyType::CLIENT]);
 
         Contact::create([
             'third_party_id' => $thirdParty->id,
@@ -110,7 +111,7 @@ describe('WelcomeCustomerNotification', function () {
     });
 
     test('notification liée au bon User', function () {
-        $thirdParty = ThirdParty::factory()->create();
+        $thirdParty = ThirdParty::factory()->create(['type' => ThirdPartyType::CLIENT]);
 
         $contact1 = Contact::create([
             'third_party_id' => $thirdParty->id,
@@ -145,7 +146,7 @@ describe('WelcomeCustomerNotification', function () {
     });
 
     test('notification résout le contact correctement', function () {
-        $thirdParty = ThirdParty::factory()->create();
+        $thirdParty = ThirdParty::factory()->create(['type' => ThirdPartyType::CLIENT]);
 
         $contact = Contact::create([
             'third_party_id' => $thirdParty->id,

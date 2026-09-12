@@ -69,6 +69,7 @@ class AppServiceProvider extends ServiceProvider
                     'immobilisation',
                     'locations',
                     'gpao',
+                    'laser',
                 ])
                 ->icons([
                     'core' => Phosphor::Building,
@@ -84,6 +85,7 @@ class AppServiceProvider extends ServiceProvider
                     'immobilisation' => Phosphor::BoxArrowUp,
                     'locations' => Phosphor::KeyReturn,
                     'gpao' => Phosphor::Factory,
+                    'laser' => Phosphor::Scissors,
                 ])
                 ->labels([
                     'core' => 'Configurations',
@@ -99,6 +101,7 @@ class AppServiceProvider extends ServiceProvider
                     'immobilisation' => 'Immobilisations',
                     'locations' => 'Locations',
                     'gpao' => 'Atelier & Production',
+                    'laser' => 'Laser',
                 ]);
         });
 

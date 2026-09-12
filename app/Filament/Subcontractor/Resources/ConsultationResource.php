@@ -2,6 +2,7 @@
 
 namespace App\Filament\Subcontractor\Resources;
 
+use App\Enums\Tiers\ThirdPartyType;
 use App\Filament\Subcontractor\Resources\ConsultationResource\Pages;
 use App\Models\Tiers\Consultation;
 use App\Models\Tiers\ConsultationOffer;
@@ -78,7 +79,7 @@ class ConsultationResource extends Resource
                     ->action(function (Consultation $record, array $data) {
                         $user = auth()->user();
 
-                        if (! $user || ! $user->contact || ! $user->contact->thirdParty || $user->contact->thirdParty->type !== 'SUBCONTRACTOR') {
+                        if (! $user || ! $user->contact || ! $user->contact->thirdParty || $user->contact->thirdParty->type !== ThirdPartyType::SUBCONTRACTOR) {
                             Notification::make()
                                 ->title('Identité invalide')
                                 ->body('Impossible de soumettre une offre sans être identifié comme sous-traitant.')
