@@ -21,11 +21,18 @@ Dès la validation de l'actif, le système génère son **tableau prévisionnel 
 - Vous pouvez opter pour un amortissement **Linéaire** (classique) ou **Dégressif**.
 - Le système gère le prorata temporis (amortissement calculé au jour près la première année).
 - En cas de sinistre ou de perte de valeur exceptionnelle, vous pouvez déclarer une **Dépréciation** : le tableau recalculera alors automatiquement les dotations futures pour lisser la Valeur Nette Comptable (VNC).
+- **Subventions d'investissement** : si l'acquisition a été financée en partie par une subvention, vous choisissez son traitement — soit elle **diminue la base amortissable** (l'actif est amorti sur son coût net), soit elle est **rapportée au résultat** étalée sur la durée d'amortissement.
 
 ## 3. Maintenance et Cession
 
 Une immobilisation peut tomber en panne. Vous pouvez enregistrer les factures de maintenance (qui viendront impacter le coût du chantier où la machine est affectée).
-En fin de vie, l'outil gère la **Cession** ou la **Mise au rebut**, en calculant automatiquement la plus-value ou moins-value comptable de cession.
+
+En fin de vie, l'outil gère la **Cession** (vente) ou la **Mise au rebut** de bout en bout :
+
+1. Vous saisissez l'opération (date, prix de cession, motif).
+2. Le système calcule automatiquement la **plus-value ou moins-value** comptable.
+3. Il génère le **procès-verbal (PV) de cession** téléchargeable.
+4. Les **écritures comptables** de sortie d'actif (annulation de l'immobilisation et des amortissements constatés, constat de la plus/moins-value) sont produites automatiquement.
 
 ## 4. Clôture et Export FEC
 

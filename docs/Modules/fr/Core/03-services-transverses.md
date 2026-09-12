@@ -20,14 +20,29 @@ Ce service gère la signature électronique des devis clients, des contrats RH, 
 - **Authenticité** : Lorsqu'un document est signé, ce moteur calcule une empreinte cryptographique (hash SHA-256) du document.
 - **Scellement** : Le document PDF est scellé avec le certificat de signature, le rendant juridiquement valide et inaltérable.
 - Il supporte le recueil de signature en "Local" (directement sur votre tablette sur un chantier) ou "à distance" via e-mail sécurisé.
+- **Signatures multiples** : un même document peut être soumis à **plusieurs signataires**, chacun recevant son lien dédié. Le document n'est scellé qu'une fois l'ensemble des signatures recueillies.
 
-## 3. Le Moteur Géospatial (Google Maps)
+Les demandes de signature sont pilotées depuis un **Panel Signatures** dédié, qui centralise les documents à faire signer et leur état d'avancement.
+
+## 3. La Gestion Documentaire (GED)
+
+Batistack indexe automatiquement **tous les PDF générés** par l'ERP (devis, contrats, rapports d'intervention, fiches de paie…) dans une **Gestion Électronique de Documents**.
+
+- Une arborescence unique permet de retrouver, classer et archiver l'ensemble des documents, sans les éparpiller.
+- L'accès est **cloisonné par espace** : chaque portail (administrateur, salarié, client, sous-traitant) ne voit que les documents qui le concernent.
+- Les documents existants peuvent être ré-indexés en une commande, et la consultation s'appuie sur des liens sécurisés (compatible stockage cloud).
+
+> [!NOTE]
+> **Un seul point d'accès**
+> La GED alimente directement les rubriques « Mes Documents » des différents portails self-service.
+
+## 4. Le Moteur Géospatial (Google Maps)
 
 Batistack intègre un service de géolocalisation utilisé par les modules de Chantiers et de Flotte Automobile. 
 - Il permet de convertir les adresses saisies en coordonnées GPS exactes.
 - Il est capable de calculer des matrices de distance (temps de trajet) pour optimiser les déplacements de vos véhicules (routing).
 
-## 4. Le Service Météorologique
+## 5. Le Service Météorologique
 
 Relié à l'API OpenWeather, ce service récupère les prévisions et les alertes météo en fonction des coordonnées de vos chantiers. 
 C'est ce qui permet d'afficher automatiquement les conditions climatiques dans les journaux de chantier, et de justifier d'éventuels jours d'intempéries sans intervention manuelle de votre part.

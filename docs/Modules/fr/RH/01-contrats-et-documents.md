@@ -20,6 +20,11 @@ L'intégration d'un nouveau salarié (Onboarding) est digitalisée :
 En cas de départ, l'ERP automatise la génération des documents légaux :
 - **Rupture de période d'essai** : Le système génère la lettre et calcule dynamiquement le délai de prévenance en fonction de l'ancienneté du salarié.
 - **Avenant de rupture anticipée (CDD)** : Génération automatique de l'avenant avec prise en compte des dates négociées.
+- **Rupture de CDI (démission / licenciement)** : un workflow dédié pilote le départ — génération de la lettre de notification avec calcul du **préavis**, puis édition automatique des **documents de fin de contrat** (certificat de travail, attestation France Travail, solde de tout compte).
+
+> [!NOTE]
+> **Suspension sans clôture**
+> Un contrat peut être **suspendu** (maladie longue durée, congé sabbatique, etc.) sans être clôturé : le salarié reste dans l'effectif mais est temporairement inactif, puis le contrat est **repris** à l'identique.
 
 ## 3. Santé et Sécurité (Visites & CACES)
 

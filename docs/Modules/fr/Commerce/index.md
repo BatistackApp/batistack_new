@@ -17,6 +17,7 @@ Le module Commerce est le pont entre le terrain (Chantiers) et la comptabilité 
 - [Le Cycle des Ventes (Clients)](./01-cycle-des-ventes.md) : De la création d'un devis avec signature en ligne jusqu'à la facturation de situation (avancement), en passant par les **avenants (travaux supplémentaires)**.
 - [Le Cycle des Achats (Fournisseurs)](./02-cycle-des-achats.md) : Commandes d'achats, bons de réception, et gestion stricte de la sous-traitance.
 - [Paiements et Relances Automatiques](./03-paiements-et-relances.md) : Comment payer et se faire payer (Stripe) et configurer l'envoi automatique des relances d'impayés.
+- [L'Espace Client](./04-espace-client.md) : Le portail self-service de vos clients — signature de devis en ligne, suivi des commandes/livraisons, consultation des factures et avoirs, paiement et documents.
 
 > [!TIP]
 > **Scan de code-barres**

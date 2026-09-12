@@ -9,7 +9,7 @@ order: 999
 Batistack est un ERP en constante évolution. Afin de vous offrir toujours plus d'automatisation et de simplicité, notre équipe de développement travaille en continu sur de nouvelles fonctionnalités.
 
 > [!NOTE]
-> **Trajectoire v1.0.0** : la version courante est la **v0.38.0**. La feuille de route détaillée de passage à la **1.0.0** (critères, issues bloqueuses, lots de correction, estimation) est disponible dans [docs/avancement/v1.0.0-roadmap.md](../../avancement/v1.0.0-roadmap.md) et suivie sur GitHub via le milestone **v1.0.0**.
+> **Trajectoire v1.0.0** : la version courante est la **v0.52.0**. La feuille de route détaillée de passage à la **1.0.0** (critères, issues bloqueuses, lots de correction, estimation) est disponible dans [docs/avancement/v1.0.0-roadmap.md](../../avancement/v1.0.0-roadmap.md) et suivie sur GitHub via le milestone **v1.0.0**.
 > Les fonctionnalités livrées au fil des versions sont détaillées dans le [Changelog](changelog.md).
 
 ---

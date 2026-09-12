@@ -21,5 +21,16 @@ Vous pouvez modéliser votre logistique comme bon vous semble en créant des ent
 
 Au sein du logiciel, vous attribuez chaque article en stock à un ou plusieurs entrepôts. Un même article "Câble électrique 3G1.5" peut très bien se trouver à la fois dans le Magasin Principal (pour 500m) et dans le Camion 1 (pour 50m).
 
+## Emplacements de stockage (bin-picking)
+
+Pour aller plus loin dans l'organisation physique d'un grand dépôt, vous pouvez définir des **emplacements** à l'intérieur d'un entrepôt (ex : Allée A / Travée 3 / Bac 2). Chaque quantité de stock peut alors être localisée précisément sur une étagère.
+
+- Le magasinier sait **où trouver** une référence sans parcourir tout le dépôt.
+- Les mouvements et les inventaires peuvent être suivis **par emplacement**, ce qui fiabilise le comptage.
+
+> [!NOTE]
+> **Optionnel**
+> L'organisation par emplacement est progressive : vous pouvez très bien démarrer avec un simple entrepôt global, puis détailler les emplacements de vos grands magasins uniquement.
+
 > [!TIP]
 > Multiplier les entrepôts (ex: un entrepôt par camion) offre une traçabilité redoutable, mais exige plus de rigueur de la part des magasiniers (il faudra saisir un mouvement de stock chaque fois qu'un outil passe du magasin au camion). Si vous débutez avec Batistack, commencez avec un seul "Magasin Principal".
