@@ -13,6 +13,7 @@ use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Support\Facades\DB;
 use ToneGabes\Filament\Icons\Enums\Phosphor;
 
 class ConsultationOfferRelationManager extends RelationManager
@@ -63,6 +64,7 @@ class ConsultationOfferRelationManager extends RelationManager
             ->filters([
                 //
             ])
+            ->checkIfRecordIsSelectable(fn (ConsultationOffer $record): bool => $record->status === 'submitted')
             ->recordActions([
                 Action::make('accept')
                     ->label('Accepter')
@@ -73,19 +75,33 @@ class ConsultationOfferRelationManager extends RelationManager
                     ->modalHeading('Accepter cette offre')
                     ->modalDescription('Êtes-vous sûr de vouloir accepter cette offre ? Les autres offres seront rejetées.')
                     ->action(function (ConsultationOffer $record) {
-                        $record->update(['status' => 'accepted']);
+                        DB::transaction(function () use ($record) {
+                            $consultation = $record->consultation()->lockForUpdate()->first();
 
-                        $this->notifySubcontractor($record, OfferAcceptedNotification::class);
+                            if ($consultation->status !== 'closed') {
+                                Notification::make()
+                                    ->title('Impossible d\'accepter')
+                                    ->body('Cette consultation n\'est plus ouverte aux réponses.')
+                                    ->danger()
+                                    ->send();
 
-                        $record->consultation->offers()
-                            ->where('id', '!=', $record->id)
-                            ->where('status', 'submitted')
-                            ->each(function (ConsultationOffer $rejected) {
-                                $rejected->update(['status' => 'rejected']);
-                                $this->notifySubcontractor($rejected, OfferRejectedNotification::class);
-                            });
+                                return;
+                            }
 
-                        $record->consultation->update(['status' => 'awarded']);
+                            $record->update(['status' => 'accepted']);
+
+                            $this->notifySubcontractor($record, OfferAcceptedNotification::class);
+
+                            $consultation->offers()
+                                ->where('id', '!=', $record->id)
+                                ->where('status', 'submitted')
+                                ->each(function (ConsultationOffer $rejected) {
+                                    $rejected->update(['status' => 'rejected']);
+                                    $this->notifySubcontractor($rejected, OfferRejectedNotification::class);
+                                });
+
+                            $consultation->update(['status' => 'awarded']);
+                        });
 
                         Notification::make()
                             ->title('Offre acceptée')
@@ -114,7 +130,23 @@ class ConsultationOfferRelationManager extends RelationManager
             ])
             ->bulkActions([
                 BulkActionGroup::make([
-                    DeleteBulkAction::make(),
+                    DeleteBulkAction::make()
+                        ->action(function () {
+                            $selectedRecords = $this->getSelectedRecords();
+                            $nonDeletable = $selectedRecords->reject(fn (ConsultationOffer $offer) => $offer->status === 'submitted');
+
+                            if ($nonDeletable->isNotEmpty()) {
+                                Notification::make()
+                                    ->title('Suppression refusée')
+                                    ->body('Seules les offres en attente ("submitted") peuvent être supprimées.')
+                                    ->danger()
+                                    ->send();
+
+                                return;
+                            }
+
+                            $selectedRecords->each->delete();
+                        }),
                 ]),
             ]);
     }
