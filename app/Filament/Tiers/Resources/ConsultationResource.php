@@ -3,6 +3,7 @@
 namespace App\Filament\Tiers\Resources;
 
 use App\Filament\Tiers\Resources\ConsultationResource\Pages;
+use App\Filament\Tiers\Resources\ConsultationResource\RelationManagers\ConsultationOfferRelationManager;
 use App\Models\Tiers\Consultation;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
@@ -101,7 +102,7 @@ class ConsultationResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            ConsultationOfferRelationManager::class,
         ];
     }
 
@@ -110,6 +111,7 @@ class ConsultationResource extends Resource
         return [
             'index' => Pages\ListConsultations::route('/'),
             'create' => Pages\CreateConsultation::route('/create'),
+            'view' => Pages\ViewConsultation::route('/{record}'),
             'edit' => Pages\EditConsultation::route('/{record}/edit'),
         ];
     }

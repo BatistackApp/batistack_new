@@ -75,7 +75,7 @@ class ContactsRelationManager extends RelationManager
                 EditAction::make(),
                 DeleteAction::make()
                     ->action(function (Model $record) {
-                        $record->user->delete();
+                        $record->user?->delete();
                         $record->delete();
                     }),
             ])

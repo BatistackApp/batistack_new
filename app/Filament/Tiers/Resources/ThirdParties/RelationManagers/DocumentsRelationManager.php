@@ -17,10 +17,14 @@ use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\SpatieMediaLibraryFileUpload;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Notifications\Notification;
 use Filament\Resources\RelationManagers\RelationManager;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -107,32 +111,32 @@ class DocumentsRelationManager extends RelationManager
                         $record->signatures()->where('status', SignatureStatus::SIGNED)->doesntExist()
                     )
                     ->form([
-                        Filament\Forms\Components\Toggle::make('is_multi')
+                        Toggle::make('is_multi')
                             ->label('Signature multi-signataires')
                             ->default(false)
                             ->live(),
-                        Filament\Forms\Components\TextInput::make('name')
+                        TextInput::make('name')
                             ->label('Nom du signataire')
                             ->required()
                             ->default(fn (ThirdPartyDocument $record) => $record->thirdParty->name)
-                            ->visible(fn (Filament\Forms\Components\Get $get) => ! $get('is_multi')),
-                        Filament\Forms\Components\TextInput::make('email')
+                            ->visible(fn (Get $get) => ! $get('is_multi')),
+                        TextInput::make('email')
                             ->label('Email du signataire')
                             ->email()
                             ->required()
                             ->default(fn (ThirdPartyDocument $record) => $record->thirdParty->email)
-                            ->visible(fn (Filament\Forms\Components\Get $get) => ! $get('is_multi')),
-                        Filament\Forms\Components\Repeater::make('signers')
+                            ->visible(fn (Get $get) => ! $get('is_multi')),
+                        Repeater::make('signers')
                             ->label('Signataires')
                             ->schema([
-                                Filament\Forms\Components\TextInput::make('name')
+                                TextInput::make('name')
                                     ->label('Nom')
                                     ->required(),
-                                Filament\Forms\Components\TextInput::make('email')
+                                TextInput::make('email')
                                     ->label('Email')
                                     ->email()
                                     ->required(),
-                                Filament\Forms\Components\Select::make('role')
+                                Select::make('role')
                                     ->label('Rôle')
                                     ->options([
                                         'Signataire' => 'Signataire',
@@ -146,8 +150,8 @@ class DocumentsRelationManager extends RelationManager
                             ->columns(3)
                             ->defaultItems(0)
                             ->addActionLabel('Ajouter un signataire')
-                            ->visible(fn (Filament\Forms\Components\Get $get) => $get('is_multi'))
-                            ->required(fn (Filament\Forms\Components\Get $get) => $get('is_multi')),
+                            ->visible(fn (Get $get) => $get('is_multi'))
+                            ->required(fn (Get $get) => $get('is_multi')),
                     ])
                     ->action(function (ThirdPartyDocument $record, array $data, SignatureService $service) {
                         $path = $record->getFirstMedia('third_party_documents')?->getPath();

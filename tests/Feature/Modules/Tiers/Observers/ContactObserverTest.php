@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Modules\Tiers\Observers;
 
+use App\Enums\Tiers\ThirdPartyType;
 use App\Models\Core\Company;
 use App\Models\Tiers\Contact;
 use App\Models\Tiers\ThirdParty;
@@ -15,8 +16,8 @@ beforeEach(function () {
 });
 
 describe('ContactObserver - created()', function () {
-    test('crée un User si email présent', function () {
-        $thirdParty = ThirdParty::factory()->create();
+    test('crée un User si email présent et tiers client', function () {
+        $thirdParty = ThirdParty::factory()->create(['type' => ThirdPartyType::CLIENT]);
         Notification::fake();
 
         Contact::create([
@@ -37,8 +38,61 @@ describe('ContactObserver - created()', function () {
             ->and($contact->user_id)->toBe($user->id);
     });
 
+    test('crée un User si email présent et tiers sous-traitant', function () {
+        $thirdParty = ThirdParty::factory()->create(['type' => ThirdPartyType::SUBCONTRACTOR]);
+        Notification::fake();
+
+        Contact::create([
+            'third_party_id' => $thirdParty->id,
+            'first_name' => 'Jean',
+            'last_name' => 'Dupont',
+            'email' => 'jean@example.com',
+        ]);
+
+        $contact = Contact::first();
+        $user = User::first();
+
+        expect($user)->not->toBeNull()
+            ->and($user->is_tiers)->toBeTrue()
+            ->and($contact->user_id)->toBe($user->id);
+    });
+
+    test('ne crée pas d\'User si tiers fournisseur', function () {
+        $thirdParty = ThirdParty::factory()->create(['type' => ThirdPartyType::SUPPLIER]);
+        Notification::fake();
+
+        Contact::create([
+            'third_party_id' => $thirdParty->id,
+            'first_name' => 'Jean',
+            'last_name' => 'Dupont',
+            'email' => 'jean@example.com',
+        ]);
+
+        $contact = Contact::first();
+
+        expect($contact->user_id)->toBeNull()
+            ->and(User::count())->toBe(0);
+    });
+
+    test('ne crée pas d\'User si tiers prospect', function () {
+        $thirdParty = ThirdParty::factory()->create(['type' => ThirdPartyType::PROSPECT]);
+        Notification::fake();
+
+        Contact::create([
+            'third_party_id' => $thirdParty->id,
+            'first_name' => 'Jean',
+            'last_name' => 'Dupont',
+            'email' => 'jean@example.com',
+        ]);
+
+        $contact = Contact::first();
+
+        expect($contact->user_id)->toBeNull()
+            ->and(User::count())->toBe(0);
+    });
+
     test('ne crée pas d\'User si email vide', function () {
-        $thirdParty = ThirdParty::factory()->create();
+        $thirdParty = ThirdParty::factory()->create(['type' => ThirdPartyType::CLIENT]);
         Notification::fake();
 
         Contact::create([
@@ -55,7 +109,7 @@ describe('ContactObserver - created()', function () {
     });
 
     test('ne crée pas d\'User si email null', function () {
-        $thirdParty = ThirdParty::factory()->create();
+        $thirdParty = ThirdParty::factory()->create(['type' => ThirdPartyType::CLIENT]);
         Notification::fake();
 
         Contact::create([
@@ -71,7 +125,7 @@ describe('ContactObserver - created()', function () {
     });
 
     test('envoie WelcomeCustomerNotification', function () {
-        $thirdParty = ThirdParty::factory()->create();
+        $thirdParty = ThirdParty::factory()->create(['type' => ThirdPartyType::CLIENT]);
         Notification::fake();
 
         Contact::create([
@@ -87,7 +141,7 @@ describe('ContactObserver - created()', function () {
     });
 
     test('n\'envoie pas de notification sans email', function () {
-        $thirdParty = ThirdParty::factory()->create();
+        $thirdParty = ThirdParty::factory()->create(['type' => ThirdPartyType::CLIENT]);
         Notification::fake();
 
         Contact::create([
@@ -101,7 +155,7 @@ describe('ContactObserver - created()', function () {
     });
 
     test('User password est hashé', function () {
-        $thirdParty = ThirdParty::factory()->create();
+        $thirdParty = ThirdParty::factory()->create(['type' => ThirdPartyType::CLIENT]);
         Notification::fake();
 
         Contact::create([
@@ -202,7 +256,7 @@ describe('ContactObserver - saving()', function () {
 
 describe('ContactObserver - Intégration', function () {
     test('crée contact avec email complètement', function () {
-        $thirdParty = ThirdParty::factory()->create();
+        $thirdParty = ThirdParty::factory()->create(['type' => ThirdPartyType::CLIENT]);
         Notification::fake();
 
         Contact::create([
@@ -225,7 +279,7 @@ describe('ContactObserver - Intégration', function () {
     });
 
     test('crée contact sans email', function () {
-        $thirdParty = ThirdParty::factory()->create();
+        $thirdParty = ThirdParty::factory()->create(['type' => ThirdPartyType::CLIENT]);
         Notification::fake();
 
         Contact::create([
@@ -243,7 +297,7 @@ describe('ContactObserver - Intégration', function () {
     });
 
     test('plusieurs contacts du même tiers', function () {
-        $thirdParty = ThirdParty::factory()->create();
+        $thirdParty = ThirdParty::factory()->create(['type' => ThirdPartyType::CLIENT]);
         Notification::fake();
 
         Contact::create([
