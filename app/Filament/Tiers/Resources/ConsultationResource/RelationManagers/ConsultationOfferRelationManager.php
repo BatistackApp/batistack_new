@@ -75,7 +75,9 @@ class ConsultationOfferRelationManager extends RelationManager
                     ->modalHeading('Accepter cette offre')
                     ->modalDescription('Êtes-vous sûr de vouloir accepter cette offre ? Les autres offres seront rejetées.')
                     ->action(function (ConsultationOffer $record) {
-                        DB::transaction(function () use ($record) {
+                        $notifications = [];
+
+                        DB::transaction(function () use ($record, &$notifications) {
                             $consultation = $record->consultation()->lockForUpdate()->first();
 
                             if ($consultation->status !== 'closed') {
@@ -88,20 +90,46 @@ class ConsultationOfferRelationManager extends RelationManager
                                 return;
                             }
 
-                            $record->update(['status' => 'accepted']);
+                            $freshRecord = $record->fresh();
 
-                            $this->notifySubcontractor($record, OfferAcceptedNotification::class);
+                            if ($freshRecord->status !== 'submitted') {
+                                Notification::make()
+                                    ->title('Impossible d\'accepter')
+                                    ->body('Cette offre n\'est plus en attente.')
+                                    ->danger()
+                                    ->send();
+
+                                return;
+                            }
+
+                            if ($consultation->offers()->where('status', 'accepted')->exists()) {
+                                Notification::make()
+                                    ->title('Impossible d\'accepter')
+                                    ->body('Une offre a déjà été acceptée pour cette consultation.')
+                                    ->danger()
+                                    ->send();
+
+                                return;
+                            }
+
+                            $freshRecord->update(['status' => 'accepted']);
+
+                            $notifications[] = fn () => $this->notifySubcontractor($freshRecord, OfferAcceptedNotification::class);
 
                             $consultation->offers()
-                                ->where('id', '!=', $record->id)
+                                ->where('id', '!=', $freshRecord->id)
                                 ->where('status', 'submitted')
-                                ->each(function (ConsultationOffer $rejected) {
+                                ->each(function (ConsultationOffer $rejected) use (&$notifications) {
                                     $rejected->update(['status' => 'rejected']);
-                                    $this->notifySubcontractor($rejected, OfferRejectedNotification::class);
+                                    $notifications[] = fn () => $this->notifySubcontractor($rejected, OfferRejectedNotification::class);
                                 });
 
                             $consultation->update(['status' => 'awarded']);
                         });
+
+                        foreach ($notifications as $dispatch) {
+                            $dispatch();
+                        }
 
                         Notification::make()
                             ->title('Offre acceptée')
@@ -117,9 +145,31 @@ class ConsultationOfferRelationManager extends RelationManager
                     ->requiresConfirmation()
                     ->modalHeading('Rejeter cette offre')
                     ->action(function (ConsultationOffer $record) {
-                        $record->update(['status' => 'rejected']);
+                        $notification = null;
 
-                        $this->notifySubcontractor($record, OfferRejectedNotification::class);
+                        DB::transaction(function () use ($record, &$notification) {
+                            $consultation = $record->consultation()->lockForUpdate()->first();
+
+                            $freshRecord = $record->fresh();
+
+                            if ($freshRecord->status !== 'submitted') {
+                                Notification::make()
+                                    ->title('Impossible de rejeter')
+                                    ->body('Cette offre n\'est plus en attente.')
+                                    ->danger()
+                                    ->send();
+
+                                return;
+                            }
+
+                            $freshRecord->update(['status' => 'rejected']);
+
+                            $notification = fn () => $this->notifySubcontractor($freshRecord, OfferRejectedNotification::class);
+                        });
+
+                        if ($notification) {
+                            $notification();
+                        }
 
                         Notification::make()
                             ->title('Offre rejetée')
