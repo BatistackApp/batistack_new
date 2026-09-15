@@ -19,6 +19,9 @@ class LaserRevenueChart extends ChartWidget
     {
         $year = now()->year;
 
+        // Uses created_at as the invoice date reference because laser_invoices
+        // has no dedicated invoice_date column. created_at represents the invoice
+        // creation timestamp and is the only available date field for aggregation.
         $monthlyData = LaserInvoice::whereYear('created_at', $year)
             ->whereIn('status', [InvoiceStatus::VALIDATED, InvoiceStatus::PAID])
             ->selectRaw("DATE_FORMAT(created_at, '%Y-%m') as month, SUM(total_ht) as total")
