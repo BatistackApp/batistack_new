@@ -216,6 +216,19 @@ class Employee extends Model implements HasMedia, Signable
         return "{$this->first_name} {$this->last_name}";
     }
 
+    public function getSelectLabel(): string
+    {
+        $label = $this->last_name . ' ' . $this->first_name;
+
+        if ($this->currentContract?->job_title) {
+            $label .= ' · ' . $this->currentContract->job_title;
+        }
+
+        $label .= $this->is_active ? ' — Disponible' : ' — Indisponible';
+
+        return $label;
+    }
+
     public function getFullAddress(): string
     {
         return "{$this->address} {$this->postal_code} {$this->city}";
