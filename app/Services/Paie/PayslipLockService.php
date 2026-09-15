@@ -5,6 +5,7 @@ namespace App\Services\Paie;
 use App\Enums\Paie\AdvancePaymentStatus;
 use App\Enums\Paie\PayslipStatus;
 use App\Enums\RH\TimeEntryStatus;
+use App\Jobs\Paie\GeneratePayslipPdfJob;
 use App\Models\Paie\Payslip;
 use App\Models\RH\TimeEntry;
 use Carbon\Carbon;
@@ -12,13 +13,6 @@ use Illuminate\Support\Facades\DB;
 
 class PayslipLockService
 {
-    protected PayslipPdfService $pdfService;
-
-    public function __construct(PayslipPdfService $pdfService)
-    {
-        $this->pdfService = $pdfService;
-    }
-
     /**
      * Lock a payslip and all its related dependencies.
      */
@@ -44,9 +38,9 @@ class PayslipLockService
             // 3. Update Payslip status to Validated (Locked)
             $payslip->status = PayslipStatus::VALIDATED;
             $payslip->save();
-
-            // 4. Generate definitive PDF
-            $this->pdfService->generatePdf($payslip);
         });
+
+        // 4. Generate definitive PDF (queued to avoid timeout)
+        GeneratePayslipPdfJob::dispatch($payslip);
     }
 }
