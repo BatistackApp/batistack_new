@@ -18,11 +18,13 @@ class PayslipLockService
      */
     public function lock(Payslip $payslip): void
     {
-        if ($payslip->status !== PayslipStatus::DRAFT) {
-            return;
-        }
+        $wasLocked = DB::transaction(function () use ($payslip) {
+            $payslip = Payslip::whereKey($payslip->id)->lockForUpdate()->firstOrFail();
 
-        DB::transaction(function () use ($payslip) {
+            if ($payslip->status !== PayslipStatus::DRAFT) {
+                return false;
+            }
+
             // 1. Lock TimeEntries for this employee during this period
             $startOfMonth = Carbon::parse($payslip->period.'-01')->startOfMonth();
             $endOfMonth = Carbon::parse($payslip->period.'-01')->endOfMonth();
@@ -38,9 +40,13 @@ class PayslipLockService
             // 3. Update Payslip status to Validated (Locked)
             $payslip->status = PayslipStatus::VALIDATED;
             $payslip->save();
+
+            return true;
         });
 
-        // 4. Generate definitive PDF (queued to avoid timeout)
-        GeneratePayslipPdfJob::dispatch($payslip);
+        if ($wasLocked) {
+            // 4. Generate definitive PDF (queued to avoid timeout)
+            GeneratePayslipPdfJob::dispatch($payslip);
+        }
     }
 }

@@ -5,6 +5,7 @@ use App\Models\Laser\LaserQuote;
 use App\Models\Laser\LaserQuoteLine;
 use App\Services\Laser\DxfImportResult;
 use App\Services\Laser\DxfParserService;
+use App\Services\Laser\DxfToSvgService;
 use Illuminate\Support\Facades\Queue;
 
 // ============================================================
@@ -644,4 +645,181 @@ it('rejects inactive material', function () {
 it('rejects quantity below 1', function () {
     $quantity = 0;
     expect($quantity)->toBeLessThan(1);
+});
+
+// ============================================================
+// DxfParserService — Legacy POLYLINE (VERTEX/SEQEND)
+// ============================================================
+
+it('parses open legacy POLYLINE with vertices', function () {
+    $parser = app(DxfParserService::class);
+
+    $dxf = "0\nSECTION\n2\nENTITIES\n0\nPOLYLINE\n8\nCUT\n70\n0\n10\n0.0\n20\n0.0\n0\nVERTEX\n10\n10.0\n20\n20.0\n0\nVERTEX\n10\n30.0\n20\n40.0\n0\nVERTEX\n10\n50.0\n20\n60.0\n0\nSEQEND\n0\nENDSEC\n0\nEOF";
+    $result = $parser->parse($dxf);
+
+    expect($result->isValid())->toBeTrue()
+        ->and($result->entityCount)->toBe(1)
+        ->and($result->entities[0]['data']['flags'])->toBe(0)
+        ->and(count($result->entities[0]['data']['vertices']))->toBe(3)
+        ->and($result->entities[0]['data']['vertices'][0]['x'])->toBe(10.0)
+        ->and($result->entities[0]['data']['vertices'][0]['y'])->toBe(20.0)
+        ->and($result->entities[0]['data']['vertices'][1]['x'])->toBe(30.0)
+        ->and($result->entities[0]['data']['vertices'][1]['y'])->toBe(40.0)
+        ->and($result->entities[0]['data']['vertices'][2]['x'])->toBe(50.0)
+        ->and($result->entities[0]['data']['vertices'][2]['y'])->toBe(60.0);
+});
+
+it('parses closed legacy POLYLINE (flag 70=1)', function () {
+    $parser = app(DxfParserService::class);
+
+    $dxf = "0\nSECTION\n2\nENTITIES\n0\nPOLYLINE\n8\nCUT\n70\n1\n10\n0.0\n20\n0.0\n0\nVERTEX\n10\n0.0\n20\n0.0\n0\nVERTEX\n10\n100.0\n20\n0.0\n0\nVERTEX\n10\n100.0\n20\n50.0\n0\nVERTEX\n10\n0.0\n20\n50.0\n0\nSEQEND\n0\nENDSEC\n0\nEOF";
+    $result = $parser->parse($dxf);
+
+    expect($result->isValid())->toBeTrue()
+        ->and($result->entities[0]['data']['flags'])->toBe(1)
+        ->and(count($result->entities[0]['data']['vertices']))->toBe(4)
+        ->and($result->totalCutLengthMm)->toBe(300.0);
+});
+
+it('parses legacy POLYLINE vertex with bulge', function () {
+    $parser = app(DxfParserService::class);
+
+    $dxf = "0\nSECTION\n2\nENTITIES\n0\nPOLYLINE\n8\nCUT\n70\n0\n10\n0.0\n20\n0.0\n0\nVERTEX\n10\n0.0\n20\n0.0\n42\n1.0\n0\nVERTEX\n10\n100.0\n20\n0.0\n0\nSEQEND\n0\nENDSEC\n0\nEOF";
+    $result = $parser->parse($dxf);
+
+    expect($result->isValid())->toBeTrue()
+        ->and(count($result->entities[0]['data']['vertices']))->toBe(2)
+        ->and($result->entities[0]['data']['vertices'][0]['bulge'])->toBe(1.0)
+        ->and($result->entities[0]['data']['vertices'][1]['bulge'])->toBe(0.0)
+        ->and($result->totalCutLengthMm)->toBe(round(M_PI * 50, 2));
+});
+
+it('does not let VERTEX code 70 overwrite POLYLINE flags', function () {
+    $parser = app(DxfParserService::class);
+
+    // POLYLINE flag 70=1 (closed), VERTEX flag 70=0 should not overwrite
+    $dxf = "0\nSECTION\n2\nENTITIES\n0\nPOLYLINE\n8\nCUT\n70\n1\n10\n0.0\n20\n0.0\n0\nVERTEX\n10\n0.0\n20\n0.0\n70\n0\n0\nVERTEX\n10\n100.0\n20\n0.0\n70\n0\n0\nVERTEX\n10\n100.0\n20\n100.0\n70\n0\n0\nSEQEND\n0\nENDSEC\n0\nEOF";
+    $result = $parser->parse($dxf);
+
+    expect($result->isValid())->toBeTrue()
+        ->and($result->entities[0]['data']['flags'])->toBe(1)
+        ->and($result->totalCutLengthMm)->toBe(round(100 + 100 + sqrt(10000 + 10000), 2));
+});
+
+it('parses legacy POLYLINE with mixed straight and bulge segments', function () {
+    $parser = app(DxfParserService::class);
+
+    $dxf = "0\nSECTION\n2\nENTITIES\n0\nPOLYLINE\n8\nCUT\n70\n0\n10\n0.0\n20\n0.0\n0\nVERTEX\n10\n0.0\n20\n0.0\n0\nVERTEX\n10\n100.0\n20\n0.0\n42\n0.5\n0\nVERTEX\n10\n100.0\n20\n100.0\n0\nSEQEND\n0\nENDSEC\n0\nEOF";
+    $result = $parser->parse($dxf);
+
+    $straightLength = sqrt(100 * 100); // first segment: 0,0 -> 100,0
+    // second segment has bulge=0.5, should be longer than straight line
+    $totalLength = $result->totalCutLengthMm;
+
+    expect($result->isValid())->toBeTrue()
+        ->and($totalLength)->toBeGreaterThan($straightLength);
+});
+
+// ============================================================
+// DxfToSvgService — Polyline rendering with bulge arcs
+// ============================================================
+
+it('renders straight polyline segments as SVG lines', function () {
+    $service = app(DxfToSvgService::class);
+
+    $entities = [
+        [
+            'type' => 'LWPOLYLINE',
+            'layer' => 'CUT',
+            'data' => [
+                'flags' => 0,
+                'vertices' => [
+                    ['x' => 0, 'y' => 0, 'bulge' => 0],
+                    ['x' => 100, 'y' => 0, 'bulge' => 0],
+                    ['x' => 100, 'y' => 50, 'bulge' => 0],
+                ],
+            ],
+        ],
+    ];
+
+    $svg = $service->toSvg($entities, 100, 50);
+
+    expect($svg)->not->toBeEmpty()
+        ->and($svg)->toContain('M ')
+        ->and($svg)->toContain(' L ')
+        ->and($svg)->not->toContain(' A ');
+});
+
+it('renders bulge arc segments as SVG arc commands', function () {
+    $service = app(DxfToSvgService::class);
+
+    $entities = [
+        [
+            'type' => 'LWPOLYLINE',
+            'layer' => 'CUT',
+            'data' => [
+                'flags' => 0,
+                'vertices' => [
+                    ['x' => 0, 'y' => 0, 'bulge' => 1.0],
+                    ['x' => 100, 'y' => 0, 'bulge' => 0],
+                ],
+            ],
+        ],
+    ];
+
+    $svg = $service->toSvg($entities, 100, 50);
+
+    expect($svg)->not->toBeEmpty()
+        ->and($svg)->toContain('M ')
+        ->and($svg)->toContain(' A ');
+});
+
+it('renders closed polyline with Z command', function () {
+    $service = app(DxfToSvgService::class);
+
+    $entities = [
+        [
+            'type' => 'LWPOLYLINE',
+            'layer' => 'CUT',
+            'data' => [
+                'flags' => 1,
+                'vertices' => [
+                    ['x' => 0, 'y' => 0, 'bulge' => 0],
+                    ['x' => 100, 'y' => 0, 'bulge' => 0],
+                    ['x' => 100, 'y' => 50, 'bulge' => 0],
+                    ['x' => 0, 'y' => 50, 'bulge' => 0],
+                ],
+            ],
+        ],
+    ];
+
+    $svg = $service->toSvg($entities, 100, 50);
+
+    expect($svg)->not->toBeEmpty()
+        ->and($svg)->toContain('Z');
+});
+
+it('renders mixed straight and bulge segments', function () {
+    $service = app(DxfToSvgService::class);
+
+    $entities = [
+        [
+            'type' => 'LWPOLYLINE',
+            'layer' => 'CUT',
+            'data' => [
+                'flags' => 0,
+                'vertices' => [
+                    ['x' => 0, 'y' => 0, 'bulge' => 0],
+                    ['x' => 50, 'y' => 0, 'bulge' => 1.0],
+                    ['x' => 100, 'y' => 0, 'bulge' => 0],
+                ],
+            ],
+        ],
+    ];
+
+    $svg = $service->toSvg($entities, 100, 50);
+
+    expect($svg)->not->toBeEmpty()
+        ->and($svg)->toContain(' L ')
+        ->and($svg)->toContain(' A ');
 });

@@ -96,6 +96,7 @@ class DxfParserService
         $count = count($this->groupCodes);
         $inEntities = false;
         $currentEntity = null;
+        $currentVertex = null;
 
         for ($i = 0; $i < $count; $i++) {
             $code = $this->groupCodes[$i]['code'];
@@ -117,7 +118,11 @@ class DxfParserService
 
             if ($code === 0) {
                 if ($value === 'VERTEX' && $currentEntity !== null && ($currentEntity['data']['legacy_polyline'] ?? false)) {
-                    $currentEntity['data']['vertices'][] = [
+                    // Finalize previous vertex if any
+                    if ($currentVertex !== null) {
+                        $currentEntity['data']['vertices'][] = $currentVertex;
+                    }
+                    $currentVertex = [
                         'x' => 0.0,
                         'y' => 0.0,
                         'bulge' => 0.0,
@@ -127,10 +132,21 @@ class DxfParserService
                 }
 
                 if ($value === 'SEQEND' && $currentEntity !== null && ($currentEntity['data']['legacy_polyline'] ?? false)) {
+                    // Finalize last vertex if any
+                    if ($currentVertex !== null) {
+                        $currentEntity['data']['vertices'][] = $currentVertex;
+                        $currentVertex = null;
+                    }
+
                     continue;
                 }
 
                 if ($currentEntity !== null) {
+                    // Finalize any pending vertex before storing the entity
+                    if ($currentVertex !== null) {
+                        $currentEntity['data']['vertices'][] = $currentVertex;
+                        $currentVertex = null;
+                    }
                     $entities[] = $currentEntity;
                     $currentEntity = null;
                 }
@@ -157,10 +173,28 @@ class DxfParserService
                 continue;
             }
 
+            $isLegacy = $currentEntity['data']['legacy_polyline'] ?? false;
+            $inVertex = $isLegacy && $currentVertex !== null;
+
+            if ($inVertex) {
+                // Group codes inside a VERTEX go into $currentVertex, not the parent entity
+                match ($code) {
+                    8 => $currentVertex['layer'] = $value,
+                    10 => $currentVertex['x'] = (float) $value,
+                    20 => $currentVertex['y'] = (float) $value,
+                    42 => $currentVertex['bulge'] = (float) $value,
+                    70 => $currentVertex['flags'] = (int) $value,
+                    default => null,
+                };
+
+                continue;
+            }
+
+            // Standard entity group codes (non-VERTEX context)
             match ($code) {
                 8 => $currentEntity['layer'] = $value,
-                10 => $currentEntity['data']['start_x'] = (float) $value,
-                20 => $currentEntity['data']['start_y'] = (float) $value,
+                10 => $this->handleCode10($currentEntity, $value, $isLegacy),
+                20 => $this->handleCode20($currentEntity, $value, $isLegacy),
                 11 => $currentEntity['data']['end_x'] = (float) $value,
                 21 => $currentEntity['data']['end_y'] = (float) $value,
                 40 => $currentEntity['data']['radius'] = (float) $value,
@@ -171,35 +205,53 @@ class DxfParserService
                 70 => $currentEntity['data']['flags'] = (int) $value,
                 default => null,
             };
-
-            if ($code === 10 && $currentEntity['type'] === 'LWPOLYLINE') {
-                if ($currentEntity['data']['legacy_polyline'] ?? false) {
-                    $vertexCount = count($currentEntity['data']['vertices'] ?? []);
-                    if ($vertexCount > 0) {
-                        $currentEntity['data']['vertices'][$vertexCount - 1]['x'] = (float) $value;
-                    }
-                } else {
-                    $currentEntity['data']['vertices'][] = [
-                        'x' => (float) $value,
-                        'y' => 0,
-                        'bulge' => 0.0,
-                    ];
-                }
-            }
-
-            if ($code === 20 && $currentEntity['type'] === 'LWPOLYLINE') {
-                $vertexCount = count($currentEntity['data']['vertices'] ?? []);
-                if ($vertexCount > 0) {
-                    $currentEntity['data']['vertices'][$vertexCount - 1]['y'] = (float) $value;
-                }
-            }
         }
 
         if ($currentEntity !== null) {
+            // Finalize any pending vertex
+            if ($currentVertex !== null) {
+                $currentEntity['data']['vertices'][] = $currentVertex;
+            }
             $entities[] = $currentEntity;
         }
 
         return $entities;
+    }
+
+    private function handleCode10(array &$entity, string $value, bool $isLegacy): void
+    {
+        if ($entity['type'] !== 'LWPOLYLINE') {
+            $entity['data']['start_x'] = (float) $value;
+
+            return;
+        }
+
+        if ($isLegacy) {
+            $vertexCount = count($entity['data']['vertices'] ?? []);
+            if ($vertexCount > 0) {
+                $entity['data']['vertices'][$vertexCount - 1]['x'] = (float) $value;
+            }
+        } else {
+            $entity['data']['vertices'][] = [
+                'x' => (float) $value,
+                'y' => 0,
+                'bulge' => 0.0,
+            ];
+        }
+    }
+
+    private function handleCode20(array &$entity, string $value, bool $isLegacy): void
+    {
+        if ($entity['type'] !== 'LWPOLYLINE') {
+            $entity['data']['start_y'] = (float) $value;
+
+            return;
+        }
+
+        $vertexCount = count($entity['data']['vertices'] ?? []);
+        if ($vertexCount > 0) {
+            $entity['data']['vertices'][$vertexCount - 1]['y'] = (float) $value;
+        }
     }
 
     private function setLastVertexBulge(array &$entity, float $bulge): void

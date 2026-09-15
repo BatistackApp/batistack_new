@@ -5,7 +5,9 @@ namespace App\Services\Laser;
 class DxfToSvgService
 {
     private const SVG_WIDTH = 120;
+
     private const SVG_HEIGHT = 120;
+
     private const PADDING = 5;
 
     public function toSvg(array $entities, float $lengthMm, float $widthMm): string
@@ -159,19 +161,80 @@ class DxfToSvgService
         $flags = $entity['data']['flags'] ?? 0;
         $isClosed = ($flags & 1) === 1;
 
-        $points = [];
-        foreach ($vertices as $vertex) {
-            $x = $this->toSvgX($vertex['x'], $scale, $offsetX, $minX);
-            $y = $this->toSvgY($vertex['y'], $scale, $offsetY, $minY);
-            $points[] = "$x,$y";
+        $firstX = $this->toSvgX($vertices[0]['x'], $scale, $offsetX, $minX);
+        $firstY = $this->toSvgY($vertices[0]['y'], $scale, $offsetY, $minY);
+
+        $d = "M $firstX $firstY";
+
+        $segmentCount = $isClosed ? $count : $count - 1;
+        for ($i = 0; $i < $segmentCount; $i++) {
+            $start = $vertices[$i];
+            $end = $vertices[($i + 1) % $count];
+            $bulge = $start['bulge'] ?? 0.0;
+
+            $x2 = $this->toSvgX($end['x'], $scale, $offsetX, $minX);
+            $y2 = $this->toSvgY($end['y'], $scale, $offsetY, $minY);
+
+            if (abs($bulge) < 1e-10) {
+                $d .= " L $x2 $y2";
+            } else {
+                $d .= ' '.$this->bulgeToSvgArc($start, $end, $bulge, $scale, $offsetX, $offsetY, $minX, $minY);
+            }
         }
 
-        $d = 'M ' . implode(' L ', $points);
         if ($isClosed) {
             $d .= ' Z';
         }
 
         return ["<path d=\"$d\" stroke=\"#e11d48\" stroke-width=\"0.5\" fill=\"none\"/>"];
+    }
+
+    private function bulgeToSvgArc(array $start, array $end, float $bulge, float $scale, float $offsetX, float $offsetY, float $minX, float $minY): string
+    {
+        $dx = $end['x'] - $start['x'];
+        $dy = $end['y'] - $start['y'];
+        $chord = sqrt($dx * $dx + $dy * $dy);
+
+        if ($chord < 1e-10) {
+            return 'L '.$this->toSvgX($end['x'], $scale, $offsetX, $minX).' '.$this->toSvgY($end['y'], $scale, $offsetY, $minY);
+        }
+
+        $radius = $chord * (1 + $bulge ** 2) / (4 * abs($bulge));
+
+        $tangentAngle = atan2($dy, $dx);
+        $centerAngle = $tangentAngle + ($bulge > 0 ? -M_PI / 2 : M_PI / 2);
+        $centerDist = $radius * cos(2 * atan(abs($bulge)));
+        $midX = ($start['x'] + $end['x']) / 2;
+        $midY = ($start['y'] + $end['y']) / 2;
+        $cx = $midX + $centerDist * cos($centerAngle);
+        $cy = $midY + $centerDist * sin($centerAngle);
+
+        $startAngle = atan2($start['y'] - $cy, $start['x'] - $cx);
+        $endAngle = atan2($end['y'] - $cy, $end['x'] - $cx);
+
+        $sweepFlag = $bulge < 0 ? 1 : 0;
+
+        $sweep = $endAngle - $startAngle;
+        if ($bulge > 0) {
+            // Counterclockwise in DXF: SVG sweep-flag = 0
+            if ($sweep <= 0) {
+                $sweep += 2 * M_PI;
+            }
+        } else {
+            // Clockwise in DXF: SVG sweep-flag = 1
+            if ($sweep >= 0) {
+                $sweep -= 2 * M_PI;
+            }
+            $sweep = -$sweep;
+        }
+
+        $largeArc = $sweep > M_PI ? 1 : 0;
+
+        $scaledRadius = $radius * $scale;
+        $x2 = $this->toSvgX($end['x'], $scale, $offsetX, $minX);
+        $y2 = $this->toSvgY($end['y'], $scale, $offsetY, $minY);
+
+        return "A $scaledRadius $scaledRadius 0 $largeArc $sweepFlag $x2 $y2";
     }
 
     private function renderArc(array $entity, float $scale, float $offsetX, float $offsetY, float $minX, float $minY): array
