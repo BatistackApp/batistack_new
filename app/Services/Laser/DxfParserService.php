@@ -52,6 +52,7 @@ class DxfParserService
             totalCutLengthMm: round($totalCutLength, 2),
             entityCount: count($cutEntities),
             layers: $layers,
+            entities: $cutEntities,
         );
     }
 
@@ -115,6 +116,20 @@ class DxfParserService
             }
 
             if ($code === 0) {
+                if ($value === 'VERTEX' && $currentEntity !== null && ($currentEntity['data']['legacy_polyline'] ?? false)) {
+                    $currentEntity['data']['vertices'][] = [
+                        'x' => 0.0,
+                        'y' => 0.0,
+                        'bulge' => 0.0,
+                    ];
+
+                    continue;
+                }
+
+                if ($value === 'SEQEND' && $currentEntity !== null && ($currentEntity['data']['legacy_polyline'] ?? false)) {
+                    continue;
+                }
+
                 if ($currentEntity !== null) {
                     $entities[] = $currentEntity;
                     $currentEntity = null;
@@ -124,12 +139,14 @@ class DxfParserService
                     break;
                 }
 
-                $supportedTypes = ['LINE', 'LWPOLYLINE', 'ARC', 'CIRCLE'];
+                $supportedTypes = ['LINE', 'LWPOLYLINE', 'POLYLINE', 'ARC', 'CIRCLE'];
                 if (in_array($value, $supportedTypes, true)) {
                     $currentEntity = [
-                        'type' => $value,
+                        'type' => $value === 'POLYLINE' ? 'LWPOLYLINE' : $value,
                         'layer' => '0',
-                        'data' => [],
+                        'data' => $value === 'POLYLINE'
+                            ? ['vertices' => [], 'legacy_polyline' => true]
+                            : [],
                     ];
                 }
 
@@ -156,14 +173,18 @@ class DxfParserService
             };
 
             if ($code === 10 && $currentEntity['type'] === 'LWPOLYLINE') {
-                if (! isset($currentEntity['data']['vertices'])) {
-                    $currentEntity['data']['vertices'] = [];
+                if ($currentEntity['data']['legacy_polyline'] ?? false) {
+                    $vertexCount = count($currentEntity['data']['vertices'] ?? []);
+                    if ($vertexCount > 0) {
+                        $currentEntity['data']['vertices'][$vertexCount - 1]['x'] = (float) $value;
+                    }
+                } else {
+                    $currentEntity['data']['vertices'][] = [
+                        'x' => (float) $value,
+                        'y' => 0,
+                        'bulge' => 0.0,
+                    ];
                 }
-                $currentEntity['data']['vertices'][] = [
-                    'x' => (float) $value,
-                    'y' => 0,
-                    'bulge' => 0.0,
-                ];
             }
 
             if ($code === 20 && $currentEntity['type'] === 'LWPOLYLINE') {

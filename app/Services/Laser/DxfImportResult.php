@@ -10,6 +10,7 @@ class DxfImportResult
         public readonly float $totalCutLengthMm,
         public readonly int $entityCount,
         public readonly array $layers,
+        public readonly array $entities = [],
         public readonly ?string $error = null,
     ) {}
 
@@ -26,6 +27,7 @@ class DxfImportResult
             totalCutLengthMm: 0,
             entityCount: 0,
             layers: [],
+            entities: [],
             error: $message,
         );
     }

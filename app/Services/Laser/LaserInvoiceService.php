@@ -75,6 +75,7 @@ class LaserInvoiceService
                     'total_ht' => round($lineTotal, 2),
                     'weight_kg' => $line->weight_kg,
                     'density_kg_m3' => $line->density_kg_m3,
+                    'dxf_entities' => $line->dxf_entities,
                 ]);
 
                 $line->increment('invoiced_quantity', $qtyToInvoice);

@@ -9,11 +9,9 @@ use App\Services\Laser\DxfParserService;
 use App\Services\Laser\LaserQuoteService;
 use Filament\Actions\Action;
 use Filament\Forms\Components\FileUpload;
-use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
-use Illuminate\Http\UploadedFile;
 
 class ImportDxfAction
 {
@@ -29,86 +27,10 @@ class ImportDxfAction
             ->form([
                 FileUpload::make('dxf_file')
                     ->label('Fichier DXF')
-                    ->acceptedFileTypes(['application/dxf', 'application/x-dxf', 'text/plain'])
                     ->helperText('Formats acceptés : .dxf (AutoCAD DXF). Les dimensions du fichier doivent être en millimètres.')
                     ->required()
                     ->maxSize(10240)
-                    ->storeFiles(false)
-                    ->live()
-                    ->afterStateUpdated(function ($state, callable $set) {
-                        if ($state === null) {
-                            $set('dxf_preview', null);
-                            $set('dxf_length', null);
-                            $set('dxf_width', null);
-                            $set('dxf_cut_length', null);
-                            $set('dxf_entity_count', null);
-                            $set('dxf_layers', null);
-
-                            return;
-                        }
-
-                        /** @var UploadedFile $file */
-                        $file = $state;
-                        $content = file_get_contents($file->getRealPath());
-
-                        if ($content === false) {
-                            $set('dxf_preview', 'Erreur de lecture du fichier.');
-                            $set('dxf_length', null);
-                            $set('dxf_width', null);
-                            $set('dxf_cut_length', null);
-                            $set('dxf_entity_count', null);
-                            $set('dxf_layers', null);
-
-                            return;
-                        }
-
-                        /** @var DxfParserService $parser */
-                        $parser = app(DxfParserService::class);
-                        $allowedLayers = config('laser.dxf_cut_layers', []);
-                        $result = $parser->parse($content, $allowedLayers);
-
-                        if (! $result->isValid()) {
-                            $set('dxf_preview', 'Erreur : '.$result->error);
-                            $set('dxf_length', null);
-                            $set('dxf_width', null);
-                            $set('dxf_cut_length', null);
-                            $set('dxf_entity_count', null);
-                            $set('dxf_layers', null);
-
-                            return;
-                        }
-
-                        $set('dxf_length', $result->lengthMm);
-                        $set('dxf_width', $result->widthMm);
-                        $set('dxf_cut_length', $result->totalCutLengthMm);
-                        $set('dxf_entity_count', $result->entityCount);
-                        $set('dxf_layers', implode(', ', $result->layers));
-                        $set('dxf_preview', 'Fichier analysé avec succès.');
-                    }),
-
-                Placeholder::make('dxf_preview')
-                    ->label('Résultat de l\'analyse')
-                    ->content(fn (callable $get) => $get('dxf_preview') ?? 'En attente du fichier...'),
-
-                Placeholder::make('dxf_length')
-                    ->label('Longueur extraite (mm)')
-                    ->content(fn (callable $get) => $get('dxf_length') !== null ? number_format($get('dxf_length'), 2, ',', ' ').' mm' : '-'),
-
-                Placeholder::make('dxf_width')
-                    ->label('Largeur extraite (mm)')
-                    ->content(fn (callable $get) => $get('dxf_width') !== null ? number_format($get('dxf_width'), 2, ',', ' ').' mm' : '-'),
-
-                Placeholder::make('dxf_cut_length')
-                    ->label('Périmètre de découpe (mm)')
-                    ->content(fn (callable $get) => $get('dxf_cut_length') !== null ? number_format($get('dxf_cut_length'), 2, ',', ' ').' mm' : '-'),
-
-                Placeholder::make('dxf_entity_count')
-                    ->label('Nombre d\'entités')
-                    ->content(fn (callable $get) => $get('dxf_entity_count') !== null ? (string) $get('dxf_entity_count') : '-'),
-
-                Placeholder::make('dxf_layers')
-                    ->label('Couches détectées dans le DXF')
-                    ->content(fn (callable $get) => $get('dxf_layers') ?? '-'),
+                    ->storeFiles(false),
 
                 Select::make('material_id')
                     ->label('Matériau')
@@ -271,6 +193,7 @@ class ImportDxfAction
                     'density_kg_m3' => $material->density_kg_m3,
                     'discount_pct' => $discount,
                     'total_ht' => 0,
+                    'dxf_entities' => $result->entities,
                 ]);
 
                 Notification::make()

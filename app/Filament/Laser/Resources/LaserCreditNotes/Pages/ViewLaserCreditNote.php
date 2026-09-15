@@ -14,7 +14,7 @@ class ViewLaserCreditNote extends ViewRecord
     protected function getHeaderActions(): array
     {
         return [
-            Actions\PrintAction::make()
+            Actions\Action::make('print')
                 ->label('Imprimer PDF')
                 ->icon('heroicon-o-document-text')
                 ->color('gray')

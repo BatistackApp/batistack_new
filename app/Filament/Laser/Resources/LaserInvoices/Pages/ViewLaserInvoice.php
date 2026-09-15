@@ -66,7 +66,7 @@ class ViewLaserInvoice extends ViewRecord
                         ->suffix('€')
                         ->numeric()
                         ->minValue(0.01)
-                        ->max(fn ($record) => $record->remaining_creditable_ht)
+                        ->maxValue(fn ($record) => $record->remaining_creditable_ht)
                         ->helperText(fn ($record) => 'Solde restant : '.number_format($record->remaining_creditable_ht, 2, ',', ' ').' € HT'),
                     Textarea::make('reason')
                         ->label('Motif')
@@ -92,7 +92,7 @@ class ViewLaserInvoice extends ViewRecord
                     return $this->redirect(route('filament.laser.resources.laser-credit-notes.view', $creditNote));
                 }),
 
-            Actions\PrintAction::make()
+            Actions\Action::make('print')
                 ->label('Imprimer PDF')
                 ->icon('heroicon-o-document-text')
                 ->color('gray')

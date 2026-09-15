@@ -2,6 +2,7 @@
 
 namespace App\Filament\Laser\Resources\LaserDeliveryNotes;
 
+use App\Filament\Laser\Resources\LaserDeliveryNotes\Pages\EditLaserDeliveryNote;
 use App\Filament\Laser\Resources\LaserDeliveryNotes\Pages\ListLaserDeliveryNotes;
 use App\Filament\Laser\Resources\LaserDeliveryNotes\Pages\ViewLaserDeliveryNote;
 use App\Filament\Laser\Resources\LaserDeliveryNotes\RelationManagers\LinesRelationManager;
@@ -61,6 +62,7 @@ class LaserDeliveryNoteResource extends Resource
         return [
             'index' => ListLaserDeliveryNotes::route('/'),
             'view' => ViewLaserDeliveryNote::route('/{record}'),
+            'edit' => EditLaserDeliveryNote::route('/{record}/edit'),
         ];
     }
 }

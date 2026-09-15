@@ -64,7 +64,7 @@ class ViewLaserOrder extends ViewRecord
 
             Actions\Action::make('generateInvoice')
                 ->label('Générer une Facture')
-                ->icon('heroicon-o-receipt')
+                ->icon('heroicon-o-document-text')
                 ->color('warning')
                 ->visible(function ($record) {
                     if (in_array($record->status, [OrderStatus::CANCELLED, OrderStatus::BILLED])) {
@@ -106,7 +106,7 @@ class ViewLaserOrder extends ViewRecord
                         ->send();
                 }),
 
-            Actions\PrintAction::make()
+            Actions\Action::make('print')
                 ->label('Imprimer PDF')
                 ->icon('heroicon-o-document-text')
                 ->color('gray')

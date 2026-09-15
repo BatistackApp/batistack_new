@@ -26,6 +26,7 @@ class LaserInvoiceLine extends Model
         'total_ht',
         'weight_kg',
         'density_kg_m3',
+        'dxf_entities',
     ];
 
     protected static function boot(): void
@@ -67,6 +68,7 @@ class LaserInvoiceLine extends Model
             'total_ht' => 'decimal:2',
             'weight_kg' => 'decimal:4',
             'density_kg_m3' => 'decimal:2',
+            'dxf_entities' => 'array',
         ];
     }
 

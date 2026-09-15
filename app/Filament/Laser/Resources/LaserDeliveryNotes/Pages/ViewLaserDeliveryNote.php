@@ -5,6 +5,7 @@ namespace App\Filament\Laser\Resources\LaserDeliveryNotes\Pages;
 use App\Enums\Laser\DeliveryStatus;
 use App\Filament\Laser\Resources\LaserDeliveryNotes\LaserDeliveryNoteResource;
 use App\Services\Laser\LaserDeliveryNoteService;
+use App\Services\Laser\LaserInvoiceService;
 use Filament\Actions;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
@@ -17,6 +18,9 @@ class ViewLaserDeliveryNote extends ViewRecord
     protected function getHeaderActions(): array
     {
         return [
+            Actions\EditAction::make()
+                ->visible(fn ($record) => $record->status === DeliveryStatus::DRAFT),
+
             Actions\Action::make('ship')
                 ->label('Expédier')
                 ->icon('heroicon-o-truck')
@@ -51,7 +55,36 @@ class ViewLaserDeliveryNote extends ViewRecord
                         ->send();
                 }),
 
-            Actions\PrintAction::make()
+            Actions\Action::make('createInvoice')
+                ->label('Créer une facture')
+                ->icon('heroicon-o-document-text')
+                ->color('warning')
+                ->visible(function ($record) {
+                    if ($record->status !== DeliveryStatus::SHIPPED && $record->status !== DeliveryStatus::DELIVERED) {
+                        return false;
+                    }
+
+                    $record->load('order.lines');
+
+                    return $record->order->lines->some(
+                        fn ($line) => $line->delivered_quantity > $line->invoiced_quantity
+                    );
+                })
+                ->requiresConfirmation()
+                ->modalHeading('Créer une facture')
+                ->modalDescription('Une facture sera créée pour les lignes livrées non encore facturées.')
+                ->action(function ($record) {
+                    $invoice = app(LaserInvoiceService::class)->createInvoice($record->order);
+
+                    Notification::make()
+                        ->title('Facture créée : '.$invoice->reference)
+                        ->success()
+                        ->send();
+
+                    return $this->redirect(route('filament.laser.resources.laser-invoices.view', $invoice));
+                }),
+
+            Actions\Action::make('print')
                 ->label('Imprimer PDF')
                 ->icon('heroicon-o-document-text')
                 ->color('gray')

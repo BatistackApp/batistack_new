@@ -26,6 +26,7 @@ class LaserDeliveryNoteLine extends Model
         'cut_length_mm',
         'weight_kg',
         'density_kg_m3',
+        'dxf_entities',
     ];
 
     protected function casts(): array
@@ -39,6 +40,7 @@ class LaserDeliveryNoteLine extends Model
             'cut_length_mm' => 'decimal:2',
             'weight_kg' => 'decimal:4',
             'density_kg_m3' => 'decimal:2',
+            'dxf_entities' => 'array',
         ];
     }
 
