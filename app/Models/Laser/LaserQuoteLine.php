@@ -134,7 +134,9 @@ class LaserQuoteLine extends Model
 
     public function recalculate(): void
     {
-        $discount = $this->calculateDiscount();
+        $discount = $this->discount_pct === null
+            ? $this->calculateDiscount()
+            : (float) $this->discount_pct;
 
         $this->update([
             'density_kg_m3' => $this->density_kg_m3 ?? $this->material?->density_kg_m3,

@@ -17,6 +17,7 @@ use Filament\Tables;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\CreateAction;
 use Filament\Actions\DeleteAction;
+use Filament\Actions\EditAction;
 use Filament\Tables\Columns\Summarizers\Sum;
 use Filament\Tables\Columns\TextColumn;
 
@@ -116,9 +117,13 @@ class LinesRelationManager extends RelationManager
                     ->afterStateUpdated(fn (Get $get, Set $set) => static::recalculateLine($get, $set)),
 
                 TextInput::make('discount_pct')
-                    ->label('Remise automatique (%)')
+                    ->label('Remise manuelle (%)')
                     ->numeric()
-                    ->readOnly(),
+                    ->default(0)
+                    ->minValue(0)
+                    ->maxValue(100)
+                    ->live()
+                    ->afterStateUpdated(fn (Get $get, Set $set) => static::recalculateLine($get, $set)),
 
                 TextInput::make('weight_kg')
                     ->label('Poids (kg)')
@@ -193,6 +198,7 @@ class LinesRelationManager extends RelationManager
             ])
             ->recordActions([
                 ActionGroup::make([
+                    EditAction::make(),
                     DeleteAction::make()
                         ->requiresConfirmation(),
                 ]),
@@ -216,7 +222,7 @@ class LinesRelationManager extends RelationManager
         $surface = LaserQuoteLine::computeSurface($length, $width);
         $weight = LaserQuoteLine::computeWeight($length, $width, $thickness, $density);
 
-        $discount = $service->applyDiscount($quantity);
+        $discount = max(0, min(100, (float) ($get('discount_pct') ?? 0)));
 
         $totalHt = $service->calculateLineTotal(
             $weight,
