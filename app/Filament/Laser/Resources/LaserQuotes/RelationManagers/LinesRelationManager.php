@@ -14,9 +14,10 @@ use Filament\Forms\Set;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Schemas\Schema;
 use Filament\Tables;
-use Filament\Tables\Actions\ActionGroup;
-use Filament\Tables\Actions\CreateAction;
-use Filament\Tables\Actions\DeleteAction;
+use Filament\Actions\ActionGroup;
+use Filament\Actions\CreateAction;
+use Filament\Actions\DeleteAction;
+use Filament\Tables\Columns\Summarizers\Sum;
 use Filament\Tables\Columns\TextColumn;
 
 class LinesRelationManager extends RelationManager
@@ -164,7 +165,12 @@ class LinesRelationManager extends RelationManager
                     ->label('Qté'),
 
                 TextColumn::make('weight_kg')
-                    ->label('Poids')
+                    ->label('Poids unit.')
+                    ->suffix(' kg'),
+
+                TextColumn::make('total_weight_kg')
+                    ->label('Poids total')
+                    ->state(fn ($record) => round($record->quantity * $record->weight_kg, 4))
                     ->suffix(' kg'),
 
                 TextColumn::make('unit_price_ht')
@@ -178,7 +184,7 @@ class LinesRelationManager extends RelationManager
                 TextColumn::make('total_ht')
                     ->label('Total HT')
                     ->money('EUR')
-                    ->summarized(),
+                    ->summarize(Sum::make()->money('EUR')),
             ])
             ->headerActions([
                 ImportDxfAction::make($this->getOwnerRecord()),

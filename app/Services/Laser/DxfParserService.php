@@ -52,6 +52,7 @@ class DxfParserService
             totalCutLengthMm: round($totalCutLength, 2),
             entityCount: count($cutEntities),
             layers: $layers,
+            entities: $cutEntities,
         );
     }
 
@@ -95,6 +96,7 @@ class DxfParserService
         $count = count($this->groupCodes);
         $inEntities = false;
         $currentEntity = null;
+        $currentVertex = null;
 
         for ($i = 0; $i < $count; $i++) {
             $code = $this->groupCodes[$i]['code'];
@@ -115,7 +117,36 @@ class DxfParserService
             }
 
             if ($code === 0) {
+                if ($value === 'VERTEX' && $currentEntity !== null && ($currentEntity['data']['legacy_polyline'] ?? false)) {
+                    // Finalize previous vertex if any
+                    if ($currentVertex !== null) {
+                        $currentEntity['data']['vertices'][] = $currentVertex;
+                    }
+                    $currentVertex = [
+                        'x' => 0.0,
+                        'y' => 0.0,
+                        'bulge' => 0.0,
+                    ];
+
+                    continue;
+                }
+
+                if ($value === 'SEQEND' && $currentEntity !== null && ($currentEntity['data']['legacy_polyline'] ?? false)) {
+                    // Finalize last vertex if any
+                    if ($currentVertex !== null) {
+                        $currentEntity['data']['vertices'][] = $currentVertex;
+                        $currentVertex = null;
+                    }
+
+                    continue;
+                }
+
                 if ($currentEntity !== null) {
+                    // Finalize any pending vertex before storing the entity
+                    if ($currentVertex !== null) {
+                        $currentEntity['data']['vertices'][] = $currentVertex;
+                        $currentVertex = null;
+                    }
                     $entities[] = $currentEntity;
                     $currentEntity = null;
                 }
@@ -124,12 +155,14 @@ class DxfParserService
                     break;
                 }
 
-                $supportedTypes = ['LINE', 'LWPOLYLINE', 'ARC', 'CIRCLE'];
+                $supportedTypes = ['LINE', 'LWPOLYLINE', 'POLYLINE', 'ARC', 'CIRCLE'];
                 if (in_array($value, $supportedTypes, true)) {
                     $currentEntity = [
-                        'type' => $value,
+                        'type' => $value === 'POLYLINE' ? 'LWPOLYLINE' : $value,
                         'layer' => '0',
-                        'data' => [],
+                        'data' => $value === 'POLYLINE'
+                            ? ['vertices' => [], 'legacy_polyline' => true]
+                            : [],
                     ];
                 }
 
@@ -140,10 +173,28 @@ class DxfParserService
                 continue;
             }
 
+            $isLegacy = $currentEntity['data']['legacy_polyline'] ?? false;
+            $inVertex = $isLegacy && $currentVertex !== null;
+
+            if ($inVertex) {
+                // Group codes inside a VERTEX go into $currentVertex, not the parent entity
+                match ($code) {
+                    8 => $currentVertex['layer'] = $value,
+                    10 => $currentVertex['x'] = (float) $value,
+                    20 => $currentVertex['y'] = (float) $value,
+                    42 => $currentVertex['bulge'] = (float) $value,
+                    70 => $currentVertex['flags'] = (int) $value,
+                    default => null,
+                };
+
+                continue;
+            }
+
+            // Standard entity group codes (non-VERTEX context)
             match ($code) {
                 8 => $currentEntity['layer'] = $value,
-                10 => $currentEntity['data']['start_x'] = (float) $value,
-                20 => $currentEntity['data']['start_y'] = (float) $value,
+                10 => $this->handleCode10($currentEntity, $value, $isLegacy),
+                20 => $this->handleCode20($currentEntity, $value, $isLegacy),
                 11 => $currentEntity['data']['end_x'] = (float) $value,
                 21 => $currentEntity['data']['end_y'] = (float) $value,
                 40 => $currentEntity['data']['radius'] = (float) $value,
@@ -154,31 +205,53 @@ class DxfParserService
                 70 => $currentEntity['data']['flags'] = (int) $value,
                 default => null,
             };
-
-            if ($code === 10 && $currentEntity['type'] === 'LWPOLYLINE') {
-                if (! isset($currentEntity['data']['vertices'])) {
-                    $currentEntity['data']['vertices'] = [];
-                }
-                $currentEntity['data']['vertices'][] = [
-                    'x' => (float) $value,
-                    'y' => 0,
-                    'bulge' => 0.0,
-                ];
-            }
-
-            if ($code === 20 && $currentEntity['type'] === 'LWPOLYLINE') {
-                $vertexCount = count($currentEntity['data']['vertices'] ?? []);
-                if ($vertexCount > 0) {
-                    $currentEntity['data']['vertices'][$vertexCount - 1]['y'] = (float) $value;
-                }
-            }
         }
 
         if ($currentEntity !== null) {
+            // Finalize any pending vertex
+            if ($currentVertex !== null) {
+                $currentEntity['data']['vertices'][] = $currentVertex;
+            }
             $entities[] = $currentEntity;
         }
 
         return $entities;
+    }
+
+    private function handleCode10(array &$entity, string $value, bool $isLegacy): void
+    {
+        if ($entity['type'] !== 'LWPOLYLINE') {
+            $entity['data']['start_x'] = (float) $value;
+
+            return;
+        }
+
+        if ($isLegacy) {
+            $vertexCount = count($entity['data']['vertices'] ?? []);
+            if ($vertexCount > 0) {
+                $entity['data']['vertices'][$vertexCount - 1]['x'] = (float) $value;
+            }
+        } else {
+            $entity['data']['vertices'][] = [
+                'x' => (float) $value,
+                'y' => 0,
+                'bulge' => 0.0,
+            ];
+        }
+    }
+
+    private function handleCode20(array &$entity, string $value, bool $isLegacy): void
+    {
+        if ($entity['type'] !== 'LWPOLYLINE') {
+            $entity['data']['start_y'] = (float) $value;
+
+            return;
+        }
+
+        $vertexCount = count($entity['data']['vertices'] ?? []);
+        if ($vertexCount > 0) {
+            $entity['data']['vertices'][$vertexCount - 1]['y'] = (float) $value;
+        }
     }
 
     private function setLastVertexBulge(array &$entity, float $bulge): void
@@ -226,164 +299,7 @@ class DxfParserService
      */
     private function calculateBoundingBox(array $entities): array
     {
-        $minX = PHP_FLOAT_MAX;
-        $maxX = -PHP_FLOAT_MAX;
-        $minY = PHP_FLOAT_MAX;
-        $maxY = -PHP_FLOAT_MAX;
-
-        $updateBounds = function (float $x, float $y) use (&$minX, &$maxX, &$minY, &$maxY): void {
-            $minX = min($minX, $x);
-            $maxX = max($maxX, $x);
-            $minY = min($minY, $y);
-            $maxY = max($maxY, $y);
-        };
-
-        foreach ($entities as $entity) {
-            match ($entity['type']) {
-                'LINE' => $this->boundingBoxForLine($entity, $updateBounds),
-                'LWPOLYLINE' => $this->boundingBoxForPolyline($entity, $updateBounds),
-                'ARC' => $this->boundingBoxForArc($entity, $updateBounds),
-                'CIRCLE' => $this->boundingBoxForCircle($entity, $updateBounds),
-                default => null,
-            };
-        }
-
-        if ($minX === PHP_FLOAT_MAX) {
-            return ['min_x' => 0, 'max_x' => 0, 'min_y' => 0, 'max_y' => 0];
-        }
-
-        return [
-            'min_x' => $minX,
-            'max_x' => $maxX,
-            'min_y' => $minY,
-            'max_y' => $maxY,
-        ];
-    }
-
-    private function boundingBoxForLine(array $entity, callable $updateBounds): void
-    {
-        $d = $entity['data'];
-        $updateBounds($d['start_x'] ?? 0, $d['start_y'] ?? 0);
-        $updateBounds($d['end_x'] ?? 0, $d['end_y'] ?? 0);
-    }
-
-    private function boundingBoxForPolyline(array $entity, callable $updateBounds): void
-    {
-        $vertices = $entity['data']['vertices'] ?? [];
-        $count = count($vertices);
-        $flags = $entity['data']['flags'] ?? 0;
-        $isClosed = ($flags & 1) === 1;
-
-        foreach ($vertices as $vertex) {
-            $updateBounds($vertex['x'], $vertex['y']);
-        }
-
-        $segmentCount = $isClosed ? $count : $count - 1;
-        for ($i = 0; $i < $segmentCount; $i++) {
-            $start = $vertices[$i];
-            $end = $vertices[($i + 1) % $count];
-            $bulge = $start['bulge'] ?? 0.0;
-
-            if (abs($bulge) >= 1e-10) {
-                $this->boundingBoxForBulgeArc($start, $end, $bulge, $updateBounds);
-            }
-        }
-    }
-
-    private function boundingBoxForBulgeArc(array $start, array $end, float $bulge, callable $updateBounds): void
-    {
-        $dx = $end['x'] - $start['x'];
-        $dy = $end['y'] - $start['y'];
-        $chord = sqrt($dx * $dx + $dy * $dy);
-
-        if ($chord < 1e-10) {
-            return;
-        }
-
-        $radius = $chord * (1 + $bulge ** 2) / (4 * abs($bulge));
-
-        $tangentAngle = atan2($dy, $dx);
-        $centerAngle = $tangentAngle + ($bulge > 0 ? -M_PI / 2 : M_PI / 2);
-        $centerDist = $radius * cos(2 * atan(abs($bulge)));
-        $cx = ($start['x'] + $end['x']) / 2 + $centerDist * cos($centerAngle);
-        $cy = ($start['y'] + $end['y']) / 2 + $centerDist * sin($centerAngle);
-
-        $startAngle = atan2($start['y'] - $cy, $start['x'] - $cx);
-        $endAngle = atan2($end['y'] - $cy, $end['x'] - $cx);
-
-        $updateBounds($cx + $radius * cos($startAngle), $cy + $radius * sin($startAngle));
-        $updateBounds($cx + $radius * cos($endAngle), $cy + $radius * sin($endAngle));
-
-        $checkAngles = [0, M_PI / 2, M_PI, 3 * M_PI / 2];
-        $ccw = $bulge < 0;
-        foreach ($checkAngles as $angle) {
-            if ($this->isAngleOnArc($startAngle, $endAngle, $angle, $ccw)) {
-                $updateBounds($cx + $radius * cos($angle), $cy + $radius * sin($angle));
-            }
-        }
-    }
-
-    private function boundingBoxForArc(array $entity, callable $updateBounds): void
-    {
-        $d = $entity['data'];
-        $cx = $d['start_x'] ?? 0;
-        $cy = $d['start_y'] ?? 0;
-        $radius = $d['radius'] ?? 0;
-
-        $startAngle = $this->normalizeAngle(deg2rad($d['start_angle'] ?? 0));
-        $endAngle = $this->normalizeAngle(deg2rad($d['end_angle'] ?? 0));
-
-        $updateBounds($cx + $radius * cos($startAngle), $cy + $radius * sin($startAngle));
-        $updateBounds($cx + $radius * cos($endAngle), $cy + $radius * sin($endAngle));
-
-        $checkAngles = [0, M_PI / 2, M_PI, 3 * M_PI / 2];
-        foreach ($checkAngles as $angle) {
-            if ($this->isAngleOnArc($startAngle, $endAngle, $angle)) {
-                $updateBounds($cx + $radius * cos($angle), $cy + $radius * sin($angle));
-            }
-        }
-    }
-
-    private function normalizeAngle(float $angle): float
-    {
-        $angle = fmod($angle, 2 * M_PI);
-        if ($angle < 0) {
-            $angle += 2 * M_PI;
-        }
-
-        return $angle;
-    }
-
-    private function isAngleOnArc(float $startAngle, float $endAngle, float $angle, bool $ccw = true): bool
-    {
-        $startAngle = $this->normalizeAngle($startAngle);
-        $endAngle = $this->normalizeAngle($endAngle);
-        $angle = $this->normalizeAngle($angle);
-
-        if ($ccw) {
-            if ($startAngle <= $endAngle) {
-                return $angle >= $startAngle && $angle <= $endAngle;
-            }
-
-            return $angle >= $startAngle || $angle <= $endAngle;
-        }
-
-        if ($startAngle >= $endAngle) {
-            return $angle <= $startAngle && $angle >= $endAngle;
-        }
-
-        return $angle <= $startAngle || $angle >= $endAngle;
-    }
-
-    private function boundingBoxForCircle(array $entity, callable $updateBounds): void
-    {
-        $d = $entity['data'];
-        $cx = $d['start_x'] ?? 0;
-        $cy = $d['start_y'] ?? 0;
-        $radius = $d['radius'] ?? 0;
-
-        $updateBounds($cx - $radius, $cy - $radius);
-        $updateBounds($cx + $radius, $cy + $radius);
+        return app(BoundingBoxCalculator::class)->calculate($entities);
     }
 
     /**
@@ -448,18 +364,9 @@ class DxfParserService
 
     private function bulgeArcLength(array $start, array $end, float $bulge): float
     {
-        $dx = $end['x'] - $start['x'];
-        $dy = $end['y'] - $start['y'];
-        $chord = sqrt($dx * $dx + $dy * $dy);
+        $chord = app(ArcGeometryHelper::class)->chordLength($start, $end);
 
-        if ($chord < 1e-10) {
-            return 0.0;
-        }
-
-        $radius = $chord * (1 + $bulge ** 2) / (4 * abs($bulge));
-        $theta = 4 * atan(abs($bulge));
-
-        return $radius * $theta;
+        return app(ArcGeometryHelper::class)->arcLength($chord, $bulge);
     }
 
     private function arcLength(array $entity): float

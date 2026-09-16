@@ -42,10 +42,12 @@
             <tr>
                 <th>DESCRIPTION</th>
                 <th>MATÉRIAU</th>
+                <th>FORME</th>
                 <th>DIMENSIONS (mm)</th>
                 <th>ÉP. (mm)</th>
                 <th>QTÉ</th>
-                <th>POIDS (kg)</th>
+                <th>POIDS UNIT. (kg)</th>
+                <th>POIDS TOTAL (kg)</th>
                 <th>PRIX UNIT. HT</th>
                 <th>REMISE</th>
                 <th>TOTAL HT</th>
@@ -61,17 +63,25 @@
                         @endif
                     </td>
                     <td>{{ $line->material->name ?? '-' }}</td>
+                    <td style="text-align: center; vertical-align: middle;">
+                        @if($line->dxf_entities)
+                            {!! app(\App\Services\Laser\DxfToSvgService::class)->toSvg($line->dxf_entities, (float) $line->length_mm, (float) $line->width_mm) !!}
+                        @else
+                            <span style="color:#999;">—</span>
+                        @endif
+                    </td>
                     <td>{{ number_format($line->length_mm, 0) }} × {{ number_format($line->width_mm, 0) }}</td>
                     <td>{{ number_format($line->thickness_mm, 1) }}</td>
                     <td>{{ $line->quantity }}</td>
                     <td>{{ number_format($line->weight_kg, 2) }}</td>
+                    <td>{{ number_format($line->quantity * $line->weight_kg, 2) }}</td>
                     <td>{{ number_format($line->unit_price_ht, 2) }} €</td>
                     <td>{{ $line->discount_pct > 0 ? number_format($line->discount_pct, 0).'%' : '-' }}</td>
                     <td>{{ number_format($line->total_ht, 2) }} €</td>
                 </tr>
             @empty
                 <tr>
-                    <td colspan="9">Aucune ligne</td>
+                    <td colspan="11">Aucune ligne</td>
                 </tr>
             @endforelse
         </tbody>
@@ -79,6 +89,15 @@
 
     <div class="totals-section">
         <table>
+            @php
+                $totalWeight = $quote->lines->sum(fn ($l) => $l->quantity * $l->weight_kg);
+            @endphp
+            @if($totalWeight > 0)
+                <tr>
+                    <td>Poids total</td>
+                    <td style="text-align: right;">{{ number_format($totalWeight, 2) }} kg</td>
+                </tr>
+            @endif
             <tr>
                 <td>TOTAL HT</td>
                 <td style="text-align: right;">{{ number_format($quote->total_ht, 2) }} €</td>

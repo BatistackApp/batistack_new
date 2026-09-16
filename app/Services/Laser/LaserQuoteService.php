@@ -64,6 +64,7 @@ class LaserQuoteService
                 'unit_price_ht' => $line->unit_price_ht,
                 'total_ht' => $line->total_ht,
                 'density_kg_m3' => $line->density_kg_m3,
+                'dxf_entities' => $line->dxf_entities,
             ]);
 
             if ($linesToCreate->isNotEmpty()) {

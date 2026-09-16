@@ -4,6 +4,7 @@ namespace App\Filament\Laser\Resources\LaserOrders\RelationManagers;
 
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Schemas\Schema;
+use Filament\Tables\Columns\Summarizers\Sum;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
@@ -51,7 +52,12 @@ class LinesRelationManager extends RelationManager
                     ->label('Qté'),
 
                 TextColumn::make('weight_kg')
-                    ->label('Poids')
+                    ->label('Poids unit.')
+                    ->suffix(' kg'),
+
+                TextColumn::make('total_weight_kg')
+                    ->label('Poids total')
+                    ->state(fn ($record) => round($record->quantity * $record->weight_kg, 4))
                     ->suffix(' kg'),
 
                 TextColumn::make('unit_price_ht')
@@ -65,7 +71,7 @@ class LinesRelationManager extends RelationManager
                 TextColumn::make('total_ht')
                     ->label('Total HT')
                     ->money('EUR')
-                    ->summarized(),
+                    ->summarize(Sum::make()),
             ]);
     }
 }

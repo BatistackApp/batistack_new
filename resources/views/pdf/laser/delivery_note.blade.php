@@ -4,22 +4,26 @@
     <div class="invoice-info">
         <div class="label">{{ $title }}</div>
         <div class="value">{{ $delivery->reference }}</div>
-        <div style="margin-top: 8px;">
-            <span class="label">Date de livraison :</span>
-            <span class="value">{{ $delivery->delivery_date ? $delivery->delivery_date->format('d/m/Y') : $generated_at }}</span>
+        <div style="margin-top: 6px; font-size: 11px;">
+            <table style="width: auto; margin-left: auto;">
+                <tr>
+                    <td style="padding: 2px 12px 2px 0; text-align: right; font-weight: bold; color: #1e40af; border: none; white-space: nowrap;">Date de livraison :</td>
+                    <td style="padding: 2px 0; border: none; font-weight: bold;">{{ $delivery->delivery_date ? $delivery->delivery_date->format('d/m/Y') : $generated_at }}</td>
+                </tr>
+                @if($delivery->order)
+                    <tr>
+                        <td style="padding: 2px 12px 2px 0; text-align: right; font-weight: bold; color: #1e40af; border: none; white-space: nowrap;">Commande :</td>
+                        <td style="padding: 2px 0; border: none; font-weight: bold;">{{ $delivery->order->reference }}</td>
+                    </tr>
+                @endif
+                @if($delivery->order?->quote)
+                    <tr>
+                        <td style="padding: 2px 12px 2px 0; text-align: right; font-weight: bold; color: #1e40af; border: none; white-space: nowrap;">Devis :</td>
+                        <td style="padding: 2px 0; border: none; font-weight: bold;">{{ $delivery->order->quote->reference }}</td>
+                    </tr>
+                @endif
+            </table>
         </div>
-        @if($delivery->order)
-            <div>
-                <span class="label">Commande d'origine :</span>
-                <span class="value">{{ $delivery->order->reference }}</span>
-            </div>
-        @endif
-        @if($delivery->order?->quote)
-            <div>
-                <span class="label">Devis :</span>
-                <span class="value">{{ $delivery->order->quote->reference }}</span>
-            </div>
-        @endif
     </div>
 @endsection
 
@@ -58,11 +62,13 @@
             <tr>
                 <th>DESCRIPTION</th>
                 <th>MATÉRIAU</th>
+                <th>FORME</th>
                 <th>DIMENSIONS (mm)</th>
                 <th>ÉP. (mm)</th>
                 <th>QTÉ CMD</th>
                 <th>QTÉ LIVRÉE</th>
-                <th>POIDS (kg)</th>
+                <th>POIDS UNIT. (kg)</th>
+                <th>POIDS TOTAL (kg)</th>
             </tr>
         </thead>
         <tbody>
@@ -70,6 +76,13 @@
                 <tr>
                     <td>{{ $line->description ?? 'Pièce '.$loop->iteration }}</td>
                     <td>{{ $line->material->name ?? '-' }}</td>
+                    <td style="text-align: center; vertical-align: middle;">
+                        @if($line->dxf_entities)
+                            {!! app(\App\Services\Laser\DxfToSvgService::class)->toSvg($line->dxf_entities, (float) $line->length_mm, (float) $line->width_mm) !!}
+                        @else
+                            <span style="color:#999;">—</span>
+                        @endif
+                    </td>
                     <td>{{ number_format($line->length_mm, 0) }} × {{ number_format($line->width_mm, 0) }}</td>
                     <td>{{ number_format($line->thickness_mm, 1) }}</td>
                     <td>{{ $line->quantity }}</td>
@@ -80,14 +93,24 @@
                         @endif
                     </td>
                     <td>{{ number_format($line->weight_kg, 2) }}</td>
+                    <td>{{ number_format($line->quantity_delivered * $line->weight_kg, 2) }}</td>
                 </tr>
             @empty
                 <tr>
-                    <td colspan="7">Aucune ligne</td>
+                    <td colspan="9">Aucune ligne</td>
                 </tr>
             @endforelse
         </tbody>
     </table>
+
+    @php
+        $totalWeight = $delivery->lines->sum(fn ($l) => $l->quantity_delivered * $l->weight_kg);
+    @endphp
+    @if($totalWeight > 0)
+        <div style="margin-top: 10px; text-align: right; font-weight: bold;">
+            Poids total : {{ number_format($totalWeight, 2) }} kg
+        </div>
+    @endif
 
     <div style="clear: both; margin-top: 20px;">
         <div class="section-title">OBSERVATIONS / RÉSERVES</div>

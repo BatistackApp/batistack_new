@@ -55,7 +55,12 @@ class LinesRelationManager extends RelationManager
                     ->color(fn ($record) => $record->quantity_delivered < $record->quantity ? 'warning' : null),
 
                 TextColumn::make('weight_kg')
-                    ->label('Poids')
+                    ->label('Poids unit.')
+                    ->suffix(' kg'),
+
+                TextColumn::make('total_weight_kg')
+                    ->label('Poids total')
+                    ->state(fn ($record) => round($record->quantity_delivered * $record->weight_kg, 4))
                     ->suffix(' kg'),
             ]);
     }

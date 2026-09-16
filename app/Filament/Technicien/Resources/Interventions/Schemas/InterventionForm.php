@@ -95,7 +95,9 @@ class InterventionForm
                                         Grid::make(['default' => 1, 'sm' => 2])->schema([
                                             Select::make('employee_id')
                                                 ->label('Employé')
-                                                ->options(Employee::pluck('first_name', 'id'))
+                                                ->options(fn () => Employee::with('currentContract')->get()
+                                                    ->mapWithKeys(fn ($employee) => [$employee->id => $employee->getSelectLabel()]))
+                                                ->getOptionLabelUsing(fn ($value): ?string => Employee::with('currentContract')->find($value)?->getSelectLabel())
                                                 ->searchable()
                                                 ->required(),
 

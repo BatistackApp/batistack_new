@@ -21,6 +21,7 @@ use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
+use Illuminate\Support\Facades\Storage;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use Saade\FilamentAutograph\Forms\Components\SignaturePad;
@@ -99,9 +100,10 @@ class InterventionResource extends Resource
                 ->label('Télécharger le Bon')
                 ->icon('heroicon-o-document-arrow-down')
                 ->action(function (Intervention $record, InterventionPdfService $pdfService) {
-                    $path = $pdfService->generatePdf($record);
+                    $relativePath = $pdfService->generatePdf($record);
+                    $absolutePath = Storage::disk('public')->path($relativePath);
 
-                    return response()->download($path);
+                    return response()->download($absolutePath);
                 }),
             Action::make('create_invoice')
                 ->label('Générer Facture')

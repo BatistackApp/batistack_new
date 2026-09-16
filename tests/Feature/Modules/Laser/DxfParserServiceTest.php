@@ -5,6 +5,7 @@ use App\Models\Laser\LaserQuote;
 use App\Models\Laser\LaserQuoteLine;
 use App\Services\Laser\DxfImportResult;
 use App\Services\Laser\DxfParserService;
+use App\Services\Laser\DxfToSvgService;
 use Illuminate\Support\Facades\Queue;
 
 // ============================================================
@@ -254,8 +255,8 @@ it('calculates correct bounding box for bulge 0.5 (small arc above chord)', func
     $dxf = "0\nSECTION\n2\nENTITIES\n0\nLWPOLYLINE\n8\nCUT\n90\n2\n70\n0\n10\n0.0\n20\n0.0\n42\n0.5\n10\n100.0\n20\n0.0\n0\nENDSEC\n0\nEOF";
     $result = $parser->parse($dxf);
 
-    // bulge=0.5: center at (50,-37.5), radius=62.5, included angle ~106.3 deg
-    // Arc peaks at y=25, x range is [0,100]
+    // bulge=0.5: center at (50,37.5), radius=62.5, included angle ~106.3 deg
+    // Arc reaches y=-25, x range is [0,100]
     expect($result->isValid())->toBeTrue()
         ->and($result->lengthMm)->toBe(100.0)
         ->and($result->widthMm)->toBe(25.0);
@@ -267,8 +268,8 @@ it('calculates correct bounding box for bulge -0.5 (small arc below chord)', fun
     $dxf = "0\nSECTION\n2\nENTITIES\n0\nLWPOLYLINE\n8\nCUT\n90\n2\n70\n0\n10\n0.0\n20\n0.0\n42\n-0.5\n10\n100.0\n20\n0.0\n0\nENDSEC\n0\nEOF";
     $result = $parser->parse($dxf);
 
-    // bulge=-0.5: center at (50,37.5), radius=62.5, included angle ~106.3 deg
-    // Arc peaks at y=-25, x range is [0,100]
+    // bulge=-0.5: center at (50,-37.5), radius=62.5, included angle ~106.3 deg
+    // Arc reaches y=25, x range is [0,100]
     expect($result->isValid())->toBeTrue()
         ->and($result->lengthMm)->toBe(100.0)
         ->and($result->widthMm)->toBe(25.0);
@@ -280,8 +281,8 @@ it('calculates correct bounding box for bulge 2.0 (large arc above chord)', func
     $dxf = "0\nSECTION\n2\nENTITIES\n0\nLWPOLYLINE\n8\nCUT\n90\n2\n70\n0\n10\n0.0\n20\n0.0\n42\n2.0\n10\n100.0\n20\n0.0\n0\nENDSEC\n0\nEOF";
     $result = $parser->parse($dxf);
 
-    // bulge=2.0: center at (50,37.5), radius=62.5, included angle ~253.7 deg
-    // Arc peaks at y=100, x range extends to [-12.5,112.5]
+    // bulge=2.0: center at (50,-37.5), radius=62.5, included angle ~253.7 deg
+    // Arc reaches y=25, x range extends to [-12.5,112.5]
     expect($result->isValid())->toBeTrue()
         ->and($result->lengthMm)->toBe(125.0)
         ->and($result->widthMm)->toBe(100.0);
@@ -293,8 +294,8 @@ it('calculates correct bounding box for bulge -2.0 (large arc below chord)', fun
     $dxf = "0\nSECTION\n2\nENTITIES\n0\nLWPOLYLINE\n8\nCUT\n90\n2\n70\n0\n10\n0.0\n20\n0.0\n42\n-2.0\n10\n100.0\n20\n0.0\n0\nENDSEC\n0\nEOF";
     $result = $parser->parse($dxf);
 
-    // bulge=-2.0: center at (50,-37.5), radius=62.5, included angle ~253.7 deg
-    // Arc peaks at y=-100, x range extends to [-12.5,112.5]
+    // bulge=-2.0: center at (50,37.5), radius=62.5, included angle ~253.7 deg
+    // Arc reaches y=100, x range extends to [-12.5,112.5]
     expect($result->isValid())->toBeTrue()
         ->and($result->lengthMm)->toBe(125.0)
         ->and($result->widthMm)->toBe(100.0);
@@ -644,4 +645,361 @@ it('rejects inactive material', function () {
 it('rejects quantity below 1', function () {
     $quantity = 0;
     expect($quantity)->toBeLessThan(1);
+});
+
+// ============================================================
+// DxfParserService — Legacy POLYLINE (VERTEX/SEQEND)
+// ============================================================
+
+it('parses open legacy POLYLINE with vertices', function () {
+    $parser = app(DxfParserService::class);
+
+    $dxf = "0\nSECTION\n2\nENTITIES\n0\nPOLYLINE\n8\nCUT\n70\n0\n10\n0.0\n20\n0.0\n0\nVERTEX\n10\n10.0\n20\n20.0\n0\nVERTEX\n10\n30.0\n20\n40.0\n0\nVERTEX\n10\n50.0\n20\n60.0\n0\nSEQEND\n0\nENDSEC\n0\nEOF";
+    $result = $parser->parse($dxf);
+
+    expect($result->isValid())->toBeTrue()
+        ->and($result->entityCount)->toBe(1)
+        ->and($result->entities[0]['data']['flags'])->toBe(0)
+        ->and(count($result->entities[0]['data']['vertices']))->toBe(3)
+        ->and($result->entities[0]['data']['vertices'][0]['x'])->toBe(10.0)
+        ->and($result->entities[0]['data']['vertices'][0]['y'])->toBe(20.0)
+        ->and($result->entities[0]['data']['vertices'][1]['x'])->toBe(30.0)
+        ->and($result->entities[0]['data']['vertices'][1]['y'])->toBe(40.0)
+        ->and($result->entities[0]['data']['vertices'][2]['x'])->toBe(50.0)
+        ->and($result->entities[0]['data']['vertices'][2]['y'])->toBe(60.0);
+});
+
+it('parses closed legacy POLYLINE (flag 70=1)', function () {
+    $parser = app(DxfParserService::class);
+
+    $dxf = "0\nSECTION\n2\nENTITIES\n0\nPOLYLINE\n8\nCUT\n70\n1\n10\n0.0\n20\n0.0\n0\nVERTEX\n10\n0.0\n20\n0.0\n0\nVERTEX\n10\n100.0\n20\n0.0\n0\nVERTEX\n10\n100.0\n20\n50.0\n0\nVERTEX\n10\n0.0\n20\n50.0\n0\nSEQEND\n0\nENDSEC\n0\nEOF";
+    $result = $parser->parse($dxf);
+
+    expect($result->isValid())->toBeTrue()
+        ->and($result->entities[0]['data']['flags'])->toBe(1)
+        ->and(count($result->entities[0]['data']['vertices']))->toBe(4)
+        ->and($result->totalCutLengthMm)->toBe(300.0);
+});
+
+it('parses legacy POLYLINE vertex with bulge', function () {
+    $parser = app(DxfParserService::class);
+
+    $dxf = "0\nSECTION\n2\nENTITIES\n0\nPOLYLINE\n8\nCUT\n70\n0\n10\n0.0\n20\n0.0\n0\nVERTEX\n10\n0.0\n20\n0.0\n42\n1.0\n0\nVERTEX\n10\n100.0\n20\n0.0\n0\nSEQEND\n0\nENDSEC\n0\nEOF";
+    $result = $parser->parse($dxf);
+
+    expect($result->isValid())->toBeTrue()
+        ->and(count($result->entities[0]['data']['vertices']))->toBe(2)
+        ->and($result->entities[0]['data']['vertices'][0]['bulge'])->toBe(1.0)
+        ->and($result->entities[0]['data']['vertices'][1]['bulge'])->toBe(0.0)
+        ->and($result->totalCutLengthMm)->toBe(round(M_PI * 50, 2));
+});
+
+it('does not let VERTEX code 70 overwrite POLYLINE flags', function () {
+    $parser = app(DxfParserService::class);
+
+    // POLYLINE flag 70=1 (closed), VERTEX flag 70=0 should not overwrite
+    $dxf = "0\nSECTION\n2\nENTITIES\n0\nPOLYLINE\n8\nCUT\n70\n1\n10\n0.0\n20\n0.0\n0\nVERTEX\n10\n0.0\n20\n0.0\n70\n0\n0\nVERTEX\n10\n100.0\n20\n0.0\n70\n0\n0\nVERTEX\n10\n100.0\n20\n100.0\n70\n0\n0\nSEQEND\n0\nENDSEC\n0\nEOF";
+    $result = $parser->parse($dxf);
+
+    expect($result->isValid())->toBeTrue()
+        ->and($result->entities[0]['data']['flags'])->toBe(1)
+        ->and($result->totalCutLengthMm)->toBe(round(100 + 100 + sqrt(10000 + 10000), 2));
+});
+
+it('parses legacy POLYLINE with mixed straight and bulge segments', function () {
+    $parser = app(DxfParserService::class);
+
+    $dxf = "0\nSECTION\n2\nENTITIES\n0\nPOLYLINE\n8\nCUT\n70\n0\n10\n0.0\n20\n0.0\n0\nVERTEX\n10\n0.0\n20\n0.0\n0\nVERTEX\n10\n100.0\n20\n0.0\n42\n0.5\n0\nVERTEX\n10\n100.0\n20\n100.0\n0\nSEQEND\n0\nENDSEC\n0\nEOF";
+    $result = $parser->parse($dxf);
+
+    $straightLength = sqrt(100 * 100); // first segment: 0,0 -> 100,0
+    // second segment has bulge=0.5, should be longer than straight line
+    $totalLength = $result->totalCutLengthMm;
+
+    expect($result->isValid())->toBeTrue()
+        ->and($totalLength)->toBeGreaterThan($straightLength);
+});
+
+// ============================================================
+// DxfToSvgService — Polyline rendering with bulge arcs
+// ============================================================
+
+it('renders straight polyline segments as SVG lines', function () {
+    $service = app(DxfToSvgService::class);
+
+    $entities = [
+        [
+            'type' => 'LWPOLYLINE',
+            'layer' => 'CUT',
+            'data' => [
+                'flags' => 0,
+                'vertices' => [
+                    ['x' => 0, 'y' => 0, 'bulge' => 0],
+                    ['x' => 100, 'y' => 0, 'bulge' => 0],
+                    ['x' => 100, 'y' => 50, 'bulge' => 0],
+                ],
+            ],
+        ],
+    ];
+
+    $svg = $service->toSvg($entities, 100, 50);
+
+    expect($svg)->not->toBeEmpty()
+        ->and($svg)->toContain('M ')
+        ->and($svg)->toContain(' L ')
+        ->and($svg)->not->toContain(' A ');
+});
+
+it('renders bulge arc segments as SVG arc commands', function () {
+    $service = app(DxfToSvgService::class);
+
+    $entities = [
+        [
+            'type' => 'LWPOLYLINE',
+            'layer' => 'CUT',
+            'data' => [
+                'flags' => 0,
+                'vertices' => [
+                    ['x' => 0, 'y' => 0, 'bulge' => 1.0],
+                    ['x' => 100, 'y' => 0, 'bulge' => 0],
+                ],
+            ],
+        ],
+    ];
+
+    $svg = $service->toSvg($entities, 100, 50);
+
+    expect($svg)->not->toBeEmpty()
+        ->and($svg)->toContain('M ')
+        ->and($svg)->toContain(' A ');
+});
+
+it('renders closed polyline with Z command', function () {
+    $service = app(DxfToSvgService::class);
+
+    $entities = [
+        [
+            'type' => 'LWPOLYLINE',
+            'layer' => 'CUT',
+            'data' => [
+                'flags' => 1,
+                'vertices' => [
+                    ['x' => 0, 'y' => 0, 'bulge' => 0],
+                    ['x' => 100, 'y' => 0, 'bulge' => 0],
+                    ['x' => 100, 'y' => 50, 'bulge' => 0],
+                    ['x' => 0, 'y' => 50, 'bulge' => 0],
+                ],
+            ],
+        ],
+    ];
+
+    $svg = $service->toSvg($entities, 100, 50);
+
+    expect($svg)->not->toBeEmpty()
+        ->and($svg)->toContain('Z');
+});
+
+it('renders mixed straight and bulge segments', function () {
+    $service = app(DxfToSvgService::class);
+
+    $entities = [
+        [
+            'type' => 'LWPOLYLINE',
+            'layer' => 'CUT',
+            'data' => [
+                'flags' => 0,
+                'vertices' => [
+                    ['x' => 0, 'y' => 0, 'bulge' => 0],
+                    ['x' => 50, 'y' => 0, 'bulge' => 1.0],
+                    ['x' => 100, 'y' => 0, 'bulge' => 0],
+                ],
+            ],
+        ],
+    ];
+
+    $svg = $service->toSvg($entities, 100, 50);
+
+    expect($svg)->not->toBeEmpty()
+        ->and($svg)->toContain(' L ')
+        ->and($svg)->toContain(' A ');
+});
+
+// ============================================================
+// DxfToSvgService — Bounding box accounts for bulge arcs
+// ============================================================
+
+it('bounding box includes bulge arc extrema beyond endpoints', function () {
+    $service = app(DxfToSvgService::class);
+
+    // bulge=2.0 on a 100mm chord: center at (50,37.5), radius=62.5
+    // Arc peaks at y=100 (well above chord at y=0) and x extends to [-12.5, 112.5]
+    // Without bulge-aware bounding box, viewBox would only cover [0,100] x [0,0]
+    $entities = [
+        [
+            'type' => 'LWPOLYLINE',
+            'layer' => 'CUT',
+            'data' => [
+                'flags' => 0,
+                'vertices' => [
+                    ['x' => 0, 'y' => 0, 'bulge' => 2.0],
+                    ['x' => 100, 'y' => 0, 'bulge' => 0],
+                ],
+            ],
+        ],
+    ];
+
+    $svg = $service->toSvg($entities, 100, 50);
+
+    // SVG must not be empty — bounding box must include arc extrema
+    expect($svg)->not->toBeEmpty();
+
+    // Extract all coordinates from the SVG path (M, L, A commands)
+    preg_match_all('/[MLA]\s+([\d.e+-]+)\s+([\d.e+-]+)/', $svg, $matches);
+    $allCoords = [];
+    for ($i = 0; $i < count($matches[1]); $i++) {
+        $allCoords[] = [(float) $matches[1][$i], (float) $matches[2][$i]];
+    }
+
+    // All coordinates must be within the SVG viewport (0..120) — nothing truncated
+    foreach ($allCoords as [$x, $y]) {
+        expect($x)->toBeGreaterThanOrEqual(0)->and($x)->toBeLessThanOrEqual(120);
+        expect($y)->toBeGreaterThanOrEqual(0)->and($y)->toBeLessThanOrEqual(120);
+    }
+});
+
+// ============================================================
+// DxfToSvgService — Consistent Y-axis between LINE and ARC
+// ============================================================
+
+it('renders LINE and ARC with consistent Y-axis orientation', function () {
+    $service = app(DxfToSvgService::class);
+
+    // A horizontal LINE at y=50 and an ARC centered at (50,50) r=25
+    // Both should render in the same Y direction
+    $entities = [
+        [
+            'type' => 'LINE',
+            'layer' => 'CUT',
+            'data' => [
+                'start_x' => 0, 'start_y' => 50,
+                'end_x' => 100, 'end_y' => 50,
+            ],
+        ],
+        [
+            'type' => 'ARC',
+            'layer' => 'CUT',
+            'data' => [
+                'start_x' => 50, 'start_y' => 50,
+                'radius' => 25,
+                'start_angle' => 0.0,
+                'end_angle' => 90.0,
+            ],
+        ],
+    ];
+
+    $svg = $service->toSvg($entities, 100, 100);
+
+    expect($svg)->not->toBeEmpty()
+        ->and($svg)->toContain('<line')
+        ->and($svg)->toContain(' A ');
+
+    // Extract LINE y1,y2 and ARC endpoints to verify they are in the same half of the SVG
+    preg_match('/line.*?y1="([\d.e+-]+)".*?y2="([\d.e+-]+)"/', $svg, $lineMatch);
+    preg_match('/M\s+[\d.e+-]+\s+([\d.e+-]+)\s+A/', $svg, $arcStartMatch);
+
+    if (! empty($lineMatch) && ! empty($arcStartMatch)) {
+        $lineY = (float) $lineMatch[1];
+        $arcStartY = (float) $arcStartMatch[1];
+
+        // Both should be in the same vertical region (top or bottom half)
+        // If Y is flipped, the arc endpoint would be on the opposite side
+        $lineIsTop = $lineY < 60;
+        $arcIsTop = $arcStartY < 60;
+        expect($lineIsTop)->toBe($arcIsTop);
+    }
+});
+
+// ============================================================
+// DxfToSvgService — Closed polyline with bulge arcs renders Z
+// ============================================================
+
+it('renders closed polyline with bulge arcs and Z command', function () {
+    $service = app(DxfToSvgService::class);
+
+    $entities = [
+        [
+            'type' => 'LWPOLYLINE',
+            'layer' => 'CUT',
+            'data' => [
+                'flags' => 1,
+                'vertices' => [
+                    ['x' => 0, 'y' => 0, 'bulge' => 0],
+                    ['x' => 100, 'y' => 0, 'bulge' => 1.0],
+                    ['x' => 100, 'y' => 50, 'bulge' => 0],
+                    ['x' => 0, 'y' => 50, 'bulge' => 0],
+                ],
+            ],
+        ],
+    ];
+
+    $svg = $service->toSvg($entities, 100, 50);
+
+    expect($svg)->not->toBeEmpty()
+        ->and($svg)->toContain('Z')
+        ->and($svg)->toContain(' A ');
+});
+
+// ============================================================
+// DxfToSvgService — Empty / invalid input
+// ============================================================
+
+it('returns empty string for empty entities', function () {
+    $service = app(DxfToSvgService::class);
+
+    expect($service->toSvg([], 100, 50))->toBe('');
+});
+
+it('returns empty string for zero dimensions', function () {
+    $service = app(DxfToSvgService::class);
+
+    $entities = [
+        [
+            'type' => 'LINE',
+            'layer' => 'CUT',
+            'data' => ['start_x' => 0, 'start_y' => 0, 'end_x' => 10, 'end_y' => 10],
+        ],
+    ];
+
+    expect($service->toSvg($entities, 0, 50))->toBe('');
+});
+
+// ============================================================
+// BoundingBoxCalculator — Shared between Parser and ToSvg
+// ============================================================
+
+it('calculates correct bounding box for polyline with large bulge via shared calculator', function () {
+    $calculator = app(\App\Services\Laser\BoundingBoxCalculator::class);
+
+    $entities = [
+        [
+            'type' => 'LWPOLYLINE',
+            'layer' => 'CUT',
+            'data' => [
+                'flags' => 0,
+                'vertices' => [
+                    ['x' => 0, 'y' => 0, 'bulge' => 2.0],
+                    ['x' => 100, 'y' => 0, 'bulge' => 0],
+                ],
+            ],
+        ],
+    ];
+
+    $bbox = $calculator->calculate($entities);
+
+    // bulge=2.0: center (50, -37.5), radius 62.5
+    // The major arc extends below the chord and x to [-12.5, 112.5].
+    expect($bbox['min_x'])->toBeLessThanOrEqual(-12.0)
+        ->and($bbox['max_x'])->toBeGreaterThanOrEqual(112.0)
+        ->and($bbox['min_y'])->toBeLessThanOrEqual(-99.0)
+        ->and($bbox['max_y'])->toBe(0.0);
 });

@@ -32,6 +32,7 @@ class LaserOrderLine extends Model
         'unit_price_ht',
         'total_ht',
         'density_kg_m3',
+        'dxf_entities',
     ];
 
     protected function casts(): array
@@ -54,6 +55,7 @@ class LaserOrderLine extends Model
             'unit_price_ht' => 'decimal:4',
             'total_ht' => 'decimal:2',
             'density_kg_m3' => 'decimal:2',
+            'dxf_entities' => 'array',
         ];
     }
 

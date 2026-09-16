@@ -54,10 +54,12 @@
             <tr>
                 <th>DESCRIPTION</th>
                 <th>MATÉRIAU</th>
+                <th>FORME</th>
                 <th>DIMENSIONS (mm)</th>
                 <th>ÉP. (mm)</th>
                 <th>QTÉ</th>
-                <th>POIDS (kg)</th>
+                <th>POIDS UNIT. (kg)</th>
+                <th>POIDS TOTAL (kg)</th>
                 <th>P.U. HT</th>
                 <th>REMISE</th>
                 <th>TOTAL HT</th>
@@ -68,10 +70,18 @@
                 <tr>
                     <td>{{ $line->description ?? 'Pièce '.$loop->iteration }}</td>
                     <td>{{ $line->material->name ?? '-' }}</td>
+                    <td style="text-align: center; vertical-align: middle;">
+                        @if($line->dxf_entities)
+                            {!! app(\App\Services\Laser\DxfToSvgService::class)->toSvg($line->dxf_entities, (float) $line->length_mm, (float) $line->width_mm) !!}
+                        @else
+                            <span style="color:#999;">—</span>
+                        @endif
+                    </td>
                     <td>{{ number_format($line->length_mm, 0) }} × {{ number_format($line->width_mm, 0) }}</td>
                     <td>{{ number_format($line->thickness_mm, 1) }}</td>
                     <td>{{ $line->quantity_invoiced }}</td>
                     <td>{{ number_format($line->weight_kg, 2) }}</td>
+                    <td>{{ number_format($line->quantity_invoiced * $line->weight_kg, 2) }}</td>
                     <td>{{ number_format($line->unit_price_ht, 2) }} €</td>
                     <td>
                         @if($line->discount_pct > 0)
@@ -84,7 +94,7 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="9">Aucune ligne</td>
+                    <td colspan="11">Aucune ligne</td>
                 </tr>
             @endforelse
         </tbody>
@@ -92,7 +102,16 @@
 
     <div style="clear: both; margin-top: 20px;">
         <div style="float: right; width: 300px;">
+            @php
+                $totalWeight = $invoice->lines->sum(fn ($l) => $l->quantity_invoiced * $l->weight_kg);
+            @endphp
             <table style="width: 100%; font-size: 11px;">
+                @if($totalWeight > 0)
+                    <tr>
+                        <td style="padding: 4px 0;"><strong>Poids total :</strong></td>
+                        <td style="text-align: right; padding: 4px 0;">{{ number_format($totalWeight, 2) }} kg</td>
+                    </tr>
+                @endif
                 <tr>
                     <td style="padding: 4px 0;"><strong>Total HT :</strong></td>
                     <td style="text-align: right; padding: 4px 0;">{{ number_format($invoice->total_ht, 2) }} €</td>
