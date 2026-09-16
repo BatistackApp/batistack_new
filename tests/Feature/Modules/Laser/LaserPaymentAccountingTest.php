@@ -111,5 +111,8 @@ it('rejects allocations on a cancelled payment without creating accounting entri
         ->toThrow(InvalidArgumentException::class);
 
     expect($payment->fresh()->allocations()->count())->toBe(0)
-        ->and(EcritureComptable::where('reconcilable_type', 'App\\Models\\Commerce\\PaymentAllocation')->count())->toBe(0);
+        ->and(EcritureComptable::where(
+            'reconcilable_type',
+            (new \App\Models\Commerce\PaymentAllocation)->getMorphClass(),
+        )->count())->toBe(0);
 });

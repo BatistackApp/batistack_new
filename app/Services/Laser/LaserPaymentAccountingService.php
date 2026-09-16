@@ -67,6 +67,13 @@ class LaserPaymentAccountingService
         DB::transaction(function () use ($allocation) {
             $invoice = $allocation->payable;
 
+            if ($invoice instanceof LaserInvoice) {
+                $invoice = LaserInvoice::query()
+                    ->whereKey($invoice->getKey())
+                    ->lockForUpdate()
+                    ->firstOrFail();
+            }
+
             EcritureComptable::query()
                 ->where('reconcilable_type', $allocation->getMorphClass())
                 ->where('reconcilable_id', $allocation->getKey())
