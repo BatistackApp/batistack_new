@@ -15,6 +15,7 @@ use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use App\Services\Laser\LaserPaymentAccountingService;
 
 class PaymentRecordingService
 {
@@ -269,6 +270,8 @@ class PaymentRecordingService
             foreach ($payment->allocations as $allocation) {
                 // Récupérer la facture et dé-lettrer
                 $payable = $allocation->payable;
+
+                app(LaserPaymentAccountingService::class)->removeAllocation($allocation);
 
                 $allocation->delete();
 

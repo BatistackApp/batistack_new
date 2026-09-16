@@ -9,6 +9,7 @@ use App\Models\Commerce\PaymentAllocation;
 use DB;
 use Illuminate\Database\Eloquent\Model;
 use Log;
+use App\Services\Laser\LaserPaymentAccountingService;
 
 class PaymentService
 {
@@ -31,6 +32,8 @@ class PaymentService
                 'payable_id' => $payable->id,
                 'allocated_amount' => $amountToAllocate,
             ]);
+
+            app(LaserPaymentAccountingService::class)->syncAllocation($allocation);
 
             // 2. Calcul du total lettré sur cette facture
             $totalAllocated = PaymentAllocation::where('payable_type', $payable->getMorphClass())
