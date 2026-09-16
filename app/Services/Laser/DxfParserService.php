@@ -8,8 +8,11 @@ class DxfParserService
 
     private array $groupCodes = [];
 
+    private ?string $parseError = null;
+
     public function parse(string $content, array $allowedLayers = []): DxfImportResult
     {
+        $this->parseError = null;
         $content = $this->normalizeLineEndings($content);
 
         if (trim($content) === '') {
@@ -17,6 +20,10 @@ class DxfParserService
         }
 
         $this->groupCodes = $this->parseGroupCodes($content);
+
+        if ($this->parseError !== null) {
+            return DxfImportResult::error($this->parseError);
+        }
 
         if (empty($this->groupCodes)) {
             return DxfImportResult::error('Impossible de parser le fichier DXF.');
@@ -38,6 +45,15 @@ class DxfParserService
                     ? 'Aucune entité de découpe trouvée dans le fichier DXF.'
                     : 'Aucune entité de découpe trouvée dans les couches autorisées ('.implode(', ', $allowedLayers).').'
             );
+        }
+
+        $unitScale = $this->unitScaleToMillimeters();
+        if ($unitScale === null) {
+            return DxfImportResult::error('Unité DXF non supportée. Utilisez un fichier en millimètres, centimètres ou pouces.');
+        }
+
+        if ($unitScale !== 1.0) {
+            $cutEntities = $this->scaleEntities($cutEntities, $unitScale);
         }
 
         $bbox = $this->calculateBoundingBox($cutEntities);
@@ -70,11 +86,22 @@ class DxfParserService
         $pairs = [];
         $count = count($lines);
 
-        for ($i = 0; $i < $count - 1; $i += 2) {
+        for ($i = 0; $i < $count; $i += 2) {
+            if (! isset($lines[$i + 1])) {
+                if (trim($lines[$i]) !== '') {
+                    $this->parseError = 'Fichier DXF mal formé : paire de codes incomplète à la ligne '.($i + 1).'.';
+                }
+                break;
+            }
+
             $codeLine = trim($lines[$i]);
             $valueLine = trim($lines[$i + 1] ?? '');
 
             if ($codeLine === '' || ! ctype_digit($codeLine)) {
+                if ($codeLine !== '') {
+                    $this->parseError = 'Fichier DXF mal formé : code de groupe invalide à la ligne '.($i + 1).'.';
+                    break;
+                }
                 continue;
             }
 
@@ -85,6 +112,47 @@ class DxfParserService
         }
 
         return $pairs;
+    }
+
+    private function unitScaleToMillimeters(): ?float
+    {
+        $units = 0;
+        foreach ($this->groupCodes as $index => $pair) {
+            if ($pair['code'] === 9 && $pair['value'] === '$INSUNITS') {
+                $next = $this->groupCodes[$index + 1] ?? null;
+                if ($next && $next['code'] === 70) {
+                    $units = (int) $next['value'];
+                }
+                break;
+            }
+        }
+
+        return match ($units) {
+            0, 4 => 1.0,
+            1 => 25.4,
+            2 => 304.8,
+            5 => 10.0,
+            6 => 1000.0,
+            default => null,
+        };
+    }
+
+    private function scaleEntities(array $entities, float $scale): array
+    {
+        foreach ($entities as &$entity) {
+            foreach ($entity['data'] as $key => &$value) {
+                if (is_numeric($value) && in_array($key, ['start_x', 'start_y', 'end_x', 'end_y', 'radius'], true)) {
+                    $value *= $scale;
+                } elseif ($key === 'vertices' && is_array($value)) {
+                    foreach ($value as &$vertex) {
+                        $vertex['x'] *= $scale;
+                        $vertex['y'] *= $scale;
+                    }
+                }
+            }
+        }
+
+        return $entities;
     }
 
     /**
