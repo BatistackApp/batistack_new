@@ -3,12 +3,16 @@
 namespace App\Services\Commerce;
 
 use App\Enums\Commerce\InvoiceStatus;
+use App\Enums\Commerce\PaymentStatus;
+use App\Enums\Commerce\PaymentType;
+use App\Enums\Laser\InvoiceStatus as LaserInvoiceStatus;
 use App\Exceptions\Commerce\AllocationOverflowException;
 use App\Models\Commerce\Payment;
 use App\Models\Commerce\PaymentAllocation;
 use DB;
 use Illuminate\Database\Eloquent\Model;
 use Log;
+use App\Services\Laser\LaserPaymentAccountingService;
 
 class PaymentService
 {
@@ -20,6 +24,20 @@ class PaymentService
     public function allocatePayment(Payment $payment, Model $payable, float $amountToAllocate): PaymentAllocation
     {
         return DB::transaction(function () use ($payment, $payable, $amountToAllocate) {
+            $payment = Payment::query()->whereKey($payment->getKey())->lockForUpdate()->firstOrFail();
+            if ($payment->status !== PaymentStatus::COMPLETED) {
+                throw new \InvalidArgumentException('Seul un paiement terminé peut être alloué.');
+            }
+
+            if ($payable instanceof \App\Models\Laser\LaserInvoice && $payment->type !== PaymentType::IN) {
+                throw new \InvalidArgumentException('Seul un encaissement client peut être affecté à une facture Laser.');
+            }
+
+            $allocatedAmount = (float) $payment->allocations()->sum('allocated_amount');
+            if ($allocatedAmount + $amountToAllocate > (float) $payment->amount + 0.00001) {
+                throw new \InvalidArgumentException('Le total des allocations dépasse le montant du paiement.');
+            }
+
             // ← AJOUTER : Lock + Validation
             $lockedPayable = $payable->newQuery()->whereKey($payable->getKey())->lockForUpdate()->firstOrFail();
             $this->validateAllocation($lockedPayable, $amountToAllocate);
@@ -32,6 +50,8 @@ class PaymentService
                 'allocated_amount' => $amountToAllocate,
             ]);
 
+            app(LaserPaymentAccountingService::class)->syncAllocation($allocation);
+
             // 2. Calcul du total lettré sur cette facture
             $totalAllocated = PaymentAllocation::where('payable_type', $payable->getMorphClass())
                 ->where('payable_id', $payable->id)
@@ -43,7 +63,14 @@ class PaymentService
             // 4. Si la facture est totalement payée (avec une tolérance de centimes)
             if ($totalAllocated >= ($targetAmount - 0.05)) {
                 if (method_exists($payable, 'update')) {
-                    $payable->update(['status' => InvoiceStatus::PAID]);
+                    $statusUpdate = [
+                        'status' => $payable instanceof \App\Models\Laser\LaserInvoice
+                            ? LaserInvoiceStatus::PAID
+                            : InvoiceStatus::PAID,
+                    ];
+                    $payable instanceof \App\Models\Laser\LaserInvoice
+                        ? $payable->updateQuietly($statusUpdate)
+                        : $payable->update($statusUpdate);
                     Log::info('Invoice PAID', ['invoice' => $payable->id]);
                 }
             }
@@ -62,9 +89,15 @@ class PaymentService
             ->where('payable_id', $payable->id)
             ->sum('allocated_amount');
 
-        $remaining = $targetAmount - $existing;
+            $remaining = $targetAmount - $existing;
 
-        if ($amount > $remaining + 0.05) {
+            if ($payable instanceof \App\Models\Laser\LaserInvoice && $amount > $remaining + 0.00001) {
+                throw new AllocationOverflowException(
+                    "Cannot allocate {$amount}€ (only {$remaining}€ remaining)"
+                );
+            }
+
+            if ($amount > $remaining + 0.05) {
             throw new AllocationOverflowException(
                 "Cannot allocate {$amount}€ (only {$remaining}€ remaining)"
             );

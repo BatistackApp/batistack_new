@@ -1,0 +1,158 @@
+<?php
+
+use App\Enums\Laser\InvoiceStatus;
+use App\Models\Accounting\EcritureComptable;
+use App\Models\Commerce\Payment;
+use App\Models\Core\Company;
+use App\Models\Laser\LaserInvoice;
+use App\Models\Tiers\ThirdParty;
+use App\Services\Commerce\PaymentRecordingService;
+use App\Services\Commerce\PaymentService;
+use App\Services\Laser\LaserInvoiceAccountingService;
+use Illuminate\Support\Facades\Bus;
+
+beforeEach(function () {
+    Company::factory()->create();
+    Bus::fake();
+    $this->client = ThirdParty::factory()->state(['type' => 'client'])->create();
+});
+
+function laserInvoiceForPayment(ThirdParty $client, float $total = 120): LaserInvoice
+{
+    $invoice = LaserInvoice::factory()->create([
+        'client_id' => $client->id,
+        'status' => InvoiceStatus::VALIDATED,
+        'total_ht' => $total / 1.2,
+        'total_tva' => $total / 6,
+        'total_ttc' => $total,
+    ]);
+
+    app(LaserInvoiceAccountingService::class)->syncInvoice($invoice);
+
+    return $invoice;
+}
+
+function paymentForLaserInvoice(ThirdParty $client, float $amount, string $type = 'in'): Payment
+{
+    return Payment::factory()->create([
+        'third_party_id' => $client->id,
+        'type' => $type,
+        'amount' => $amount,
+        'payment_date' => now(),
+    ]);
+}
+
+it('creates bank entries and letters a fully paid laser invoice', function () {
+    $invoice = laserInvoiceForPayment($this->client);
+    $payment = paymentForLaserInvoice($this->client, 120);
+
+    app(PaymentService::class)->allocatePayment($payment, $invoice, 120);
+
+    $entries = EcritureComptable::where('reconcilable_type', 'App\Models\Commerce\PaymentAllocation')->get();
+
+    expect($entries)->toHaveCount(2)
+        ->and((float) $entries->sum('debit'))->toBe(120.0)
+        ->and((float) $entries->sum('credit'))->toBe(120.0)
+        ->and(EcritureComptable::where('reconcilable_id', $invoice->id)->value('lettrage'))->toBe('LET-'.$invoice->reference);
+});
+
+it('rejects an allocation above the payment amount without persistence', function () {
+    $invoice = laserInvoiceForPayment($this->client);
+    $payment = paymentForLaserInvoice($this->client, 50);
+
+    expect(fn () => app(PaymentService::class)->allocatePayment($payment, $invoice, 120))
+        ->toThrow(InvalidArgumentException::class);
+
+    expect($payment->allocations()->count())->toBe(0)
+        ->and(EcritureComptable::where('reconcilable_type', (new \App\Models\Commerce\PaymentAllocation)->getMorphClass())->count())->toBe(0)
+        ->and($invoice->fresh()->status)->toBe(InvoiceStatus::VALIDATED);
+});
+
+it('rejects an outgoing payment on a laser invoice', function () {
+    $invoice = laserInvoiceForPayment($this->client);
+    $payment = paymentForLaserInvoice($this->client, 120, 'out');
+
+    expect(fn () => app(PaymentService::class)->allocatePayment($payment, $invoice, 120))
+        ->toThrow(InvalidArgumentException::class);
+
+    expect($payment->allocations()->count())->toBe(0)
+        ->and($invoice->fresh()->status)->toBe(InvoiceStatus::VALIDATED);
+});
+
+it('does not letter a partially paid laser invoice', function () {
+    $invoice = laserInvoiceForPayment($this->client);
+    $payment = paymentForLaserInvoice($this->client, 50);
+
+    app(PaymentService::class)->allocatePayment($payment, $invoice, 50);
+
+    expect(EcritureComptable::where('reconcilable_type', 'App\Models\Commerce\PaymentAllocation')->count())->toBe(2)
+        ->and(EcritureComptable::where('reconcilable_id', $invoice->id)->value('lettrage'))->toBeNull();
+});
+
+it('removes payment entries when a laser payment is cancelled', function () {
+    $invoice = laserInvoiceForPayment($this->client);
+    $payment = paymentForLaserInvoice($this->client, 120);
+    $allocation = app(PaymentService::class)->allocatePayment($payment, $invoice, 120);
+
+    app(PaymentRecordingService::class)->cancelPayment($payment, 'Test');
+
+    expect(EcritureComptable::where('reconcilable_type', $allocation->getMorphClass())
+        ->where('reconcilable_id', $allocation->id)->count())->toBe(0)
+        ->and(EcritureComptable::where('reconcilable_type', $invoice->getMorphClass())
+            ->where('reconcilable_id', $invoice->id)
+            ->where('compte_numero', '411100')
+            ->value('lettrage'))->toBeNull()
+        ->and($invoice->fresh()->status)->toBe(InvoiceStatus::VALIDATED);
+});
+
+it('deletters remaining allocations when one of several payments is cancelled', function () {
+    $invoice = laserInvoiceForPayment($this->client);
+    $firstPayment = paymentForLaserInvoice($this->client, 60);
+    $secondPayment = paymentForLaserInvoice($this->client, 60);
+
+    app(PaymentService::class)->allocatePayment($firstPayment, $invoice, 60);
+    app(PaymentService::class)->allocatePayment($secondPayment, $invoice, 60);
+
+    app(PaymentRecordingService::class)->cancelPayment($secondPayment, 'Test');
+
+    expect(EcritureComptable::where('reconcilable_type', $invoice->getMorphClass())
+        ->where('reconcilable_id', $invoice->id)
+        ->where('compte_numero', '411100')
+        ->value('lettrage'))->toBeNull()
+        ->and(EcritureComptable::where('reconcilable_type', 'App\Models\Commerce\PaymentAllocation')
+            ->where('compte_numero', '411100')
+            ->value('lettrage'))->toBeNull();
+});
+
+it('rejects allocations on a cancelled payment without creating accounting entries', function () {
+    $invoice = laserInvoiceForPayment($this->client);
+    $payment = paymentForLaserInvoice($this->client, 120);
+
+    app(PaymentService::class)->allocatePayment($payment, $invoice, 120);
+    app(PaymentRecordingService::class)->cancelPayment($payment, 'Test');
+
+    expect(fn () => app(PaymentService::class)->allocatePayment($payment->fresh(), $invoice, 120))
+        ->toThrow(InvalidArgumentException::class);
+
+    expect($payment->fresh()->allocations()->count())->toBe(0)
+        ->and(EcritureComptable::where(
+            'reconcilable_type',
+            (new \App\Models\Commerce\PaymentAllocation)->getMorphClass(),
+        )->count())->toBe(0);
+});
+
+it('rejects a laser allocation one cent above the invoice balance', function () {
+    $invoice = laserInvoiceForPayment($this->client);
+    $payment = paymentForLaserInvoice($this->client, 50);
+
+    expect(fn () => app(PaymentService::class)->allocatePayment($payment, $invoice, 50.01))
+        ->toThrow(InvalidArgumentException::class);
+});
+
+it('rejects a laser overpayment instead of creating an unlettered entry', function () {
+    $invoice = laserInvoiceForPayment($this->client);
+    $payment = paymentForLaserInvoice($this->client, 120.04);
+
+    expect(fn () => app(PaymentService::class)->allocatePayment($payment, $invoice, 120.04))
+        ->toThrow(\App\Exceptions\Commerce\AllocationOverflowException::class);
+});
