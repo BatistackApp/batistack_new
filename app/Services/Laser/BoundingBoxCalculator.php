@@ -4,6 +4,13 @@ namespace App\Services\Laser;
 
 class BoundingBoxCalculator
 {
+    private ArcGeometryHelper $arcHelper;
+
+    public function __construct(ArcGeometryHelper $arcHelper)
+    {
+        $this->arcHelper = $arcHelper;
+    }
+
     public function calculate(array $entities): array
     {
         $minX = PHP_FLOAT_MAX;
@@ -72,24 +79,19 @@ class BoundingBoxCalculator
 
     private function forBulgeArc(array $start, array $end, float $bulge, callable $updateBounds): void
     {
-        $dx = $end['x'] - $start['x'];
-        $dy = $end['y'] - $start['y'];
-        $chord = sqrt($dx * $dx + $dy * $dy);
+        $chord = $this->arcHelper->chordLength($start, $end);
 
         if ($chord < 1e-10) {
             return;
         }
 
-        $radius = $chord * (1 + $bulge ** 2) / (4 * abs($bulge));
+        $radius = $this->arcHelper->radius($chord, $bulge);
+        $center = $this->arcHelper->center($start, $end, $bulge);
+        $cx = $center['x'];
+        $cy = $center['y'];
 
-        $tangentAngle = atan2($dy, $dx);
-        $centerAngle = $tangentAngle + ($bulge > 0 ? -M_PI / 2 : M_PI / 2);
-        $centerDist = $radius * cos(2 * atan(abs($bulge)));
-        $cx = ($start['x'] + $end['x']) / 2 + $centerDist * cos($centerAngle);
-        $cy = ($start['y'] + $end['y']) / 2 + $centerDist * sin($centerAngle);
-
-        $startAngle = atan2($start['y'] - $cy, $start['x'] - $cx);
-        $endAngle = atan2($end['y'] - $cy, $end['x'] - $cx);
+        $startAngle = $this->arcHelper->startAngle($start, $center);
+        $endAngle = $this->arcHelper->endAngle($end, $center);
 
         $updateBounds($cx + $radius * cos($startAngle), $cy + $radius * sin($startAngle));
         $updateBounds($cx + $radius * cos($endAngle), $cy + $radius * sin($endAngle));
@@ -97,7 +99,7 @@ class BoundingBoxCalculator
         $ccw = $bulge < 0;
         $checkAngles = [0, M_PI / 2, M_PI, 3 * M_PI / 2];
         foreach ($checkAngles as $angle) {
-            if ($this->isAngleOnArc($startAngle, $endAngle, $angle, $ccw)) {
+            if ($this->arcHelper->isAngleOnArc($startAngle, $endAngle, $angle, $ccw)) {
                 $updateBounds($cx + $radius * cos($angle), $cy + $radius * sin($angle));
             }
         }
@@ -110,15 +112,15 @@ class BoundingBoxCalculator
         $cy = $d['start_y'] ?? 0;
         $radius = $d['radius'] ?? 0;
 
-        $startAngle = $this->normalizeAngle(deg2rad($d['start_angle'] ?? 0));
-        $endAngle = $this->normalizeAngle(deg2rad($d['end_angle'] ?? 0));
+        $startAngle = $this->arcHelper->normalizeAngle(deg2rad($d['start_angle'] ?? 0));
+        $endAngle = $this->arcHelper->normalizeAngle(deg2rad($d['end_angle'] ?? 0));
 
         $updateBounds($cx + $radius * cos($startAngle), $cy + $radius * sin($startAngle));
         $updateBounds($cx + $radius * cos($endAngle), $cy + $radius * sin($endAngle));
 
         $checkAngles = [0, M_PI / 2, M_PI, 3 * M_PI / 2];
         foreach ($checkAngles as $angle) {
-            if ($this->isAngleOnArc($startAngle, $endAngle, $angle)) {
+            if ($this->arcHelper->isAngleOnArc($startAngle, $endAngle, $angle)) {
                 $updateBounds($cx + $radius * cos($angle), $cy + $radius * sin($angle));
             }
         }
@@ -137,32 +139,11 @@ class BoundingBoxCalculator
 
     public function normalizeAngle(float $angle): float
     {
-        $angle = fmod($angle, 2 * M_PI);
-        if ($angle < 0) {
-            $angle += 2 * M_PI;
-        }
-
-        return $angle;
+        return $this->arcHelper->normalizeAngle($angle);
     }
 
     public function isAngleOnArc(float $startAngle, float $endAngle, float $angle, bool $ccw = true): bool
     {
-        $startAngle = $this->normalizeAngle($startAngle);
-        $endAngle = $this->normalizeAngle($endAngle);
-        $angle = $this->normalizeAngle($angle);
-
-        if ($ccw) {
-            if ($startAngle <= $endAngle) {
-                return $angle >= $startAngle && $angle <= $endAngle;
-            }
-
-            return $angle >= $startAngle || $angle <= $endAngle;
-        }
-
-        if ($startAngle >= $endAngle) {
-            return $angle <= $startAngle && $angle >= $endAngle;
-        }
-
-        return $angle <= $startAngle || $angle >= $endAngle;
+        return $this->arcHelper->isAngleOnArc($startAngle, $endAngle, $angle, $ccw);
     }
 }

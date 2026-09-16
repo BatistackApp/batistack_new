@@ -364,18 +364,9 @@ class DxfParserService
 
     private function bulgeArcLength(array $start, array $end, float $bulge): float
     {
-        $dx = $end['x'] - $start['x'];
-        $dy = $end['y'] - $start['y'];
-        $chord = sqrt($dx * $dx + $dy * $dy);
+        $chord = app(ArcGeometryHelper::class)->chordLength($start, $end);
 
-        if ($chord < 1e-10) {
-            return 0.0;
-        }
-
-        $radius = $chord * (1 + $bulge ** 2) / (4 * abs($bulge));
-        $theta = 4 * atan(abs($bulge));
-
-        return $radius * $theta;
+        return app(ArcGeometryHelper::class)->arcLength($chord, $bulge);
     }
 
     private function arcLength(array $entity): float

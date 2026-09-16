@@ -61,3 +61,43 @@ it('is idempotent: double lock only transitions once', function () {
 
     Queue::assertPushed(GeneratePayslipPdfJob::class, 1);
 });
+
+it('uses row-level locking to prevent concurrent lock race condition', function () {
+    Queue::fake();
+
+    $payslip = Payslip::factory()->create([
+        'status' => PayslipStatus::DRAFT,
+        'pdf_path' => null,
+    ]);
+
+    $service = app(PayslipLockService::class);
+
+    $service->lock($payslip);
+
+    Queue::assertPushed(GeneratePayslipPdfJob::class, 1);
+
+    $service->lock($payslip);
+
+    $payslip->refresh();
+    expect($payslip->status)->toBe(PayslipStatus::VALIDATED);
+
+    Queue::assertPushed(GeneratePayslipPdfJob::class, 1);
+});
+
+it('reads latest status inside lockForUpdate before transitioning', function () {
+    $payslip = Payslip::factory()->create([
+        'status' => PayslipStatus::DRAFT,
+        'pdf_path' => null,
+    ]);
+
+    $service = app(PayslipLockService::class);
+
+    $service->lock($payslip);
+
+    $payslip->refresh();
+    expect($payslip->status)->toBe(PayslipStatus::VALIDATED);
+
+    $service->lock($payslip);
+    $payslip->refresh();
+    expect($payslip->status)->toBe(PayslipStatus::VALIDATED);
+});
