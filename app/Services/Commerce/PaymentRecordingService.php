@@ -259,6 +259,8 @@ class PaymentRecordingService
     public function cancelPayment(Payment $payment, string $reason = ''): Payment
     {
         return DB::transaction(function () use ($payment, $reason) {
+            $providedPayment = $payment;
+            $payment = Payment::query()->whereKey($payment->getKey())->lockForUpdate()->firstOrFail();
 
             // Vérifier l'état
             if ($payment->status === PaymentStatus::FAILED) {
@@ -295,7 +297,9 @@ class PaymentRecordingService
 
             event(new PaymentCancelledEvent($payment, $reason));
 
-            return $payment;
+            $providedPayment->refresh();
+
+            return $providedPayment;
         });
     }
 

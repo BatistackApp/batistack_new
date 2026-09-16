@@ -99,3 +99,17 @@ it('deletters remaining allocations when one of several payments is cancelled', 
             ->where('compte_numero', '411100')
             ->value('lettrage'))->toBeNull();
 });
+
+it('rejects allocations on a cancelled payment without creating accounting entries', function () {
+    $invoice = laserInvoiceForPayment($this->client);
+    $payment = paymentForLaserInvoice($this->client, 120);
+
+    app(PaymentService::class)->allocatePayment($payment, $invoice, 120);
+    app(PaymentRecordingService::class)->cancelPayment($payment, 'Test');
+
+    expect(fn () => app(PaymentService::class)->allocatePayment($payment->fresh(), $invoice, 120))
+        ->toThrow(InvalidArgumentException::class);
+
+    expect($payment->fresh()->allocations()->count())->toBe(0)
+        ->and(EcritureComptable::where('reconcilable_type', 'App\\Models\\Commerce\\PaymentAllocation')->count())->toBe(0);
+});

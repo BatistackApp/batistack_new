@@ -3,6 +3,7 @@
 namespace App\Services\Commerce;
 
 use App\Enums\Commerce\InvoiceStatus;
+use App\Enums\Commerce\PaymentStatus;
 use App\Enums\Laser\InvoiceStatus as LaserInvoiceStatus;
 use App\Exceptions\Commerce\AllocationOverflowException;
 use App\Models\Commerce\Payment;
@@ -22,6 +23,11 @@ class PaymentService
     public function allocatePayment(Payment $payment, Model $payable, float $amountToAllocate): PaymentAllocation
     {
         return DB::transaction(function () use ($payment, $payable, $amountToAllocate) {
+            $payment = Payment::query()->whereKey($payment->getKey())->lockForUpdate()->firstOrFail();
+            if ($payment->status !== PaymentStatus::COMPLETED) {
+                throw new \InvalidArgumentException('Seul un paiement terminé peut être alloué.');
+            }
+
             // ← AJOUTER : Lock + Validation
             $lockedPayable = $payable->newQuery()->whereKey($payable->getKey())->lockForUpdate()->firstOrFail();
             $this->validateAllocation($lockedPayable, $amountToAllocate);
