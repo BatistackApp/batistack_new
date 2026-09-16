@@ -86,13 +86,9 @@
                         <div class="mt-8 flex justify-between">
                             {{-- Refuse button (multi-signer only) --}}
                             @if(isset($signer))
-                                <form action="{{ route('signature.refuse', $signer->token) }}" method="POST" onsubmit="return confirm('Êtes-vous sûr de vouloir refuser cette signature ?');">
-                                    @csrf
-                                    <input type="hidden" name="reason" value="">
-                                    <button type="submit" class="px-6 py-3 bg-red-100 hover:bg-red-200 text-red-700 font-bold rounded-lg transition duration-200">
-                                        Refuser
-                                    </button>
-                                </form>
+                                <button type="submit" form="refuse-form" class="px-6 py-3 bg-red-100 hover:bg-red-200 text-red-700 font-bold rounded-lg transition duration-200">
+                                    Refuser
+                                </button>
                             @endif
 
                             <button type="submit" id="submit-btn" class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow-md transition duration-200 ml-auto">
@@ -100,6 +96,12 @@
                             </button>
                         </div>
                     </form>
+                    @if(isset($signer))
+                        <form id="refuse-form" action="{{ route('signature.refuse', $signer->token) }}" method="POST" onsubmit="return confirm('Êtes-vous sûr de vouloir refuser cette signature ?');" class="hidden">
+                            @csrf
+                            <input type="hidden" name="reason" value="">
+                        </form>
+                    @endif
                 @else
                     <div class="mt-8 text-center text-gray-500">
                         Vous avez déjà signé ce document.

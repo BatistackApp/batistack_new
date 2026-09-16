@@ -179,11 +179,17 @@ class DocusealProvider implements SignatureProviderInterface
         string $ipAddress,
         string $userAgent
     ): SignatureSigner {
-        $signer = SignatureSigner::where('token', $token)
-            ->where('status', SignatureStatus::PENDING)
-            ->firstOrFail();
+        return DB::transaction(function () use ($token, $signatureData, $ipAddress, $userAgent) {
+            $signer = SignatureSigner::where('token', $token)
+                ->where('status', SignatureStatus::PENDING)
+                ->lockForUpdate()
+                ->firstOrFail();
+            $signature = Signature::whereKey($signer->signature_id)->lockForUpdate()->firstOrFail();
+            if (! hash_equals($signature->checksum, hash('sha256', json_encode($signature->signable->toArray())))) {
+                throw new \RuntimeException('Le document a été modifié depuis la demande de signature.');
+            }
 
-        $signer->update([
+            $signer->update([
             'status' => SignatureStatus::SIGNED,
             'signature_data' => $signatureData,
             'ip_address' => $ipAddress,
@@ -192,10 +198,9 @@ class DocusealProvider implements SignatureProviderInterface
                 'user_agent' => $userAgent,
                 'source' => 'external_public_link',
             ]),
-        ]);
+            ]);
 
         // Check if all signers have signed
-        $signature = $signer->signature;
         $allSigned = ! $signature->signers()
             ->where('status', '!=', SignatureStatus::SIGNED)
             ->exists();
@@ -207,7 +212,8 @@ class DocusealProvider implements SignatureProviderInterface
             ]);
         }
 
-        return $signer;
+            return $signer;
+        });
     }
 
     /**

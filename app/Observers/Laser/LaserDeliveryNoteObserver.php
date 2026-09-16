@@ -15,7 +15,7 @@ class LaserDeliveryNoteObserver
 
     public function created(LaserDeliveryNote $delivery): void
     {
-        GenerateLaserDocumentJob::dispatch('laser_delivery_note', $delivery);
+        GenerateLaserDocumentJob::dispatch('laser_delivery_note', $delivery)->afterCommit();
     }
 
     public function deleted(LaserDeliveryNote $delivery): void

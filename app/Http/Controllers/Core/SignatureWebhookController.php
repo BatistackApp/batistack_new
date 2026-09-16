@@ -25,6 +25,18 @@ class SignatureWebhookController extends Controller
             return response()->json(['error' => 'Invalid payload'], 400);
         }
 
+        $secret = config('services.docuseal.webhook_secret');
+        $providedSignature = $request->header('X-Docuseal-Signature')
+            ?? $request->header('X-DocuSeal-Signature');
+        $expectedSignature = $secret ? hash_hmac('sha256', $request->getContent(), $secret) : null;
+
+        if (! $secret || ! $providedSignature || ! hash_equals(
+            $expectedSignature,
+            preg_replace('/^sha256=/', '', $providedSignature),
+        )) {
+            return response()->json(['error' => 'Unauthenticated webhook'], 401);
+        }
+
         Log::info("DocuSeal Webhook Received: {$eventType}", ['data' => $data]);
 
         if ($eventType === 'submission.completed') {

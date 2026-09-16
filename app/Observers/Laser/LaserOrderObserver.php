@@ -15,7 +15,7 @@ class LaserOrderObserver
 
     public function created(LaserOrder $order): void
     {
-        GenerateLaserDocumentJob::dispatch('laser_order', $order);
+        GenerateLaserDocumentJob::dispatch('laser_order', $order)->afterCommit();
     }
 
     public function deleted(LaserOrder $order): void

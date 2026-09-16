@@ -23,13 +23,13 @@ class LaserQuoteObserver
 
     public function created(LaserQuote $quote): void
     {
-        GenerateLaserDocumentJob::dispatch('laser_quote', $quote);
+        GenerateLaserDocumentJob::dispatch('laser_quote', $quote)->afterCommit();
     }
 
     public function updated(LaserQuote $quote): void
     {
         if ($quote->isDirty('status')) {
-            GenerateLaserDocumentJob::dispatch('laser_quote', $quote);
+            GenerateLaserDocumentJob::dispatch('laser_quote', $quote)->afterCommit();
         }
     }
 
