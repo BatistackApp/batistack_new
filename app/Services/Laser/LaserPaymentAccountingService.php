@@ -64,19 +64,36 @@ class LaserPaymentAccountingService
 
     public function removeAllocation(PaymentAllocation $allocation): void
     {
-        EcritureComptable::query()
-            ->where('reconcilable_type', $allocation->getMorphClass())
-            ->where('reconcilable_id', $allocation->getKey())
-            ->delete();
+        DB::transaction(function () use ($allocation) {
+            $invoice = $allocation->payable;
+
+            EcritureComptable::query()
+                ->where('reconcilable_type', $allocation->getMorphClass())
+                ->where('reconcilable_id', $allocation->getKey())
+                ->delete();
+
+            if (! $invoice instanceof LaserInvoice) {
+                return;
+            }
+
+            $invoiceEntry = $this->invoiceEntry($invoice);
+            if (! $invoiceEntry) {
+                return;
+            }
+
+            if ($invoiceEntry->lettrage) {
+                $this->ecritureService->dellettrer(collect([$invoiceEntry]));
+            }
+
+            // The caller deletes the allocation after this method. Exclude it
+            // here so a remaining balance can be rebuilt immediately.
+            $this->lettrerIfFullyPaid($invoice, $allocation->getKey());
+        });
     }
 
-    private function lettrerIfFullyPaid(LaserInvoice $invoice): void
+    private function lettrerIfFullyPaid(LaserInvoice $invoice, ?int $excludedAllocationId = null): void
     {
-        $invoiceEntry = EcritureComptable::query()
-            ->where('reconcilable_type', $invoice->getMorphClass())
-            ->where('reconcilable_id', $invoice->getKey())
-            ->where('compte_numero', $this->settingService->get('customer_account', '411100'))
-            ->first();
+        $invoiceEntry = $this->invoiceEntry($invoice);
 
         if (! $invoiceEntry || $invoiceEntry->lettrage) {
             return;
@@ -85,6 +102,7 @@ class LaserPaymentAccountingService
         $allocationIds = PaymentAllocation::query()
             ->where('payable_type', $invoice->getMorphClass())
             ->where('payable_id', $invoice->getKey())
+            ->when($excludedAllocationId, fn ($query) => $query->where('id', '!=', $excludedAllocationId))
             ->pluck('id');
 
         $paymentEntries = EcritureComptable::query()
@@ -101,5 +119,14 @@ class LaserPaymentAccountingService
             collect([$invoiceEntry, ...$paymentEntries->all()]),
             'LET-'.$invoice->reference,
         );
+    }
+
+    private function invoiceEntry(LaserInvoice $invoice): ?EcritureComptable
+    {
+        return EcritureComptable::query()
+            ->where('reconcilable_type', $invoice->getMorphClass())
+            ->where('reconcilable_id', $invoice->getKey())
+            ->where('compte_numero', $this->settingService->get('customer_account', '411100'))
+            ->first();
     }
 }

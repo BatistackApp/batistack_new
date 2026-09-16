@@ -74,5 +74,9 @@ it('removes payment entries when a laser payment is cancelled', function () {
     app(PaymentRecordingService::class)->cancelPayment($payment, 'Test');
 
     expect(EcritureComptable::where('reconcilable_type', $allocation->getMorphClass())
-        ->where('reconcilable_id', $allocation->id)->count())->toBe(0);
+        ->where('reconcilable_id', $allocation->id)->count())->toBe(0)
+        ->and(EcritureComptable::where('reconcilable_type', $invoice->getMorphClass())
+            ->where('reconcilable_id', $invoice->id)
+            ->where('compte_numero', '411100')
+            ->value('lettrage'))->toBeNull();
 });
