@@ -82,12 +82,16 @@ class SignatureWebhookController extends Controller
 
             foreach ($submitters as $submitter) {
                 $email = $submitter['email'] ?? null;
-                if (! $email) {
+                $submitterId = $submitter['id'] ?? $submitter['submitter_id'] ?? null;
+                if (! $submitterId) {
+                    Log::warning('DocuSeal webhook ignored: submitter identifier missing.', [
+                        'signature_id' => $signature->id,
+                    ]);
                     continue;
                 }
 
                 $signer = $signature->signers()
-                    ->where('email', $email)
+                    ->where('metadata->docuseal_submitter_id', (string) $submitterId)
                     ->where('status', SignatureStatus::PENDING)
                     ->first();
 
