@@ -5,6 +5,7 @@ namespace App\Services\Laser;
 use App\Enums\Laser\InvoiceStatus;
 use App\Enums\Laser\OrderStatus;
 use App\Jobs\Laser\GenerateLaserDocumentJob;
+use App\Jobs\Laser\SyncLaserAccountingJob;
 use App\Models\Laser\LaserCreditNote;
 use App\Models\Laser\LaserInvoice;
 use App\Models\Laser\LaserLegalizationSequence;
@@ -92,7 +93,6 @@ class LaserInvoiceService
             ]);
 
             DB::afterCommit(fn () => GenerateLaserDocumentJob::dispatch('laser_invoice', $invoice));
-
             return $invoice;
         });
     }
@@ -173,6 +173,7 @@ class LaserInvoiceService
             ]);
 
             DB::afterCommit(fn () => GenerateLaserDocumentJob::dispatch('laser_invoice', $invoice));
+            DB::afterCommit(fn () => SyncLaserAccountingJob::dispatch('invoice', $invoice->id));
 
             $this->refreshOrderStatus($invoice->order()->with('lines')->first());
         });
@@ -252,6 +253,7 @@ class LaserInvoiceService
             $invoice->increment('credited_amount_ttc', $requestedTtc);
 
             DB::afterCommit(fn () => GenerateLaserDocumentJob::dispatch('laser_credit_note', $creditNote));
+            DB::afterCommit(fn () => SyncLaserAccountingJob::dispatch('credit_note', $creditNote->id));
 
             return $creditNote;
         });

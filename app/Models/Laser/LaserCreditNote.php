@@ -3,11 +3,13 @@
 namespace App\Models\Laser;
 
 use App\Models\Tiers\ThirdParty;
+use App\Models\Accounting\AccountingSync;
 use App\Observers\Laser\LaserCreditNoteObserver;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphOne;
 
 #[ObservedBy([LaserCreditNoteObserver::class])]
 class LaserCreditNote extends Model
@@ -67,5 +69,10 @@ class LaserCreditNote extends Model
     public function invoice(): BelongsTo
     {
         return $this->belongsTo(LaserInvoice::class, 'laser_invoice_id');
+    }
+
+    public function accountingSync(): MorphOne
+    {
+        return $this->morphOne(AccountingSync::class, 'syncable');
     }
 }

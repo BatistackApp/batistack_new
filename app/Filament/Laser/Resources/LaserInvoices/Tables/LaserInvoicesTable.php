@@ -32,6 +32,11 @@ class LaserInvoicesTable
                     ->label('Statut')
                     ->badge(),
 
+                TextColumn::make('accountingSync.status')
+                    ->label('Comptabilité')
+                    ->badge()
+                    ->placeholder('En attente'),
+
                 TextColumn::make('total_ttc')
                     ->label('Total TTC')
                     ->money('EUR')
