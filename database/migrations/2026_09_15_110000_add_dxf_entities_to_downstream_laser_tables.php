@@ -82,7 +82,6 @@ return new class extends Migration
                             ORDER BY id
                         ) AS rn
                     FROM laser_quote_lines
-                    WHERE dxf_entities IS NOT NULL
                 ) ql_numbered
                     ON ql_numbered.laser_quote_id = o.laser_quote_id
                     AND ql_numbered.material_id = ol_numbered.material_id
@@ -91,6 +90,7 @@ return new class extends Migration
                     AND ql_numbered.thickness_mm = ol_numbered.thickness_mm
                     AND ql_numbered.quantity = ol_numbered.quantity
                     AND ql_numbered.rn = ol_numbered.rn
+                    AND ql_numbered.dxf_entities IS NOT NULL
                 WHERE ol_numbered.id = laser_order_lines.id
             )
             WHERE EXISTS (
@@ -172,7 +172,6 @@ return new class extends Migration
                             ORDER BY id
                         ) AS rn
                     FROM laser_quote_lines
-                    WHERE dxf_entities IS NOT NULL
                 ) ql_numbered
                     ON ql_numbered.laser_quote_id = o.laser_quote_id
                     AND ql_numbered.material_id = ol_numbered.material_id
@@ -181,6 +180,7 @@ return new class extends Migration
                     AND ql_numbered.thickness_mm = ol_numbered.thickness_mm
                     AND ql_numbered.quantity = ol_numbered.quantity
                     AND ql_numbered.rn = ol_numbered.rn
+                    AND ql_numbered.dxf_entities IS NOT NULL
             ) AS matched ON matched.order_line_id = ol.id
             SET ol.dxf_entities = matched.dxf_entities
         ');

@@ -53,14 +53,6 @@ class ArcGeometryHelper
         ];
     }
 
-    public function anglesFromCenter(array $point, array $center): array
-    {
-        return [
-            atan2($point['y'] - $center['y'], $point['x'] - $center['x']),
-            atan2($point['y'] - $center['y'], $point['x'] - $center['x']),
-        ];
-    }
-
     public function startAngle(array $start, array $center): float
     {
         return atan2($start['y'] - $center['y'], $start['x'] - $center['x']);

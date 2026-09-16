@@ -193,6 +193,109 @@ it('renders LWPOLYLINE with bulge arcs using A commands', function () {
     expect($svg)->toContain('A ');
 });
 
+it('validates semicircle arc parameters: radius=50, largeArc=0, sweepFlag=0', function () {
+    $entities = [
+        [
+            'type' => 'LWPOLYLINE',
+            'layer' => '0',
+            'data' => [
+                'vertices' => [
+                    ['x' => 0, 'y' => 0, 'bulge' => 1.0],
+                    ['x' => 100, 'y' => 0, 'bulge' => 0],
+                ],
+                'flags' => 0,
+            ],
+        ],
+    ];
+
+    $svg = $this->svg->toSvg($entities, 200, 200);
+    preg_match('/d="([^"]+)"/', $svg, $m);
+    $d = $m[1];
+
+    // Extract the A command: A rx ry 0 largeArc sweep x2 y2
+    preg_match('/A\s+([\d.]+)\s+[\d.]+\s+0\s+(\d)\s+(\d)\s+[\d.]+\s+[\d.]+/', $d, $arc);
+
+    // bulge=1 → chord=100, radius = 100*(1+1)/(4*1) = 50
+    // The SVG service scales by the internal viewport, so radius = 50 * scale
+    // We verify the flags are correct: largeArc=0 (|bulge| ≤ 1), sweepFlag=0 (bulge > 0)
+    expect((int) $arc[2])->toBe(0)  // largeArc flag
+        ->and((int) $arc[3])->toBe(0);  // sweepFlag
+});
+
+it('validates major arc (bulge=2) sets largeArc flag to 1', function () {
+    $entities = [
+        [
+            'type' => 'LWPOLYLINE',
+            'layer' => '0',
+            'data' => [
+                'vertices' => [
+                    ['x' => 0, 'y' => 0, 'bulge' => 2.0],
+                    ['x' => 100, 'y' => 0, 'bulge' => 0],
+                ],
+                'flags' => 0,
+            ],
+        ],
+    ];
+
+    $svg = $this->svg->toSvg($entities, 200, 200);
+    preg_match('/d="([^"]+)"/', $svg, $m);
+    $d = $m[1];
+
+    // bulge=2 → |bulge| > 1 → includedAngle > PI → largeArc=1
+    preg_match('/A\s+[\d.]+\s+[\d.]+\s+0\s+(\d)\s+(\d)/', $d, $arc);
+    expect((int) $arc[1])->toBe(1);  // largeArc flag
+});
+
+it('validates negative bulge sets sweepFlag to 1', function () {
+    $entities = [
+        [
+            'type' => 'LWPOLYLINE',
+            'layer' => '0',
+            'data' => [
+                'vertices' => [
+                    ['x' => 0, 'y' => 0, 'bulge' => -1.0],
+                    ['x' => 100, 'y' => 0, 'bulge' => 0],
+                ],
+                'flags' => 0,
+            ],
+        ],
+    ];
+
+    $svg = $this->svg->toSvg($entities, 200, 200);
+    preg_match('/d="([^"]+)"/', $svg, $m);
+    $d = $m[1];
+
+    // bulge < 0 → sweepFlag=1
+    preg_match('/A\s+[\d.]+\s+[\d.]+\s+0\s+(\d)\s+(\d)/', $d, $arc);
+    expect((int) $arc[2])->toBe(1);  // sweepFlag
+});
+
+it('validates SVG endpoint coordinates with Y-axis flip', function () {
+    // DXF: (0,0) → (100,0) with bulge=0 (straight line)
+    $entities = [
+        [
+            'type' => 'LWPOLYLINE',
+            'layer' => '0',
+            'data' => [
+                'vertices' => [
+                    ['x' => 0, 'y' => 0, 'bulge' => 0],
+                    ['x' => 100, 'y' => 0, 'bulge' => 0],
+                ],
+                'flags' => 0,
+            ],
+        ],
+    ];
+
+    $svg = $this->svg->toSvg($entities, 200, 200);
+    preg_match('/d="([^"]+)"/', $svg, $m);
+    $d = $m[1];
+
+    // Both DXF points have y=0 → both SVG Y coords must be identical (Y-flip preserves equality)
+    preg_match('/M\s+([\d.]+)\s+([\d.]+)\s+L\s+([\d.]+)\s+([\d.]+)/', $d, $coords);
+    expect($coords[2])->toBe($coords[4])  // same DXF y → same SVG y
+        ->and($coords[1])->not->toBe($coords[3]);  // different DXF x → different SVG x
+});
+
 it('returns empty string for polyline with fewer than 2 vertices', function () {
     $entities = [
         [
