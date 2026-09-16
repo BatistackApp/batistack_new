@@ -32,11 +32,11 @@ function laserInvoiceForPayment(ThirdParty $client, float $total = 120): LaserIn
     return $invoice;
 }
 
-function paymentForLaserInvoice(ThirdParty $client, float $amount): Payment
+function paymentForLaserInvoice(ThirdParty $client, float $amount, string $type = 'in'): Payment
 {
     return Payment::factory()->create([
         'third_party_id' => $client->id,
-        'type' => 'in',
+        'type' => $type,
         'amount' => $amount,
         'payment_date' => now(),
     ]);
@@ -54,6 +54,29 @@ it('creates bank entries and letters a fully paid laser invoice', function () {
         ->and((float) $entries->sum('debit'))->toBe(120.0)
         ->and((float) $entries->sum('credit'))->toBe(120.0)
         ->and(EcritureComptable::where('reconcilable_id', $invoice->id)->value('lettrage'))->toBe('LET-'.$invoice->reference);
+});
+
+it('rejects an allocation above the payment amount without persistence', function () {
+    $invoice = laserInvoiceForPayment($this->client);
+    $payment = paymentForLaserInvoice($this->client, 50);
+
+    expect(fn () => app(PaymentService::class)->allocatePayment($payment, $invoice, 120))
+        ->toThrow(InvalidArgumentException::class);
+
+    expect($payment->allocations()->count())->toBe(0)
+        ->and(EcritureComptable::where('reconcilable_type', (new \App\Models\Commerce\PaymentAllocation)->getMorphClass())->count())->toBe(0)
+        ->and($invoice->fresh()->status)->toBe(InvoiceStatus::VALIDATED);
+});
+
+it('rejects an outgoing payment on a laser invoice', function () {
+    $invoice = laserInvoiceForPayment($this->client);
+    $payment = paymentForLaserInvoice($this->client, 120, 'out');
+
+    expect(fn () => app(PaymentService::class)->allocatePayment($payment, $invoice, 120))
+        ->toThrow(InvalidArgumentException::class);
+
+    expect($payment->allocations()->count())->toBe(0)
+        ->and($invoice->fresh()->status)->toBe(InvoiceStatus::VALIDATED);
 });
 
 it('does not letter a partially paid laser invoice', function () {

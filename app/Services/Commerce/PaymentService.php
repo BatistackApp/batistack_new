@@ -4,6 +4,7 @@ namespace App\Services\Commerce;
 
 use App\Enums\Commerce\InvoiceStatus;
 use App\Enums\Commerce\PaymentStatus;
+use App\Enums\Commerce\PaymentType;
 use App\Enums\Laser\InvoiceStatus as LaserInvoiceStatus;
 use App\Exceptions\Commerce\AllocationOverflowException;
 use App\Models\Commerce\Payment;
@@ -26,6 +27,15 @@ class PaymentService
             $payment = Payment::query()->whereKey($payment->getKey())->lockForUpdate()->firstOrFail();
             if ($payment->status !== PaymentStatus::COMPLETED) {
                 throw new \InvalidArgumentException('Seul un paiement terminé peut être alloué.');
+            }
+
+            if ($payable instanceof \App\Models\Laser\LaserInvoice && $payment->type !== PaymentType::IN) {
+                throw new \InvalidArgumentException('Seul un encaissement client peut être affecté à une facture Laser.');
+            }
+
+            $allocatedAmount = (float) $payment->allocations()->sum('allocated_amount');
+            if ($allocatedAmount + $amountToAllocate > (float) $payment->amount + 0.05) {
+                throw new \InvalidArgumentException('Le total des allocations dépasse le montant du paiement.');
             }
 
             // ← AJOUTER : Lock + Validation
