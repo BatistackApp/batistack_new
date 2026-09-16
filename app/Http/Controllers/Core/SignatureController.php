@@ -148,6 +148,7 @@ class SignatureController extends Controller
             }
         } catch (\Exception $e) {
             Log::error('Erreur post-signature pour '.class_basename($signature->signable).': '.$e->getMessage());
+            throw $e;
         }
     }
 
