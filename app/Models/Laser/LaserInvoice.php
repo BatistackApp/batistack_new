@@ -3,6 +3,7 @@
 namespace App\Models\Laser;
 
 use App\Enums\Laser\InvoiceStatus;
+use App\Models\Accounting\AccountingSync;
 use App\Models\Laser\Concerns\RecalculatesLaserTotals;
 use App\Models\Tiers\ThirdParty;
 use App\Observers\Laser\LaserInvoiceObserver;
@@ -11,6 +12,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphOne;
 
 #[ObservedBy([LaserInvoiceObserver::class])]
 class LaserInvoice extends Model
@@ -89,6 +91,11 @@ class LaserInvoice extends Model
     public function creditNotes(): HasMany
     {
         return $this->hasMany(LaserCreditNote::class);
+    }
+
+    public function accountingSync(): MorphOne
+    {
+        return $this->morphOne(AccountingSync::class, 'syncable');
     }
 
     public function getRemainingCreditableHtAttribute(): float

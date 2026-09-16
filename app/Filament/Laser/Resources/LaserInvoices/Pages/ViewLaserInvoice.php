@@ -4,6 +4,7 @@ namespace App\Filament\Laser\Resources\LaserInvoices\Pages;
 
 use App\Enums\Laser\InvoiceStatus;
 use App\Filament\Laser\Resources\LaserInvoices\LaserInvoiceResource;
+use App\Jobs\Laser\SyncLaserAccountingJob;
 use App\Services\Laser\LaserInvoiceService;
 use Filament\Actions;
 use Filament\Forms\Components\Textarea;
@@ -32,6 +33,20 @@ class ViewLaserInvoice extends ViewRecord
 
                     Notification::make()
                         ->title('Facture légalisée')
+                        ->success()
+                        ->send();
+                }),
+
+            Actions\Action::make('retryAccountingSync')
+                ->label('Relancer la comptabilisation')
+                ->icon('heroicon-o-arrow-path')
+                ->color('warning')
+                ->visible(fn ($record) => in_array($record->accountingSync?->status, ['pending', 'failed'], true))
+                ->action(function ($record) {
+                    SyncLaserAccountingJob::dispatch('invoice', $record->id);
+
+                    Notification::make()
+                        ->title('Synchronisation comptable relancée')
                         ->success()
                         ->send();
                 }),
