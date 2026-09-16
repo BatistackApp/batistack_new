@@ -136,7 +136,11 @@ trait HasSignature
         $documentPath = $this->getSignatureDocumentPath();
         $signatoryName = $this->getSignatoryName();
 
-        if ($documentPath && file_exists($documentPath)) {
+        if (! $documentPath || ! is_readable($documentPath)) {
+            throw new \RuntimeException('Le document source de la signature est introuvable ou illisible.');
+        }
+
+        if ($documentPath) {
             // Load signed signers for multi-signer stamping
             $signers = $signature->signers()
                 ->where('status', SignatureStatus::SIGNED)
@@ -146,6 +150,9 @@ trait HasSignature
             $stamper = app(PdfStamperService::class);
             $documentChecksum = null;
             $stampedPdfPath = $stamper->stamp($documentPath, $signature, $signatoryName, $signers ?: null, $documentChecksum);
+            if (! $stampedPdfPath || ! is_readable($stampedPdfPath)) {
+                throw new \RuntimeException('Le document signé n’a pas pu être généré.');
+            }
 
             if ($documentChecksum) {
                 $signature->update(['document_checksum' => $documentChecksum]);
@@ -158,7 +165,6 @@ trait HasSignature
                 $stampedMediaCollection = $this->getStampedMediaCollection();
 
                 if ($stampedMediaCollection && method_exists($this, 'clearMediaCollection') && method_exists($this, 'addMedia')) {
-                    $this->clearMediaCollection($stampedMediaCollection);
                     $this->addMedia($stampedPdfPath)->toMediaCollection($stampedMediaCollection);
                 } elseif (method_exists($this, 'getStampedPath')) {
                     $relativePath = $this->getStampedPath();
@@ -167,7 +173,9 @@ trait HasSignature
                         Storage::disk($stampedDisk)->makeDirectory(dirname($relativePath));
 
                         $fullPath = Storage::disk($stampedDisk)->path($relativePath);
-                        File::copy($stampedPdfPath, $fullPath);
+                        if (! File::copy($stampedPdfPath, $fullPath) || ! is_readable($fullPath)) {
+                            throw new \RuntimeException('Le document signé n’a pas pu être stocké.');
+                        }
                     }
                 } else {
                     // Legacy fallback: overwrite the source in place (models without

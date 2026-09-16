@@ -25,6 +25,18 @@ class SignatureWebhookController extends Controller
             return response()->json(['error' => 'Invalid payload'], 400);
         }
 
+        $secret = config('services.docuseal.webhook_secret');
+        $providedSignature = $request->header('X-Docuseal-Signature')
+            ?? $request->header('X-DocuSeal-Signature');
+        $expectedSignature = $secret ? hash_hmac('sha256', $request->getContent(), $secret) : null;
+
+        if (! $secret || ! $providedSignature || ! hash_equals(
+            $expectedSignature,
+            preg_replace('/^sha256=/', '', $providedSignature),
+        )) {
+            return response()->json(['error' => 'Unauthenticated webhook'], 401);
+        }
+
         Log::info("DocuSeal Webhook Received: {$eventType}", ['data' => $data]);
 
         if ($eventType === 'submission.completed') {
@@ -70,12 +82,16 @@ class SignatureWebhookController extends Controller
 
             foreach ($submitters as $submitter) {
                 $email = $submitter['email'] ?? null;
-                if (! $email) {
+                $submitterId = $submitter['id'] ?? $submitter['submitter_id'] ?? null;
+                if (! $submitterId) {
+                    Log::warning('DocuSeal webhook ignored: submitter identifier missing.', [
+                        'signature_id' => $signature->id,
+                    ]);
                     continue;
                 }
 
                 $signer = $signature->signers()
-                    ->where('email', $email)
+                    ->where('metadata->docuseal_submitter_id', (string) $submitterId)
                     ->where('status', SignatureStatus::PENDING)
                     ->first();
 

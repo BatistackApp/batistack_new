@@ -309,14 +309,16 @@ class PdfStamperService
         }
 
         $base64Data = str_replace(' ', '+', $base64Data);
-        $imageDecoded = base64_decode($base64Data);
+        $imageDecoded = base64_decode($base64Data, true);
 
-        if ($imageDecoded === false) {
+        if ($imageDecoded === false || @getimagesizefromstring($imageDecoded) === false) {
             return null;
         }
 
         $tempFile = sys_get_temp_dir().'/signature_'.Str::uuid().'.png';
-        file_put_contents($tempFile, $imageDecoded);
+        if (file_put_contents($tempFile, $imageDecoded) === false) {
+            return null;
+        }
 
         return $tempFile;
     }

@@ -30,6 +30,6 @@ class LaserQuoteLineObserver
 
         $quote->recalculateTotals();
 
-        GenerateLaserDocumentJob::dispatch('laser_quote', $quote);
+        GenerateLaserDocumentJob::dispatch('laser_quote', $quote)->afterCommit();
     }
 }
