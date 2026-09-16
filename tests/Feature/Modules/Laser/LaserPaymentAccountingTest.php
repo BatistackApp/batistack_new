@@ -80,3 +80,22 @@ it('removes payment entries when a laser payment is cancelled', function () {
             ->where('compte_numero', '411100')
             ->value('lettrage'))->toBeNull();
 });
+
+it('deletters remaining allocations when one of several payments is cancelled', function () {
+    $invoice = laserInvoiceForPayment($this->client);
+    $firstPayment = paymentForLaserInvoice($this->client, 60);
+    $secondPayment = paymentForLaserInvoice($this->client, 60);
+
+    app(PaymentService::class)->allocatePayment($firstPayment, $invoice, 60);
+    app(PaymentService::class)->allocatePayment($secondPayment, $invoice, 60);
+
+    app(PaymentRecordingService::class)->cancelPayment($secondPayment, 'Test');
+
+    expect(EcritureComptable::where('reconcilable_type', $invoice->getMorphClass())
+        ->where('reconcilable_id', $invoice->id)
+        ->where('compte_numero', '411100')
+        ->value('lettrage'))->toBeNull()
+        ->and(EcritureComptable::where('reconcilable_type', 'App\Models\Commerce\PaymentAllocation')
+            ->where('compte_numero', '411100')
+            ->value('lettrage'))->toBeNull();
+});
