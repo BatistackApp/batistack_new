@@ -3,6 +3,7 @@
 namespace App\Services\Commerce;
 
 use App\Enums\Commerce\InvoiceStatus;
+use App\Enums\Laser\InvoiceStatus as LaserInvoiceStatus;
 use App\Exceptions\Commerce\AllocationOverflowException;
 use App\Models\Commerce\Payment;
 use App\Models\Commerce\PaymentAllocation;
@@ -46,7 +47,14 @@ class PaymentService
             // 4. Si la facture est totalement payée (avec une tolérance de centimes)
             if ($totalAllocated >= ($targetAmount - 0.05)) {
                 if (method_exists($payable, 'update')) {
-                    $payable->update(['status' => InvoiceStatus::PAID]);
+                    $statusUpdate = [
+                        'status' => $payable instanceof \App\Models\Laser\LaserInvoice
+                            ? LaserInvoiceStatus::PAID
+                            : InvoiceStatus::PAID,
+                    ];
+                    $payable instanceof \App\Models\Laser\LaserInvoice
+                        ? $payable->updateQuietly($statusUpdate)
+                        : $payable->update($statusUpdate);
                     Log::info('Invoice PAID', ['invoice' => $payable->id]);
                 }
             }
