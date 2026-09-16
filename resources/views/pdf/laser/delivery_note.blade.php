@@ -4,22 +4,22 @@
     <div class="invoice-info">
         <div class="label">{{ $title }}</div>
         <div class="value">{{ $delivery->reference }}</div>
-        <div style="margin-top: 6px; font-size: 11px;">
-            <table style="width: auto; margin-left: auto;">
+        <div>
+            <table class="document-meta">
                 <tr>
-                    <td style="padding: 2px 12px 2px 0; text-align: right; font-weight: bold; color: #1e40af; border: none; white-space: nowrap;">Date de livraison :</td>
-                    <td style="padding: 2px 0; border: none; font-weight: bold;">{{ $delivery->delivery_date ? $delivery->delivery_date->format('d/m/Y') : $generated_at }}</td>
+                    <td>Date de livraison :</td>
+                    <td>{{ $delivery->delivery_date ? $delivery->delivery_date->format('d/m/Y') : $generated_at }}</td>
                 </tr>
                 @if($delivery->order)
                     <tr>
-                        <td style="padding: 2px 12px 2px 0; text-align: right; font-weight: bold; color: #1e40af; border: none; white-space: nowrap;">Commande :</td>
-                        <td style="padding: 2px 0; border: none; font-weight: bold;">{{ $delivery->order->reference }}</td>
+                        <td>Commande :</td>
+                        <td>{{ $delivery->order->reference }}</td>
                     </tr>
                 @endif
                 @if($delivery->order?->quote)
                     <tr>
-                        <td style="padding: 2px 12px 2px 0; text-align: right; font-weight: bold; color: #1e40af; border: none; white-space: nowrap;">Devis :</td>
-                        <td style="padding: 2px 0; border: none; font-weight: bold;">{{ $delivery->order->quote->reference }}</td>
+                        <td>Devis :</td>
+                        <td>{{ $delivery->order->quote->reference }}</td>
                     </tr>
                 @endif
             </table>

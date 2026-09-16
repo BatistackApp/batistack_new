@@ -6,6 +6,7 @@ use App\Enums\Laser\OrderStatus;
 use App\Filament\Laser\Resources\LaserOrders\LaserOrderResource;
 use App\Services\Laser\LaserDeliveryNoteService;
 use App\Services\Laser\LaserInvoiceService;
+use App\Services\Core\DocumentService;
 use Filament\Actions;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
@@ -110,7 +111,7 @@ class ViewLaserOrder extends ViewRecord
                 ->label('Imprimer PDF')
                 ->icon('heroicon-o-document-text')
                 ->color('gray')
-                ->url(fn ($record) => Storage::url('documents/laser/orders/commande_laser_'.$record->reference.'.pdf'))
+                ->url(fn ($record) => Storage::disk(DocumentService::getDisk())->url('documents/laser/orders/commande_laser_'.$record->reference.'.pdf'))
                 ->openUrlInNewTab(),
         ];
     }

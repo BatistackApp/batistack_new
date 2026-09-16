@@ -6,12 +6,15 @@ use App\Models\Laser\LaserMaterial;
 use App\Models\Laser\LaserQuote;
 use App\Models\Laser\LaserQuoteLine;
 use App\Services\Laser\DxfParserService;
-use App\Services\Laser\LaserQuoteService;
+use App\Services\Laser\DxfToSvgService;
 use Filament\Actions\Action;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Placeholder;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Notifications\Notification;
+use Illuminate\Support\HtmlString;
 
 class ImportDxfAction
 {
@@ -25,12 +28,39 @@ class ImportDxfAction
             ->modalDescription('Extrait automatiquement les dimensions et le périmètre de découpe du fichier CAD. Les dimensions doivent être en millimètres.')
             ->modalSubmitActionLabel('Créer la ligne')
             ->form([
-                FileUpload::make('dxf_file')
+                 FileUpload::make('dxf_file')
                     ->label('Fichier DXF')
                     ->helperText('Formats acceptés : .dxf (AutoCAD DXF). Les dimensions du fichier doivent être en millimètres.')
                     ->required()
-                    ->maxSize(10240)
-                    ->storeFiles(false),
+                     ->maxSize(10240)
+                     ->storeFiles(false)
+                     ->live(),
+
+                 Placeholder::make('svg_preview')
+                     ->label('Prévisualisation')
+                     ->content(function (Get $get): HtmlString|string {
+                         $file = $get('dxf_file');
+                         if (! $file || ! method_exists($file, 'getRealPath')) {
+                             return 'La prévisualisation apparaîtra après le chargement du fichier.';
+                         }
+
+                         $content = file_get_contents($file->getRealPath());
+                         if ($content === false) {
+                             return 'Impossible de lire le fichier DXF.';
+                         }
+
+                         $result = app(DxfParserService::class)->parse($content, config('laser.dxf_cut_layers', []));
+                         if (! $result->isValid()) {
+                             return 'Prévisualisation indisponible : '.$result->error;
+                         }
+
+                         return new HtmlString(app(DxfToSvgService::class)->toSvg(
+                             $result->entities,
+                             $result->lengthMm,
+                             $result->widthMm,
+                         ));
+                     })
+                     ->columnSpanFull(),
 
                 Select::make('material_id')
                     ->label('Matériau')
@@ -60,6 +90,13 @@ class ImportDxfAction
                     ->required()
                     ->minValue(1)
                     ->default(1),
+
+                TextInput::make('discount_pct')
+                    ->label('Remise manuelle (%)')
+                    ->numeric()
+                    ->default(0)
+                    ->minValue(0)
+                    ->maxValue(100),
 
                 TextInput::make('programming_cost')
                     ->label('Coût fixe programmation (€)')
@@ -175,8 +212,7 @@ class ImportDxfAction
                     return;
                 }
 
-                $service = app(LaserQuoteService::class);
-                $discount = $service->applyDiscount($quantity);
+                 $discount = max(0, min(100, (float) ($data['discount_pct'] ?? 0)));
 
                 LaserQuoteLine::create([
                     'laser_quote_id' => $quote->id,

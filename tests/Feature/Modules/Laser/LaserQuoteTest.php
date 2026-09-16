@@ -804,7 +804,7 @@ it('discount is always automatic based on quantity', function () {
         ->and($service->applyDiscount(20))->toBe(15.0);
 });
 
-it('recalculate always uses automatic discount', function () {
+it('recalculate preserves a manually entered discount', function () {
     Queue::fake();
 
     $material = LaserMaterial::create([
@@ -838,7 +838,7 @@ it('recalculate always uses automatic discount', function () {
 
     $line->refresh();
 
-    expect($line->discount_pct)->toBe('0.00');
+    expect($line->discount_pct)->toBe('20.00');
 });
 
 it('quantity 5 gets automatic 5% discount via recalculate', function () {
