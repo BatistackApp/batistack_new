@@ -246,7 +246,7 @@ it('returns zero bounds for LWPOLYLINE with fewer than 2 vertices', function () 
 });
 
 it('accounts for bulge arc extrema beyond endpoints', function () {
-    // Semicircle bulge (bulge=1) from (0,0) to (100,0) → arc goes up to y=50
+    // Semicircle bulge (bulge=1) from (0,0) to (100,0) → arc goes down to y=-50
     $entities = [
         [
             'type' => 'LWPOLYLINE',
@@ -265,12 +265,12 @@ it('accounts for bulge arc extrema beyond endpoints', function () {
 
     expect($result['min_x'])->toBe(0.0);
     expect($result['max_x'])->toBe(100.0);
-    expect($result['min_y'])->toBe(0.0);
-    expect($result['max_y'])->toBeGreaterThanOrEqual(49.0);
+    expect($result['min_y'])->toBeLessThanOrEqual(-49.0);
+    expect(round($result['max_y'], 4))->toBe(0.0);
 });
 
 it('accounts for negative bulge arc extrema', function () {
-    // Negative bulge from (0,0) to (100,0) → arc curves downward
+    // Negative bulge from (0,0) to (100,0) → arc curves upward
     $entities = [
         [
             'type' => 'LWPOLYLINE',
@@ -287,7 +287,7 @@ it('accounts for negative bulge arc extrema', function () {
 
     $result = $this->calc->calculate($entities);
 
-    expect($result['min_y'])->toBeLessThanOrEqual(-49.0);
+    expect($result['max_y'])->toBeGreaterThanOrEqual(49.0);
 });
 
 it('handles coincident points in bulge arc (zero chord)', function () {

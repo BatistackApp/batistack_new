@@ -42,14 +42,19 @@ class ArcGeometryHelper
             return ['x' => $start['x'], 'y' => $start['y']];
         }
 
-        $radius = $this->radius($chord, $bulge);
-        $tangentAngle = atan2($end['y'] - $start['y'], $end['x'] - $start['x']);
-        $centerAngle = $tangentAngle + ($bulge > 0 ? -M_PI / 2 : M_PI / 2);
-        $centerDist = $radius * cos(2 * atan(abs($bulge)));
+        $midpoint = [
+            'x' => ($start['x'] + $end['x']) / 2,
+            'y' => ($start['y'] + $end['y']) / 2,
+        ];
+        $dx = $end['x'] - $start['x'];
+        $dy = $end['y'] - $start['y'];
+        $offset = $chord * (1 - $bulge ** 2) / (4 * $bulge);
 
+        // Positive bulges use the left normal of the chord, matching DXF's
+        // signed bulge convention for both minor and major arcs.
         return [
-            'x' => ($start['x'] + $end['x']) / 2 + $centerDist * cos($centerAngle),
-            'y' => ($start['y'] + $end['y']) / 2 + $centerDist * sin($centerAngle),
+            'x' => $midpoint['x'] - ($dy / $chord) * $offset,
+            'y' => $midpoint['y'] + ($dx / $chord) * $offset,
         ];
     }
 
@@ -77,10 +82,10 @@ class ArcGeometryHelper
      * Determine if a cardinal angle lies on the arc path between startAngle and endAngle.
      *
      * For DXF bulge arcs:
-     * - bulge > 0: arc curves LEFT of chord direction → traversal is CW in terms of angles from center
-     * - bulge < 0: arc curves RIGHT of chord direction → traversal is CCW in terms of angles from center
+     * - bulge > 0: arc curves LEFT of chord direction → traversal is CCW in terms of angles from center
+     * - bulge < 0: arc curves RIGHT of chord direction → traversal is CW in terms of angles from center
      *
-     * So $ccw parameter = ($bulge < 0), NOT ($bulge > 0).
+     * So callers should use ($bulge > 0) for the CCW direction.
      */
     public function isAngleOnArc(float $startAngle, float $endAngle, float $angle, bool $ccw = true): bool
     {

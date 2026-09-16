@@ -255,8 +255,8 @@ it('calculates correct bounding box for bulge 0.5 (small arc above chord)', func
     $dxf = "0\nSECTION\n2\nENTITIES\n0\nLWPOLYLINE\n8\nCUT\n90\n2\n70\n0\n10\n0.0\n20\n0.0\n42\n0.5\n10\n100.0\n20\n0.0\n0\nENDSEC\n0\nEOF";
     $result = $parser->parse($dxf);
 
-    // bulge=0.5: center at (50,-37.5), radius=62.5, included angle ~106.3 deg
-    // Arc peaks at y=25, x range is [0,100]
+    // bulge=0.5: center at (50,37.5), radius=62.5, included angle ~106.3 deg
+    // Arc reaches y=-25, x range is [0,100]
     expect($result->isValid())->toBeTrue()
         ->and($result->lengthMm)->toBe(100.0)
         ->and($result->widthMm)->toBe(25.0);
@@ -268,8 +268,8 @@ it('calculates correct bounding box for bulge -0.5 (small arc below chord)', fun
     $dxf = "0\nSECTION\n2\nENTITIES\n0\nLWPOLYLINE\n8\nCUT\n90\n2\n70\n0\n10\n0.0\n20\n0.0\n42\n-0.5\n10\n100.0\n20\n0.0\n0\nENDSEC\n0\nEOF";
     $result = $parser->parse($dxf);
 
-    // bulge=-0.5: center at (50,37.5), radius=62.5, included angle ~106.3 deg
-    // Arc peaks at y=-25, x range is [0,100]
+    // bulge=-0.5: center at (50,-37.5), radius=62.5, included angle ~106.3 deg
+    // Arc reaches y=25, x range is [0,100]
     expect($result->isValid())->toBeTrue()
         ->and($result->lengthMm)->toBe(100.0)
         ->and($result->widthMm)->toBe(25.0);
@@ -281,8 +281,8 @@ it('calculates correct bounding box for bulge 2.0 (large arc above chord)', func
     $dxf = "0\nSECTION\n2\nENTITIES\n0\nLWPOLYLINE\n8\nCUT\n90\n2\n70\n0\n10\n0.0\n20\n0.0\n42\n2.0\n10\n100.0\n20\n0.0\n0\nENDSEC\n0\nEOF";
     $result = $parser->parse($dxf);
 
-    // bulge=2.0: center at (50,37.5), radius=62.5, included angle ~253.7 deg
-    // Arc peaks at y=100, x range extends to [-12.5,112.5]
+    // bulge=2.0: center at (50,-37.5), radius=62.5, included angle ~253.7 deg
+    // Arc reaches y=25, x range extends to [-12.5,112.5]
     expect($result->isValid())->toBeTrue()
         ->and($result->lengthMm)->toBe(125.0)
         ->and($result->widthMm)->toBe(100.0);
@@ -294,8 +294,8 @@ it('calculates correct bounding box for bulge -2.0 (large arc below chord)', fun
     $dxf = "0\nSECTION\n2\nENTITIES\n0\nLWPOLYLINE\n8\nCUT\n90\n2\n70\n0\n10\n0.0\n20\n0.0\n42\n-2.0\n10\n100.0\n20\n0.0\n0\nENDSEC\n0\nEOF";
     $result = $parser->parse($dxf);
 
-    // bulge=-2.0: center at (50,-37.5), radius=62.5, included angle ~253.7 deg
-    // Arc peaks at y=-100, x range extends to [-12.5,112.5]
+    // bulge=-2.0: center at (50,37.5), radius=62.5, included angle ~253.7 deg
+    // Arc reaches y=100, x range extends to [-12.5,112.5]
     expect($result->isValid())->toBeTrue()
         ->and($result->lengthMm)->toBe(125.0)
         ->and($result->widthMm)->toBe(100.0);
@@ -996,9 +996,10 @@ it('calculates correct bounding box for polyline with large bulge via shared cal
 
     $bbox = $calculator->calculate($entities);
 
-    // bulge=2.0: center (50, 37.5), radius 62.5
-    // Arc extends to y=100 and x to [-12.5, 112.5]
+    // bulge=2.0: center (50, -37.5), radius 62.5
+    // The major arc extends below the chord and x to [-12.5, 112.5].
     expect($bbox['min_x'])->toBeLessThanOrEqual(-12.0)
         ->and($bbox['max_x'])->toBeGreaterThanOrEqual(112.0)
-        ->and($bbox['max_y'])->toBeGreaterThanOrEqual(99.0);
+        ->and($bbox['min_y'])->toBeLessThanOrEqual(-99.0)
+        ->and($bbox['max_y'])->toBe(0.0);
 });

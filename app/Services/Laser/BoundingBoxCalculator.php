@@ -96,7 +96,8 @@ class BoundingBoxCalculator
         $updateBounds($cx + $radius * cos($startAngle), $cy + $radius * sin($startAngle));
         $updateBounds($cx + $radius * cos($endAngle), $cy + $radius * sin($endAngle));
 
-        $ccw = $bulge < 0;
+        // Positive DXF bulges traverse counter-clockwise around the centre.
+        $ccw = $bulge > 0;
         $checkAngles = [0, M_PI / 2, M_PI, 3 * M_PI / 2];
         foreach ($checkAngles as $angle) {
             if ($this->arcHelper->isAngleOnArc($startAngle, $endAngle, $angle, $ccw)) {

@@ -94,25 +94,25 @@ it('calculates center for semicircle (bulge=1)', function () {
 it('calculates center for bulge=0.5', function () {
     $center = $this->helper->center(['x' => 0, 'y' => 0], ['x' => 100, 'y' => 0], 0.5);
     expect(round($center['x'], 4))->toBe(50.0)
-        ->and(round($center['y'], 4))->toBe(-37.5);
+        ->and(round($center['y'], 4))->toBe(37.5);
 });
 
 it('calculates center for bulge=2.0 (major arc)', function () {
     $center = $this->helper->center(['x' => 0, 'y' => 0], ['x' => 100, 'y' => 0], 2.0);
     expect(round($center['x'], 4))->toBe(50.0)
-        ->and(round($center['y'], 4))->toBe(37.5);
+        ->and(round($center['y'], 4))->toBe(-37.5);
 });
 
 it('calculates center for bulge=-0.5', function () {
     $center = $this->helper->center(['x' => 0, 'y' => 0], ['x' => 100, 'y' => 0], -0.5);
     expect(round($center['x'], 4))->toBe(50.0)
-        ->and(round($center['y'], 4))->toBe(37.5);
+        ->and(round($center['y'], 4))->toBe(-37.5);
 });
 
 it('calculates center for bulge=-2.0 (major arc)', function () {
     $center = $this->helper->center(['x' => 0, 'y' => 0], ['x' => 100, 'y' => 0], -2.0);
     expect(round($center['x'], 4))->toBe(50.0)
-        ->and(round($center['y'], 4))->toBe(-37.5);
+        ->and(round($center['y'], 4))->toBe(37.5);
 });
 
 it('returns start point for coincident points', function () {
@@ -318,5 +318,6 @@ it('major arc (bulge=2) peak reaches expected y', function () {
     $center = $this->helper->center($start, $end, 2.0);
     $radius = $this->helper->radius($this->helper->chordLength($start, $end), 2.0);
 
-    expect(round($center['y'] + $radius, 4))->toBe(100.0);
+    expect(round($center['y'], 4))->toBe(-37.5)
+        ->and(round($center['y'] + $radius, 4))->toBe(25.0);
 });
