@@ -101,7 +101,8 @@ it('removes payment entries when a laser payment is cancelled', function () {
         ->and(EcritureComptable::where('reconcilable_type', $invoice->getMorphClass())
             ->where('reconcilable_id', $invoice->id)
             ->where('compte_numero', '411100')
-            ->value('lettrage'))->toBeNull();
+            ->value('lettrage'))->toBeNull()
+        ->and($invoice->fresh()->status)->toBe(InvoiceStatus::VALIDATED);
 });
 
 it('deletters remaining allocations when one of several payments is cancelled', function () {
@@ -138,4 +139,20 @@ it('rejects allocations on a cancelled payment without creating accounting entri
             'reconcilable_type',
             (new \App\Models\Commerce\PaymentAllocation)->getMorphClass(),
         )->count())->toBe(0);
+});
+
+it('rejects a laser allocation one cent above the invoice balance', function () {
+    $invoice = laserInvoiceForPayment($this->client);
+    $payment = paymentForLaserInvoice($this->client, 50);
+
+    expect(fn () => app(PaymentService::class)->allocatePayment($payment, $invoice, 50.01))
+        ->toThrow(InvalidArgumentException::class);
+});
+
+it('rejects a laser overpayment instead of creating an unlettered entry', function () {
+    $invoice = laserInvoiceForPayment($this->client);
+    $payment = paymentForLaserInvoice($this->client, 120.04);
+
+    expect(fn () => app(PaymentService::class)->allocatePayment($payment, $invoice, 120.04))
+        ->toThrow(\App\Exceptions\Commerce\AllocationOverflowException::class);
 });

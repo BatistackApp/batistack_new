@@ -7,7 +7,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        DB::table('settings')->updateOrInsert(
+        DB::table('settings')->insertOrIgnore(
             ['key' => 'laser_bank_account'],
             ['value' => '512000', 'group' => 'banking', 'type' => 'string', 'updated_at' => now(), 'created_at' => now()]
         );

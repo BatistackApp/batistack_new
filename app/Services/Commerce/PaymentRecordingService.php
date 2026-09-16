@@ -8,6 +8,7 @@ use App\Enums\Commerce\PaymentType;
 use App\Events\Commerce\PaymentCancelledEvent;
 use App\Events\Commerce\PaymentRecordedEvent;
 use App\Models\Commerce\Payment;
+use App\Models\Commerce\PaymentAllocation;
 use App\Models\Tiers\ThirdParty;
 use Carbon\Carbon;
 use Carbon\CarbonImmutable;
@@ -276,6 +277,14 @@ class PaymentRecordingService
                 app(LaserPaymentAccountingService::class)->removeAllocation($allocation);
 
                 $allocation->delete();
+
+                if ($payable instanceof \App\Models\Laser\LaserInvoice
+                    && ! PaymentAllocation::query()
+                        ->where('payable_type', $payable->getMorphClass())
+                        ->where('payable_id', $payable->getKey())
+                        ->exists()) {
+                    $payable->updateQuietly(['status' => \App\Enums\Laser\InvoiceStatus::VALIDATED]);
+                }
 
                 // Rétrogader la facture si nécessaire
                 if (method_exists($payable, 'markAsUnpaid')) {

@@ -34,7 +34,7 @@ class PaymentService
             }
 
             $allocatedAmount = (float) $payment->allocations()->sum('allocated_amount');
-            if ($allocatedAmount + $amountToAllocate > (float) $payment->amount + 0.05) {
+            if ($allocatedAmount + $amountToAllocate > (float) $payment->amount + 0.00001) {
                 throw new \InvalidArgumentException('Le total des allocations dépasse le montant du paiement.');
             }
 
@@ -89,9 +89,15 @@ class PaymentService
             ->where('payable_id', $payable->id)
             ->sum('allocated_amount');
 
-        $remaining = $targetAmount - $existing;
+            $remaining = $targetAmount - $existing;
 
-        if ($amount > $remaining + 0.05) {
+            if ($payable instanceof \App\Models\Laser\LaserInvoice && $amount > $remaining + 0.00001) {
+                throw new AllocationOverflowException(
+                    "Cannot allocate {$amount}€ (only {$remaining}€ remaining)"
+                );
+            }
+
+            if ($amount > $remaining + 0.05) {
             throw new AllocationOverflowException(
                 "Cannot allocate {$amount}€ (only {$remaining}€ remaining)"
             );
