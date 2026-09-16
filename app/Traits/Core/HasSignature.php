@@ -165,7 +165,6 @@ trait HasSignature
                 $stampedMediaCollection = $this->getStampedMediaCollection();
 
                 if ($stampedMediaCollection && method_exists($this, 'clearMediaCollection') && method_exists($this, 'addMedia')) {
-                    $this->clearMediaCollection($stampedMediaCollection);
                     $this->addMedia($stampedPdfPath)->toMediaCollection($stampedMediaCollection);
                 } elseif (method_exists($this, 'getStampedPath')) {
                     $relativePath = $this->getStampedPath();

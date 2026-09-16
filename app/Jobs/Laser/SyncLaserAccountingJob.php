@@ -49,7 +49,15 @@ class SyncLaserAccountingJob implements ShouldQueue
 
     public function failed(Throwable $exception): void
     {
-        $document = $this->document();
+        $document = $this->documentType === 'credit_note'
+            ? LaserCreditNote::query()->find($this->documentId)
+            : LaserInvoice::query()->find($this->documentId);
+
+        if (! $document) {
+            report($exception);
+            return;
+        }
+
         $sync = AccountingSync::query()->firstOrCreate(
             [
                 'syncable_type' => $document->getMorphClass(),
