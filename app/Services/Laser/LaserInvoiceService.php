@@ -93,8 +93,6 @@ class LaserInvoiceService
             ]);
 
             DB::afterCommit(fn () => GenerateLaserDocumentJob::dispatch('laser_invoice', $invoice));
-            DB::afterCommit(fn () => SyncLaserAccountingJob::dispatch('invoice', $invoice->id));
-
             return $invoice;
         });
     }

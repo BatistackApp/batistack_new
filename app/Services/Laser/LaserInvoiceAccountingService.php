@@ -8,7 +8,6 @@ use App\Models\Accounting\AccountingSync;
 use App\Models\Accounting\EcritureComptable;
 use App\Models\Laser\LaserCreditNote;
 use App\Models\Laser\LaserInvoice;
-use App\Services\Accounting\EcritureComptableService;
 use App\Services\Core\SettingService;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
@@ -17,7 +16,6 @@ use InvalidArgumentException;
 class LaserInvoiceAccountingService
 {
     public function __construct(
-        private EcritureComptableService $ecritureService,
         private SettingService $settingService,
     ) {}
 
@@ -42,13 +40,21 @@ class LaserInvoiceAccountingService
     private function syncDocument(Model $document, bool $isCreditNote): AccountingSync
     {
         return DB::transaction(function () use ($document, $isCreditNote) {
-            $sync = AccountingSync::query()->firstOrCreate(
+            AccountingSync::query()->firstOrCreate(
                 [
                     'syncable_type' => $document->getMorphClass(),
                     'syncable_id' => $document->getKey(),
                 ],
                 ['status' => 'pending']
             );
+
+            // Serialize concurrent jobs for the same document before checking
+            // the status or creating any accounting entries.
+            $sync = AccountingSync::query()
+                ->where('syncable_type', $document->getMorphClass())
+                ->where('syncable_id', $document->getKey())
+                ->lockForUpdate()
+                ->firstOrFail();
 
             if ($sync->status === 'synced') {
                 return $sync;
