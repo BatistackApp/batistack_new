@@ -146,9 +146,9 @@ it('keeps a file-based stamped path distinct from the source for CustomerQuote',
         'signature_data' => stampedSignatureData(),
     ]);
 
-    // Avant tamponnage, pas de copie signée : on retombe sur la source.
+    // Avant tamponnage, aucun document signé ne doit être exposé.
     expect($quote->getSignaturePath())->not->toBeNull()
-        ->and($quote->getStampedDocumentPath($signature))->toBe($quote->getSignaturePath());
+        ->and($quote->getStampedDocumentPath($signature))->toBeNull();
 
     // Une fois le PDF signé enregistré, le chemin signé devient distinct de la source.
     $signedRelative = 'documents/commerce/quotes/signes/devis_DEV-00123.pdf';

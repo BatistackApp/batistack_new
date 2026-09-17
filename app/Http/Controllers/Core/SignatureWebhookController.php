@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Core\Signature;
 use App\Services\Core\SignatureService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -28,11 +29,11 @@ class SignatureWebhookController extends Controller
         $secret = config('services.docuseal.webhook_secret');
         $providedSignature = $request->header('X-Docuseal-Signature')
             ?? $request->header('X-DocuSeal-Signature');
-        $expectedSignature = $secret ? hash_hmac('sha256', $request->getContent(), $secret) : null;
 
-        if (! $secret || ! $providedSignature || ! hash_equals(
-            $expectedSignature,
-            preg_replace('/^sha256=/', '', $providedSignature),
+        if (! $secret || ! $providedSignature || ! $this->isValidWebhookSignature(
+            $providedSignature,
+            $request->getContent(),
+            $secret,
         )) {
             return response()->json(['error' => 'Unauthenticated webhook'], 401);
         }
@@ -68,6 +69,30 @@ class SignatureWebhookController extends Controller
         }
 
         return response()->json(['status' => 'success']);
+    }
+
+    private function isValidWebhookSignature(string $header, string $body, string $secret): bool
+    {
+        [$timestamp, $signature] = array_pad(explode('.', $header, 2), 2, null);
+
+        if (! ctype_digit((string) $timestamp) || ! $signature) {
+            return false;
+        }
+
+        $timestamp = (int) $timestamp;
+        $tolerance = (int) config('services.docuseal.webhook_tolerance', 300);
+
+        if (abs(now()->timestamp - $timestamp) > $tolerance) {
+            return false;
+        }
+
+        $expected = hash_hmac('sha256', $timestamp.'.'.$body, $secret);
+
+        if (! hash_equals($expected, $signature)) {
+            return false;
+        }
+
+        return Cache::add('docuseal-webhook:'.$timestamp.':'.$signature, true, $tolerance);
     }
 
     /**
