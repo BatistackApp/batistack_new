@@ -28,9 +28,10 @@ test('setting key must be unique', function () {
 });
 
 test('multiple settings can coexist', function () {
+    $countBefore = Setting::count();
     Setting::factory()->create(['key' => 'app_version']);
 
-    expect(Setting::count())->toBe(2);
+    expect(Setting::count())->toBe($countBefore + 1);
 });
 
 test('validation fails for invalid integer', function () {

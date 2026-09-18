@@ -6,6 +6,7 @@ use App\Models\Commerce\CustomerQuote;
 use App\Models\Core\Signature;
 use App\Models\Core\SignatureSigner;
 use App\Models\Tiers\ThirdPartyDocument;
+use App\Services\Core\PdfStamperService;
 use App\Services\Core\SignatureService;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Str;
@@ -89,6 +90,16 @@ it('shows completed page for legacy signed signature', function () {
 
 it('processes legacy signature', function () {
     $doc = ThirdPartyDocument::factory()->create();
+    $sourcePdf = sys_get_temp_dir().'/source.pdf';
+    $stampedPdf = sys_get_temp_dir().'/stamped.pdf';
+    file_put_contents($sourcePdf, 'source content');
+    file_put_contents($stampedPdf, 'stamped content');
+    $doc->addMedia($sourcePdf)->toMediaCollection('third_party_documents');
+
+    $mockStamper = Mockery::mock(PdfStamperService::class);
+    $mockStamper->shouldReceive('stamp')->andReturn($stampedPdf);
+    app()->instance(PdfStamperService::class, $mockStamper);
+
     $token = Str::uuid()->toString();
     Signature::create([
         'token' => $token,
@@ -104,6 +115,8 @@ it('processes legacy signature', function () {
     ]);
 
     $response->assertRedirect();
+
+    @unlink($stampedPdf);
 });
 
 it('refuses as signer', function () {
