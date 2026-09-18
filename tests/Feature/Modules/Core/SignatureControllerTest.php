@@ -57,6 +57,10 @@ it('can sign the document', function () {
     $mockStamper->shouldReceive('stamp')->andReturn(sys_get_temp_dir().'/dummy.pdf');
     file_put_contents(sys_get_temp_dir().'/dummy.pdf', 'dummy content');
 
+    $sourcePdf = sys_get_temp_dir().'/source.pdf';
+    file_put_contents($sourcePdf, 'source content');
+    $document->addMedia($sourcePdf)->toMediaCollection('third_party_documents');
+
     app()->instance(PdfStamperService::class, $mockStamper);
 
     $response = $this->post(route('signature.sign', $signature->token), [

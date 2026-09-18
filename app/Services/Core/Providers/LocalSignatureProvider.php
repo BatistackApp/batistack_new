@@ -274,9 +274,19 @@ class LocalSignatureProvider implements SignatureProviderInterface
 
     /**
      * Génère une empreinte unique (SHA-256) basée sur les attributs du modèle.
+     * Normalise les instances Carbon pour garantir la cohérence entre
+     * le modèle en mémoire et le modèle chargé depuis la base de données.
      */
     protected function generateChecksum(Model $model): string
     {
-        return hash('sha256', json_encode($model->toArray()));
+        $attributes = $model->toArray();
+
+        foreach ($attributes as $key => $value) {
+            if ($value instanceof \Carbon\CarbonInterface) {
+                $attributes[$key] = $value->format('Y-m-d H:i:s');
+            }
+        }
+
+        return hash('sha256', json_encode($attributes));
     }
 }

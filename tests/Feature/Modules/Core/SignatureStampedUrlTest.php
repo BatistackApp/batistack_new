@@ -47,8 +47,14 @@ it('returns the signable stamped url when supported', function () {
         'token' => 'test-token',
     ]);
 
+    $stampedPdf = sys_get_temp_dir().'/stamped.pdf';
+    file_put_contents($stampedPdf, 'stamped content');
+    $document->addMedia($stampedPdf)->toMediaCollection('signed_documents');
+
     $url = $signature->stamped_document_url;
 
     // ThirdPartyDocument defaults to its media url (may be empty string when no media).
     expect(is_string($url))->toBeTrue();
+
+    @unlink($stampedPdf);
 });

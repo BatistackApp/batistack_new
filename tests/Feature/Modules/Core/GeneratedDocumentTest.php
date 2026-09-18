@@ -152,7 +152,7 @@ it('returns temporary url for s3 disk', function () {
     ]);
 
     $url = $document->temporaryUrl();
-    expect($url)->toContain('https://');
+    expect($url)->toContain('expiration=');
 });
 
 it('returns regular url for non-s3 disk', function () {
