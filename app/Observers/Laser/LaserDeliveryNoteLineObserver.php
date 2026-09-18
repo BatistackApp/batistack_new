@@ -4,6 +4,7 @@ namespace App\Observers\Laser;
 
 use App\Models\Laser\LaserDeliveryNoteLine;
 use Exception;
+use Illuminate\Support\Facades\DB;
 
 class LaserDeliveryNoteLineObserver
 {
@@ -24,6 +25,9 @@ class LaserDeliveryNoteLineObserver
         }
 
         $orderLine = $line->orderLine;
+        // Serialize competing draft-line edits on the order line. The
+        // reservation is recomputed after the line update from committed rows.
+        $orderLine->newQuery()->whereKey($orderLine->id)->lockForUpdate()->first();
 
         $otherReserved = $orderLine->deliveryNoteLines()
             ->where('laser_delivery_note_id', '!=', $line->laser_delivery_note_id)
@@ -52,11 +56,14 @@ class LaserDeliveryNoteLineObserver
             $new = $line->quantity_delivered;
             $diff = $new - $old;
 
-            if ($diff > 0) {
-                $line->orderLine->increment('reserved_quantity', $diff);
-            } elseif ($diff < 0) {
-                $line->orderLine->decrement('reserved_quantity', abs($diff));
-            }
+            DB::transaction(function () use ($line) {
+                $orderLine = $line->orderLine()->lockForUpdate()->firstOrFail();
+                $reserved = $orderLine->deliveryNoteLines()
+                    ->whereHas('deliveryNote', fn ($query) => $query->where('status', 'draft'))
+                    ->sum('quantity_delivered');
+
+                $orderLine->update(['reserved_quantity' => $reserved]);
+            });
         }
     }
 }

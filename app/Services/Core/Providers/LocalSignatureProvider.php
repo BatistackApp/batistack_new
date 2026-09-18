@@ -222,30 +222,30 @@ class LocalSignatureProvider implements SignatureProviderInterface
         string $token,
         ?string $reason = null
     ): SignatureSigner {
-        $signer = SignatureSigner::where('token', $token)
-            ->where('status', SignatureStatus::PENDING)
-            ->firstOrFail();
+        return DB::transaction(function () use ($token, $reason) {
+            $signer = SignatureSigner::where('token', $token)
+                ->where('status', SignatureStatus::PENDING)
+                ->lockForUpdate()
+                ->firstOrFail();
+            $signature = Signature::whereKey($signer->signature_id)->lockForUpdate()->firstOrFail();
 
-        $signer->update([
-            'status' => SignatureStatus::REFUSED,
-            'metadata' => array_merge($signer->metadata ?? [], [
-                'refused_at' => now()->toDateTimeString(),
-                'refusal_reason' => $reason,
-            ]),
-        ]);
+            $signer->update([
+                'status' => SignatureStatus::REFUSED,
+                'metadata' => array_merge($signer->metadata ?? [], [
+                    'refused_at' => now()->toDateTimeString(),
+                    'refusal_reason' => $reason,
+                ]),
+            ]);
 
-        // The whole workflow is stopped
-        $signature = $signer->signature;
-        $signature->update([
-            'status' => SignatureStatus::REFUSED,
-        ]);
+            // The whole workflow is stopped.
+            $signature->update(['status' => SignatureStatus::REFUSED]);
 
-        // Notify admin/owner via relationship
-        if ($signature->user) {
-            Notification::send($signature->user, new SignatureRefusedNotification($signature, $signer));
-        }
+            if ($signature->user) {
+                Notification::send($signature->user, new SignatureRefusedNotification($signature, $signer));
+            }
 
-        return $signer;
+            return $signer;
+        });
     }
 
     /**
@@ -279,13 +279,17 @@ class LocalSignatureProvider implements SignatureProviderInterface
      */
     protected function generateChecksum(Model $model): string
     {
-        $attributes = $model->toArray();
+        // Use persisted attributes only. `toArray()` can change representation
+        // after a model is reloaded (casts and appended relationships).
+        $attributes = $model->getAttributes();
 
         foreach ($attributes as $key => $value) {
             if ($value instanceof \Carbon\CarbonInterface) {
                 $attributes[$key] = $value->format('Y-m-d H:i:s');
             }
         }
+
+        ksort($attributes);
 
         return hash('sha256', json_encode($attributes));
     }

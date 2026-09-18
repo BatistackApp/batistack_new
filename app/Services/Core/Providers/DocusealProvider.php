@@ -267,32 +267,29 @@ class DocusealProvider implements SignatureProviderInterface
         string $token,
         ?string $reason = null
     ): SignatureSigner {
-        $signer = SignatureSigner::where('token', $token)
-            ->where('status', SignatureStatus::PENDING)
-            ->firstOrFail();
+        return DB::transaction(function () use ($token, $reason) {
+            $signer = SignatureSigner::where('token', $token)
+                ->where('status', SignatureStatus::PENDING)
+                ->lockForUpdate()
+                ->firstOrFail();
+            $signature = Signature::whereKey($signer->signature_id)->lockForUpdate()->firstOrFail();
 
-        $signer->update([
-            'status' => SignatureStatus::REFUSED,
-            'metadata' => array_merge($signer->metadata ?? [], [
-                'refused_at' => now()->toDateTimeString(),
-                'refusal_reason' => $reason,
-            ]),
-        ]);
+            $signer->update([
+                'status' => SignatureStatus::REFUSED,
+                'metadata' => array_merge($signer->metadata ?? [], [
+                    'refused_at' => now()->toDateTimeString(),
+                    'refusal_reason' => $reason,
+                ]),
+            ]);
 
-        $signature = $signer->signature;
-        $signature->update([
-            'status' => SignatureStatus::REFUSED,
-        ]);
+            $signature->update(['status' => SignatureStatus::REFUSED]);
 
-        // Notify admin
-        if ($signature->user) {
-            Notification::send(
-                $signature->user,
-                new SignatureRefusedNotification($signature, $signer)
-            );
-        }
+            if ($signature->user) {
+                Notification::send($signature->user, new SignatureRefusedNotification($signature, $signer));
+            }
 
-        return $signer;
+            return $signer;
+        });
     }
 
     public function sign(

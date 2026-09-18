@@ -153,6 +153,26 @@ class SignatureController extends Controller
     }
 
     /**
+     * Finalize a completed signature exactly once.
+     */
+    public function finalizeSignature(Signature $signature): void
+    {
+        $signature->refresh();
+
+        if (($signature->metadata['post_processed_at'] ?? null) !== null) {
+            return;
+        }
+
+        $this->handlePostSignature($signature);
+
+        $signature->update([
+            'metadata' => array_merge($signature->metadata ?? [], [
+                'post_processed_at' => now()->toDateTimeString(),
+            ]),
+        ]);
+    }
+
+    /**
      * Validate and return the signature data from the request.
      */
     protected function validateSignatureData(Request $request): string

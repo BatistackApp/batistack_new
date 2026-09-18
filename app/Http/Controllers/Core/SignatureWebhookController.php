@@ -17,7 +17,7 @@ class SignatureWebhookController extends Controller
     /**
      * Handle incoming webhooks from DocuSeal.
      */
-    public function handleDocuseal(Request $request, SignatureService $signatureService)
+    public function handleDocuseal(Request $request, SignatureService $signatureService, SignatureController $signatureController)
     {
         $eventType = $request->input('event_type');
         $data = $request->input('data');
@@ -49,7 +49,7 @@ class SignatureWebhookController extends Controller
                 if ($signature && $signature->status === SignatureStatus::PENDING) {
                     // Multi-signatory: update individual signer by email
                     if ($signature->signers()->exists()) {
-                        $this->handleMultiSignerWebhook($signature, $data, $signatureService);
+                         $this->handleMultiSignerWebhook($signature, $data, $signatureService, $signatureController);
                     } else {
                         // Legacy single signer
                         $signatureService->driver('docuseal')->sign(
@@ -100,7 +100,12 @@ class SignatureWebhookController extends Controller
      * DocuSeal sends one webhook per completed submission.
      * Match the signer by email from the submitters array.
      */
-    protected function handleMultiSignerWebhook(Signature $signature, array $data, SignatureService $signatureService): void
+    protected function handleMultiSignerWebhook(
+        Signature $signature,
+        array $data,
+        SignatureService $signatureService,
+        SignatureController $signatureController,
+    ): void
     {
         DB::transaction(function () use ($signature, $data, $signatureService) {
             $submitters = $data['submitters'] ?? [];
@@ -130,6 +135,11 @@ class SignatureWebhookController extends Controller
 
                     Log::info("Signer {$signer->id} ({$email}) marked as signed via DocuSeal webhook.");
                 }
+            }
+
+            $signature->refresh();
+            if ($signature->status === SignatureStatus::SIGNED) {
+                $signatureController->finalizeSignature($signature);
             }
         });
     }
