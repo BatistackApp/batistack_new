@@ -25,7 +25,7 @@ class DocumentService
      */
     public static function getDisk(): string
     {
-        return env('DOCUMENTS_DISK', 'public');
+        return config('filesystems.documents_disk', env('DOCUMENTS_DISK', 'public'));
     }
 
     /**

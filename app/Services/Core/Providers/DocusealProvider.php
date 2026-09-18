@@ -107,19 +107,28 @@ class DocusealProvider implements SignatureProviderInterface
             return $signature;
         });
 
+        $templateId = null;
+        $submissionId = null;
+        $http = Http::withHeaders([
+            'X-Auth-Token' => $this->apiToken,
+            'Content-Type' => 'application/json',
+        ]);
+
         try {
             $fileContent = Storage::disk($disk)->get($documentPath);
             if (! $fileContent) {
                 throw new \RuntimeException("Impossible de lire le document PDF : {$documentPath}");
             }
 
+            $sourceChecksum = hash('sha256', $fileContent);
+            $signature->update([
+                'metadata' => array_merge($signature->metadata ?? [], [
+                    'source_document_checksum' => $sourceChecksum,
+                ]),
+            ]);
+
             $base64File = 'data:application/pdf;base64,'.base64_encode($fileContent);
             $documentName = basename($documentPath);
-
-            $http = Http::withHeaders([
-                'X-Auth-Token' => $this->apiToken,
-                'Content-Type' => 'application/json',
-            ]);
 
             // 1. Create a Template from the PDF
             $templateResponse = $http->post("{$this->apiUrl}/templates/pdf", [
@@ -179,6 +188,15 @@ class DocusealProvider implements SignatureProviderInterface
             }
         } catch (\Exception $e) {
             Log::error('DocusealProvider exception: '.$e->getMessage());
+
+            // Compensate remote resources created before the local workflow failed.
+            if ($submissionId) {
+                $http->delete("{$this->apiUrl}/submissions/{$submissionId}");
+            }
+            if ($templateId) {
+                $http->delete("{$this->apiUrl}/templates/{$templateId}");
+            }
+
             $signature->signers()->delete();
             $signature->delete();
             throw $e;
@@ -204,6 +222,15 @@ class DocusealProvider implements SignatureProviderInterface
             $signature = Signature::whereKey($signer->signature_id)->lockForUpdate()->firstOrFail();
             if (! hash_equals($signature->checksum, hash('sha256', json_encode($signature->signable->toArray())))) {
                 throw new \RuntimeException('Le document a été modifié depuis la demande de signature.');
+            }
+
+            $sourcePath = $signature->signable->getSignatureDocumentPath();
+            $expectedSourceChecksum = $signature->metadata['source_document_checksum'] ?? null;
+            if ($expectedSourceChecksum && (! $sourcePath || ! is_readable($sourcePath) || ! hash_equals(
+                $expectedSourceChecksum,
+                hash_file('sha256', $sourcePath),
+            ))) {
+                throw new \RuntimeException('Le fichier PDF a été modifié depuis la demande de signature.');
             }
 
             $signer->update([

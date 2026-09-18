@@ -37,6 +37,7 @@ return [
 
     'docuseal' => [
         'webhook_secret' => env('DOCUSEAL_WEBHOOK_SECRET'),
+        'webhook_tolerance' => (int) env('DOCUSEAL_WEBHOOK_TOLERANCE', 300),
         'endpoint' => env('DOCUSEAL_ENDPOINT'),
         'api_key' => env('DOCUSEAL_API_KEY'),
     ],

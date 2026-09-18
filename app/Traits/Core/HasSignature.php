@@ -46,7 +46,7 @@ trait HasSignature
             }
         }
 
-        return $this->getSignatureDocumentUrl($signature);
+        return null;
     }
 
     /**
@@ -71,7 +71,7 @@ trait HasSignature
             }
         }
 
-        return $this->getSignatureDocumentPath();
+        return null;
     }
 
     /**
