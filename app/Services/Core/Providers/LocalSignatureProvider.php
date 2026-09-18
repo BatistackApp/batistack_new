@@ -174,11 +174,18 @@ class LocalSignatureProvider implements SignatureProviderInterface
         string $ipAddress,
         string $userAgent
     ): SignatureSigner {
-        $signer = SignatureSigner::where('token', $token)
-            ->where('status', SignatureStatus::PENDING)
-            ->firstOrFail();
+        return DB::transaction(function () use ($token, $signatureData, $ipAddress, $userAgent) {
+            $signer = SignatureSigner::where('token', $token)
+                ->where('status', SignatureStatus::PENDING)
+                ->lockForUpdate()
+                ->firstOrFail();
 
-        $signer->update([
+            $signature = Signature::whereKey($signer->signature_id)->lockForUpdate()->firstOrFail();
+            if (! hash_equals($signature->checksum, $this->generateChecksum($signature->signable))) {
+                throw new \RuntimeException('Le document a été modifié depuis la demande de signature.');
+            }
+
+            $signer->update([
             'status' => SignatureStatus::SIGNED,
             'signature_data' => $signatureData,
             'ip_address' => $ipAddress,
@@ -187,25 +194,25 @@ class LocalSignatureProvider implements SignatureProviderInterface
                 'user_agent' => $userAgent,
                 'source' => 'external_public_link',
             ]),
-        ]);
+            ]);
 
         // Check if all signers have signed
-        $signature = $signer->signature;
         $allSigned = ! $signature->signers()
             ->where('status', '!=', SignatureStatus::SIGNED)
             ->exists();
 
         if ($allSigned) {
-            $signature->update([
+                $signature->update([
                 'status' => SignatureStatus::SIGNED,
                 'signed_at' => now(),
             ]);
 
             // Dispatch completion notification
-            $this->dispatchCompletionNotification($signature);
-        }
+                $this->dispatchCompletionNotification($signature);
+            }
 
-        return $signer;
+            return $signer;
+        });
     }
 
     /**
@@ -215,30 +222,30 @@ class LocalSignatureProvider implements SignatureProviderInterface
         string $token,
         ?string $reason = null
     ): SignatureSigner {
-        $signer = SignatureSigner::where('token', $token)
-            ->where('status', SignatureStatus::PENDING)
-            ->firstOrFail();
+        return DB::transaction(function () use ($token, $reason) {
+            $signer = SignatureSigner::where('token', $token)
+                ->where('status', SignatureStatus::PENDING)
+                ->lockForUpdate()
+                ->firstOrFail();
+            $signature = Signature::whereKey($signer->signature_id)->lockForUpdate()->firstOrFail();
 
-        $signer->update([
-            'status' => SignatureStatus::REFUSED,
-            'metadata' => array_merge($signer->metadata ?? [], [
-                'refused_at' => now()->toDateTimeString(),
-                'refusal_reason' => $reason,
-            ]),
-        ]);
+            $signer->update([
+                'status' => SignatureStatus::REFUSED,
+                'metadata' => array_merge($signer->metadata ?? [], [
+                    'refused_at' => now()->toDateTimeString(),
+                    'refusal_reason' => $reason,
+                ]),
+            ]);
 
-        // The whole workflow is stopped
-        $signature = $signer->signature;
-        $signature->update([
-            'status' => SignatureStatus::REFUSED,
-        ]);
+            // The whole workflow is stopped.
+            $signature->update(['status' => SignatureStatus::REFUSED]);
 
-        // Notify admin/owner via relationship
-        if ($signature->user) {
-            Notification::send($signature->user, new SignatureRefusedNotification($signature, $signer));
-        }
+            if ($signature->user) {
+                Notification::send($signature->user, new SignatureRefusedNotification($signature, $signer));
+            }
 
-        return $signer;
+            return $signer;
+        });
     }
 
     /**
@@ -267,9 +274,23 @@ class LocalSignatureProvider implements SignatureProviderInterface
 
     /**
      * Génère une empreinte unique (SHA-256) basée sur les attributs du modèle.
+     * Normalise les instances Carbon pour garantir la cohérence entre
+     * le modèle en mémoire et le modèle chargé depuis la base de données.
      */
     protected function generateChecksum(Model $model): string
     {
-        return hash('sha256', json_encode($model->toArray()));
+        // Use persisted attributes only. `toArray()` can change representation
+        // after a model is reloaded (casts and appended relationships).
+        $attributes = $model->getAttributes();
+
+        foreach ($attributes as $key => $value) {
+            if ($value instanceof \Carbon\CarbonInterface) {
+                $attributes[$key] = $value->format('Y-m-d H:i:s');
+            }
+        }
+
+        ksort($attributes);
+
+        return hash('sha256', json_encode($attributes));
     }
 }

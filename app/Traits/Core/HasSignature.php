@@ -2,9 +2,11 @@
 
 namespace App\Traits\Core;
 
+use App\Enums\Core\SignatureStatus;
 use App\Models\Core\Signature;
 use App\Services\Core\PdfStamperService;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Storage;
 
 trait HasSignature
 {
@@ -18,6 +20,66 @@ trait HasSignature
             return $this->getSignatureUrl($signature);
         }
 
+        return null;
+    }
+
+    /**
+     * Get the URL of the final stamped/signed document.
+     * Models can override via getStampedDocumentUrl() method (stamped copy).
+     * Defaults to the source document URL when the model does not store a distinct stamped copy.
+     */
+    public function getStampedDocumentUrl(Signature $signature): ?string
+    {
+        $stampedMediaCollection = $this->getStampedMediaCollection();
+
+        if ($stampedMediaCollection && method_exists($this, 'getMedia')) {
+            $media = $this->getMedia($stampedMediaCollection)->first();
+            if ($media) {
+                return $media->getUrl();
+            }
+        }
+
+        if (method_exists($this, 'getStampedPath')) {
+            $relativePath = $this->getStampedPath();
+            if ($relativePath && Storage::disk($this->getStampedDisk())->exists($relativePath)) {
+                return $this->getStampedUrlForPath($relativePath);
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Get the absolute path of the final stamped/signed document.
+     * Models can override via getStampedPath() method (file-based storage).
+     */
+    public function getStampedDocumentPath(?Signature $signature = null): ?string
+    {
+        $stampedMediaCollection = $this->getStampedMediaCollection();
+
+        if ($stampedMediaCollection && method_exists($this, 'getMedia')) {
+            $media = $this->getMedia($stampedMediaCollection)->first();
+            if ($media) {
+                return $media->getPath();
+            }
+        }
+
+        if (method_exists($this, 'getStampedPath')) {
+            $relativePath = $this->getStampedPath();
+            if ($relativePath && Storage::disk($this->getStampedDisk())->exists($relativePath)) {
+                return Storage::disk($this->getStampedDisk())->path($relativePath);
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Resolve the public URL for a stamped file-based document.
+     * Models can override when the stamped copy lives on a specific disk.
+     */
+    protected function getStampedUrlForPath(string $stampedPath): ?string
+    {
         return null;
     }
 
@@ -74,19 +136,50 @@ trait HasSignature
         $documentPath = $this->getSignatureDocumentPath();
         $signatoryName = $this->getSignatoryName();
 
-        if ($documentPath && file_exists($documentPath)) {
+        if (! $documentPath || ! is_readable($documentPath)) {
+            throw new \RuntimeException('Le document source de la signature est introuvable ou illisible.');
+        }
+
+        if ($documentPath) {
+            // Load signed signers for multi-signer stamping
+            $signers = $signature->signers()
+                ->where('status', SignatureStatus::SIGNED)
+                ->get()
+                ->all();
+
             $stamper = app(PdfStamperService::class);
-            $stampedPdfPath = $stamper->stamp($documentPath, $signature, $signatoryName);
+            $documentChecksum = null;
+            $stampedPdfPath = $stamper->stamp($documentPath, $signature, $signatoryName, $signers ?: null, $documentChecksum);
+            if (! $stampedPdfPath || ! is_readable($stampedPdfPath)) {
+                throw new \RuntimeException('Le document signé n’a pas pu être généré.');
+            }
+
+            if ($documentChecksum) {
+                $signature->update(['document_checksum' => $documentChecksum]);
+            }
 
             try {
-                // Use Spatie Media for models that support it
-                if (method_exists($this, 'clearMediaCollection') && method_exists($this, 'addMedia')) {
-                    $mediaCollection = $this->getSignatureMediaCollection();
-                    if ($mediaCollection) {
-                        $this->clearMediaCollection($mediaCollection);
-                        $this->addMedia($stampedPdfPath)->toMediaCollection($mediaCollection);
+                // The stamped PDF is stored in a DEDICATED location so that the source
+                // document (getSignaturePath / getSignatureDocumentUrl) stays untouched:
+                // this avoids re-stamping an already-stamped PDF on a second signature.
+                $stampedMediaCollection = $this->getStampedMediaCollection();
+
+                if ($stampedMediaCollection && method_exists($this, 'clearMediaCollection') && method_exists($this, 'addMedia')) {
+                    $this->addMedia($stampedPdfPath)->toMediaCollection($stampedMediaCollection);
+                } elseif (method_exists($this, 'getStampedPath')) {
+                    $relativePath = $this->getStampedPath();
+                    if ($relativePath) {
+                        $stampedDisk = $this->getStampedDisk();
+                        Storage::disk($stampedDisk)->makeDirectory(dirname($relativePath));
+
+                        $fullPath = Storage::disk($stampedDisk)->path($relativePath);
+                        if (! File::copy($stampedPdfPath, $fullPath) || ! is_readable($fullPath)) {
+                            throw new \RuntimeException('Le document signé n’a pas pu être stocké.');
+                        }
                     }
                 } else {
+                    // Legacy fallback: overwrite the source in place (models without
+                    // dedicated stamped storage).
                     File::copy($stampedPdfPath, $documentPath);
                 }
             } finally {
@@ -98,11 +191,37 @@ trait HasSignature
     }
 
     /**
-     * Get the Spatie Media collection name for signed documents.
+     * Get the Spatie Media collection name used for the SOURCE document.
      * Override in models that use Spatie Media Library.
      */
     protected function getSignatureMediaCollection(): ?string
     {
         return null;
+    }
+
+    /**
+     * Get the Spatie Media collection name used for the STAMPED (signed) document.
+     * Must differ from the source collection so that re-signing never re-stamps
+     * an already-stamped document.
+     */
+    protected function getStampedMediaCollection(): ?string
+    {
+        return null;
+    }
+
+    /**
+     * Relative path (on getStampedDisk()) of the STAMPED document for file-based models.
+     */
+    protected function getStampedPath(): ?string
+    {
+        return null;
+    }
+
+    /**
+     * Disk used for the stamped file-based document.
+     */
+    public function getStampedDisk(): string
+    {
+        return 'public';
     }
 }

@@ -60,6 +60,19 @@ class DocusealProvider implements SignatureProviderInterface
         array $signers,
         ?string $documentPath = null
     ): Signature {
+        if (! $this->apiToken) {
+            throw new \RuntimeException("Le Token API DocuSeal n'est pas configuré dans votre fichier .env (DOCUSEAL_API_TOKEN).");
+        }
+
+        if ($signers === [] || ! $documentPath) {
+            throw new \InvalidArgumentException('Les signataires et le document PDF sont requis.');
+        }
+
+        $disk = DocumentService::getDisk();
+        if (! Storage::disk($disk)->exists($documentPath)) {
+            throw new \RuntimeException("Le document PDF est introuvable : {$documentPath}");
+        }
+
         $signature = DB::transaction(function () use ($model, $type, $signers) {
             $signature = Signature::create([
                 'token' => Str::uuid()->toString(),
@@ -94,30 +107,28 @@ class DocusealProvider implements SignatureProviderInterface
             return $signature;
         });
 
-        if (! $this->apiToken) {
-            throw new \Exception("Le Token API DocuSeal n'est pas configuré dans votre fichier .env (DOCUSEAL_API_TOKEN).");
-        }
-
-        if (empty($signers) || ! $documentPath) {
-            throw new \Exception("Les signataires ou le document PDF sont manquants pour l'envoi à DocuSeal.");
-        }
+        $templateId = null;
+        $submissionId = null;
+        $http = Http::withHeaders([
+            'X-Auth-Token' => $this->apiToken,
+            'Content-Type' => 'application/json',
+        ]);
 
         try {
-            $disk = DocumentService::getDisk();
             $fileContent = Storage::disk($disk)->get($documentPath);
             if (! $fileContent) {
-                Log::error("DocusealProvider: Could not read document at {$documentPath} on disk {$disk}");
-
-                return $signature;
+                throw new \RuntimeException("Impossible de lire le document PDF : {$documentPath}");
             }
+
+            $sourceChecksum = hash('sha256', $fileContent);
+            $signature->update([
+                'metadata' => array_merge($signature->metadata ?? [], [
+                    'source_document_checksum' => $sourceChecksum,
+                ]),
+            ]);
 
             $base64File = 'data:application/pdf;base64,'.base64_encode($fileContent);
             $documentName = basename($documentPath);
-
-            $http = Http::withHeaders([
-                'X-Auth-Token' => $this->apiToken,
-                'Content-Type' => 'application/json',
-            ]);
 
             // 1. Create a Template from the PDF
             $templateResponse = $http->post("{$this->apiUrl}/templates/pdf", [
@@ -160,11 +171,35 @@ class DocusealProvider implements SignatureProviderInterface
                         'docuseal_response' => $responseData,
                     ]),
                 ]);
+
+                foreach (($responseData ?: []) as $remoteSubmitter) {
+                    $remoteEmail = $remoteSubmitter['email'] ?? $remoteSubmitter['submitter_email'] ?? null;
+                    $remoteId = $remoteSubmitter['submitter_id'] ?? $remoteSubmitter['id'] ?? null;
+                    if (! $remoteEmail || ! $remoteId) {
+                        continue;
+                    }
+
+                    $signature->signers()
+                        ->where('email', $remoteEmail)
+                        ->update(['metadata->docuseal_submitter_id' => (string) $remoteId]);
+                }
             } else {
                 throw new \Exception('Erreur DocuSeal lors de la création de la soumission: '.$response->body());
             }
         } catch (\Exception $e) {
             Log::error('DocusealProvider exception: '.$e->getMessage());
+
+            // Compensate remote resources created before the local workflow failed.
+            if ($submissionId) {
+                $http->delete("{$this->apiUrl}/submissions/{$submissionId}");
+            }
+            if ($templateId) {
+                $http->delete("{$this->apiUrl}/templates/{$templateId}");
+            }
+
+            $signature->signers()->delete();
+            $signature->delete();
+            throw $e;
         }
 
         return $signature;
@@ -179,11 +214,26 @@ class DocusealProvider implements SignatureProviderInterface
         string $ipAddress,
         string $userAgent
     ): SignatureSigner {
-        $signer = SignatureSigner::where('token', $token)
-            ->where('status', SignatureStatus::PENDING)
-            ->firstOrFail();
+        return DB::transaction(function () use ($token, $signatureData, $ipAddress, $userAgent) {
+            $signer = SignatureSigner::where('token', $token)
+                ->where('status', SignatureStatus::PENDING)
+                ->lockForUpdate()
+                ->firstOrFail();
+            $signature = Signature::whereKey($signer->signature_id)->lockForUpdate()->firstOrFail();
+            if (! hash_equals($signature->checksum, hash('sha256', json_encode($signature->signable->toArray())))) {
+                throw new \RuntimeException('Le document a été modifié depuis la demande de signature.');
+            }
 
-        $signer->update([
+            $sourcePath = $signature->signable->getSignatureDocumentPath();
+            $expectedSourceChecksum = $signature->metadata['source_document_checksum'] ?? null;
+            if ($expectedSourceChecksum && (! $sourcePath || ! is_readable($sourcePath) || ! hash_equals(
+                $expectedSourceChecksum,
+                hash_file('sha256', $sourcePath),
+            ))) {
+                throw new \RuntimeException('Le fichier PDF a été modifié depuis la demande de signature.');
+            }
+
+            $signer->update([
             'status' => SignatureStatus::SIGNED,
             'signature_data' => $signatureData,
             'ip_address' => $ipAddress,
@@ -192,10 +242,9 @@ class DocusealProvider implements SignatureProviderInterface
                 'user_agent' => $userAgent,
                 'source' => 'external_public_link',
             ]),
-        ]);
+            ]);
 
         // Check if all signers have signed
-        $signature = $signer->signature;
         $allSigned = ! $signature->signers()
             ->where('status', '!=', SignatureStatus::SIGNED)
             ->exists();
@@ -207,7 +256,8 @@ class DocusealProvider implements SignatureProviderInterface
             ]);
         }
 
-        return $signer;
+            return $signer;
+        });
     }
 
     /**
@@ -217,32 +267,29 @@ class DocusealProvider implements SignatureProviderInterface
         string $token,
         ?string $reason = null
     ): SignatureSigner {
-        $signer = SignatureSigner::where('token', $token)
-            ->where('status', SignatureStatus::PENDING)
-            ->firstOrFail();
+        return DB::transaction(function () use ($token, $reason) {
+            $signer = SignatureSigner::where('token', $token)
+                ->where('status', SignatureStatus::PENDING)
+                ->lockForUpdate()
+                ->firstOrFail();
+            $signature = Signature::whereKey($signer->signature_id)->lockForUpdate()->firstOrFail();
 
-        $signer->update([
-            'status' => SignatureStatus::REFUSED,
-            'metadata' => array_merge($signer->metadata ?? [], [
-                'refused_at' => now()->toDateTimeString(),
-                'refusal_reason' => $reason,
-            ]),
-        ]);
+            $signer->update([
+                'status' => SignatureStatus::REFUSED,
+                'metadata' => array_merge($signer->metadata ?? [], [
+                    'refused_at' => now()->toDateTimeString(),
+                    'refusal_reason' => $reason,
+                ]),
+            ]);
 
-        $signature = $signer->signature;
-        $signature->update([
-            'status' => SignatureStatus::REFUSED,
-        ]);
+            $signature->update(['status' => SignatureStatus::REFUSED]);
 
-        // Notify admin
-        if ($signature->user) {
-            Notification::send(
-                $signature->user,
-                new SignatureRefusedNotification($signature, $signer)
-            );
-        }
+            if ($signature->user) {
+                Notification::send($signature->user, new SignatureRefusedNotification($signature, $signer));
+            }
 
-        return $signer;
+            return $signer;
+        });
     }
 
     public function sign(

@@ -8,6 +8,7 @@ use App\Enums\Commerce\PaymentType;
 use App\Events\Commerce\PaymentCancelledEvent;
 use App\Events\Commerce\PaymentRecordedEvent;
 use App\Models\Commerce\Payment;
+use App\Models\Commerce\PaymentAllocation;
 use App\Models\Tiers\ThirdParty;
 use Carbon\Carbon;
 use Carbon\CarbonImmutable;
@@ -15,6 +16,7 @@ use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use App\Services\Laser\LaserPaymentAccountingService;
 
 class PaymentRecordingService
 {
@@ -258,6 +260,8 @@ class PaymentRecordingService
     public function cancelPayment(Payment $payment, string $reason = ''): Payment
     {
         return DB::transaction(function () use ($payment, $reason) {
+            $providedPayment = $payment;
+            $payment = Payment::query()->whereKey($payment->getKey())->lockForUpdate()->firstOrFail();
 
             // Vérifier l'état
             if ($payment->status === PaymentStatus::FAILED) {
@@ -270,7 +274,17 @@ class PaymentRecordingService
                 // Récupérer la facture et dé-lettrer
                 $payable = $allocation->payable;
 
+                app(LaserPaymentAccountingService::class)->removeAllocation($allocation);
+
                 $allocation->delete();
+
+                if ($payable instanceof \App\Models\Laser\LaserInvoice
+                    && ! PaymentAllocation::query()
+                        ->where('payable_type', $payable->getMorphClass())
+                        ->where('payable_id', $payable->getKey())
+                        ->exists()) {
+                    $payable->updateQuietly(['status' => \App\Enums\Laser\InvoiceStatus::VALIDATED]);
+                }
 
                 // Rétrogader la facture si nécessaire
                 if (method_exists($payable, 'markAsUnpaid')) {
@@ -292,7 +306,9 @@ class PaymentRecordingService
 
             event(new PaymentCancelledEvent($payment, $reason));
 
-            return $payment;
+            $providedPayment->refresh();
+
+            return $providedPayment;
         });
     }
 

@@ -22,6 +22,7 @@ Le module est découpé pour accompagner la vie de votre projet, de sa signature
 - [Qualité & Sécurité (QSE)](./04-qualite-et-securite.md) : Création de checklists dynamiques et signatures électroniques sur chantier.
 - [Levée des Réserves & OPR](./05-levee-des-reserves-opr.md) : Signalement terrain, suivi et levée des réserves jusqu'au PV de Réception.
 - [PPSPS & Sécurité](./06-ppsps.md) : Génération automatique du Plan Particulier de Sécurité (risques déduits des produits).
+- [L'Espace Conducteur de Travaux](./07-espace-conducteur-travaux.md) : Le portail mobile du terrain — journal, pointage équipe, scan matériel, état des lieux, réserves/OPR et consultation des maquettes.
 
 > [!TIP]
 > **Une application pensée pour le terrain**

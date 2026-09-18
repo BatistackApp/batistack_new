@@ -10,26 +10,61 @@ use App\Services\Core\SignatureService;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Str;
 
+function postDocusealWebhook(array $payload)
+{
+    $body = json_encode($payload, JSON_THROW_ON_ERROR);
+    $timestamp = now()->timestamp;
+    $signature = hash_hmac('sha256', $timestamp.'.'.$body, config('services.docuseal.webhook_secret'));
+
+    return test()->call('POST', route('webhooks.docuseal'), [], [], [], [
+        'CONTENT_TYPE' => 'application/json',
+        'HTTP_X_DOCUSEAL_SIGNATURE' => $timestamp.'.'.$signature,
+    ], $body);
+}
+
 beforeEach(function () {
     Notification::fake();
     config()->set('signature.providers.docuseal.api_token', 'test-token');
     config()->set('signature.providers.docuseal.api_url', 'https://api.docuseal.com');
+    config()->set('services.docuseal.webhook_secret', 'webhook-secret');
     $this->user = User::factory()->create();
     $this->service = app(SignatureService::class);
 });
 
 it('returns 400 on invalid payload', function () {
-    $response = $this->postJson(route('webhooks.docuseal'), []);
+    $response = postDocusealWebhook([]);
     $response->assertStatus(400);
 });
 
 it('returns success on unknown event type', function () {
-    $response = $this->postJson(route('webhooks.docuseal'), [
+    $response = postDocusealWebhook([
         'event_type' => 'submission.created',
         'data' => ['id' => '123'],
     ]);
 
     $response->assertOk();
+});
+
+it('rejects an invalid DocuSeal signature', function () {
+    $response = $this->call('POST', route('webhooks.docuseal'), [], [], [], [
+        'CONTENT_TYPE' => 'application/json',
+        'HTTP_X_DOCUSEAL_SIGNATURE' => now()->timestamp.'.invalid',
+    ], json_encode(['event_type' => 'submission.created', 'data' => ['id' => '123']]));
+
+    $response->assertUnauthorized();
+});
+
+it('rejects an expired DocuSeal signature', function () {
+    $body = json_encode(['event_type' => 'submission.created', 'data' => ['id' => '123']]);
+    $timestamp = now()->subMinutes(6)->timestamp;
+    $signature = hash_hmac('sha256', $timestamp.'.'.$body, config('services.docuseal.webhook_secret'));
+
+    $response = $this->call('POST', route('webhooks.docuseal'), [], [], [], [
+        'CONTENT_TYPE' => 'application/json',
+        'HTTP_X_DOCUSEAL_SIGNATURE' => $timestamp.'.'.$signature,
+    ], $body);
+
+    $response->assertUnauthorized();
 });
 
 it('processes legacy single signer webhook', function () {
@@ -45,7 +80,7 @@ it('processes legacy single signer webhook', function () {
         'metadata' => ['provider' => 'docuseal', 'docuseal_submission_id' => 'sub-123'],
     ]);
 
-    $response = $this->postJson(route('webhooks.docuseal'), [
+    $response = postDocusealWebhook([
         'event_type' => 'submission.completed',
         'data' => [
             'id' => 'sub-123',
@@ -88,7 +123,7 @@ it('processes multi-signer webhook for each signer', function () {
         'token' => $token2,
     ]);
 
-    $response = $this->postJson(route('webhooks.docuseal'), [
+    $response = postDocusealWebhook([
         'event_type' => 'submission.completed',
         'data' => [
             'id' => 'sub-456',
@@ -104,7 +139,7 @@ it('processes multi-signer webhook for each signer', function () {
 });
 
 it('ignores webhook with no matching signature', function () {
-    $response = $this->postJson(route('webhooks.docuseal'), [
+    $response = postDocusealWebhook([
         'event_type' => 'submission.completed',
         'data' => [
             'id' => 'nonexistent-submission-id',
@@ -136,7 +171,7 @@ it('skips submitters without email', function () {
         'token' => Str::uuid()->toString(),
     ]);
 
-    $response = $this->postJson(route('webhooks.docuseal'), [
+    $response = postDocusealWebhook([
         'event_type' => 'submission.completed',
         'data' => [
             'id' => 'sub-789',
@@ -150,3 +185,5 @@ it('skips submitters without email', function () {
 
     $response->assertOk();
 });
+
+

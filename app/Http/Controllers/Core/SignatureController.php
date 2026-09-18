@@ -148,7 +148,28 @@ class SignatureController extends Controller
             }
         } catch (\Exception $e) {
             Log::error('Erreur post-signature pour '.class_basename($signature->signable).': '.$e->getMessage());
+            throw $e;
         }
+    }
+
+    /**
+     * Finalize a completed signature exactly once.
+     */
+    public function finalizeSignature(Signature $signature): void
+    {
+        $signature->refresh();
+
+        if (($signature->metadata['post_processed_at'] ?? null) !== null) {
+            return;
+        }
+
+        $this->handlePostSignature($signature);
+
+        $signature->update([
+            'metadata' => array_merge($signature->metadata ?? [], [
+                'post_processed_at' => now()->toDateTimeString(),
+            ]),
+        ]);
     }
 
     /**

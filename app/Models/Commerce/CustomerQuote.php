@@ -139,6 +139,22 @@ class CustomerQuote extends Model implements HasTimeline, Signable
         return Storage::disk('public')->path('documents/commerce/quotes/devis_'.$this->reference.'.pdf');
     }
 
+    /**
+     * Chemin relatif (sur le disque public) du devis TAMPONNÉ (signé).
+     * La source (devis_...pdf) reste intacte : seule cette copie est modifiée.
+     */
+    protected function getStampedPath(): ?string
+    {
+        return 'documents/commerce/quotes/signes/devis_'.$this->reference.'.pdf';
+    }
+
+    protected function getStampedUrlForPath(string $stampedPath): ?string
+    {
+        $relative = ltrim(str_replace('\\', '/', $stampedPath), '/');
+
+        return Storage::disk('public')->url($relative);
+    }
+
     public function getSignatoryDisplayName(): ?string
     {
         return $this->client->name ?? null;

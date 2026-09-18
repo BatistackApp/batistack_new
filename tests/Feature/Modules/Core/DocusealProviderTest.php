@@ -19,6 +19,7 @@ beforeEach(function () {
     Notification::fake();
     config()->set('signature.providers.docuseal.api_token', 'test-token');
     config()->set('signature.providers.docuseal.api_url', 'https://api.docuseal.com');
+    config()->set('filesystems.documents_disk', 'public');
     $this->user = User::factory()->create();
     $this->provider = new DocusealProvider;
     $this->quote = CustomerQuote::factory()->create();
@@ -30,9 +31,9 @@ it('creates signature with signers via requestMultiSignature', function () {
         'api.docuseal.com/submissions' => Http::response([['submission_id' => 'sub-123']], 200),
     ]);
 
-    Storage::fake('local');
+    Storage::fake('public');
     $pdfPath = 'signatures/test.pdf';
-    Storage::disk('local')->put($pdfPath, '%PDF-1.4 fake content');
+    Storage::disk('public')->put($pdfPath, '%PDF-1.4 fake content');
 
     $signature = $this->provider->requestMultiSignature(
         $this->quote,
@@ -69,7 +70,7 @@ it('signs as specific signer via signAsSigner', function () {
         'signable_id' => $this->quote->id,
         'status' => SignatureStatus::PENDING,
         'type' => SignatureType::AUTOGRAPH,
-        'checksum' => hash('sha256', 'test'),
+         'checksum' => hash('sha256', json_encode($this->quote->fresh()->toArray())),
     ]);
 
     $signerToken = Str::uuid()->toString();
@@ -107,7 +108,7 @@ it('completes signature when all signers have signed', function () {
         'signable_id' => $this->quote->id,
         'status' => SignatureStatus::PENDING,
         'type' => SignatureType::AUTOGRAPH,
-        'checksum' => hash('sha256', 'test'),
+         'checksum' => hash('sha256', json_encode($this->quote->fresh()->toArray())),
     ]);
 
     $token1 = Str::uuid()->toString();

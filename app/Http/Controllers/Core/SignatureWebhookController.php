@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Core\Signature;
 use App\Services\Core\SignatureService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -16,13 +17,25 @@ class SignatureWebhookController extends Controller
     /**
      * Handle incoming webhooks from DocuSeal.
      */
-    public function handleDocuseal(Request $request, SignatureService $signatureService)
+    public function handleDocuseal(Request $request, SignatureService $signatureService, SignatureController $signatureController)
     {
         $eventType = $request->input('event_type');
         $data = $request->input('data');
 
         if (! $eventType || ! $data) {
             return response()->json(['error' => 'Invalid payload'], 400);
+        }
+
+        $secret = config('services.docuseal.webhook_secret');
+        $providedSignature = $request->header('X-Docuseal-Signature')
+            ?? $request->header('X-DocuSeal-Signature');
+
+        if (! $secret || ! $providedSignature || ! $this->isValidWebhookSignature(
+            $providedSignature,
+            $request->getContent(),
+            $secret,
+        )) {
+            return response()->json(['error' => 'Unauthenticated webhook'], 401);
         }
 
         Log::info("DocuSeal Webhook Received: {$eventType}", ['data' => $data]);
@@ -36,7 +49,7 @@ class SignatureWebhookController extends Controller
                 if ($signature && $signature->status === SignatureStatus::PENDING) {
                     // Multi-signatory: update individual signer by email
                     if ($signature->signers()->exists()) {
-                        $this->handleMultiSignerWebhook($signature, $data, $signatureService);
+                         $this->handleMultiSignerWebhook($signature, $data, $signatureService, $signatureController);
                     } else {
                         // Legacy single signer
                         $signatureService->driver('docuseal')->sign(
@@ -58,24 +71,57 @@ class SignatureWebhookController extends Controller
         return response()->json(['status' => 'success']);
     }
 
+    private function isValidWebhookSignature(string $header, string $body, string $secret): bool
+    {
+        [$timestamp, $signature] = array_pad(explode('.', $header, 2), 2, null);
+
+        if (! ctype_digit((string) $timestamp) || ! $signature) {
+            return false;
+        }
+
+        $timestamp = (int) $timestamp;
+        $tolerance = (int) config('services.docuseal.webhook_tolerance', 300);
+
+        if (abs(now()->timestamp - $timestamp) > $tolerance) {
+            return false;
+        }
+
+        $expected = hash_hmac('sha256', $timestamp.'.'.$body, $secret);
+
+        if (! hash_equals($expected, $signature)) {
+            return false;
+        }
+
+        return Cache::add('docuseal-webhook:'.$timestamp.':'.$signature, true, $tolerance);
+    }
+
     /**
      * Handle webhook for multi-signatory workflow.
      * DocuSeal sends one webhook per completed submission.
      * Match the signer by email from the submitters array.
      */
-    protected function handleMultiSignerWebhook(Signature $signature, array $data, SignatureService $signatureService): void
+    protected function handleMultiSignerWebhook(
+        Signature $signature,
+        array $data,
+        SignatureService $signatureService,
+        SignatureController $signatureController,
+    ): void
     {
         DB::transaction(function () use ($signature, $data, $signatureService) {
             $submitters = $data['submitters'] ?? [];
 
             foreach ($submitters as $submitter) {
                 $email = $submitter['email'] ?? null;
-                if (! $email) {
+                $submitterId = $submitter['id'] ?? $submitter['submitter_id'] ?? null;
+                if (! $submitterId) {
+                    Log::warning('DocuSeal webhook ignored: submitter identifier missing.', [
+                        'signature_id' => $signature->id,
+                    ]);
                     continue;
                 }
 
                 $signer = $signature->signers()
-                    ->where('email', $email)
+                    ->where('metadata->docuseal_submitter_id', (string) $submitterId)
                     ->where('status', SignatureStatus::PENDING)
                     ->first();
 
@@ -89,6 +135,11 @@ class SignatureWebhookController extends Controller
 
                     Log::info("Signer {$signer->id} ({$email}) marked as signed via DocuSeal webhook.");
                 }
+            }
+
+            $signature->refresh();
+            if ($signature->status === SignatureStatus::SIGNED) {
+                $signatureController->finalizeSignature($signature);
             }
         });
     }

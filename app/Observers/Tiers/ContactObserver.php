@@ -2,6 +2,7 @@
 
 namespace App\Observers\Tiers;
 
+use App\Enums\Tiers\ThirdPartyType;
 use App\Models\Tiers\Contact;
 use App\Models\User;
 use App\Notifications\Tiers\WelcomeCustomerNotification;
@@ -11,7 +12,9 @@ class ContactObserver
 {
     public function created(Contact $contact): void
     {
-        if (! empty($contact->email)) {
+        if (! empty($contact->email)
+            && in_array($contact->thirdParty->type, [ThirdPartyType::CLIENT, ThirdPartyType::SUBCONTRACTOR], true)
+        ) {
             $user = User::create([
                 'name' => $contact->full_name,
                 'email' => $contact->email,

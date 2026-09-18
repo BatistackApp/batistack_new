@@ -62,3 +62,15 @@ Vous pouvez repérer automatiquement les conflits géométriques dans vos modèl
 3. Sélectionnez le **Calque A** et le **Calque B** que vous souhaitez comparer (ex: `IfcWall` contre `IfcPipeSegment`).
 4. Cliquez sur **Lancer l'analyse**.
 5. L'algorithme prévisualisera chaque conflit détecté par une sphère colorée. Vous pouvez ensuite cliquer sur **Sauvegarder les punaises** pour convertir ces conflits en annotations `BimAnnotation` que vous pourrez assigner aux sous-traitants concernés.
+
+## 5. Outils sur plans 2D (DXF)
+
+Pour les fichiers **DXF** (plans 2D), le visualiseur met à disposition une boîte à outils dédiée au travail sur plan :
+
+- **Calques (layers)** : affichez ou masquez les couches du plan (murs, réseaux, mobilier…) pour ne travailler que sur ce qui vous intéresse.
+- **Masquage / sélection d'éléments** : sélectionnez un élément et masquez-le temporairement pour dégager la vue.
+- **Mesure de distances** : prenez des cotes directement sur le plan en cliquant deux points.
+- **Affichage des textes** : les libellés et cotations présents dans le DXF sont rendus à l'écran.
+
+> [!TIP]
+> Ces outils transforment le simple « visualiseur » en véritable outil de lecture de plan, utile pour préparer une découpe ou vérifier une implantation sur site.

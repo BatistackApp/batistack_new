@@ -1,8 +1,8 @@
 <?php
 
 declare(strict_types=1);
-use BezhanSalleh\FilamentShield\Resources\Roles\RoleResource;
 use App\Filament\Pages\Dashboard;
+use BezhanSalleh\FilamentShield\Resources\Roles\RoleResource;
 use Filament\Widgets\AccountWidget;
 use Filament\Widgets\FilamentInfoWidget;
 use FilamentInbox\Pages\Inbox;

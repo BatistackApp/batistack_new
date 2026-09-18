@@ -103,6 +103,8 @@
         /* En-tête */
         .quote-info, .invoice-info, .situation-info {
             text-align: right;
+            width: 52%;
+            max-width: 52%;
         }
 
         .quote-info .label, .invoice-info .label, .situation-info .label {
@@ -121,6 +123,61 @@
             border: 1px solid #e2e8f0;
             display: inline-block;
             margin-bottom: 8px;
+        }
+
+        /* Keep document metadata compact so the header does not consume the page. */
+        .quote-info > div:not(:first-child),
+        .invoice-info > div:not(:first-child),
+        .situation-info > div:not(:first-child) {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            align-items: center;
+            column-gap: 10px;
+            margin-top: 4px !important;
+        }
+
+        .quote-info > div:not(:first-child) .label,
+        .invoice-info > div:not(:first-child) .label,
+        .situation-info > div:not(:first-child) .label {
+            display: inline;
+            font-size: 11px;
+            margin: 0;
+            text-align: left;
+        }
+
+        .quote-info > div:not(:first-child) .value,
+        .invoice-info > div:not(:first-child) .value,
+        .situation-info > div:not(:first-child) .value {
+            font-size: 11px;
+            padding: 4px 8px;
+            margin: 0;
+            white-space: nowrap;
+        }
+
+        .document-meta {
+            width: 100%;
+            margin-top: 6px;
+            font-size: 11px;
+        }
+
+        .document-meta td {
+            padding: 3px 0;
+            border: none;
+            vertical-align: middle;
+        }
+
+        .document-meta td:first-child {
+            text-align: left;
+            font-weight: bold;
+            color: #1e40af;
+            padding-right: 12px;
+            white-space: nowrap;
+        }
+
+        .document-meta td:last-child {
+            text-align: right;
+            font-weight: bold;
+            white-space: nowrap;
         }
 
         /* Informations client */
@@ -277,16 +334,7 @@
             page-break-after: always;
         }
     </style>
-    <style>
-        .gantt-container { overflow-x: auto; }
-        .bar-milestone .bar { fill: #f97316; }
-        .bar-phase .bar { fill: #3b82f6; }
-        .bar-task .bar { fill: #94a3b8; }
-        .bar-task-completed .bar { fill: #22c55e; }
-    </style>
     @yield('styles')
-    <link rel="stylesheet" href="https://unpkg.com/frappe-gantt@1.2.2/dist/frappe-gantt.css">
-    <script src="https://unpkg.com/frappe-gantt@1.2.2/dist/frappe-gantt.umd.js"></script>
 </head>
 <body class="bg-white text-slate-900 font-sans p-8 antialiased">
 <header class="header">

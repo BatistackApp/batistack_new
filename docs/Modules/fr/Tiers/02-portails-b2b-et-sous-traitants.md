@@ -27,3 +27,19 @@ Le portail sous-traitant permet également le suivi opérationnel du chantier :
 - Le sous-traitant accède au planning et voit les tâches qui lui sont assignées.
 - Il peut indiquer l'**avancement en temps réel** de ses travaux (ex: 50% réalisé).
 - Il dispose d'un espace pour **déposer ses factures de situation** (en uploadant son PDF). Ces factures sont automatiquement routées vers votre module Achats pour vérification et paiement.
+
+## 4. Suivi des Paiements
+
+Côté **Finance**, le sous-traitant consulte l'état de ses règlements : factures émises, montants payés et **reste à encaisser**. Il dispose d'un tableau de bord de son suivi financier, sans avoir à vous relancer par e-mail.
+
+## 5. Ses documents de vigilance
+
+Le sous-traitant dépose et met à jour **lui-même** ses pièces obligatoires (Kbis, attestation de vigilance URSSAF, assurance décennale) dans son espace **Documents**. Chaque dépôt est horodaté, et l'ERP alerte automatiquement le sous-traitant à l'approche de l'expiration d'un document.
+
+## 6. Son profil entreprise
+
+Le sous-traitant tient à jour ses **informations d'entreprise** (coordonnées, RIB, contacts) depuis son portail, garantissant que votre référentiel reste fiable sans ressaisie de votre côté.
+
+> [!NOTE]
+> **Confidentialité**
+> Contrairement à l'Espace Client (voir [Commerce → L'Espace Client](../Commerce/04-espace-client.md)), le portail sous-traitant ne donne accès qu'aux données propres au partenaire : ses chantiers, ses factures et ses documents.

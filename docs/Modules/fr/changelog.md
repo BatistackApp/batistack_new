@@ -7,12 +7,41 @@ order: 1000
 # 📜 Changelog & Notes de Version
 
 Bienvenue dans le journal des modifications (Changelog) de Batistack.
-Vous retrouverez ici les nouveautés, améliorations et corrections apportées à votre ERP et documentées au fil des versions (voir la note ⚠️ Historique partielle ⚠️ ci-dessous).
+Vous retrouverez ici les nouveautés, améliorations et corrections apportées à votre ERP et documentées au fil des versions. Les versions récentes sont regroupées par module (voir la note « Historique » ci-dessous).
 
 ---
 
 > [!NOTE]
-> **Historique partiel** : ce journal détaille les versions jusqu'à la **v0.34.0**. Les versions suivantes (v0.35.0 → v0.42.0) sont suivies via les notes de release GitHub.
+> **Historique** : les versions **v0.34.0 → v0.52.0** sont regroupées ci-dessous par module (synthèse des nouveautés cumulées). Le détail version par version reste disponible dans les notes de release GitHub. Les versions antérieures (jusqu'à la **v0.33.0**) sont détaillées plus bas.
+
+## 📌 Versions 0.34.0 → 0.52.0 (Août – Septembre 2026)
+
+Synthèse des grandes nouveautés livrées depuis la v0.33, regroupées par module.
+
+### 🌟 Nouveaux modules
+
+*   **⚡ Découpe Laser** : module complet dédié à l'activité de découpe — **référentiel matériaux**, **devis avec calcul automatique du prix et import de fichiers DXF**, **commandes**, **bons de livraison**, et **factures/avoirs**. Le cycle Devis → Commande → Livraison → Facture est entièrement automatisé, avec facturation partielle et gestion des avoirs plafonnés. *(voir le module [Découpe Laser](./Laser/index.md))*
+*   **📊 Comptabilité** : plan comptable général (PCG), **génération automatique des écritures** issues du lettrage bancaire, et **exports FEC, Sage 50 et Cegid Flow** pour l'expert-comptable. *(voir le module [Comptabilité](./Accounting/index.md))*
+
+### 🌐 Portails self-service
+
+*   **Espace Client** : suivi des devis (signature en ligne), commandes, livraisons, situations, factures et avoirs, solde financier et documents.
+*   **Espace Salarié** : contrat, congés et soldes, pointages, notes de frais, équipements, déclaration de casse et documents personnels.
+*   **Espace Sous-Traitant** : appels d'offres, signature des marchés, dépôt de situations, suivi des paiements et documents de vigilance.
+*   **Espace Technicien** : tableau de bord, planning des interventions et travail **hors-ligne** avec synchronisation.
+*   **Espace Conducteur de Travaux** : portail mobile de chantier (journal, pointage d'équipe, scan matériel, état des lieux, réserves/OPR, maquettes).
+
+### 🧩 Par module
+
+*   **Core** : **Gestion Documentaire (GED)** indexant tous les PDF générés ; **signature multi-destinataires** ; **Panel Signatures** dédié ; nouveau **Dashboard Core** ; fiabilisation de la génération PDF (Browsershot).
+*   **Commerce** : **exports PDF harmonisés** et standardisés ; **envoi des factures en masse** et **relevés de compte client**.
+*   **Articles & Stocks** : **emplacements de stockage** (bin-picking) ; **prévision des ruptures** (croisement historique + besoins planifiés) ; impression d'**étiquettes PDF** (QR / code-barres).
+*   **Immobilisations** : **cycle complet des cessions d'actifs** (calcul de plus/moins-value, PV et écritures comptables automatiques) ; traitement des **subventions d'investissement**.
+*   **RH** : **workflow de rupture de CDI** (préavis, documents de fin de contrat) ; **suspension** d'un contrat sans le clôturer.
+*   **GPAO** : module de **tickets de maintenance machine**.
+*   **3DVision** : sur plans **DXF** — **calques**, **mesure de distances**, **sélection/masquage** d'éléments, **rendu des textes** ; miniatures automatiques des maquettes.
+*   **Tiers** : **automatisation du suivi juridique** (rafraîchissement périodique du statut) ; **collecte automatique des documents légaux** (API Entreprise / e-Attestations).
+*   **Interventions** : **suivi GPS** des véhicules d'intervention.
 
 ## 🚀 Version 0.36.0 (Août 2026)
 

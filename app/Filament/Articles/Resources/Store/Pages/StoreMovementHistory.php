@@ -96,7 +96,7 @@ class StoreMovementHistory extends Page implements Tables\Contracts\HasTable
                     ->query(fn ($query, array $data) => $query
                         ->when($data['start_date'], fn ($query, $date) => $query->where('created_at', '>=', $date))
                         ->when($data['end_date'], fn ($query, $date) => $query->where('created_at', '<=', $date))
-                    )
+                    ),
             ]);
     }
 }

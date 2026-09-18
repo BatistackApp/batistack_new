@@ -216,6 +216,19 @@ class Employee extends Model implements HasMedia, Signable
         return "{$this->first_name} {$this->last_name}";
     }
 
+    public function getSelectLabel(): string
+    {
+        $label = $this->last_name . ' ' . $this->first_name;
+
+        if ($this->currentContract?->job_title) {
+            $label .= ' · ' . $this->currentContract->job_title;
+        }
+
+        $label .= $this->is_active ? ' — Disponible' : ' — Indisponible';
+
+        return $label;
+    }
+
     public function getFullAddress(): string
     {
         return "{$this->address} {$this->postal_code} {$this->city}";
@@ -311,6 +324,13 @@ class Employee extends Model implements HasMedia, Signable
         return $this->getFullAddress();
     }
 
+    public function registerMediaCollections(): void
+    {
+        $this->addMediaCollection('rh_documents_signed')
+            ->singleFile()
+            ->useDisk('public');
+    }
+
     public function getSignatureUrl(Signature $signature): ?string
     {
         return Storage::disk('public')->url("documents/rh/onboarding/affiliation_probtp_{$this->id}_{$this->registration_number}.pdf");
@@ -333,5 +353,10 @@ class Employee extends Model implements HasMedia, Signable
     protected function getSignatureMediaCollection(): ?string
     {
         return 'rh_documents';
+    }
+
+    protected function getStampedMediaCollection(): ?string
+    {
+        return 'rh_documents_signed';
     }
 }

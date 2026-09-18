@@ -12,9 +12,19 @@ interface Signable
     public function getSignatureDocumentUrl(Signature $signature): ?string;
 
     /**
+     * Get the URL of the final stamped/signed document.
+     */
+    public function getStampedDocumentUrl(Signature $signature): ?string;
+
+    /**
      * Get the absolute path to the PDF for stamping.
      */
     public function getSignatureDocumentPath(): ?string;
+
+    /**
+     * Get the absolute path of the final stamped/signed document.
+     */
+    public function getStampedDocumentPath(?Signature $signature = null): ?string;
 
     /**
      * Get the signatory display name.

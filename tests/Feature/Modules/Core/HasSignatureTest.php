@@ -131,5 +131,6 @@ it('stampSignatureDocument uses default flow without file', function () {
         'checksum' => hash('sha256', 'test'),
     ]);
 
-    $model->stampSignatureDocument($signature);
+    expect(fn () => $model->stampSignatureDocument($signature))
+        ->toThrow(\RuntimeException::class, 'Le document source de la signature est introuvable ou illisible.');
 });

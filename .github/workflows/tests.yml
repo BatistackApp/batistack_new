@@ -191,6 +191,18 @@ jobs:
               - 'app/Providers/Vision3D/**'
               - 'app/Services/Vision3D/**'
               - 'tests/Feature/Modules/Vision3D/**'
+            Laser:
+              - 'app/Console/Laser/**'
+              - 'app/Enums/Laser/**'
+              - 'app/Events/Laser/**'
+              - 'app/Jobs/Laser/**'
+              - 'app/Mails/Laser/**'
+              - 'app/Models/Laser/**'
+              - 'app/Notifications/Laser/**'
+              - 'app/Observers/Laser/**'
+              - 'app/Providers/Laser/**'
+              - 'app/Services/Laser/**'
+              - 'tests/Feature/Modules/Laser/**'
             Accounting:
               - 'app/Console/Accounting/**'
               - 'app/Enums/Accounting/**'

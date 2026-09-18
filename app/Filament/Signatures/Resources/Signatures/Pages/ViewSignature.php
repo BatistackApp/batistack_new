@@ -19,6 +19,21 @@ class ViewSignature extends ViewRecord
     protected function getHeaderActions(): array
     {
         return [
+            Action::make('viewDocument')
+                ->label('Voir le PDF signé')
+                ->icon(Phosphor::Eye)
+                ->color('success')
+                ->visible(fn (Signature $record) => $record->status === SignatureStatus::SIGNED && $record->stamped_document_url)
+                ->url(fn (Signature $record) => $record->stamped_document_url)
+                ->openUrlInNewTab(),
+
+            Action::make('downloadDocument')
+                ->label('Télécharger le PDF signé')
+                ->icon(Phosphor::DownloadSimple)
+                ->color('info')
+                ->visible(fn (Signature $record) => $record->status === SignatureStatus::SIGNED && $record->stamped_document_url)
+                ->url(fn (Signature $record) => route('signatures.download', $record)),
+
             Action::make('resend')
                 ->label('Relancer')
                 ->icon(Phosphor::ArrowClockwise)

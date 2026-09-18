@@ -10,9 +10,11 @@ use App\Http\Controllers\Banque\BridgeCallbackController;
 use App\Http\Controllers\Commerce\StripePaymentController;
 use App\Http\Controllers\Commerce\StripeWebhookController;
 use App\Http\Controllers\Core\SignatureController;
+use App\Http\Controllers\Core\SignatureDownloadController;
 use App\Http\Controllers\Core\SignatureWebhookController;
 use App\Http\Controllers\Public\PublicSafetyPassportController;
 use App\Http\Controllers\WebPushController;
+use App\Http\Middleware\EnsureUserIsAdmin;
 use App\Livewire\Kiosk\BiometricClock;
 use App\Livewire\Kiosk\BiometricEnrollment;
 use App\Livewire\Onboarding\CandidateForm;
@@ -40,6 +42,11 @@ Route::middleware([
 Route::get('/signature/{token}', [SignatureController::class, 'show'])->name('signature.show');
 Route::post('/signature/{token}', [SignatureController::class, 'sign'])->name('signature.sign');
 Route::post('/signature/{token}/refuse', [SignatureController::class, 'refuse'])->name('signature.refuse');
+
+// Téléchargement du PDF signé (espace admin/signatures)
+Route::middleware(['auth', EnsureUserIsAdmin::class])
+    ->get('/signatures/{signature}/download', [SignatureDownloadController::class, 'download'])
+    ->name('signatures.download');
 
 Route::get('/pay/invoice/{invoice}', [StripePaymentController::class, 'checkout'])->name('pay.invoice')->middleware('signed');
 Route::get('/payment/success', [StripePaymentController::class, 'success'])->name('payment.success');

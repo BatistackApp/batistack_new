@@ -75,3 +75,13 @@ L'application fonctionne **même sans connexion** : les photos et données sont 
 ### 5.3. Consultation
 
 Depuis le panel **Locations**, l'onglet **« État des lieux »** sur la fiche d'un contrat de location liste tous les états des lieux : type, photos, commentaire, horodatage, statut de signature et position GPS.
+
+## 6. Scoring des Fournisseurs de Location
+
+La qualité de vos loueurs est évaluée **en continu**. Chaque contrat de location terminé est noté, et Batistack recalcule automatiquement un **score fournisseur** (de 0 à 100) à partir de la moyenne des notes obtenues.
+
+- Ce score est restitué sur la fiche du tiers fournisseur (module **Tiers**).
+- Il alimente le **Comparateur de prix** : à tarif égal, vous identifiez instantanément le loueur le plus fiable.
+
+> [!TIP]
+> Pensez à noter les contrats à leur clôture : un score à jour vous aide à arbitrer vos prochaines locations entre prix et qualité de service.

@@ -21,6 +21,7 @@ Voici un aperçu de ses grandes capacités :
 ### 🏭 Production et Terrain
 * **Chantiers & Interventions** : Planification, suivi de l'avancement, gestion des équipes sur le terrain et suivi de la rentabilité de chaque chantier.
 * **GPAO (Gestion de Production Assistée par Ordinateur)** : Maîtrise complète de votre processus de fabrication en atelier (BOM, ordres de fabrication, gestion des stocks et de l'avancement).
+* **Découpe Laser** : Circuit dédié aux ateliers de découpe — chiffrage de pièces (avec import DXF), commandes, bons de livraison et facturation.
 * **3DVision** : Outils de modélisation et de conception intégrés pour vos projets techniques.
 
 ### 👥 Gestion des Ressources Humaines
@@ -33,6 +34,7 @@ Voici un aperçu de ses grandes capacités :
 
 ### 💼 Comptabilité et Finance
 * **Banque** : Suivi de la trésorerie, rapprochements bancaires et état des encaissements.
+* **Comptabilité** : Plan comptable, écritures générées automatiquement depuis le lettrage bancaire et exports pour l'expert-comptable (FEC, Sage 50, Cegid Flow).
 * **Locations** : Gestion de la location de matériel spécifique (engins, échafaudages) nécessaire à vos projets.
 
 ---
