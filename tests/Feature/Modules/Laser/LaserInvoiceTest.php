@@ -484,6 +484,18 @@ it('canBeDeleted is true only in DRAFT status', function () {
     expect($paid->canBeDeleted())->toBeFalse();
 });
 
+it('allows deleting a draft credit note only', function () {
+    $draft = LaserCreditNote::withoutEvents(fn () => LaserCreditNote::factory()->create([
+        'status' => 'draft',
+    ]));
+    $validated = LaserCreditNote::withoutEvents(fn () => LaserCreditNote::factory()->create([
+        'status' => 'validated',
+    ]));
+
+    expect($draft->canBeDeleted())->toBeTrue()
+        ->and($validated->canBeDeleted())->toBeFalse();
+});
+
 // ============================================================
 // LaserInvoiceLine model coverage
 // ============================================================

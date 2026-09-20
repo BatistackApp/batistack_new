@@ -23,6 +23,23 @@ class LaserQuoteService
         return ReferenceGenerator::next(config('laser.order_prefix', 'LAC'));
     }
 
+    public function markAsAccepted(LaserQuote $quote): LaserQuote
+    {
+        if ($quote->status !== QuoteStatus::SENT) {
+            throw new Exception('Seul un devis envoyé peut être accepté.');
+        }
+
+        $quote->update([
+            'status' => QuoteStatus::ACCEPTED,
+            'signed_at' => now(),
+        ]);
+
+        return $quote->refresh();
+    }
+
+    /**
+     * @deprecated Use convertToOrder() for the explicit order conversion workflow.
+     */
     public function acceptQuote(LaserQuote $quote): LaserOrder
     {
         return DB::transaction(function () use ($quote) {
@@ -36,6 +53,31 @@ class LaserQuoteService
                 throw new Exception('Ce devis ne peut pas être accepté dans son état actuel.');
             }
 
+            $quote->update(['status' => QuoteStatus::ACCEPTED, 'signed_at' => $quote->signed_at ?? now()]);
+
+            return $this->createOrderFromQuote($quote);
+        });
+    }
+
+    public function convertToOrder(LaserQuote $quote): LaserOrder
+    {
+        return DB::transaction(function () use ($quote) {
+            $quote = LaserQuote::whereKey($quote->id)->lockForUpdate()->firstOrFail();
+
+            if ($quote->order()->exists()) {
+                throw new Exception('Ce devis a déjà été converti en commande.');
+            }
+
+            if ($quote->status !== QuoteStatus::ACCEPTED) {
+                throw new Exception('Seul un devis accepté et signé peut être converti en commande.');
+            }
+
+            return $this->createOrderFromQuote($quote);
+        });
+    }
+
+    private function createOrderFromQuote(LaserQuote $quote): LaserOrder
+    {
             $order = LaserOrder::create([
                 'client_id' => $quote->client_id,
                 'laser_quote_id' => $quote->id,
@@ -71,12 +113,7 @@ class LaserQuoteService
                 $order->lines()->createMany($linesToCreate->all());
             }
 
-            if ($quote->status !== QuoteStatus::ACCEPTED) {
-                $quote->update(['status' => QuoteStatus::ACCEPTED]);
-            }
-
             return $order;
-        });
     }
 
     public function calculateLine(LaserQuoteLine $line): void

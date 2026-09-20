@@ -3,6 +3,7 @@
 namespace App\Filament\Laser\Resources\LaserInvoices;
 
 use App\Filament\Laser\Resources\LaserInvoices\Pages\ListLaserInvoices;
+use App\Filament\Laser\Resources\LaserInvoices\Pages\EditLaserInvoice;
 use App\Filament\Laser\Resources\LaserInvoices\Pages\ViewLaserInvoice;
 use App\Filament\Laser\Resources\LaserInvoices\RelationManagers\LinesRelationManager;
 use App\Filament\Laser\Resources\LaserInvoices\Schemas\LaserInvoiceForm;
@@ -61,6 +62,7 @@ class LaserInvoiceResource extends Resource
         return [
             'index' => ListLaserInvoices::route('/'),
             'view' => ViewLaserInvoice::route('/{record}'),
+            'edit' => EditLaserInvoice::route('/{record}/edit'),
         ];
     }
 }

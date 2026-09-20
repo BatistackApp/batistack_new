@@ -57,6 +57,8 @@ it('creates a delivery note from an order', function () {
         ->and($delivery->laser_order_id)->toBe($order->id)
         ->and($delivery->lines)->toHaveCount(1);
 
+    expect($order->fresh()->status)->toBe(OrderStatus::IN_PROGRESS);
+
     $line = $delivery->lines->first();
     expect($line->laser_order_line_id)->toBe($order->lines->first()->id)
         ->and($line->material_id)->toBe($material->id)

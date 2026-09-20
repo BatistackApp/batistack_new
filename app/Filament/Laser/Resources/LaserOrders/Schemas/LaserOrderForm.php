@@ -16,6 +16,7 @@ class LaserOrderForm
         return $schema
             ->components([
                 Section::make('Informations de commande')
+                    ->visibleOn(['create', 'edit'])
                     ->columns(2)
                     ->columnSpanFull()
                     ->schema([
@@ -41,6 +42,7 @@ class LaserOrderForm
                     ]),
 
                 Section::make('Conditions')
+                    ->visibleOn(['create', 'edit'])
                     ->columnSpanFull()
                     ->schema([
                         Textarea::make('terms')

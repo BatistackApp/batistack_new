@@ -3,23 +3,38 @@
 namespace App\Filament\Laser\Resources\LaserInvoices\Pages;
 
 use App\Enums\Laser\InvoiceStatus;
+use App\Enums\Commerce\PaymentMethod;
+use App\Enums\Commerce\PaymentStatus;
+use App\Enums\Commerce\PaymentType;
 use App\Filament\Laser\Resources\LaserInvoices\LaserInvoiceResource;
 use App\Jobs\Laser\SyncLaserAccountingJob;
 use App\Services\Laser\LaserInvoiceService;
 use Filament\Actions;
+use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
+use App\Mail\Laser\LaserInvoiceMail;
+use App\Services\Laser\LaserDocumentationService;
+use App\Services\Commerce\PaymentService;
+use App\Models\Commerce\Payment;
+use MortalKiller\FilamentPageHeader\Concerns\HasPageHeader;
 
 class ViewLaserInvoice extends ViewRecord
 {
+    use HasPageHeader;
+
     protected static string $resource = LaserInvoiceResource::class;
 
     protected function getHeaderActions(): array
     {
         return [
+            Actions\EditAction::make()
+                ->visible(fn ($record) => $record->status === InvoiceStatus::DRAFT),
+
             Actions\Action::make('legalize')
                 ->label('Légaliser')
                 ->icon('heroicon-o-check-badge')
@@ -28,13 +43,39 @@ class ViewLaserInvoice extends ViewRecord
                 ->requiresConfirmation()
                 ->modalHeading('Légalisation de la facture')
                 ->modalDescription('La légalisation appliquera la chaîne de hash NF525. Cette action est irréversible.')
-                ->action(function ($record) {
+                ->form([
+                    Toggle::make('send_email')
+                        ->label('Envoyer la facture au client par email')
+                        ->default(true),
+                ])
+                ->action(function ($record, array $data) {
                     app(LaserInvoiceService::class)->legalizeInvoice($record);
 
-                    Notification::make()
-                        ->title('Facture légalisée')
-                        ->success()
-                        ->send();
+                    if ($data['send_email'] ?? false) {
+                        $record->load('client.primaryContact');
+                        $contact = $record->client?->primaryContact;
+                        $email = $contact?->email ?? $record->client?->email;
+
+                        if ($email) {
+                            $pdfPath = app(LaserDocumentationService::class)->generateInvoicePdf($record->fresh(['client', 'order', 'lines.material']));
+                            Mail::to($email)->queue(new LaserInvoiceMail($record->fresh('client'), $pdfPath));
+
+                            Notification::make()
+                                ->title('Facture légalisée et envoyée au client')
+                                ->success()
+                                ->send();
+                        } else {
+                            Notification::make()
+                                ->title('Facture légalisée, mais aucun email client trouvé')
+                                ->warning()
+                                ->send();
+                        }
+                    } else {
+                        Notification::make()
+                            ->title('Facture légalisée')
+                            ->success()
+                            ->send();
+                    }
                 }),
 
             Actions\Action::make('retryAccountingSync')
@@ -47,6 +88,54 @@ class ViewLaserInvoice extends ViewRecord
 
                     Notification::make()
                         ->title('Synchronisation comptable relancée')
+                        ->success()
+                        ->send();
+                    }),
+
+            Actions\Action::make('recordPayment')
+                ->label('Enregistrer un paiement')
+                ->icon('heroicon-o-banknotes')
+                ->color('primary')
+                ->visible(fn ($record) => in_array($record->status, [InvoiceStatus::VALIDATED], true)
+                    && $record->remaining_paid_amount < (float) $record->total_ttc)
+                ->form([
+                    TextInput::make('amount')
+                        ->label('Montant encaissé')
+                        ->numeric()
+                        ->minValue(0.01)
+                        ->maxValue(fn ($record): float => max(0, (float) $record->total_ttc - (float) $record->payments()->sum('allocated_amount')))
+                        ->required()
+                        ->prefix('€'),
+                    Select::make('method')
+                        ->label('Moyen de paiement')
+                        ->options(PaymentMethod::class)
+                        ->required()
+                        ->native(false),
+                    TextInput::make('reference')
+                        ->label('Référence du paiement')
+                        ->required(),
+                    DatePicker::make('payment_date')
+                        ->label('Date du paiement')
+                        ->default(now())
+                        ->required()
+                        ->native(false),
+                ])
+                ->action(function ($record, array $data) {
+                    $payment = Payment::create([
+                        'third_party_id' => $record->client_id,
+                        'reference' => $data['reference'],
+                        'type' => PaymentType::IN,
+                        'method' => $data['method'],
+                        'status' => PaymentStatus::COMPLETED,
+                        'amount' => $data['amount'],
+                        'payment_date' => $data['payment_date'],
+                    ]);
+
+                    app(PaymentService::class)->allocatePayment($payment, $record, (float) $data['amount']);
+
+                    Notification::make()
+                        ->title('Paiement enregistré')
+                        ->body('Le paiement a été affecté à la facture.')
                         ->success()
                         ->send();
                 }),

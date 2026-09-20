@@ -11,14 +11,20 @@ use Filament\Actions;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
 use Illuminate\Support\Facades\Storage;
+use MortalKiller\FilamentPageHeader\Concerns\HasPageHeader;
 
 class ViewLaserOrder extends ViewRecord
 {
+    use HasPageHeader;
+
     protected static string $resource = LaserOrderResource::class;
 
     protected function getHeaderActions(): array
     {
         return [
+            Actions\DeleteAction::make()
+                ->visible(fn ($record) => $record->canBeDeleted()),
+
             Actions\Action::make('confirm')
                 ->label('Confirmer')
                 ->icon('heroicon-o-check-circle')

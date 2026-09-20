@@ -38,6 +38,10 @@ class LaserDeliveryNoteService
                 'status' => DeliveryStatus::DRAFT,
             ]);
 
+            if ($order->status === OrderStatus::CONFIRMED) {
+                $order->update(['status' => OrderStatus::IN_PROGRESS]);
+            }
+
             foreach ($linesWithRemaining as $line) {
                 $quantityForBL = $line->remaining_quantity;
 
@@ -92,7 +96,7 @@ class LaserDeliveryNoteService
         });
     }
 
-    public function receiveDeliveryNote(LaserDeliveryNote $delivery): void
+    public function receiveDeliveryNote(LaserDeliveryNote $delivery, ?string $deliveryDate = null): void
     {
         if ($delivery->status !== DeliveryStatus::SHIPPED) {
             throw new Exception('Seul un bon de livraison expédié peut être réceptionné.');
@@ -100,7 +104,7 @@ class LaserDeliveryNoteService
 
         $delivery->update([
             'status' => DeliveryStatus::DELIVERED,
-            'delivery_date' => now()->toDateString(),
+            'delivery_date' => $deliveryDate ?? now()->toDateString(),
         ]);
     }
 

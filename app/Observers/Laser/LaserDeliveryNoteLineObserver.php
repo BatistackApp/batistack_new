@@ -3,6 +3,7 @@
 namespace App\Observers\Laser;
 
 use App\Models\Laser\LaserDeliveryNoteLine;
+use App\Jobs\Laser\GenerateLaserDocumentJob;
 use Exception;
 use Illuminate\Support\Facades\DB;
 
@@ -31,7 +32,7 @@ class LaserDeliveryNoteLineObserver
 
         $otherReserved = $orderLine->deliveryNoteLines()
             ->where('laser_delivery_note_id', '!=', $line->laser_delivery_note_id)
-            ->where('laser_delivery_note_id', function ($query) {
+            ->whereIn('laser_delivery_note_id', function ($query) {
                 $query->select('id')
                     ->from('laser_delivery_notes')
                     ->where('status', 'draft');
@@ -63,6 +64,13 @@ class LaserDeliveryNoteLineObserver
                     ->sum('quantity_delivered');
 
                 $orderLine->update(['reserved_quantity' => $reserved]);
+            });
+
+            DB::afterCommit(function () use ($line): void {
+                GenerateLaserDocumentJob::dispatch(
+                    'laser_delivery_note',
+                    $line->deliveryNote()->firstOrFail(),
+                );
             });
         }
     }

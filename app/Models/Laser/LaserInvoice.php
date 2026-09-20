@@ -4,6 +4,7 @@ namespace App\Models\Laser;
 
 use App\Enums\Laser\InvoiceStatus;
 use App\Models\Accounting\AccountingSync;
+use App\Models\Commerce\PaymentAllocation;
 use App\Models\Laser\Concerns\RecalculatesLaserTotals;
 use App\Models\Tiers\ThirdParty;
 use App\Observers\Laser\LaserInvoiceObserver;
@@ -13,6 +14,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 #[ObservedBy([LaserInvoiceObserver::class])]
 class LaserInvoice extends Model
@@ -96,6 +98,21 @@ class LaserInvoice extends Model
     public function accountingSync(): MorphOne
     {
         return $this->morphOne(AccountingSync::class, 'syncable');
+    }
+
+    public function payments(): MorphMany
+    {
+        return $this->morphMany(PaymentAllocation::class, 'payable');
+    }
+
+    public function getPaidAmountAttribute(): float
+    {
+        return (float) $this->payments()->sum('allocated_amount');
+    }
+
+    public function getRemainingPaidAmountAttribute(): float
+    {
+        return max(0, (float) $this->total_ttc - $this->paid_amount);
     }
 
     public function getRemainingCreditableHtAttribute(): float

@@ -515,6 +515,27 @@ it('has correct labels for all status', function () {
         ->and(QuoteStatus::CANCELLED->getLabel())->toBe('Annulé');
 });
 
+it('accepts a sent quote without creating an order', function () {
+    Queue::fake();
+
+    $quote = LaserQuote::factory()->create(['status' => QuoteStatus::SENT]);
+
+    $accepted = app(LaserQuoteService::class)->markAsAccepted($quote);
+
+    expect($accepted->status)->toBe(QuoteStatus::ACCEPTED)
+        ->and($accepted->signed_at)->not->toBeNull()
+        ->and($accepted->order()->exists())->toBeFalse();
+});
+
+it('refuses to convert a quote before it is accepted', function () {
+    Queue::fake();
+
+    $quote = LaserQuote::factory()->create(['status' => QuoteStatus::SENT]);
+
+    expect(fn () => app(LaserQuoteService::class)->convertToOrder($quote))
+        ->toThrow(Exception::class, 'Seul un devis accepté et signé peut être converti en commande.');
+});
+
 it('has correct colors for all status', function () {
     expect(QuoteStatus::DRAFT->getColor())->toBe('gray')
         ->and(QuoteStatus::SENT->getColor())->toBe('warning')

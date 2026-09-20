@@ -7,12 +7,16 @@ use App\Filament\Laser\Resources\LaserDeliveryNotes\LaserDeliveryNoteResource;
 use App\Services\Laser\LaserDeliveryNoteService;
 use App\Services\Laser\LaserInvoiceService;
 use Filament\Actions;
+use Filament\Forms\Components\DatePicker;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
 use Illuminate\Support\Facades\Storage;
+use MortalKiller\FilamentPageHeader\Concerns\HasPageHeader;
 
 class ViewLaserDeliveryNote extends ViewRecord
 {
+    use HasPageHeader;
+
     protected static string $resource = LaserDeliveryNoteResource::class;
 
     protected function getHeaderActions(): array
@@ -20,6 +24,20 @@ class ViewLaserDeliveryNote extends ViewRecord
         return [
             Actions\EditAction::make()
                 ->visible(fn ($record) => $record->status === DeliveryStatus::DRAFT),
+
+            Actions\Action::make('delete')
+                ->label('Supprimer')
+                ->icon('heroicon-o-trash')
+                ->color('danger')
+                ->visible(fn ($record) => $record->canBeDeleted())
+                ->requiresConfirmation()
+                ->action(function ($record) {
+                    app(LaserDeliveryNoteService::class)->deleteDeliveryNote($record);
+
+                    Notification::make()->title('Bon de livraison supprimé')->success()->send();
+
+                    return $this->redirect(route('filament.laser.resources.laser-delivery-notes.index'));
+                }),
 
             Actions\Action::make('ship')
                 ->label('Expédier')
@@ -46,8 +64,15 @@ class ViewLaserDeliveryNote extends ViewRecord
                 ->requiresConfirmation()
                 ->modalHeading('Réception du BL')
                 ->modalDescription('Confirmer la réception par le client.')
-                ->action(function ($record) {
-                    app(LaserDeliveryNoteService::class)->receiveDeliveryNote($record);
+                ->form([
+                    DatePicker::make('delivery_date')
+                        ->label('Date de livraison effective')
+                        ->default(now())
+                        ->required()
+                        ->native(false),
+                ])
+                ->action(function ($record, array $data) {
+                    app(LaserDeliveryNoteService::class)->receiveDeliveryNote($record, $data['delivery_date']);
 
                     Notification::make()
                         ->title('BL réceptionné')
