@@ -221,7 +221,7 @@ class DocusealProvider implements SignatureProviderInterface
                 ->lockForUpdate()
                 ->firstOrFail();
             $signature = Signature::whereKey($signer->signature_id)->lockForUpdate()->firstOrFail();
-            if (! hash_equals($signature->checksum, hash('sha256', json_encode($signature->signable->toArray())))) {
+            if (! hash_equals($signature->checksum, app(SignatureChecksumService::class)->generate($signature->signable))) {
                 throw new \RuntimeException('Le document a été modifié depuis la demande de signature.');
             }
 

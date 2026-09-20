@@ -107,7 +107,7 @@ class SignatureWebhookController extends Controller
         SignatureController $signatureController,
     ): void
     {
-        DB::transaction(function () use ($signature, $data, $signatureService) {
+        $completed = DB::transaction(function () use ($signature, $data, $signatureService): bool {
             $submitters = $data['submitters'] ?? [];
 
             foreach ($submitters as $submitter) {
@@ -137,10 +137,11 @@ class SignatureWebhookController extends Controller
                 }
             }
 
-            $signature->refresh();
-            if ($signature->status === SignatureStatus::SIGNED) {
-                $signatureController->finalizeSignature($signature);
-            }
+            return $signature->refresh()->status === SignatureStatus::SIGNED;
         });
+
+        if ($completed) {
+            $signatureController->finalizeSignature($signature->fresh());
+        }
     }
 }

@@ -45,6 +45,7 @@ class LocalSignatureProvider implements SignatureProviderInterface
             'ip_address' => request()->ip(),
             'signed_at' => now(),
             'metadata' => array_merge([
+                'provider' => 'local',
                 'user_agent' => request()->userAgent(),
                 'source' => 'internal_erp',
             ], $additionalMetadata),

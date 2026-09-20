@@ -8,6 +8,7 @@ class SignatureChecksumService
 {
     public function generate(Model $model): string
     {
+        $model = $model->fresh() ?? $model;
         $attributes = $this->clean($model->getAttributes());
 
         if (method_exists($model, 'lines')) {
