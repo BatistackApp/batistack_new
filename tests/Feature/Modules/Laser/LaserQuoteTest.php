@@ -515,16 +515,18 @@ it('has correct labels for all status', function () {
         ->and(QuoteStatus::CANCELLED->getLabel())->toBe('Annulé');
 });
 
-it('accepts a sent quote without creating an order', function () {
+it('refuses to convert an accepted quote without an electronic signature', function () {
     Queue::fake();
 
     $quote = LaserQuote::factory()->create(['status' => QuoteStatus::SENT]);
 
-    $accepted = app(LaserQuoteService::class)->markAsAccepted($quote);
+    $quote->update([
+        'status' => QuoteStatus::ACCEPTED,
+        'signed_at' => now(),
+    ]);
 
-    expect($accepted->status)->toBe(QuoteStatus::ACCEPTED)
-        ->and($accepted->signed_at)->not->toBeNull()
-        ->and($accepted->order()->exists())->toBeFalse();
+    expect(fn () => app(LaserQuoteService::class)->convertToOrder($quote))
+        ->toThrow(Exception::class, 'Une signature électronique valide est obligatoire');
 });
 
 it('refuses to convert a quote before it is accepted', function () {

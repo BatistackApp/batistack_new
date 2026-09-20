@@ -6,6 +6,7 @@ use App\Enums\Laser\DeliveryStatus;
 use App\Enums\Laser\OrderStatus;
 use App\Models\Laser\LaserDeliveryNote;
 use App\Models\Laser\LaserOrder;
+use App\Models\Laser\LaserDeliveryNoteLine;
 use App\Support\ReferenceGenerator;
 use Exception;
 use Illuminate\Support\Facades\DB;
@@ -82,17 +83,51 @@ class LaserDeliveryNoteService
                     throw new Exception('La quantité livrée doit être supérieure à zéro.');
                 }
 
-                if ($line->quantity_delivered > $line->orderLine->quantity - $line->orderLine->delivered_quantity) {
+                $orderLine = $line->orderLine()->lockForUpdate()->firstOrFail();
+
+                if ($line->quantity_delivered > $orderLine->quantity - $orderLine->delivered_quantity) {
                     throw new Exception('La quantité livrée dépasse la quantité disponible pour la ligne "'.$line->description.'".');
                 }
 
-                $line->orderLine->decrement('reserved_quantity', $line->quantity_delivered);
-                $line->orderLine->increment('delivered_quantity', $line->quantity_delivered);
+                $orderLine->decrement('reserved_quantity', $line->quantity_delivered);
+                $orderLine->increment('delivered_quantity', $line->quantity_delivered);
             }
 
             $delivery->update(['status' => DeliveryStatus::SHIPPED]);
 
             $this->refreshOrderStatus($delivery->order);
+        });
+    }
+
+    public function updateDeliveryQuantity(LaserDeliveryNoteLine $line, int $quantity): void
+    {
+        DB::transaction(function () use ($line, $quantity): void {
+            $line = LaserDeliveryNoteLine::whereKey($line->id)->lockForUpdate()->firstOrFail();
+            $delivery = $line->deliveryNote()->lockForUpdate()->firstOrFail();
+
+            if ($delivery->status !== DeliveryStatus::DRAFT) {
+                throw new Exception('Seul un BL brouillon peut être modifié.');
+            }
+            if ($quantity <= 0) {
+                throw new Exception('La quantité livrée doit être supérieure à zéro.');
+            }
+
+            $orderLine = $line->orderLine()->lockForUpdate()->firstOrFail();
+            $otherReserved = $orderLine->deliveryNoteLines()
+                ->where('id', '!=', $line->id)
+                ->whereHas('deliveryNote', fn ($query) => $query->where('status', DeliveryStatus::DRAFT))
+                ->sum('quantity_delivered');
+            $available = $orderLine->quantity - $orderLine->delivered_quantity - $otherReserved;
+
+            if ($quantity > $available) {
+                throw new Exception("La quantité livrée ({$quantity}) dépasse la quantité disponible ({$available}).");
+            }
+
+            $line->updateQuietly(['quantity_delivered' => $quantity]);
+            $reserved = $orderLine->deliveryNoteLines()
+                ->whereHas('deliveryNote', fn ($query) => $query->where('status', DeliveryStatus::DRAFT))
+                ->sum('quantity_delivered');
+            $orderLine->update(['reserved_quantity' => $reserved]);
         });
     }
 

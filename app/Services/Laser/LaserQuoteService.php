@@ -4,6 +4,7 @@ namespace App\Services\Laser;
 
 use App\Enums\Laser\OrderStatus;
 use App\Enums\Laser\QuoteStatus;
+use App\Enums\Core\SignatureStatus;
 use App\Models\Laser\LaserOrder;
 use App\Models\Laser\LaserQuote;
 use App\Models\Laser\LaserQuoteLine;
@@ -23,40 +24,12 @@ class LaserQuoteService
         return ReferenceGenerator::next(config('laser.order_prefix', 'LAC'));
     }
 
-    public function markAsAccepted(LaserQuote $quote): LaserQuote
-    {
-        if ($quote->status !== QuoteStatus::SENT) {
-            throw new Exception('Seul un devis envoyé peut être accepté.');
-        }
-
-        $quote->update([
-            'status' => QuoteStatus::ACCEPTED,
-            'signed_at' => now(),
-        ]);
-
-        return $quote->refresh();
-    }
-
     /**
-     * @deprecated Use convertToOrder() for the explicit order conversion workflow.
+     * @deprecated Use convertToOrder(). Kept as a strict alias for callers being migrated.
      */
     public function acceptQuote(LaserQuote $quote): LaserOrder
     {
-        return DB::transaction(function () use ($quote) {
-            $quote = LaserQuote::whereKey($quote->id)->lockForUpdate()->firstOrFail();
-
-            if ($quote->order()->exists()) {
-                throw new Exception('Ce devis a déjà été converti en commande.');
-            }
-
-            if (! in_array($quote->status, [QuoteStatus::DRAFT, QuoteStatus::SENT, QuoteStatus::ACCEPTED], true)) {
-                throw new Exception('Ce devis ne peut pas être accepté dans son état actuel.');
-            }
-
-            $quote->update(['status' => QuoteStatus::ACCEPTED, 'signed_at' => $quote->signed_at ?? now()]);
-
-            return $this->createOrderFromQuote($quote);
-        });
+        return $this->convertToOrder($quote);
     }
 
     public function convertToOrder(LaserQuote $quote): LaserOrder
@@ -70,6 +43,16 @@ class LaserQuoteService
 
             if ($quote->status !== QuoteStatus::ACCEPTED) {
                 throw new Exception('Seul un devis accepté et signé peut être converti en commande.');
+            }
+
+            $signature = $quote->signatures()
+                ->where('status', SignatureStatus::SIGNED)
+                ->whereNotNull('signed_at')
+                ->latest('signed_at')
+                ->first();
+
+            if (! $signature || ! $quote->signed_at) {
+                throw new Exception('Une signature électronique valide est obligatoire avant la conversion en commande.');
             }
 
             return $this->createOrderFromQuote($quote);

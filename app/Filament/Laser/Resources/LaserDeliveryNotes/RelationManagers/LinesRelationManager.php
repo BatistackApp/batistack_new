@@ -3,7 +3,9 @@
 namespace App\Filament\Laser\Resources\LaserDeliveryNotes\RelationManagers;
 
 use Filament\Resources\RelationManagers\RelationManager;
-use Filament\Actions\EditAction;
+use App\Models\Laser\LaserDeliveryNoteLine;
+use App\Services\Laser\LaserDeliveryNoteService;
+use Filament\Actions\Action;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
@@ -90,8 +92,24 @@ class LinesRelationManager extends RelationManager
                     ->suffix(' kg'),
             ])
             ->recordActions([
-                EditAction::make()
-                    ->visible(fn () => ! $this->isReadOnly()),
+                Action::make('editQuantity')
+                    ->label('Modifier la quantité')
+                    ->icon('heroicon-o-pencil-square')
+                    ->form([
+                        TextInput::make('quantity_delivered')
+                            ->label('Quantité livrée')
+                            ->numeric()
+                            ->integer()
+                            ->minValue(1)
+                            ->required(),
+                    ])
+                    ->visible(fn () => ! $this->isReadOnly())
+                    ->action(function (LaserDeliveryNoteLine $record, array $data): void {
+                        app(LaserDeliveryNoteService::class)->updateDeliveryQuantity(
+                            $record,
+                            (int) $data['quantity_delivered'],
+                        );
+                    }),
             ]);
     }
 }
