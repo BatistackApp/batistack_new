@@ -2,8 +2,9 @@
 
 namespace App\Models\Laser;
 
-use App\Enums\Laser\QuoteStatus;
 use App\Contracts\Core\Signable;
+use App\Enums\Core\SignatureStatus;
+use App\Enums\Laser\QuoteStatus;
 use App\Models\Core\Signature;
 use App\Models\Laser\Concerns\RecalculatesLaserTotals;
 use App\Models\Tiers\ThirdParty;
@@ -106,7 +107,7 @@ class LaserQuote extends Model implements Signable
     public function canBeEdited(): bool
     {
         return in_array($this->status, [QuoteStatus::DRAFT, QuoteStatus::SENT], true)
-            && ! $this->signatures()->where('status', \App\Enums\Core\SignatureStatus::SIGNED)->exists();
+            && ! $this->signatures()->where('status', SignatureStatus::SIGNED)->exists();
     }
 
     public function getIsExpiredAttribute(): bool

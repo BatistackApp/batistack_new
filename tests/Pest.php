@@ -1,6 +1,14 @@
 <?php
 
+use App\Enums\Core\SignatureStatus;
+use App\Enums\Core\SignatureType;
+use App\Enums\Laser\QuoteStatus;
+use App\Models\Core\Signature;
+use App\Models\Laser\LaserQuote;
+use App\Services\Core\SignatureChecksumService;
+use App\Services\Core\SignatureService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Str;
 use Tests\TestCase;
 
 /*
@@ -49,31 +57,27 @@ function something()
     // ..
 }
 
-function signedLaserQuote(\App\Models\Laser\LaserQuote $quote): \App\Models\Laser\LaserQuote
+function signedLaserQuote(LaserQuote $quote): LaserQuote
 {
     $quote->update([
-        'status' => \App\Enums\Laser\QuoteStatus::ACCEPTED,
+        'status' => QuoteStatus::ACCEPTED,
         'signed_at' => now(),
     ]);
 
-    $provider = app(\App\Services\Core\Providers\LocalSignatureProvider::class);
-    $method = new \ReflectionMethod($provider, 'generateChecksum');
-    $method->setAccessible(true);
-
-    $signature = \App\Models\Core\Signature::create([
-        'token' => \Illuminate\Support\Str::uuid()->toString(),
+    $signature = Signature::create([
+        'token' => Str::uuid()->toString(),
         'signable_type' => $quote->getMorphClass(),
         'signable_id' => $quote->id,
         'user_id' => null,
-        'status' => \App\Enums\Core\SignatureStatus::SIGNED,
-        'type' => \App\Enums\Core\SignatureType::AUTOGRAPH,
+        'status' => SignatureStatus::SIGNED,
+        'type' => SignatureType::AUTOGRAPH,
         'signature_data' => 'test-signature',
-        'checksum' => $method->invoke($provider, $quote),
+        'checksum' => app(SignatureChecksumService::class)->generate($quote),
         'signed_at' => $quote->signed_at,
         'metadata' => ['provider' => 'local'],
     ]);
 
-    app(\App\Services\Core\SignatureService::class)->refreshChecksum($signature->fresh());
+    app(SignatureService::class)->refreshChecksum($signature->fresh());
 
     return $quote->fresh();
 }

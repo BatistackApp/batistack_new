@@ -6,8 +6,8 @@ use App\Enums\Laser\DeliveryStatus;
 use App\Enums\Laser\OrderStatus;
 use App\Jobs\Laser\GenerateLaserDocumentJob;
 use App\Models\Laser\LaserDeliveryNote;
-use App\Models\Laser\LaserOrder;
 use App\Models\Laser\LaserDeliveryNoteLine;
+use App\Models\Laser\LaserOrder;
 use App\Support\ReferenceGenerator;
 use Exception;
 use Illuminate\Support\Facades\DB;
@@ -136,14 +136,18 @@ class LaserDeliveryNoteService
 
     public function receiveDeliveryNote(LaserDeliveryNote $delivery, ?string $deliveryDate = null): void
     {
-        if ($delivery->status !== DeliveryStatus::SHIPPED) {
-            throw new Exception('Seul un bon de livraison expédié peut être réceptionné.');
-        }
+        DB::transaction(function () use ($delivery, $deliveryDate): void {
+            $delivery = LaserDeliveryNote::whereKey($delivery->id)->lockForUpdate()->firstOrFail();
 
-        $delivery->update([
-            'status' => DeliveryStatus::DELIVERED,
-            'delivery_date' => $deliveryDate ?? now()->toDateString(),
-        ]);
+            if ($delivery->status !== DeliveryStatus::SHIPPED) {
+                throw new Exception('Seul un bon de livraison expédié peut être réceptionné.');
+            }
+
+            $delivery->update([
+                'status' => DeliveryStatus::DELIVERED,
+                'delivery_date' => $deliveryDate ?? now()->toDateString(),
+            ]);
+        });
     }
 
     public function deleteDeliveryNote(LaserDeliveryNote $delivery): void

@@ -7,10 +7,12 @@ use App\Enums\Core\SignatureStatus;
 use App\Enums\Core\SignatureType;
 use App\Mail\Core\MultiSignatureRequestedMail;
 use App\Models\Core\Signature;
-use App\Services\Core\SignatureChecksumService;
 use App\Models\Core\SignatureSigner;
 use App\Notifications\Core\SignatureCompletedNotification;
 use App\Notifications\Core\SignatureRefusedNotification;
+use App\Services\Core\DocumentService;
+use App\Services\Core\SignatureChecksumService;
+use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -64,7 +66,7 @@ class LocalSignatureProvider implements SignatureProviderInterface
     ): Signature {
         $emailToSend = null;
 
-        $signature = DB::transaction(function () use ($model, $type, $email, $name, &$emailToSend) {
+        $signature = DB::transaction(function () use ($model, $type, $email, $name, $documentPath, &$emailToSend) {
             $signature = Signature::create([
                 'token' => Str::uuid()->toString(),
                 'signable_type' => $model->getMorphClass(),
@@ -73,10 +75,11 @@ class LocalSignatureProvider implements SignatureProviderInterface
                 'status' => SignatureStatus::PENDING,
                 'type' => $type,
                 'checksum' => app(SignatureChecksumService::class)->generate($model),
-                'metadata' => [
+                'metadata' => array_filter([
                     'provider' => 'local',
                     'requested_at' => now()->toDateTimeString(),
-                ],
+                    'source_document_checksum' => $this->sourceDocumentChecksum($documentPath),
+                ]),
             ]);
 
             // Create a single signer for backward compatibility
@@ -123,7 +126,7 @@ class LocalSignatureProvider implements SignatureProviderInterface
     ): Signature {
         $emailsToSend = [];
 
-        $signature = DB::transaction(function () use ($model, $type, $signers, &$emailsToSend) {
+        $signature = DB::transaction(function () use ($model, $type, $signers, $documentPath, &$emailsToSend) {
             $signature = Signature::create([
                 'token' => Str::uuid()->toString(),
                 'signable_type' => $model->getMorphClass(),
@@ -132,11 +135,12 @@ class LocalSignatureProvider implements SignatureProviderInterface
                 'status' => SignatureStatus::PENDING,
                 'type' => $type,
                 'checksum' => app(SignatureChecksumService::class)->generate($model),
-                'metadata' => [
+                'metadata' => array_filter([
                     'provider' => 'local',
                     'requested_at' => now()->toDateTimeString(),
                     'signers_count' => count($signers),
-                ],
+                    'source_document_checksum' => $this->sourceDocumentChecksum($documentPath),
+                ]),
             ]);
 
             foreach ($signers as $signerData) {
@@ -189,29 +193,35 @@ class LocalSignatureProvider implements SignatureProviderInterface
                 throw new \RuntimeException('Le document a été modifié depuis la demande de signature.');
             }
 
+            $expectedSourceChecksum = $signature->metadata['source_document_checksum'] ?? null;
+            $sourcePath = $signature->signable->getSignatureDocumentPath();
+            if ($expectedSourceChecksum && (! $sourcePath || ! is_readable($sourcePath) || ! hash_equals($expectedSourceChecksum, hash_file('sha256', $sourcePath)))) {
+                throw new \RuntimeException('Le fichier PDF a été modifié depuis la demande de signature.');
+            }
+
             $signer->update([
-            'status' => SignatureStatus::SIGNED,
-            'signature_data' => $signatureData,
-            'ip_address' => $ipAddress,
-            'signed_at' => now(),
-            'metadata' => array_merge($signer->metadata ?? [], [
-                'user_agent' => $userAgent,
-                'source' => 'external_public_link',
-            ]),
-            ]);
-
-        // Check if all signers have signed
-        $allSigned = ! $signature->signers()
-            ->where('status', '!=', SignatureStatus::SIGNED)
-            ->exists();
-
-        if ($allSigned) {
-                $signature->update([
                 'status' => SignatureStatus::SIGNED,
+                'signature_data' => $signatureData,
+                'ip_address' => $ipAddress,
                 'signed_at' => now(),
+                'metadata' => array_merge($signer->metadata ?? [], [
+                    'user_agent' => $userAgent,
+                    'source' => 'external_public_link',
+                ]),
             ]);
 
-            // Dispatch completion notification
+            // Check if all signers have signed
+            $allSigned = ! $signature->signers()
+                ->where('status', '!=', SignatureStatus::SIGNED)
+                ->exists();
+
+            if ($allSigned) {
+                $signature->update([
+                    'status' => SignatureStatus::SIGNED,
+                    'signed_at' => now(),
+                ]);
+
+                // Dispatch completion notification
                 $this->dispatchCompletionNotification($signature);
             }
 
@@ -281,6 +291,20 @@ class LocalSignatureProvider implements SignatureProviderInterface
         }
     }
 
+    private function sourceDocumentChecksum(?string $documentPath): ?string
+    {
+        if (! $documentPath) {
+            return null;
+        }
+
+        $disk = DocumentService::getDisk();
+        if (! \Storage::disk($disk)->exists($documentPath)) {
+            return null;
+        }
+
+        return hash('sha256', \Storage::disk($disk)->get($documentPath));
+    }
+
     /**
      * Génère une empreinte unique (SHA-256) basée sur les attributs du modèle.
      * Normalise les instances Carbon pour garantir la cohérence entre
@@ -293,7 +317,7 @@ class LocalSignatureProvider implements SignatureProviderInterface
         $attributes = $model->getAttributes();
 
         foreach ($attributes as $key => $value) {
-            if ($value instanceof \Carbon\CarbonInterface) {
+            if ($value instanceof CarbonInterface) {
                 $attributes[$key] = $value->format('Y-m-d H:i:s');
             }
         }

@@ -3,8 +3,11 @@
 use App\Enums\Core\SignatureStatus;
 use App\Enums\Core\SignatureType;
 use App\Enums\Laser\QuoteStatus;
-use App\Models\Laser\LaserQuote;
 use App\Models\Core\Company;
+use App\Models\Core\Signature;
+use App\Models\Laser\LaserQuote;
+use App\Services\Core\PdfStamperService;
+use App\Services\Core\SignatureChecksumService;
 use App\Services\Core\SignatureService;
 use App\Services\Laser\LaserQuoteService;
 use Illuminate\Support\Facades\Storage;
@@ -58,6 +61,37 @@ it('completes the local signature workflow before converting a quote', function 
     $order = app(LaserQuoteService::class)->convertToOrder($quote);
 
     expect($order->laser_quote_id)->toBe($quote->id);
+
+    @unlink($sourcePath);
+});
+
+it('does not expose a stamped PDF when stamping fails', function () {
+    Storage::fake('public');
+    Company::factory()->create();
+    $quote = LaserQuote::factory()->create(['status' => QuoteStatus::ACCEPTED, 'signed_at' => now()]);
+    $relativePath = 'documents/laser/quotes/devis_laser_'.$quote->reference.'.pdf';
+    $sourcePath = localSignaturePdf();
+    Storage::disk('public')->put($relativePath, file_get_contents($sourcePath));
+
+    $signature = Signature::create([
+        'token' => Str::uuid()->toString(),
+        'signable_type' => $quote->getMorphClass(),
+        'signable_id' => $quote->id,
+        'status' => SignatureStatus::SIGNED,
+        'type' => SignatureType::AUTOGRAPH,
+        'checksum' => app(SignatureChecksumService::class)->generate($quote),
+        'signed_at' => $quote->signed_at,
+        'metadata' => ['provider' => 'local'],
+    ]);
+
+    $stamper = Mockery::mock(PdfStamperService::class);
+    $stamper->shouldReceive('stamp')->once()->andThrow(new RuntimeException('Stamping failed'));
+    app()->instance(PdfStamperService::class, $stamper);
+
+    expect(fn () => $quote->stampSignatureDocument($signature))
+        ->toThrow(RuntimeException::class, 'Stamping failed');
+
+    expect(Storage::disk('public')->exists('documents/laser/quotes/signes/devis_laser_'.$quote->reference.'.pdf'))->toBeFalse();
 
     @unlink($sourcePath);
 });

@@ -6,10 +6,10 @@ use App\Contracts\Core\SignatureProviderInterface;
 use App\Enums\Core\SignatureStatus;
 use App\Enums\Core\SignatureType;
 use App\Models\Core\Signature;
-use App\Services\Core\SignatureChecksumService;
 use App\Models\Core\SignatureSigner;
 use App\Notifications\Core\SignatureRefusedNotification;
 use App\Services\Core\DocumentService;
+use App\Services\Core\SignatureChecksumService;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
@@ -235,27 +235,27 @@ class DocusealProvider implements SignatureProviderInterface
             }
 
             $signer->update([
-            'status' => SignatureStatus::SIGNED,
-            'signature_data' => $signatureData,
-            'ip_address' => $ipAddress,
-            'signed_at' => now(),
-            'metadata' => array_merge($signer->metadata ?? [], [
-                'user_agent' => $userAgent,
-                'source' => 'external_public_link',
-            ]),
-            ]);
-
-        // Check if all signers have signed
-        $allSigned = ! $signature->signers()
-            ->where('status', '!=', SignatureStatus::SIGNED)
-            ->exists();
-
-        if ($allSigned) {
-            $signature->update([
                 'status' => SignatureStatus::SIGNED,
+                'signature_data' => $signatureData,
+                'ip_address' => $ipAddress,
                 'signed_at' => now(),
+                'metadata' => array_merge($signer->metadata ?? [], [
+                    'user_agent' => $userAgent,
+                    'source' => 'external_public_link',
+                ]),
             ]);
-        }
+
+            // Check if all signers have signed
+            $allSigned = ! $signature->signers()
+                ->where('status', '!=', SignatureStatus::SIGNED)
+                ->exists();
+
+            if ($allSigned) {
+                $signature->update([
+                    'status' => SignatureStatus::SIGNED,
+                    'signed_at' => now(),
+                ]);
+            }
 
             return $signer;
         });
