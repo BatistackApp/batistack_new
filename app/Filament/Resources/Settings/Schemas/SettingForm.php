@@ -83,10 +83,10 @@ class SettingForm
                             ->schema([
                                 TextEntry::make('created_at')->label('Créé le')
                                     ->label('Date de création')
-                                    ->state(fn ($record): string => $record?->created_at->diffForHumans() ?? '-'),
+                                    ->state(fn ($record): string => $record?->created_at?->diffForHumans() ?? '-'),
                                 TextEntry::make('updated_at')->label('Mis à jour le')
                                     ->label('Dernière modification')
-                                    ->state(fn ($record): string => $record?->updated_at->diffForHumans() ?? '-'),
+                                    ->state(fn ($record): string => $record?->updated_at?->diffForHumans() ?? '-'),
                             ]),
                     ])->columnSpanFull(),
             ]);

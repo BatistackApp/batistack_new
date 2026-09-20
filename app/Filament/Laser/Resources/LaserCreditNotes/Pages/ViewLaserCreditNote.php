@@ -8,14 +8,20 @@ use Filament\Actions;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
 use Illuminate\Support\Facades\Storage;
+use MortalKiller\FilamentPageHeader\Concerns\HasPageHeader;
 
 class ViewLaserCreditNote extends ViewRecord
 {
+    use HasPageHeader;
+
     protected static string $resource = LaserCreditNoteResource::class;
 
     protected function getHeaderActions(): array
     {
         return [
+            Actions\DeleteAction::make()
+                ->visible(fn ($record) => $record->canBeDeleted()),
+
             Actions\Action::make('retryAccountingSync')
                 ->label('Relancer la comptabilisation')
                 ->icon('heroicon-o-arrow-path')

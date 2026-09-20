@@ -29,6 +29,7 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Hugomyb\FilamentMediaAction\Actions\MediaAction;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Storage;
 use ToneGabes\Filament\Icons\Enums\Phosphor;
 
@@ -267,7 +268,24 @@ class CustomerQuotesTable
                 BulkActionGroup::make([
                     DeleteBulkAction::make()
                         ->requiresConfirmation()
-                        ->check(fn ($records) => $records->every(fn ($r) => $r->canBeDeleted())),
+                        ->action(function (Collection $records): void {
+                            if (! $records->every(fn (CustomerQuote $record): bool => $record->canBeDeleted())) {
+                                Notification::make()
+                                    ->danger()
+                                    ->title('Suppression impossible')
+                                    ->body('Seuls les devis brouillons peuvent être supprimés.')
+                                    ->send();
+
+                                return;
+                            }
+
+                            $records->each->delete();
+
+                            Notification::make()
+                                ->success()
+                                ->title('Devis supprimés')
+                                ->send();
+                        }),
                 ]),
             ]);
     }

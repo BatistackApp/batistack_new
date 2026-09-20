@@ -43,7 +43,7 @@ it('creates an order from a draft quote', function () {
     $quote->update(['total_ht' => 150, 'total_ttc' => 180]);
 
     $service = app(LaserQuoteService::class);
-    $order = $service->acceptQuote($quote);
+    $order = $service->convertToOrder(signedLaserQuote($quote));
 
     expect($order)->toBeInstanceOf(LaserOrder::class)
         ->and($order->reference)->toStartWith('LAC-')
@@ -88,7 +88,7 @@ it('copies quote lines to order lines as snapshot', function () {
     $quote->update(['total_ht' => 654.31, 'total_ttc' => 785.17]);
 
     $service = app(LaserQuoteService::class);
-    $order = $service->acceptQuote($quote);
+    $order = $service->convertToOrder(signedLaserQuote($quote));
 
     $orderLines = $order->lines;
     expect($orderLines)->toHaveCount(1);
@@ -118,8 +118,8 @@ it('rejects quote in invalid status', function () {
     $service = app(LaserQuoteService::class);
 
     $this->expectException(Exception::class);
-    $this->expectExceptionMessage('Ce devis ne peut pas être accepté');
-    $service->acceptQuote($quote);
+    $this->expectExceptionMessage('Seul un devis accepté et signé');
+    $service->convertToOrder($quote);
 });
 
 it('rejects cancelled quote', function () {
@@ -130,7 +130,7 @@ it('rejects cancelled quote', function () {
     $service = app(LaserQuoteService::class);
 
     $this->expectException(Exception::class);
-    $service->acceptQuote($quote);
+    $service->convertToOrder($quote);
 });
 
 it('accepts quote in sent status', function () {
@@ -141,7 +141,7 @@ it('accepts quote in sent status', function () {
     ]));
 
     $service = app(LaserQuoteService::class);
-    $order = $service->acceptQuote($quote);
+    $order = $service->convertToOrder(signedLaserQuote($quote));
 
     expect($order->status)->toBe(OrderStatus::CONFIRMED);
 
@@ -157,7 +157,7 @@ it('accepts quote already in accepted status', function () {
     ]));
 
     $service = app(LaserQuoteService::class);
-    $order = $service->acceptQuote($quote);
+    $order = $service->convertToOrder(signedLaserQuote($quote));
 
     expect($order->status)->toBe(OrderStatus::CONFIRMED);
 });
@@ -185,7 +185,7 @@ it('creates order with empty quote lines', function () {
     ]));
 
     $service = app(LaserQuoteService::class);
-    $order = $service->acceptQuote($quote);
+    $order = $service->convertToOrder(signedLaserQuote($quote));
 
     expect($order->lines)->toHaveCount(0)
         ->and($order->status)->toBe(OrderStatus::CONFIRMED);
@@ -211,11 +211,11 @@ it('rejects duplicate order for same quote', function () {
     ]));
 
     $service = app(LaserQuoteService::class);
-    $service->acceptQuote($quote);
+    $service->convertToOrder(signedLaserQuote($quote));
 
     $this->expectException(Exception::class);
     $this->expectExceptionMessage('Ce devis a déjà été converti en commande');
-    $service->acceptQuote($quote);
+    $service->convertToOrder(signedLaserQuote($quote));
 });
 
 it('has one-to-one relationship between quote and order', function () {
@@ -226,7 +226,7 @@ it('has one-to-one relationship between quote and order', function () {
     ]));
 
     $service = app(LaserQuoteService::class);
-    $order = $service->acceptQuote($quote);
+    $order = $service->convertToOrder(signedLaserQuote($quote));
 
     expect($quote->order)->not->toBeNull()
         ->and($quote->order->id)->toBe($order->id)
@@ -304,7 +304,7 @@ it('LaserOrder quote relationship works', function () {
     ]));
 
     $service = app(LaserQuoteService::class);
-    $order = $service->acceptQuote($quote);
+    $order = $service->convertToOrder(signedLaserQuote($quote));
 
     expect($order->quote)->not->toBeNull()
         ->and($order->quote->id)->toBe($quote->id);
@@ -421,7 +421,7 @@ it('dispatches generate order document job on order created', function () {
     ]));
 
     $service = app(LaserQuoteService::class);
-    $order = $service->acceptQuote($quote);
+    $order = $service->convertToOrder(signedLaserQuote($quote));
 
     Queue::assertPushed(GenerateLaserDocumentJob::class, function ($job) {
         return $job->namespace === 'laser_order';

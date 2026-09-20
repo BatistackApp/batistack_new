@@ -16,6 +16,7 @@ class LaserDeliveryNoteForm
         return $schema
             ->components([
                 Section::make('Informations du bon de livraison')
+                    ->visibleOn(['create', 'edit'])
                     ->columns(2)
                     ->columnSpanFull()
                     ->schema([
@@ -24,12 +25,16 @@ class LaserDeliveryNoteForm
                             ->readOnly()
                             ->required(),
 
-                        TextInput::make('client.name')
+                        TextInput::make('client_id')
                             ->label('Client')
+                            ->formatStateUsing(fn ($state, $record): ?string => $record?->client?->name)
+                            ->dehydrated(false)
                             ->readOnly(),
 
-                        TextInput::make('order.reference')
+                        TextInput::make('laser_order_id')
                             ->label('Commande d\'origine')
+                            ->formatStateUsing(fn ($state, $record): ?string => $record?->order?->reference)
+                            ->dehydrated(false)
                             ->readOnly(),
 
                         Select::make('status')

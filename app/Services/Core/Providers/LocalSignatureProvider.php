@@ -10,6 +10,9 @@ use App\Models\Core\Signature;
 use App\Models\Core\SignatureSigner;
 use App\Notifications\Core\SignatureCompletedNotification;
 use App\Notifications\Core\SignatureRefusedNotification;
+use App\Services\Core\DocumentService;
+use App\Services\Core\SignatureChecksumService;
+use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -40,10 +43,11 @@ class LocalSignatureProvider implements SignatureProviderInterface
             'status' => SignatureStatus::SIGNED,
             'type' => $type,
             'signature_data' => $signatureData,
-            'checksum' => $this->generateChecksum($model),
+            'checksum' => app(SignatureChecksumService::class)->generate($model),
             'ip_address' => request()->ip(),
             'signed_at' => now(),
             'metadata' => array_merge([
+                'provider' => 'local',
                 'user_agent' => request()->userAgent(),
                 'source' => 'internal_erp',
             ], $additionalMetadata),
@@ -62,7 +66,7 @@ class LocalSignatureProvider implements SignatureProviderInterface
     ): Signature {
         $emailToSend = null;
 
-        $signature = DB::transaction(function () use ($model, $type, $email, $name, &$emailToSend) {
+        $signature = DB::transaction(function () use ($model, $type, $email, $name, $documentPath, &$emailToSend) {
             $signature = Signature::create([
                 'token' => Str::uuid()->toString(),
                 'signable_type' => $model->getMorphClass(),
@@ -70,10 +74,12 @@ class LocalSignatureProvider implements SignatureProviderInterface
                 'user_id' => Auth::id(),
                 'status' => SignatureStatus::PENDING,
                 'type' => $type,
-                'checksum' => $this->generateChecksum($model),
-                'metadata' => [
+                'checksum' => app(SignatureChecksumService::class)->generate($model),
+                'metadata' => array_filter([
+                    'provider' => 'local',
                     'requested_at' => now()->toDateTimeString(),
-                ],
+                    'source_document_checksum' => $this->sourceDocumentChecksum($documentPath),
+                ]),
             ]);
 
             // Create a single signer for backward compatibility
@@ -120,7 +126,7 @@ class LocalSignatureProvider implements SignatureProviderInterface
     ): Signature {
         $emailsToSend = [];
 
-        $signature = DB::transaction(function () use ($model, $type, $signers, &$emailsToSend) {
+        $signature = DB::transaction(function () use ($model, $type, $signers, $documentPath, &$emailsToSend) {
             $signature = Signature::create([
                 'token' => Str::uuid()->toString(),
                 'signable_type' => $model->getMorphClass(),
@@ -128,11 +134,13 @@ class LocalSignatureProvider implements SignatureProviderInterface
                 'user_id' => Auth::id(),
                 'status' => SignatureStatus::PENDING,
                 'type' => $type,
-                'checksum' => $this->generateChecksum($model),
-                'metadata' => [
+                'checksum' => app(SignatureChecksumService::class)->generate($model),
+                'metadata' => array_filter([
+                    'provider' => 'local',
                     'requested_at' => now()->toDateTimeString(),
                     'signers_count' => count($signers),
-                ],
+                    'source_document_checksum' => $this->sourceDocumentChecksum($documentPath),
+                ]),
             ]);
 
             foreach ($signers as $signerData) {
@@ -181,33 +189,39 @@ class LocalSignatureProvider implements SignatureProviderInterface
                 ->firstOrFail();
 
             $signature = Signature::whereKey($signer->signature_id)->lockForUpdate()->firstOrFail();
-            if (! hash_equals($signature->checksum, $this->generateChecksum($signature->signable))) {
+            if (! hash_equals($signature->checksum, app(SignatureChecksumService::class)->generate($signature->signable))) {
                 throw new \RuntimeException('Le document a été modifié depuis la demande de signature.');
             }
 
+            $expectedSourceChecksum = $signature->metadata['source_document_checksum'] ?? null;
+            $sourcePath = $signature->signable->getSignatureDocumentPath();
+            if ($expectedSourceChecksum && (! $sourcePath || ! is_readable($sourcePath) || ! hash_equals($expectedSourceChecksum, hash_file('sha256', $sourcePath)))) {
+                throw new \RuntimeException('Le fichier PDF a été modifié depuis la demande de signature.');
+            }
+
             $signer->update([
-            'status' => SignatureStatus::SIGNED,
-            'signature_data' => $signatureData,
-            'ip_address' => $ipAddress,
-            'signed_at' => now(),
-            'metadata' => array_merge($signer->metadata ?? [], [
-                'user_agent' => $userAgent,
-                'source' => 'external_public_link',
-            ]),
-            ]);
-
-        // Check if all signers have signed
-        $allSigned = ! $signature->signers()
-            ->where('status', '!=', SignatureStatus::SIGNED)
-            ->exists();
-
-        if ($allSigned) {
-                $signature->update([
                 'status' => SignatureStatus::SIGNED,
+                'signature_data' => $signatureData,
+                'ip_address' => $ipAddress,
                 'signed_at' => now(),
+                'metadata' => array_merge($signer->metadata ?? [], [
+                    'user_agent' => $userAgent,
+                    'source' => 'external_public_link',
+                ]),
             ]);
 
-            // Dispatch completion notification
+            // Check if all signers have signed
+            $allSigned = ! $signature->signers()
+                ->where('status', '!=', SignatureStatus::SIGNED)
+                ->exists();
+
+            if ($allSigned) {
+                $signature->update([
+                    'status' => SignatureStatus::SIGNED,
+                    'signed_at' => now(),
+                ]);
+
+                // Dispatch completion notification
                 $this->dispatchCompletionNotification($signature);
             }
 
@@ -257,9 +271,14 @@ class LocalSignatureProvider implements SignatureProviderInterface
             return false;
         }
 
-        $currentChecksum = $this->generateChecksum($signature->signable);
+        $currentChecksum = app(SignatureChecksumService::class)->generate($signature->signable);
 
         return hash_equals($signature->checksum, $currentChecksum);
+    }
+
+    public function refreshChecksum(Signature $signature): void
+    {
+        $signature->update(['checksum' => app(SignatureChecksumService::class)->generate($signature->signable)]);
     }
 
     /**
@@ -270,6 +289,20 @@ class LocalSignatureProvider implements SignatureProviderInterface
         if ($signature->user) {
             Notification::send($signature->user, new SignatureCompletedNotification($signature));
         }
+    }
+
+    private function sourceDocumentChecksum(?string $documentPath): ?string
+    {
+        if (! $documentPath) {
+            return null;
+        }
+
+        $disk = DocumentService::getDisk();
+        if (! \Storage::disk($disk)->exists($documentPath)) {
+            return null;
+        }
+
+        return hash('sha256', \Storage::disk($disk)->get($documentPath));
     }
 
     /**
@@ -284,7 +317,7 @@ class LocalSignatureProvider implements SignatureProviderInterface
         $attributes = $model->getAttributes();
 
         foreach ($attributes as $key => $value) {
-            if ($value instanceof \Carbon\CarbonInterface) {
+            if ($value instanceof CarbonInterface) {
                 $attributes[$key] = $value->format('Y-m-d H:i:s');
             }
         }

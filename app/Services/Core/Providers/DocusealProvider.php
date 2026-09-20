@@ -9,6 +9,7 @@ use App\Models\Core\Signature;
 use App\Models\Core\SignatureSigner;
 use App\Notifications\Core\SignatureRefusedNotification;
 use App\Services\Core\DocumentService;
+use App\Services\Core\SignatureChecksumService;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
@@ -81,7 +82,7 @@ class DocusealProvider implements SignatureProviderInterface
                 'user_id' => auth()->id() ?? 1,
                 'status' => SignatureStatus::PENDING,
                 'type' => $type,
-                'checksum' => hash('sha256', json_encode($model->toArray())),
+                'checksum' => app(SignatureChecksumService::class)->generate($model),
                 'metadata' => [
                     'provider' => 'docuseal',
                     'requested_at' => now()->toDateTimeString(),
@@ -220,7 +221,7 @@ class DocusealProvider implements SignatureProviderInterface
                 ->lockForUpdate()
                 ->firstOrFail();
             $signature = Signature::whereKey($signer->signature_id)->lockForUpdate()->firstOrFail();
-            if (! hash_equals($signature->checksum, hash('sha256', json_encode($signature->signable->toArray())))) {
+            if (! hash_equals($signature->checksum, app(SignatureChecksumService::class)->generate($signature->signable))) {
                 throw new \RuntimeException('Le document a été modifié depuis la demande de signature.');
             }
 
@@ -234,27 +235,27 @@ class DocusealProvider implements SignatureProviderInterface
             }
 
             $signer->update([
-            'status' => SignatureStatus::SIGNED,
-            'signature_data' => $signatureData,
-            'ip_address' => $ipAddress,
-            'signed_at' => now(),
-            'metadata' => array_merge($signer->metadata ?? [], [
-                'user_agent' => $userAgent,
-                'source' => 'external_public_link',
-            ]),
-            ]);
-
-        // Check if all signers have signed
-        $allSigned = ! $signature->signers()
-            ->where('status', '!=', SignatureStatus::SIGNED)
-            ->exists();
-
-        if ($allSigned) {
-            $signature->update([
                 'status' => SignatureStatus::SIGNED,
+                'signature_data' => $signatureData,
+                'ip_address' => $ipAddress,
                 'signed_at' => now(),
+                'metadata' => array_merge($signer->metadata ?? [], [
+                    'user_agent' => $userAgent,
+                    'source' => 'external_public_link',
+                ]),
             ]);
-        }
+
+            // Check if all signers have signed
+            $allSigned = ! $signature->signers()
+                ->where('status', '!=', SignatureStatus::SIGNED)
+                ->exists();
+
+            if ($allSigned) {
+                $signature->update([
+                    'status' => SignatureStatus::SIGNED,
+                    'signed_at' => now(),
+                ]);
+            }
 
             return $signer;
         });
@@ -312,7 +313,7 @@ class DocusealProvider implements SignatureProviderInterface
                 'status' => SignatureStatus::SIGNED,
                 'type' => $type,
                 'signature_data' => $signatureData,
-                'checksum' => hash('sha256', json_encode($model->toArray())),
+                'checksum' => app(SignatureChecksumService::class)->generate($model),
                 'signed_at' => now(),
                 'metadata' => array_merge([
                     'provider' => 'docuseal',
@@ -339,6 +340,16 @@ class DocusealProvider implements SignatureProviderInterface
             return false;
         }
 
-        return true;
+        return hash_equals(
+            $signature->checksum,
+            app(SignatureChecksumService::class)->generate($signature->signable),
+        );
+    }
+
+    public function refreshChecksum(Signature $signature): void
+    {
+        $signature->update([
+            'checksum' => app(SignatureChecksumService::class)->generate($signature->signable),
+        ]);
     }
 }

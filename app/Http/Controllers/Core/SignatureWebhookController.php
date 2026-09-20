@@ -49,7 +49,7 @@ class SignatureWebhookController extends Controller
                 if ($signature && $signature->status === SignatureStatus::PENDING) {
                     // Multi-signatory: update individual signer by email
                     if ($signature->signers()->exists()) {
-                         $this->handleMultiSignerWebhook($signature, $data, $signatureService, $signatureController);
+                        $this->handleMultiSignerWebhook($signature, $data, $signatureService, $signatureController);
                     } else {
                         // Legacy single signer
                         $signatureService->driver('docuseal')->sign(
@@ -105,9 +105,8 @@ class SignatureWebhookController extends Controller
         array $data,
         SignatureService $signatureService,
         SignatureController $signatureController,
-    ): void
-    {
-        DB::transaction(function () use ($signature, $data, $signatureService) {
+    ): void {
+        $completed = DB::transaction(function () use ($signature, $data, $signatureService): bool {
             $submitters = $data['submitters'] ?? [];
 
             foreach ($submitters as $submitter) {
@@ -117,6 +116,7 @@ class SignatureWebhookController extends Controller
                     Log::warning('DocuSeal webhook ignored: submitter identifier missing.', [
                         'signature_id' => $signature->id,
                     ]);
+
                     continue;
                 }
 
@@ -137,10 +137,11 @@ class SignatureWebhookController extends Controller
                 }
             }
 
-            $signature->refresh();
-            if ($signature->status === SignatureStatus::SIGNED) {
-                $signatureController->finalizeSignature($signature);
-            }
+            return $signature->refresh()->status === SignatureStatus::SIGNED;
         });
+
+        if ($completed) {
+            $signatureController->finalizeSignature($signature->fresh());
+        }
     }
 }

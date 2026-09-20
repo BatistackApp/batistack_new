@@ -7,6 +7,7 @@ use App\Models\Core\Signature;
 use App\Models\Core\SignatureSigner;
 use App\Models\User;
 use App\Services\Core\Providers\DocusealProvider;
+use App\Services\Core\SignatureChecksumService;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Notification;
@@ -59,6 +60,30 @@ it('throws on requestSignature without email', function () {
     $this->provider->requestSignature($this->quote, SignatureType::AUTOGRAPH, null, null);
 })->throws(InvalidArgumentException::class, 'Email et Nom requis');
 
+it('completes a DocuSeal request through request, signer and checksum verification', function () {
+    Http::fake([
+        'api.docuseal.com/templates/pdf' => Http::response(['id' => 456], 200),
+        'api.docuseal.com/submissions' => Http::response([['submission_id' => 'sub-456']], 200),
+    ]);
+
+    Storage::fake('public');
+    $pdfPath = 'documents/commerce/quotes/devis_'.$this->quote->reference.'.pdf';
+    Storage::disk('public')->put($pdfPath, '%PDF-1.4 integration');
+
+    $signature = $this->provider->requestMultiSignature(
+        $this->quote,
+        SignatureType::AUTOGRAPH,
+        [['name' => 'Alice', 'email' => 'alice@test.com']],
+        $pdfPath,
+    );
+
+    $signer = $signature->signers()->first();
+    $this->provider->signAsSigner($signer->token, 'signed-data', '127.0.0.1', 'Test');
+
+    expect($signature->fresh()->status)->toBe(SignatureStatus::SIGNED)
+        ->and($this->provider->verify($signature->fresh()))->toBeTrue();
+});
+
 it('throws on requestSignature without name', function () {
     $this->provider->requestSignature($this->quote, SignatureType::AUTOGRAPH, 'test@test.com', null);
 })->throws(InvalidArgumentException::class, 'Email et Nom requis');
@@ -70,7 +95,7 @@ it('signs as specific signer via signAsSigner', function () {
         'signable_id' => $this->quote->id,
         'status' => SignatureStatus::PENDING,
         'type' => SignatureType::AUTOGRAPH,
-         'checksum' => hash('sha256', json_encode($this->quote->fresh()->toArray())),
+        'checksum' => app(SignatureChecksumService::class)->generate($this->quote),
     ]);
 
     $signerToken = Str::uuid()->toString();
@@ -108,7 +133,7 @@ it('completes signature when all signers have signed', function () {
         'signable_id' => $this->quote->id,
         'status' => SignatureStatus::PENDING,
         'type' => SignatureType::AUTOGRAPH,
-         'checksum' => hash('sha256', json_encode($this->quote->fresh()->toArray())),
+        'checksum' => app(SignatureChecksumService::class)->generate($this->quote),
     ]);
 
     $token1 = Str::uuid()->toString();
@@ -146,7 +171,7 @@ it('refuses as signer and stops workflow', function () {
         'user_id' => $this->user->id,
         'status' => SignatureStatus::PENDING,
         'type' => SignatureType::AUTOGRAPH,
-        'checksum' => hash('sha256', 'test'),
+        'checksum' => app(SignatureChecksumService::class)->generate($this->quote),
     ]);
 
     $signerToken = Str::uuid()->toString();
@@ -175,7 +200,7 @@ it('refuseAsSigner throws on non-pending signer', function () {
         'signable_id' => $this->quote->id,
         'status' => SignatureStatus::PENDING,
         'type' => SignatureType::AUTOGRAPH,
-        'checksum' => hash('sha256', 'test'),
+        'checksum' => app(SignatureChecksumService::class)->generate($this->quote),
     ]);
 
     SignatureSigner::create([
@@ -212,7 +237,7 @@ it('updates existing pending signature via sign', function () {
         'signable_id' => $this->quote->id,
         'status' => SignatureStatus::PENDING,
         'type' => SignatureType::AUTOGRAPH,
-        'checksum' => hash('sha256', 'test'),
+        'checksum' => app(SignatureChecksumService::class)->generate($this->quote),
     ]);
 
     $result = $this->provider->sign($this->quote, 'base64data', SignatureType::AUTOGRAPH);
@@ -229,8 +254,10 @@ it('verify returns true for signed signature', function () {
         'signable_id' => $this->quote->id,
         'status' => SignatureStatus::SIGNED,
         'type' => SignatureType::AUTOGRAPH,
-        'checksum' => hash('sha256', 'test'),
+        'checksum' => app(SignatureChecksumService::class)->generate($this->quote),
     ]);
+
+    $this->provider->refreshChecksum($signature->fresh());
 
     expect($this->provider->verify($signature))->toBeTrue();
 });
@@ -242,7 +269,7 @@ it('verify returns false for pending signature', function () {
         'signable_id' => $this->quote->id,
         'status' => SignatureStatus::PENDING,
         'type' => SignatureType::AUTOGRAPH,
-        'checksum' => hash('sha256', 'test'),
+        'checksum' => app(SignatureChecksumService::class)->generate($this->quote),
     ]);
 
     expect($this->provider->verify($signature))->toBeFalse();

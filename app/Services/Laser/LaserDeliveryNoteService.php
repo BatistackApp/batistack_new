@@ -4,7 +4,9 @@ namespace App\Services\Laser;
 
 use App\Enums\Laser\DeliveryStatus;
 use App\Enums\Laser\OrderStatus;
+use App\Jobs\Laser\GenerateLaserDocumentJob;
 use App\Models\Laser\LaserDeliveryNote;
+use App\Models\Laser\LaserDeliveryNoteLine;
 use App\Models\Laser\LaserOrder;
 use App\Support\ReferenceGenerator;
 use Exception;
@@ -37,6 +39,10 @@ class LaserDeliveryNoteService
                 'reference' => $this->generateReference(),
                 'status' => DeliveryStatus::DRAFT,
             ]);
+
+            if ($order->status === OrderStatus::CONFIRMED) {
+                $order->update(['status' => OrderStatus::IN_PROGRESS]);
+            }
 
             foreach ($linesWithRemaining as $line) {
                 $quantityForBL = $line->remaining_quantity;
@@ -78,12 +84,14 @@ class LaserDeliveryNoteService
                     throw new Exception('La quantité livrée doit être supérieure à zéro.');
                 }
 
-                if ($line->quantity_delivered > $line->orderLine->quantity - $line->orderLine->delivered_quantity) {
+                $orderLine = $line->orderLine()->lockForUpdate()->firstOrFail();
+
+                if ($line->quantity_delivered > $orderLine->quantity - $orderLine->delivered_quantity) {
                     throw new Exception('La quantité livrée dépasse la quantité disponible pour la ligne "'.$line->description.'".');
                 }
 
-                $line->orderLine->decrement('reserved_quantity', $line->quantity_delivered);
-                $line->orderLine->increment('delivered_quantity', $line->quantity_delivered);
+                $orderLine->decrement('reserved_quantity', $line->quantity_delivered);
+                $orderLine->increment('delivered_quantity', $line->quantity_delivered);
             }
 
             $delivery->update(['status' => DeliveryStatus::SHIPPED]);
@@ -92,16 +100,54 @@ class LaserDeliveryNoteService
         });
     }
 
-    public function receiveDeliveryNote(LaserDeliveryNote $delivery): void
+    public function updateDeliveryQuantity(LaserDeliveryNoteLine $line, int $quantity): void
     {
-        if ($delivery->status !== DeliveryStatus::SHIPPED) {
-            throw new Exception('Seul un bon de livraison expédié peut être réceptionné.');
-        }
+        DB::transaction(function () use ($line, $quantity): void {
+            $line = LaserDeliveryNoteLine::whereKey($line->id)->lockForUpdate()->firstOrFail();
+            $delivery = $line->deliveryNote()->lockForUpdate()->firstOrFail();
 
-        $delivery->update([
-            'status' => DeliveryStatus::DELIVERED,
-            'delivery_date' => now()->toDateString(),
-        ]);
+            if ($delivery->status !== DeliveryStatus::DRAFT) {
+                throw new Exception('Seul un BL brouillon peut être modifié.');
+            }
+            if ($quantity <= 0) {
+                throw new Exception('La quantité livrée doit être supérieure à zéro.');
+            }
+
+            $orderLine = $line->orderLine()->lockForUpdate()->firstOrFail();
+            $otherReserved = $orderLine->deliveryNoteLines()
+                ->where('id', '!=', $line->id)
+                ->whereHas('deliveryNote', fn ($query) => $query->where('status', DeliveryStatus::DRAFT))
+                ->sum('quantity_delivered');
+            $available = $orderLine->quantity - $orderLine->delivered_quantity - $otherReserved;
+
+            if ($quantity > $available) {
+                throw new Exception("La quantité livrée ({$quantity}) dépasse la quantité disponible ({$available}).");
+            }
+
+            $line->updateQuietly(['quantity_delivered' => $quantity]);
+            $reserved = $orderLine->deliveryNoteLines()
+                ->whereHas('deliveryNote', fn ($query) => $query->where('status', DeliveryStatus::DRAFT))
+                ->sum('quantity_delivered');
+            $orderLine->update(['reserved_quantity' => $reserved]);
+
+            DB::afterCommit(fn () => GenerateLaserDocumentJob::dispatch('laser_delivery_note', $delivery));
+        });
+    }
+
+    public function receiveDeliveryNote(LaserDeliveryNote $delivery, ?string $deliveryDate = null): void
+    {
+        DB::transaction(function () use ($delivery, $deliveryDate): void {
+            $delivery = LaserDeliveryNote::whereKey($delivery->id)->lockForUpdate()->firstOrFail();
+
+            if ($delivery->status !== DeliveryStatus::SHIPPED) {
+                throw new Exception('Seul un bon de livraison expédié peut être réceptionné.');
+            }
+
+            $delivery->update([
+                'status' => DeliveryStatus::DELIVERED,
+                'delivery_date' => $deliveryDate ?? now()->toDateString(),
+            ]);
+        });
     }
 
     public function deleteDeliveryNote(LaserDeliveryNote $delivery): void

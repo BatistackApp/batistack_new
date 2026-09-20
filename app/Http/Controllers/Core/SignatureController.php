@@ -66,14 +66,34 @@ class SignatureController extends Controller
                 return redirect()->route('signature.show', $token)->with('error', 'Vous avez déjà signé ce document.');
             }
 
-            $service->signAsSigner(
+            $signedSigner = $service->signAsSigner(
                 $token,
                 $signatureData,
                 $request->ip(),
                 $request->userAgent()
             );
 
-            $this->handlePostSignature($signer->signature);
+            $previousAttributes = $signedSigner->signature->signable?->getOriginal();
+            try {
+                $this->handlePostSignature($signedSigner->fresh('signature')->signature);
+                app(SignatureService::class)->refreshChecksum($signedSigner->signature->fresh());
+            } catch (\Throwable $exception) {
+                $signedSigner->update([
+                    'status' => SignatureStatus::PENDING,
+                    'signature_data' => null,
+                    'signed_at' => null,
+                ]);
+                $signedSigner->signature()->update([
+                    'status' => SignatureStatus::PENDING,
+                    'signed_at' => null,
+                    'signature_data' => null,
+                    'document_checksum' => null,
+                ]);
+                $this->restoreSignable($signedSigner->signature->signable, $previousAttributes);
+                $signedSigner->signature->signable?->discardStampedSignatureDocument($signedSigner->signature);
+
+                throw $exception;
+            }
 
             return redirect()->route('signature.show', $token)->with('success', 'Document signé avec succès !');
         }
@@ -104,9 +124,36 @@ class SignatureController extends Controller
             ]),
         ]);
 
-        $this->handlePostSignature($signature);
+        $previousAttributes = $signature->signable->getOriginal();
+        try {
+            $this->handlePostSignature($signature->fresh());
+            app(SignatureService::class)->refreshChecksum($signature->fresh());
+        } catch (\Throwable $exception) {
+            $signature->update([
+                'status' => SignatureStatus::PENDING,
+                'signed_at' => null,
+                'signature_data' => null,
+                'document_checksum' => null,
+            ]);
+            $this->restoreSignable($signature->signable, $previousAttributes);
+            $signature->signable?->discardStampedSignatureDocument($signature);
+
+            throw $exception;
+        }
 
         return redirect()->route('signature.show', $token)->with('success', 'Document signé avec succès !');
+    }
+
+    protected function restoreSignable(?object $signable, ?array $attributes): void
+    {
+        if (! $signable || ! $attributes) {
+            return;
+        }
+
+        $restore = array_intersect_key($attributes, array_flip(['status', 'signed_at']));
+        if ($restore !== []) {
+            $signable->updateQuietly($restore);
+        }
     }
 
     /**
