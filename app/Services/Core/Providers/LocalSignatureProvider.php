@@ -7,6 +7,7 @@ use App\Enums\Core\SignatureStatus;
 use App\Enums\Core\SignatureType;
 use App\Mail\Core\MultiSignatureRequestedMail;
 use App\Models\Core\Signature;
+use App\Services\Core\SignatureChecksumService;
 use App\Models\Core\SignatureSigner;
 use App\Notifications\Core\SignatureCompletedNotification;
 use App\Notifications\Core\SignatureRefusedNotification;
@@ -40,7 +41,7 @@ class LocalSignatureProvider implements SignatureProviderInterface
             'status' => SignatureStatus::SIGNED,
             'type' => $type,
             'signature_data' => $signatureData,
-            'checksum' => $this->generateChecksum($model),
+            'checksum' => app(SignatureChecksumService::class)->generate($model),
             'ip_address' => request()->ip(),
             'signed_at' => now(),
             'metadata' => array_merge([
@@ -70,7 +71,7 @@ class LocalSignatureProvider implements SignatureProviderInterface
                 'user_id' => Auth::id(),
                 'status' => SignatureStatus::PENDING,
                 'type' => $type,
-                'checksum' => $this->generateChecksum($model),
+                'checksum' => app(SignatureChecksumService::class)->generate($model),
                 'metadata' => [
                     'provider' => 'local',
                     'requested_at' => now()->toDateTimeString(),
@@ -129,7 +130,7 @@ class LocalSignatureProvider implements SignatureProviderInterface
                 'user_id' => Auth::id(),
                 'status' => SignatureStatus::PENDING,
                 'type' => $type,
-                'checksum' => $this->generateChecksum($model),
+                'checksum' => app(SignatureChecksumService::class)->generate($model),
                 'metadata' => [
                     'provider' => 'local',
                     'requested_at' => now()->toDateTimeString(),
@@ -183,7 +184,7 @@ class LocalSignatureProvider implements SignatureProviderInterface
                 ->firstOrFail();
 
             $signature = Signature::whereKey($signer->signature_id)->lockForUpdate()->firstOrFail();
-            if (! hash_equals($signature->checksum, $this->generateChecksum($signature->signable))) {
+            if (! hash_equals($signature->checksum, app(SignatureChecksumService::class)->generate($signature->signable))) {
                 throw new \RuntimeException('Le document a été modifié depuis la demande de signature.');
             }
 
@@ -259,14 +260,14 @@ class LocalSignatureProvider implements SignatureProviderInterface
             return false;
         }
 
-        $currentChecksum = $this->generateChecksum($signature->signable);
+        $currentChecksum = app(SignatureChecksumService::class)->generate($signature->signable);
 
         return hash_equals($signature->checksum, $currentChecksum);
     }
 
     public function refreshChecksum(Signature $signature): void
     {
-        $signature->update(['checksum' => $this->generateChecksum($signature->signable)]);
+        $signature->update(['checksum' => app(SignatureChecksumService::class)->generate($signature->signable)]);
     }
 
     /**

@@ -55,7 +55,7 @@ class PurchaseOrder extends Model
     protected function casts(): array
     {
         return [
-            'ordered_at' => 'timestamp',
+            'ordered_at' => 'datetime',
             'expected_delivery_date' => 'date',
             'status' => OrderStatus::class,
             'total_ht' => 'decimal:2',

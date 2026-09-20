@@ -146,7 +146,7 @@ it('refuses as signer and stops workflow', function () {
         'user_id' => $this->user->id,
         'status' => SignatureStatus::PENDING,
         'type' => SignatureType::AUTOGRAPH,
-        'checksum' => hash('sha256', 'test'),
+        'checksum' => app(\App\Services\Core\SignatureChecksumService::class)->generate($this->quote),
     ]);
 
     $signerToken = Str::uuid()->toString();
@@ -229,8 +229,10 @@ it('verify returns true for signed signature', function () {
         'signable_id' => $this->quote->id,
         'status' => SignatureStatus::SIGNED,
         'type' => SignatureType::AUTOGRAPH,
-        'checksum' => hash('sha256', 'test'),
+        'checksum' => app(\App\Services\Core\SignatureChecksumService::class)->generate($this->quote),
     ]);
+
+    $this->provider->refreshChecksum($signature->fresh());
 
     expect($this->provider->verify($signature))->toBeTrue();
 });

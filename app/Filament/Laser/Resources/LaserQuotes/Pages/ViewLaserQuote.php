@@ -11,6 +11,7 @@ use App\Services\Laser\LaserDocumentationService;
 use Filament\Actions;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
+use Illuminate\Support\Facades\Storage;
 use MortalKiller\FilamentPageHeader\Concerns\HasPageHeader;
 
 class ViewLaserQuote extends ViewRecord
@@ -45,6 +46,7 @@ class ViewLaserQuote extends ViewRecord
                         return;
                     }
                      $previousStatus = $record->status;
+                     $path = null;
 
                      try {
                          $record->update(['status' => QuoteStatus::SENT]);
@@ -53,6 +55,9 @@ class ViewLaserQuote extends ViewRecord
                          Notification::make()->success()->title('Devis envoyé pour signature')->send();
                      } catch (\Throwable $exception) {
                          $record->updateQuietly(['status' => $previousStatus]);
+                         if ($path) {
+                             Storage::disk(LaserDocumentationService::getDisk())->delete($path);
+                         }
                          Notification::make()->danger()->title('Échec de l’envoi pour signature')->body($exception->getMessage())->send();
                      }
                 }),

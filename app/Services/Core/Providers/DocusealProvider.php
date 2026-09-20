@@ -6,6 +6,7 @@ use App\Contracts\Core\SignatureProviderInterface;
 use App\Enums\Core\SignatureStatus;
 use App\Enums\Core\SignatureType;
 use App\Models\Core\Signature;
+use App\Services\Core\SignatureChecksumService;
 use App\Models\Core\SignatureSigner;
 use App\Notifications\Core\SignatureRefusedNotification;
 use App\Services\Core\DocumentService;
@@ -81,7 +82,7 @@ class DocusealProvider implements SignatureProviderInterface
                 'user_id' => auth()->id() ?? 1,
                 'status' => SignatureStatus::PENDING,
                 'type' => $type,
-                'checksum' => hash('sha256', json_encode($model->toArray())),
+                'checksum' => app(SignatureChecksumService::class)->generate($model),
                 'metadata' => [
                     'provider' => 'docuseal',
                     'requested_at' => now()->toDateTimeString(),
@@ -312,7 +313,7 @@ class DocusealProvider implements SignatureProviderInterface
                 'status' => SignatureStatus::SIGNED,
                 'type' => $type,
                 'signature_data' => $signatureData,
-                'checksum' => hash('sha256', json_encode($model->toArray())),
+                'checksum' => app(SignatureChecksumService::class)->generate($model),
                 'signed_at' => now(),
                 'metadata' => array_merge([
                     'provider' => 'docuseal',
@@ -341,14 +342,14 @@ class DocusealProvider implements SignatureProviderInterface
 
         return hash_equals(
             $signature->checksum,
-            hash('sha256', json_encode($signature->signable->toArray())),
+            app(SignatureChecksumService::class)->generate($signature->signable),
         );
     }
 
     public function refreshChecksum(Signature $signature): void
     {
         $signature->update([
-            'checksum' => hash('sha256', json_encode($signature->signable->toArray())),
+            'checksum' => app(SignatureChecksumService::class)->generate($signature->signable),
         ]);
     }
 }
