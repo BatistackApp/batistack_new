@@ -26,9 +26,6 @@ class LaserDeliveryNoteLineObserver
         }
 
         $orderLine = $line->orderLine;
-        // Serialize competing draft-line edits on the order line. The
-        // reservation is recomputed after the line update from committed rows.
-        $orderLine->newQuery()->whereKey($orderLine->id)->lockForUpdate()->first();
 
         $otherReserved = $orderLine->deliveryNoteLines()
             ->where('laser_delivery_note_id', '!=', $line->laser_delivery_note_id)

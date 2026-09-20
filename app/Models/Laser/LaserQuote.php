@@ -92,7 +92,7 @@ class LaserQuote extends Model implements Signable
 
     public function onPostSignature(Signature $signature): void
     {
-        $this->update([
+        $this->updateQuietly([
             'status' => QuoteStatus::ACCEPTED,
             'signed_at' => $signature->signed_at ?? now(),
         ]);

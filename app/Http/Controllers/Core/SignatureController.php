@@ -66,14 +66,30 @@ class SignatureController extends Controller
                 return redirect()->route('signature.show', $token)->with('error', 'Vous avez déjà signé ce document.');
             }
 
-            $service->signAsSigner(
+            $signedSigner = $service->signAsSigner(
                 $token,
                 $signatureData,
                 $request->ip(),
                 $request->userAgent()
             );
 
-            $this->handlePostSignature($signer->signature);
+            try {
+                $this->handlePostSignature($signedSigner->fresh('signature')->signature);
+            } catch (\Throwable $exception) {
+                $signedSigner->update([
+                    'status' => SignatureStatus::PENDING,
+                    'signature_data' => null,
+                    'signed_at' => null,
+                ]);
+                $signedSigner->signature()->update([
+                    'status' => SignatureStatus::PENDING,
+                    'signed_at' => null,
+                    'signature_data' => null,
+                    'document_checksum' => null,
+                ]);
+
+                throw $exception;
+            }
 
             return redirect()->route('signature.show', $token)->with('success', 'Document signé avec succès !');
         }
@@ -104,7 +120,18 @@ class SignatureController extends Controller
             ]),
         ]);
 
-        $this->handlePostSignature($signature);
+        try {
+            $this->handlePostSignature($signature->fresh());
+        } catch (\Throwable $exception) {
+            $signature->update([
+                'status' => SignatureStatus::PENDING,
+                'signed_at' => null,
+                'signature_data' => null,
+                'document_checksum' => null,
+            ]);
+
+            throw $exception;
+        }
 
         return redirect()->route('signature.show', $token)->with('success', 'Document signé avec succès !');
     }
