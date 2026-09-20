@@ -339,6 +339,16 @@ class DocusealProvider implements SignatureProviderInterface
             return false;
         }
 
-        return true;
+        return hash_equals(
+            $signature->checksum,
+            hash('sha256', json_encode($signature->signable->toArray())),
+        );
+    }
+
+    public function refreshChecksum(Signature $signature): void
+    {
+        $signature->update([
+            'checksum' => hash('sha256', json_encode($signature->signable->toArray())),
+        ]);
     }
 }

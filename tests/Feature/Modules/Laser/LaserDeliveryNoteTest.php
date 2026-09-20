@@ -29,7 +29,7 @@ it('creates a delivery note from an order', function () {
         'status' => QuoteStatus::DRAFT,
     ]));
 
-    $order = app(LaserQuoteService::class)->acceptQuote($quote);
+    $order = app(LaserQuoteService::class)->convertToOrder(signedLaserQuote($quote));
 
     LaserOrderLine::withoutEvents(fn () => LaserOrderLine::create([
         'laser_order_id' => $order->id,
@@ -77,7 +77,7 @@ it('reserves quantity when creating a delivery note', function () {
         'status' => QuoteStatus::DRAFT,
     ]));
 
-    $order = app(LaserQuoteService::class)->acceptQuote($quote);
+    $order = app(LaserQuoteService::class)->convertToOrder(signedLaserQuote($quote));
 
     $orderLine = LaserOrderLine::withoutEvents(fn () => LaserOrderLine::create([
         'laser_order_id' => $order->id,
@@ -109,7 +109,7 @@ it('prevents over-delivery via multiple DRAFT BLs', function () {
         'status' => QuoteStatus::DRAFT,
     ]));
 
-    $order = app(LaserQuoteService::class)->acceptQuote($quote);
+    $order = app(LaserQuoteService::class)->convertToOrder(signedLaserQuote($quote));
 
     LaserOrderLine::withoutEvents(fn () => LaserOrderLine::create([
         'laser_order_id' => $order->id,
@@ -143,7 +143,7 @@ it('allows sequential partial deliveries with proper reservation', function () {
         'status' => QuoteStatus::DRAFT,
     ]));
 
-    $order = app(LaserQuoteService::class)->acceptQuote($quote);
+    $order = app(LaserQuoteService::class)->convertToOrder(signedLaserQuote($quote));
 
     $orderLine = LaserOrderLine::withoutEvents(fn () => LaserOrderLine::create([
         'laser_order_id' => $order->id,
@@ -161,7 +161,7 @@ it('allows sequential partial deliveries with proper reservation', function () {
     $service = app(LaserDeliveryNoteService::class);
 
     $blA = $service->createDeliveryNote($order);
-    $blA->lines->first()->update(['quantity_delivered' => 12]);
+    $service->updateDeliveryQuantity($blA->lines->first(), 12);
     $service->shipDeliveryNote($blA);
 
     $orderLine->refresh();
@@ -193,7 +193,7 @@ it('rejects delivery creation when no remaining quantity', function () {
         'status' => QuoteStatus::DRAFT,
     ]));
 
-    $order = app(LaserQuoteService::class)->acceptQuote($quote);
+    $order = app(LaserQuoteService::class)->convertToOrder(signedLaserQuote($quote));
 
     LaserOrderLine::withoutEvents(fn () => LaserOrderLine::create([
         'laser_order_id' => $order->id,
@@ -229,7 +229,7 @@ it('ships a delivery note and updates delivered_quantity', function () {
         'status' => QuoteStatus::DRAFT,
     ]));
 
-    $order = app(LaserQuoteService::class)->acceptQuote($quote);
+    $order = app(LaserQuoteService::class)->convertToOrder(signedLaserQuote($quote));
 
     $orderLine = LaserOrderLine::withoutEvents(fn () => LaserOrderLine::create([
         'laser_order_id' => $order->id,
@@ -268,7 +268,7 @@ it('marks order as DELIVERED when all lines fully delivered', function () {
         'status' => QuoteStatus::DRAFT,
     ]));
 
-    $order = app(LaserQuoteService::class)->acceptQuote($quote);
+    $order = app(LaserQuoteService::class)->convertToOrder(signedLaserQuote($quote));
 
     LaserOrderLine::withoutEvents(fn () => LaserOrderLine::create([
         'laser_order_id' => $order->id,
@@ -300,7 +300,7 @@ it('does not mark order as DELIVERED when partial delivery', function () {
         'status' => QuoteStatus::DRAFT,
     ]));
 
-    $order = app(LaserQuoteService::class)->acceptQuote($quote);
+    $order = app(LaserQuoteService::class)->convertToOrder(signedLaserQuote($quote));
 
     LaserOrderLine::withoutEvents(fn () => LaserOrderLine::create([
         'laser_order_id' => $order->id,
@@ -318,7 +318,7 @@ it('does not mark order as DELIVERED when partial delivery', function () {
     $service = app(LaserDeliveryNoteService::class);
     $delivery = $service->createDeliveryNote($order);
 
-    $delivery->lines->first()->update(['quantity_delivered' => 5]);
+    $service->updateDeliveryQuantity($delivery->lines->first(), 5);
     $service->shipDeliveryNote($delivery);
 
     $order->refresh();
@@ -338,7 +338,7 @@ it('rejects shipping an already shipped delivery note', function () {
         'status' => QuoteStatus::DRAFT,
     ]));
 
-    $order = app(LaserQuoteService::class)->acceptQuote($quote);
+    $order = app(LaserQuoteService::class)->convertToOrder(signedLaserQuote($quote));
 
     LaserOrderLine::withoutEvents(fn () => LaserOrderLine::create([
         'laser_order_id' => $order->id,
@@ -372,7 +372,7 @@ it('rejects shipping a delivered delivery note', function () {
         'status' => QuoteStatus::DRAFT,
     ]));
 
-    $order = app(LaserQuoteService::class)->acceptQuote($quote);
+    $order = app(LaserQuoteService::class)->convertToOrder(signedLaserQuote($quote));
 
     LaserOrderLine::withoutEvents(fn () => LaserOrderLine::create([
         'laser_order_id' => $order->id,
@@ -412,7 +412,7 @@ it('rejects shipping with zero quantity_delivered', function () {
         'status' => QuoteStatus::DRAFT,
     ]));
 
-    $order = app(LaserQuoteService::class)->acceptQuote($quote);
+    $order = app(LaserQuoteService::class)->convertToOrder(signedLaserQuote($quote));
 
     LaserOrderLine::withoutEvents(fn () => LaserOrderLine::create([
         'laser_order_id' => $order->id,
@@ -446,7 +446,7 @@ it('rejects shipping with quantity exceeding available', function () {
         'status' => QuoteStatus::DRAFT,
     ]));
 
-    $order = app(LaserQuoteService::class)->acceptQuote($quote);
+    $order = app(LaserQuoteService::class)->convertToOrder(signedLaserQuote($quote));
 
     LaserOrderLine::withoutEvents(fn () => LaserOrderLine::create([
         'laser_order_id' => $order->id,
@@ -484,7 +484,7 @@ it('receives a delivery note and sets delivery_date', function () {
         'status' => QuoteStatus::DRAFT,
     ]));
 
-    $order = app(LaserQuoteService::class)->acceptQuote($quote);
+    $order = app(LaserQuoteService::class)->convertToOrder(signedLaserQuote($quote));
 
     LaserOrderLine::withoutEvents(fn () => LaserOrderLine::create([
         'laser_order_id' => $order->id,
@@ -526,7 +526,7 @@ it('rejects receiving a DRAFT delivery note', function () {
         'status' => QuoteStatus::DRAFT,
     ]));
 
-    $order = app(LaserQuoteService::class)->acceptQuote($quote);
+    $order = app(LaserQuoteService::class)->convertToOrder(signedLaserQuote($quote));
 
     LaserOrderLine::withoutEvents(fn () => LaserOrderLine::create([
         'laser_order_id' => $order->id,
@@ -558,7 +558,7 @@ it('rejects receiving an already delivered delivery note', function () {
         'status' => QuoteStatus::DRAFT,
     ]));
 
-    $order = app(LaserQuoteService::class)->acceptQuote($quote);
+    $order = app(LaserQuoteService::class)->convertToOrder(signedLaserQuote($quote));
 
     LaserOrderLine::withoutEvents(fn () => LaserOrderLine::create([
         'laser_order_id' => $order->id,
@@ -598,7 +598,7 @@ it('deletes a DRAFT delivery note and releases reserved quantity', function () {
         'status' => QuoteStatus::DRAFT,
     ]));
 
-    $order = app(LaserQuoteService::class)->acceptQuote($quote);
+    $order = app(LaserQuoteService::class)->convertToOrder(signedLaserQuote($quote));
 
     $orderLine = LaserOrderLine::withoutEvents(fn () => LaserOrderLine::create([
         'laser_order_id' => $order->id,
@@ -636,7 +636,7 @@ it('rejects deleting a shipped delivery note', function () {
         'status' => QuoteStatus::DRAFT,
     ]));
 
-    $order = app(LaserQuoteService::class)->acceptQuote($quote);
+    $order = app(LaserQuoteService::class)->convertToOrder(signedLaserQuote($quote));
 
     LaserOrderLine::withoutEvents(fn () => LaserOrderLine::create([
         'laser_order_id' => $order->id,
@@ -675,7 +675,7 @@ it('rejects setting quantity_delivered to zero on BL line', function () {
         'status' => QuoteStatus::DRAFT,
     ]));
 
-    $order = app(LaserQuoteService::class)->acceptQuote($quote);
+    $order = app(LaserQuoteService::class)->convertToOrder(signedLaserQuote($quote));
 
     LaserOrderLine::withoutEvents(fn () => LaserOrderLine::create([
         'laser_order_id' => $order->id,
@@ -695,7 +695,7 @@ it('rejects setting quantity_delivered to zero on BL line', function () {
 
     $this->expectException(Exception::class);
     $this->expectExceptionMessage('La quantité livrée doit être supérieure à zéro');
-    $delivery->lines->first()->update(['quantity_delivered' => 0]);
+    $service->updateDeliveryQuantity($delivery->lines->first(), 0);
 });
 
 it('rejects setting quantity_delivered to negative on BL line', function () {
@@ -707,7 +707,7 @@ it('rejects setting quantity_delivered to negative on BL line', function () {
         'status' => QuoteStatus::DRAFT,
     ]));
 
-    $order = app(LaserQuoteService::class)->acceptQuote($quote);
+    $order = app(LaserQuoteService::class)->convertToOrder(signedLaserQuote($quote));
 
     LaserOrderLine::withoutEvents(fn () => LaserOrderLine::create([
         'laser_order_id' => $order->id,
@@ -727,7 +727,7 @@ it('rejects setting quantity_delivered to negative on BL line', function () {
 
     $this->expectException(Exception::class);
     $this->expectExceptionMessage('La quantité livrée doit être supérieure à zéro');
-    $delivery->lines->first()->update(['quantity_delivered' => -3]);
+    $service->updateDeliveryQuantity($delivery->lines->first(), -3);
 });
 
 it('rejects setting quantity_delivered exceeding available on BL line', function () {
@@ -739,7 +739,7 @@ it('rejects setting quantity_delivered exceeding available on BL line', function
         'status' => QuoteStatus::DRAFT,
     ]));
 
-    $order = app(LaserQuoteService::class)->acceptQuote($quote);
+    $order = app(LaserQuoteService::class)->convertToOrder(signedLaserQuote($quote));
 
     LaserOrderLine::withoutEvents(fn () => LaserOrderLine::create([
         'laser_order_id' => $order->id,
@@ -759,7 +759,7 @@ it('rejects setting quantity_delivered exceeding available on BL line', function
 
     $this->expectException(Exception::class);
     $this->expectExceptionMessage('dépasse la quantité disponible');
-    $delivery->lines->first()->update(['quantity_delivered' => 15]);
+    $service->updateDeliveryQuantity($delivery->lines->first(), 15);
 });
 
 it('allows reducing quantity_delivered back to a valid value', function () {
@@ -771,7 +771,7 @@ it('allows reducing quantity_delivered back to a valid value', function () {
         'status' => QuoteStatus::DRAFT,
     ]));
 
-    $order = app(LaserQuoteService::class)->acceptQuote($quote);
+    $order = app(LaserQuoteService::class)->convertToOrder(signedLaserQuote($quote));
 
     $orderLine = LaserOrderLine::withoutEvents(fn () => LaserOrderLine::create([
         'laser_order_id' => $order->id,
@@ -789,12 +789,12 @@ it('allows reducing quantity_delivered back to a valid value', function () {
     $service = app(LaserDeliveryNoteService::class);
     $delivery = $service->createDeliveryNote($order);
 
-    $delivery->lines->first()->update(['quantity_delivered' => 6]);
+    $service->updateDeliveryQuantity($delivery->lines->first(), 6);
 
     $orderLine->refresh();
     expect($orderLine->reserved_quantity)->toBe(6);
 
-    $delivery->lines->first()->update(['quantity_delivered' => 4]);
+    $service->updateDeliveryQuantity($delivery->lines->first(), 4);
 
     $orderLine->refresh();
     expect($orderLine->reserved_quantity)->toBe(4);

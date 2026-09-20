@@ -44,10 +44,17 @@ class ViewLaserQuote extends ViewRecord
                         Notification::make()->warning()->title('Le client n’a pas d’adresse email')->send();
                         return;
                     }
-                    $record->update(['status' => QuoteStatus::SENT]);
-                    $path = app(LaserDocumentationService::class)->generateQuotePdf($record);
-                    app(SignatureService::class)->requestSignature($record, SignatureType::AUTOGRAPH, $email, $contact ? trim("{$contact->first_name} {$contact->last_name}") : $record->client->name, $path);
-                    Notification::make()->success()->title('Devis envoyé pour signature')->send();
+                     $previousStatus = $record->status;
+
+                     try {
+                         $record->update(['status' => QuoteStatus::SENT]);
+                         $path = app(LaserDocumentationService::class)->generateQuotePdf($record);
+                         app(SignatureService::class)->requestSignature($record, SignatureType::AUTOGRAPH, $email, $contact ? trim("{$contact->first_name} {$contact->last_name}") : $record->client->name, $path);
+                         Notification::make()->success()->title('Devis envoyé pour signature')->send();
+                     } catch (\Throwable $exception) {
+                         $record->updateQuietly(['status' => $previousStatus]);
+                         Notification::make()->danger()->title('Échec de l’envoi pour signature')->body($exception->getMessage())->send();
+                     }
                 }),
 
             Actions\Action::make('convertToOrder')

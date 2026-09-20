@@ -72,6 +72,7 @@ class LocalSignatureProvider implements SignatureProviderInterface
                 'type' => $type,
                 'checksum' => $this->generateChecksum($model),
                 'metadata' => [
+                    'provider' => 'local',
                     'requested_at' => now()->toDateTimeString(),
                 ],
             ]);
@@ -130,6 +131,7 @@ class LocalSignatureProvider implements SignatureProviderInterface
                 'type' => $type,
                 'checksum' => $this->generateChecksum($model),
                 'metadata' => [
+                    'provider' => 'local',
                     'requested_at' => now()->toDateTimeString(),
                     'signers_count' => count($signers),
                 ],

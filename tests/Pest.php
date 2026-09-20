@@ -48,3 +48,32 @@ function something()
 {
     // ..
 }
+
+function signedLaserQuote(\App\Models\Laser\LaserQuote $quote): \App\Models\Laser\LaserQuote
+{
+    $quote->update([
+        'status' => \App\Enums\Laser\QuoteStatus::ACCEPTED,
+        'signed_at' => now(),
+    ]);
+
+    $provider = app(\App\Services\Core\Providers\LocalSignatureProvider::class);
+    $method = new \ReflectionMethod($provider, 'generateChecksum');
+    $method->setAccessible(true);
+
+    $signature = \App\Models\Core\Signature::create([
+        'token' => \Illuminate\Support\Str::uuid()->toString(),
+        'signable_type' => $quote->getMorphClass(),
+        'signable_id' => $quote->id,
+        'user_id' => null,
+        'status' => \App\Enums\Core\SignatureStatus::SIGNED,
+        'type' => \App\Enums\Core\SignatureType::AUTOGRAPH,
+        'signature_data' => 'test-signature',
+        'checksum' => $method->invoke($provider, $quote),
+        'signed_at' => $quote->signed_at,
+        'metadata' => ['provider' => 'local'],
+    ]);
+
+    app(\App\Services\Core\SignatureService::class)->refreshChecksum($signature->fresh());
+
+    return $quote->fresh();
+}
