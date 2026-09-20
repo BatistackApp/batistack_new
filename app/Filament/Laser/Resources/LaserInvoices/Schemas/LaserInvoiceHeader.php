@@ -43,6 +43,12 @@ class LaserInvoiceHeader
                         ->columns(2)
                         ->formatStateUsing(fn ($state): string => number_format((float) $state, 2, ',', ' ').' €')
                         ->extraAttributes(['class' => 'whitespace-nowrap']),
+                    TextEntry::make('remaining_paid_amount')
+                        ->label('Reste à payer')
+                        ->columns(2)
+                        ->formatStateUsing(fn ($state): string => number_format((float) $state, 2, ',', ' ').' €')
+                        ->color(fn ($state): string => (float) $state > 0 ? 'danger' : 'success')
+                        ->extraAttributes(['class' => 'whitespace-nowrap']),
                 ]),
         ]);
     }

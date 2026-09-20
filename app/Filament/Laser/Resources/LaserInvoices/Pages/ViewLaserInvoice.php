@@ -4,12 +4,13 @@ namespace App\Filament\Laser\Resources\LaserInvoices\Pages;
 
 use App\Enums\Laser\InvoiceStatus;
 use App\Enums\Commerce\PaymentMethod;
-use App\Enums\Commerce\PaymentStatus;
 use App\Enums\Commerce\PaymentType;
 use App\Filament\Laser\Resources\LaserInvoices\LaserInvoiceResource;
 use App\Jobs\Laser\SyncLaserAccountingJob;
 use App\Services\Laser\LaserInvoiceService;
 use Filament\Actions;
+use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -19,8 +20,10 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use App\Mail\Laser\LaserInvoiceMail;
 use App\Services\Laser\LaserDocumentationService;
+use App\Services\Commerce\PaymentRecordingService;
 use App\Services\Commerce\PaymentService;
-use App\Models\Commerce\Payment;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 use MortalKiller\FilamentPageHeader\Concerns\HasPageHeader;
 
 class ViewLaserInvoice extends ViewRecord
@@ -96,8 +99,8 @@ class ViewLaserInvoice extends ViewRecord
                 ->label('Enregistrer un paiement')
                 ->icon('heroicon-o-banknotes')
                 ->color('primary')
-                ->visible(fn ($record) => in_array($record->status, [InvoiceStatus::VALIDATED], true)
-                    && $record->remaining_paid_amount < (float) $record->total_ttc)
+                ->visible(fn ($record) => $record->status === InvoiceStatus::VALIDATED
+                    && $record->paid_amount < (float) $record->total_ttc)
                 ->form([
                     TextInput::make('amount')
                         ->label('Montant encaissé')
@@ -121,17 +124,24 @@ class ViewLaserInvoice extends ViewRecord
                         ->native(false),
                 ])
                 ->action(function ($record, array $data) {
-                    $payment = Payment::create([
-                        'third_party_id' => $record->client_id,
-                        'reference' => $data['reference'],
-                        'type' => PaymentType::IN,
-                        'method' => $data['method'],
-                        'status' => PaymentStatus::COMPLETED,
-                        'amount' => $data['amount'],
-                        'payment_date' => $data['payment_date'],
-                    ]);
+                    DB::transaction(function () use ($record, $data): void {
+                        $payment = app(PaymentRecordingService::class)->recordPayment(
+                            third_party: $record->client,
+                            type: PaymentType::IN,
+                            method: $data['method'] instanceof PaymentMethod
+                                ? $data['method']
+                                : PaymentMethod::from($data['method']),
+                            amount: (float) $data['amount'],
+                            payment_date: Carbon::parse($data['payment_date']),
+                            reference: $data['reference'],
+                        );
 
-                    app(PaymentService::class)->allocatePayment($payment, $record, (float) $data['amount']);
+                        app(PaymentService::class)->allocatePayment(
+                            $payment,
+                            $record,
+                            (float) $data['amount'],
+                        );
+                    });
 
                     Notification::make()
                         ->title('Paiement enregistré')

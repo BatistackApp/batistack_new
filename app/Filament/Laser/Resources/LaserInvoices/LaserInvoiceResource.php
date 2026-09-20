@@ -6,6 +6,7 @@ use App\Filament\Laser\Resources\LaserInvoices\Pages\ListLaserInvoices;
 use App\Filament\Laser\Resources\LaserInvoices\Pages\EditLaserInvoice;
 use App\Filament\Laser\Resources\LaserInvoices\Pages\ViewLaserInvoice;
 use App\Filament\Laser\Resources\LaserInvoices\RelationManagers\LinesRelationManager;
+use App\Filament\Laser\Resources\LaserInvoices\RelationManagers\PaymentsRelationManager;
 use App\Filament\Laser\Resources\LaserInvoices\Schemas\LaserInvoiceForm;
 use App\Filament\Laser\Resources\LaserInvoices\Tables\LaserInvoicesTable;
 use App\Models\Laser\LaserInvoice;
@@ -54,6 +55,7 @@ class LaserInvoiceResource extends Resource
     {
         return [
             LinesRelationManager::class,
+            PaymentsRelationManager::class,
         ];
     }
 
