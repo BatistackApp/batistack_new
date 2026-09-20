@@ -12,6 +12,30 @@ use Illuminate\Support\Manager;
 
 class SignatureService extends Manager
 {
+    public function verify(Signature $signature): bool
+    {
+        $provider = $signature->metadata['provider'] ?? null;
+
+        return match ($provider) {
+            'local' => app(Providers\LocalSignatureProvider::class)->verify($signature),
+            'docuseal' => app(Providers\DocusealProvider::class)->verify($signature),
+            default => $this->driver()->verify($signature),
+        };
+    }
+
+    public function refreshChecksum(Signature $signature): void
+    {
+        $provider = $signature->metadata['provider'] ?? null;
+        $driver = match ($provider) {
+            'local' => app(Providers\LocalSignatureProvider::class),
+            'docuseal' => app(Providers\DocusealProvider::class),
+            default => $this->driver(),
+        };
+
+        if (method_exists($driver, 'refreshChecksum')) {
+            $driver->refreshChecksum($signature);
+        }
+    }
     /**
      * Get the default driver name.
      */

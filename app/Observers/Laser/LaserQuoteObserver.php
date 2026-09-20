@@ -3,6 +3,7 @@
 namespace App\Observers\Laser;
 
 use App\Jobs\Laser\GenerateLaserDocumentJob;
+use App\Enums\Core\SignatureStatus;
 use App\Models\Laser\LaserQuote;
 use App\Services\Laser\LaserDocumentationService;
 use Carbon\Carbon;
@@ -28,6 +29,24 @@ class LaserQuoteObserver
 
     public function updated(LaserQuote $quote): void
     {
+        if ($quote->wasChanged() && $quote->getOriginal('signed_at') !== null) {
+            $quote->signatures()
+                ->where('status', SignatureStatus::SIGNED)
+                ->update([
+                    'status' => SignatureStatus::PENDING,
+                    'signed_at' => null,
+                    'signature_data' => null,
+                    'document_checksum' => null,
+                ]);
+
+            $quote->updateQuietly([
+                'status' => \App\Enums\Laser\QuoteStatus::SENT,
+                'signed_at' => null,
+            ]);
+
+            return;
+        }
+
         if ($quote->isDirty('status')) {
             GenerateLaserDocumentJob::dispatch('laser_quote', $quote)->afterCommit();
         }

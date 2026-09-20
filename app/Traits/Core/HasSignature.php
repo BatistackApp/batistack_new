@@ -74,6 +74,15 @@ trait HasSignature
         return null;
     }
 
+    public function discardStampedSignatureDocument(?Signature $signature = null): void
+    {
+        $path = $this->getStampedDocumentPath($signature);
+
+        if ($path && file_exists($path)) {
+            @unlink($path);
+        }
+    }
+
     /**
      * Resolve the public URL for a stamped file-based document.
      * Models can override when the stamped copy lives on a specific disk.

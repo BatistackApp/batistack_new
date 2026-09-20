@@ -19,6 +19,7 @@ class LaserQuoteForm
         return $schema
             ->components([
                 Section::make('Informations générales')
+                    ->visibleOn(['create', 'edit'])
                     ->columns(2)
                     ->columnSpanFull()
                     ->schema([
@@ -50,6 +51,7 @@ class LaserQuoteForm
                     ]),
 
                 Section::make('Conditions')
+                    ->visibleOn(['create', 'edit'])
                     ->columnSpanFull()
                     ->schema([
                         Textarea::make('terms')

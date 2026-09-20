@@ -1,6 +1,14 @@
 <?php
 
+use App\Enums\Core\SignatureStatus;
+use App\Enums\Core\SignatureType;
+use App\Enums\Laser\QuoteStatus;
+use App\Models\Core\Signature;
+use App\Models\Laser\LaserQuote;
+use App\Services\Core\SignatureChecksumService;
+use App\Services\Core\SignatureService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Str;
 use Tests\TestCase;
 
 /*
@@ -47,4 +55,29 @@ expect()->extend('toBeOne', function () {
 function something()
 {
     // ..
+}
+
+function signedLaserQuote(LaserQuote $quote): LaserQuote
+{
+    $quote->update([
+        'status' => QuoteStatus::ACCEPTED,
+        'signed_at' => now(),
+    ]);
+
+    $signature = Signature::create([
+        'token' => Str::uuid()->toString(),
+        'signable_type' => $quote->getMorphClass(),
+        'signable_id' => $quote->id,
+        'user_id' => null,
+        'status' => SignatureStatus::SIGNED,
+        'type' => SignatureType::AUTOGRAPH,
+        'signature_data' => 'test-signature',
+        'checksum' => app(SignatureChecksumService::class)->generate($quote),
+        'signed_at' => $quote->signed_at,
+        'metadata' => ['provider' => 'local'],
+    ]);
+
+    app(SignatureService::class)->refreshChecksum($signature->fresh());
+
+    return $quote->fresh();
 }

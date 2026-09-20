@@ -31,7 +31,7 @@ it('creates an invoice from an order with delivered lines', function () {
         'status' => QuoteStatus::DRAFT,
     ]));
 
-    $order = app(LaserQuoteService::class)->acceptQuote($quote);
+    $order = app(LaserQuoteService::class)->convertToOrder(signedLaserQuote($quote));
 
     LaserOrderLine::withoutEvents(fn () => LaserOrderLine::create([
         'laser_order_id' => $order->id,
@@ -82,7 +82,7 @@ it('updates invoiced_quantity on order line after invoicing', function () {
         'status' => QuoteStatus::DRAFT,
     ]));
 
-    $order = app(LaserQuoteService::class)->acceptQuote($quote);
+    $order = app(LaserQuoteService::class)->convertToOrder(signedLaserQuote($quote));
 
     $orderLine = LaserOrderLine::withoutEvents(fn () => LaserOrderLine::create([
         'laser_order_id' => $order->id,
@@ -116,7 +116,7 @@ it('calculates totals with TVA', function () {
         'status' => QuoteStatus::DRAFT,
     ]));
 
-    $order = app(LaserQuoteService::class)->acceptQuote($quote);
+    $order = app(LaserQuoteService::class)->convertToOrder(signedLaserQuote($quote));
 
     LaserOrderLine::withoutEvents(fn () => LaserOrderLine::create([
         'laser_order_id' => $order->id,
@@ -150,7 +150,7 @@ it('rejects invoice creation when no lines to invoice', function () {
         'status' => QuoteStatus::DRAFT,
     ]));
 
-    $order = app(LaserQuoteService::class)->acceptQuote($quote);
+    $order = app(LaserQuoteService::class)->convertToOrder(signedLaserQuote($quote));
 
     LaserOrderLine::withoutEvents(fn () => LaserOrderLine::create([
         'laser_order_id' => $order->id,
@@ -184,7 +184,7 @@ it('supports partial invoicing', function () {
         'status' => QuoteStatus::DRAFT,
     ]));
 
-    $order = app(LaserQuoteService::class)->acceptQuote($quote);
+    $order = app(LaserQuoteService::class)->convertToOrder(signedLaserQuote($quote));
 
     LaserOrderLine::withoutEvents(fn () => LaserOrderLine::create([
         'laser_order_id' => $order->id,
@@ -241,7 +241,7 @@ it('updates order status to BILLED after legalization when all delivered lines i
         'status' => QuoteStatus::DRAFT,
     ]));
 
-    $order = app(LaserQuoteService::class)->acceptQuote($quote);
+    $order = app(LaserQuoteService::class)->convertToOrder(signedLaserQuote($quote));
 
     LaserOrderLine::withoutEvents(fn () => LaserOrderLine::create([
         'laser_order_id' => $order->id,
@@ -482,6 +482,18 @@ it('canBeDeleted is true only in DRAFT status', function () {
 
     $paid = LaserInvoice::withoutEvents(fn () => LaserInvoice::factory()->create(['status' => InvoiceStatus::PAID]));
     expect($paid->canBeDeleted())->toBeFalse();
+});
+
+it('allows deleting a draft credit note only', function () {
+    $draft = LaserCreditNote::withoutEvents(fn () => LaserCreditNote::factory()->create([
+        'status' => 'draft',
+    ]));
+    $validated = LaserCreditNote::withoutEvents(fn () => LaserCreditNote::factory()->create([
+        'status' => 'validated',
+    ]));
+
+    expect($draft->canBeDeleted())->toBeTrue()
+        ->and($validated->canBeDeleted())->toBeFalse();
 });
 
 // ============================================================
@@ -752,7 +764,7 @@ it('does not mark order BILLED when some delivered lines are not yet invoiced', 
         'status' => QuoteStatus::DRAFT,
     ]));
 
-    $order = app(LaserQuoteService::class)->acceptQuote($quote);
+    $order = app(LaserQuoteService::class)->convertToOrder(signedLaserQuote($quote));
 
     // Line 1: delivered 10, invoiced 10 (fully invoiced)
     LaserOrderLine::withoutEvents(fn () => LaserOrderLine::create([
@@ -814,7 +826,7 @@ it('marks order BILLED when all delivered lines are fully invoiced', function ()
         'status' => QuoteStatus::DRAFT,
     ]));
 
-    $order = app(LaserQuoteService::class)->acceptQuote($quote);
+    $order = app(LaserQuoteService::class)->convertToOrder(signedLaserQuote($quote));
 
     LaserOrderLine::withoutEvents(fn () => LaserOrderLine::create([
         'laser_order_id' => $order->id,
@@ -988,7 +1000,7 @@ it('deletes a DRAFT invoice and restores invoiced_quantity', function () {
         'status' => QuoteStatus::DRAFT,
     ]));
 
-    $order = app(LaserQuoteService::class)->acceptQuote($quote);
+    $order = app(LaserQuoteService::class)->convertToOrder(signedLaserQuote($quote));
 
     $orderLine = LaserOrderLine::withoutEvents(fn () => LaserOrderLine::create([
         'laser_order_id' => $order->id,
@@ -1273,7 +1285,7 @@ it('rejects invoice creation for CANCELLED order', function () {
         'status' => QuoteStatus::DRAFT,
     ]));
 
-    $order = app(LaserQuoteService::class)->acceptQuote($quote);
+    $order = app(LaserQuoteService::class)->convertToOrder(signedLaserQuote($quote));
 
     LaserOrderLine::withoutEvents(fn () => LaserOrderLine::create([
         'laser_order_id' => $order->id,
@@ -1309,7 +1321,7 @@ it('rejects invoice creation for BILLED order', function () {
         'status' => QuoteStatus::DRAFT,
     ]));
 
-    $order = app(LaserQuoteService::class)->acceptQuote($quote);
+    $order = app(LaserQuoteService::class)->convertToOrder(signedLaserQuote($quote));
 
     LaserOrderLine::withoutEvents(fn () => LaserOrderLine::create([
         'laser_order_id' => $order->id,
@@ -1349,7 +1361,7 @@ it('does not overwrite CANCELLED order to BILLED when legalizing draft invoice',
         'status' => QuoteStatus::DRAFT,
     ]));
 
-    $order = app(LaserQuoteService::class)->acceptQuote($quote);
+    $order = app(LaserQuoteService::class)->convertToOrder(signedLaserQuote($quote));
 
     LaserOrderLine::withoutEvents(fn () => LaserOrderLine::create([
         'laser_order_id' => $order->id,
@@ -1881,7 +1893,7 @@ it('stores vat_rate on invoice from config', function () {
         'status' => QuoteStatus::DRAFT,
     ]));
 
-    $order = app(LaserQuoteService::class)->acceptQuote($quote);
+    $order = app(LaserQuoteService::class)->convertToOrder(signedLaserQuote($quote));
 
     LaserOrderLine::withoutEvents(fn () => LaserOrderLine::create([
         'laser_order_id' => $order->id,
@@ -1937,7 +1949,7 @@ it('partial invoicing lifecycle: deliver 6, invoice 6, deliver 4, invoice 4', fu
         'status' => QuoteStatus::DRAFT,
     ]));
 
-    $order = app(LaserQuoteService::class)->acceptQuote($quote);
+    $order = app(LaserQuoteService::class)->convertToOrder(signedLaserQuote($quote));
 
     $orderLine = LaserOrderLine::withoutEvents(fn () => LaserOrderLine::create([
         'laser_order_id' => $order->id,

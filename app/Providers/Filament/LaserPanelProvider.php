@@ -20,6 +20,7 @@ use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use MartinPetricko\FilamentSentryFeedback\FilamentSentryFeedbackPlugin;
+use MortalKiller\FilamentPageHeader\PageHeaderPlugin;
 use Vaslv\FilamentAppVersion\AppVersionPlugin;
 
 class LaserPanelProvider extends PanelProvider
@@ -49,6 +50,7 @@ class LaserPanelProvider extends PanelProvider
             ->plugins([
                 FilamentSentryFeedbackPlugin::make(),
                 AppVersionPlugin::make(),
+                PageHeaderPlugin::make()->compact(),
             ])
             ->plugin(KnowledgeBaseCompanionPlugin::make()->knowledgeBasePanelId('docs'))
             ->middleware([

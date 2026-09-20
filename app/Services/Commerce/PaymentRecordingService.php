@@ -92,7 +92,7 @@ class PaymentRecordingService
             ]);
 
             // 6. Dispatcher l'événement
-            event(new PaymentRecordedEvent($payment));
+            DB::afterCommit(fn () => event(new PaymentRecordedEvent($payment)));
 
             return $payment;
         });
@@ -392,6 +392,7 @@ class PaymentRecordingService
 
         // Trouver le prochain numéro séquentiel pour cette année/type
         $lastPayment = Payment::where('reference', 'like', "{$prefix}-{$year}-%")
+            ->lockForUpdate()
             ->orderBy('created_at', 'desc')
             ->first();
 

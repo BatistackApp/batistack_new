@@ -75,4 +75,9 @@ class LaserCreditNote extends Model
     {
         return $this->morphOne(AccountingSync::class, 'syncable');
     }
+
+    public function canBeDeleted(): bool
+    {
+        return ($this->status ?? 'draft') === 'draft';
+    }
 }

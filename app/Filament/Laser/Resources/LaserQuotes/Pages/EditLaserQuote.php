@@ -5,6 +5,7 @@ namespace App\Filament\Laser\Resources\LaserQuotes\Pages;
 use App\Filament\Laser\Resources\LaserQuotes\LaserQuoteResource;
 use Filament\Actions;
 use Filament\Resources\Pages\EditRecord;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class EditLaserQuote extends EditRecord
 {
@@ -18,5 +19,14 @@ class EditLaserQuote extends EditRecord
                 ->requiresConfirmation()
                 ->visible(fn () => $this->record->canBeDeleted()),
         ];
+    }
+
+    protected function authorizeAccess(): void
+    {
+        parent::authorizeAccess();
+
+        if (! $this->record->canBeEdited()) {
+            throw new NotFoundHttpException;
+        }
     }
 }
