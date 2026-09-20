@@ -12,6 +12,17 @@ use Illuminate\Support\Manager;
 
 class SignatureService extends Manager
 {
+    public function verify(Signature $signature): bool
+    {
+        return $this->driver()->verify($signature);
+    }
+
+    public function refreshChecksum(Signature $signature): void
+    {
+        if (method_exists($this->driver(), 'refreshChecksum')) {
+            $this->driver()->refreshChecksum($signature);
+        }
+    }
     /**
      * Get the default driver name.
      */

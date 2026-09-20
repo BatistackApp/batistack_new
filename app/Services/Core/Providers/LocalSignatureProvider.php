@@ -262,6 +262,11 @@ class LocalSignatureProvider implements SignatureProviderInterface
         return hash_equals($signature->checksum, $currentChecksum);
     }
 
+    public function refreshChecksum(Signature $signature): void
+    {
+        $signature->update(['checksum' => $this->generateChecksum($signature->signable)]);
+    }
+
     /**
      * Dispatch la notification de complétion du workflow.
      */

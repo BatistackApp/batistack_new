@@ -55,6 +55,10 @@ class LaserQuoteService
                 throw new Exception('Une signature électronique valide est obligatoire avant la conversion en commande.');
             }
 
+            if (! app(\App\Services\Core\SignatureService::class)->verify($signature)) {
+                throw new Exception('Le devis a été modifié depuis sa signature et doit être signé à nouveau.');
+            }
+
             return $this->createOrderFromQuote($quote);
         });
     }

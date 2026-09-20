@@ -4,6 +4,7 @@ namespace App\Services\Laser;
 
 use App\Enums\Laser\DeliveryStatus;
 use App\Enums\Laser\OrderStatus;
+use App\Jobs\Laser\GenerateLaserDocumentJob;
 use App\Models\Laser\LaserDeliveryNote;
 use App\Models\Laser\LaserOrder;
 use App\Models\Laser\LaserDeliveryNoteLine;
@@ -128,6 +129,8 @@ class LaserDeliveryNoteService
                 ->whereHas('deliveryNote', fn ($query) => $query->where('status', DeliveryStatus::DRAFT))
                 ->sum('quantity_delivered');
             $orderLine->update(['reserved_quantity' => $reserved]);
+
+            DB::afterCommit(fn () => GenerateLaserDocumentJob::dispatch('laser_delivery_note', $delivery));
         });
     }
 

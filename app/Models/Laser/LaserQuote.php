@@ -103,6 +103,12 @@ class LaserQuote extends Model implements Signable
         return $this->status->value === QuoteStatus::DRAFT->value;
     }
 
+    public function canBeEdited(): bool
+    {
+        return in_array($this->status, [QuoteStatus::DRAFT, QuoteStatus::SENT], true)
+            && ! $this->signatures()->where('status', \App\Enums\Core\SignatureStatus::SIGNED)->exists();
+    }
+
     public function getIsExpiredAttribute(): bool
     {
         return $this->expires_at && $this->expires_at->isPast();

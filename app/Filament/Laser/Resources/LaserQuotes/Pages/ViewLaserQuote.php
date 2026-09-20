@@ -22,7 +22,8 @@ class ViewLaserQuote extends ViewRecord
     protected function getHeaderActions(): array
     {
         return [
-            Actions\EditAction::make(),
+            Actions\EditAction::make()
+                ->visible(fn ($record) => $record->canBeEdited()),
             Actions\DeleteAction::make()
                 ->visible(fn ($record) => $record->canBeDeleted()),
 

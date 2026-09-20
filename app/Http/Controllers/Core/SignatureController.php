@@ -73,8 +73,10 @@ class SignatureController extends Controller
                 $request->userAgent()
             );
 
+            $previousAttributes = $signedSigner->signature->signable?->getOriginal();
             try {
                 $this->handlePostSignature($signedSigner->fresh('signature')->signature);
+                app(SignatureService::class)->refreshChecksum($signedSigner->signature->fresh('signable'));
             } catch (\Throwable $exception) {
                 $signedSigner->update([
                     'status' => SignatureStatus::PENDING,
@@ -87,6 +89,7 @@ class SignatureController extends Controller
                     'signature_data' => null,
                     'document_checksum' => null,
                 ]);
+                $this->restoreSignable($signedSigner->signature->signable, $previousAttributes);
 
                 throw $exception;
             }
@@ -120,8 +123,10 @@ class SignatureController extends Controller
             ]),
         ]);
 
+        $previousAttributes = $signature->signable->getOriginal();
         try {
             $this->handlePostSignature($signature->fresh());
+            app(SignatureService::class)->refreshChecksum($signature->fresh('signable'));
         } catch (\Throwable $exception) {
             $signature->update([
                 'status' => SignatureStatus::PENDING,
@@ -129,11 +134,24 @@ class SignatureController extends Controller
                 'signature_data' => null,
                 'document_checksum' => null,
             ]);
+            $this->restoreSignable($signature->signable, $previousAttributes);
 
             throw $exception;
         }
 
         return redirect()->route('signature.show', $token)->with('success', 'Document signé avec succès !');
+    }
+
+    protected function restoreSignable(?object $signable, ?array $attributes): void
+    {
+        if (! $signable || ! $attributes) {
+            return;
+        }
+
+        $restore = array_intersect_key($attributes, array_flip(['status', 'signed_at']));
+        if ($restore !== []) {
+            $signable->updateQuietly($restore);
+        }
     }
 
     /**
