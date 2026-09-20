@@ -16,10 +16,8 @@ use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
-use App\Mail\Laser\LaserInvoiceMail;
-use App\Services\Laser\LaserDocumentationService;
+use App\Jobs\Laser\SendLaserInvoiceJob;
 use App\Services\Commerce\PaymentRecordingService;
 use App\Services\Commerce\PaymentService;
 use Carbon\Carbon;
@@ -60,8 +58,7 @@ class ViewLaserInvoice extends ViewRecord
                         $email = $contact?->email ?? $record->client?->email;
 
                         if ($email) {
-                            $pdfPath = app(LaserDocumentationService::class)->generateInvoicePdf($record->fresh(['client', 'order', 'lines.material']));
-                            Mail::to($email)->queue(new LaserInvoiceMail($record->fresh('client'), $pdfPath));
+                            SendLaserInvoiceJob::dispatch($record->id, $email)->afterCommit();
 
                             Notification::make()
                                 ->title('Facture légalisée et envoyée au client')
