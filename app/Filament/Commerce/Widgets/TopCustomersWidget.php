@@ -29,7 +29,7 @@ class TopCustomersWidget extends BaseWidget
                     ->selectRaw('third_parties.id, third_parties.name, SUM(customer_invoices.total_ht) as total_revenue')
                     ->whereIn('customer_invoices.status', [InvoiceStatus::VALIDATED, InvoiceStatus::PAID])
                     ->whereYear('customer_invoices.created_at', now()->year)
-                    ->groupBy('third_parties.id')
+                    ->groupBy('third_parties.id', 'third_parties.name')
                     ->limit(5)
             )
             ->defaultSort('total_revenue', 'desc')
