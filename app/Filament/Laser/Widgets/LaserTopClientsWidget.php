@@ -29,7 +29,7 @@ class LaserTopClientsWidget extends BaseWidget
                     ->selectRaw('third_parties.id, third_parties.name, SUM(laser_invoices.total_ht) as total_revenue')
                     ->whereIn('laser_invoices.status', [InvoiceStatus::VALIDATED, InvoiceStatus::PAID])
                     ->whereYear('laser_invoices.created_at', now()->year)
-                    ->groupBy('third_parties.id')
+                    ->groupBy('third_parties.id', 'third_parties.name')
                     ->limit(5)
             )
             ->defaultSort('total_revenue', 'desc')
