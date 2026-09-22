@@ -73,7 +73,7 @@ class EmployeeForm
                                             ->required(),
                                         DatePicker::make('birth_date')
                                             ->label('Date de naissance')
-                                            ->native(false),
+                                            ->native(true),
                                         TextInput::make('social_security_number')
                                             ->label('N° Sécurité Sociale')
                                             ->mask('9 99 99 99 999 999 99')
