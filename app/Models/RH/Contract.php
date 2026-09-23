@@ -203,6 +203,10 @@ class Contract extends Model implements HasMedia, Signable
 
     public function onPostSignature(Signature $signature): void
     {
+        if ($this->signature_status === SignatureStatus::VALIDATED) {
+            return;
+        }
+
         $this->update(['signature_status' => SignatureStatus::SIGNED]);
         app(RHDocumentService::class)->generateContract($this);
     }

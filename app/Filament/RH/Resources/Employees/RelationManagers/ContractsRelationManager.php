@@ -255,11 +255,21 @@ class ContractsRelationManager extends RelationManager
                         ->label('Valider le contrat')
                         ->icon(Phosphor::CheckCircle)
                         ->color('info')
-                        ->visible(fn (Contract $record) => $record->signature_status === SignatureStatus::PENDING)
+                        ->visible(fn (Contract $record) => $record->signature_status === SignatureStatus::PENDING && ! $record->signatures()->exists())
                         ->requiresConfirmation()
                         ->modalHeading('Valider le contrat')
                         ->modalDescription('Le salarié a déjà signé ce contrat sur papier ? Cette action le marque comme validé sans signature électronique.')
                         ->action(function (Contract $record) {
+                            if ($record->signatures()->exists()) {
+                                Notification::make()
+                                    ->title('Validation impossible')
+                                    ->body('Une demande de signature électronique existe déjà pour ce contrat.')
+                                    ->danger()
+                                    ->send();
+
+                                return;
+                            }
+
                             $record->update(['signature_status' => SignatureStatus::VALIDATED]);
 
                             Notification::make()
