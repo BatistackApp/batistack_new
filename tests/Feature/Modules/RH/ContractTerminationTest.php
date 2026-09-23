@@ -146,6 +146,7 @@ it('excludes a terminated CDD from the active scope', function () {
 });
 
 it('makes a future-dated CDD termination inactive immediately', function () {
+    $terminationDate = now()->addDays(10)->startOfDay();
     $contract = Contract::factory()->create([
         'type' => ContractType::CDD,
         'start_date' => now()->subYear(),
@@ -155,12 +156,14 @@ it('makes a future-dated CDD termination inactive immediately', function () {
 
     app(ContractTerminationService::class)->terminateCdd(
         contract: $contract,
-        terminationDate: now()->addDays(10),
+        terminationDate: $terminationDate,
     );
 
-    expect($contract->fresh()->isTerminated())->toBeTrue()
-        ->and($contract->fresh()->isActive())->toBeFalse()
-        ->and(Contract::query()->active()->whereKey($contract->id)->exists())->toBeFalse();
+    $contract = $contract->fresh();
+
+    expect($contract->isTerminated())->toBeTrue();
+    expect($contract->isActive())->toBeFalse();
+    expect(Contract::query()->active()->whereKey($contract->id)->exists())->toBeFalse();
 });
 
 it('calculates notice period for < 6 months tenure', function () {
