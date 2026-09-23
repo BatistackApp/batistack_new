@@ -83,6 +83,34 @@ class ContractTerminationService
     }
 
     /**
+     * Close a CDD that reached its planned end date without prior closure.
+     */
+    public function closeExpiredCdd(Contract $contract): Contract
+    {
+        if ($contract->type !== ContractType::CDD) {
+            throw new LogicException('La clôture rétroactive ne peut être appliquée qu’à un contrat CDD.');
+        }
+
+        if ($contract->isTerminated()) {
+            throw new LogicException('Le contrat est déjà terminé.');
+        }
+
+        if (! $contract->end_date || ! $contract->end_date->isPast()) {
+            throw new LogicException('Seul un CDD arrivé à son terme peut être clôturé rétroactivement.');
+        }
+
+        $contract->update([
+            'termination_type' => TerminationType::EXPIRATION_CDD,
+            'terminated_at' => $contract->end_date,
+            'notice_end_date' => null,
+        ]);
+
+        $contract->employee->notify(new ContractTerminatedNotification($contract));
+
+        return $contract->fresh();
+    }
+
+    /**
      * Calculate the end date of the notice period based on seniority.
      *
      * Legal notice periods (Art. L1234-1 du Code du travail):
