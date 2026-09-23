@@ -53,7 +53,7 @@ it('terminates a CDD contract without notice', function () {
     Notification::fake();
     $user = User::factory()->create();
     $employee = Employee::factory()->create(['user_id' => $user->id]);
-    $terminationDate = now()->addWeek()->startOfDay();
+    $terminationDate = now()->addDays(10)->startOfDay();
 
     $contract = Contract::factory()->create([
         'employee_id' => $employee->id,
@@ -76,6 +76,8 @@ it('terminates a CDD contract without notice', function () {
     expect($terminated->notice_end_date)->toBeNull();
     expect($terminated->termination_amount)->toBe('500.00');
     expect($terminated->isTerminated())->toBeTrue();
+    expect($terminated->isActive())->toBeFalse();
+    expect(Contract::query()->active()->whereKey($terminated->id)->exists())->toBeFalse();
     Notification::assertSentTo($employee, \App\Notifications\RH\ContractTerminatedNotification::class);
 });
 
@@ -143,27 +145,6 @@ it('excludes a terminated CDD from the active scope', function () {
 
     expect(Contract::query()->active()->whereKey($contract->id)->exists())->toBeFalse();
     expect($contract->fresh()->isActive())->toBeFalse();
-});
-
-it('makes a future-dated CDD termination inactive immediately', function () {
-    $terminationDate = now()->addDays(10)->startOfDay();
-    $contract = Contract::factory()->create([
-        'type' => ContractType::CDD,
-        'start_date' => now()->subYear(),
-        'end_date' => now()->addYear(),
-        'hourly_rate' => 20,
-    ]);
-
-    app(ContractTerminationService::class)->terminateCdd(
-        contract: $contract,
-        terminationDate: $terminationDate,
-    );
-
-    $contract = $contract->fresh();
-
-    expect($contract->isTerminated())->toBeTrue();
-    expect($contract->isActive())->toBeFalse();
-    expect(Contract::query()->active()->whereKey($contract->id)->exists())->toBeFalse();
 });
 
 it('calculates notice period for < 6 months tenure', function () {
