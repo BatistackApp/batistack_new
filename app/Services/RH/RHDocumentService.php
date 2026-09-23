@@ -13,6 +13,7 @@ use App\Models\RH\Employee;
 use App\Models\RH\WageGarnishment;
 use App\Services\Core\DocumentService;
 use Carbon\Carbon;
+use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Collection;
 
 class RHDocumentService extends DocumentService
@@ -63,7 +64,7 @@ class RHDocumentService extends DocumentService
         );
     }
 
-    public function generateCddEarlyTermination(Contract $contract, ?Carbon $terminationDate = null): string
+    public function generateCddEarlyTermination(Contract $contract, ?CarbonInterface $terminationDate = null): string
     {
         $contract->load(['employee']);
 

@@ -138,6 +138,30 @@ class ContractsRelationManager extends RelationManager
                 TextColumn::make('signature_status')
                     ->label('Signature')
                     ->badge(),
+                TextColumn::make('contract_state')
+                    ->label('État')
+                    ->state(function (Contract $record): string {
+                        if ($record->isTerminated()) {
+                            return 'Clôturé';
+                        }
+
+                        if ($record->end_date?->lt(now()->startOfDay())) {
+                            return 'Expiré à clôturer';
+                        }
+
+                        if ($record->start_date?->isFuture()) {
+                            return 'À venir';
+                        }
+
+                        return 'Actif';
+                    })
+                    ->badge()
+                    ->color(fn (string $state): string => match ($state) {
+                        'Clôturé' => 'gray',
+                        'Expiré à clôturer' => 'danger',
+                        'À venir' => 'warning',
+                        default => 'success',
+                    }),
                 TextColumn::make('terminated_at')
                     ->label('Rompus le')
                     ->date('d/m/Y')
