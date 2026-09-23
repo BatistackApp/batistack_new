@@ -3,9 +3,12 @@
 namespace App\Services\RH;
 
 use App\Enums\RH\TerminationType;
+use App\Enums\RH\ContractType;
 use App\Models\RH\Contract;
 use App\Notifications\RH\ContractTerminatedNotification;
+use Carbon\CarbonInterface;
 use Illuminate\Support\Carbon;
+use LogicException;
 
 class ContractTerminationService
 {
@@ -29,6 +32,49 @@ class ContractTerminationService
             'notice_end_date' => $noticeEndDate,
             'termination_amount' => $amount,
             'end_date' => $noticeEndDate,
+        ]);
+
+        $contract->employee->notify(new ContractTerminatedNotification($contract));
+
+        return $contract->fresh();
+    }
+
+    /**
+     * Terminate a CDD by negotiated early termination, without notice.
+     */
+    public function terminateCdd(
+        Contract $contract,
+        CarbonInterface $terminationDate,
+        ?string $reason = null,
+        ?float $amount = null,
+    ): Contract {
+        if ($contract->type !== ContractType::CDD) {
+            throw new LogicException('La rupture anticipée ne peut être appliquée qu’à un contrat CDD.');
+        }
+
+        if ($contract->isTerminated()) {
+            throw new LogicException('Le contrat est déjà terminé.');
+        }
+
+        if (! $contract->isActive()) {
+            throw new LogicException('La rupture anticipée ne peut être appliquée qu’à un contrat actif.');
+        }
+
+        if ($terminationDate->lt($contract->start_date)) {
+            throw new LogicException('La date de rupture doit être postérieure ou égale à la date de début.');
+        }
+
+        if ($contract->end_date && $terminationDate->gte($contract->end_date)) {
+            throw new LogicException('La date de rupture doit être antérieure au terme initial du CDD.');
+        }
+
+        $contract->update([
+            'termination_type' => TerminationType::RUPTURE_ANTICIPEE_CDD,
+            'termination_reason' => $reason,
+            'terminated_at' => now(),
+            'notice_end_date' => null,
+            'end_date' => $terminationDate,
+            'termination_amount' => $amount,
         ]);
 
         $contract->employee->notify(new ContractTerminatedNotification($contract));

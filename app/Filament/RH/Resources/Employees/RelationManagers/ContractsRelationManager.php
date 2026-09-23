@@ -258,16 +258,45 @@ class ContractsRelationManager extends RelationManager
                         ->visible(fn (Contract $record) => $record->trial_end_date && $record->trial_end_date->isFuture())
                         ->action(fn (Contract $record, RHDocumentService $service) => $service->download($service->generateTrialPeriodEndLetter($record))),
                     Action::make('cdd_terminate')
-                        ->label('Avenant Rupture CDD')
+                        ->label('Rupture anticipée CDD')
                         ->icon(Phosphor::FileX)
                         ->color('danger')
-                        ->visible(fn (Contract $record) => $record->type === ContractType::CDD)
+                        ->visible(fn (Contract $record) => $record->type === ContractType::CDD && $record->isActive() && ! $record->isTerminated())
                         ->form([
                             DatePicker::make('termination_date')
                                 ->label('Date de rupture négociée')
+                                ->required()
+                                ->minDate(fn (Contract $record) => $record->start_date),
+                            TextInput::make('termination_reason')
+                                ->label('Motif de rupture anticipée')
                                 ->required(),
+                            TextInput::make('termination_amount')
+                                ->label('Indemnité (€)')
+                                ->numeric()
+                                ->prefix('€')
+                                ->minValue(0),
                         ])
-                        ->action(fn (Contract $record, array $data, RHDocumentService $service) => $service->download($service->generateCddEarlyTermination($record, Carbon::parse($data['termination_date'])))),
+                        ->requiresConfirmation()
+                        ->modalHeading('Rompre le CDD')
+                        ->modalDescription('Cette action va clôturer le contrat et générer l’avenant de rupture anticipée.')
+                        ->action(function (Contract $record, array $data, ContractTerminationService $terminationService, RHDocumentService $documentService) {
+                             $record = $terminationService->terminateCdd(
+                                 contract: $record,
+                                 terminationDate: Carbon::parse($data['termination_date']),
+                                 reason: $data['termination_reason'],
+                                 amount: $data['termination_amount'] ?? null,
+                             );
+
+                             $documentPath = $documentService->generateCddEarlyTermination($record, $record->end_date);
+
+                             Notification::make()
+                                 ->title('CDD rompu')
+                                 ->body("Le contrat de {$record->job_title} a été clôturé le {$record->end_date->format('d/m/Y')}.")
+                                 ->success()
+                                 ->send();
+
+                             return $documentService->download($documentPath);
+                        }),
                     Action::make('print_solde_compte')
                         ->label('Solde de tout compte')
                         ->icon(Phosphor::DownloadSimple)
@@ -282,7 +311,10 @@ class ContractsRelationManager extends RelationManager
                         ->form(fn (Action $action) => [
                             Select::make('termination_type')
                                 ->label('Type de rupture')
-                                ->options(TerminationType::class)
+                                ->options(collect(TerminationType::cases())
+                                    ->reject(fn (TerminationType $type) => $type === TerminationType::RUPTURE_ANTICIPEE_CDD)
+                                    ->mapWithKeys(fn (TerminationType $type) => [$type->value => $type->getLabel()])
+                                    ->all())
                                 ->required()
                                 ->native(false),
                             DatePicker::make('terminated_at')
@@ -313,11 +345,12 @@ class ContractsRelationManager extends RelationManager
                                 amount: $data['termination_amount'] ?? null,
                             );
 
-                            $documentPath = $documentService->generateTerminationDocument($record, $terminationService);
+                             $documentPath = $documentService->generateTerminationDocument($record, $terminationService);
+                             $effectiveEndDate = $record->notice_end_date ?? $record->end_date;
 
-                            Notification::make()
-                                ->title('Contrat rompu')
-                                ->body("Le contrat de {$record->job_title} a été rompu ({$type->getLabel()}). Préavis jusqu'au {$record->notice_end_date->format('d/m/Y')}.")
+                             Notification::make()
+                                 ->title('Contrat rompu')
+                                 ->body("Le contrat de {$record->job_title} a été rompu ({$type->getLabel()}). Fin effective le {$effectiveEndDate?->format('d/m/Y')}.")
                                 ->success()
                                 ->send();
 

@@ -22,12 +22,13 @@ class ContractTerminatedNotification extends Notification
     public function toMail($notifiable): MailMessage
     {
         $type = $this->contract->termination_type->getLabel();
+        $endDate = $this->contract->notice_end_date ?? $this->contract->end_date ?? now();
 
         return (new MailMessage)
             ->subject("Rupture de contrat – {$type}")
             ->greeting("Bonjour {$notifiable->full_name},")
             ->line("Votre contrat ({$this->contract->job_title}) a été rompu par {$type}.")
-            ->line('Date de fin effective : '.$this->contract->notice_end_date->format('d/m/Y'))
+            ->line('Date de fin effective : '.$endDate->format('d/m/Y'))
             ->line('Motif : '.($this->contract->termination_reason ?: 'Non précisé'))
             ->line('Vous recevrez les documents officiels dans les plus brefs délais.');
     }
@@ -40,10 +41,11 @@ class ContractTerminatedNotification extends Notification
     public function toArray($notifiable): array
     {
         $type = $this->contract->termination_type->getLabel();
+        $endDate = $this->contract->notice_end_date ?? $this->contract->end_date ?? now();
 
         return [
             'title' => 'Contrat rompu – '.$type,
-            'body' => 'Votre contrat a été terminé le '.$this->contract->notice_end_date->format('d/m/Y').'.',
+            'body' => 'Votre contrat a été terminé le '.$endDate->format('d/m/Y').'.',
             'icon' => Phosphor::FileX,
             'color' => 'danger',
             'url' => EmployeeResource::getUrl('edit', ['record' => $this->contract->employee_id]),
@@ -53,10 +55,11 @@ class ContractTerminatedNotification extends Notification
     public function toFilament($notifiable): ?FilamentNotification
     {
         $type = $this->contract->termination_type->getLabel();
+        $endDate = $this->contract->notice_end_date ?? $this->contract->end_date ?? now();
 
         return FilamentNotification::make()
             ->title("Contrat rompu – {$type}")
-            ->body("Contrat de {$this->contract->job_title} terminé le {$this->contract->notice_end_date->format('d/m/Y')}.")
+            ->body("Contrat de {$this->contract->job_title} terminé le {$endDate->format('d/m/Y')}.")
             ->danger()
             ->icon(Phosphor::FileX)
             ->actions([
