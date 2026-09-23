@@ -180,7 +180,7 @@ class RHDocumentService extends DocumentService
 
         // Calculate notice compensation using actual dates
         $terminatedAt = $contract->terminated_at ?? now();
-        $noticeEndDate = $contract->notice_end_date ?? now();
+        $noticeEndDate = $contract->notice_end_date ?? $contract->end_date ?? now();
         $noticeDays = (int) $terminatedAt->diffInDays($noticeEndDate);
         // Daily rate = monthly salary / 26 (working days per month in France)
         $dailyRate = $monthlyGross / 26;

@@ -73,10 +73,56 @@ it('terminates a CDD contract without notice', function () {
     expect($terminated->termination_type)->toBe(TerminationType::RUPTURE_ANTICIPEE_CDD);
     expect($terminated->termination_reason)->toBe('Rupture négociée');
     expect($terminated->end_date->toDateString())->toBe($terminationDate->toDateString());
-    expect($terminated->notice_end_date->toDateString())->toBe($terminationDate->toDateString());
+    expect($terminated->notice_end_date)->toBeNull();
     expect($terminated->termination_amount)->toBe('500.00');
     expect($terminated->isTerminated())->toBeTrue();
     Notification::assertSentTo($employee, \App\Notifications\RH\ContractTerminatedNotification::class);
+});
+
+it('rejects CDD termination for a CDI contract', function () {
+    $contract = Contract::factory()->create([
+        'type' => ContractType::CDI,
+        'start_date' => now()->subYear(),
+        'hourly_rate' => 20,
+    ]);
+
+    expect(fn () => app(ContractTerminationService::class)->terminateCdd($contract, now()))
+        ->toThrow(LogicException::class);
+});
+
+it('rejects CDD termination outside the contract dates', function () {
+    $contract = Contract::factory()->create([
+        'type' => ContractType::CDD,
+        'start_date' => now()->subYear(),
+        'end_date' => now()->addYear(),
+        'hourly_rate' => 20,
+    ]);
+    $service = app(ContractTerminationService::class);
+
+    expect(fn () => $service->terminateCdd($contract, $contract->start_date->copy()->subDay()))
+        ->toThrow(LogicException::class);
+    expect(fn () => $service->terminateCdd($contract, $contract->end_date->copy()))
+        ->toThrow(LogicException::class);
+});
+
+it('rejects an already terminated or inactive CDD', function () {
+    $service = app(ContractTerminationService::class);
+    $terminated = Contract::factory()->create([
+        'type' => ContractType::CDD,
+        'start_date' => now()->subYear(),
+        'end_date' => now()->addYear(),
+        'terminated_at' => now(),
+        'hourly_rate' => 20,
+    ]);
+    $expired = Contract::factory()->create([
+        'type' => ContractType::CDD,
+        'start_date' => now()->subYears(2),
+        'end_date' => now()->subDay(),
+        'hourly_rate' => 20,
+    ]);
+
+    expect(fn () => $service->terminateCdd($terminated, now()))->toThrow(LogicException::class);
+    expect(fn () => $service->terminateCdd($expired, now()))->toThrow(LogicException::class);
 });
 
 it('excludes a terminated CDD from the active scope', function () {

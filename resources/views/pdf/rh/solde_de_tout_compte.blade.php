@@ -6,7 +6,7 @@
     </div>
 
     <div class="mb-10 text-right">
-        <p>A {{ $company->city }}, le {{ $contract->notice_end_date ? $contract->notice_end_date->format('d/m/Y') : now()->format('d/m/Y') }}</p>
+        <p>A {{ $company->city }}, le {{ ($contract->notice_end_date ?? $contract->end_date ?? now())->format('d/m/Y') }}</p>
     </div>
 
     <div class="mb-10 leading-relaxed">
@@ -24,7 +24,7 @@
             <strong>Objet : Solde de tout compte suite à la rupture du contrat de travail</strong>
         </p>
         <p>
-            Le contrat de travail liant les parties a pris fin le {{ $contract->notice_end_date ? $contract->notice_end_date->format('d/m/Y') : now()->format('d/m/Y') }},
+            Le contrat de travail liant les parties a pris fin le {{ ($contract->notice_end_date ?? $contract->end_date ?? now())->format('d/m/Y') }},
             pour motif : {{ $contract->termination_type ? $contract->termination_type->getLabel() : 'Rupture de contrat' }}.
         </p>
 
@@ -42,7 +42,7 @@
             </thead>
             <tbody>
                 <tr>
-                    <td>Salaire jusqu'au {{ $contract->notice_end_date ? $contract->notice_end_date->format('d/m/Y') : now()->format('d/m/Y') }}</td>
+                    <td>Salaire jusqu'au {{ ($contract->notice_end_date ?? $contract->end_date ?? now())->format('d/m/Y') }}</td>
                     <td class="text-right">{{ number_format($salary_amount ?? 0, 2, ',', ' ') }}</td>
                 </tr>
                 <tr>

@@ -345,11 +345,12 @@ class ContractsRelationManager extends RelationManager
                                 amount: $data['termination_amount'] ?? null,
                             );
 
-                            $documentPath = $documentService->generateTerminationDocument($record, $terminationService);
+                             $documentPath = $documentService->generateTerminationDocument($record, $terminationService);
+                             $effectiveEndDate = $record->notice_end_date ?? $record->end_date;
 
-                            Notification::make()
-                                ->title('Contrat rompu')
-                                ->body("Le contrat de {$record->job_title} a été rompu ({$type->getLabel()}). Préavis jusqu'au {$record->notice_end_date->format('d/m/Y')}.")
+                             Notification::make()
+                                 ->title('Contrat rompu')
+                                 ->body("Le contrat de {$record->job_title} a été rompu ({$type->getLabel()}). Fin effective le {$effectiveEndDate?->format('d/m/Y')}.")
                                 ->success()
                                 ->send();
 
