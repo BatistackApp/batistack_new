@@ -9,6 +9,7 @@ use App\Models\RH\Employee;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use App\Models\User;
 use Spatie\Activitylog\Models\Activity;
+use Spatie\Activitylog\Support\LogOptions;
 
 uses(RefreshDatabase::class);
 
@@ -24,6 +25,12 @@ it('can validate a pending paper contract without electronic signature', functio
 
     expect($contract->fresh()->signature_status)->toBe(SignatureStatus::VALIDATED)
         ->and($contract->signatures()->count())->toBe(0);
+});
+
+it('configures contract status activity logging', function () {
+    $contract = new Contract;
+
+    expect($contract->getActivitylogOptions())->toBeInstanceOf(LogOptions::class);
 });
 
 it('does not expose validation or signature request states after validation', function () {
