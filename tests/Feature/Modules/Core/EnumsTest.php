@@ -8,17 +8,22 @@ it('verifie les valeurs de l\'enum SignatureStatus', function () {
     expect(SignatureStatus::PENDING->value)->toBe('pending')
         ->and(SignatureStatus::SIGNED->value)->toBe('signed')
         ->and(SignatureStatus::REFUSED->value)->toBe('refused')
-        ->and(SignatureStatus::EXPIRED->value)->toBe('expired');
+        ->and(SignatureStatus::EXPIRED->value)->toBe('expired')
+        ->and(SignatureStatus::VALIDATED->value)->toBe('validated');
 
     expect(SignatureStatus::PENDING->getLabel())->toBe('En attente')
         ->and(SignatureStatus::SIGNED->getLabel())->toBe('Signé')
         ->and(SignatureStatus::REFUSED->getLabel())->toBe('Refusé')
-        ->and(SignatureStatus::EXPIRED->getLabel())->toBe('Expiré');
+        ->and(SignatureStatus::EXPIRED->getLabel())->toBe('Expiré')
+        ->and(SignatureStatus::VALIDATED->getLabel())->toBe('Validé');
 
     expect(SignatureStatus::PENDING->getColor())->toBe('warning')
         ->and(SignatureStatus::SIGNED->getColor())->toBe('success')
         ->and(SignatureStatus::REFUSED->getColor())->toBe('danger')
-        ->and(SignatureStatus::EXPIRED->getColor())->toBe('gray');
+        ->and(SignatureStatus::EXPIRED->getColor())->toBe('gray')
+        ->and(SignatureStatus::VALIDATED->getColor())->toBe('info');
+
+    expect(SignatureStatus::VALIDATED->getIcon())->toBe(\ToneGabes\Filament\Icons\Enums\Phosphor::CheckCircle);
 });
 
 it('verifie les valeurs de l\'enum SignatureType', function () {

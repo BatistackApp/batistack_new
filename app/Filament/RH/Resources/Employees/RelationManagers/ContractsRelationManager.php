@@ -249,7 +249,24 @@ class ContractsRelationManager extends RelationManager
                                 );
                             }
 
-                            Notification::make()->title('Demande de signature envoyée par email')->success()->send();
+                             Notification::make()->title('Demande de signature envoyée par email')->success()->send();
+                         }),
+                    Action::make('validate_contract')
+                        ->label('Valider le contrat')
+                        ->icon(Phosphor::CheckCircle)
+                        ->color('info')
+                        ->visible(fn (Contract $record) => $record->signature_status === SignatureStatus::PENDING)
+                        ->requiresConfirmation()
+                        ->modalHeading('Valider le contrat')
+                        ->modalDescription('Le salarié a déjà signé ce contrat sur papier ? Cette action le marque comme validé sans signature électronique.')
+                        ->action(function (Contract $record) {
+                            $record->update(['signature_status' => SignatureStatus::VALIDATED]);
+
+                            Notification::make()
+                                ->title('Contrat validé')
+                                ->body("Le contrat de {$record->job_title} a été validé (signature papier).")
+                                ->success()
+                                ->send();
                         }),
                     Action::make('trial_end')
                         ->label('Rupture Période d\'Essai')
