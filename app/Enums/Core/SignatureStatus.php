@@ -13,6 +13,7 @@ enum SignatureStatus: string implements HasColor, HasIcon, HasLabel
     case SIGNED = 'signed';     // Signé
     case REFUSED = 'refused';   // Refusé
     case EXPIRED = 'expired';   // Expiré (si délai dépassé)
+    case VALIDATED = 'validated'; // Validé manuellement (contrat papier)
 
     public function getLabel(): ?string
     {
@@ -21,6 +22,7 @@ enum SignatureStatus: string implements HasColor, HasIcon, HasLabel
             self::SIGNED => 'Signé',
             self::REFUSED => 'Refusé',
             self::EXPIRED => 'Expiré',
+            self::VALIDATED => 'Validé',
         };
     }
 
@@ -31,6 +33,7 @@ enum SignatureStatus: string implements HasColor, HasIcon, HasLabel
             self::SIGNED => 'success',
             self::REFUSED => 'danger',
             self::EXPIRED => 'gray',
+            self::VALIDATED => 'info',
         };
     }
 
@@ -41,6 +44,7 @@ enum SignatureStatus: string implements HasColor, HasIcon, HasLabel
             self::SIGNED => Phosphor::CheckCircle,
             self::REFUSED => Phosphor::XCircle,
             self::EXPIRED => Phosphor::CalendarX,
+            self::VALIDATED => Phosphor::CheckCircle,
         };
     }
 }
