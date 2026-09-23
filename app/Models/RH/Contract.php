@@ -18,13 +18,15 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Storage;
+use Spatie\Activitylog\Models\Concerns\LogsActivity;
+use Spatie\Activitylog\Support\LogOptions;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 
 #[ObservedBy([ContractObserver::class])]
 class Contract extends Model implements HasMedia, Signable
 {
-    use HasFactory, HasSignature, InteractsWithMedia;
+    use HasFactory, HasSignature, InteractsWithMedia, LogsActivity;
 
     protected $fillable = [
         'employee_id',
@@ -105,6 +107,14 @@ class Contract extends Model implements HasMedia, Signable
             'termination_amount' => 'decimal:2',
             'signature_status' => SignatureStatus::class,
         ];
+    }
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly(['signature_status'])
+            ->logOnlyDirty()
+            ->dontLogEmptyChanges();
     }
 
     // SCOPES
@@ -203,6 +213,10 @@ class Contract extends Model implements HasMedia, Signable
 
     public function onPostSignature(Signature $signature): void
     {
+        if ($this->signature_status === SignatureStatus::VALIDATED) {
+            return;
+        }
+
         $this->update(['signature_status' => SignatureStatus::SIGNED]);
         app(RHDocumentService::class)->generateContract($this);
     }
