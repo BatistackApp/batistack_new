@@ -278,6 +278,23 @@ class ContractsRelationManager extends RelationManager
                                 ->success()
                                 ->send();
                         }),
+                    Action::make('cdd_expired_close')
+                        ->label('Clôturer CDD expiré')
+                        ->icon(Phosphor::CheckCircle)
+                        ->color('gray')
+                        ->visible(fn (Contract $record) => $record->type === ContractType::CDD && $record->end_date?->isPast() && ! $record->isTerminated())
+                        ->requiresConfirmation()
+                        ->modalHeading('Clôturer le CDD expiré')
+                        ->modalDescription('Cette action enregistre la fin naturelle du CDD et le rend disponible pour le solde de tout compte.')
+                        ->action(function (Contract $record, ContractTerminationService $terminationService) {
+                            $record = $terminationService->closeExpiredCdd($record);
+
+                            Notification::make()
+                                ->title('CDD clôturé')
+                                ->body("Le contrat de {$record->job_title} a été clôturé à sa date de fin.")
+                                ->success()
+                                ->send();
+                        }),
                     Action::make('trial_end')
                         ->label('Rupture Période d\'Essai')
                         ->icon(Phosphor::FileMinus)

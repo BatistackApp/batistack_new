@@ -127,6 +127,26 @@ it('rejects an already terminated or inactive CDD', function () {
     expect(fn () => $service->terminateCdd($expired, now()))->toThrow(LogicException::class);
 });
 
+it('closes an expired CDD retroactively', function () {
+    Notification::fake();
+    $employee = Employee::factory()->create();
+    $contract = Contract::factory()->create([
+        'employee_id' => $employee->id,
+        'type' => ContractType::CDD,
+        'start_date' => now()->subYear(),
+        'end_date' => now()->subDay(),
+        'hourly_rate' => 20,
+    ]);
+
+    $closed = app(ContractTerminationService::class)->closeExpiredCdd($contract);
+
+    expect($closed->termination_type)->toBe(TerminationType::EXPIRATION_CDD)
+        ->and($closed->terminated_at->toDateString())->toBe($closed->end_date->toDateString())
+        ->and($closed->isTerminated())->toBeTrue()
+        ->and(Contract::query()->active()->whereKey($closed->id)->exists())->toBeFalse();
+    Notification::assertSentTo($employee, \App\Notifications\RH\ContractTerminatedNotification::class);
+});
+
 it('excludes a terminated CDD from the active scope', function () {
     $employee = Employee::factory()->create();
     $contract = Contract::factory()->create([
