@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Services\RH\ContractTerminationService;
 use App\Services\RH\RHDocumentService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Notification;
 use Spatie\Permission\Models\Role;
 
 uses(RefreshDatabase::class);
@@ -46,6 +47,55 @@ it('terminates a CDI contract and sets termination fields', function () {
     expect($terminated->notice_end_date)->not->toBeNull();
     expect($terminated->end_date)->not->toBeNull();
     expect($terminated->isTerminated())->toBeTrue();
+});
+
+it('terminates a CDD contract without notice', function () {
+    Notification::fake();
+    $user = User::factory()->create();
+    $employee = Employee::factory()->create(['user_id' => $user->id]);
+    $terminationDate = now()->addWeek()->startOfDay();
+
+    $contract = Contract::factory()->create([
+        'employee_id' => $employee->id,
+        'type' => ContractType::CDD,
+        'start_date' => now()->subYear(),
+        'end_date' => now()->addYear(),
+        'hourly_rate' => 20,
+    ]);
+
+    $terminated = app(ContractTerminationService::class)->terminateCdd(
+        contract: $contract,
+        terminationDate: $terminationDate,
+        reason: 'Rupture négociée',
+        amount: 500,
+    );
+
+    expect($terminated->termination_type)->toBe(TerminationType::RUPTURE_ANTICIPEE_CDD);
+    expect($terminated->termination_reason)->toBe('Rupture négociée');
+    expect($terminated->end_date->toDateString())->toBe($terminationDate->toDateString());
+    expect($terminated->notice_end_date->toDateString())->toBe($terminationDate->toDateString());
+    expect($terminated->termination_amount)->toBe('500.00');
+    expect($terminated->isTerminated())->toBeTrue();
+    Notification::assertSentTo($employee, \App\Notifications\RH\ContractTerminatedNotification::class);
+});
+
+it('excludes a terminated CDD from the active scope', function () {
+    $employee = Employee::factory()->create();
+    $contract = Contract::factory()->create([
+        'employee_id' => $employee->id,
+        'type' => ContractType::CDD,
+        'start_date' => now()->subYear(),
+        'end_date' => now()->addYear(),
+        'hourly_rate' => 20,
+    ]);
+
+    app(ContractTerminationService::class)->terminateCdd(
+        contract: $contract,
+        terminationDate: now()->subDay(),
+        reason: 'Rupture immédiate',
+    );
+
+    expect(Contract::query()->active()->whereKey($contract->id)->exists())->toBeFalse();
 });
 
 it('calculates notice period for < 6 months tenure', function () {

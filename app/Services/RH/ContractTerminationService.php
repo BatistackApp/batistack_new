@@ -5,6 +5,7 @@ namespace App\Services\RH;
 use App\Enums\RH\TerminationType;
 use App\Models\RH\Contract;
 use App\Notifications\RH\ContractTerminatedNotification;
+use Carbon\CarbonInterface;
 use Illuminate\Support\Carbon;
 
 class ContractTerminationService
@@ -29,6 +30,29 @@ class ContractTerminationService
             'notice_end_date' => $noticeEndDate,
             'termination_amount' => $amount,
             'end_date' => $noticeEndDate,
+        ]);
+
+        $contract->employee->notify(new ContractTerminatedNotification($contract));
+
+        return $contract->fresh();
+    }
+
+    /**
+     * Terminate a CDD by negotiated early termination, without notice.
+     */
+    public function terminateCdd(
+        Contract $contract,
+        CarbonInterface $terminationDate,
+        ?string $reason = null,
+        ?float $amount = null,
+    ): Contract {
+        $contract->update([
+            'termination_type' => TerminationType::RUPTURE_ANTICIPEE_CDD,
+            'termination_reason' => $reason,
+            'terminated_at' => now(),
+            'notice_end_date' => $terminationDate,
+            'end_date' => $terminationDate,
+            'termination_amount' => $amount,
         ]);
 
         $contract->employee->notify(new ContractTerminatedNotification($contract));

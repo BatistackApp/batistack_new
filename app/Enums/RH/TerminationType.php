@@ -12,6 +12,7 @@ enum TerminationType: string implements HasColor, HasLabel
     case RUPTURE_CONVENTIONNELLE = 'rupture_conventionnelle';
     case RETRAITE = 'retraite';
     case INAPTITUDE = 'inaptitude';
+    case RUPTURE_ANTICIPEE_CDD = 'rupture_anticipee_cdd';
 
     public function getLabel(): ?string
     {
@@ -21,6 +22,7 @@ enum TerminationType: string implements HasColor, HasLabel
             self::RUPTURE_CONVENTIONNELLE => 'Rupture conventionnelle',
             self::RETRAITE => 'Départ à la retraite',
             self::INAPTITUDE => 'Inaptitude',
+            self::RUPTURE_ANTICIPEE_CDD => 'Rupture anticipée CDD',
         };
     }
 
@@ -32,6 +34,7 @@ enum TerminationType: string implements HasColor, HasLabel
             self::RUPTURE_CONVENTIONNELLE => 'info',
             self::RETRAITE => 'success',
             self::INAPTITUDE => 'danger',
+            self::RUPTURE_ANTICIPEE_CDD => 'danger',
         };
     }
 
