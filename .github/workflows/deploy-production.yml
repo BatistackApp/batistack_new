@@ -24,7 +24,7 @@ jobs:
 
       - name: Bump Version and Push Tag (Semantic Versioning)
         id: tag_version
-        uses: mathieudutour/github-tag-action@v6.2
+        uses: mathieudutour/github-tag-action@v7
         with:
           github_token: ${{ secrets.GH_TOKEN }}
           default_bump: patch
