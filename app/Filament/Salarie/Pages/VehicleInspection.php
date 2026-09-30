@@ -6,6 +6,7 @@ use App\Enums\Flottes\ConditionReportType;
 use App\Models\Flottes\Vehicle;
 use App\Models\Flottes\VehicleAssignment;
 use App\Models\Flottes\VehicleConditionReport;
+use App\Services\RH\EmployeePinService;
 use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Hidden;
@@ -16,7 +17,6 @@ use Filament\Pages\Page;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Wizard;
 use Filament\Schemas\Schema;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\HtmlString;
 use ToneGabes\Filament\Icons\Enums\Phosphor;
 
@@ -64,18 +64,48 @@ class VehicleInspection extends Page
                                 ->label('Votre Code PIN')
                                 ->password()
                                 ->required()
+                                ->maxLength(4)
+                                ->rule('regex:/^[0-9]{4}$/')
                                 ->rule(function () {
                                     return function (string $attribute, $value, \Closure $fail) {
                                         $employee = $this->assignment->employee;
-                                        if (auth()->user()->salarie->id !== $employee->id) {
+
+                                        if (auth()->user()->salarie?->id !== $employee->id) {
                                             $fail("Vous n'êtes pas le conducteur assigné à ce véhicule.");
 
                                             return;
                                         }
 
-                                        if (! Hash::check($value, $employee->pin_code)) {
-                                            $fail('Le code PIN est incorrect.');
+                                        $pinService = app(EmployeePinService::class);
+
+                                        if (! $employee->pin_hash) {
+                                            $fail('Code PIN non configuré — contactez la RH.');
+
+                                            return;
                                         }
+
+                                        $attemptsKey = $pinService->pinAttemptsKey(
+                                            $employee,
+                                            'salarie-inspection:'.$this->assignment->getKey()
+                                        );
+
+                                        if ($pinService->isPinAttemptLocked($attemptsKey)) {
+                                            $remaining = $pinService->pinAttemptRemainingSeconds($attemptsKey);
+
+                                            $fail("Trop de tentatives de code PIN. Réessayez dans {$remaining} secondes.");
+
+                                            return;
+                                        }
+
+                                        if (! $pinService->checkPin($employee, $value)) {
+                                            $pinService->registerFailedPinAttempt($attemptsKey);
+
+                                            $fail('Le code PIN est incorrect.');
+
+                                            return;
+                                        }
+
+                                        $pinService->clearPinAttempts($attemptsKey);
                                     };
                                 }),
 

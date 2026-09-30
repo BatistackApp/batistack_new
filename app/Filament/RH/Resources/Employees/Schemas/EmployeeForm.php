@@ -144,6 +144,20 @@ class EmployeeForm
                                             ->collection('identity_docs')
                                             ->multiple(),
                                     ]),
+
+                                Section::make('Code PIN')
+                                    ->description('PIN à 4 chiffres requis pour signer les états des lieux des véhicules (module Flottes).')
+                                    ->schema([
+                                        TextInput::make('pin')
+                                            ->label('Code PIN')
+                                            ->password()
+                                            ->revealable()
+                                            ->nullable()
+                                            ->maxLength(4)
+                                            ->rule('regex:/^[0-9]{4}$/')
+                                            ->required(fn (string $operation): bool => $operation === 'create')
+                                            ->helperText('4 chiffres. Laisser vide lors d\'une modification pour conserver le PIN actuel.'),
+                                    ]),
                             ]),
 
                         // --- PAIE ---
