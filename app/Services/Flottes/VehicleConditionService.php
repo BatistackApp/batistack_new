@@ -6,11 +6,11 @@ use App\Enums\Flottes\AssignmentStatus;
 use App\Enums\Flottes\ConditionReportType;
 use App\Models\Flottes\VehicleAssignment;
 use App\Models\Flottes\VehicleConditionReport;
+use App\Services\RH\EmployeePinService;
 use Exception;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
 
 class VehicleConditionService
 {
@@ -60,9 +60,22 @@ class VehicleConditionService
             throw new Exception('Aucun code PIN n\'est configuré pour ce conducteur. Contactez la RH.');
         }
 
-        if (! Hash::check($driverPin, $employeePinHash)) {
+        $pinService = app(EmployeePinService::class);
+        $attemptsKey = $pinService->pinAttemptsKey($employee, 'flotte-assignment:'.$assignment->getKey());
+
+        if ($pinService->isPinAttemptLocked($attemptsKey)) {
+            $remaining = $pinService->pinAttemptRemainingSeconds($attemptsKey);
+
+            throw new Exception("Trop de tentatives de code PIN. Réessayez dans {$remaining} secondes.");
+        }
+
+        if (! $pinService->checkPin($employee, $driverPin)) {
+            $pinService->registerFailedPinAttempt($attemptsKey);
+
             throw new Exception('Le code PIN saisi est invalide.');
         }
+
+        $pinService->clearPinAttempts($attemptsKey);
 
         $payloadToSign = json_encode([
             'assignment_id' => $assignment->id,

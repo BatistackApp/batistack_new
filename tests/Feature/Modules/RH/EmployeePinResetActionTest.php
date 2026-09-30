@@ -8,12 +8,13 @@ use Filament\Facades\Filament;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Notification;
 use Livewire\Livewire;
+use PHPUnit\Framework\AssertionFailedError;
 use Spatie\Permission\Models\Permission;
 
 beforeEach(function () {
     $this->admin = User::factory()->create(['is_admin' => true]);
 
-    foreach (['ViewAny', 'View'] as $ability) {
+    foreach (['ViewAny', 'View', 'Update'] as $ability) {
         $this->admin->givePermissionTo(Permission::findOrCreate($ability.':Employee', 'web'));
     }
 
@@ -52,4 +53,40 @@ test('reset_pin fonctionne pour un salarié sans PIN initial', function () {
     expect($employee->fresh()->pin_hash)->not->toBeNull();
 
     Notification::assertSentTo($employee, EmployeePinResetNotification::class);
+});
+
+test('reset_pin est masqué pour un utilisateur disposant uniquement des droits de lecture', function () {
+    Notification::fake();
+
+    $this->admin->revokePermissionTo('Update:Employee');
+
+    $employee = Employee::factory()->create([
+        'pin_hash' => Hash::make('1111'),
+    ]);
+
+    Livewire::test(ViewEmployee::class, ['record' => $employee->getKey()])
+        ->assertActionHidden('reset_pin');
+
+    expect(Hash::check('1111', $employee->fresh()->pin_hash))->toBeTrue();
+
+    Notification::assertNothingSent();
+});
+
+test('reset_pin ne peut pas être exécuté par un utilisateur en lecture seule', function () {
+    Notification::fake();
+
+    $this->admin->revokePermissionTo('Update:Employee');
+
+    $employee = Employee::factory()->create([
+        'pin_hash' => Hash::make('1111'),
+    ]);
+
+    // L'action masquée ne peut pas être montée : Filament refuse l'appel.
+    expect(fn () => Livewire::test(ViewEmployee::class, ['record' => $employee->getKey()])
+        ->callAction('reset_pin'))
+        ->toThrow(AssertionFailedError::class);
+
+    expect(Hash::check('1111', $employee->fresh()->pin_hash))->toBeTrue();
+
+    Notification::assertNothingSent();
 });

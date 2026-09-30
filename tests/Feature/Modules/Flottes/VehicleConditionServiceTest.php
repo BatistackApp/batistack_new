@@ -98,6 +98,32 @@ test('refuse état des lieux avec PIN invalide', function () {
     ))->toThrow(Exception::class);
 });
 
+test('verrouille les tentatives après 5 codes PIN erronés', function () {
+    $assignment = $this->assignmentService->createAssignment($this->vehicle, $this->driver, $this->chantier, now(), null);
+
+    $fakePhotos = array_fill_keys(['front', 'back', 'left', 'right', 'dashboard'], UploadedFile::fake()->image('x.jpg'));
+
+    foreach (range(1, 5) as $attempt) {
+        expect(fn () => $this->conditionService->submitReport(
+            $assignment,
+            ConditionReportType::CHECK_IN,
+            10000.00,
+            100,
+            '9999',
+            $fakePhotos
+        ))->toThrow(Exception::class, 'Le code PIN saisi est invalide.');
+    }
+
+    expect(fn () => $this->conditionService->submitReport(
+        $assignment,
+        ConditionReportType::CHECK_IN,
+        10000.00,
+        100,
+        '1234',
+        $fakePhotos
+    ))->toThrow(Exception::class, 'Trop de tentatives de code PIN');
+});
+
 test('refuse état des lieux si aucun PIN n\'est configuré', function () {
     $this->driver->updateQuietly(['pin_hash' => null]);
 

@@ -3,8 +3,8 @@
 namespace App\Filament\RH\Resources\Employees\Pages;
 
 use App\Filament\RH\Resources\Employees\EmployeeResource;
+use App\Services\RH\EmployeePinService;
 use Filament\Resources\Pages\CreateRecord;
-use Illuminate\Support\Facades\Hash;
 
 class CreateEmployee extends CreateRecord
 {
@@ -13,7 +13,7 @@ class CreateEmployee extends CreateRecord
     protected function mutateFormDataBeforeCreate(array $data): array
     {
         if (! empty($data['pin'])) {
-            $data['pin_hash'] = Hash::make($data['pin']);
+            $data['pin_hash'] = app(EmployeePinService::class)->hashPin($data['pin']);
         }
 
         unset($data['pin']);

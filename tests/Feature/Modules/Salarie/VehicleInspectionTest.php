@@ -78,3 +78,39 @@ test('refuse un PIN qui ne fait pas 4 chiffres', function () {
         ->call('submit')
         ->assertHasErrors('data.pin_code');
 });
+
+test('verrouille les tentatives après 5 codes PIN erronés', function () {
+    foreach (range(1, 5) as $attempt) {
+        Livewire::test(VehicleInspection::class, ['uuid' => $this->vehicle->uuid])
+            ->set('data.pin_code', '9999')
+            ->call('submit')
+            ->assertHasErrors('data.pin_code');
+    }
+
+    Livewire::test(VehicleInspection::class, ['uuid' => $this->vehicle->uuid])
+        ->set('data.pin_code', '1234')
+        ->call('submit')
+        ->assertHasErrors([
+            'data.pin_code' => fn ($failedRules, $messages) => str_contains(implode(' ', $messages), 'Trop de tentatives de code PIN'),
+        ]);
+});
+
+test('un PIN correct remet le compteur de tentatives à zéro', function () {
+    $submit = fn (string $pin) => Livewire::test(VehicleInspection::class, ['uuid' => $this->vehicle->uuid])
+        ->set('data.pin_code', $pin)
+        ->call('submit');
+
+    foreach (range(1, 4) as $attempt) {
+        $submit('9999')->assertHasErrors('data.pin_code');
+    }
+
+    $submit('1234')->assertHasNoErrors('data.pin_code');
+
+    // 4 nouveaux échecs seulement : le compteur a bien été remis à zéro,
+    // sinon les 5 échecs cumulés auraient déjà verrouillé l'accès.
+    foreach (range(1, 4) as $attempt) {
+        $submit('9999')->assertHasErrors('data.pin_code');
+    }
+
+    $submit('1234')->assertHasNoErrors('data.pin_code');
+});
