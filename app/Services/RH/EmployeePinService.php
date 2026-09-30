@@ -59,15 +59,20 @@ class EmployeePinService
 
     /**
      * Génère un code PIN provisoire aléatoire, le hash en base
-     * et l'envoie par email au salarié.
+     * et transmet le code au salarié.
      *
-     * Si l'envoi échoue, l'ancien code PIN est restauré afin que le salarié
-     * ne se retrouve jamais avec un code qu'il ignore.
+     * Les deux canaux de la notification sont traités séparément :
+     * - canal critique (email) : envoyé en premier, seul à transporter le code.
+     *   S'il échoue, l'ancien hash est restauré — aucun code n'ayant été livré,
+     *   le salarié conserve un code qu'il connaît.
+     * - canal secondaire (notification en base) : envoyé après coup et en best-effort.
+     *   Son échec est journalisé mais n'annule jamais la réinitialisation :
+     *   un code PIN déjà transmis par email reste donc toujours valide.
      *
      * @return string le PIN en clair (uniquement destiné aux tests)
      *
      * @throws AuthorizationException si l'utilisateur connecté n'a pas le droit de réinitialiser
-     * @throws EmployeePinException si le salarié n'a pas d'adresse email ou si l'envoi échoue
+     * @throws EmployeePinException si le salarié n'a pas d'adresse email ou si l'envoi de l'email échoue
      */
     public function resetPin(Employee $employee): string
     {
@@ -80,7 +85,7 @@ class EmployeePinService
         $employee->update(['pin_hash' => Hash::make($pin)]);
 
         try {
-            $employee->notify(new EmployeePinResetNotification($pin));
+            $employee->notifyNow(new EmployeePinResetNotification($pin), ['mail']);
         } catch (Throwable $exception) {
             $employee->update(['pin_hash' => $previousHash]);
 
@@ -89,6 +94,12 @@ class EmployeePinService
             throw new EmployeePinException(
                 'L\'envoi de l\'email a échoué : le code PIN précédent a été conservé. Vérifiez la configuration email puis réessayez.'
             );
+        }
+
+        try {
+            $employee->notifyNow(new EmployeePinResetNotification($pin), ['database']);
+        } catch (Throwable $exception) {
+            report($exception);
         }
 
         return $pin;
