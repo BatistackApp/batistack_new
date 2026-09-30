@@ -98,6 +98,23 @@ test('refuse état des lieux avec PIN invalide', function () {
     ))->toThrow(Exception::class);
 });
 
+test('refuse état des lieux si aucun PIN n\'est configuré', function () {
+    $this->driver->updateQuietly(['pin_hash' => null]);
+
+    $assignment = $this->assignmentService->createAssignment($this->vehicle, $this->driver, $this->chantier, now(), null);
+
+    $fakePhotos = array_fill_keys(['front', 'back', 'left', 'right', 'dashboard'], UploadedFile::fake()->image('x.jpg'));
+
+    expect(fn () => $this->conditionService->submitReport(
+        $assignment,
+        ConditionReportType::CHECK_IN,
+        10000.00,
+        100,
+        '1234',
+        $fakePhotos
+    ))->toThrow(Exception::class, 'Aucun code PIN n\'est configuré pour ce conducteur. Contactez la RH.');
+});
+
 test('refuse état des lieux avec photos manquantes', function () {
     $assignment = $this->assignmentService->createAssignment($this->vehicle, $this->driver, $this->chantier, now(), null);
 

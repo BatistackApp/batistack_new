@@ -56,6 +56,10 @@ class VehicleConditionService
         $employee = $assignment->employee;
         $employeePinHash = $employee->pin_hash;
 
+        if (! $employeePinHash) {
+            throw new Exception('Aucun code PIN n\'est configuré pour ce conducteur. Contactez la RH.');
+        }
+
         if (! Hash::check($driverPin, $employeePinHash)) {
             throw new Exception('Le code PIN saisi est invalide.');
         }

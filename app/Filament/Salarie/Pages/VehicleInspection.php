@@ -64,6 +64,8 @@ class VehicleInspection extends Page
                                 ->label('Votre Code PIN')
                                 ->password()
                                 ->required()
+                                ->maxLength(4)
+                                ->rule('regex:/^[0-9]{4}$/')
                                 ->rule(function () {
                                     return function (string $attribute, $value, \Closure $fail) {
                                         $employee = $this->assignment->employee;
@@ -73,7 +75,13 @@ class VehicleInspection extends Page
                                             return;
                                         }
 
-                                        if (! Hash::check($value, $employee->pin_code)) {
+                                        if (! $employee->pin_hash) {
+                                            $fail('Code PIN non configuré — contactez la RH.');
+
+                                            return;
+                                        }
+
+                                        if (! Hash::check($value, $employee->pin_hash)) {
                                             $fail('Le code PIN est incorrect.');
                                         }
                                     };

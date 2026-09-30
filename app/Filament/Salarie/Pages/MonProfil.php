@@ -2,6 +2,7 @@
 
 namespace App\Filament\Salarie\Pages;
 
+use App\Services\RH\EmployeePinService;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
@@ -30,6 +31,8 @@ class MonProfil extends Page implements HasSchemas
 
     public ?array $passwordData = [];
 
+    public ?array $pinData = [];
+
     public function mount(): void
     {
         $user = auth()->user();
@@ -51,6 +54,7 @@ class MonProfil extends Page implements HasSchemas
         return [
             'employeeForm',
             'passwordForm',
+            'pinForm',
         ];
     }
 
@@ -116,6 +120,44 @@ class MonProfil extends Page implements HasSchemas
             ->statePath('passwordData');
     }
 
+    public function pinForm(Schema $schema): Schema
+    {
+        return $schema
+            ->schema([
+                Section::make('Code PIN')
+                    ->description('Le code PIN est demandé pour signer les états des lieux de votre véhicule (4 chiffres).')
+                    ->schema([
+                        TextInput::make('current_pin')
+                            ->label('Code PIN actuel')
+                            ->password()
+                            ->maxLength(4)
+                            ->required(fn (): bool => (bool) auth()->user()->salarie?->pin_hash)
+                            ->rule(function () {
+                                return function (string $attribute, $value, \Closure $fail) {
+                                    $employee = auth()->user()->salarie;
+
+                                    if ($employee?->pin_hash && ! app(EmployeePinService::class)->checkPin($employee, $value)) {
+                                        $fail('Le code PIN actuel est incorrect.');
+                                    }
+                                };
+                            }),
+                        TextInput::make('pin')
+                            ->label('Nouveau code PIN')
+                            ->password()
+                            ->required()
+                            ->maxLength(4)
+                            ->confirmed()
+                            ->rule('regex:/^[0-9]{4}$/'),
+                        TextInput::make('pin_confirmation')
+                            ->label('Confirmer le nouveau code PIN')
+                            ->password()
+                            ->required(),
+                    ])
+                    ->columns(1),
+            ])
+            ->statePath('pinData');
+    }
+
     public function saveEmployeeData(): void
     {
         $data = $this->employeeForm->getState();
@@ -144,6 +186,26 @@ class MonProfil extends Page implements HasSchemas
 
         Notification::make()
             ->title('Mot de passe mis à jour avec succès.')
+            ->success()
+            ->send();
+    }
+
+    public function savePinData(): void
+    {
+        $data = $this->pinForm->getState();
+
+        $employee = auth()->user()->salarie;
+
+        if (! $employee) {
+            return;
+        }
+
+        app(EmployeePinService::class)->setPin($employee, $data['pin']);
+
+        $this->pinForm->fill();
+
+        Notification::make()
+            ->title('Code PIN mis à jour avec succès.')
             ->success()
             ->send();
     }
