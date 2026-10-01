@@ -281,9 +281,9 @@ jobs:
             echo "======================================"
 
             if [ "$MODULE" == "Core" ]; then
-              ./vendor/bin/pest tests/Feature/Modules/Core tests/Feature/Auth tests/Feature/Settings tests/Feature/*.php tests/Unit --coverage --coverage-clover storage/coverage/coverage-$MODULE.xml --log-junit junit-$MODULE.xml || echo "Tests failed for $MODULE"
+              ./vendor/bin/pest tests/Feature/Modules/Core tests/Feature/Auth tests/Feature/Settings tests/Feature/*.php tests/Unit --coverage --coverage-clover storage/coverage/coverage-$MODULE.xml --log-junit junit-$MODULE.xml
             else
-              ./vendor/bin/pest tests/Feature/Modules/$MODULE --coverage --coverage-clover storage/coverage/coverage-$MODULE.xml --log-junit junit-$MODULE.xml || echo "Tests failed for $MODULE"
+              ./vendor/bin/pest tests/Feature/Modules/$MODULE --coverage --coverage-clover storage/coverage/coverage-$MODULE.xml --log-junit junit-$MODULE.xml
             fi
 
             echo "Uploading coverage for $MODULE to Codecov..."
@@ -355,4 +355,3 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           slug: BatistackApp/batistack_new
           files: ./storage/coverage/coverage.xml
-

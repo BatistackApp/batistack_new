@@ -5,7 +5,6 @@ namespace App\Services\Laser;
 use App\Enums\Accounting\JournalType;
 use App\Enums\Commerce\PaymentType;
 use App\Models\Accounting\EcritureComptable;
-use App\Models\Commerce\Payment;
 use App\Models\Commerce\PaymentAllocation;
 use App\Models\Laser\LaserInvoice;
 use App\Services\Accounting\EcritureComptableService;

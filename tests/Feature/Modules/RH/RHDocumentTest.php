@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\RH\ContractType;
 use App\Models\Core\Company;
 use App\Models\RH\Contract;
 use App\Models\RH\Employee;
@@ -36,7 +37,7 @@ it('does not calculate notice compensation for an early CDD termination', functi
     $employee = Employee::factory()->create();
     $contract = Contract::factory()->create([
         'employee_id' => $employee->id,
-        'type' => \App\Enums\RH\ContractType::CDD,
+        'type' => ContractType::CDD,
         'start_date' => now()->subYear(),
         'end_date' => now()->addDays(10),
         'terminated_at' => now(),

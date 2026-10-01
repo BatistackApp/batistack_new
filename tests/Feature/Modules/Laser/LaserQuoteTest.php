@@ -15,6 +15,72 @@ use Illuminate\Support\Facades\Storage;
 uses(RefreshDatabase::class);
 
 // ============================================================
+// QUOTE CONVERSION
+// ============================================================
+
+it('converts a signed accepted quote into an order with its lines', function () {
+    Queue::fake();
+
+    $quote = LaserQuote::factory()->create([
+        'total_ht' => 125.50,
+        'total_ttc' => 150.60,
+    ]);
+    $material = LaserMaterial::factory()->create();
+
+    LaserQuoteLine::create([
+        'laser_quote_id' => $quote->id,
+        'material_id' => $material->id,
+        'description' => 'Découpe acier',
+        'length_mm' => 1000,
+        'width_mm' => 500,
+        'thickness_mm' => 2,
+        'quantity' => 2,
+        'price_per_kg' => 1.20,
+        'price_per_meter' => 0.80,
+        'total_ht' => 125.50,
+    ]);
+
+    $order = app(LaserQuoteService::class)->convertToOrder(signedLaserQuote($quote));
+
+    expect($order->laser_quote_id)->toBe($quote->id)
+        ->and((float) $order->total_ht)->toBe((float) $quote->fresh()->total_ht)
+        ->and((float) $order->total_ttc)->toBe((float) $quote->fresh()->total_ttc)
+        ->and($order->lines)->toHaveCount(1)
+        ->and($order->lines->first()->description)->toBe('Découpe acier');
+});
+
+it('rejects conversion of a quote that is not accepted', function () {
+    Queue::fake();
+
+    $quote = LaserQuote::factory()->create(['status' => QuoteStatus::DRAFT]);
+
+    expect(fn () => app(LaserQuoteService::class)->convertToOrder($quote))
+        ->toThrow(Exception::class, 'Seul un devis accepté et signé peut être converti en commande.');
+});
+
+it('rejects conversion when the quote has no valid signature', function () {
+    Queue::fake();
+
+    $quote = LaserQuote::factory()->create(['status' => QuoteStatus::ACCEPTED]);
+
+    expect(fn () => app(LaserQuoteService::class)->convertToOrder($quote))
+        ->toThrow(Exception::class, 'Une signature électronique valide est obligatoire avant la conversion en commande.');
+});
+
+it('rejects conversion of a quote already converted into an order', function () {
+    Queue::fake();
+
+    $quote = LaserQuote::factory()->create();
+    $signedQuote = signedLaserQuote($quote);
+    $service = app(LaserQuoteService::class);
+
+    $service->convertToOrder($signedQuote);
+
+    expect(fn () => $service->convertToOrder($signedQuote->fresh()))
+        ->toThrow(Exception::class, 'Ce devis a déjà été converti en commande.');
+});
+
+// ============================================================
 // QUOTE REFERENCE
 // ============================================================
 

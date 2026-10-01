@@ -2,26 +2,26 @@
 
 namespace App\Filament\Laser\Resources\LaserInvoices\Pages;
 
-use App\Enums\Laser\InvoiceStatus;
 use App\Enums\Commerce\PaymentMethod;
 use App\Enums\Commerce\PaymentType;
+use App\Enums\Laser\InvoiceStatus;
 use App\Filament\Laser\Resources\LaserInvoices\LaserInvoiceResource;
+use App\Jobs\Laser\SendLaserInvoiceJob;
 use App\Jobs\Laser\SyncLaserAccountingJob;
+use App\Services\Commerce\PaymentRecordingService;
+use App\Services\Commerce\PaymentService;
 use App\Services\Laser\LaserInvoiceService;
+use Carbon\Carbon;
 use Filament\Actions;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
-use Illuminate\Support\Facades\Storage;
-use App\Jobs\Laser\SendLaserInvoiceJob;
-use App\Services\Commerce\PaymentRecordingService;
-use App\Services\Commerce\PaymentService;
-use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use MortalKiller\FilamentPageHeader\Concerns\HasPageHeader;
 
 class ViewLaserInvoice extends ViewRecord
@@ -90,35 +90,35 @@ class ViewLaserInvoice extends ViewRecord
                         ->title('Synchronisation comptable relancée')
                         ->success()
                         ->send();
-                    }),
+                }),
 
             Actions\Action::make('recordPayment')
                 ->label('Enregistrer un paiement')
                 ->icon('heroicon-o-banknotes')
                 ->color('primary')
                 ->visible(fn ($record) => $record->status === InvoiceStatus::VALIDATED
-                    && $record->paid_amount < (float) $record->total_ttc)
+                && $record->paid_amount < (float) $record->total_ttc)
                 ->form([
-                    TextInput::make('amount')
-                        ->label('Montant encaissé')
-                        ->numeric()
-                        ->minValue(0.01)
-                        ->maxValue(fn ($record): float => max(0, (float) $record->total_ttc - (float) $record->payments()->sum('allocated_amount')))
-                        ->required()
-                        ->prefix('€'),
-                    Select::make('method')
-                        ->label('Moyen de paiement')
-                        ->options(PaymentMethod::class)
-                        ->required()
-                        ->native(false),
-                    TextInput::make('reference')
-                        ->label('Référence du paiement')
-                        ->required(),
-                    DatePicker::make('payment_date')
-                        ->label('Date du paiement')
-                        ->default(now())
-                        ->required()
-                        ->native(false),
+                TextInput::make('amount')
+                    ->label('Montant encaissé')
+                    ->numeric()
+                    ->minValue(0.01)
+                    ->maxValue(fn ($record): float => max(0, (float) $record->total_ttc - (float) $record->payments()->sum('allocated_amount')))
+                    ->required()
+                    ->prefix('€'),
+                Select::make('method')
+                    ->label('Moyen de paiement')
+                    ->options(PaymentMethod::class)
+                    ->required()
+                    ->native(false),
+                TextInput::make('reference')
+                    ->label('Référence du paiement')
+                    ->required(),
+                DatePicker::make('payment_date')
+                    ->label('Date du paiement')
+                    ->default(now())
+                    ->required()
+                    ->native(false),
                 ])
                 ->action(function ($record, array $data) {
                     DB::transaction(function () use ($record, $data): void {

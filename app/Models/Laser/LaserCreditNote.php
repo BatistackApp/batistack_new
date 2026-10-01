@@ -2,8 +2,8 @@
 
 namespace App\Models\Laser;
 
-use App\Models\Tiers\ThirdParty;
 use App\Models\Accounting\AccountingSync;
+use App\Models\Tiers\ThirdParty;
 use App\Observers\Laser\LaserCreditNoteObserver;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;

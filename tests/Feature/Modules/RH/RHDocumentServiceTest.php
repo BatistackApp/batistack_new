@@ -11,21 +11,6 @@ use App\Services\RH\RHDocumentService;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Storage;
 
-// Define a mock enum for equipment type within the test scope
-enum MockEquipmentType: string
-{
-    case EPI = 'epi';
-    case TOOL = 'tool';
-
-    public function getLabel(): string
-    {
-        return match ($this) {
-            self::EPI => 'Équipement de Protection Individuelle',
-            self::TOOL => 'Outil',
-        };
-    }
-}
-
 beforeEach(function () {
     Company::factory()->create();
     Storage::fake('public');

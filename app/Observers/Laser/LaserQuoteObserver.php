@@ -2,8 +2,9 @@
 
 namespace App\Observers\Laser;
 
-use App\Jobs\Laser\GenerateLaserDocumentJob;
 use App\Enums\Core\SignatureStatus;
+use App\Enums\Laser\QuoteStatus;
+use App\Jobs\Laser\GenerateLaserDocumentJob;
 use App\Models\Laser\LaserQuote;
 use App\Services\Laser\LaserDocumentationService;
 use Carbon\Carbon;
@@ -40,7 +41,7 @@ class LaserQuoteObserver
                 ]);
 
             $quote->updateQuietly([
-                'status' => \App\Enums\Laser\QuoteStatus::SENT,
+                'status' => QuoteStatus::SENT,
                 'signed_at' => null,
             ]);
 

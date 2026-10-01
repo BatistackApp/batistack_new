@@ -5,6 +5,7 @@ namespace App\Jobs\Laser;
 use App\Models\Accounting\AccountingSync;
 use App\Models\Laser\LaserCreditNote;
 use App\Models\Laser\LaserInvoice;
+use App\Models\User;
 use App\Notifications\Accounting\LaserAccountingSyncFailedNotification;
 use App\Services\Laser\LaserInvoiceAccountingService;
 use Illuminate\Bus\Queueable;
@@ -12,7 +13,6 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use App\Models\User;
 use Throwable;
 
 class SyncLaserAccountingJob implements ShouldQueue
@@ -55,6 +55,7 @@ class SyncLaserAccountingJob implements ShouldQueue
 
         if (! $document) {
             report($exception);
+
             return;
         }
 

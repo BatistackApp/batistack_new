@@ -2,11 +2,12 @@
 
 namespace App\Filament\Laser\Resources\LaserDeliveryNotes\RelationManagers;
 
-use Filament\Resources\RelationManagers\RelationManager;
+use App\Enums\Laser\DeliveryStatus;
 use App\Models\Laser\LaserDeliveryNoteLine;
 use App\Services\Laser\LaserDeliveryNoteService;
 use Filament\Actions\Action;
 use Filament\Forms\Components\TextInput;
+use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
@@ -20,7 +21,7 @@ class LinesRelationManager extends RelationManager
 
     public function isReadOnly(): bool
     {
-        return $this->getOwnerRecord()->status !== \App\Enums\Laser\DeliveryStatus::DRAFT;
+        return $this->getOwnerRecord()->status !== DeliveryStatus::DRAFT;
     }
 
     public function form(Schema $schema): Schema

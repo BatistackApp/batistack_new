@@ -2,8 +2,8 @@
 
 namespace App\Services\RH;
 
-use App\Enums\RH\TerminationType;
 use App\Enums\RH\ContractType;
+use App\Enums\RH\TerminationType;
 use App\Models\RH\Contract;
 use App\Notifications\RH\ContractTerminatedNotification;
 use Carbon\CarbonInterface;
