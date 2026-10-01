@@ -136,9 +136,30 @@ class MonProfil extends Page implements HasSchemas
                                 return function (string $attribute, $value, \Closure $fail) {
                                     $employee = auth()->user()->salarie;
 
-                                    if ($employee?->pin_hash && ! app(EmployeePinService::class)->checkPin($employee, $value)) {
-                                        $fail('Le code PIN actuel est incorrect.');
+                                    if (! $employee?->pin_hash) {
+                                        return;
                                     }
+
+                                    $pinService = app(EmployeePinService::class);
+                                    $attemptsKey = $pinService->pinAttemptsKey($employee, 'salarie-pin-change');
+
+                                    if ($pinService->isPinAttemptLocked($attemptsKey)) {
+                                        $remaining = $pinService->pinAttemptRemainingSeconds($attemptsKey);
+
+                                        $fail("Trop de tentatives de code PIN. Réessayez dans {$remaining} secondes.");
+
+                                        return;
+                                    }
+
+                                    if (! $pinService->checkPin($employee, $value)) {
+                                        $pinService->registerFailedPinAttempt($attemptsKey);
+
+                                        $fail('Le code PIN actuel est incorrect.');
+
+                                        return;
+                                    }
+
+                                    $pinService->clearPinAttempts($attemptsKey);
                                 };
                             }),
                         TextInput::make('pin')

@@ -142,19 +142,55 @@ test('resetPin refuse un salarié sans adresse email', function () {
     Notification::assertNothingSent();
 });
 
-test('resetPin conserve l\'ancien PIN si l\'envoi de la notification échoue', function () {
+test('resetPin conserve l\'ancien PIN si l\'envoi de l\'email échoue', function () {
     $employee = Employee::factory()->create([
         'pin_hash' => Hash::make('1111'),
     ]);
 
     $channelManager = Mockery::mock(ChannelManager::class);
-    $channelManager->shouldReceive('send')->andThrow(new RuntimeException('SMTP indisponible'));
+    $channelManager->shouldReceive('sendNow')
+        ->once()
+        ->withArgs(fn ($notifiables, $notification, $channels) => $channels === ['mail'])
+        ->andThrow(new RuntimeException('SMTP indisponible'));
     app()->instance(ChannelManager::class, $channelManager);
 
     expect(fn () => $this->service->resetPin($employee))
         ->toThrow(EmployeePinException::class, 'L\'envoi de l\'email a échoué');
 
     expect(Hash::check('1111', $employee->fresh()->pin_hash))->toBeTrue();
+});
+
+test('resetPin garde le nouveau PIN valide si seul le canal database échoue', function () {
+    $employee = Employee::factory()->create([
+        'pin_hash' => Hash::make('1111'),
+    ]);
+
+    $deliveredMailPin = null;
+
+    $channelManager = Mockery::mock(ChannelManager::class);
+
+    // Canal critique : l'email part avec le nouveau PIN.
+    $channelManager->shouldReceive('sendNow')
+        ->once()
+        ->withArgs(fn ($notifiables, $notification, $channels) => $channels === ['mail'])
+        ->andReturnUsing(function ($notifiables, $notification) use (&$deliveredMailPin) {
+            $deliveredMailPin = $notification->pin;
+        });
+
+    // Canal secondaire : la notification en base échoue après l'envoi de l'email.
+    $channelManager->shouldReceive('sendNow')
+        ->once()
+        ->withArgs(fn ($notifiables, $notification, $channels) => $channels === ['database'])
+        ->andThrow(new RuntimeException('Échec de la base de notifications'));
+
+    app()->instance(ChannelManager::class, $channelManager);
+
+    $pin = $this->service->resetPin($employee);
+
+    // Le PIN reçu par email doit rester valide : aucun rollback après le mail.
+    expect($pin)->toBe($deliveredMailPin)
+        ->and(Hash::check($deliveredMailPin, $employee->fresh()->pin_hash))->toBeTrue()
+        ->and(Hash::check('1111', $employee->fresh()->pin_hash))->toBeFalse();
 });
 
 test('le compteur de tentatives verrouille après le nombre maximal d\'échecs', function () {
