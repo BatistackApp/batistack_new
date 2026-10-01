@@ -11,6 +11,28 @@ Vous retrouverez ici les nouveautés, améliorations et corrections apportées �
 
 ---
 
+## 🧪 Préparation 1.0.0 — Stabilisation post-PR #480 (01/10/2026)
+
+Cette étape prépare la première release candidate de BATISTACK. Elle ne constitue pas encore une release versionnée.
+
+### Qualité et CI
+
+* Correction des avertissements d'autoload **PSR-4** des classes auxiliaires de tests.
+* Correction du workflow de tests afin que les échecs Pest arrêtent réellement les jobs CI.
+* Validation de Pint, des tests complets, de `RefreshDatabase` et de Codecov.
+* Ajout de tests ciblés sur la conversion des devis Laser en commandes : statut, signature, double conversion et copie des lignes.
+
+### Documentation
+
+* Mise à jour de la checklist [GO / NO-GO 1.0.0](../../avancement/v1.0.0-go-no-go.md).
+* Mise à jour de la trajectoire vers `v1.0.0-rc.1`.
+
+### Prochaines étapes
+
+* Geler le périmètre fonctionnel.
+* Tester l'installation propre, la migration, la sauvegarde/restauration et le rollback.
+* Publier `v1.0.0-rc.1` après validation de ces contrôles.
+
 > [!NOTE]
 > **Historique** : les versions **v0.34.0 → v0.52.0** sont regroupées ci-dessous par module (synthèse des nouveautés cumulées). Le détail version par version reste disponible dans les notes de release GitHub. Les versions antérieures (jusqu'à la **v0.33.0**) sont détaillées plus bas.
 
