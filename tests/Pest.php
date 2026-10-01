@@ -11,6 +11,9 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
 use Tests\TestCase;
 
+// Pest 4 validates configured traits before triggering Composer's nested trait autoloading.
+trait_exists(RefreshDatabase::class);
+
 /*
 |--------------------------------------------------------------------------
 | Test Case

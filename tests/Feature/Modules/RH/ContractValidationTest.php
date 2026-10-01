@@ -6,8 +6,8 @@ use App\Models\Core\Company;
 use App\Models\Core\Signature;
 use App\Models\RH\Contract;
 use App\Models\RH\Employee;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Activitylog\Models\Activity;
 use Spatie\Activitylog\Support\LogOptions;
 

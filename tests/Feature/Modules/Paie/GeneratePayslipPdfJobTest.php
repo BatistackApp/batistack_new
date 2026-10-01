@@ -3,7 +3,9 @@
 use App\Enums\Paie\PayslipStatus;
 use App\Jobs\Paie\GeneratePayslipPdfJob;
 use App\Models\Paie\Payslip;
+use App\Services\Paie\PayslipLockService;
 use App\Services\Paie\PayslipPdfService;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Queue;
 
@@ -17,7 +19,7 @@ it('dispatches GeneratePayslipPdfJob on successful lock', function () {
         'pdf_path' => null,
     ]);
 
-    app(\App\Services\Paie\PayslipLockService::class)->lock($payslip);
+    app(PayslipLockService::class)->lock($payslip);
 
     Queue::assertPushed(GeneratePayslipPdfJob::class, 1);
 });
@@ -28,7 +30,7 @@ it('job handles payslip with existing pdf_path by returning early', function () 
         'pdf_path' => 'payslips/test.pdf',
     ]);
 
-    $mockPdf = \Mockery::mock(PayslipPdfService::class);
+    $mockPdf = Mockery::mock(PayslipPdfService::class);
     $mockPdf->shouldReceive('generatePdf')->never();
 
     $job = new GeneratePayslipPdfJob($payslip);
@@ -41,7 +43,7 @@ it('job generates pdf when payslip has no pdf_path', function () {
         'pdf_path' => null,
     ]);
 
-    $mockPdf = \Mockery::mock(PayslipPdfService::class);
+    $mockPdf = Mockery::mock(PayslipPdfService::class);
     $mockPdf->shouldReceive('generatePdf')->once()->with($payslip);
 
     $job = new GeneratePayslipPdfJob($payslip);
@@ -53,7 +55,7 @@ it('job implements ShouldQueue', function () {
 
     $job = new GeneratePayslipPdfJob($payslip);
 
-    expect($job)->toBeInstanceOf(\Illuminate\Contracts\Queue\ShouldQueue::class);
+    expect($job)->toBeInstanceOf(ShouldQueue::class);
 });
 
 it('job stores payslip on public property', function () {

@@ -273,8 +273,8 @@ class ContractsRelationManager extends RelationManager
                                 );
                             }
 
-                             Notification::make()->title('Demande de signature envoyée par email')->success()->send();
-                         }),
+                            Notification::make()->title('Demande de signature envoyée par email')->success()->send();
+                        }),
                     Action::make('validate_contract')
                         ->label('Valider le contrat')
                         ->icon(Phosphor::CheckCircle)
@@ -348,22 +348,22 @@ class ContractsRelationManager extends RelationManager
                         ->modalHeading('Rompre le CDD')
                         ->modalDescription('Cette action va clôturer le contrat et générer l’avenant de rupture anticipée.')
                         ->action(function (Contract $record, array $data, ContractTerminationService $terminationService, RHDocumentService $documentService) {
-                             $record = $terminationService->terminateCdd(
-                                 contract: $record,
-                                 terminationDate: Carbon::parse($data['termination_date']),
-                                 reason: $data['termination_reason'],
-                                 amount: $data['termination_amount'] ?? null,
-                             );
+                            $record = $terminationService->terminateCdd(
+                                contract: $record,
+                                terminationDate: Carbon::parse($data['termination_date']),
+                                reason: $data['termination_reason'],
+                                amount: $data['termination_amount'] ?? null,
+                            );
 
-                             $documentPath = $documentService->generateCddEarlyTermination($record, $record->end_date);
+                            $documentPath = $documentService->generateCddEarlyTermination($record, $record->end_date);
 
-                             Notification::make()
-                                 ->title('CDD rompu')
-                                 ->body("Le contrat de {$record->job_title} a été clôturé le {$record->end_date->format('d/m/Y')}.")
-                                 ->success()
-                                 ->send();
+                            Notification::make()
+                                ->title('CDD rompu')
+                                ->body("Le contrat de {$record->job_title} a été clôturé le {$record->end_date->format('d/m/Y')}.")
+                                ->success()
+                                ->send();
 
-                             return $documentService->download($documentPath);
+                            return $documentService->download($documentPath);
                         }),
                     Action::make('print_solde_compte')
                         ->label('Solde de tout compte')
@@ -413,12 +413,12 @@ class ContractsRelationManager extends RelationManager
                                 amount: $data['termination_amount'] ?? null,
                             );
 
-                             $documentPath = $documentService->generateTerminationDocument($record, $terminationService);
-                             $effectiveEndDate = $record->notice_end_date ?? $record->end_date;
+                            $documentPath = $documentService->generateTerminationDocument($record, $terminationService);
+                            $effectiveEndDate = $record->notice_end_date ?? $record->end_date;
 
-                             Notification::make()
-                                 ->title('Contrat rompu')
-                                 ->body("Le contrat de {$record->job_title} a été rompu ({$type->getLabel()}). Fin effective le {$effectiveEndDate?->format('d/m/Y')}.")
+                            Notification::make()
+                                ->title('Contrat rompu')
+                                ->body("Le contrat de {$record->job_title} a été rompu ({$type->getLabel()}). Fin effective le {$effectiveEndDate?->format('d/m/Y')}.")
                                 ->success()
                                 ->send();
 

@@ -5,18 +5,20 @@ namespace App\Services\Commerce;
 use App\Enums\Commerce\PaymentMethod;
 use App\Enums\Commerce\PaymentStatus;
 use App\Enums\Commerce\PaymentType;
+use App\Enums\Laser\InvoiceStatus;
 use App\Events\Commerce\PaymentCancelledEvent;
 use App\Events\Commerce\PaymentRecordedEvent;
 use App\Models\Commerce\Payment;
 use App\Models\Commerce\PaymentAllocation;
+use App\Models\Laser\LaserInvoice;
 use App\Models\Tiers\ThirdParty;
+use App\Services\Laser\LaserPaymentAccountingService;
 use Carbon\Carbon;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use App\Services\Laser\LaserPaymentAccountingService;
 
 class PaymentRecordingService
 {
@@ -278,12 +280,12 @@ class PaymentRecordingService
 
                 $allocation->delete();
 
-                if ($payable instanceof \App\Models\Laser\LaserInvoice
+                if ($payable instanceof LaserInvoice
                     && ! PaymentAllocation::query()
                         ->where('payable_type', $payable->getMorphClass())
                         ->where('payable_id', $payable->getKey())
                         ->exists()) {
-                    $payable->updateQuietly(['status' => \App\Enums\Laser\InvoiceStatus::VALIDATED]);
+                    $payable->updateQuietly(['status' => InvoiceStatus::VALIDATED]);
                 }
 
                 // Rétrogader la facture si nécessaire

@@ -93,276 +93,276 @@ class ViewChantier extends ViewRecord
 
             ActionGroup::make([
                 Action::make('generate_invoice')
-                ->label('Facturer Situation')
-                ->icon(Phosphor::Receipt)
-                ->color('success')
-                ->visible(fn (Chantier $record) => $record->quote_id !== null)
-                ->schema([
-                    TextInput::make('percentage')
-                        ->label('Pourcentage d\'avancement à facturer')
-                        ->numeric()
-                        ->default(fn (Chantier $record, ChantierAnalyticService $service) => $service->getPerformanceMetrics($record)['progress'])
-                        ->minValue(1)
-                        ->maxValue(100)
-                        ->required()
-                        ->suffix('%'),
-                ])
-                ->action(function (Chantier $record, array $data) {
-                    $quote = $record->quote;
-                    if (! $quote) {
-                        return;
-                    }
-
-                    DB::transaction(function () use ($record, $quote, $data) {
-                        $percentage = $data['percentage'] / 100;
-
-                        $alreadyInvoicedHt = CustomerInvoice::where('chantier_id', $record->id)
-                            ->where('type', InvoiceType::SITUATION)
-                            ->where('status', '!=', InvoiceStatus::CANCELED)
-                            ->sum('total_ht');
-
-                        $remainingHt = (float) $quote->total_ht - (float) $alreadyInvoicedHt;
-                        $requestedHt = (float) $quote->total_ht * $percentage;
-
-                        if ($requestedHt > $remainingHt + 0.01) {
-                            throw ValidationException::withMessages([
-                                'percentage' => 'Le montant demandé dépasse le solde restant du devis ('.round($remainingHt, 2).' € HT).',
-                            ]);
-                        }
-
-                        $amountHt = $requestedHt;
-                        $amountTva = (float) $quote->total_tva * $percentage;
-
-                        CustomerInvoice::create([
-                            'client_id' => $record->client_id,
-                            'chantier_id' => $record->id,
-                            'reference' => 'FACT-SIT-'.uniqid(),
-                            'type' => InvoiceType::SITUATION,
-                            'status' => InvoiceStatus::DRAFT,
-                            'total_ht' => $amountHt,
-                            'total_tva' => $amountTva,
-                            'total_ttc' => $amountHt + $amountTva,
-                            'due_date' => now()->addDays(30),
-                            'responsable_id' => auth()->id(),
-                        ]);
-                    });
-
-                    Notification::make()
-                        ->title('Facture de situation créée (Brouillon)')
-                        ->success()
-                        ->send();
-                }),
-
-            Action::make('affect_vehicle')
-                ->label('Assigner Véhicule')
-                ->icon(Phosphor::Truck)
-                ->color('info')
-                ->schema([
-                    Select::make('vehicle_id')
-                        ->label('Véhicule / Engin')
-                        ->options(Vehicle::all()->mapWithKeys(fn ($v) => [$v->id => "{$v->brand} {$v->model} ({$v->license_plate})"]))
-                        ->required()
-                        ->searchable(),
-                    Select::make('employee_id')
-                        ->label('Conducteur (Optionnel)')
-                        ->options(function (ViewRecord $livewire) {
-                            $options = [];
-                            $chantier = $livewire->getRecord();
-                            $employees = $chantier->members()->with(['currentContract', 'qualifications'])->get();
-                            foreach ($employees as $emp) {
-                                $hasPermis = $emp->qualifications->contains(function ($q) {
-                                    return $q->type === QualificationType::PERMIS && $q->isActive();
-                                });
-                                if (! $hasPermis) {
-                                    continue;
-                                }
-                                $job = $emp->currentContract?->job_title ?? 'Non défini';
-                                $options[$emp->id] = "{$emp->full_name} | {$job}";
-                            }
-
-                            return $options;
-                        })
-                        ->searchable(),
-                    DatePicker::make('started_at')
-                        ->label('Date de début')
-                        ->default(now())
-                        ->required(),
-                    DatePicker::make('ended_at')
-                        ->label('Date de fin (Prévue)'),
-                ])
-                ->action(function (Chantier $record, array $data) {
-                    if (! empty($data['employee_id'])) {
-                        $driver = Employee::with('qualifications')->find($data['employee_id']);
-                        $hasPermis = $driver?->qualifications->contains(function ($q) {
-                            return $q->type === QualificationType::PERMIS && $q->isActive();
-                        });
-                        if (! $hasPermis) {
-                            Notification::make()
-                                ->title('Affectation refusée')
-                                ->body('Le conducteur sélectionné ne dispose pas d\'un permis de conduire actif.')
-                                ->danger()
-                                ->send();
-
+                    ->label('Facturer Situation')
+                    ->icon(Phosphor::Receipt)
+                    ->color('success')
+                    ->visible(fn (Chantier $record) => $record->quote_id !== null)
+                    ->schema([
+                        TextInput::make('percentage')
+                            ->label('Pourcentage d\'avancement à facturer')
+                            ->numeric()
+                            ->default(fn (Chantier $record, ChantierAnalyticService $service) => $service->getPerformanceMetrics($record)['progress'])
+                            ->minValue(1)
+                            ->maxValue(100)
+                            ->required()
+                            ->suffix('%'),
+                    ])
+                    ->action(function (Chantier $record, array $data) {
+                        $quote = $record->quote;
+                        if (! $quote) {
                             return;
                         }
-                    }
 
-                    VehicleAssignment::create([
-                        'vehicle_id' => $data['vehicle_id'],
-                        'chantier_id' => $record->id,
-                        'employee_id' => $data['employee_id'] ?? null,
-                        'started_at' => $data['started_at'],
-                        'ended_at' => $data['ended_at'] ?? null,
-                        'status' => AssignmentStatus::ACTIVE,
-                        'purpose' => 'Affectation Chantier '.$record->reference,
-                        'start_odometer' => Vehicle::find($data['vehicle_id'])->odometer ?? 0,
-                    ]);
+                        DB::transaction(function () use ($record, $quote, $data) {
+                            $percentage = $data['percentage'] / 100;
 
-                    Notification::make()
-                        ->title('Véhicule assigné au chantier')
-                        ->success()
-                        ->send();
-                }),
+                            $alreadyInvoicedHt = CustomerInvoice::where('chantier_id', $record->id)
+                                ->where('type', InvoiceType::SITUATION)
+                                ->where('status', '!=', InvoiceStatus::CANCELED)
+                                ->sum('total_ht');
 
-            Action::make('generate_pv')
-                ->label('PV de Réception')
-                ->icon(Phosphor::Handshake)
-                ->color('warning')
-                ->requiresConfirmation()
-                ->modalHeading('Générer le Procès-Verbal de Réception')
-                ->modalDescription('Le PV sera généré et une demande de signature sera envoyée par email.')
-                ->form([
-                    Toggle::make('is_multi')
-                        ->label('Signature multi-signataires')
-                        ->default(false)
-                        ->live(),
-                    Repeater::make('signers')
-                        ->label('Signataires')
-                        ->schema([
-                            TextInput::make('name')
-                                ->label('Nom')
-                                ->required(),
-                            TextInput::make('email')
-                                ->label('Email')
-                                ->email()
-                                ->required(),
-                            Select::make('role')
-                                ->label('Rôle')
-                                ->options([
-                                    'Signataire' => 'Signataire',
-                                    'Client' => 'Client',
-                                    'Maître d\'ouvrage' => 'Maître d\'ouvrage',
-                                    'Autre' => 'Autre',
-                                ])
-                                ->default('Client'),
-                        ])
-                        ->columns(3)
-                        ->defaultItems(0)
-                        ->addActionLabel('Ajouter un signataire')
-                        ->visible(fn (Get $get) => $get('is_multi')),
-                ])
-                ->action(function (Chantier $record, array $data, ChantierDocumentService $service, SignatureService $signatureService) {
-                    $relativePath = $service->generateHandoverProtocol($record);
+                            $remainingHt = (float) $quote->total_ht - (float) $alreadyInvoicedHt;
+                            $requestedHt = (float) $quote->total_ht * $percentage;
 
-                    if ($data['is_multi'] ?? false) {
-                        $signatureService->requestMultiSignature(
-                            model: $record,
-                            type: SignatureType::AUTOGRAPH,
-                            signers: $data['signers'],
-                            documentPath: $relativePath
-                        );
+                            if ($requestedHt > $remainingHt + 0.01) {
+                                throw ValidationException::withMessages([
+                                    'percentage' => 'Le montant demandé dépasse le solde restant du devis ('.round($remainingHt, 2).' € HT).',
+                                ]);
+                            }
+
+                            $amountHt = $requestedHt;
+                            $amountTva = (float) $quote->total_tva * $percentage;
+
+                            CustomerInvoice::create([
+                                'client_id' => $record->client_id,
+                                'chantier_id' => $record->id,
+                                'reference' => 'FACT-SIT-'.uniqid(),
+                                'type' => InvoiceType::SITUATION,
+                                'status' => InvoiceStatus::DRAFT,
+                                'total_ht' => $amountHt,
+                                'total_tva' => $amountTva,
+                                'total_ttc' => $amountHt + $amountTva,
+                                'due_date' => now()->addDays(30),
+                                'responsable_id' => auth()->id(),
+                            ]);
+                        });
 
                         Notification::make()
-                            ->title('PV de Réception généré')
-                            ->body('Une demande de signature multi-signataires a été envoyée.')
+                            ->title('Facture de situation créée (Brouillon)')
                             ->success()
                             ->send();
-                    } else {
-                        $client = $record->client;
-                        $contact = $client?->getPrimaryContact();
-                        $email = $contact?->email ?? $client?->email;
-                        $name = $contact ? trim("{$contact->first_name} {$contact->last_name}") : ($client?->name ?? 'Client');
+                    }),
 
-                        if ($email) {
-                            $signatureService->driver()->requestSignature(
+                Action::make('affect_vehicle')
+                    ->label('Assigner Véhicule')
+                    ->icon(Phosphor::Truck)
+                    ->color('info')
+                    ->schema([
+                        Select::make('vehicle_id')
+                            ->label('Véhicule / Engin')
+                            ->options(Vehicle::all()->mapWithKeys(fn ($v) => [$v->id => "{$v->brand} {$v->model} ({$v->license_plate})"]))
+                            ->required()
+                            ->searchable(),
+                        Select::make('employee_id')
+                            ->label('Conducteur (Optionnel)')
+                            ->options(function (ViewRecord $livewire) {
+                                $options = [];
+                                $chantier = $livewire->getRecord();
+                                $employees = $chantier->members()->with(['currentContract', 'qualifications'])->get();
+                                foreach ($employees as $emp) {
+                                    $hasPermis = $emp->qualifications->contains(function ($q) {
+                                        return $q->type === QualificationType::PERMIS && $q->isActive();
+                                    });
+                                    if (! $hasPermis) {
+                                        continue;
+                                    }
+                                    $job = $emp->currentContract?->job_title ?? 'Non défini';
+                                    $options[$emp->id] = "{$emp->full_name} | {$job}";
+                                }
+
+                                return $options;
+                            })
+                            ->searchable(),
+                        DatePicker::make('started_at')
+                            ->label('Date de début')
+                            ->default(now())
+                            ->required(),
+                        DatePicker::make('ended_at')
+                            ->label('Date de fin (Prévue)'),
+                    ])
+                    ->action(function (Chantier $record, array $data) {
+                        if (! empty($data['employee_id'])) {
+                            $driver = Employee::with('qualifications')->find($data['employee_id']);
+                            $hasPermis = $driver?->qualifications->contains(function ($q) {
+                                return $q->type === QualificationType::PERMIS && $q->isActive();
+                            });
+                            if (! $hasPermis) {
+                                Notification::make()
+                                    ->title('Affectation refusée')
+                                    ->body('Le conducteur sélectionné ne dispose pas d\'un permis de conduire actif.')
+                                    ->danger()
+                                    ->send();
+
+                                return;
+                            }
+                        }
+
+                        VehicleAssignment::create([
+                            'vehicle_id' => $data['vehicle_id'],
+                            'chantier_id' => $record->id,
+                            'employee_id' => $data['employee_id'] ?? null,
+                            'started_at' => $data['started_at'],
+                            'ended_at' => $data['ended_at'] ?? null,
+                            'status' => AssignmentStatus::ACTIVE,
+                            'purpose' => 'Affectation Chantier '.$record->reference,
+                            'start_odometer' => Vehicle::find($data['vehicle_id'])->odometer ?? 0,
+                        ]);
+
+                        Notification::make()
+                            ->title('Véhicule assigné au chantier')
+                            ->success()
+                            ->send();
+                    }),
+
+                Action::make('generate_pv')
+                    ->label('PV de Réception')
+                    ->icon(Phosphor::Handshake)
+                    ->color('warning')
+                    ->requiresConfirmation()
+                    ->modalHeading('Générer le Procès-Verbal de Réception')
+                    ->modalDescription('Le PV sera généré et une demande de signature sera envoyée par email.')
+                    ->form([
+                        Toggle::make('is_multi')
+                            ->label('Signature multi-signataires')
+                            ->default(false)
+                            ->live(),
+                        Repeater::make('signers')
+                            ->label('Signataires')
+                            ->schema([
+                                TextInput::make('name')
+                                    ->label('Nom')
+                                    ->required(),
+                                TextInput::make('email')
+                                    ->label('Email')
+                                    ->email()
+                                    ->required(),
+                                Select::make('role')
+                                    ->label('Rôle')
+                                    ->options([
+                                        'Signataire' => 'Signataire',
+                                        'Client' => 'Client',
+                                        'Maître d\'ouvrage' => 'Maître d\'ouvrage',
+                                        'Autre' => 'Autre',
+                                    ])
+                                    ->default('Client'),
+                            ])
+                            ->columns(3)
+                            ->defaultItems(0)
+                            ->addActionLabel('Ajouter un signataire')
+                            ->visible(fn (Get $get) => $get('is_multi')),
+                    ])
+                    ->action(function (Chantier $record, array $data, ChantierDocumentService $service, SignatureService $signatureService) {
+                        $relativePath = $service->generateHandoverProtocol($record);
+
+                        if ($data['is_multi'] ?? false) {
+                            $signatureService->requestMultiSignature(
                                 model: $record,
                                 type: SignatureType::AUTOGRAPH,
-                                email: $email,
-                                name: $name,
+                                signers: $data['signers'],
                                 documentPath: $relativePath
                             );
 
                             Notification::make()
                                 ->title('PV de Réception généré')
-                                ->body("Une demande de signature a été envoyée au client ({$email}).")
+                                ->body('Une demande de signature multi-signataires a été envoyée.')
                                 ->success()
                                 ->send();
                         } else {
+                            $client = $record->client;
+                            $contact = $client?->getPrimaryContact();
+                            $email = $contact?->email ?? $client?->email;
+                            $name = $contact ? trim("{$contact->first_name} {$contact->last_name}") : ($client?->name ?? 'Client');
+
+                            if ($email) {
+                                $signatureService->driver()->requestSignature(
+                                    model: $record,
+                                    type: SignatureType::AUTOGRAPH,
+                                    email: $email,
+                                    name: $name,
+                                    documentPath: $relativePath
+                                );
+
+                                Notification::make()
+                                    ->title('PV de Réception généré')
+                                    ->body("Une demande de signature a été envoyée au client ({$email}).")
+                                    ->success()
+                                    ->send();
+                            } else {
+                                Notification::make()
+                                    ->title('PV de Réception généré')
+                                    ->body("Le PV a été généré, mais le client n'a pas d'adresse email renseignée pour l'envoi de la signature.")
+                                    ->warning()
+                                    ->send();
+                            }
+                        }
+
+                        return response()->download(Storage::disk(ChantierDocumentService::getDisk())->path($relativePath));
+                    }),
+
+                Action::make('create_avenant')
+                    ->label('Créer un avenant')
+                    ->icon(Phosphor::Plus)
+                    ->color('primary')
+                    ->schema([
+                        Select::make('order_id')
+                            ->label('Commande principale')
+                            ->options(fn (Chantier $record) => CustomerOrder::where('chantier_id', $record->id)->pluck('reference', 'id'))
+                            ->searchable()
+                            ->required(),
+                    ])
+                    ->action(function (Chantier $record, array $data) {
+                        $order = CustomerOrder::find($data['order_id']);
+
+                        $quote = CustomerQuote::create([
+                            'client_id' => $record->client_id,
+                            'chantier_id' => $record->id,
+                            'parent_order_id' => $order->id,
+                            'reference' => app(QuoteService::class)->generateReferenceAvenant(),
+                            'status' => QuoteStatus::DRAFT,
+                            'expires_at' => now()->addDays(30),
+                            'responsable_id' => auth()->id(),
+                            'is_avenant' => true,
+                        ]);
+
+                        Notification::make()
+                            ->title('Avenant créé')
+                            ->body("Ajoutez les travaux supplémentaires, puis envoyez l'avenant au client.")
+                            ->success()
+                            ->send();
+
+                        return redirect(CustomerQuoteResource::getUrl('edit', ['record' => $quote]));
+                    }),
+
+                Action::make('generate_doe')
+                    ->label('Générer le DOE')
+                    ->icon(Phosphor::Archive)
+                    ->color('primary')
+                    ->requiresConfirmation()
+                    ->modalHeading('Générer le Dossier d\'Ouvrage Exécuté')
+                    ->modalDescription('Cette action va compiler tous les plans et fiches techniques validés en une seule archive ZIP.')
+                    ->action(function (Chantier $record, DoeDocumentService $service) {
+                        try {
+                            $path = $service->compileDoe($record);
+
+                            return response()->download($path);
+                        } catch (\Exception $e) {
                             Notification::make()
-                                ->title('PV de Réception généré')
-                                ->body("Le PV a été généré, mais le client n'a pas d'adresse email renseignée pour l'envoi de la signature.")
-                                ->warning()
+                                ->danger()
+                                ->title('Erreur lors de la génération du DOE')
+                                ->body($e->getMessage())
                                 ->send();
                         }
-                    }
-
-                    return response()->download(Storage::disk(ChantierDocumentService::getDisk())->path($relativePath));
-                }),
-
-            Action::make('create_avenant')
-                ->label('Créer un avenant')
-                ->icon(Phosphor::Plus)
-                ->color('primary')
-                ->schema([
-                    Select::make('order_id')
-                        ->label('Commande principale')
-                        ->options(fn (Chantier $record) => CustomerOrder::where('chantier_id', $record->id)->pluck('reference', 'id'))
-                        ->searchable()
-                        ->required(),
-                ])
-                ->action(function (Chantier $record, array $data) {
-                    $order = CustomerOrder::find($data['order_id']);
-
-                    $quote = CustomerQuote::create([
-                        'client_id' => $record->client_id,
-                        'chantier_id' => $record->id,
-                        'parent_order_id' => $order->id,
-                        'reference' => app(QuoteService::class)->generateReferenceAvenant(),
-                        'status' => QuoteStatus::DRAFT,
-                        'expires_at' => now()->addDays(30),
-                        'responsable_id' => auth()->id(),
-                        'is_avenant' => true,
-                    ]);
-
-                    Notification::make()
-                        ->title('Avenant créé')
-                        ->body("Ajoutez les travaux supplémentaires, puis envoyez l'avenant au client.")
-                        ->success()
-                        ->send();
-
-                    return redirect(CustomerQuoteResource::getUrl('edit', ['record' => $quote]));
-                }),
-
-            Action::make('generate_doe')
-                ->label('Générer le DOE')
-                ->icon(Phosphor::Archive)
-                ->color('primary')
-                ->requiresConfirmation()
-                ->modalHeading('Générer le Dossier d\'Ouvrage Exécuté')
-                ->modalDescription('Cette action va compiler tous les plans et fiches techniques validés en une seule archive ZIP.')
-                ->action(function (Chantier $record, DoeDocumentService $service) {
-                    try {
-                        $path = $service->compileDoe($record);
-
-                        return response()->download($path);
-                    } catch (\Exception $e) {
-                        Notification::make()
-                            ->danger()
-                            ->title('Erreur lors de la génération du DOE')
-                            ->body($e->getMessage())
-                            ->send();
-                    }
-                }),
+                    }),
                 EditAction::make(),
             ])
                 ->label('Actions'),

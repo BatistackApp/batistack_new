@@ -2,16 +2,16 @@
 
 namespace App\Filament\Laser\Resources\LaserQuotes\Tables;
 
-use App\Enums\Laser\QuoteStatus;
 use App\Enums\Core\SignatureType;
+use App\Enums\Laser\QuoteStatus;
 use App\Models\Laser\LaserQuote;
-use App\Services\Laser\LaserQuoteService;
 use App\Services\Core\SignatureService;
 use App\Services\Laser\LaserDocumentationService;
-use Filament\Notifications\Notification;
+use App\Services\Laser\LaserQuoteService;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\ViewAction;
+use Filament\Notifications\Notification;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
@@ -70,6 +70,7 @@ class LaserQuotesTable
                             $email = $contact?->email ?? $record->client?->email;
                             if (! $email) {
                                 Notification::make()->warning()->title('Le client n’a pas d’adresse email')->send();
+
                                 return;
                             }
                             $record->update(['status' => QuoteStatus::SENT]);
@@ -87,7 +88,7 @@ class LaserQuotesTable
                         ->modalHeading('Transformer en commande')
                         ->modalDescription('Une commande sera créée avec les lignes du devis.')
                         ->action(function (LaserQuote $record) {
-                             $order = app(LaserQuoteService::class)->convertToOrder($record);
+                            $order = app(LaserQuoteService::class)->convertToOrder($record);
 
                             Notification::make()
                                 ->title('Commande créée : '.$order->reference)

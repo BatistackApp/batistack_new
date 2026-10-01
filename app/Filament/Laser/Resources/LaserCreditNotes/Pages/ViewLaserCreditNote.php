@@ -2,8 +2,8 @@
 
 namespace App\Filament\Laser\Resources\LaserCreditNotes\Pages;
 
-use App\Jobs\Laser\SyncLaserAccountingJob;
 use App\Filament\Laser\Resources\LaserCreditNotes\LaserCreditNoteResource;
+use App\Jobs\Laser\SyncLaserAccountingJob;
 use Filament\Actions;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;

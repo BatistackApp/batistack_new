@@ -3,6 +3,7 @@
 use App\Enums\Core\SignatureStatus;
 use App\Enums\Core\SignatureType;
 use App\Enums\Core\UnitType;
+use ToneGabes\Filament\Icons\Enums\Phosphor;
 
 it('verifie les valeurs de l\'enum SignatureStatus', function () {
     expect(SignatureStatus::PENDING->value)->toBe('pending')
@@ -23,7 +24,7 @@ it('verifie les valeurs de l\'enum SignatureStatus', function () {
         ->and(SignatureStatus::EXPIRED->getColor())->toBe('gray')
         ->and(SignatureStatus::VALIDATED->getColor())->toBe('info');
 
-    expect(SignatureStatus::VALIDATED->getIcon())->toBe(\ToneGabes\Filament\Icons\Enums\Phosphor::CheckCircle);
+    expect(SignatureStatus::VALIDATED->getIcon())->toBe(Phosphor::CheckCircle);
 });
 
 it('verifie les valeurs de l\'enum SignatureType', function () {

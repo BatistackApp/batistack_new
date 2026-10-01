@@ -20,8 +20,8 @@ it('handles invoice synchronization through the accounting service', function ()
         'total_tva' => 20,
         'total_ttc' => 120,
     ]);
-    $service = \Mockery::mock(LaserInvoiceAccountingService::class);
-    $service->expects('syncInvoice')->once()->with(\Mockery::on(fn ($value) => $value->is($invoice)));
+    $service = Mockery::mock(LaserInvoiceAccountingService::class);
+    $service->expects('syncInvoice')->once()->with(Mockery::on(fn ($value) => $value->is($invoice)));
     app()->instance(LaserInvoiceAccountingService::class, $service);
 
     (new SyncLaserAccountingJob('invoice', $invoice->id))->handle($service);

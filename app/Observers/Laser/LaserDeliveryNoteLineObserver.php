@@ -2,8 +2,8 @@
 
 namespace App\Observers\Laser;
 
-use App\Models\Laser\LaserDeliveryNoteLine;
 use App\Jobs\Laser\GenerateLaserDocumentJob;
+use App\Models\Laser\LaserDeliveryNoteLine;
 use Exception;
 use Illuminate\Support\Facades\DB;
 

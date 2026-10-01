@@ -3,7 +3,6 @@
 namespace App\Filament\Laser\Resources\LaserInvoices\Schemas;
 
 use Filament\Infolists\Components\TextEntry;
-use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Schema;
 use Illuminate\Database\Eloquent\Model;
 use MortalKiller\FilamentPageHeader\Components\Header;

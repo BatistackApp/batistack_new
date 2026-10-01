@@ -102,6 +102,7 @@ class DxfParserService
                     $this->parseError = 'Fichier DXF mal formé : code de groupe invalide à la ligne '.($i + 1).'.';
                     break;
                 }
+
                 continue;
             }
 

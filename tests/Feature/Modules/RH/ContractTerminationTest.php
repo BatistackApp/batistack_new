@@ -5,6 +5,7 @@ use App\Enums\RH\TerminationType;
 use App\Models\RH\Contract;
 use App\Models\RH\Employee;
 use App\Models\User;
+use App\Notifications\RH\ContractTerminatedNotification;
 use App\Services\RH\ContractTerminationService;
 use App\Services\RH\RHDocumentService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -78,7 +79,7 @@ it('terminates a CDD contract without notice', function () {
     expect($terminated->isTerminated())->toBeTrue();
     expect($terminated->isActive())->toBeFalse();
     expect(Contract::query()->active()->whereKey($terminated->id)->exists())->toBeFalse();
-    Notification::assertSentTo($employee, \App\Notifications\RH\ContractTerminatedNotification::class);
+    Notification::assertSentTo($employee, ContractTerminatedNotification::class);
 });
 
 it('rejects CDD termination for a CDI contract', function () {
@@ -144,7 +145,7 @@ it('closes an expired CDD retroactively', function () {
         ->and($closed->terminated_at->toDateString())->toBe($closed->end_date->toDateString())
         ->and($closed->isTerminated())->toBeTrue()
         ->and(Contract::query()->active()->whereKey($closed->id)->exists())->toBeFalse();
-    Notification::assertSentTo($employee, \App\Notifications\RH\ContractTerminatedNotification::class);
+    Notification::assertSentTo($employee, ContractTerminatedNotification::class);
 });
 
 it('excludes a terminated CDD from the active scope', function () {

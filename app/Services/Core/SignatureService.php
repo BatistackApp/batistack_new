@@ -17,8 +17,8 @@ class SignatureService extends Manager
         $provider = $signature->metadata['provider'] ?? null;
 
         return match ($provider) {
-            'local' => app(Providers\LocalSignatureProvider::class)->verify($signature),
-            'docuseal' => app(Providers\DocusealProvider::class)->verify($signature),
+            'local' => app(LocalSignatureProvider::class)->verify($signature),
+            'docuseal' => app(DocusealProvider::class)->verify($signature),
             default => $this->driver()->verify($signature),
         };
     }
@@ -27,8 +27,8 @@ class SignatureService extends Manager
     {
         $provider = $signature->metadata['provider'] ?? null;
         $driver = match ($provider) {
-            'local' => app(Providers\LocalSignatureProvider::class),
-            'docuseal' => app(Providers\DocusealProvider::class),
+            'local' => app(LocalSignatureProvider::class),
+            'docuseal' => app(DocusealProvider::class),
             default => $this->driver(),
         };
 
@@ -36,6 +36,7 @@ class SignatureService extends Manager
             $driver->refreshChecksum($signature);
         }
     }
+
     /**
      * Get the default driver name.
      */

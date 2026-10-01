@@ -3,7 +3,6 @@
 namespace App\Filament\Laser\Widgets;
 
 use App\Enums\Laser\InvoiceStatus;
-use App\Models\Laser\LaserInvoice;
 use App\Models\Tiers\ThirdParty;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
