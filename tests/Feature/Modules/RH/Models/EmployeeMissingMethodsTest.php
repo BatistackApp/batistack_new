@@ -3,7 +3,6 @@
 use App\Models\RH\Employee;
 use App\Models\RH\MedicalVisit;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\DB;
 
 uses(RefreshDatabase::class);
 

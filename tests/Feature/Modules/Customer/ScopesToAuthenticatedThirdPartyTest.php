@@ -2,29 +2,15 @@
 
 namespace Tests\Feature\Customer;
 
-use App\Filament\Customer\Concerns\ScopesToAuthenticatedThirdParty;
 use App\Models\Tiers\Contact;
 use App\Models\Tiers\ThirdParty;
 use App\Models\User;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Schema;
+use Tests\Feature\Modules\Customer\DummyModel;
+use Tests\Feature\Modules\Customer\DummyResource;
 
 uses(RefreshDatabase::class);
-
-class DummyModel extends Model
-{
-    protected $table = 'dummy_table';
-
-    protected $guarded = [];
-}
-
-class DummyResource extends \Filament\Resources\Resource
-{
-    protected static ?string $model = DummyModel::class;
-
-    use ScopesToAuthenticatedThirdParty;
-}
 
 beforeEach(function () {
     Schema::create('dummy_table', function ($table) {

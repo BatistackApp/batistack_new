@@ -9,10 +9,11 @@ use App\Enums\Laser\InvoiceStatus as LaserInvoiceStatus;
 use App\Exceptions\Commerce\AllocationOverflowException;
 use App\Models\Commerce\Payment;
 use App\Models\Commerce\PaymentAllocation;
+use App\Models\Laser\LaserInvoice;
+use App\Services\Laser\LaserPaymentAccountingService;
 use DB;
 use Illuminate\Database\Eloquent\Model;
 use Log;
-use App\Services\Laser\LaserPaymentAccountingService;
 
 class PaymentService
 {
@@ -29,7 +30,7 @@ class PaymentService
                 throw new \InvalidArgumentException('Seul un paiement terminé peut être alloué.');
             }
 
-            if ($payable instanceof \App\Models\Laser\LaserInvoice && $payment->type !== PaymentType::IN) {
+            if ($payable instanceof LaserInvoice && $payment->type !== PaymentType::IN) {
                 throw new \InvalidArgumentException('Seul un encaissement client peut être affecté à une facture Laser.');
             }
 
@@ -64,11 +65,11 @@ class PaymentService
             if ($totalAllocated >= ($targetAmount - 0.05)) {
                 if (method_exists($payable, 'update')) {
                     $statusUpdate = [
-                        'status' => $payable instanceof \App\Models\Laser\LaserInvoice
+                        'status' => $payable instanceof LaserInvoice
                             ? LaserInvoiceStatus::PAID
                             : InvoiceStatus::PAID,
                     ];
-                    $payable instanceof \App\Models\Laser\LaserInvoice
+                    $payable instanceof LaserInvoice
                         ? $payable->updateQuietly($statusUpdate)
                         : $payable->update($statusUpdate);
                     Log::info('Invoice PAID', ['invoice' => $payable->id]);
@@ -89,15 +90,15 @@ class PaymentService
             ->where('payable_id', $payable->id)
             ->sum('allocated_amount');
 
-            $remaining = $targetAmount - $existing;
+        $remaining = $targetAmount - $existing;
 
-            if ($payable instanceof \App\Models\Laser\LaserInvoice && $amount > $remaining + 0.00001) {
-                throw new AllocationOverflowException(
-                    "Cannot allocate {$amount}€ (only {$remaining}€ remaining)"
-                );
-            }
+        if ($payable instanceof LaserInvoice && $amount > $remaining + 0.00001) {
+            throw new AllocationOverflowException(
+                "Cannot allocate {$amount}€ (only {$remaining}€ remaining)"
+            );
+        }
 
-            if ($amount > $remaining + 0.05) {
+        if ($amount > $remaining + 0.05) {
             throw new AllocationOverflowException(
                 "Cannot allocate {$amount}€ (only {$remaining}€ remaining)"
             );

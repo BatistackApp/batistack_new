@@ -218,10 +218,10 @@ class Employee extends Model implements HasMedia, Signable
 
     public function getSelectLabel(): string
     {
-        $label = $this->last_name . ' ' . $this->first_name;
+        $label = $this->last_name.' '.$this->first_name;
 
         if ($this->currentContract?->job_title) {
-            $label .= ' · ' . $this->currentContract->job_title;
+            $label .= ' · '.$this->currentContract->job_title;
         }
 
         $label .= $this->is_active ? ' — Disponible' : ' — Indisponible';

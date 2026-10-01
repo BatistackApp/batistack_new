@@ -1,23 +1,13 @@
 <?php
 
 use App\Models\Core\Setting;
-use App\Services\RH\GoogleCloudVisionOcrService;
 use Google\Cloud\Vision\V1\AnnotateFileResponse;
 use Google\Cloud\Vision\V1\AnnotateImageResponse;
 use Google\Cloud\Vision\V1\BatchAnnotateFilesResponse;
 use Google\Cloud\Vision\V1\TextAnnotation;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
-
-class TestableOcrService extends GoogleCloudVisionOcrService
-{
-    public $mockClient;
-
-    protected function createClient(array $clientConfig)
-    {
-        return $this->mockClient;
-    }
-}
+use Tests\Feature\TestableOcrService;
 
 test('extractData handles multi-page PDF using batchAnnotateFiles', function () {
     // 1. Setup mock Settings to enable OCR

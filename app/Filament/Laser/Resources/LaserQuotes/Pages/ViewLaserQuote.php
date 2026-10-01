@@ -2,12 +2,12 @@
 
 namespace App\Filament\Laser\Resources\LaserQuotes\Pages;
 
-use App\Enums\Laser\QuoteStatus;
 use App\Enums\Core\SignatureType;
+use App\Enums\Laser\QuoteStatus;
 use App\Filament\Laser\Resources\LaserQuotes\LaserQuoteResource;
-use App\Services\Laser\LaserQuoteService;
 use App\Services\Core\SignatureService;
 use App\Services\Laser\LaserDocumentationService;
+use App\Services\Laser\LaserQuoteService;
 use Filament\Actions;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
@@ -37,29 +37,31 @@ class ViewLaserQuote extends ViewRecord
                 ->action(function ($record) {
                     if (! $record->lines()->exists()) {
                         Notification::make()->danger()->title('Le devis ne contient aucune ligne')->send();
+
                         return;
                     }
                     $contact = $record->client?->getPrimaryContact();
                     $email = $contact?->email ?? $record->client?->email;
                     if (! $email) {
                         Notification::make()->warning()->title('Le client n’a pas d’adresse email')->send();
+
                         return;
                     }
-                     $previousStatus = $record->status;
-                     $path = null;
+                    $previousStatus = $record->status;
+                    $path = null;
 
-                     try {
-                         $record->update(['status' => QuoteStatus::SENT]);
-                         $path = app(LaserDocumentationService::class)->generateQuotePdf($record);
-                         app(SignatureService::class)->requestSignature($record, SignatureType::AUTOGRAPH, $email, $contact ? trim("{$contact->first_name} {$contact->last_name}") : $record->client->name, $path);
-                         Notification::make()->success()->title('Devis envoyé pour signature')->send();
-                     } catch (\Throwable $exception) {
-                         $record->updateQuietly(['status' => $previousStatus]);
-                         if ($path) {
-                             Storage::disk(LaserDocumentationService::getDisk())->delete($path);
-                         }
-                         Notification::make()->danger()->title('Échec de l’envoi pour signature')->body($exception->getMessage())->send();
-                     }
+                    try {
+                        $record->update(['status' => QuoteStatus::SENT]);
+                        $path = app(LaserDocumentationService::class)->generateQuotePdf($record);
+                        app(SignatureService::class)->requestSignature($record, SignatureType::AUTOGRAPH, $email, $contact ? trim("{$contact->first_name} {$contact->last_name}") : $record->client->name, $path);
+                        Notification::make()->success()->title('Devis envoyé pour signature')->send();
+                    } catch (\Throwable $exception) {
+                        $record->updateQuietly(['status' => $previousStatus]);
+                        if ($path) {
+                            Storage::disk(LaserDocumentationService::getDisk())->delete($path);
+                        }
+                        Notification::make()->danger()->title('Échec de l’envoi pour signature')->body($exception->getMessage())->send();
+                    }
                 }),
 
             Actions\Action::make('convertToOrder')
@@ -71,7 +73,7 @@ class ViewLaserQuote extends ViewRecord
                 ->modalHeading('Transformer ce devis en commande')
                 ->modalDescription('Une commande sera créée avec les lignes du devis. Cette action est irréversible.')
                 ->action(function ($record) {
-                     $order = app(LaserQuoteService::class)->convertToOrder($record);
+                    $order = app(LaserQuoteService::class)->convertToOrder($record);
 
                     Notification::make()
                         ->title('Commande créée : '.$order->reference)

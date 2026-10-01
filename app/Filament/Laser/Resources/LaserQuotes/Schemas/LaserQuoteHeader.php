@@ -2,7 +2,6 @@
 
 namespace App\Filament\Laser\Resources\LaserQuotes\Schemas;
 
-use App\Enums\Laser\QuoteStatus;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Schema;
 use Illuminate\Database\Eloquent\Model;

@@ -3,6 +3,7 @@
 use App\Models\Laser\LaserMaterial;
 use App\Models\Laser\LaserQuote;
 use App\Models\Laser\LaserQuoteLine;
+use App\Services\Laser\BoundingBoxCalculator;
 use App\Services\Laser\DxfImportResult;
 use App\Services\Laser\DxfParserService;
 use App\Services\Laser\DxfToSvgService;
@@ -978,7 +979,7 @@ it('returns empty string for zero dimensions', function () {
 // ============================================================
 
 it('calculates correct bounding box for polyline with large bulge via shared calculator', function () {
-    $calculator = app(\App\Services\Laser\BoundingBoxCalculator::class);
+    $calculator = app(BoundingBoxCalculator::class);
 
     $entities = [
         [

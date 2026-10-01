@@ -83,7 +83,7 @@ class InterventionInfolist
                                             ->schema([
                                                 TextEntry::make('workers_sum_hours')
                                                     ->label('Heures totales')
-                                                    ->getStateUsing(fn ($record) => $record->workers->sum('hours_worked') . ' h')
+                                                    ->getStateUsing(fn ($record) => $record->workers->sum('hours_worked').' h')
                                                     ->placeholder('0 h'),
                                                 TextEntry::make('workers_sum_cost')
                                                     ->label('Coût main d\'œuvre')

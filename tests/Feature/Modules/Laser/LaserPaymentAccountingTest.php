@@ -1,8 +1,10 @@
 <?php
 
 use App\Enums\Laser\InvoiceStatus;
+use App\Exceptions\Commerce\AllocationOverflowException;
 use App\Models\Accounting\EcritureComptable;
 use App\Models\Commerce\Payment;
+use App\Models\Commerce\PaymentAllocation;
 use App\Models\Core\Company;
 use App\Models\Laser\LaserInvoice;
 use App\Models\Tiers\ThirdParty;
@@ -64,7 +66,7 @@ it('rejects an allocation above the payment amount without persistence', functio
         ->toThrow(InvalidArgumentException::class);
 
     expect($payment->allocations()->count())->toBe(0)
-        ->and(EcritureComptable::where('reconcilable_type', (new \App\Models\Commerce\PaymentAllocation)->getMorphClass())->count())->toBe(0)
+        ->and(EcritureComptable::where('reconcilable_type', (new PaymentAllocation)->getMorphClass())->count())->toBe(0)
         ->and($invoice->fresh()->status)->toBe(InvoiceStatus::VALIDATED);
 });
 
@@ -137,7 +139,7 @@ it('rejects allocations on a cancelled payment without creating accounting entri
     expect($payment->fresh()->allocations()->count())->toBe(0)
         ->and(EcritureComptable::where(
             'reconcilable_type',
-            (new \App\Models\Commerce\PaymentAllocation)->getMorphClass(),
+            (new PaymentAllocation)->getMorphClass(),
         )->count())->toBe(0);
 });
 
@@ -154,5 +156,5 @@ it('rejects a laser overpayment instead of creating an unlettered entry', functi
     $payment = paymentForLaserInvoice($this->client, 120.04);
 
     expect(fn () => app(PaymentService::class)->allocatePayment($payment, $invoice, 120.04))
-        ->toThrow(\App\Exceptions\Commerce\AllocationOverflowException::class);
+        ->toThrow(AllocationOverflowException::class);
 });

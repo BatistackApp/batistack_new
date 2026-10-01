@@ -4,7 +4,6 @@ namespace App\Filament\Laser\Widgets;
 
 use App\Enums\Laser\InvoiceStatus;
 use App\Enums\Laser\OrderStatus;
-use App\Enums\Laser\QuoteStatus;
 use App\Models\Laser\LaserInvoice;
 use App\Models\Laser\LaserOrder;
 use App\Models\Laser\LaserQuote;

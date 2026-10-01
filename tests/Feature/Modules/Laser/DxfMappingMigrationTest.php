@@ -129,7 +129,7 @@ it('maps DXF entities 1:1 by running the actual migration propagation', function
 
     // Invoke the ACTUAL migration's propagation method via reflection
     $migration = require database_path('migrations/2026_09_15_110000_add_dxf_entities_to_downstream_laser_tables.php');
-    $reflection = new \ReflectionClass($migration);
+    $reflection = new ReflectionClass($migration);
     $method = $reflection->getMethod('propagateDxfEntities');
     $method->setAccessible(true);
     $method->invoke($migration);
@@ -231,7 +231,7 @@ it('handles more order lines than quote lines gracefully via actual propagation'
 
     // Invoke the ACTUAL migration's propagation method via reflection
     $migration = require database_path('migrations/2026_09_15_110000_add_dxf_entities_to_downstream_laser_tables.php');
-    $reflection = new \ReflectionClass($migration);
+    $reflection = new ReflectionClass($migration);
     $method = $reflection->getMethod('propagateDxfEntities');
     $method->setAccessible(true);
     $method->invoke($migration);
@@ -354,7 +354,7 @@ it('preserves row positions when some quote lines have NULL dxf_entities via act
 
     // Invoke the ACTUAL migration's propagation method via reflection
     $migration = require database_path('migrations/2026_09_15_110000_add_dxf_entities_to_downstream_laser_tables.php');
-    $reflection = new \ReflectionClass($migration);
+    $reflection = new ReflectionClass($migration);
     $method = $reflection->getMethod('propagateDxfEntities');
     $method->setAccessible(true);
     $method->invoke($migration);
