@@ -5,6 +5,7 @@ namespace App\Filament\Salarie\Resources;
 use App\Filament\Salarie\Resources\ContractResource\Pages\ListContracts;
 use App\Filament\Salarie\Resources\ContractResource\Pages\ViewContract;
 use App\Models\RH\Contract;
+use Filament\Actions\ViewAction;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
@@ -147,7 +148,7 @@ class ContractResource extends Resource
                 //
             ])
             ->recordActions([
-                Tables\Actions\ViewAction::make(),
+                ViewAction::make(),
             ])
             ->toolbarActions([
                 //

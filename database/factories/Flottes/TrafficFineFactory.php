@@ -18,7 +18,7 @@ class TrafficFineFactory extends Factory
         return [
             'reference' => $this->faker->unique()->numerify('##########'),
             'infraction_at' => Carbon::now(),
-            'amount' => $this->faker->randomFloat(null, 0, 150),
+            'amount' => $this->faker->randomFloat(2, 1, 150),
             'points_deducted' => $this->faker->randomNumber(),
             'status' => $this->faker->randomElement(FineStatus::class),
             'created_at' => Carbon::now(),

@@ -5,6 +5,7 @@ namespace App\Filament\Salarie\Resources;
 use App\Enums\RH\QualificationType;
 use App\Filament\Salarie\Resources\QualificationResource\Pages\ListQualifications;
 use App\Models\RH\Qualification;
+use Filament\Actions\ViewAction;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
@@ -181,7 +182,7 @@ class QualificationResource extends Resource
                     }),
             ])
             ->recordActions([
-                Tables\Actions\ViewAction::make(),
+                ViewAction::make(),
             ])
             ->toolbarActions([
                 //

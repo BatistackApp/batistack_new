@@ -3,6 +3,11 @@
 namespace App\Filament\RH\Resources\TrainingSessions\RelationManagers;
 
 use App\Enums\RH\TrainingParticipantStatus;
+use Filament\Actions\AttachAction;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DetachAction;
+use Filament\Actions\DetachBulkAction;
+use Filament\Actions\EditAction;
 use Filament\Forms;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Schemas\Schema;
@@ -42,9 +47,9 @@ class ParticipantsRelationManager extends RelationManager
                 //
             ])
             ->headerActions([
-                Tables\Actions\AttachAction::make()
+                AttachAction::make()
                     ->preloadRecordSelect()
-                    ->form(fn (Tables\Actions\AttachAction $action): array => [
+                    ->form(fn (AttachAction $action): array => [
                         $action->getRecordSelect(),
                         Forms\Components\Select::make('status')
                             ->options(TrainingParticipantStatus::class)
@@ -53,12 +58,12 @@ class ParticipantsRelationManager extends RelationManager
                     ]),
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\DetachAction::make(),
+                EditAction::make(),
+                DetachAction::make(),
             ])
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DetachBulkAction::make(),
+                BulkActionGroup::make([
+                    DetachBulkAction::make(),
                 ]),
             ]);
     }

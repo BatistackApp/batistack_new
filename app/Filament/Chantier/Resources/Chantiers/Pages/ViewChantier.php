@@ -91,7 +91,8 @@ class ViewChantier extends ViewRecord
                 ->button()
                 ->color('gray'),
 
-            Action::make('generate_invoice')
+            ActionGroup::make([
+                Action::make('generate_invoice')
                 ->label('Facturer Situation')
                 ->icon(Phosphor::Receipt)
                 ->color('success')
@@ -362,7 +363,9 @@ class ViewChantier extends ViewRecord
                             ->send();
                     }
                 }),
-            EditAction::make(),
+                EditAction::make(),
+            ])
+                ->label('Actions'),
         ];
     }
 
