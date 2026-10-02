@@ -10,6 +10,9 @@ Bienvenue dans la documentation du module **Tiers** de Batistack.
 
 Ce module est la mémoire de votre entreprise concernant vos relations externes. Il regroupe l'ensemble de vos Clients, Fournisseurs et Sous-Traitants, tout en sécurisant vos relations commerciales grâce à des vérifications légales automatisées.
 
+> **Statut 1.0.0 : À valider**
+> Le périmètre couvre le référentiel CRM, les contacts, la conformité et le portail sous-traitant. La collecte automatique avancée des documents légaux reste hors périmètre 1.0.0 tant qu'elle n'est pas validée séparément.
+
 ## 📑 Que trouverez-vous dans ce module ?
 
 Le module Tiers centralise la gestion de vos contacts B2B et B2C :

@@ -10,6 +10,9 @@ Bienvenue dans la documentation du module **Comptabilité** de Batistack.
 
 Ce module transforme la gestion bancaire en comptabilité : il tient un **plan de comptes**, génère automatiquement les **écritures comptables** issues du lettrage bancaire, et produit les **exports** destinés à votre expert-comptable (FEC, Sage 50, Cegid Flow).
 
+> **Statut 1.0.0 : À valider**
+> Le module est inclus dans le périmètre 1.0.0. La validation finale doit porter sur l'équilibre des écritures, le lettrage, les exports FEC/Sage/Cegid et la conservation des données comptables.
+
 > [!NOTE]
 > **Accès depuis le module Banque**
 > Les fonctions comptables se pilotent depuis le panel **Banque**, dans le menu **« Comptabilité »**.

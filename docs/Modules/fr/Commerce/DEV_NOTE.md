@@ -30,15 +30,15 @@ Le module **Commerce** couvre l'intégralité du cycle de vente et d'achat de l'
 *   Multiples Observers (`CustomerQuoteObserver`, `CustomerInvoiceObserver`, etc.) gérant la numérotation automatique et la mise à jour en cascade des statuts de documents liés.
 
 ### 4. Interface Utilisateur (Filament)
-*   **Interfaces 100% complètes** : Le dossier `app/Filament/Commerce` est très riche. Toutes les ressources possèdent leur interface Filament traduite et avec les gestionnaires de relations (Relation Managers).
+*   **Interfaces Filament** : Le dossier `app/Filament/Commerce` contient les ressources et gestionnaires de relations du périmètre commercial. Les parcours UI doivent être validés par rôle avant la RC.
 *   **Workflows automatisés** : Ajout de boutons d'action rapide dans les tableaux pour transformer les documents sans friction.
 *   **Lecteur de Code-barres** : Intégration du scan de code-barres dans les formulaires des Commandes Clients et Factures Fournisseurs pour identifier et insérer rapidement des lignes d'articles.
 *   **Signature Électronique Intégrée** : Bouton d'envoi de devis intégrant une demande de signature numérique (via `LocalSignatureProvider`). Le client reçoit un email, signe sur le portail public, et le devis passe automatiquement en statut `ACCEPTED` déclenchant la suite du processus (création chantier/commande).
 *   **Refonte du Dashboard Commercial** : Les widgets avancés (`laboiteacode`) sont développés (CA avec variance, entonnoir de conversion paramétrable, progression des objectifs mensuels, alertes d'impayés) et **câblés sur le Dashboard** via `getWidgets()` (7 widgets).
 
 ### 5. Tests
-*   Validation complète du module avec 100% de succès sur la gigantesque suite de tests PestPHP (incluant les nouvelles fonctionnalités : rapports PDF, allocations de paiements, annulations, dé-lettrages et paiements Stripe en ligne avec webhooks). Le cycle de vie complet est garanti sans faille logicielle.
+*   Les tests Commerce couvrent notamment les rapports PDF, allocations de paiements, annulations, dé-lettrages et paiements Stripe avec webhooks. La validation finale doit encore couvrir les services externes, les mails et les permissions en environnement de référence.
 *   **Harmonisation des exports PDF** (Issue #329) : En-têtes de documents standardisés (gros titre bleu `#1e40af` + référence) via `pdf.layout`, couleurs homogènes (bleu Batistack partout, suppression du `#575aff` dans la situation), devise unifiée en `€`, accents corrigés (relevé client), pieds de page dupliqués retirés (utilise celui du layout), CSS dupliqués nettoyés. **Implémentation complète des gabarits stubs** : Bon de Commande Fournisseur (`purchase_order`) et Rapport d'Audit Facture Fournisseur (`supplier_invoice_audit`).
 
 ## 🚧 Ce qu'il reste à faire
-*   *(Peaufiner les détails cosmétiques des exports PDF selon retours utilisateurs finaux — fait, voir Issue #329.)*
+*   Valider les parcours complets par rôle et les intégrations PDF, mails, paiement et webhook dans l'environnement de release.

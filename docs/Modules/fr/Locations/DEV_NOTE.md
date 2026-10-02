@@ -33,7 +33,7 @@ Le module **Locations** permet de gérer l'ensemble des locations de matériel (
 *   **Intégration Chantiers** : Création d'un tableau de bord unifié (`DeployedResourcesWidget`) sur la vue détaillée d'un chantier, fusionnant le matériel en propre (Immobilisations) et les locations externes.
 
 ### 5. Tests
-*   Des tests unitaires/fonctionnels exhaustifs couvrent l'analytique et la génération de factures. Tous passent avec succès.
+*   Les tests unitaires/fonctionnels couvrent l'analytique, la génération de factures, les locations sortantes, les pénalités, le comparateur, les automatisations et les états des lieux. Leur exécution de référence est assurée par CI.
 
 ### 6. Locations Sortantes (Location Client)
 *   Création des modèles `OutboundRentalContract` et `OutboundRentalLine`.
@@ -90,7 +90,7 @@ Le module **Locations** permet de gérer l'ensemble des locations de matériel (
 *   **Tests** : `tests/Feature/Modules/Locations/RentalConditionReportTest.php` (7 tests : idempotence, horodatage serveur, accès limité aux chantiers gérés, type/clé invalide, signature, photo, API end-to-end).
 
 ## 🚧 Ce qu'il reste à faire
-*   Tests d'intégration pour les 3 nouvelles automatisations Locations (facturation récurrente, alerte J-3, dépassements/pénalités).
+*   Compléter la validation en environnement de release des automatisations de facturation récurrente, alertes et pénalités.
 
 ## ✅ Tests ajoutés (#340)
 *   **Pénalités** : `RentalCostServiceTest.php` (10 tests : getActiveDays, getPenaltyDays, getCumulativeCost, edge cases).

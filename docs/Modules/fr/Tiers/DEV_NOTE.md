@@ -26,6 +26,7 @@ Le module **Tiers** est le cœur de la relation externe de Batistack. Il central
 *   **Garde-Fou de Contractualisation** : `ContractingGuardService` (blocage dur RJ/LJ, avertissement Sauvegarde/Cessation/non-vérifié) appliqué à la génération des contrats de sous-traitance (`GenerateContractAction`), à la création des bons de commande (`PurchaseService::convertRequestToOrder` + page `CreatePurchaseOrder`) et à l'affectation de sous-traitants aux chantiers (`SubcontractorsRelationManager`).
 *   **Scoring** : `SupplierScoringService` (Scoring Fournisseur basé sur la qualité, délais, litiges).
 *   **Gestion Documentaire** : `TiersDocumentService` centralise les documents obligatoires avec suivi des expirations (notifications automatisées à J-30 et J-7).
+*   **Collecte des documents légaux (#343)** : le parcours de collecte est livré et doit être configuré avec les connecteurs disponibles ; la couverture des APIs externes doit être validée séparément.
 *   **Signature Électronique (Sous-Traitants)** : Intégration avancée de la signature électronique pour les devis et les marchés de sous-traitance afin de contractualiser plus rapidement avec les partenaires externes (Issue #146).
 *   **Portail d'Appels d'Offres Privé** : Publication de consultations pour les sous-traitants qui peuvent soumettre leurs offres chiffrées via leur portail.
 *   **Campagnes d'E-Mailing (CRM)** : Outil de publipostage intégré permettant l'envoi groupé d'emails via une sélection multicritère (Clients, Fournisseurs) avec traitement asynchrone (Job) et suivi d'état des envois (Issue #248).
@@ -41,9 +42,9 @@ Le module **Tiers** est le cœur de la relation externe de Batistack. Il central
 *   **Dashboard CRM (Widgets Avancés)** : Intégration de `laboiteacode/filament-dashboard-widgets` pour afficher les alertes de conformité (Detail List), l'acquisition client (Variance), la qualité de la base (Goal) et la répartition du portefeuille (Composition).
 
 ### 5. Tests
-*   Suite ultra-complète validée à 100% (plus de 233 tests PestPHP pour le module Tiers).
+*   Les tests du module Tiers sont regroupés dans `tests/Feature/Modules/Tiers/`. Le statut vert de la suite complète est validé par CI ; les appels aux APIs externes restent testés selon leur niveau de mock.
 
 ## 🚧 Ce qu'il reste à faire
 
 ## 💡 Idées d'amélioration et Nouvelles Fonctionnalités
-*   **Collecte Automatique des Documents Légaux** : Connecter l'ERP à une API légale tierce (e-Attestations ou Provigis) pour télécharger et mettre à jour automatiquement les Kbis et attestations URSSAF des sous-traitants, annulant le besoin de relance manuelle.
+*   **Connecteurs de conformité supplémentaires** : étendre la collecte légale aux fournisseurs externes et améliorer les reprises sur erreur. La disponibilité dépend des credentials et contrats API.

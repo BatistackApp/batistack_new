@@ -10,6 +10,9 @@ Bienvenue dans la documentation du module **Core** de Batistack.
 
 Ce module est invisible pour la plupart des employés de terrain, mais il constitue la colonne vertébrale technique de l'ERP. C'est ici que sont hébergés tous les paramètres fondamentaux et les moteurs qui font fonctionner les autres modules (Ventes, Chantiers, RH).
 
+> **Statut 1.0.0 : À valider**
+> Le périmètre Core est inclus dans la 1.0.0. La validation finale porte sur les permissions, la piste d'audit, la GED, les signatures et la configuration d'une installation neuve.
+
 ## 📑 Que trouverez-vous dans ce module ?
 
 En tant qu'Administrateur, c'est ici que vous configurerez le comportement global de votre logiciel :

@@ -46,6 +46,7 @@ Le cœur regorge de services essentiels déjà implémentés et fonctionnels :
 *   Les Observers (`CompanyObserver`, `SettingObserver`, `UnitObserver`, `VatRateObserver`) garantissent l'intégrité des données, avec une couverture de tests validant la sécurité et l'invalidation du cache.
 *   La logique de hachage de la signature et le typage strict sont en place.
 *   Couverture complète ajoutée pour `CompanyService` (données d'en-tête de documents) et `GoogleMapsService` (géocodage, matrice de distance, optimisation d'itinéraire).
+*   Les tests de signatures couvrent également les workflows multi-signataires ; la couverture UI et les providers externes doivent être validés séparément.
 
 ### 6. Gestion des Droits et Permissions (Filament Shield)
 *   Intégration de `spatie/laravel-permission` via `bezhansalleh/filament-shield`.
@@ -67,4 +68,4 @@ Le cœur regorge de services essentiels déjà implémentés et fonctionnels :
 *   **Enregistrement sans conflit** : suppression du `->pages([Dashboard::class])` du `CorePanelProvider` (auto-découverte), exclusion de la classe Core dans `config/filament-shield.php`.
 
 ## 💡 Idées d'amélioration et Nouvelles Fonctionnalités
-*   **Workflow Approbations Multiples** : Permettre d'avoir plusieurs signataires sur un même document via le `SignatureService` (actuellement **un seul** signataire : `Signature.user_id`, `SignatureProviderInterface` à email unique, `DocusealProvider` avec un seul `submitter`).
+*   **Signature avancée AES / eIDAS** : renforcer la signature électronique avec vérification d'identité, PAdES et horodatage qualifié. Cette évolution est hors périmètre 1.0.0.

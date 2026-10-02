@@ -10,6 +10,9 @@ Bienvenue dans la documentation du module **Paie** de Batistack.
 
 La paie est l'aboutissement de tout le travail saisi dans l'ERP (les contrats du module RH, les pointages du module GPAO, les absences). Ce module centralise le calcul des bulletins de salaire, la gestion des acomptes, et la génération des exports obligatoires.
 
+> **Statut 1.0.0 : À valider**
+> Le périmètre couvre les bulletins, les calculs, les paiements SEPA, les écritures, les exports et le portail salarié. La télétransmission DSN avancée reste hors périmètre 1.0.0 tant qu'elle n'est pas validée séparément.
+
 ## 📑 Que trouverez-vous dans ce module ?
 
 Le module Paie est conçu pour simplifier la vie de votre service RH et de votre comptable :

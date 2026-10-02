@@ -10,6 +10,9 @@ Bienvenue dans la documentation du module **Locations** de Batistack.
 
 Que vous ayez besoin de louer une grue auprès d'un fournisseur pour un gros chantier (Locations Entrantes) ou que vous décidiez de rentabiliser votre propre matériel en le louant à un confrère (Locations Sortantes), ce module centralise tout.
 
+> **Statut 1.0.0 : À valider**
+> Le périmètre couvre les locations entrantes et sortantes, l'analytique, les pénalités et la facturation interne. La validation finale doit vérifier les commandes planifiées, les dates de facturation et les notifications.
+
 ## 📑 Que trouverez-vous dans ce module ?
 
 Le module est divisé selon le flux de location :

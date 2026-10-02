@@ -10,6 +10,9 @@ Bienvenue dans la documentation du module **Immobilisations** de Batistack.
 
 Ce module est conçu pour gérer l'intégralité du cycle de vie de votre patrimoine (matériel lourd, véhicules, bâtiments, outillage coûteux). Il vous permet d'assurer un suivi rigoureux de sa valeur financière (amortissements) ainsi que de son emplacement physique (chantiers, inventaire).
 
+> **Statut 1.0.0 : À valider**
+> Le périmètre couvre les amortissements, cessions, transferts, inventaires, étiquetage et écritures comptables. La validation finale doit contrôler les calculs, les arrondis et les exports.
+
 ## 📑 Que trouverez-vous dans ce module ?
 
 Le module Immobilisations couvre deux grands axes :
