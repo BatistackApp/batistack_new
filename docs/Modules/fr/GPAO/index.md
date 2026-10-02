@@ -10,6 +10,9 @@ Bienvenue dans la documentation du module **GPAO** (Gestion de Production Assist
 
 Ce module est le cœur de votre activité de fabrication. Il vous permet de transformer vos matières premières en produits finis tout en maîtrisant vos coûts, vos délais et la qualité. Il fait le pont entre les commandes commerciales et le suivi logistique de votre inventaire.
 
+> **Statut 1.0.0 : À valider**
+> Le périmètre couvre les ordres de fabrication, nomenclatures, besoins, atelier, pointage, rebuts et maintenance. La connexion IoT/OPC-UA reste hors périmètre 1.0.0.
+
 ## 📑 Que trouverez-vous dans ce module ?
 
 Le module GPAO couvre l'ensemble du cycle de vie de la fabrication :

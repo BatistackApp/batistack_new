@@ -46,4 +46,6 @@ Le module **Banque** gère la trésorerie de l'entreprise. Il permet de connecte
 *   Le module est fondamentalement complet.
 
 ## 💡 Idées d'amélioration et Nouvelles Fonctionnalités
-*   **Module « Comptabilité » complet** : ✅ **Livré** (Issue #325, branche `feature/accounting-module`). Le `BankReconciliationObserver` génère désormais automatiquement des écritures comptables équilibrées (débit/crédit) lors du lettrage bancaire. L'annulation du lettrage supprime les écritures associées. Voir `docs/Modules/fr/Accounting/DEV_NOTE.md` pour le détail complet.
+*   **Contrôles de trésorerie avancés** : enrichir les alertes, les prévisions et les contrôles de clôture selon les besoins métier.
+
+La comptabilité issue du lettrage bancaire est livrée. Voir `docs/Modules/fr/Accounting/DEV_NOTE.md` pour le périmètre et les limites actuels.

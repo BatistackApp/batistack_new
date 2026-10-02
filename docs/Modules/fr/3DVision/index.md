@@ -12,6 +12,9 @@ Batistack n'est pas seulement un ERP de gestion financière ou RH ; il intègre 
 
 Ce module vous permet d'importer vos plans et maquettes, de les visualiser directement dans votre navigateur, et d'y ajouter des annotations intelligentes reliées à la vie du chantier.
 
+> **Statut 1.0.0 : À valider**
+> Le périmètre couvre l'import, la visualisation, les annotations et les miniatures. La validation finale doit vérifier les formats supportés, les jobs de génération et les permissions d'accès aux maquettes.
+
 ## 📑 Sommaire du module
 
 Découvrez comment tirer le meilleur parti de vos fichiers 3D :

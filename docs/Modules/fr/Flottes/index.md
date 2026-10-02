@@ -12,6 +12,9 @@ Ce module permet de gérer l'intégralité du parc automobile de l'entreprise : 
 
 L'objectif est d'avoir une vision claire des coûts réels de chaque véhicule (TCO), de savoir instantanément qui conduit quoi, et de faciliter le suivi d'entretien et l'optimisation des trajets.
 
+> **Statut 1.0.0 : À valider**
+> Le périmètre couvre les véhicules, affectations, états des lieux, coûts, amendes et alertes d'entretien. Les intégrations GPS et l'optimisation avancée doivent être confirmées séparément.
+
 ## 📑 Que trouverez-vous dans ce module ?
 
 Le module couvre 4 grands aspects de la gestion de flotte :

@@ -50,4 +50,4 @@ Le module **Immobilisations** permet la gestion du patrimoine de l'entreprise (m
 *   **Tests** : `AssetMaintenanceTicketTest` (15 tests) + extensions `ImmobilisationDocumentServiceTest`.
 
 ## 💡 Idées d'amélioration et Nouvelles Fonctionnalités
-*   **Subventions (Issue #138)** : Option de déduction de la subvention de la **base amortissable** (`baseValue`) en plus de la reprise proportionnelle actuellement implémentée (méthode alternative à la norme PCG).
+*   **Méthodes alternatives de subvention** : la reprise proportionnelle au rythme de l'amortissement est livrée. Une déduction directe de la base amortissable (`baseValue`) pourrait être ajoutée comme méthode configurable après validation comptable.

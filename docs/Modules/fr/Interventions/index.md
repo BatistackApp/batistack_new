@@ -10,6 +10,9 @@ Bienvenue dans la documentation du module **Interventions** de Batistack.
 
 Ce module est pensé pour les activités de Service Après-Vente (SAV), de maintenance et de dépannage sur site. Il connecte directement les demandes de vos clients aux tablettes de vos techniciens sur le terrain, tout en fluidifiant la facturation et la gestion des stocks de pièces détachées.
 
+> **Statut 1.0.0 : À valider**
+> Le périmètre couvre les tickets, la facturation, les stocks de pièces, les portails technicien/client, la maintenance prédictive et les contrats récurrents. La validation finale doit couvrir les droits d'accès et le fonctionnement des jobs planifiés.
+
 ## 📑 Que trouverez-vous dans ce module ?
 
 Le module Interventions s'articule autour de trois thématiques principales :

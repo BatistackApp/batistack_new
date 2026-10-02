@@ -34,10 +34,12 @@ Le module **Flottes** gère l'ensemble du parc automobile de l'entreprise (camio
 *   **Bilan Carbone Automatisé (Rapports RSE)** : Nouvelle page Filament (RseReport) croisant les imports de transactions de carburant avec le type de moteur du véhicule (`fuel_type`) pour calculer automatiquement l'empreinte CO2 (kg convertis en Tonnes d'équivalent CO2) de la flotte, répartie par mois et imputée par Chantier.
 
 ### 5. Tests
-*   Plus de 155 tests PestPHP validant l'ensemble de cette logique complexe (100% de réussite).
+*   Les tests Flottes couvrent les affectations, états des lieux, coûts, amendes, maintenance et rapports. La validation navigateur et les intégrations externes doivent être confirmées séparément.
 
 ## 🚀 Ce qu'il reste à faire
 *   Le module est aujourd'hui complet pour une gestion courante de la flotte.
 
 ## 💡 Idées d'amélioration et Nouvelles Fonctionnalités
 *   **Intégration Télématique Avancée** : Remontée des kilomètres et codes erreurs OBD en temps réel via des boîtiers branchés dans les véhicules.
+
+*   **PIN salarié pour les états des lieux** : le PIN salarié et ses contrôles sont disponibles pour sécuriser les parcours mobiles ; les scénarios multi-appareils restent à valider en environnement de release.

@@ -10,6 +10,9 @@ Bienvenue dans la documentation du module **Découpe Laser** de Batistack.
 
 Ce module prend en charge toute l'activité de découpe : du chiffrage d'une pièce à la facturation, en passant par la commande, la livraison et les avoirs. Il est pensé pour les ateliers laser qui vendent des pièces découpées à façon.
 
+> **Statut 1.0.0 : À valider**
+> Le périmètre couvre les matériaux, devis, signature, conversion en commande, livraisons, factures et avoirs. La validation finale doit contrôler les transitions, les quantités livrées et la facturation partielle.
+
 ## 📑 Que trouverez-vous dans ce module ?
 
 Le module suit le cycle commercial de la découpe laser :

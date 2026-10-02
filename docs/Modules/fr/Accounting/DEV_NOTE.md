@@ -59,7 +59,7 @@ Le module **Comptabilité** gère le plan comptable, la génération automatique
     *   Sélecteur d'année + sélecteur de format (FEC / Sage 50 / Cegid Flow).
     *   Bouton « Générer l'export » → téléchargement du fichier.
     *   Bouton « Aperçu » → tableau des écritures avant export.
-*   **`CompteComptableResource`** : CRUD Filament pour le plan comptable (à venir en itération suivante).
+    *   Le plan comptable est consultable via les fonctions comptables disponibles ; aucun CRUD Filament dédié n'est actuellement livré pour modifier le PCG.
 
 ### 7. Tests — Couverture Complète
 *   **60 tests PestPHP**, **145 assertions** — tous verts.
@@ -78,7 +78,7 @@ Le module **Comptabilité** gère le plan comptable, la génération automatique
 | `app/Models/Accounting/CompteComptable.php` | Plan comptable |
 | `app/Models/Accounting/EcritureComptable.php` | Écritures comptables |
 | `app/Enums/Accounting/JournalType.php` | Types de journaux |
-| `app/Enums/Accounting/LetrageStatus.php` | Statuts de lettrage |
+| `app/Enums/Accounting/LettrageStatus.php` | Statuts de lettrage |
 | `app/Services/Accounting/EcritureComptableService.php` | Service d'écritures |
 | `app/Services/Accounting/AccountingPlanService.php` | Mapping catégories→comptes |
 | `app/Services/Accounting/FecExportService.php` | Export FEC |
@@ -99,19 +99,9 @@ php artisan test tests/Feature/Modules/Accounting/
 
 ## ⚠️ CI Configuration
 
-Le module Comptabilité nécessite une entrée `Accounting` dans `.github/workflows/tests.yml` (paths-filter) pour être détecté par CI. Sans cette entrée, les tests ne sont jamais exécutés et Codecov affiche 0%.
+Le module Comptabilité dispose d'une entrée `Accounting` dans `.github/workflows/tests.yml` (paths-filter) et ses tests sont détectés par CI.
 
 L'entrée doit inclure les chemins :
-```yaml
-Accounting:
-  - 'app/Console/Accounting/**'
-  - 'app/Enums/Accounting/**'
-  - 'app/Models/Accounting/**'
-  - 'app/Services/Accounting/**'
-  - 'database/seeders/Accounting/**'
-  - 'tests/Feature/Modules/Accounting/**'
-```
-
 ## 💡 Comment tester par l'UI
 
 1. **Aller** dans le panel **Banque** → menu **Comptabilité** → **Export Comptable**.
