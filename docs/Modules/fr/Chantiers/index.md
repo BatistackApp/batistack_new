@@ -12,6 +12,9 @@ Ce module est le cœur de votre production. C'est ici que l'ERP cesse d'être un
 
 Il permet d'orchestrer la planification, le suivi financier, la remontée d'informations du terrain, et la constitution du Dossier des Ouvrages Exécutés (DOE).
 
+> **Statut 1.0.0 : À valider**
+> Le périmètre couvre le pilotage des chantiers, le journal terrain, le suivi analytique, la QSE, les réserves, le DOE et le portail conducteur. La validation finale doit vérifier l'isolation des chantiers et les documents générés.
+
 ## 📑 Que trouverez-vous dans ce module ?
 
 Le module est découpé pour accompagner la vie de votre projet, de sa signature à sa livraison :

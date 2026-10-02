@@ -12,6 +12,9 @@ Ce module est le centre névralgique de votre gestion matérielle. Que vous gér
 
 Ce module vous permet de garantir la traçabilité complète de ce qui entre et sort de votre entreprise, afin de ne jamais être pris au dépourvu par une rupture de stock.
 
+> **Statut 1.0.0 : À valider**
+> Le périmètre couvre le catalogue, les dépôts, les mouvements, les réservations et les inventaires. La traçabilité avancée des lots et des péremptions reste une évolution à confirmer hors périmètre initial.
+
 ## 📑 Que trouverez-vous dans ce module ?
 
 Le module est découpé en plusieurs grandes fonctionnalités, détaillées dans les pages suivantes :

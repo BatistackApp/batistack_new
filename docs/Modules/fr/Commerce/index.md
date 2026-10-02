@@ -10,6 +10,9 @@ Bienvenue dans la documentation du module **Commerce** de Batistack.
 
 Ce module gère l'intégralité du cycle de vie financier de vos projets, depuis le premier devis envoyé au client jusqu'au recouvrement final, en passant par la gestion des sous-traitants et l'achat de matériaux.
 
+> **Statut 1.0.0 : À valider**
+> Le périmètre 1.0.0 couvre les devis, commandes, factures, avoirs, paiements, relances, achats et portail client. La validation finale doit couvrir les transitions d'état, les PDF, les mails et les droits d'accès.
+
 ## 📑 Que trouverez-vous dans ce module ?
 
 Le module Commerce est le pont entre le terrain (Chantiers) et la comptabilité (Banque). Découvrez son fonctionnement :

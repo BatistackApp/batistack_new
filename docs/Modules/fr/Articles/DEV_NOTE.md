@@ -44,11 +44,11 @@ Le module **Articles & Stocks** permet la gestion complète de l'inventaire, du 
 *   **Impression d'Étiquettes PDF** : Action de masse (BulkAction) disponible sur la ressource Articles pour générer des étiquettes au format A4 (Avery 3x7) ou Thermique (Dymo) incluant le QR Code de l'article pour le scan physique.
 
 ### 5. Tests
-*   100% de succès sur la suite de tests (plus de 130 tests). Couverture complète de la logique métier (calcul du PUMP, prévention des stocks négatifs, seuils d'alerte, transfert de kits, gestion de la récursion infinie pour les compositions, **tests complets de la réservation de stock et blocage des sorties sur stock réservé**, traçabilité des lots/péremption) via `InventoryServiceTest`, `ItemServiceTest`, `StockServiceTest`, `StockBatchTracingTest`, `StockLogisticsTest`, `BomProcurementServiceTest` et `CycleCountingTest`.
+*   Les tests couvrent le PUMP, les stocks négatifs, les seuils, les kits, les compositions, les réservations, les lots/péremptions et le procurement BIM via les suites `InventoryServiceTest`, `ItemServiceTest`, `StockServiceTest`, `StockBatchTracingTest`, `StockLogisticsTest`, `BomProcurementServiceTest` et `CycleCountingTest`.
 *   **Couverture d'Interface** : `ItemLabelsTest` (10 tests : formats A4/Dymo, copies, QR code, fallback barcode/reference, format invalide, collection vide, attributs article).
 
 ## 🚧 Ce qu'il reste à faire
-*   Le module est complet dans sa version actuelle (toutes les issues fermées #214, #215, #216, #276, #277, #278 sont implémentées).
+*   Le périmètre actuel inclut les fonctionnalités livrées des issues #214, #215, #216, #276, #277, #278, #322, #323 et #404 ; une issue fermée ne remplace pas une validation de production.
 
 ## 💡 Idées d'amélioration et Nouvelles Fonctionnalités
 *   **Prévisions par IA** : Anticiper les ruptures de stock selon les chantiers planifiés et la saisonnalité.

@@ -12,6 +12,9 @@ Ce module est le centre de contrôle financier de votre entreprise. Il ne s'agit
 
 Grâce à des fonctionnalités d'Open Banking et d'intelligence artificielle, l'ERP automatise le rapprochement entre ce que vous facturez et ce que vous encaissez réellement.
 
+> **Statut 1.0.0 : À valider**
+> La validation finale porte sur la synchronisation, le rapprochement, les paiements, la trésorerie et les affectations analytiques. Les identifiants et services Open Banking doivent être configurés séparément par environnement.
+
 ## 📑 Que trouverez-vous dans ce module ?
 
 Le module s'articule autour de trois grands piliers :
