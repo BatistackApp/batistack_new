@@ -14,6 +14,25 @@ class VehicleConditionReport extends Model implements HasMedia
 {
     use HasFactory, InteractsWithMedia;
 
+    protected static function booted(): void
+    {
+        static::creating(function (self $report): void {
+            if (blank($report->signature_checksum)) {
+                $report->signature_checksum = hash_hmac(
+                    'sha256',
+                    json_encode([
+                        'assignment_id' => $report->vehicle_assignment_id,
+                        'type' => $report->type,
+                        'odometer' => $report->odometer,
+                        'fuel_level' => $report->fuel_level,
+                        'comment' => $report->comment,
+                    ], JSON_THROW_ON_ERROR),
+                    config('app.key'),
+                );
+            }
+        });
+    }
+
     protected $fillable = [
         'vehicle_assignment_id',
         'type',
