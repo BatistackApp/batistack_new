@@ -41,6 +41,16 @@ test('relation assignment charge affectation', function () {
     expect($report->assignment->id)->toBe($assignment->id);
 });
 
+test('génère un checksum lors de la création sans signature', function () {
+    $report = VehicleConditionReport::factory()->create([
+        'signature_checksum' => null,
+        'signed_at' => null,
+    ]);
+
+    expect($report->signature_checksum)->not()->toBeNull()
+        ->and($report->signed_at)->toBeNull();
+});
+
 test('méthode validateChecksum vérifie intégrité', function () {
     $report = VehicleConditionReport::factory()->create([
         'signature_checksum' => 'abc123def456',
