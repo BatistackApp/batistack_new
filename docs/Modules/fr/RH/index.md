@@ -10,6 +10,9 @@ Bienvenue dans la documentation du module **RH** de Batistack.
 
 Ce module gère le cycle de vie complet de vos collaborateurs, depuis leur embauche jusqu'à leur départ, en passant par leur sécurité, leurs temps de travail et leurs frais professionnels.
 
+> **Statut 1.0.0 : À valider**
+> Le périmètre couvre les contrats, absences, temps, frais, documents, formations et portail salarié. La validation finale doit inclure l'isolation des données, les permissions et les échanges avec la paie.
+
 ## 📑 Que trouverez-vous dans ce module ?
 
 Le module RH s'articule autour de trois grands piliers :

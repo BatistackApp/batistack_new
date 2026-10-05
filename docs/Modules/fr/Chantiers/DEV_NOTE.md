@@ -36,7 +36,7 @@ Le module **Chantiers** est le cœur de la gestion de projets BTP de l'ERP. Il p
     *   **Tableaux** : `ActiveChantiersTable`, `LatestChantiersWidget`.
 
 ### 5. Tests
-*   Testé à 100% avec PestPHP (les 39 tests métier passent avec succès, y compris les tests d'évaluation financière, analytique, de génération de DOE, et de prévention de double-réservation `ResourcePlannerTest`).
+*   Les tests Chantiers couvrent notamment l'évaluation financière, l'analytique, la génération de DOE et la prévention des doubles réservations. Les parcours terrain et l'ergonomie mobile nécessitent une validation navigateur.
 *   Couverture complète des Checklists Dynamiques (`ChecklistTest.php`) avec vérification du rendu, soumission et génération de signature.
 
 ### 6. Audits QSE & Checklists Dynamiques
@@ -50,7 +50,7 @@ Le module **Chantiers** est le cœur de la gestion de projets BTP de l'ERP. Il p
 
 ## 🚧 Ce qu'il reste à faire
 *   Le socle est complet. Les optimisations d'UX (ergonomie mobile pour les conducteurs de travaux) peuvent être affinées.
-*   **Pointage Matériel IoT (Issue #127)** : Le coût d'immobilisation du matériel est imputé au chantier, mais le **tracking physique** d'entrée/sortie du gros matériel (capteurs IoT ou QR Codes) n'est pas implémenté.
+*   L'imputation des coûts de matériel est livrée ; le tracking physique par capteurs IoT ou QR Codes reste hors périmètre 1.0.0.
 
 ## 💡 Idées d'amélioration et Nouvelles Fonctionnalités
 *   **Ergonomie mobile des chantiers** : Affiner l'expérience des conducteurs de travaux sur mobile (formulaires, navigation, hors-ligne PWA).

@@ -44,12 +44,14 @@ Le module **Ressources Humaines (RH)** est l'un des piliers centraux de Batistac
 ### 4. Interface Utilisateur (Filament & Kiosques)
 *   **Panel RH Filament** : Interface de gestion complète des employés, formulaires de saisie, matrice de polyvalence dynamique (validité des habilitations avec code couleur). Intégration d'un Calendrier fusionnant présences et congés.
 *   **Lecteur de Code-barres** : Intégration de `filament-barcode-scanner-field` pour assigner et tracer l'équipement.
-*   **Kiosque Biométrique** : Saisie des heures via une pointeuse tablette avec reconnaissance faciale (`face-api.js`), traitement local, gestion RGPD et brouillons automatiques.
+*   **Kiosque Biométrique** : Saisie des heures via une pointeuse tablette avec reconnaissance faciale (`face-api.js`), traitement local et brouillons automatiques. La validation RGPD et navigateur/production doit être conduite séparément.
 *   **Onboarding Digitalisé** : Espace candidat autonome pour le dépôt des pièces justificatives avant édition du contrat.
 *   **Dashboard Ressources Humaines (Widgets Avancés)** : Intégration de `laboiteacode/filament-dashboard-widgets` pour afficher le volume d'heures supplémentaires (Variance), la conformité légale CACES/Médicale (Goal), la répartition des contrats (Composition) et les demandes en attente (Detail List — widget `PendingHrActionsDetailWidget` listant les notes de frais soumises et les absences **non payées** (`is_paid = false`), avec liens vers les fiches concernées). Disposition optimisée (KPIs en haut, listes d'alertes en pleine largeur en bas).
 
 ### 5. Tests
-*   **100% de succès** sur la suite massive de plus de 130 tests PestPHP. Toutes les fonctionnalités de base et avancées (y compris l'analytique et l'OCR) sont couvertes.
+*   Les tests RH sont regroupés dans `tests/Feature/Modules/RH/` et couvrent les principaux workflows, dont l'analytique et l'OCR. Les intégrations externes nécessitent une validation séparée.
+
+*   **PIN salarié** : définition, modification et réinitialisation du PIN avec limitation des tentatives et tests dédiés.
 
 ## 🚧 Ce qu'il reste à faire
 *   Le module est fonctionnellement très abouti et couvre tous les besoins RH classiques et avancés. Il est en phase de maintenance/amélioration continue.

@@ -59,11 +59,10 @@ Le module **Interventions** permet la gestion complète du service après-vente 
 *   **Tests** : `MaintenanceContractTest` couvre la génération (idempotence, fréquence, fin de contrat, pause), la déduplication des rappels, l'envoi au contact principal et le cycle soft delete de l'observer.
 
 ### 8. Tests
-*   Couverture robuste avec PestPHP. L'intégralité de la logique métier (gestion, facturation, maintenance prédictive, optimisation d'itinéraire), du déstockage automatique, de la facturation, des signatures, et des contraintes d'intégrité passe avec succès (100% de réussite). Les composants mineurs et les observers sont également couverts.
+*   Couverture robuste avec PestPHP des principaux workflows de gestion, facturation, maintenance prédictive, optimisation d'itinéraire, déstockage, signatures et contraintes d'intégrité. Les parcours UI et les intégrations externes doivent être validés séparément.
 
 ## 🚧 Ce qu'il reste à faire
-*   **Tracking GPS des camions (Issue #152)** : La capture GPS existe dans la page offline (`captureGPS()` → opération `UPDATE_GPS` en file) mais le handler serveur **jette les données** (`TechnicienSyncController::updateGPS`, lignes 132-134) : aucune colonne `latitude`/`longitude` sur `Intervention`, aucun modèle de position véhicule. Le socle du module est terminé et opérationnel, y compris avec les signatures cryptographiques et le portail client SAV.
+*   **Tracking GPS des camions** : la synchronisation et le stockage des positions sont livrés pour le périmètre actuel (Issue #337). La télématique temps réel et l'historique avancé des positions restent des évolutions séparées.
 
 ## 💡 Idées d'amélioration et Nouvelles Fonctionnalités
 *   *(Aucune idée d'amélioration pour le moment.)*
-

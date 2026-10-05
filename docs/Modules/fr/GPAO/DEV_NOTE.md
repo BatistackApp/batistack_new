@@ -42,10 +42,10 @@ Le module **GPAO** a pour objectif de gérer les opérations de production ou d'
 *   **Alertes Temps Réel** : Intégration de WebPush (PWA) pour notifier les opérateurs d'urgences directement sur leur terminal, même en arrière-plan.
 
 ### 5. Tests
-*   100% de réussite sur la suite de tests PestPHP (`ManufacturingOrderTest`).
+*   Les tests PestPHP couvrent les ordres de fabrication et les services de production ; la validation complète doit également inclure l'interface atelier et les workflows de maintenance.
 
 ## 🚧 Ce qu'il reste à faire
-*   **mini-GMAO (Issue #231)** : Aucune UI Filament pour lister/gérer les `MachineMaintenanceTicket` (créés uniquement automatiquement par l'observer).
+*   **mini-GMAO** : la gestion des tickets de maintenance est livrée pour le périmètre actuel (Issue #333). Les écrans et workflows complémentaires de gestion du parc machines restent à valider séparément.
 
 ## 💡 Idées d'amélioration et Nouvelles Fonctionnalités
 *   **Connexion IoT et ERP** : Remontée des quantités produites et des temps de cycle directement depuis les API machines (OPC-UA) — non implémenté.

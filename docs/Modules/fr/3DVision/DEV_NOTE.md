@@ -30,7 +30,7 @@ order: 99
   - **Interactivité Live & Polymorphisme** : Les punaises peuvent être liées de manière polymorphique à une `ChantierTask` ou à une `Intervention`. Au survol (Raycasting), un Tooltip affiche les informations de la tâche. Au clic, une fenêtre modale native Filament s'ouvre pour afficher les détails complets de la tâche associée.
 - **Tests** : 
   - Rédaction des tests PestPHP (`BimModelTest.php`).
-  - Validation de la chaîne de téléchargement, attachement polymorphique, et purge disque (100% Passed).
+   - Validation de la chaîne de téléchargement, de l'attachement polymorphique et de la purge disque.
 
 ---
 
@@ -73,11 +73,8 @@ Passerelle Vision 3D → Articles → Achats pour générer des commandes d'acha
 
 ## ⏳ Ce qu'il reste à faire (Next Steps)
 
-- **Optimisation des chargements de gros fichiers IFC** : Le moteur `web-ifc` peut être gourmand. Il faudra éventuellement configurer un web worker (Multithreading) si de très gros modèles sont uploadés pour ne pas figer l'interface le temps du parsing géométrique.
-- **Étendre les calques aux DXF** : ~~Ajouter le parsing et la visibilité des calques DXF~~ *(Fait — voir Issue #316)*.
-- **Cacher un élément via la touche "Suppr"** : ~~Compléter le double-clic par la combinaison prévue à l'origine~~ *(Fait — voir Issue #317)*.
-- **Mesure de distances en DXF** : ~~Étendre la mesure point A → point B aux plans AutoCAD~~ *(Fait — voir Issue #318)*.
-- **Support complet de three-dxf** : Rendu DXF via `dxf-viewer` (+ police TTF fournie pour les textes — Issue #319). *V2 possible : mappage des épaisseurs de traits par entité (lineweight), non supporté nativement par `dxf-viewer`.*
+- **Optimisation des chargements de gros fichiers IFC** : Le moteur `web-ifc` peut être gourmand. L'optimisation par web worker reste à confirmer pour de très gros modèles.
+- **Épaisseurs de traits DXF par entité** : le rendu des textes, calques et mesures est livré ; le mappage fin des `lineweight` reste limité par `dxf-viewer` et reporté en v2.
 
 ---
 
