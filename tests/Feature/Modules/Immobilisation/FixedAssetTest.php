@@ -183,6 +183,7 @@ it('returns full purchase price when no depreciations exist', function () {
         'purchase_price' => 32000,
         'salvage_value' => 0,
         'purchase_date' => '2026-01-01',
+        'depreciation_method' => DepreciationMethod::NONE,
     ]);
 
     expect($asset->getVncAtDate('2026-06-15'))->toEqual(32000.0);
@@ -267,7 +268,10 @@ it('returns warning vgp_status when vgp expires within 30 days', function () {
 
     $asset->maintenances()->create([
         'type' => 'control',
-        'maintenance_date' => now()->subMonths(11)->format('Y-m-d'),
+        'description' => 'Contrôle VGP annuel',
+        // Prochain VGP dans 15 jours, quel que soit le mois (subMonths(11)
+        // donnait +30 ou +31 jours selon la longueur du mois).
+        'maintenance_date' => now()->addDays(15)->subMonths(12)->format('Y-m-d'),
     ]);
 
     expect($asset->vgp_status)->toBe('warning');
@@ -280,6 +284,7 @@ it('returns ok vgp_status when vgp is up to date', function () {
 
     $asset->maintenances()->create([
         'type' => 'control',
+        'description' => 'Contrôle VGP annuel',
         'maintenance_date' => now()->subMonths(3)->format('Y-m-d'),
     ]);
 

@@ -1,7 +1,5 @@
 <?php
 
-uses(RefreshDatabase::class);
-
 use App\Enums\Locations\RentalBillingPeriod;
 use App\Enums\Locations\RentalStatus;
 use App\Models\Chantiers\Chantier;

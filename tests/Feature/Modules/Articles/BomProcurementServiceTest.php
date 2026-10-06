@@ -3,6 +3,7 @@
 use App\Enums\Articles\ItemType;
 use App\Enums\Commerce\OrderStatus;
 use App\Enums\Tiers\ThirdPartyType;
+use App\Jobs\GenerateBimThumbnailJob;
 use App\Models\Articles\Item;
 use App\Models\Articles\Stock;
 use App\Models\Articles\Warehouse;
@@ -15,9 +16,12 @@ use App\Models\User;
 use App\Models\Vision3D\BimModel;
 use App\Models\Vision3D\BimQuantity;
 use App\Services\Articles\BomProcurementService;
+use Illuminate\Support\Facades\Queue;
 use Spatie\Permission\Models\Permission;
 
 beforeEach(function () {
+    Queue::fake([GenerateBimThumbnailJob::class]);
+
     Company::factory()->create();
     $this->service = app(BomProcurementService::class);
 

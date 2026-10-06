@@ -6,8 +6,6 @@ use App\Services\Chantiers\ChantierAnalyticService;
 use App\Services\Locations\RentalCostService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
-uses(RefreshDatabase::class);
-
 it('calculates active days correctly', function () {
     $contract = RentalContract::factory()->create([
         'start_date' => today()->subDays(5),
