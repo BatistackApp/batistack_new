@@ -29,8 +29,8 @@ class VehicleConditionService
         ConditionReportType $type,
         float $odometer,
         int $fuelLevel,
-        string $driverPin,
-        array $photos,
+        ?string $driverPin = null,
+        array $photos = [],
         ?string $comments = null
     ): VehicleConditionReport {
 
@@ -54,28 +54,31 @@ class VehicleConditionService
         }
 
         $employee = $assignment->employee;
-        $employeePinHash = $employee->pin_hash;
 
-        if (! $employeePinHash) {
-            throw new Exception('Aucun code PIN n\'est configuré pour ce conducteur. Contactez la RH.');
+        if ($driverPin !== null) {
+            $employeePinHash = $employee->pin_hash;
+
+            if (! $employeePinHash) {
+                throw new Exception('Aucun code PIN n\'est configuré pour ce conducteur. Contactez la RH.');
+            }
+
+            $pinService = app(EmployeePinService::class);
+            $attemptsKey = $pinService->pinAttemptsKey($employee, 'flotte-assignment:'.$assignment->getKey());
+
+            if ($pinService->isPinAttemptLocked($attemptsKey)) {
+                $remaining = $pinService->pinAttemptRemainingSeconds($attemptsKey);
+
+                throw new Exception("Trop de tentatives de code PIN. Réessayez dans {$remaining} secondes.");
+            }
+
+            if (! $pinService->checkPin($employee, $driverPin)) {
+                $pinService->registerFailedPinAttempt($attemptsKey);
+
+                throw new Exception('Le code PIN saisi est invalide.');
+            }
+
+            $pinService->clearPinAttempts($attemptsKey);
         }
-
-        $pinService = app(EmployeePinService::class);
-        $attemptsKey = $pinService->pinAttemptsKey($employee, 'flotte-assignment:'.$assignment->getKey());
-
-        if ($pinService->isPinAttemptLocked($attemptsKey)) {
-            $remaining = $pinService->pinAttemptRemainingSeconds($attemptsKey);
-
-            throw new Exception("Trop de tentatives de code PIN. Réessayez dans {$remaining} secondes.");
-        }
-
-        if (! $pinService->checkPin($employee, $driverPin)) {
-            $pinService->registerFailedPinAttempt($attemptsKey);
-
-            throw new Exception('Le code PIN saisi est invalide.');
-        }
-
-        $pinService->clearPinAttempts($attemptsKey);
 
         $payloadToSign = json_encode([
             'assignment_id' => $assignment->id,

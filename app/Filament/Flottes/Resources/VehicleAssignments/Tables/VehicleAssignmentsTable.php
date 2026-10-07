@@ -100,13 +100,6 @@ class VehicleAssignmentsTable
 
                             Textarea::make('comments')
                                 ->label('Observations éventuelles / Chocs constatés'),
-
-                            TextInput::make('driver_pin')
-                                ->label('Code PIN de signature numérique')
-                                ->password()
-                                ->required()
-                                ->maxLength(4)
-                                ->helperText('Saisissez votre code personnel de 4 chiffres pour valider la décharge.'),
                         ])
                         ->action(function (VehicleAssignment $record, array $data) {
                             try {
@@ -123,7 +116,7 @@ class VehicleAssignmentsTable
                                     ConditionReportType::CHECK_OUT,
                                     (float) $data['odometer'],
                                     (int) $data['fuel_level'],
-                                    $data['driver_pin'],
+                                    null,
                                     $photos,
                                     $data['comments'] ?? null
                                 );
