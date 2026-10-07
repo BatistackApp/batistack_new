@@ -188,7 +188,7 @@ test('workflow affectation avec condition reports', function () {
         ConditionReportType::CHECK_OUT,
         10150,
         75,
-        '1234',
+        null,
         $checkoutPhotos,
     );
 

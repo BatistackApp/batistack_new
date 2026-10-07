@@ -6,6 +6,7 @@ use App\Enums\Gpao\ManufacturingStatus;
 use App\Models\Articles\Item;
 use App\Models\Chantiers\Chantier;
 use App\Models\Commerce\CustomerOrder;
+use App\Models\Laser\LaserOrder;
 use App\Models\RH\TimeEntry;
 use App\Observers\Gpao\ManufacturingOrderObserver;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
@@ -29,6 +30,7 @@ class ManufacturingOrder extends Model implements HasMedia
         'item_id',
         'chantier_id',
         'customer_order_id',
+        'laser_order_id',
         'parent_id',
         'quantity_planned',
         'quantity_produced',
@@ -73,6 +75,11 @@ class ManufacturingOrder extends Model implements HasMedia
     public function customerOrder(): BelongsTo
     {
         return $this->belongsTo(CustomerOrder::class);
+    }
+
+    public function laserOrder(): BelongsTo
+    {
+        return $this->belongsTo(LaserOrder::class, 'laser_order_id');
     }
 
     public function machines(): BelongsToMany

@@ -175,7 +175,7 @@ test('check-out clôture affectation et libère véhicule', function () {
         ConditionReportType::CHECK_OUT,
         10150.00,
         75,
-        '1234',
+        null,
         $fakePhotos,
         'Restitué propre.'
     );
@@ -184,6 +184,36 @@ test('check-out clôture affectation et libère véhicule', function () {
     $this->vehicle->refresh();
 
     expect($report->type)->toBe(ConditionReportType::CHECK_OUT)
+        ->and($assignment->status)->toBe(AssignmentStatus::COMPLETED)
+        ->and($this->vehicle->status)->toBe(VehicleStatus::AVAILABLE);
+});
+
+test('check-out administratif sans code PIN', function () {
+    $assignment = $this->assignmentService->createAssignment($this->vehicle, $this->driver, $this->chantier, now()->subDay(), null);
+
+    $fakePhotos = [
+        'front' => UploadedFile::fake()->image('front.jpg'),
+        'back' => UploadedFile::fake()->image('back.jpg'),
+        'left' => UploadedFile::fake()->image('left.jpg'),
+        'right' => UploadedFile::fake()->image('right.jpg'),
+        'dashboard' => UploadedFile::fake()->image('dashboard.jpg'),
+    ];
+
+    $report = $this->conditionService->submitReport(
+        $assignment,
+        ConditionReportType::CHECK_OUT,
+        10150.00,
+        75,
+        null,
+        $fakePhotos,
+        'Restitué propre.'
+    );
+
+    $assignment->refresh();
+    $this->vehicle->refresh();
+
+    expect($report)->toBeInstanceOf(VehicleConditionReport::class)
+        ->and($report->type)->toBe(ConditionReportType::CHECK_OUT)
         ->and($assignment->status)->toBe(AssignmentStatus::COMPLETED)
         ->and($this->vehicle->status)->toBe(VehicleStatus::AVAILABLE);
 });
