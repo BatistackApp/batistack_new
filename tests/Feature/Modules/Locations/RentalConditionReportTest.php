@@ -298,7 +298,13 @@ it('rejects photos with an unsupported or undetectable mime type', function () {
     expect($service->attachPhoto($report, '!!!not-base64!!!'))->toBeFalse();
 
     expect($report->getMedia('photos'))->toHaveCount(0);
-    Log::shouldHaveReceived('warning')->twice();
+
+    // Ciblé sur le message du service : l'observateur ThirdParty dispatche
+    // CollectLegalDocumentsJob (sync) si le tiers du chantier a un siren,
+    // et ce job logge 2 warnings "API Entreprise token not configured".
+    Log::shouldHaveReceived('warning')
+        ->withArgs(fn (string $message) => str_contains($message, "Type d'image"))
+        ->twice();
 });
 
 it('attaches a photo provided as a data URL', function () {

@@ -109,9 +109,11 @@ it('can scope by entity', function () {
 });
 
 it('can search documents', function () {
-    GeneratedDocument::factory()->create(['file_name' => 'Devis DEV-2026-001']);
-    GeneratedDocument::factory()->create(['file_name' => 'Facture FAC-2026-001']);
-    GeneratedDocument::factory()->create(['file_name' => 'Bon de commande BC-2026-001']);
+    // module/type fixés : le hasard de l'factory peut faire tomber un document
+    // sur le type « devis » et faire matcher inutilement search('DEV').
+    GeneratedDocument::factory()->create(['module' => 'chantiers', 'type' => 'journal', 'file_name' => 'Devis DEV-2026-001']);
+    GeneratedDocument::factory()->create(['module' => 'chantiers', 'type' => 'journal', 'file_name' => 'Facture FAC-2026-001']);
+    GeneratedDocument::factory()->create(['module' => 'chantiers', 'type' => 'journal', 'file_name' => 'Bon de commande BC-2026-001']);
 
     $results = GeneratedDocument::search('DEV')->count();
     expect($results)->toBe(1);

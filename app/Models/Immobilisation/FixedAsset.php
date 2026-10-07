@@ -184,6 +184,18 @@ class FixedAsset extends Model implements HasMedia
         $carbonDate = Carbon::parse($date ?? now());
         $totalDepreciable = (float) $this->purchase_price - (float) $this->salvage_value;
 
+        // Un amortissement passé fait foi : la VNC est gelée sur son remaining_vnc
+        // jusqu'au prochain amortissement passé.
+        $lastPassedDepreciation = $this->depreciations()
+            ->where('is_passed', true)
+            ->where('period_date', '<=', $carbonDate)
+            ->orderByDesc('period_date')
+            ->first();
+
+        if ($lastPassedDepreciation) {
+            return (float) $lastPassedDepreciation->remaining_vnc;
+        }
+
         $depreciations = $this->depreciations()
             ->orderBy('period_date')
             ->get();
@@ -206,7 +218,7 @@ class FixedAsset extends Model implements HasMedia
             }
 
             $start = $prevPeriodDate ?? $periodDate->copy()->subYear();
-            $elapsedDays = max(1, $start->diffInDays($carbonDate));
+            $elapsedDays = max(0, $start->diffInDays($carbonDate));
             $totalDays = max(1, $start->diffInDays($periodDate));
 
             $periodDepreciation = $previousVnc - (float) $dep->remaining_vnc;
