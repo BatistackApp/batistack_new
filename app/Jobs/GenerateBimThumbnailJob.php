@@ -3,11 +3,11 @@
 namespace App\Jobs;
 
 use App\Models\Vision3D\BimModel;
+use App\Support\Browsershot;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-use Spatie\Browsershot\Browsershot;
 
 class GenerateBimThumbnailJob implements ShouldQueue
 {

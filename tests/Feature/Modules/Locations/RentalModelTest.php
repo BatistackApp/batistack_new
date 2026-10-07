@@ -7,8 +7,6 @@ use App\Models\Locations\RentalContractLine;
 use App\Models\Tiers\ThirdParty;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
-uses(RefreshDatabase::class);
-
 it('can create a rental contract with supplier and chantier', function () {
     $supplier = ThirdParty::factory()->create(['type' => ThirdPartyType::SUPPLIER]);
     $chantier = Chantier::factory()->create();
