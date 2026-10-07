@@ -3,6 +3,7 @@
 namespace App\Models\Laser;
 
 use App\Enums\Laser\OrderStatus;
+use App\Models\Gpao\ManufacturingOrder;
 use App\Models\Laser\Concerns\RecalculatesLaserTotals;
 use App\Models\Tiers\ThirdParty;
 use App\Observers\Laser\LaserOrderObserver;
@@ -59,6 +60,11 @@ class LaserOrder extends Model
     public function invoices(): HasMany
     {
         return $this->hasMany(LaserInvoice::class);
+    }
+
+    public function manufacturingOrders(): HasMany
+    {
+        return $this->hasMany(ManufacturingOrder::class, 'laser_order_id');
     }
 
     public function canBeDeleted(): bool

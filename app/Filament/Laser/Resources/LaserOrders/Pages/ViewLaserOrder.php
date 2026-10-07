@@ -4,6 +4,7 @@ namespace App\Filament\Laser\Resources\LaserOrders\Pages;
 
 use App\Enums\Laser\OrderStatus;
 use App\Filament\Laser\Resources\LaserOrders\LaserOrderResource;
+use App\Jobs\Laser\GenerateLaserManufacturingOrdersJob;
 use App\Services\Core\DocumentService;
 use App\Services\Laser\LaserDeliveryNoteService;
 use App\Services\Laser\LaserInvoiceService;
@@ -38,6 +39,21 @@ class ViewLaserOrder extends ViewRecord
 
                     Notification::make()
                         ->title('Commande confirmée')
+                        ->success()
+                        ->send();
+                }),
+
+            Actions\Action::make('generate_of')
+                ->label('Générer l\'OF')
+                ->icon('phosphor-factory')
+                ->color('warning')
+                ->requiresConfirmation()
+                ->visible(fn ($record) => $record->status === OrderStatus::CONFIRMED && $record->manufacturingOrders()->count() === 0)
+                ->action(function ($record) {
+                    GenerateLaserManufacturingOrdersJob::dispatch($record);
+
+                    Notification::make()
+                        ->title('Ordres de fabrication générés !')
                         ->success()
                         ->send();
                 }),
