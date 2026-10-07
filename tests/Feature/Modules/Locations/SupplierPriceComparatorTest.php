@@ -5,8 +5,6 @@ use App\Models\Locations\SupplierPriceGrid;
 use App\Models\Tiers\ThirdParty;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
-uses(RefreshDatabase::class);
-
 it('creates a supplier price grid with correct attributes', function () {
     $supplier = ThirdParty::factory()->create();
 

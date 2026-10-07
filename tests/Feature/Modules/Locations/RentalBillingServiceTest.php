@@ -7,8 +7,6 @@ use App\Models\Locations\RentalContractLine;
 use App\Services\Locations\RentalBillingService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
-uses(RefreshDatabase::class);
-
 it('generates a draft invoice from contract without lines', function () {
     VatRate::factory()->create(['id' => 1, 'rate' => 20, 'is_default' => true]);
 

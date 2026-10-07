@@ -6,8 +6,6 @@ use App\Models\Locations\OutboundRentalContract;
 use App\Models\Locations\OutboundRentalLine;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
-uses(RefreshDatabase::class);
-
 it('sets asset to rented when line is added to active contract', function () {
     $asset = FixedAsset::factory()->create(['status' => AssetStatus::ACTIVE]);
     $contract = OutboundRentalContract::factory()->create(['status' => 'active']);
