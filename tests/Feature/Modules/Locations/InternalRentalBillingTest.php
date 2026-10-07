@@ -199,6 +199,8 @@ it('cancels internal rental invoices when the chantier passes to FINISHED', func
     $invoice = $asset->internalRentalInvoices()->first();
     expect($invoice->status)->toBe(InternalRentalInvoiceStatus::DRAFT);
 
+    // Le statut est aléatoire en factory : on garantit une transition réelle.
+    $this->chantier->update(['status' => ChantierStatus::IN_PROGRESS]);
     $this->chantier->update(['status' => ChantierStatus::FINISHED]);
 
     expect($invoice->fresh()->status)->toBe(InternalRentalInvoiceStatus::CANCELED);
@@ -216,6 +218,8 @@ it('does not cancel internal rental invoices on a status change other than FINIS
     $asset = makeBillableAsset();
     $invoice = $asset->internalRentalInvoices()->first();
 
+    // Le statut est aléatoire en factory : on garantit une transition réelle.
+    $this->chantier->update(['status' => ChantierStatus::IN_PROGRESS]);
     $this->chantier->update(['status' => ChantierStatus::SUSPENDED]);
 
     expect($invoice->fresh()->status)->toBe(InternalRentalInvoiceStatus::DRAFT);
