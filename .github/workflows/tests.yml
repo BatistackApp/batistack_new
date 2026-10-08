@@ -1,9 +1,17 @@
 name: tests
 
 on:
+  pull_request:
+    branches:
+      - develop
+      - master
+      - 'release/**'
+      - production
   push:
     branches:
-      - '**'
+      - develop
+      - master
+      - production
   schedule:
     - cron: '0 2 * * *'
   workflow_dispatch:
@@ -239,7 +247,7 @@ jobs:
           node-version: '22'
 
       - name: Install Node Dependencies
-        run: npm i
+        run: npm ci
 
       - name: Install Puppeter
         run: npx puppeteer browsers install chrome-headless-shell
@@ -311,7 +319,7 @@ jobs:
           node-version: '22'
 
       - name: Install Node Dependencies
-        run: npm i
+        run: npm ci
 
       - name: Install Puppeter
         run: npx puppeteer browsers install chrome-headless-shell
@@ -342,12 +350,6 @@ jobs:
 
       - name: Run Global Tests
         run: ./vendor/bin/pest --coverage --coverage-clover storage/coverage/coverage.xml --log-junit junit.xml
-
-      - name: Upload test results to Codecov
-        if: ${{ !cancelled() }}
-        uses: codecov/test-results-action@v1
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
 
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v5
