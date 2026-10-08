@@ -4,7 +4,6 @@ use App\Models\Chantiers\Chantier;
 use App\Models\Locations\RentalContract;
 use App\Services\Chantiers\ChantierAnalyticService;
 use App\Services\Locations\RentalCostService;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 
 it('calculates active days correctly', function () {
     $contract = RentalContract::factory()->create([
