@@ -33,12 +33,24 @@ describe('Employee - Scopes', function () {
     });
 
     test('scope search() cherche par nom', function () {
-        Employee::factory()->create(['first_name' => 'John', 'last_name' => 'Doe']);
-        Employee::factory()->create(['first_name' => 'Jane', 'last_name' => 'Smith']);
+        Employee::factory()->create([
+            'first_name' => 'John',
+            'last_name' => 'Doe',
+            'email' => 'john.doe@example.test',
+            'registration_number' => 'MAT-0001',
+        ]);
+
+        Employee::factory()->create([
+            'first_name' => 'Jane',
+            'last_name' => 'Smith',
+            'email' => 'jane.smith@example.test',
+            'registration_number' => 'MAT-0002',
+        ]);
 
         $result = Employee::search('John')->get();
 
-        expect($result->count())->toBe(1);
+        expect($result)->toHaveCount(1)
+            ->and($result->first()->first_name)->toBe('John');
     });
 
     test('scope search() cherche par email', function () {
