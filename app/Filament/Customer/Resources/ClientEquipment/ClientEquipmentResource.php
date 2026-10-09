@@ -81,5 +81,4 @@ class ClientEquipmentResource extends Resource
     {
         return true;
     }
-
 }
