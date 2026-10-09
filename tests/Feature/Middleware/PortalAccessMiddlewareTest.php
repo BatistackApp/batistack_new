@@ -42,7 +42,8 @@ test('an active employee with the chef de chantier title is authorized', functio
         'user_id' => $user->id,
         'is_active' => true,
     ]);
-    $employee->contracts()->create([
+    \App\Models\RH\Contract::factory()->create([
+        'employee_id' => $employee->id,
         'job_title' => 'Chef de chantier',
         'start_date' => now()->subDay()->toDateString(),
         'end_date' => null,
