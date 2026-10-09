@@ -6,6 +6,7 @@ use App\Enums\Commerce\InvoiceStatus;
 use App\Enums\Commerce\QuoteStatus;
 use App\Filament\Customer\Resources\CustomerDeliveryNotes\CustomerDeliveryNoteResource;
 use App\Filament\Customer\Resources\CustomerInvoices\CustomerInvoiceResource;
+use App\Filament\Customer\Resources\CustomerInvoices\Pages\ViewCustomerInvoice;
 use App\Filament\Customer\Resources\CustomerOrders\CustomerOrderResource;
 use App\Filament\Customer\Resources\CustomerQuotes\CustomerQuoteResource;
 use App\Filament\Customer\Resources\CustomerSituations\CustomerSituationResource;
@@ -17,9 +18,11 @@ use App\Models\Commerce\CustomerSituation;
 use App\Models\Tiers\Contact;
 use App\Models\Tiers\ThirdParty;
 use App\Models\User;
+use App\Services\Commerce\CommerceDocumentationService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\URL;
+use Livewire\Livewire;
 
 uses(RefreshDatabase::class);
 
@@ -85,6 +88,39 @@ it('rejects direct access to another customers invoice page and its download act
         ->and(CustomerInvoiceResource::canView($otherInvoice))->toBeFalse()
         ->and(CustomerInvoiceResource::canEdit($ownInvoice))->toBeFalse()
         ->and(CustomerInvoiceResource::canDelete($ownInvoice))->toBeFalse();
+});
+
+it('executes the invoice PDF download action only for an authorized invoice', function () {
+    $user = User::factory()->create(['is_tiers' => true]);
+    $ownThirdParty = ThirdParty::factory()->create(['type' => 'client']);
+    $otherThirdParty = ThirdParty::factory()->create(['type' => 'client']);
+
+    authenticateCustomerForThirdParty($user, $ownThirdParty);
+
+    $ownInvoice = CustomerInvoice::withoutEvents(fn () => CustomerInvoice::factory()->create([
+        'client_id' => $ownThirdParty->id,
+        'status' => InvoiceStatus::VALIDATED,
+    ]));
+    $otherInvoice = CustomerInvoice::withoutEvents(fn () => CustomerInvoice::factory()->create([
+        'client_id' => $otherThirdParty->id,
+        'status' => InvoiceStatus::VALIDATED,
+    ]));
+
+    $documentationService = Mockery::mock(CommerceDocumentationService::class);
+    $documentationService
+        ->shouldReceive('generateInvoicePdf')
+        ->once()
+        ->with(Mockery::on(fn (CustomerInvoice $invoice) => $invoice->is($ownInvoice)))
+        ->andThrow(new RuntimeException('Stop after verifying the authorized invoice.'));
+    $this->app->instance(CommerceDocumentationService::class, $documentationService);
+
+    $this->actingAs($user);
+
+    Livewire::test(ViewCustomerInvoice::class, ['record' => $ownInvoice->getRouteKey()])
+        ->callAction('downloadPdf');
+
+    $this->get(CustomerInvoiceResource::getUrl('view', ['record' => $otherInvoice], panel: 'customer'))
+        ->assertNotFound();
 });
 
 it('rejects unsigned and tampered invoice payment URLs', function () {
