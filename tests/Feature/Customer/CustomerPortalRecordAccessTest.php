@@ -219,10 +219,11 @@ it('renders a valid signed payment URL for an authorized invoice', function () {
         'status' => InvoiceStatus::VALIDATED,
     ]));
 
+    $this->travelTo(now());
     $this->actingAs($user);
     Filament::setCurrentPanel(Filament::getPanel('customer'));
 
-    $expectedSignedUrl = URL::signedRoute('pay.invoice', [
+    $expectedSignedUrl = URL::temporarySignedRoute('pay.invoice', now()->addMinutes(30), [
         'invoice' => $invoice->id,
     ]);
 
@@ -254,6 +255,12 @@ it('rejects unsigned and tampered invoice payment URLs', function () {
     expect(URL::hasValidSignature(Request::create($tamperedUrl)))->toBeFalse();
 
     $this->get($tamperedUrl)->assertForbidden();
+
+    $expiredUrl = URL::temporarySignedRoute('pay.invoice', now()->subMinute(), [
+        'invoice' => $invoice->getRouteKey(),
+    ]);
+
+    $this->get($expiredUrl)->assertForbidden();
 });
 
 it('rejects direct access to another customers order page', function () {
