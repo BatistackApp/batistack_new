@@ -136,7 +136,6 @@ it('executes the invoice PDF download action only for an authorized invoice', fu
         ->assertNotFound();
 });
 
-
 it('rejects a foreign invoice before the PDF action can be mounted', function () {
     $user = User::factory()->create(['is_tiers' => true]);
     $ownThirdParty = ThirdParty::factory()->create(['type' => 'client']);
@@ -160,7 +159,6 @@ it('rejects a foreign invoice before the PDF action can be mounted', function ()
     $this->get(CustomerInvoiceResource::getUrl('view', ['record' => $otherInvoice], panel: 'customer'))
         ->assertNotFound();
 });
-
 
 it('allows customers to view their own equipment and rejects another customers equipment', function () {
     $user = User::factory()->create(['is_tiers' => true]);
@@ -213,7 +211,6 @@ it('allows customers to view their own interventions and rejects another custome
     $this->get(InterventionResource::getUrl('view', ['record' => $otherIntervention], panel: 'customer'))
         ->assertNotFound();
 });
-
 
 it('renders a valid signed payment URL for an authorized invoice', function () {
     $user = User::factory()->create(['is_tiers' => true]);
@@ -313,7 +310,6 @@ it('rejects direct access to another customers situation page', function () {
     $this->get(CustomerSituationResource::getUrl('view', ['record' => $ownSituation], panel: 'customer'))->assertSuccessful();
     $this->get(CustomerSituationResource::getUrl('view', ['record' => $otherSituation], panel: 'customer'))->assertNotFound();
 });
-
 
 it('scopes the customer quote list to the authenticated customer', function () {
     $user = User::factory()->create(['is_tiers' => true]);
