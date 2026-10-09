@@ -126,6 +126,31 @@ it('executes the invoice PDF download action only for an authorized invoice', fu
         ->assertNotFound();
 });
 
+
+it('does not expose the invoice PDF action for another customers invoice', function () {
+    $user = User::factory()->create(['is_tiers' => true]);
+    $ownThirdParty = ThirdParty::factory()->create(['type' => 'client']);
+    $otherThirdParty = ThirdParty::factory()->create(['type' => 'client']);
+
+    authenticateCustomerForThirdParty($user, $ownThirdParty);
+
+    $otherInvoice = CustomerInvoice::withoutEvents(fn () => CustomerInvoice::factory()->create([
+        'client_id' => $otherThirdParty->id,
+        'status' => InvoiceStatus::VALIDATED,
+    ]));
+
+    $documentationService = Mockery::mock(CommerceDocumentationService::class);
+    $documentationService->shouldNotReceive('generateInvoicePdf');
+    $this->app->instance(CommerceDocumentationService::class, $documentationService);
+
+    $this->actingAs($user);
+
+    // The record must be rejected before Filament can mount the page and expose
+    // its download action. The documentation service must never be invoked.
+    $this->get(CustomerInvoiceResource::getUrl('view', ['record' => $otherInvoice], panel: 'customer'))
+        ->assertNotFound();
+});
+
 it('rejects unsigned and tampered invoice payment URLs', function () {
     // Use an existing invoice so implicit route-model binding does not return
     // 404 before the signed middleware can validate the URL.
