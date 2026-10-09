@@ -154,4 +154,3 @@ it('rejects direct access to another customers situation page', function () {
     $this->get(CustomerSituationResource::getUrl('view', ['record' => $ownSituation], panel: 'customer'))->assertSuccessful();
     $this->get(CustomerSituationResource::getUrl('view', ['record' => $otherSituation], panel: 'customer'))->assertNotFound();
 });
-
