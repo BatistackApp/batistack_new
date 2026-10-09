@@ -80,6 +80,11 @@ it('rejects direct access to another customers invoice page and its download act
 
     $this->get(CustomerInvoiceResource::getUrl('view', ['record' => $otherInvoice], panel: 'customer'))
         ->assertNotFound();
+
+    expect(CustomerInvoiceResource::canView($ownInvoice))->toBeTrue()
+        ->and(CustomerInvoiceResource::canView($otherInvoice))->toBeFalse()
+        ->and(CustomerInvoiceResource::canEdit($ownInvoice))->toBeFalse()
+        ->and(CustomerInvoiceResource::canDelete($ownInvoice))->toBeFalse();
 });
 
 it('rejects unsigned and tampered invoice payment URLs', function () {
