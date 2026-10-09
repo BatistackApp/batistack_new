@@ -22,6 +22,7 @@ use App\Models\Commerce\CustomerInvoice;
 use App\Models\Commerce\CustomerOrder;
 use App\Models\Commerce\CustomerQuote;
 use App\Models\Commerce\CustomerSituation;
+use App\Models\Core\Company;
 use App\Models\Interventions\ClientEquipment;
 use App\Models\Interventions\Intervention;
 use App\Models\Tiers\Contact;
@@ -191,10 +192,14 @@ it('allows customers to view their own interventions and rejects another custome
 
     authenticateCustomerForThirdParty($user, $ownThirdParty);
 
+    $company = Company::factory()->create();
+
     $ownIntervention = Intervention::withoutEvents(fn () => Intervention::factory()->create([
+        'company_id' => $company->id,
         'third_party_id' => $ownThirdParty->id,
     ]));
     $otherIntervention = Intervention::withoutEvents(fn () => Intervention::factory()->create([
+        'company_id' => $company->id,
         'third_party_id' => $otherThirdParty->id,
     ]));
 
