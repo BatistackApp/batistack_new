@@ -29,7 +29,7 @@ class ViewCustomerInvoice extends ViewRecord
                     InvoiceStatus::PAYMENT_IN_PROGRESS,
                     InvoiceStatus::PARTIALLY_PAID,
                 ]))
-                ->url(fn () => URL::signedRoute('pay.invoice', [
+                ->url(fn () => URL::temporarySignedRoute('pay.invoice', now()->addMinutes(30), [
                     'invoice' => $this->record->id,
                 ]))
                 ->openUrlInNewTab(),
