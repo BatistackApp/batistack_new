@@ -10,8 +10,8 @@ use App\Filament\Customer\Resources\CustomerDeliveryNotes\Pages\ListCustomerDeli
 use App\Filament\Customer\Resources\CustomerInvoices\CustomerInvoiceResource;
 use App\Filament\Customer\Resources\CustomerInvoices\Pages\ListCustomerInvoices;
 use App\Filament\Customer\Resources\CustomerInvoices\Pages\ViewCustomerInvoice;
-use App\Filament\Customer\Resources\Interventions\InterventionResource;
 use App\Filament\Customer\Resources\CustomerOrders\CustomerOrderResource;
+use App\Filament\Customer\Resources\Interventions\InterventionResource;
 use App\Filament\Customer\Resources\CustomerOrders\Pages\ListCustomerOrders;
 use App\Filament\Customer\Resources\CustomerQuotes\CustomerQuoteResource;
 use App\Filament\Customer\Resources\CustomerQuotes\Pages\ListCustomerQuotes;
