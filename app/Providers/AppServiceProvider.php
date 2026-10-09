@@ -57,12 +57,16 @@ class AppServiceProvider extends ServiceProvider
                 'core', 'tiers', 'chantier', 'interventions', 'articles', 'commerce',
                 'banque', 'rh', 'paie', 'flottes', 'immobilisation', 'locations', 'gpao', 'laser',
             ];
-            $availablePanels = array_keys(Filament::getPanels());
 
             $panelSwitch
                 ->modalHeading('Espaces')
                 ->slideOver()
-                ->panels(array_values(array_intersect($configuredPanels, $availablePanels)))
+                ->panels(fn (): array => collect(Filament::getPanels())
+                    ->filter(fn ($panel): bool => auth()->user()?->canAccessPanel($panel) ?? false)
+                    ->keys()
+                    ->intersect($configuredPanels)
+                    ->values()
+                    ->all())
                 ->icons([
                     'core' => Phosphor::Building,
                     'tiers' => Phosphor::Users,
