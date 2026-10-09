@@ -79,14 +79,58 @@ it('rejects unsigned and tampered invoice payment URLs', function () {
 
     $this->get($unsignedUrl)->assertForbidden();
 
-    $signedUrl = \\Illuminate\\Support\\Facades\\URL::signedRoute('pay.invoice', [
+    $signedUrl = \Illuminate\\Support\\Facades\\URL::signedRoute('pay.invoice', [
         'invoice' => 999999,
     ]);
 
-    expect(\\Illuminate\\Support\\Facades\\URL::hasValidSignature(\\Illuminate\\Http\\Request::create($signedUrl)))->toBeTrue();
+    expect(\Illuminate\\Support\\Facades\\URL::hasValidSignature(\Illuminate\\Http\\Request::create($signedUrl)))->toBeTrue();
 
     $tamperedUrl = $signedUrl.'&invoice=1';
 
-    expect(\\Illuminate\\Support\\Facades\\URL::hasValidSignature(\\Illuminate\\Http\\Request::create($tamperedUrl)))->toBeFalse();
+    expect(\Illuminate\\Support\\Facades\\URL::hasValidSignature(\Illuminate\\Http\\Request::create($tamperedUrl)))->toBeFalse();
+});
+
+it('rejects direct access to another customers order page', function () {
+    $user = User::factory()->create(['is_tiers' => true]);
+    $ownThirdParty = ThirdParty::factory()->create(['type' => 'client']);
+    $otherThirdParty = ThirdParty::factory()->create(['type' => 'client']);
+    authenticateCustomerForThirdParty($user, $ownThirdParty);
+
+    $ownOrder = \\App\\Models\\Commerce\\CustomerOrder::withoutEvents(fn () => \\App\\Models\\Commerce\\CustomerOrder::factory()->create(['client_id' => $ownThirdParty->id]));
+    $otherOrder = \\App\\Models\\Commerce\\CustomerOrder::withoutEvents(fn () => \\App\\Models\\Commerce\\CustomerOrder::factory()->create(['client_id' => $otherThirdParty->id]));
+
+    $this->actingAs($user);
+    $this->get(CustomerOrderResource::getUrl('view', ['record' => $ownOrder], panel: 'customer'))->assertSuccessful();
+    $this->get(CustomerOrderResource::getUrl('view', ['record' => $otherOrder], panel: 'customer'))->assertNotFound();
+});
+
+it('rejects direct access to another customers delivery note page', function () {
+    $user = User::factory()->create(['is_tiers' => true]);
+    $ownThirdParty = ThirdParty::factory()->create(['type' => 'client']);
+    $otherThirdParty = ThirdParty::factory()->create(['type' => 'client']);
+    authenticateCustomerForThirdParty($user, $ownThirdParty);
+
+    $ownNote = \\App\\Models\\Commerce\\CustomerDeliveryNote::withoutEvents(fn () => \\App\\Models\\Commerce\\CustomerDeliveryNote::factory()->create(['client_id' => $ownThirdParty->id]));
+    $otherNote = \\App\\Models\\Commerce\\CustomerDeliveryNote::withoutEvents(fn () => \\App\\Models\\Commerce\\CustomerDeliveryNote::factory()->create(['client_id' => $otherThirdParty->id]));
+
+    $this->actingAs($user);
+    $this->get(CustomerDeliveryNoteResource::getUrl('view', ['record' => $ownNote], panel: 'customer'))->assertSuccessful();
+    $this->get(CustomerDeliveryNoteResource::getUrl('view', ['record' => $otherNote], panel: 'customer'))->assertNotFound();
+});
+
+it('rejects direct access to another customers situation page', function () {
+    $user = User::factory()->create(['is_tiers' => true]);
+    $ownThirdParty = ThirdParty::factory()->create(['type' => 'client']);
+    $otherThirdParty = ThirdParty::factory()->create(['type' => 'client']);
+    authenticateCustomerForThirdParty($user, $ownThirdParty);
+
+    $ownOrder = \\App\\Models\\Commerce\\CustomerOrder::withoutEvents(fn () => \\App\\Models\\Commerce\\CustomerOrder::factory()->create(['client_id' => $ownThirdParty->id]));
+    $otherOrder = \\App\\Models\\Commerce\\CustomerOrder::withoutEvents(fn () => \\App\\Models\\Commerce\\CustomerOrder::factory()->create(['client_id' => $otherThirdParty->id]));
+    $ownSituation = \\App\\Models\\Commerce\\CustomerSituation::withoutEvents(fn () => \\App\\Models\\Commerce\\CustomerSituation::factory()->create(['customer_order_id' => $ownOrder->id]));
+    $otherSituation = \\App\\Models\\Commerce\\CustomerSituation::withoutEvents(fn () => \\App\\Models\\Commerce\\CustomerSituation::factory()->create(['customer_order_id' => $otherOrder->id]));
+
+    $this->actingAs($user);
+    $this->get(CustomerSituationResource::getUrl('view', ['record' => $ownSituation], panel: 'customer'))->assertSuccessful();
+    $this->get(CustomerSituationResource::getUrl('view', ['record' => $otherSituation], panel: 'customer'))->assertNotFound();
 });
 
