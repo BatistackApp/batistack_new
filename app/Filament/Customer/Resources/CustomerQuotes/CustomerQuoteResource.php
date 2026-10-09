@@ -65,5 +65,4 @@ class CustomerQuoteResource extends Resource
     {
         return true;
     }
-
 }
