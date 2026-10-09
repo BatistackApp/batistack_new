@@ -64,5 +64,4 @@ class CustomerOrderResource extends Resource
     {
         return true;
     }
-
 }
