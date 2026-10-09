@@ -25,7 +25,7 @@ function authenticateCustomerForThirdParty(User $user, ThirdParty $thirdParty): 
 }
 
 it('rejects direct access to another customers quote page', function () {
-    $user = User::factory()->create();
+    $user = User::factory()->create(['is_tiers' => true]);
     $ownThirdParty = ThirdParty::factory()->create(['type' => 'client']);
     $otherThirdParty = ThirdParty::factory()->create(['type' => 'client']);
 
@@ -56,14 +56,14 @@ it('rejects direct access to another customers invoice page and its download act
 
     authenticateCustomerForThirdParty($user, $ownThirdParty);
 
-    $ownInvoice = CustomerInvoice::factory()->create([
+    $ownInvoice = CustomerInvoice::withoutEvents(fn () => CustomerInvoice::factory()->create([
         'client_id' => $ownThirdParty->id,
         'status' => InvoiceStatus::VALIDATED,
-    ]);
-    $otherInvoice = CustomerInvoice::factory()->create([
+    ]));
+    $otherInvoice = CustomerInvoice::withoutEvents(fn () => CustomerInvoice::factory()->create([
         'client_id' => $otherThirdParty->id,
         'status' => InvoiceStatus::VALIDATED,
-    ]);
+    ]));
 
     $this->actingAs($user);
 
