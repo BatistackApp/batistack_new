@@ -48,6 +48,7 @@ it('scopes query to authenticated user contact third party', function () {
     Contact::withoutEvents(fn () => Contact::factory()->create([
         'user_id' => $user->id,
         'third_party_id' => $thirdParty->id,
+        'is_active' => true,
     ]));
 
     $otherThirdParty = ThirdParty::factory()->create();
