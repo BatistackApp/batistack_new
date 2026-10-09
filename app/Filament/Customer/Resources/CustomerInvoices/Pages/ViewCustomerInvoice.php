@@ -1,16 +1,17 @@
 <?php
 
-namespace App\Filament\Customer\Resources\CustomerInvoices\Pages;
+namespace App\\Filament\\Customer\\Resources\\CustomerInvoices\\Pages;
 
-use App\Enums\Commerce\InvoiceStatus;
-use App\Filament\Customer\Resources\CustomerInvoices\CustomerInvoiceResource;
-use App\Services\Commerce\CommerceDocumentationService;
-use Filament\Actions\Action;
-use Filament\Actions\ActionGroup;
-use Filament\Notifications\Notification;
-use Filament\Resources\Pages\ViewRecord;
-use Symfony\Component\HttpFoundation\BinaryFileResponse;
-use ToneGabes\Filament\Icons\Enums\Phosphor;
+use App\\Enums\\Commerce\\InvoiceStatus;
+use App\\Filament\\Customer\\Resources\\CustomerInvoices\\CustomerInvoiceResource;
+use App\\Services\\Commerce\\CommerceDocumentationService;
+use Filament\\Actions\\Action;
+use Filament\\Actions\\ActionGroup;
+use Filament\\Notifications\\Notification;
+use Filament\\Resources\\Pages\\ViewRecord;
+use Illuminate\\Support\\Facades\\URL;
+use Symfony\\Component\\HttpFoundation\\BinaryFileResponse;
+use ToneGabes\\Filament\\Icons\\Enums\\Phosphor;
 
 class ViewCustomerInvoice extends ViewRecord
 {
@@ -28,9 +29,9 @@ class ViewCustomerInvoice extends ViewRecord
                     InvoiceStatus::PAYMENT_IN_PROGRESS,
                     InvoiceStatus::PARTIALLY_PAID,
                 ]))
-                ->url(fn () => route('pay.invoice', [
+                ->url(fn () => URL::signedRoute('pay.invoice', [
                     'invoice' => $this->record->id,
-                ], absolute: false))
+                ]))
                 ->openUrlInNewTab(),
 
             ActionGroup::make([
@@ -49,7 +50,7 @@ class ViewCustomerInvoice extends ViewRecord
             $path = $service->generateInvoicePdf($this->record);
 
             return response()->download(storage_path("app/{$path}"));
-        } catch (\Exception $e) {
+        } catch (\\Exception $e) {
             Notification::make()
                 ->danger()
                 ->title('Erreur lors de la génération du PDF')
