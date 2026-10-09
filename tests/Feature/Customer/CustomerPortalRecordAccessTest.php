@@ -12,8 +12,8 @@ use App\Filament\Customer\Resources\CustomerSituations\CustomerSituationResource
 use App\Models\Commerce\CustomerDeliveryNote;
 use App\Models\Commerce\CustomerInvoice;
 use App\Models\Commerce\CustomerOrder;
-use App\Models\Commerce\CustomerSituation;
 use App\Models\Commerce\CustomerQuote;
+use App\Models\Commerce\CustomerSituation;
 use App\Models\Tiers\Contact;
 use App\Models\Tiers\ThirdParty;
 use App\Models\User;
