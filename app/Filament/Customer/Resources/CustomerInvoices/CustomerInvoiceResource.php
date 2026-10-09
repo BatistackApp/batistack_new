@@ -61,5 +61,4 @@ class CustomerInvoiceResource extends Resource
     {
         return true;
     }
-
 }
