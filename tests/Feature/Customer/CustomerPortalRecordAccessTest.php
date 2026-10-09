@@ -196,10 +196,12 @@ it('allows customers to view their own interventions and rejects another custome
 
     $ownIntervention = Intervention::withoutEvents(fn () => Intervention::factory()->create([
         'company_id' => $company->id,
+        'reference' => 'INT-'.now()->format('Y').'-9001',
         'third_party_id' => $ownThirdParty->id,
     ]));
     $otherIntervention = Intervention::withoutEvents(fn () => Intervention::factory()->create([
         'company_id' => $company->id,
+        'reference' => 'INT-'.now()->format('Y').'-9002',
         'third_party_id' => $otherThirdParty->id,
     ]));
 
