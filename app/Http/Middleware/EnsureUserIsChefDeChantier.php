@@ -17,13 +17,13 @@ class EnsureUserIsChefDeChantier
     {
         $user = auth()->user();
 
-        // 1. Vérification de l'authentification de base
+        // Vérification de l'authentification de base
         if (! $user) {
             return redirect()->route('filament.terrain.auth.login');
         }
 
-        // 2. Vérification de la liaison avec la fiche employé RH
-        $employee = $user->salarie; // Relation Employee active issue du module RH
+        // Vérification de la liaison avec la fiche employé RH
+        $employee = $user->salarie;
 
         if (! $employee || ! $employee->is_active) {
             auth()->logout();
@@ -32,21 +32,19 @@ class EnsureUserIsChefDeChantier
                 ->with('error', 'Votre compte n\'est pas relié à une fiche employé active.');
         }
 
-        // 3. Vérification du rôle / poste (ex: Chef d'équipe, Chef de chantier, Conducteur de travaux)
-        $jobTitle = strtolower($employee->currentContract?->job_title ?? '');
-        $allowedKeywords = ['chef', 'conducteur', 'foreman', 'encadrant', 'responsable'];
+        // Les administrateurs sont identifiés par le flag applicatif, pas par une adresse e-mail.
+        $isAuthorized = (bool) $user->is_admin;
 
-        $isAuthorized = false;
-        foreach ($allowedKeywords as $keyword) {
-            if (str_contains($jobTitle, $keyword)) {
-                $isAuthorized = true;
-                break;
+        if (! $isAuthorized) {
+            $jobTitle = strtolower($employee->currentContract?->job_title ?? '');
+            $allowedKeywords = ['chef', 'conducteur', 'foreman', 'encadrant', 'responsable'];
+
+            foreach ($allowedKeywords as $keyword) {
+                if (str_contains($jobTitle, $keyword)) {
+                    $isAuthorized = true;
+                    break;
+                }
             }
-        }
-
-        // Optionnel : On peut aussi autoriser les super-admins à des fins de test/support
-        if ($user->email === 'admin@admin.com') {
-            $isAuthorized = true;
         }
 
         if (! $isAuthorized) {

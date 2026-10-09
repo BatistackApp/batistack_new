@@ -26,7 +26,7 @@ class EnsureUserIsEmployee
         if (! $employee || ! $employee->is_active) {
             auth()->logout();
 
-            return redirect()->route('filament.terrain.auth.login')
+            return redirect()->route('filament.salarie.auth.login')
                 ->with('error', 'Votre compte n\'est pas relié à une fiche employé active.');
         }
 
