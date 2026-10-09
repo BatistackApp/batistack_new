@@ -73,3 +73,20 @@ it('rejects direct access to another customers invoice page and its download act
     $this->get(CustomerInvoiceResource::getUrl('view', ['record' => $otherInvoice], panel: 'customer'))
         ->assertNotFound();
 });
+
+it('rejects unsigned and tampered invoice payment URLs', function () {
+    $unsignedUrl = route('pay.invoice', ['invoice' => 999999], absolute: false);
+
+    $this->get($unsignedUrl)->assertForbidden();
+
+    $signedUrl = \\Illuminate\\Support\\Facades\\URL::signedRoute('pay.invoice', [
+        'invoice' => 999999,
+    ]);
+
+    expect(\\Illuminate\\Support\\Facades\\URL::hasValidSignature(\\Illuminate\\Http\\Request::create($signedUrl)))->toBeTrue();
+
+    $tamperedUrl = $signedUrl.'&invoice=1';
+
+    expect(\\Illuminate\\Support\\Facades\\URL::hasValidSignature(\\Illuminate\\Http\\Request::create($tamperedUrl)))->toBeFalse();
+});
+
