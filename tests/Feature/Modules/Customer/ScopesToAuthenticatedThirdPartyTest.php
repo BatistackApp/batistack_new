@@ -129,8 +129,8 @@ it('scopes customer situations through their order and checks record ownership',
     ]));
 
     $otherThirdParty = ThirdParty::factory()->create();
-    $ownOrder = \Tests\Feature\Modules\Customer\DummyOrderModel::create(['client_id' => $thirdParty->id]);
-    $otherOrder = \Tests\Feature\Modules\Customer\DummyOrderModel::create(['client_id' => $otherThirdParty->id]);
+    $ownOrder = DummyOrderModel::create(['client_id' => $thirdParty->id]);
+    $otherOrder = DummyOrderModel::create(['client_id' => $otherThirdParty->id]);
     $ownSituation = DummySituationModel::create(['customer_order_id' => $ownOrder->id]);
     DummySituationModel::create(['customer_order_id' => $otherOrder->id]);
 
