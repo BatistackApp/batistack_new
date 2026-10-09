@@ -57,7 +57,7 @@ class AppServiceProvider extends ServiceProvider
                 'core', 'tiers', 'chantier', 'interventions', 'articles', 'commerce',
                 'banque', 'rh', 'paie', 'flottes', 'immobilisation', 'locations', 'gpao', 'laser',
             ];
-            $availablePanels = Filament::getPanels()->keys()->all();
+            $availablePanels = array_keys(Filament::getPanels());
 
             $panelSwitch
                 ->modalHeading('Espaces')
