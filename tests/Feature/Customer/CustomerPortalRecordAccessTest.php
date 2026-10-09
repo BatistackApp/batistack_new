@@ -92,15 +92,15 @@ it('rejects unsigned and tampered invoice payment URLs', function () {
 
     $this->get($unsignedUrl)->assertForbidden();
 
-    $signedUrl = \Illuminate\\Support\\Facades\\URL::signedRoute('pay.invoice', [
+    $signedUrl = URL::signedRoute('pay.invoice', [
         'invoice' => 999999,
     ]);
 
-    expect(\Illuminate\\Support\\Facades\\URL::hasValidSignature(\Illuminate\\Http\\Request::create($signedUrl)))->toBeTrue();
+    expect(URL::hasValidSignature(Request::create($signedUrl)))->toBeTrue();
 
     $tamperedUrl = $signedUrl.'&invoice=1';
 
-    expect(\Illuminate\\Support\\Facades\\URL::hasValidSignature(\Illuminate\\Http\\Request::create($tamperedUrl)))->toBeFalse();
+    expect(URL::hasValidSignature(Request::create($tamperedUrl)))->toBeFalse();
 });
 
 it('rejects direct access to another customers order page', function () {
