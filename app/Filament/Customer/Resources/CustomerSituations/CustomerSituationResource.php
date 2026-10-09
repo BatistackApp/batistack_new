@@ -10,7 +10,6 @@ use App\Models\Commerce\CustomerSituation;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Model;
 use ToneGabes\Filament\Icons\Enums\Phosphor;
 
 class CustomerSituationResource extends Resource
@@ -56,8 +55,4 @@ class CustomerSituationResource extends Resource
         return true;
     }
 
-    public static function canView(Model $record): bool
-    {
-        return true;
-    }
 }
