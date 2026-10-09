@@ -9,6 +9,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Schema;
 use Tests\Feature\Modules\Customer\DummyClientModel;
 use Tests\Feature\Modules\Customer\DummyClientResource;
+use Tests\Feature\Modules\Customer\DummyOrderModel;
 use Tests\Feature\Modules\Customer\DummyModel;
 use Tests\Feature\Modules\Customer\DummyResource;
 use Tests\Feature\Modules\Customer\DummySituationModel;
