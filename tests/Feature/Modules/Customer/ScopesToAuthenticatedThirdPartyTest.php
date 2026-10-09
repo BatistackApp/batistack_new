@@ -11,6 +11,8 @@ use Tests\Feature\Modules\Customer\DummyModel;
 use Tests\Feature\Modules\Customer\DummyResource;
 use Tests\Feature\Modules\Customer\DummyClientModel;
 use Tests\Feature\Modules\Customer\DummyClientResource;
+use Tests\Feature\Modules\Customer\DummySituationModel;
+use Tests\Feature\Modules\Customer\DummySituationResource;
 
 uses(RefreshDatabase::class);
 
@@ -24,6 +26,18 @@ beforeEach(function () {
     Schema::create('dummy_client_table', function ($table) {
         $table->id();
         $table->foreignId('client_id')->nullable();
+        $table->timestamps();
+    });
+
+    Schema::create('dummy_order_table', function ($table) {
+        $table->id();
+        $table->foreignId('client_id')->nullable();
+        $table->timestamps();
+    });
+
+    Schema::create('dummy_situation_table', function ($table) {
+        $table->id();
+        $table->foreignId('customer_order_id')->nullable();
         $table->timestamps();
     });
 });
@@ -99,4 +113,26 @@ it('fails closed for inactive customer contacts', function () {
 
     expect(DummyClientResource::getEloquentQuery()->count())->toBe(0)
         ->and(DummyClientResource::canView(DummyClientModel::first()))->toBeFalse();
+});
+
+it('scopes customer situations through their order and checks record ownership', function () {
+    $user = User::factory()->create();
+    $thirdParty = ThirdParty::factory()->create();
+    Contact::withoutEvents(fn () => Contact::factory()->create([
+        'user_id' => $user->id,
+        'third_party_id' => $thirdParty->id,
+        'is_active' => true,
+    ]));
+
+    $otherThirdParty = ThirdParty::factory()->create();
+    $ownOrder = \Tests\Feature\Modules\Customer\DummyOrderModel::create(['client_id' => $thirdParty->id]);
+    $otherOrder = \Tests\Feature\Modules\Customer\DummyOrderModel::create(['client_id' => $otherThirdParty->id]);
+    $ownSituation = DummySituationModel::create(['customer_order_id' => $ownOrder->id]);
+    DummySituationModel::create(['customer_order_id' => $otherOrder->id]);
+
+    $this->actingAs($user);
+
+    expect(DummySituationResource::getEloquentQuery()->get())->toHaveCount(1)
+        ->and(DummySituationResource::canView($ownSituation))->toBeTrue()
+        ->and(DummySituationResource::canView(DummySituationModel::where('customer_order_id', $otherOrder->id)->first()))->toBeFalse();
 });
