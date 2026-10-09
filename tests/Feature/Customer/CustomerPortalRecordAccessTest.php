@@ -50,7 +50,7 @@ it('rejects direct access to another customers quote page', function () {
 });
 
 it('rejects direct access to another customers invoice page and its download action entry point', function () {
-    $user = User::factory()->create();
+    $user = User::factory()->create(['is_tiers' => true]);
     $ownThirdParty = ThirdParty::factory()->create(['type' => 'client']);
     $otherThirdParty = ThirdParty::factory()->create(['type' => 'client']);
 
