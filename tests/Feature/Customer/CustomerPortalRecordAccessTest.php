@@ -4,14 +4,22 @@ namespace Tests\Feature\Customer;
 
 use App\Enums\Commerce\InvoiceStatus;
 use App\Enums\Commerce\QuoteStatus;
+use App\Filament\Customer\Resources\CustomerDeliveryNotes\CustomerDeliveryNoteResource;
 use App\Filament\Customer\Resources\CustomerInvoices\CustomerInvoiceResource;
+use App\Filament\Customer\Resources\CustomerOrders\CustomerOrderResource;
 use App\Filament\Customer\Resources\CustomerQuotes\CustomerQuoteResource;
+use App\Filament\Customer\Resources\CustomerSituations\CustomerSituationResource;
+use App\Models\Commerce\CustomerDeliveryNote;
 use App\Models\Commerce\CustomerInvoice;
+use App\Models\Commerce\CustomerOrder;
+use App\Models\Commerce\CustomerSituation;
 use App\Models\Commerce\CustomerQuote;
 use App\Models\Tiers\Contact;
 use App\Models\Tiers\ThirdParty;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\URL;
 
 uses(RefreshDatabase::class);
 
@@ -96,8 +104,8 @@ it('rejects direct access to another customers order page', function () {
     $otherThirdParty = ThirdParty::factory()->create(['type' => 'client']);
     authenticateCustomerForThirdParty($user, $ownThirdParty);
 
-    $ownOrder = \\App\\Models\\Commerce\\CustomerOrder::withoutEvents(fn () => \\App\\Models\\Commerce\\CustomerOrder::factory()->create(['client_id' => $ownThirdParty->id]));
-    $otherOrder = \\App\\Models\\Commerce\\CustomerOrder::withoutEvents(fn () => \\App\\Models\\Commerce\\CustomerOrder::factory()->create(['client_id' => $otherThirdParty->id]));
+    $ownOrder = CustomerOrder::withoutEvents(fn () => CustomerOrder::factory()->create(['client_id' => $ownThirdParty->id]));
+    $otherOrder = CustomerOrder::withoutEvents(fn () => CustomerOrder::factory()->create(['client_id' => $otherThirdParty->id]));
 
     $this->actingAs($user);
     $this->get(CustomerOrderResource::getUrl('view', ['record' => $ownOrder], panel: 'customer'))->assertSuccessful();
@@ -110,8 +118,8 @@ it('rejects direct access to another customers delivery note page', function () 
     $otherThirdParty = ThirdParty::factory()->create(['type' => 'client']);
     authenticateCustomerForThirdParty($user, $ownThirdParty);
 
-    $ownNote = \\App\\Models\\Commerce\\CustomerDeliveryNote::withoutEvents(fn () => \\App\\Models\\Commerce\\CustomerDeliveryNote::factory()->create(['client_id' => $ownThirdParty->id]));
-    $otherNote = \\App\\Models\\Commerce\\CustomerDeliveryNote::withoutEvents(fn () => \\App\\Models\\Commerce\\CustomerDeliveryNote::factory()->create(['client_id' => $otherThirdParty->id]));
+    $ownNote = CustomerDeliveryNote::withoutEvents(fn () => CustomerDeliveryNote::factory()->create(['client_id' => $ownThirdParty->id]));
+    $otherNote = CustomerDeliveryNote::withoutEvents(fn () => CustomerDeliveryNote::factory()->create(['client_id' => $otherThirdParty->id]));
 
     $this->actingAs($user);
     $this->get(CustomerDeliveryNoteResource::getUrl('view', ['record' => $ownNote], panel: 'customer'))->assertSuccessful();
@@ -124,10 +132,10 @@ it('rejects direct access to another customers situation page', function () {
     $otherThirdParty = ThirdParty::factory()->create(['type' => 'client']);
     authenticateCustomerForThirdParty($user, $ownThirdParty);
 
-    $ownOrder = \\App\\Models\\Commerce\\CustomerOrder::withoutEvents(fn () => \\App\\Models\\Commerce\\CustomerOrder::factory()->create(['client_id' => $ownThirdParty->id]));
-    $otherOrder = \\App\\Models\\Commerce\\CustomerOrder::withoutEvents(fn () => \\App\\Models\\Commerce\\CustomerOrder::factory()->create(['client_id' => $otherThirdParty->id]));
-    $ownSituation = \\App\\Models\\Commerce\\CustomerSituation::withoutEvents(fn () => \\App\\Models\\Commerce\\CustomerSituation::factory()->create(['customer_order_id' => $ownOrder->id]));
-    $otherSituation = \\App\\Models\\Commerce\\CustomerSituation::withoutEvents(fn () => \\App\\Models\\Commerce\\CustomerSituation::factory()->create(['customer_order_id' => $otherOrder->id]));
+    $ownOrder = CustomerOrder::withoutEvents(fn () => CustomerOrder::factory()->create(['client_id' => $ownThirdParty->id]));
+    $otherOrder = CustomerOrder::withoutEvents(fn () => CustomerOrder::factory()->create(['client_id' => $otherThirdParty->id]));
+    $ownSituation = CustomerSituation::withoutEvents(fn () => CustomerSituation::factory()->create(['customer_order_id' => $ownOrder->id]));
+    $otherSituation = CustomerSituation::withoutEvents(fn () => CustomerSituation::factory()->create(['customer_order_id' => $otherOrder->id]));
 
     $this->actingAs($user);
     $this->get(CustomerSituationResource::getUrl('view', ['record' => $ownSituation], panel: 'customer'))->assertSuccessful();
