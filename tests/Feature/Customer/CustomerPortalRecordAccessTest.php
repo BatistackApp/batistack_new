@@ -19,6 +19,7 @@ use App\Models\Tiers\Contact;
 use App\Models\Tiers\ThirdParty;
 use App\Models\User;
 use App\Services\Commerce\CommerceDocumentationService;
+use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\URL;
@@ -116,6 +117,7 @@ it('executes the invoice PDF download action only for an authorized invoice', fu
     $this->app->instance(CommerceDocumentationService::class, $documentationService);
 
     $this->actingAs($user);
+    Filament::setCurrentPanel(Filament::getPanel('customer'));
 
     Livewire::test(ViewCustomerInvoice::class, ['record' => $ownInvoice->getRouteKey()])
         ->callAction('downloadPdf');
