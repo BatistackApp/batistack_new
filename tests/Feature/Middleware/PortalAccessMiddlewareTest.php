@@ -2,6 +2,7 @@
 
 use App\Http\Middleware\EnsureUserIsChefDeChantier;
 use App\Http\Middleware\EnsureUserIsEmployee;
+use App\Models\RH\Contract;
 use App\Models\RH\Employee;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -42,7 +43,7 @@ test('an active employee with the chef de chantier title is authorized', functio
         'user_id' => $user->id,
         'is_active' => true,
     ]);
-    \App\Models\RH\Contract::factory()->create([
+    Contract::factory()->create([
         'employee_id' => $employee->id,
         'job_title' => 'Chef de chantier',
         'start_date' => now()->subDay()->toDateString(),
