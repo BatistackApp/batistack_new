@@ -14,6 +14,7 @@ use App\Services\RH\OcrServiceInterface;
 use App\Services\Tiers\Providers\ApiEntrepriseProvider;
 use BezhanSalleh\PanelSwitch\PanelSwitch;
 use Carbon\CarbonImmutable;
+use Filament\Facades\Filament;
 use Filament\Support\Facades\FilamentView;
 use Filament\View\PanelsRenderHook;
 use Illuminate\Support\Facades\Blade;
@@ -52,25 +53,16 @@ class AppServiceProvider extends ServiceProvider
         }
 
         PanelSwitch::configureUsing(function (PanelSwitch $panelSwitch) {
+            $configuredPanels = [
+                'core', 'tiers', 'chantier', 'interventions', 'articles', 'commerce',
+                'banque', 'rh', 'paie', 'flottes', 'immobilisation', 'locations', 'gpao', 'laser',
+            ];
+            $availablePanels = Filament::getPanels()->keys()->all();
+
             $panelSwitch
                 ->modalHeading('Espaces')
                 ->slideOver()
-                ->panels([
-                    'core',
-                    'tiers',
-                    'chantier',
-                    'interventions',
-                    'articles',
-                    'commerce',
-                    'banque',
-                    'rh',
-                    'paie',
-                    'flottes',
-                    'immobilisation',
-                    'locations',
-                    'gpao',
-                    'laser',
-                ])
+                ->panels(array_values(array_intersect($configuredPanels, $availablePanels)))
                 ->icons([
                     'core' => Phosphor::Building,
                     'tiers' => Phosphor::Users,
