@@ -23,6 +23,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\URL;
 use Livewire\Livewire;
+use Mockery;
 
 uses(RefreshDatabase::class);
 
@@ -111,7 +112,7 @@ it('executes the invoice PDF download action only for an authorized invoice', fu
         ->shouldReceive('generateInvoicePdf')
         ->once()
         ->with(Mockery::on(fn (CustomerInvoice $invoice) => $invoice->is($ownInvoice)))
-        ->andThrow(new RuntimeException('Stop after verifying the authorized invoice.'));
+        ->andThrow(new \RuntimeException('Stop after verifying the authorized invoice.'));
     $this->app->instance(CommerceDocumentationService::class, $documentationService);
 
     $this->actingAs($user);
