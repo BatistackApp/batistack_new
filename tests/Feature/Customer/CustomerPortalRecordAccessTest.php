@@ -88,12 +88,18 @@ it('rejects direct access to another customers invoice page and its download act
 });
 
 it('rejects unsigned and tampered invoice payment URLs', function () {
-    $unsignedUrl = route('pay.invoice', ['invoice' => 999999], absolute: false);
+    // Use an existing invoice so implicit route-model binding does not return
+    // 404 before the signed middleware can validate the URL.
+    $invoice = CustomerInvoice::withoutEvents(fn () => CustomerInvoice::factory()->create([
+        'status' => InvoiceStatus::VALIDATED,
+    ]));
+
+    $unsignedUrl = route('pay.invoice', ['invoice' => $invoice->getRouteKey()], absolute: false);
 
     $this->get($unsignedUrl)->assertForbidden();
 
     $signedUrl = URL::signedRoute('pay.invoice', [
-        'invoice' => 999999,
+        'invoice' => $invoice->getRouteKey(),
     ]);
 
     expect(URL::hasValidSignature(Request::create($signedUrl)))->toBeTrue();
