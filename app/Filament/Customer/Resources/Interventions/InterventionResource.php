@@ -81,5 +81,4 @@ class InterventionResource extends Resource
     {
         return true;
     }
-
 }
