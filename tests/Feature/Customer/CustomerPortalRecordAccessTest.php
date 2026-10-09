@@ -4,9 +4,11 @@ namespace Tests\Feature\Customer;
 
 use App\Enums\Commerce\InvoiceStatus;
 use App\Enums\Commerce\QuoteStatus;
+use App\Filament\Customer\Resources\ClientEquipment\ClientEquipmentResource;
 use App\Filament\Customer\Resources\CustomerDeliveryNotes\CustomerDeliveryNoteResource;
 use App\Filament\Customer\Resources\CustomerInvoices\CustomerInvoiceResource;
 use App\Filament\Customer\Resources\CustomerInvoices\Pages\ViewCustomerInvoice;
+use App\Filament\Customer\Resources\Interventions\InterventionResource;
 use App\Filament\Customer\Resources\CustomerOrders\CustomerOrderResource;
 use App\Filament\Customer\Resources\CustomerQuotes\CustomerQuoteResource;
 use App\Filament\Customer\Resources\CustomerSituations\CustomerSituationResource;
@@ -15,6 +17,8 @@ use App\Models\Commerce\CustomerInvoice;
 use App\Models\Commerce\CustomerOrder;
 use App\Models\Commerce\CustomerQuote;
 use App\Models\Commerce\CustomerSituation;
+use App\Models\Interventions\ClientEquipment;
+use App\Models\Interventions\Intervention;
 use App\Models\Tiers\Contact;
 use App\Models\Tiers\ThirdParty;
 use App\Models\User;
@@ -148,6 +152,53 @@ it('does not expose the invoice PDF action for another customers invoice', funct
     // The record must be rejected before Filament can mount the page and expose
     // its download action. The documentation service must never be invoked.
     $this->get(CustomerInvoiceResource::getUrl('view', ['record' => $otherInvoice], panel: 'customer'))
+        ->assertNotFound();
+});
+
+
+it('allows customers to view their own equipment and rejects another customers equipment', function () {
+    $user = User::factory()->create(['is_tiers' => true]);
+    $ownThirdParty = ThirdParty::factory()->create(['type' => 'client']);
+    $otherThirdParty = ThirdParty::factory()->create(['type' => 'client']);
+
+    authenticateCustomerForThirdParty($user, $ownThirdParty);
+
+    $ownEquipment = ClientEquipment::withoutEvents(fn () => ClientEquipment::factory()->create([
+        'third_party_id' => $ownThirdParty->id,
+    ]));
+    $otherEquipment = ClientEquipment::withoutEvents(fn () => ClientEquipment::factory()->create([
+        'third_party_id' => $otherThirdParty->id,
+    ]));
+
+    $this->actingAs($user);
+
+    $this->get(ClientEquipmentResource::getUrl('view', ['record' => $ownEquipment], panel: 'customer'))
+        ->assertSuccessful();
+
+    $this->get(ClientEquipmentResource::getUrl('view', ['record' => $otherEquipment], panel: 'customer'))
+        ->assertNotFound();
+});
+
+it('allows customers to view their own interventions and rejects another customers interventions', function () {
+    $user = User::factory()->create(['is_tiers' => true]);
+    $ownThirdParty = ThirdParty::factory()->create(['type' => 'client']);
+    $otherThirdParty = ThirdParty::factory()->create(['type' => 'client']);
+
+    authenticateCustomerForThirdParty($user, $ownThirdParty);
+
+    $ownIntervention = Intervention::withoutEvents(fn () => Intervention::factory()->create([
+        'third_party_id' => $ownThirdParty->id,
+    ]));
+    $otherIntervention = Intervention::withoutEvents(fn () => Intervention::factory()->create([
+        'third_party_id' => $otherThirdParty->id,
+    ]));
+
+    $this->actingAs($user);
+
+    $this->get(InterventionResource::getUrl('view', ['record' => $ownIntervention], panel: 'customer'))
+        ->assertSuccessful();
+
+    $this->get(InterventionResource::getUrl('view', ['record' => $otherIntervention], panel: 'customer'))
         ->assertNotFound();
 });
 
