@@ -53,15 +53,17 @@ it('scopes query to authenticated user contact third party', function () {
 
     $otherThirdParty = ThirdParty::factory()->create();
 
-    DummyModel::create(['third_party_id' => $thirdParty->id]);
-    DummyModel::create(['third_party_id' => $otherThirdParty->id]);
+    $ownRecord = DummyModel::create(['third_party_id' => $thirdParty->id]);
+    $otherRecord = DummyModel::create(['third_party_id' => $otherThirdParty->id]);
 
     $this->actingAs($user);
 
     $results = DummyResource::getEloquentQuery()->get();
 
-    expect($results->count())->toBe(1);
-    expect($results->first()->third_party_id)->toBe($thirdParty->id);
+    expect($results->count())->toBe(1)
+        ->and($results->first()->third_party_id)->toBe($thirdParty->id)
+        ->and(DummyResource::canView($ownRecord))->toBeTrue()
+        ->and(DummyResource::canView($otherRecord))->toBeFalse();
 });
 
 it('returns empty query if authenticated user has no contact', function () {
