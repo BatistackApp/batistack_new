@@ -3,7 +3,6 @@
 namespace Tests\Feature\Modules\Customer;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class DummyOrderModel extends Model
 {
