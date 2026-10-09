@@ -65,5 +65,4 @@ class CustomerDeliveryNoteResource extends Resource
     {
         return true;
     }
-
 }
