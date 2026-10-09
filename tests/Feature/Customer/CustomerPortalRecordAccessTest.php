@@ -6,12 +6,17 @@ use App\Enums\Commerce\InvoiceStatus;
 use App\Enums\Commerce\QuoteStatus;
 use App\Filament\Customer\Resources\ClientEquipment\ClientEquipmentResource;
 use App\Filament\Customer\Resources\CustomerDeliveryNotes\CustomerDeliveryNoteResource;
+use App\Filament\Customer\Resources\CustomerDeliveryNotes\Pages\ListCustomerDeliveryNotes;
 use App\Filament\Customer\Resources\CustomerInvoices\CustomerInvoiceResource;
+use App\Filament\Customer\Resources\CustomerInvoices\Pages\ListCustomerInvoices;
 use App\Filament\Customer\Resources\CustomerInvoices\Pages\ViewCustomerInvoice;
 use App\Filament\Customer\Resources\Interventions\InterventionResource;
 use App\Filament\Customer\Resources\CustomerOrders\CustomerOrderResource;
+use App\Filament\Customer\Resources\CustomerOrders\Pages\ListCustomerOrders;
 use App\Filament\Customer\Resources\CustomerQuotes\CustomerQuoteResource;
+use App\Filament\Customer\Resources\CustomerQuotes\Pages\ListCustomerQuotes;
 use App\Filament\Customer\Resources\CustomerSituations\CustomerSituationResource;
+use App\Filament\Customer\Resources\CustomerSituations\Pages\ListCustomerSituations;
 use App\Models\Commerce\CustomerDeliveryNote;
 use App\Models\Commerce\CustomerInvoice;
 use App\Models\Commerce\CustomerOrder;
@@ -131,7 +136,7 @@ it('executes the invoice PDF download action only for an authorized invoice', fu
 });
 
 
-it('does not expose the invoice PDF action for another customers invoice', function () {
+it('rejects a foreign invoice before the PDF action can be mounted', function () {
     $user = User::factory()->create(['is_tiers' => true]);
     $ownThirdParty = ThirdParty::factory()->create(['type' => 'client']);
     $otherThirdParty = ThirdParty::factory()->create(['type' => 'client']);
@@ -293,4 +298,104 @@ it('rejects direct access to another customers situation page', function () {
     $this->actingAs($user);
     $this->get(CustomerSituationResource::getUrl('view', ['record' => $ownSituation], panel: 'customer'))->assertSuccessful();
     $this->get(CustomerSituationResource::getUrl('view', ['record' => $otherSituation], panel: 'customer'))->assertNotFound();
+});
+
+
+it('scopes the customer quote list to the authenticated customer', function () {
+    $user = User::factory()->create(['is_tiers' => true]);
+    $ownThirdParty = ThirdParty::factory()->create(['type' => 'client']);
+    $otherThirdParty = ThirdParty::factory()->create(['type' => 'client']);
+    authenticateCustomerForThirdParty($user, $ownThirdParty);
+
+    $ownQuote = CustomerQuote::factory()->create([
+        'client_id' => $ownThirdParty->id,
+        'status' => QuoteStatus::SENT,
+    ]);
+    $otherQuote = CustomerQuote::factory()->create([
+        'client_id' => $otherThirdParty->id,
+        'status' => QuoteStatus::SENT,
+    ]);
+
+    $this->actingAs($user);
+    Filament::setCurrentPanel(Filament::getPanel('customer'));
+
+    Livewire::test(ListCustomerQuotes::class)
+        ->assertCanSeeTableRecords([$ownQuote])
+        ->assertCanNotSeeTableRecords([$otherQuote]);
+});
+
+it('scopes the customer invoice list to the authenticated customer', function () {
+    $user = User::factory()->create(['is_tiers' => true]);
+    $ownThirdParty = ThirdParty::factory()->create(['type' => 'client']);
+    $otherThirdParty = ThirdParty::factory()->create(['type' => 'client']);
+    authenticateCustomerForThirdParty($user, $ownThirdParty);
+
+    $ownInvoice = CustomerInvoice::withoutEvents(fn () => CustomerInvoice::factory()->create([
+        'client_id' => $ownThirdParty->id,
+        'status' => InvoiceStatus::VALIDATED,
+    ]));
+    $otherInvoice = CustomerInvoice::withoutEvents(fn () => CustomerInvoice::factory()->create([
+        'client_id' => $otherThirdParty->id,
+        'status' => InvoiceStatus::VALIDATED,
+    ]));
+
+    $this->actingAs($user);
+    Filament::setCurrentPanel(Filament::getPanel('customer'));
+
+    Livewire::test(ListCustomerInvoices::class)
+        ->assertCanSeeTableRecords([$ownInvoice])
+        ->assertCanNotSeeTableRecords([$otherInvoice]);
+});
+
+it('scopes the customer order list to the authenticated customer', function () {
+    $user = User::factory()->create(['is_tiers' => true]);
+    $ownThirdParty = ThirdParty::factory()->create(['type' => 'client']);
+    $otherThirdParty = ThirdParty::factory()->create(['type' => 'client']);
+    authenticateCustomerForThirdParty($user, $ownThirdParty);
+
+    $ownOrder = CustomerOrder::withoutEvents(fn () => CustomerOrder::factory()->create(['client_id' => $ownThirdParty->id]));
+    $otherOrder = CustomerOrder::withoutEvents(fn () => CustomerOrder::factory()->create(['client_id' => $otherThirdParty->id]));
+
+    $this->actingAs($user);
+    Filament::setCurrentPanel(Filament::getPanel('customer'));
+
+    Livewire::test(ListCustomerOrders::class)
+        ->assertCanSeeTableRecords([$ownOrder])
+        ->assertCanNotSeeTableRecords([$otherOrder]);
+});
+
+it('scopes the customer situation list through the owning order', function () {
+    $user = User::factory()->create(['is_tiers' => true]);
+    $ownThirdParty = ThirdParty::factory()->create(['type' => 'client']);
+    $otherThirdParty = ThirdParty::factory()->create(['type' => 'client']);
+    authenticateCustomerForThirdParty($user, $ownThirdParty);
+
+    $ownOrder = CustomerOrder::withoutEvents(fn () => CustomerOrder::factory()->create(['client_id' => $ownThirdParty->id]));
+    $otherOrder = CustomerOrder::withoutEvents(fn () => CustomerOrder::factory()->create(['client_id' => $otherThirdParty->id]));
+    $ownSituation = CustomerSituation::withoutEvents(fn () => CustomerSituation::factory()->create(['customer_order_id' => $ownOrder->id]));
+    $otherSituation = CustomerSituation::withoutEvents(fn () => CustomerSituation::factory()->create(['customer_order_id' => $otherOrder->id]));
+
+    $this->actingAs($user);
+    Filament::setCurrentPanel(Filament::getPanel('customer'));
+
+    Livewire::test(ListCustomerSituations::class)
+        ->assertCanSeeTableRecords([$ownSituation])
+        ->assertCanNotSeeTableRecords([$otherSituation]);
+});
+
+it('scopes the customer delivery note list to the authenticated customer', function () {
+    $user = User::factory()->create(['is_tiers' => true]);
+    $ownThirdParty = ThirdParty::factory()->create(['type' => 'client']);
+    $otherThirdParty = ThirdParty::factory()->create(['type' => 'client']);
+    authenticateCustomerForThirdParty($user, $ownThirdParty);
+
+    $ownNote = CustomerDeliveryNote::withoutEvents(fn () => CustomerDeliveryNote::factory()->create(['client_id' => $ownThirdParty->id]));
+    $otherNote = CustomerDeliveryNote::withoutEvents(fn () => CustomerDeliveryNote::factory()->create(['client_id' => $otherThirdParty->id]));
+
+    $this->actingAs($user);
+    Filament::setCurrentPanel(Filament::getPanel('customer'));
+
+    Livewire::test(ListCustomerDeliveryNotes::class)
+        ->assertCanSeeTableRecords([$ownNote])
+        ->assertCanNotSeeTableRecords([$otherNote]);
 });
