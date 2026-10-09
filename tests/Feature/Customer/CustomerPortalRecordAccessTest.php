@@ -202,6 +202,31 @@ it('allows customers to view their own interventions and rejects another custome
         ->assertNotFound();
 });
 
+
+it('renders a valid signed payment URL for an authorized invoice', function () {
+    $user = User::factory()->create(['is_tiers' => true]);
+    $thirdParty = ThirdParty::factory()->create(['type' => 'client']);
+
+    authenticateCustomerForThirdParty($user, $thirdParty);
+
+    $invoice = CustomerInvoice::withoutEvents(fn () => CustomerInvoice::factory()->create([
+        'client_id' => $thirdParty->id,
+        'status' => InvoiceStatus::VALIDATED,
+    ]));
+
+    $this->actingAs($user);
+    Filament::setCurrentPanel(Filament::getPanel('customer'));
+
+    $expectedSignedUrl = URL::signedRoute('pay.invoice', [
+        'invoice' => $invoice->id,
+    ]);
+
+    Livewire::test(ViewCustomerInvoice::class, ['record' => $invoice->getRouteKey()])
+        ->assertActionHasUrl('payOnline', $expectedSignedUrl);
+
+    expect(URL::hasValidSignature(Request::create($expectedSignedUrl)))->toBeTrue();
+});
+
 it('rejects unsigned and tampered invoice payment URLs', function () {
     // Use an existing invoice so implicit route-model binding does not return
     // 404 before the signed middleware can validate the URL.
