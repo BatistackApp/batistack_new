@@ -43,12 +43,12 @@ test('an active employee with the chef de chantier title is authorized', functio
         'user_id' => $user->id,
         'is_active' => true,
     ]);
-    Contract::factory()->create([
+    Contract::withoutEvents(fn () => Contract::factory()->create([
         'employee_id' => $employee->id,
         'job_title' => 'Chef de chantier',
         'start_date' => now()->subDay()->toDateString(),
         'end_date' => null,
-    ]);
+    ]));
     auth()->login($user);
 
     $response = app(EnsureUserIsChefDeChantier::class)->handle(
