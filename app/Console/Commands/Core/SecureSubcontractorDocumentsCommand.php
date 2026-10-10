@@ -149,21 +149,83 @@ class SecureSubcontractorDocumentsCommand extends Command
             return false;
         }
 
+        $sourceHash = $this->fileSha256($sourceDisk, $path);
+
+        if ($sourceHash === null) {
+            $this->warn("Impossible de calculer l'empreinte du fichier source : {$sourceDisk}:{$path}");
+
+            return false;
+        }
+
         if ($target->exists($targetPath)) {
-            $this->warn("Le fichier existe déjà sur le disque privé : local:{$targetPath}");
+            $targetHash = $this->fileSha256('local', $targetPath);
+
+            if ($targetHash !== null && hash_equals($sourceHash, $targetHash)) {
+                $this->line("Copie déjà vérifiée : local:{$targetPath}");
+
+                return true;
+            }
+
+            $this->warn("La destination existe mais son empreinte diffère de la source : local:{$targetPath}");
 
             return false;
         }
 
         $stream = $source->readStream($path);
         if (! is_resource($stream)) {
+            $this->warn("Impossible de lire le fichier source : {$sourceDisk}:{$path}");
+
             return false;
         }
 
         try {
-            return $target->writeStream($targetPath, $stream);
+            $written = $target->writeStream($targetPath, $stream);
         } finally {
             fclose($stream);
         }
+
+        if (! $written) {
+            $target->delete($targetPath);
+
+            return false;
+        }
+
+        $targetHash = $this->fileSha256('local', $targetPath);
+
+        if ($targetHash === null || ! hash_equals($sourceHash, $targetHash)) {
+            $target->delete($targetPath);
+            $this->warn("La vérification SHA-256 a échoué ; copie privée supprimée, source conservée : {$sourceDisk}:{$path}");
+
+            return false;
+        }
+
+        return true;
+    }
+
+    private function fileSha256(string $disk, string $path): ?string
+    {
+        $stream = Storage::disk($disk)->readStream($path);
+
+        if (! is_resource($stream)) {
+            return null;
+        }
+
+        $context = hash_init('sha256');
+
+        try {
+            while (! feof($stream)) {
+                $chunk = fread($stream, 8192);
+
+                if ($chunk === false) {
+                    return null;
+                }
+
+                hash_update($context, $chunk);
+            }
+        } finally {
+            fclose($stream);
+        }
+
+        return hash_final($context);
     }
 }
