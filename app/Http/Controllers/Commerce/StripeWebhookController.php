@@ -3,7 +3,8 @@
 namespace App\Http\Controllers\Commerce;
 
 use App\Enums\Commerce\InvoiceStatus;
-use App\Enums\Commerce\PaymentMethod;\nuse App\Enums\Commerce\PaymentStatus;
+use App\Enums\Commerce\PaymentMethod;
+use App\Enums\Commerce\PaymentStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Commerce\CustomerInvoice;
 use App\Models\Commerce\Payment;
