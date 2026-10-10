@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Subcontractor;
 
 use App\Enums\Tiers\ThirdPartyType;
+use App\Models\Commerce\CustomerInvoice;
 use App\Models\Commerce\SubcontractorSituation;
 use App\Models\Core\GeneratedDocument;
 use App\Models\Tiers\ThirdParty;
@@ -71,8 +72,18 @@ class PrivateDocumentController
 
         return GeneratedDocument::query()
             ->whereKey($document)
-            ->where('entity_type', ThirdParty::class)
-            ->where('entity_id', $thirdParty->id)
+            ->where(function ($query) use ($thirdParty): void {
+                $query->where(function ($thirdPartyDocuments) use ($thirdParty): void {
+                    $thirdPartyDocuments->where('entity_type', ThirdParty::class)
+                        ->where('entity_id', $thirdParty->id);
+                })->orWhere(function ($invoiceDocuments) use ($thirdParty): void {
+                    $invoiceDocuments->where('entity_type', CustomerInvoice::class)
+                        ->whereIn('entity_id', CustomerInvoice::query()
+                            ->where('client_id', $thirdParty->id)
+                            ->whereHas('client', fn ($query) => $query->where('type', ThirdPartyType::SUBCONTRACTOR))
+                            ->select('id'));
+                });
+            })
             ->firstOrFail();
     }
 
