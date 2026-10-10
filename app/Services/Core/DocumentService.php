@@ -3,6 +3,7 @@
 namespace App\Services\Core;
 
 use App\Enums\Tiers\ThirdPartyType;
+use App\Models\Commerce\CustomerInvoice;
 use App\Models\Core\GeneratedDocument;
 use App\Models\Tiers\ThirdParty;
 use Illuminate\Database\Eloquent\Model;
@@ -100,13 +101,17 @@ class DocumentService
         }
 
         $disk = static::getDisk();
-        $isSubcontractorDocument = $entity instanceof ThirdParty
-            && $entity->type === ThirdPartyType::SUBCONTRACTOR;
+        $subcontractorId = match (true) {
+            $entity instanceof ThirdParty && $entity->type === ThirdPartyType::SUBCONTRACTOR => $entity->getKey(),
+            $entity instanceof CustomerInvoice && $entity->client?->type === ThirdPartyType::SUBCONTRACTOR => $entity->client_id,
+            default => null,
+        };
 
-        // Les documents du portail sous-traitant doivent rester privés et avoir un chemin isolé.
-        if ($isSubcontractorDocument) {
+        // Les documents du portail sous-traitant, y compris les factures client qui lui sont adressées,
+        // doivent rester privés et être isolés par entreprise.
+        if ($subcontractorId !== null) {
             $disk = 'local';
-            $relativePath = 'subcontractors/'.$entity->getKey().'/documents/'.$type.'/'.$filename.'.pdf';
+            $relativePath = 'subcontractors/'.$subcontractorId.'/documents/'.$type.'/'.$filename.'.pdf';
         } else {
             $relativePath = 'documents/'.$type.'/'.$filename.'.pdf';
         }
