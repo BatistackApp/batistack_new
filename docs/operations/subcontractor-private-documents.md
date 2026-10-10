@@ -4,7 +4,7 @@
 
 La commande `subcontractors:secure-documents` remplace les références aux documents de sous-traitants stockés sur les disques `public` ou `s3-public` par des références vers le disque privé `local`.
 
-**La commande conserve volontairement les fichiers sources publics.** Elle ne vérifie pas encore l'intégrité cryptographique des copies et ne supprime donc pas les sources. Ne supprimez pas manuellement les fichiers publics tant que chaque copie n'a pas été vérifiée.
+**La commande conserve volontairement les fichiers sources publics.** Elle vérifie la copie avec SHA-256 et ne supprime jamais automatiquement les sources. Ne supprimez pas manuellement les fichiers publics tant que chaque copie n'a pas été vérifiée.
 
 Prévoir une fenêtre de maintenance, une sauvegarde de la base de données et des fichiers concernés, ainsi qu'un accès permettant de restaurer ces sauvegardes.
 
@@ -32,7 +32,7 @@ Prévoir une fenêtre de maintenance, une sauvegarde de la base de données et d
 
 ## Limites connues
 
-- Le mode `--dry-run` liste les éléments ciblés ; il ne vérifie ni l'existence ni l'intégrité des fichiers de destination.
-- En cas d'échec ou de copie partielle, ne supprimez pas la source. Examinez le message d'erreur, comparez la source et la destination et restaurez depuis la sauvegarde si nécessaire.
-- Si une destination existe déjà, la commande actuelle signale l'échec au lieu de l'écraser. Cela évite de remplacer silencieusement un fichier, mais peut nécessiter une intervention manuelle pour reprendre une migration interrompue.
-- Cette procédure est un runbook opérationnel ; elle ne remplace pas des tests automatisés d'intégrité de copie ni une procédure de reprise idempotente.
+- Le mode `--dry-run` liste les éléments ciblés ; il ne copie pas les fichiers et ne vérifie pas les empreintes.
+- Pendant l'exécution, la commande compare les empreintes SHA-256 source/destination. Si la destination existe déjà et correspond exactement à la source, elle est considérée comme une copie réussie, ce qui permet de reprendre une migration interrompue. Si les empreintes diffèrent, la commande échoue pour cet élément sans écraser la destination.
+- En cas d'échec ou de copie partielle, la source reste conservée. Examinez le message d'erreur et restaurez depuis la sauvegarde si nécessaire.
+- La vérification d'intégrité réduit le risque de copie incomplète, mais les contrôles fonctionnels des accès et des téléchargements restent obligatoires.
