@@ -196,6 +196,35 @@ it('does not expose equipment presence from unrelated chantiers when no chantier
     $response->assertOk()->assertJson(['data' => []]);
 });
 
+it('does not expose equipment presence from a chantier outside the employee scope', function () {
+    $user = User::factory()->create();
+    $employee = Employee::factory()->create(['user_id' => $user->id]);
+    Company::factory()->create();
+    Contract::factory()->create([
+        'employee_id' => $employee->id,
+        'job_title' => 'Chef de chantier',
+    ]);
+
+    Chantier::factory()->create(['manager_id' => $employee->id]);
+    $unrelatedChantier = Chantier::factory()->create();
+
+    ChantierEquipmentTracking::create([
+        'chantier_id' => $unrelatedChantier->id,
+        'trackable_type' => Equipement::class,
+        'trackable_id' => 999999,
+        'scanned_by' => $user->id,
+        'check_in_at' => now(),
+        'qr_token' => 'issue-510-unrelated-chantier-token',
+    ]);
+
+    $response = $this->actingAs($user)->getJson(route(
+        'chantier-equipment.api.presence',
+        ['chantier_id' => $unrelatedChantier->id]
+    ));
+
+    $response->assertForbidden();
+});
+
 it('rejects checklist submissions whose task belongs to another chantier', function () {
     $user = User::factory()->create();
     $employee = Employee::factory()->create(['user_id' => $user->id]);
