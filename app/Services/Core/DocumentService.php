@@ -13,7 +13,7 @@ use Spatie\Browsershot\Browsershot;
 class DocumentService
 {
     /**
-     * Génère un document PDF à partir d'une vue Blade et l'enregistre sur le disque public.
+     * Génère un document PDF à partir d'une vue Blade et l'enregistre sur le disque configuré, privé pour les sous-traitants.
      *
      * @param  string  $view  Le nom de la vue Blade à rendre.
      * @param  array  $data  Les données à passer à la vue.
@@ -41,7 +41,11 @@ class DocumentService
 
     public function download(string $relativePath, ?string $filename = null)
     {
-        return Storage::disk(static::getDisk())->download($relativePath, $filename);
+        $disk = GeneratedDocument::query()
+            ->where('file_path', $relativePath)
+            ->value('file_disk') ?? static::getDisk();
+
+        return Storage::disk($disk)->download($relativePath, $filename);
     }
 
     public function generate(
