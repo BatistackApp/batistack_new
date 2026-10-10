@@ -28,6 +28,22 @@ use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'welcome')->name('home');
 
+// Les documents du portail sous-traitant sont servis après contrôle d'appartenance.
+Route::middleware(['auth', EnsureUserIsSubcontractor::class])
+    ->prefix('sous-traitant/documents')
+    ->name('subcontractor.documents.')
+    ->group(function () {
+        Route::get('/generated/{document}/preview', [PrivateDocumentController::class, 'previewGenerated'])
+            ->whereNumber('document')
+            ->name('generated.preview');
+        Route::get('/generated/{document}/download', [PrivateDocumentController::class, 'downloadGenerated'])
+            ->whereNumber('document')
+            ->name('generated.download');
+        Route::get('/situations/{situation}/invoice', [PrivateDocumentController::class, 'downloadInvoice'])
+            ->whereNumber('situation')
+            ->name('invoice.download');
+    });
+
 Route::middleware([
     'auth:sanctum',
     config('jetstream.auth_session'),
