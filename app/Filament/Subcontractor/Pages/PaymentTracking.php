@@ -3,11 +3,12 @@
 namespace App\Filament\Subcontractor\Pages;
 
 use App\Enums\Commerce\InvoiceStatus;
+use App\Enums\Tiers\ThirdPartyType;
 use App\Models\Commerce\CustomerInvoice;
 use App\Models\Commerce\SubcontractorSituation;
-use App\Enums\Tiers\ThirdPartyType;
 use App\Models\Tiers\ThirdParty;
 use Carbon\Carbon;
+use Illuminate\Support\Collection;
 use Filament\Actions\Action;
 use Filament\Forms\Components\DatePicker;
 use Filament\Pages\Page;
@@ -126,7 +127,7 @@ class PaymentTracking extends Page implements Tables\Contracts\HasTable
             ->paginated([10, 25, 50]);
     }
 
-    public function getCustomerInvoices(): \Illuminate\Support\Collection
+    public function getCustomerInvoices(): Collection
     {
         $subcontractor = $this->getSubcontractor();
 
