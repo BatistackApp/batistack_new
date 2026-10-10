@@ -4,7 +4,6 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
-use RuntimeException;
 
 return new class extends Migration
 {
@@ -19,7 +18,7 @@ return new class extends Migration
             ->pluck('user_id');
 
         if ($conflictingUsers->isNotEmpty()) {
-            throw new RuntimeException(
+            throw new \RuntimeException(
                 'Cannot enforce one company per user: users linked to multiple companies: '
                 .$conflictingUsers->implode(', ')
                 .'. Resolve these contacts before rerunning this migration.'
