@@ -25,7 +25,11 @@ class TechnicienSyncController extends Controller
     public function index(Request $request)
     {
         $user = $request->user();
-        $salarieId = $user->salarie?->id;
+        $employee = $user->salarie;
+        if (! $employee) {
+            return response()->json(['data' => []]);
+        }
+        $salarieId = $employee->id;
 
         $query = Intervention::with([
             'thirdParty:id,name,address,city,zip_code,phone',
@@ -33,11 +37,9 @@ class TechnicienSyncController extends Controller
             'materials:id,intervention_id,name,quantity,price',
         ])->where('status', '!=', InterventionStatus::BROUILLON->value);
 
-        if ($salarieId) {
-            $query->whereHas('workers', function ($q) use ($salarieId) {
-                $q->where('employee_id', $salarieId);
-            });
-        }
+        $query->whereHas('workers', function ($q) use ($salarieId) {
+            $q->where('employee_id', $salarieId);
+        });
 
         $interventions = $query->get();
 
@@ -56,6 +58,12 @@ class TechnicienSyncController extends Controller
 
         if (! $salarieId) {
             return response()->json(['error' => 'User is not a valid technician.'], 403);
+        }
+
+        // Administrators may override technician access flags, but ordinary users must
+        // have an active employee record and explicit technical access.
+        if (! $user->is_admin && (! $user->salarie->is_active || ! $user->access_technique)) {
+            return response()->json(['error' => 'Technician access is not authorized.'], 403);
         }
 
         $operations = $request->input('operations', []);
