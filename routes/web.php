@@ -74,6 +74,9 @@ Route::middleware(['auth', EnsureUserIsAdmin::class])
     ->name('signatures.download');
 
 Route::get('/pay/invoice/{invoice}', [StripePaymentController::class, 'checkout'])->name('pay.invoice')->middleware('signed');
+Route::get('/sous-traitant/payer/facture/{invoice}', [StripePaymentController::class, 'checkoutSubcontractor'])
+    ->name('pay.subcontractor.invoice')
+    ->middleware(['auth', EnsureUserIsSubcontractor::class, 'signed']);
 Route::get('/payment/success', [StripePaymentController::class, 'success'])->name('payment.success');
 Route::get('/payment/cancel', [StripePaymentController::class, 'cancel'])->name('payment.cancel');
 
