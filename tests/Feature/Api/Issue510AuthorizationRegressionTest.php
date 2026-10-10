@@ -252,7 +252,7 @@ it('does not expose equipment presence from unrelated chantiers when no chantier
 
     $response = $this->actingAs($user)->getJson(route('chantier-equipment.api.presence'));
 
-    $response->assertOk()->assertJson(['data' => []]);
+    $response->assertForbidden();
 });
 
 it('does not expose equipment presence from a chantier outside the employee scope', function () {
