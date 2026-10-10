@@ -134,3 +134,51 @@ it('rejects Terrain API access for a non-authorized employee', function () {
 
     $response->assertForbidden();
 });
+
+
+it('does not allow an author to update a journal entry after losing chantier access', function () {
+    $author = User::factory()->create();
+    $otherUser = User::factory()->create();
+    $chantier = Chantier::factory()->create();
+
+    $log = \\App\\Models\\Chantiers\\ChantierLog::factory()->create([
+        'chantier_id' => $chantier->id,
+        'user_id' => $author->id,
+        'content' => 'Contenu initial',
+    ]);
+
+    // The author has no employee membership/management access to this chantier.
+    $response = $this->actingAs($author)->postJson(route('journal.api.sync'), [
+        'operations' => [[
+            'type' => 'UPDATE_LOG',
+            'payload' => [
+                'id' => $log->id,
+                'content' => 'Modification non autorisée',
+            ],
+        ]],
+    ]);
+
+    $response->assertJson([
+        'processed' => 0,
+        'failed' => 1,
+    ]);
+    expect($log->fresh()->content)->toBe('Contenu initial');
+});
+
+it('does not expose equipment presence from unrelated chantiers when no chantier is selected', function () {
+    $user = User::factory()->create();
+    $chantier = Chantier::factory()->create();
+
+    \\App\\Models\\Chantiers\\ChantierEquipmentTracking::create([
+        'chantier_id' => $chantier->id,
+        'trackable_type' => \\App\\Models\\RH\\Equipement::class,
+        'trackable_id' => 999999,
+        'scanned_by' => $user->id,
+        'check_in_at' => now(),
+        'qr_token' => 'issue-510-test-token',
+    ]);
+
+    $response = $this->actingAs($user)->getJson(route('chantier-equipment.api.presence'));
+
+    $response->assertOk()->assertJson(['data' => []]);
+});
