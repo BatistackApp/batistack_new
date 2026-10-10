@@ -122,6 +122,22 @@ it('can search documents', function () {
     expect($results)->toBe(3);
 });
 
+
+it('groups search OR conditions so they cannot bypass existing query filters', function () {
+    GeneratedDocument::factory()->create([
+        'module' => 'commerce',
+        'type' => 'facture',
+        'file_name' => 'document-interne',
+    ]);
+    GeneratedDocument::factory()->create([
+        'module' => 'rh',
+        'type' => 'contrat',
+        'file_name' => 'document-rh',
+    ]);
+
+    expect(GeneratedDocument::query()->where('module', 'commerce')->search('rh')->count())->toBe(0);
+});
+
 it('soft deletes documents', function () {
     $document = GeneratedDocument::factory()->create();
 
