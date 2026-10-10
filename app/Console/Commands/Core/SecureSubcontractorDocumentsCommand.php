@@ -29,7 +29,7 @@ class SecureSubcontractorDocumentsCommand extends Command
         GeneratedDocument::query()
             ->where('entity_type', ThirdParty::class)
             ->whereIn('entity_id', $subcontractorIds)
-            ->where('file_disk', '!=', 'local')
+            ->whereIn('file_disk', ['public', 's3-public'])
             ->orderBy('id')
             ->chunkById(100, function ($documents) use ($dryRun, &$movedDocuments, &$failed): void {
                 foreach ($documents as $document) {
@@ -77,7 +77,7 @@ class SecureSubcontractorDocumentsCommand extends Command
                         $oldDisk = $media->disk;
                         $path = $media->getPathRelativeToRoot();
 
-                        if ($oldDisk === 'local') {
+                        if (! in_array($oldDisk, ['public', 's3-public'], true)) {
                             continue;
                         }
 
