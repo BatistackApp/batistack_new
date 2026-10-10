@@ -145,7 +145,20 @@ class ChantierEquipmentSyncController extends Controller
                         ]);
                     }
 
-                    // Auto check-out from previous chantier
+                    // Moving equipment must not modify a chantier the user cannot access.
+                    if (! $user->is_admin && (
+                        ! $employee
+                        || ! Chantier::forEmployee($employee)->whereKey($existing->chantier_id)->exists()
+                    )) {
+                        DB::rollBack();
+
+                        return response()->json([
+                            'success' => false,
+                            'error' => 'Accès non autorisé au chantier actuel du matériel.',
+                        ], 403);
+                    }
+
+                    // Auto check-out from previous chantier only when access is authorized.
                     $existing->update(['check_out_at' => now()]);
                 }
 
