@@ -41,7 +41,10 @@ it('serves generated documents only to the subcontractor company they belong to'
     ]));
 
     $response->assertOk();
-    $response->assertHeader('Cache-Control', 'private, no-store, max-age=0');
+    $cacheControl = explode(', ', $response->headers->get('Cache-Control'));
+    sort($cacheControl);
+
+    expect($cacheControl)->toBe(['max-age=0', 'no-store', 'private']);
     $response->assertHeader('Content-Disposition', 'attachment; filename="subcontractor-test.pdf"');
 });
 
