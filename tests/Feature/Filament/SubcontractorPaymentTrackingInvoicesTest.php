@@ -85,3 +85,47 @@ it('calculates payment tracking widgets from issued customer invoices', function
         ->and($stats['total_paye'])->toBe(0.0)
         ->and($stats['reste_a_encaisser'])->toBe(4500.0);
 });
+
+
+it('prevents a subcontractor from paying another company invoice', function () {
+    $user = User::factory()->create(['is_tiers' => true]);
+    $company = ThirdParty::factory()->create(['type' => ThirdPartyType::SUBCONTRACTOR]);
+    $otherCompany = ThirdParty::factory()->create(['type' => ThirdPartyType::SUBCONTRACTOR]);
+
+    Contact::factory()->create([
+        'user_id' => $user->id,
+        'third_party_id' => $company->id,
+        'is_active' => true,
+    ]);
+
+    $invoice = CustomerInvoice::factory()->create([
+        'client_id' => $otherCompany->id,
+        'status' => InvoiceStatus::VALIDATED,
+        'total_ttc' => 4500,
+    ]);
+
+    $url = URL::temporarySignedRoute('pay.subcontractor.invoice', now()->addMinutes(10), ['invoice' => $invoice->id]);
+
+    $this->actingAs($user)->get($url)->assertForbidden();
+});
+
+it('rejects payment attempts for invoices that are not payable', function () {
+    $user = User::factory()->create(['is_tiers' => true]);
+    $company = ThirdParty::factory()->create(['type' => ThirdPartyType::SUBCONTRACTOR]);
+
+    Contact::factory()->create([
+        'user_id' => $user->id,
+        'third_party_id' => $company->id,
+        'is_active' => true,
+    ]);
+
+    $invoice = CustomerInvoice::factory()->create([
+        'client_id' => $company->id,
+        'status' => InvoiceStatus::PAID,
+        'total_ttc' => 4500,
+    ]);
+
+    $url = URL::temporarySignedRoute('pay.subcontractor.invoice', now()->addMinutes(10), ['invoice' => $invoice->id]);
+
+    $this->actingAs($user)->get($url)->assertForbidden();
+});
