@@ -15,6 +15,7 @@ use App\Models\Interventions\InterventionWorker;
 use App\Models\RH\Contract;
 use App\Models\RH\Employee;
 use App\Models\RH\Equipement;
+use App\Models\Locations\RentalContract;
 use App\Models\Tiers\ThirdParty;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -303,6 +304,43 @@ it('rejects checklist submissions whose task belongs to another chantier', funct
     $this->assertDatabaseMissing('checklist_submissions', [
         'chantier_task_id' => $taskB->id,
         'checklist_template_id' => $template->id,
+    ]);
+});
+
+it('rejects rental condition reports on a finished chantier', function () {
+    $user = User::factory()->create();
+    $employee = Employee::factory()->create(['user_id' => $user->id]);
+    Company::factory()->create();
+    Contract::factory()->create([
+        'employee_id' => $employee->id,
+        'job_title' => 'Chef de chantier',
+    ]);
+
+    $chantier = Chantier::factory()->create([
+        'manager_id' => $employee->id,
+        'status' => ChantierStatus::FINISHED,
+    ]);
+    $rentalContract = RentalContract::factory()->create([
+        'chantier_id' => $chantier->id,
+    ]);
+
+    $response = $this->actingAs($user)->postJson(route('etat-des-lieux.api.sync'), [
+        'operations' => [[
+            'type' => 'CREATE_REPORT',
+            'payload' => [
+                'contract_id' => $rentalContract->id,
+                'type' => 'reception',
+                'client_key' => 'issue-510-closed-chantier-report',
+            ],
+        ]],
+    ]);
+
+    $response->assertJson([
+        'processed' => 0,
+        'failed' => 1,
+    ]);
+    $this->assertDatabaseMissing('rental_condition_reports', [
+        'client_key' => 'issue-510-closed-chantier-report',
     ]);
 });
 
