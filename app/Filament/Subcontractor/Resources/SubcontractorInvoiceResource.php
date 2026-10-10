@@ -73,13 +73,10 @@ class SubcontractorInvoiceResource extends Resource
                     ->searchable()
                     ->rules([
                         function (string $attribute, mixed $value, Closure $fail) use ($subcontractorId): void {
-                            $isAssignedToSubcontractor = $subcontractorId
-                                && Chantier::whereKey($value)
-                                    ->whereHas('phases.tasks.allocations', function ($query) use ($subcontractorId) {
-                                        $query->where('allocatable_type', ThirdParty::class)
-                                            ->where('allocatable_id', $subcontractorId);
-                                    })
-                                    ->exists();
+                            $isAssignedToSubcontractor = static::chantierIsAssignedToSubcontractor(
+                                $value,
+                                $subcontractorId
+                            );
 
                             if (! $isAssignedToSubcontractor) {
                                 $fail('Le chantier sélectionné n’est pas attribué à votre entreprise.');
@@ -168,6 +165,20 @@ class SubcontractorInvoiceResource extends Resource
         return [
             //
         ];
+    }
+
+    public static function chantierIsAssignedToSubcontractor(int|string $chantierId, ?int $subcontractorId): bool
+    {
+        if (! $subcontractorId) {
+            return false;
+        }
+
+        return Chantier::whereKey($chantierId)
+            ->whereHas('phases.tasks.allocations', function ($query) use ($subcontractorId) {
+                $query->where('allocatable_type', ThirdParty::class)
+                    ->where('allocatable_id', $subcontractorId);
+            })
+            ->exists();
     }
 
     public static function canAccess(): bool
