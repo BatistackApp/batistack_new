@@ -124,6 +124,21 @@ class PaymentTracking extends Page implements Tables\Contracts\HasTable
             ->paginated([10, 25, 50]);
     }
 
+    public function getCustomerInvoices(): \\Illuminate\\Support\\Collection
+    {
+        $subcontractor = $this->getSubcontractor();
+
+        if (! $subcontractor || $subcontractor->type !== ThirdPartyType::SUBCONTRACTOR) {
+            return collect();
+        }
+
+        return CustomerInvoice::query()
+            ->where('client_id', $subcontractor->getKey())
+            ->withSum('allocations', 'allocated_amount')
+            ->orderByDesc('created_at')
+            ->get();
+    }
+
     private function getSubcontractor(): ?ThirdParty
     {
         $user = auth()->user();
