@@ -3,10 +3,10 @@
 namespace App\Filament\Customer\Resources\CustomerOrders\Tables;
 
 use App\Enums\Commerce\OrderStatus;
-use App\Models\Commerce\CustomerOrder;
 use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 
 class CustomerOrdersTable
@@ -15,11 +15,7 @@ class CustomerOrdersTable
     {
         return $table
             ->defaultSort('reference', 'desc')
-            ->query(
-                CustomerOrder::where('client_id', auth()->user()->contact->third_party_id)
-                    ->where('status', '!=', OrderStatus::DRAFT)
-                    ->newQuery()
-            )
+            ->modifyQueryUsing(fn (Builder $query) => $query->where('status', '!=', OrderStatus::DRAFT))
             ->columns([
                 TextColumn::make('reference')->label('Référence')
                     ->label('Numéro')

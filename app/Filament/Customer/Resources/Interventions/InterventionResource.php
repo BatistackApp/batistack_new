@@ -81,9 +81,4 @@ class InterventionResource extends Resource
     {
         return true;
     }
-
-    public static function canView(Model $record): bool
-    {
-        return true;
-    }
 }

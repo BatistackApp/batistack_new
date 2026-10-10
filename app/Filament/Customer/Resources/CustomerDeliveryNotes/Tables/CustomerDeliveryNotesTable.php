@@ -15,10 +15,6 @@ class CustomerDeliveryNotesTable
     {
         return $table
             ->defaultSort('reference', 'desc')
-            ->query(
-                CustomerDeliveryNote::where('client_id', auth()->user()->contact->third_party_id)
-                    ->newQuery()
-            )
             ->columns([
                 TextColumn::make('reference')->label('Référence')
                     ->label('Référence'),
