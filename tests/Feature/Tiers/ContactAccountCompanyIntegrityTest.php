@@ -59,3 +59,25 @@ it('rejects a contact linked to a different company for the same account at data
         'email' => null,
     ])))->toThrow(QueryException::class);
 });
+
+it('keeps an existing account link when creating an additional contact for the same company', function () {
+    $user = User::factory()->create();
+    $company = ThirdParty::factory()->create();
+
+    $firstContact = Contact::factory()->create([
+        'user_id' => $user->id,
+        'third_party_id' => $company->id,
+        'email' => null,
+    ]);
+
+    $secondContact = Contact::factory()->create([
+        'user_id' => $user->id,
+        'third_party_id' => $company->id,
+        'email' => 'additional-contact@example.test',
+    ]);
+
+    expect($firstContact->fresh()->user_id)->toBe($user->id)
+        ->and($secondContact->fresh()->user_id)->toBe($user->id)
+        ->and(User::query()->count())->toBe(1)
+        ->and(Contact::query()->where('user_id', $user->id)->count())->toBe(2);
+});
