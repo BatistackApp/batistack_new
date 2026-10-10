@@ -14,6 +14,12 @@ class ContactObserver
 {
     public function created(Contact $contact): void
     {
+        // A contact already linked to an account must keep that association.
+        // Only generate credentials when the contact has no user yet.
+        if ($contact->user_id !== null) {
+            return;
+        }
+
         if (! empty($contact->email)
             && in_array($contact->thirdParty->type, [ThirdPartyType::CLIENT, ThirdPartyType::SUBCONTRACTOR], true)
         ) {
