@@ -28,13 +28,13 @@ class AssignedTaskResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        $user = auth()->user();
+        $subcontractor = auth()->user()?->contact?->thirdParty;
 
-        if (! $user || ! $user->contact || ! $user->contact->thirdParty) {
-            return parent::getEloquentQuery()->where('id', 0); // No access
+        if ($subcontractor?->type !== ThirdPartyType::SUBCONTRACTOR) {
+            return parent::getEloquentQuery()->whereRaw('1 = 0');
         }
 
-        $subcontractorId = $user->contact->thirdParty->id;
+        $subcontractorId = $subcontractor->id;
 
         return parent::getEloquentQuery()->whereHas('allocations', function (Builder $query) use ($subcontractorId) {
             $query->where('allocatable_type', ThirdParty::class)
@@ -171,7 +171,7 @@ class AssignedTaskResource extends Resource
 
     public static function canAccess(): bool
     {
-        return true;
+        return auth()->user()?->contact?->thirdParty?->type === ThirdPartyType::SUBCONTRACTOR;
     }
 
     public static function canCreate(): bool
