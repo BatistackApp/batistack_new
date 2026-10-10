@@ -14,7 +14,7 @@ class SecureSubcontractorDocumentsCommand extends Command
 {
     protected $signature = 'subcontractors:secure-documents {--dry-run : Afficher les migrations sans déplacer les fichiers}';
 
-    protected $description = 'Déplace les documents de sous-traitants des disques publics vers le disque privé local';
+    protected $description = 'Copie les documents de sous-traitants vers le disque privé local sans supprimer les sources';
 
     public function handle(): int
     {
@@ -68,11 +68,9 @@ class SecureSubcontractorDocumentsCommand extends Command
                         'file_path' => $targetPath,
                     ]);
 
-                    if (! GeneratedDocument::query()->where('file_disk', $oldDisk)->where('file_path', $oldPath)->exists()) {
-                        Storage::disk($oldDisk)->delete($oldPath);
-                    } else {
-                        $this->warn("Le fichier source {$oldDisk}:{$oldPath} reste utilisé par un autre document indexé.");
-                    }
+                    // Retain public source files until the private copy has been verified operationally.
+                    // This makes the command safe to resume and avoids data loss from a partial/corrupt copy.
+                    $this->warn("Source conservée pour vérification manuelle : {$oldDisk}:{$oldPath}");
 
                     $movedDocuments++;
                 }
@@ -109,7 +107,8 @@ class SecureSubcontractorDocumentsCommand extends Command
                         $media->disk = 'local';
                         $media->save();
 
-                        Storage::disk($oldDisk)->delete($path);
+                        // Retain the public source until the private copy has been verified operationally.
+                        $this->warn("Source conservée pour vérification manuelle : {$oldDisk}:{$path}");
 
                         $movedInvoices++;
                     }
