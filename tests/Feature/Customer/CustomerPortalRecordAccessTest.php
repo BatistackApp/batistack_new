@@ -13,6 +13,8 @@ use App\Filament\Customer\Resources\CustomerInvoices\Pages\ViewCustomerInvoice;
 use App\Filament\Customer\Resources\CustomerOrders\CustomerOrderResource;
 use App\Filament\Customer\Resources\CustomerOrders\Pages\ListCustomerOrders;
 use App\Filament\Customer\Resources\CustomerQuotes\CustomerQuoteResource;
+use App\Filament\Customer\Resources\CustomerQuotes\Pages\ViewCustomerQuote;
+use App\Filament\Customer\Resources\CustomerQuotes\RelationManagers\ItemsRelationManager;
 use App\Filament\Customer\Resources\CustomerQuotes\Pages\ListCustomerQuotes;
 use App\Filament\Customer\Resources\CustomerSituations\CustomerSituationResource;
 use App\Filament\Customer\Resources\CustomerSituations\Pages\ListCustomerSituations;
@@ -408,4 +410,30 @@ it('scopes the customer delivery note list to the authenticated customer', funct
     Livewire::test(ListCustomerDeliveryNotes::class)
         ->assertCanSeeTableRecords([$ownNote])
         ->assertCanNotSeeTableRecords([$otherNote]);
+});
+
+it('keeps customer quote line items read-only in the customer portal', function () {
+    $user = User::factory()->create(['is_tiers' => true]);
+    $thirdParty = ThirdParty::factory()->create(['type' => 'client']);
+    authenticateCustomerForThirdParty($user, $thirdParty);
+
+    $quote = CustomerQuote::factory()->create([
+        'client_id' => $thirdParty->id,
+        'status' => QuoteStatus::SENT,
+    ]);
+
+    $this->actingAs($user);
+    Filament::setCurrentPanel(Filament::getPanel('customer'));
+
+    Livewire::test(ItemsRelationManager::class, [
+        'ownerRecord' => $quote,
+        'pageClass' => ViewCustomerQuote::class,
+    ])
+        ->assertTableActionDoesNotExist('create')
+        ->assertTableActionDoesNotExist('associate')
+        ->assertTableActionDoesNotExist('edit')
+        ->assertTableActionDoesNotExist('dissociate')
+        ->assertTableActionDoesNotExist('delete')
+        ->assertTableBulkActionDoesNotExist('dissociate')
+        ->assertTableBulkActionDoesNotExist('delete');
 });
