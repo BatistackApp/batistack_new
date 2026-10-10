@@ -5,6 +5,7 @@ namespace App\Filament\Subcontractor\Resources\GeneratedDocuments;
 use App\Enums\Tiers\ThirdPartyType;
 use App\Filament\Subcontractor\Resources\GeneratedDocuments\Pages\ListGeneratedDocuments;
 use App\Filament\Subcontractor\Resources\GeneratedDocuments\Pages\ViewGeneratedDocument;
+use App\Models\Commerce\CustomerInvoice;
 use App\Models\Core\GeneratedDocument;
 use App\Models\Tiers\Contact;
 use App\Models\Tiers\ThirdParty;
@@ -85,9 +86,19 @@ class GeneratedDocumentResource extends Resource
             return $query->whereRaw('1 = 0');
         }
 
-        return $query->where('entity_type', ThirdParty::class)
-            ->whereIn('entity_id', $thirdPartyIds)
-            ->whereHas('entity', fn ($q) => $q->where('type', ThirdPartyType::SUBCONTRACTOR));
+        return $query->where(function (Builder $documents) use ($thirdPartyIds): void {
+            $documents->where(function (Builder $thirdPartyDocuments) use ($thirdPartyIds): void {
+                $thirdPartyDocuments->where('entity_type', ThirdParty::class)
+                    ->whereIn('entity_id', $thirdPartyIds)
+                    ->whereHas('entity', fn ($q) => $q->where('type', ThirdPartyType::SUBCONTRACTOR));
+            })->orWhere(function (Builder $invoiceDocuments) use ($thirdPartyIds): void {
+                $invoiceDocuments->where('entity_type', CustomerInvoice::class)
+                    ->whereIn('entity_id', CustomerInvoice::query()
+                        ->whereIn('client_id', $thirdPartyIds)
+                        ->whereHas('client', fn ($q) => $q->where('type', ThirdPartyType::SUBCONTRACTOR))
+                        ->select('id'));
+            });
+        });
     }
 
     public static function table(Table $table): Table
