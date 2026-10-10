@@ -73,7 +73,7 @@ class ConsultationResource extends Resource
                     ->label('Répondre (Soumettre Offre)')
                     ->icon(Phosphor::PaperPlaneTilt)
                     ->color('primary')
-                    ->visible(fn (Consultation $record) => $record->status === 'published')
+                    ->visible(fn (Consultation $record): bool => static::canRespondTo($record))
                     ->schema([
                         TextInput::make('amount')->label('Montant')
                             ->label('Montant de votre offre (€ HT)')
@@ -85,16 +85,8 @@ class ConsultationResource extends Resource
                             ->maxLength(1000),
                     ])
                     ->action(function (Consultation $record, array $data) {
-                        $user = auth()->user();
-
                         // Re-check authorization and publication status server-side.
-                        if (
-                            ! $user
-                            || ! $user->contact
-                            || ! $user->contact->thirdParty
-                            || $user->contact->thirdParty->type !== ThirdPartyType::SUBCONTRACTOR
-                            || $record->status !== 'published'
-                        ) {
+                        if (! static::canRespondTo($record)) {
                             Notification::make()
                                 ->title('Identité invalide')
                                 ->body('Impossible de soumettre une offre sans être identifié comme sous-traitant.')
@@ -117,6 +109,14 @@ class ConsultationResource extends Resource
                             ->send();
                     }),
             ]);
+    }
+
+    public static function canRespondTo(Consultation $consultation): bool
+    {
+        $subcontractor = auth()->user()?->contact?->thirdParty;
+
+        return $subcontractor?->type === ThirdPartyType::SUBCONTRACTOR
+            && $consultation->status === 'published';
     }
 
     public static function canAccess(): bool
