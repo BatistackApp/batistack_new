@@ -109,6 +109,27 @@ it('prevents a subcontractor from paying another company invoice', function () {
     $this->actingAs($user)->get($url)->assertForbidden();
 });
 
+it('does not allow a client account to use the subcontractor invoice payment route', function () {
+    $user = User::factory()->create(['is_tiers' => true]);
+    $company = ThirdParty::factory()->create(['type' => ThirdPartyType::CLIENT]);
+
+    Contact::factory()->create([
+        'user_id' => $user->id,
+        'third_party_id' => $company->id,
+        'is_active' => true,
+    ]);
+
+    $invoice = CustomerInvoice::factory()->create([
+        'client_id' => $company->id,
+        'status' => InvoiceStatus::VALIDATED,
+        'total_ttc' => 4500,
+    ]);
+
+    $url = URL::temporarySignedRoute('pay.subcontractor.invoice', now()->addMinutes(10), ['invoice' => $invoice->id]);
+
+    $this->actingAs($user)->get($url)->assertForbidden();
+});
+
 it('rejects payment attempts for invoices that are not payable', function () {
     $user = User::factory()->create(['is_tiers' => true]);
     $company = ThirdParty::factory()->create(['type' => ThirdPartyType::SUBCONTRACTOR]);
