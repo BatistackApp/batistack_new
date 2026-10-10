@@ -40,13 +40,21 @@ class ChantierEquipmentSyncController extends Controller
     {
         $chantierId = $request->input('chantier_id');
 
+        if (! $chantierId) {
+            return response()->json(['data' => []]);
+        }
+
+        $user = $request->user();
+        $employee = $user->salarie;
+        if (! $user->is_admin && (! $employee || ! Chantier::forEmployee($employee)->whereKey($chantierId)->exists())) {
+            return response()->json(['message' => 'Accès non autorisé à ce chantier.'], 403);
+        }
+
         $query = ChantierEquipmentTracking::query()
             ->with('trackable', 'chantier')
             ->whereDate('check_in_at', today());
 
-        if ($chantierId) {
-            $query->where('chantier_id', $chantierId);
-        }
+        $query->where('chantier_id', $chantierId);
 
         $trackings = $query->latest('check_in_at')->get()
             ->map(fn ($tracking) => [
@@ -83,6 +91,11 @@ class ChantierEquipmentSyncController extends Controller
         $qrToken = $validated['qr_token'];
         $chantierId = $validated['chantier_id'];
         $action = $validated['action'];
+
+        $employee = $user->salarie;
+        if (! $user->is_admin && (! $employee || ! Chantier::forEmployee($employee)->whereKey($chantierId)->exists())) {
+            return response()->json(['success' => false, 'error' => 'Accès non autorisé à ce chantier.'], 403);
+        }
 
         // Resolve equipment by QR token
         $trackable = FixedAsset::where('qr_token', $qrToken)->first();
@@ -153,6 +166,7 @@ class ChantierEquipmentSyncController extends Controller
                 // Check out
                 $tracking = ChantierEquipmentTracking::where('trackable_type', $trackableType)
                     ->where('trackable_id', $trackable->id)
+                    ->where('chantier_id', $chantierId)
                     ->whereNull('check_out_at')
                     ->first();
 
