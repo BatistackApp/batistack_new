@@ -34,29 +34,33 @@ class SecureSubcontractorDocumentsCommand extends Command
             ->chunkById(100, function ($documents) use ($dryRun, &$movedDocuments, &$failed): void {
                 foreach ($documents as $document) {
                     if ($dryRun) {
-                        $this->line("[simulation] Document {$document->id}: {$document->file_disk}:{$document->file_path} → local");
+                        $targetPath = $this->privateGeneratedDocumentPath($document);
+                        $this->line("[simulation] Document {$document->id}: {$document->file_disk}:{$document->file_path} → local:{$targetPath}");
                         $movedDocuments++;
-
-                        continue;
-                    }
-
-                    if (! $this->copyToPrivateDisk($document->file_disk, $document->file_path)) {
-                        $this->error("Échec du déplacement du document {$document->id}.");
-                        $failed++;
 
                         continue;
                     }
 
                     $oldDisk = $document->file_disk;
                     $oldPath = $document->file_path;
+                    $targetPath = $this->privateGeneratedDocumentPath($document);
 
-                    GeneratedDocument::query()
-                        ->where('file_disk', $oldDisk)
-                        ->where('file_path', $oldPath)
-                        ->update(['file_disk' => 'local']);
+                    if (! $this->copyToPrivateDisk($oldDisk, $oldPath, $targetPath)) {
+                        $this->error("Échec du déplacement du document {$document->id}.");
+                        $failed++;
+
+                        continue;
+                    }
+
+                    $document->update([
+                        'file_disk' => 'local',
+                        'file_path' => $targetPath,
+                    ]);
 
                     if (! GeneratedDocument::query()->where('file_disk', $oldDisk)->where('file_path', $oldPath)->exists()) {
                         Storage::disk($oldDisk)->delete($oldPath);
+                    } else {
+                        $this->warn("Le fichier source {$oldDisk}:{$oldPath} reste utilisé par un autre document indexé.");
                     }
 
                     $movedDocuments++;
@@ -106,8 +110,14 @@ class SecureSubcontractorDocumentsCommand extends Command
         return $failed === 0 ? self::SUCCESS : self::FAILURE;
     }
 
-    private function copyToPrivateDisk(string $sourceDisk, string $path): bool
+    private function privateGeneratedDocumentPath(GeneratedDocument $document): string
     {
+        return 'subcontractors/'.$document->entity_id.'/documents/'.$document->module.'/'.$document->type.'/'.basename($document->file_path);
+    }
+
+    private function copyToPrivateDisk(string $sourceDisk, string $path, ?string $targetPath = null): bool
+    {
+        $targetPath ??= $path;
         $source = Storage::disk($sourceDisk);
         $target = Storage::disk('local');
 
@@ -117,8 +127,8 @@ class SecureSubcontractorDocumentsCommand extends Command
             return false;
         }
 
-        if ($target->exists($path)) {
-            $this->warn("Le fichier existe déjà sur le disque privé : local:{$path}");
+        if ($target->exists($targetPath)) {
+            $this->warn("Le fichier existe déjà sur le disque privé : local:{$targetPath}");
 
             return false;
         }
@@ -129,7 +139,7 @@ class SecureSubcontractorDocumentsCommand extends Command
         }
 
         try {
-            return $target->writeStream($path, $stream);
+            return $target->writeStream($targetPath, $stream);
         } finally {
             fclose($stream);
         }
