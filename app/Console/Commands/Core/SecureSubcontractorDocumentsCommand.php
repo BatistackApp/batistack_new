@@ -132,7 +132,7 @@ class SecureSubcontractorDocumentsCommand extends Command
         };
 
         if (! $subcontractorId) {
-            throw new \\LogicException("Le document {$document->id} n'est pas lié à un sous-traitant.");
+            throw new \LogicException("Le document {$document->id} n'est pas lié à un sous-traitant.");
         }
 
         return 'subcontractors/'.$subcontractorId.'/documents/'.$document->module.'/'.$document->type.'/'.basename($document->file_path);
