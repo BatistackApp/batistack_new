@@ -31,6 +31,10 @@ class TechnicienSyncController extends Controller
         }
         $salarieId = $employee->id;
 
+        if (! $user->is_admin && (! $employee->is_active || ! $user->access_technique)) {
+            return response()->json(['error' => 'Technician access is not authorized.'], 403);
+        }
+
         $query = Intervention::with([
             'thirdParty:id,name,address,city,zip_code,phone',
             'chantier:id,name,reference,address,city',
