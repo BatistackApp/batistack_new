@@ -36,11 +36,7 @@ class PaymentTracking extends Page implements Tables\Contracts\HasTable
 
     public function mount(): void
     {
-        $this->tableData = [
-            'total_facture' => $this->getTotalFacture(),
-            'retenues_garantie' => $this->getRetenuesGarantie(),
-            'total_paye' => $this->getTotalPaye(),
-        ];
+        $this->tableData = $this->getCustomerInvoiceStats();
     }
 
     public function table(Table $table): Table
@@ -127,6 +123,36 @@ class PaymentTracking extends Page implements Tables\Contracts\HasTable
             ->paginated([10, 25, 50]);
     }
 
+    /**
+     * Totaux des factures clients émises au sous-traitant connecté.
+     * Les brouillons et factures annulées ne sont pas comptabilisés.
+     *
+     * @return array{total_facture: float, total_paye: float, reste_a_encaisser: float}
+     */
+    public function getCustomerInvoiceStats(): array
+    {
+        $subcontractor = $this->getSubcontractor();
+
+        if (! $subcontractor || $subcontractor->type !== ThirdPartyType::SUBCONTRACTOR) {
+            return ['total_facture' => 0.0, 'total_paye' => 0.0, 'reste_a_encaisser' => 0.0];
+        }
+
+        $invoices = CustomerInvoice::query()
+            ->where('client_id', $subcontractor->getKey())
+            ->whereNotIn('status', [InvoiceStatus::DRAFT->value, InvoiceStatus::CANCELED->value])
+            ->withSum('allocations', 'allocated_amount')
+            ->get();
+
+        $total = (float) $invoices->sum(fn (CustomerInvoice $invoice): float => (float) $invoice->total_ttc);
+        $paid = (float) $invoices->sum(fn (CustomerInvoice $invoice): float => (float) ($invoice->allocations_sum_allocated_amount ?? 0));
+
+        return [
+            'total_facture' => $total,
+            'total_paye' => $paid,
+            'reste_a_encaisser' => max(0, $total - $paid),
+        ];
+    }
+
     public function getCustomerInvoices(): Collection
     {
         $subcontractor = $this->getSubcontractor();
@@ -151,43 +177,6 @@ class PaymentTracking extends Page implements Tables\Contracts\HasTable
         }
 
         return $user->contact->thirdParty;
-    }
-
-    private function getTotalFacture(): float
-    {
-        $thirdParty = $this->getSubcontractor();
-
-        if (! $thirdParty) {
-            return 0;
-        }
-
-        return (float) SubcontractorSituation::where('subcontractor_id', $thirdParty->id)
-            ->sum('total_ht');
-    }
-
-    private function getRetenuesGarantie(): float
-    {
-        $thirdParty = $this->getSubcontractor();
-
-        if (! $thirdParty) {
-            return 0;
-        }
-
-        return (float) SubcontractorSituation::where('subcontractor_id', $thirdParty->id)
-            ->sum('retenue_garantie_amount');
-    }
-
-    private function getTotalPaye(): float
-    {
-        $thirdParty = $this->getSubcontractor();
-
-        if (! $thirdParty) {
-            return 0;
-        }
-
-        return (float) SubcontractorSituation::where('subcontractor_id', $thirdParty->id)
-            ->where('status', InvoiceStatus::PAID)
-            ->sum('total_ht');
     }
 
     private function getChantierOptions(): array
