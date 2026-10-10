@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Enums\Chantiers\ChantierStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Chantiers\Chantier;
 use App\Models\Chantiers\ChantierLog;
@@ -126,13 +127,17 @@ class JournalSyncController extends Controller
             throw new \InvalidArgumentException('chantier_id requis');
         }
 
-        // Vérifier l'accès
-        $hasAccess = Chantier::forEmployee(
-            Employee::findOrFail($employeeId)
-        )->where('id', $chantierId)->exists();
+        // Vérifier l'accès et empêcher toute écriture sur l'historique clôturé.
+        $chantier = Chantier::forEmployee(Employee::findOrFail($employeeId))
+            ->whereKey($chantierId)
+            ->first();
 
-        if (! $hasAccess) {
+        if (! $chantier) {
             throw new \InvalidArgumentException('Accès non autorisé à ce chantier');
+        }
+
+        if (in_array($chantier->status, [ChantierStatus::FINISHED, ChantierStatus::ARCHIVED], true)) {
+            throw new \InvalidArgumentException('Ce chantier est en lecture seule');
         }
 
         ChantierLog::create([
@@ -155,14 +160,17 @@ class JournalSyncController extends Controller
 
         $log = ChantierLog::findOrFail($logId);
 
-        // Vérifier que l'utilisateur est l'auteur ou manage le chantier
-        $hasAccess = $log->user_id === auth()->id()
-            || Chantier::forEmployee(
-                Employee::findOrFail($employeeId)
-            )->where('id', $log->chantier_id)->exists();
+        // Être l'auteur ne suffit pas : l'accès actuel au chantier est obligatoire.
+        $chantier = Chantier::forEmployee(Employee::findOrFail($employeeId))
+            ->whereKey($log->chantier_id)
+            ->first();
 
-        if (! $hasAccess) {
+        if (! $chantier) {
             throw new \InvalidArgumentException('Accès non autorisé');
+        }
+
+        if (in_array($chantier->status, [ChantierStatus::FINISHED, ChantierStatus::ARCHIVED], true)) {
+            throw new \InvalidArgumentException('Ce chantier est en lecture seule');
         }
 
         $log->update([
