@@ -110,3 +110,21 @@ it('lists and serves customer invoices addressed to the authenticated subcontrac
         ->assertOk()
         ->assertHeader('Content-Type', 'application/pdf');
 });
+it('does not serve another subcontractor customer invoice document', function () {
+    Storage::fake('local');
+    [$user] = createSubcontractorPortalUser();
+    $otherCompany = ThirdParty::factory()->create(['type' => ThirdPartyType::SUBCONTRACTOR]);
+    $invoice = CustomerInvoice::factory()->create(['client_id' => $otherCompany->id]);
+    $document = GeneratedDocument::factory()->create([
+        'entity_type' => CustomerInvoice::class,
+        'entity_id' => $invoice->id,
+        'file_disk' => 'local',
+        'file_path' => 'subcontractors/'.$otherCompany->id.'/documents/commerce/other-invoice.pdf',
+        'file_name' => $invoice->reference,
+    ]);
+    Storage::disk('local')->put($document->file_path, '%PDF-1.4 other customer invoice');
+
+    $this->actingAs($user)
+        ->get(route('subcontractor.documents.generated.download', ['document' => $document->id]))
+        ->assertNotFound();
+});
