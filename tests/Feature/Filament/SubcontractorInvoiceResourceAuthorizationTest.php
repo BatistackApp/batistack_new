@@ -14,10 +14,10 @@ uses(RefreshDatabase::class);
 it('limits subcontractor invoice queries to the authenticated subcontractor company', function () {
     $user = User::factory()->create(['is_tiers' => true]);
     $subcontractor = ThirdParty::factory()->create(['type' => ThirdPartyType::SUBCONTRACTOR]);
-    Contact::factory()->create([
+    Contact::withoutEvents(fn () => Contact::factory()->create([
         'user_id' => $user->id,
         'third_party_id' => $subcontractor->id,
-    ]);
+    ]));
     $ownInvoice = SubcontractorSituation::factory()->create([
         'subcontractor_id' => $subcontractor->id,
     ]);
@@ -25,18 +25,19 @@ it('limits subcontractor invoice queries to the authenticated subcontractor comp
 
     $this->actingAs($user);
 
-    expect(SubcontractorInvoiceResource::getEloquentQuery()->pluck('id')->all())
-        ->toBe([$ownInvoice->id])
-        ->not->toContain($otherInvoice->id);
+    $visibleInvoiceIds = SubcontractorInvoiceResource::getEloquentQuery()->pluck('id')->all();
+
+    expect($visibleInvoiceIds)->toBe([$ownInvoice->id]);
+    $this->assertNotContains($otherInvoice->id, $visibleInvoiceIds);
 });
 
 it('denies access to the subcontractor invoice resource for a non-subcontractor contact', function () {
     $user = User::factory()->create(['is_tiers' => true]);
     $client = ThirdParty::factory()->create(['type' => ThirdPartyType::CLIENT]);
-    Contact::factory()->create([
+    Contact::withoutEvents(fn () => Contact::factory()->create([
         'user_id' => $user->id,
         'third_party_id' => $client->id,
-    ]);
+    ]));
 
     $this->actingAs($user);
 
