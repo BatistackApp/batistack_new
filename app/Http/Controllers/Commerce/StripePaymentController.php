@@ -118,7 +118,13 @@ class StripePaymentController extends Controller
         return DB::transaction(function () use ($request, $invoice) {
             $invoice = CustomerInvoice::lockForUpdate()->findOrFail($invoice->id);
             $subcontractor = $request->user()->contact?->thirdParty;
-            abort_unless($subcontractor && (int) $invoice->client_id === (int) $subcontractor->getKey(), 403, 'Cette facture ne vous appartient pas.');
+            abort_unless(
+                $subcontractor
+                    && $subcontractor->type === \App\Enums\Tiers\ThirdPartyType::SUBCONTRACTOR
+                    && (int) $invoice->client_id === (int) $subcontractor->getKey(),
+                403,
+                'Cette facture ne vous appartient pas.'
+            );
 
             if (! in_array($invoice->status, [InvoiceStatus::VALIDATED, InvoiceStatus::PAYMENT_IN_PROGRESS, InvoiceStatus::PARTIALLY_PAID])) {
                 abort(403, 'Cette facture n\'est pas valide pour le paiement.');
