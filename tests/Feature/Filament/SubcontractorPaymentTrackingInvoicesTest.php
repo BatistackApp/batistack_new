@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\Commerce\InvoiceStatus;
 use App\Enums\Tiers\ThirdPartyType;
 use App\Filament\Subcontractor\Pages\PaymentTracking;
 use App\Models\Commerce\CustomerInvoice;
