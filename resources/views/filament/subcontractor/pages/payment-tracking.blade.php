@@ -37,7 +37,49 @@
         </div>
     </div>
 
-    <div>
+    <div class="mb-8">
         {{ $this->table }}
     </div>
+
+    <section class="space-y-4">
+        <div>
+            <h2 class="text-xl font-bold tracking-tight text-gray-950 dark:text-white">Factures clients</h2>
+            <p class="text-sm text-gray-500 dark:text-gray-400">Factures émises par l'entreprise à votre société.</p>
+        </div>
+
+        <div class="overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900">
+            <table class="w-full divide-y divide-gray-200 text-sm dark:divide-gray-800">
+                <thead class="bg-gray-50 dark:bg-gray-800">
+                    <tr>
+                        <th class="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-300">Référence</th>
+                        <th class="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-300">Statut</th>
+                        <th class="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-300">Échéance</th>
+                        <th class="px-4 py-3 text-right font-medium text-gray-600 dark:text-gray-300">Montant TTC</th>
+                        <th class="px-4 py-3 text-right font-medium text-gray-600 dark:text-gray-300">Réglé</th>
+                        <th class="px-4 py-3 text-right font-medium text-gray-600 dark:text-gray-300">Reste à encaisser</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200 dark:divide-gray-800">
+                    @forelse ($this->customerInvoices as $invoice)
+                        @php
+                            $allocated = (float) ($invoice->allocations_sum_allocated_amount ?? 0);
+                            $remaining = max(0, (float) $invoice->total_ttc - $allocated);
+                        @endphp
+                        <tr>
+                            <td class="whitespace-nowrap px-4 py-3 font-mono text-gray-950 dark:text-white">{{ $invoice->reference }}</td>
+                            <td class="whitespace-nowrap px-4 py-3">{{ $invoice->status?->getLabel() ?? $invoice->status?->value ?? '—' }}</td>
+                            <td class="whitespace-nowrap px-4 py-3">{{ $invoice->due_date?->format('d/m/Y') ?? '—' }}</td>
+                            <td class="whitespace-nowrap px-4 py-3 text-right">{{ number_format((float) $invoice->total_ttc, 2, ',', ' ') }} €</td>
+                            <td class="whitespace-nowrap px-4 py-3 text-right">{{ number_format($allocated, 2, ',', ' ') }} €</td>
+                            <td class="whitespace-nowrap px-4 py-3 text-right font-medium">{{ number_format($remaining, 2, ',', ' ') }} €</td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="6" class="px-4 py-8 text-center text-gray-500 dark:text-gray-400">Aucune facture client.</td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+    </section>
 </x-filament-panels::page>
