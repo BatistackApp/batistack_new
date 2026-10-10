@@ -1,12 +1,12 @@
 <?php
 
-use App\\Enums\\Tiers\\ThirdPartyType;
-use App\\Filament\\Subcontractor\\Pages\\PaymentTracking;
-use App\\Models\\Commerce\\CustomerInvoice;
-use App\\Models\\Tiers\\Contact;
-use App\\Models\\Tiers\\ThirdParty;
-use App\\Models\\User;
-use Illuminate\\Foundation\\Testing\\RefreshDatabase;
+use App\Enums\Tiers\ThirdPartyType;
+use App\Filament\Subcontractor\Pages\PaymentTracking;
+use App\Models\Commerce\CustomerInvoice;
+use App\Models\Tiers\Contact;
+use App\Models\Tiers\ThirdParty;
+use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
