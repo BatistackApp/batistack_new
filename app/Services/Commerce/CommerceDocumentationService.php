@@ -105,7 +105,9 @@ class CommerceDocumentationService extends DocumentService
             'pdf.commerce.customer_invoice',
             $data,
             'facture_'.$invoice->reference,
-            'commerce/invoices'
+            'commerce/invoices',
+            entity: $invoice,
+            documentType: 'facture'
         );
     }
 
