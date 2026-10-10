@@ -76,7 +76,7 @@
                             <td class="whitespace-nowrap px-4 py-3 text-right">
                                 @if ($remaining > 0 && in_array($invoice->status?->value, ['validated', 'partially_paid', 'payment_in_progress'], true))
                                     <a
-                                        href="{{ URL::temporarySignedRoute('pay.invoice', now()->addMinutes(30), ['invoice' => $invoice->getKey()]) }}"
+                                        href="{{ URL::temporarySignedRoute('pay.subcontractor.invoice', now()->addMinutes(30), ['invoice' => $invoice->getKey()]) }}"
                                         class="inline-flex items-center rounded-lg bg-primary-600 px-3 py-2 text-sm font-semibold text-white hover:bg-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
                                     >
                                         Payer
