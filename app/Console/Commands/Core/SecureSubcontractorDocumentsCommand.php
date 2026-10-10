@@ -94,9 +94,7 @@ class SecureSubcontractorDocumentsCommand extends Command
                         $media->disk = 'local';
                         $media->save();
 
-                        if (! $media::query()->where('disk', $oldDisk)->where('id', '!=', $media->id)->where('file_name', $media->file_name)->exists()) {
-                            Storage::disk($oldDisk)->delete($path);
-                        }
+                        Storage::disk($oldDisk)->delete($path);
 
                         $movedInvoices++;
                     }
