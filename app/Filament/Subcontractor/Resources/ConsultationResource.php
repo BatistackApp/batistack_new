@@ -36,8 +36,7 @@ class ConsultationResource extends Resource
             return parent::getEloquentQuery()->whereRaw('1 = 0');
         }
 
-        // Les sous-traitants voient uniquement les consultations publiées/clôturées,
-        // sans exposer les consultations d'autres périmètres d'attribution.
+        // Keep the existing marketplace visibility statuses.
         return parent::getEloquentQuery()
             ->whereIn('status', ['published', 'closed', 'awarded']);
     }
@@ -88,7 +87,14 @@ class ConsultationResource extends Resource
                     ->action(function (Consultation $record, array $data) {
                         $user = auth()->user();
 
-                        if (! $user || ! $user->contact || ! $user->contact->thirdParty || $user->contact->thirdParty->type !== ThirdPartyType::SUBCONTRACTOR) {
+                        // Re-check authorization and publication status server-side.
+                        if (
+                            ! $user
+                            || ! $user->contact
+                            || ! $user->contact->thirdParty
+                            || $user->contact->thirdParty->type !== ThirdPartyType::SUBCONTRACTOR
+                            || $record->status !== 'published'
+                        ) {
                             Notification::make()
                                 ->title('Identité invalide')
                                 ->body('Impossible de soumettre une offre sans être identifié comme sous-traitant.')
