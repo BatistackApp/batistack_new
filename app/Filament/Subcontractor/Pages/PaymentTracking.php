@@ -115,7 +115,7 @@ class PaymentTracking extends Page implements Tables\Contracts\HasTable
                     ->label('Télécharger')
                     ->icon('heroicon-o-arrow-down-tray')
                     ->color('primary')
-                    ->url(fn (SubcontractorSituation $record) => $record->getFirstMediaUrl('invoice_document'))
+                    ->url(fn (SubcontractorSituation $record): string => route('subcontractor.documents.invoice.download', ['situation' => $record->getKey()]))
                     ->openUrlInNewTab(),
             ])
             ->bulkActions([
