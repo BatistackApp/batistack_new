@@ -28,7 +28,7 @@ class ViewGeneratedDocument extends ViewRecord
                     /** @var GeneratedDocument $record */
                     $record = $this->record;
 
-                    return $record->temporaryUrl() ?? '#';
+                    return route('subcontractor.documents.generated.preview', ['document' => $record->getKey()]);
                 })
                 ->openUrlInNewTab(),
 
@@ -36,7 +36,10 @@ class ViewGeneratedDocument extends ViewRecord
                 ->label('Télécharger')
                 ->icon(Phosphor::DownloadSimple)
                 ->color('success')
-                ->action(function () {
+                ->url(fn (GeneratedDocument $record): string => route('subcontractor.documents.generated.download', ['document' => $record->getKey()]))
+                ->openUrlInNewTab(),
+
+            /*->action(function () {
                     /** @var GeneratedDocument $record */
                     $record = $this->record;
 
@@ -45,7 +48,7 @@ class ViewGeneratedDocument extends ViewRecord
                     }
 
                     return Storage::disk($record->file_disk)->download($record->file_path, $record->file_name.'.pdf');
-                }),
+                }),*/
         ];
     }
 }
