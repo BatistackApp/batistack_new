@@ -182,3 +182,74 @@ it('does not expose equipment presence from unrelated chantiers when no chantier
 
     $response->assertOk()->assertJson(['data' => []]);
 });
+
+
+it('rejects checklist submissions whose task belongs to another chantier', function () {
+    $user = User::factory()->create();
+    $employee = Employee::factory()->create(['user_id' => $user->id]);
+    $chantierA = Chantier::factory()->create(['manager_id' => $employee->id]);
+    $chantierB = Chantier::factory()->create();
+
+    $phaseB = \\App\\Models\\Chantiers\\ChantierPhase::factory()->create([
+        'chantier_id' => $chantierB->id,
+    ]);
+    $taskB = \\App\\Models\\Chantiers\\ChantierTask::factory()->create([
+        'chantier_phase_id' => $phaseB->id,
+    ]);
+    $template = \\App\\Models\\Chantiers\\ChecklistTemplate::create([
+        'name' => 'Checklist régression issue 510',
+        'description' => 'Test de cloisonnement des chantiers',
+        'schema' => [],
+        'is_active' => true,
+    ]);
+
+    $response = $this->actingAs($user)->postJson(route('checklist.api.sync'), [
+        'operations' => [[
+            'type' => 'CREATE_SUBMISSION',
+            'payload' => [
+                'chantier_id' => $chantierA->id,
+                'chantier_task_id' => $taskB->id,
+                'checklist_template_id' => $template->id,
+                'data' => [],
+            ],
+        ]],
+    ]);
+
+    $response->assertJson([
+        'processed' => 0,
+        'failed' => 1,
+    ]);
+    $this->assertDatabaseMissing('checklist_submissions', [
+        'chantier_task_id' => $taskB->id,
+        'checklist_template_id' => $template->id,
+    ]);
+});
+
+it('rejects new journal entries on a finished chantier', function () {
+    $user = User::factory()->create();
+    $employee = Employee::factory()->create(['user_id' => $user->id]);
+    $chantier = Chantier::factory()->create([
+        'manager_id' => $employee->id,
+        'status' => \\App\\Enums\\Chantiers\\ChantierStatus::FINISHED,
+    ]);
+
+    $response = $this->actingAs($user)->postJson(route('journal.api.sync'), [
+        'operations' => [[
+            'type' => 'CREATE_LOG',
+            'payload' => [
+                'chantier_id' => $chantier->id,
+                'date' => now()->toDateString(),
+                'content' => 'Ne doit pas être ajouté après réception',
+            ],
+        ]],
+    ]);
+
+    $response->assertJson([
+        'processed' => 0,
+        'failed' => 1,
+    ]);
+    $this->assertDatabaseMissing('chantier_logs', [
+        'chantier_id' => $chantier->id,
+        'content' => 'Ne doit pas être ajouté après réception',
+    ]);
+});
