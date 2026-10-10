@@ -89,13 +89,14 @@ class ConsultationResource extends Resource
                         if (! static::canRespondTo($record)) {
                             Notification::make()
                                 ->title('Identité invalide')
-                                ->body('Impossible de soumettre une offre sans être identifié comme sous-traitant.')
+                                ->body('Votre compte ne peut pas répondre à cette consultation, ou celle-ci n’est plus ouverte.')
                                 ->danger()
                                 ->send();
 
                             return;
                         }
 
+                        $user = auth()->user();
                         $thirdPartyId = $user->contact->third_party_id;
 
                         ConsultationOffer::updateOrCreate(
