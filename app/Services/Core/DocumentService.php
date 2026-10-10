@@ -2,7 +2,9 @@
 
 namespace App\Services\Core;
 
+use App\Enums\Tiers\ThirdPartyType;
 use App\Models\Core\GeneratedDocument;
+use App\Models\Tiers\ThirdParty;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -95,6 +97,11 @@ class DocumentService
 
         $relativePath = 'documents/'.$type.'/'.$filename.'.pdf';
         $disk = static::getDisk();
+
+        // Les documents du portail sous-traitant doivent rester hors de la racine publique.
+        if ($entity instanceof ThirdParty && $entity->type === ThirdPartyType::SUBCONTRACTOR) {
+            $disk = 'local';
+        }
 
         Storage::disk($disk)->put($relativePath, $pdfContent);
 
