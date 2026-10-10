@@ -138,7 +138,7 @@ it('rejects Terrain API access for a non-authorized employee', function () {
 
 it('does not allow an author to update a journal entry after losing chantier access', function () {
     $author = User::factory()->create();
-    $otherUser = User::factory()->create();
+    Employee::factory()->create(['user_id' => $author->id]);
     $chantier = Chantier::factory()->create();
 
     $log = \App\\Models\\Chantiers\\ChantierLog::factory()->create([
