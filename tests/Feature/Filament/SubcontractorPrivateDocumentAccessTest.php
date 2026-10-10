@@ -1,6 +1,8 @@
 <?php
 
 use App\Enums\Tiers\ThirdPartyType;
+use App\Filament\Subcontractor\Resources\GeneratedDocuments\GeneratedDocumentResource;
+use App\Models\Commerce\CustomerInvoice;
 use App\Models\Commerce\SubcontractorSituation;
 use App\Models\Core\GeneratedDocument;
 use App\Models\Tiers\Contact;
