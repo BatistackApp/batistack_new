@@ -122,6 +122,64 @@ it('rejects technician sync when technical access is disabled', function () {
     expect($intervention->fresh()->status)->toBe(InterventionStatus::PLANIFIEE);
 });
 
+it('allows administrators to bypass Terrain job-title and active-employee checks', function () {
+    $user = User::factory()->create([
+        'is_admin' => true,
+        'is_employee' => true,
+    ]);
+    $employee = Employee::factory()->create([
+        'user_id' => $user->id,
+        'is_active' => false,
+    ]);
+    $chantier = Chantier::factory()->create([
+        'manager_id' => $employee->id,
+    ]);
+
+    $response = $this->actingAs($user)->getJson(route('journal.api.chantiers'));
+
+    $response->assertOk()->assertJsonPath('data.0.id', $chantier->id);
+});
+
+it('allows administrators to bypass technician access flags', function () {
+    $user = User::factory()->create([
+        'is_admin' => true,
+        'access_technique' => false,
+    ]);
+    $employee = Employee::factory()->create([
+        'user_id' => $user->id,
+        'is_active' => false,
+    ]);
+
+    $company = Company::factory()->create();
+    $thirdParty = ThirdParty::factory()->create();
+    $intervention = Intervention::factory()->create([
+        'company_id' => $company->id,
+        'third_party_id' => $thirdParty->id,
+        'status' => InterventionStatus::PLANIFIEE,
+        'type' => InterventionType::REGIE,
+    ]);
+    InterventionWorker::create([
+        'intervention_id' => $intervention->id,
+        'employee_id' => $employee->id,
+    ]);
+
+    $response = $this->actingAs($user)->postJson('/api/technicien/sync', [
+        'operations' => [[
+            'type' => 'UPDATE_STATUS',
+            'payload' => [
+                'intervention_id' => $intervention->id,
+                'status' => 'TERMINEE',
+            ],
+        ]],
+    ]);
+
+    $response->assertOk()->assertJson([
+        'processed' => 1,
+        'failed' => 0,
+    ]);
+    expect($intervention->fresh()->status)->toBe(InterventionStatus::TERMINEE);
+});
+
 it('rejects Terrain API access for a non-authorized employee', function () {
     $user = User::factory()->create([
         'is_admin' => false,
