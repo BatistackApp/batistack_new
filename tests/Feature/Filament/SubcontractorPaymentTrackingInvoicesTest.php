@@ -50,3 +50,38 @@ it('does not list customer invoices for a non-subcontractor account', function (
 
     expect($page->getCustomerInvoices())->toBeEmpty();
 });
+
+
+it('calculates payment tracking widgets from issued customer invoices', function () {
+    $user = User::factory()->create(['is_tiers' => true]);
+    $company = ThirdParty::factory()->create(['type' => ThirdPartyType::SUBCONTRACTOR]);
+
+    Contact::factory()->create([
+        'user_id' => $user->id,
+        'third_party_id' => $company->id,
+        'is_active' => true,
+    ]);
+
+    CustomerInvoice::factory()->create([
+        'client_id' => $company->id,
+        'status' => InvoiceStatus::VALIDATED,
+        'total_ttc' => 4500,
+    ]);
+    CustomerInvoice::factory()->create([
+        'client_id' => $company->id,
+        'status' => InvoiceStatus::DRAFT,
+        'total_ttc' => 1200,
+    ]);
+    CustomerInvoice::factory()->create([
+        'client_id' => $company->id,
+        'status' => InvoiceStatus::CANCELED,
+        'total_ttc' => 800,
+    ]);
+
+    $this->actingAs($user);
+    $stats = app(PaymentTracking::class)->getCustomerInvoiceStats();
+
+    expect($stats['total_facture'])->toBe(4500.0)
+        ->and($stats['total_paye'])->toBe(0.0)
+        ->and($stats['reste_a_encaisser'])->toBe(4500.0);
+});
