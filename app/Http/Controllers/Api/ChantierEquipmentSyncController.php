@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Enums\Chantiers\ChantierStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Chantiers\Chantier;
 use App\Models\Chantiers\ChantierEquipmentTracking;
@@ -95,6 +96,11 @@ class ChantierEquipmentSyncController extends Controller
         $employee = $user->salarie;
         if (! $user->is_admin && (! $employee || ! Chantier::forEmployee($employee)->whereKey($chantierId)->exists())) {
             return response()->json(['success' => false, 'error' => 'Accès non autorisé à ce chantier.'], 403);
+        }
+
+        $chantier = Chantier::findOrFail($chantierId);
+        if (in_array($chantier->status, [ChantierStatus::FINISHED, ChantierStatus::ARCHIVED], true)) {
+            return response()->json(['success' => false, 'error' => 'Ce chantier est en lecture seule.'], 403);
         }
 
         // Resolve equipment by QR token
