@@ -16,9 +16,7 @@ uses(RefreshDatabase::class);
 /**
  * Regression coverage for issue #510.
  *
- * These tests describe the approved authorization boundaries. They are expected
- * to expose gaps in the current implementation until the corresponding fixes
- * are made; this file intentionally changes no application code.
+ * Regression coverage for the approved authorization boundaries and issue #510 fixes.
  */
 
 it('does not expose interventions to an authenticated user without an employee record', function () {
@@ -169,6 +167,11 @@ it('does not allow an author to update a journal entry after losing chantier acc
 
 it('does not expose equipment presence from unrelated chantiers when no chantier is selected', function () {
     $user = User::factory()->create();
+    $employee = Employee::factory()->create(['user_id' => $user->id]);
+    \\App\\Models\\RH\\Contract::factory()->create([
+        'employee_id' => $employee->id,
+        'job_title' => 'Chef de chantier',
+    ]);
     $chantier = Chantier::factory()->create();
 
     \App\Models\Chantiers\ChantierEquipmentTracking::create([
