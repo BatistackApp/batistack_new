@@ -225,6 +225,41 @@ it('does not expose equipment presence from a chantier outside the employee scop
     $response->assertForbidden();
 });
 
+it('does not move equipment from a chantier the employee cannot access', function () {
+    $user = User::factory()->create();
+    $employee = Employee::factory()->create(['user_id' => $user->id]);
+    Company::factory()->create();
+    Contract::factory()->create([
+        'employee_id' => $employee->id,
+        'job_title' => 'Chef de chantier',
+    ]);
+
+    $destinationChantier = Chantier::factory()->create(['manager_id' => $employee->id]);
+    $sourceChantier = Chantier::factory()->create();
+    $equipment = Equipement::factory()->create([
+        'qr_token' => 'issue-510-equipment-move-token',
+    ]);
+
+    $tracking = ChantierEquipmentTracking::create([
+        'chantier_id' => $sourceChantier->id,
+        'trackable_type' => Equipement::class,
+        'trackable_id' => $equipment->id,
+        'scanned_by' => $user->id,
+        'check_in_at' => now(),
+        'qr_token' => $equipment->qr_token,
+    ]);
+
+    $response = $this->actingAs($user)->postJson(route('chantier-equipment.api.scan'), [
+        'qr_token' => $equipment->qr_token,
+        'chantier_id' => $destinationChantier->id,
+        'action' => 'check_in',
+    ]);
+
+    $response->assertForbidden();
+    expect($tracking->fresh()->check_out_at)->toBeNull();
+    $this->assertDatabaseCount('chantier_equipment_trackings', 1);
+});
+
 it('rejects checklist submissions whose task belongs to another chantier', function () {
     $user = User::factory()->create();
     $employee = Employee::factory()->create(['user_id' => $user->id]);
