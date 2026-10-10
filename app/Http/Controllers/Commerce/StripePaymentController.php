@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Commerce;
 
 use App\Enums\Commerce\InvoiceStatus;
+use App\Enums\Tiers\ThirdPartyType;
 use App\Http\Controllers\Controller;
 use App\Models\Commerce\CustomerInvoice;
 use Illuminate\Http\Request;
@@ -120,7 +121,7 @@ class StripePaymentController extends Controller
             $subcontractor = $request->user()->contact?->thirdParty;
             abort_unless(
                 $subcontractor
-                    && $subcontractor->type === \App\Enums\Tiers\ThirdPartyType::SUBCONTRACTOR
+                    && $subcontractor->type === ThirdPartyType::SUBCONTRACTOR
                     && (int) $invoice->client_id === (int) $subcontractor->getKey(),
                 403,
                 'Cette facture ne vous appartient pas.'
