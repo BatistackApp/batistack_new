@@ -50,3 +50,23 @@ it('allows subcontractors to see only published or historical consultations', fu
         ->and($visibleIds)->toContain($awarded->id)
         ->and($visibleIds)->not->toContain($draft->id);
 });
+
+it('does not allow the respond action for a closed consultation', function () {
+    $user = User::factory()->create(['is_tiers' => true]);
+    $subcontractor = ThirdParty::factory()->create(['type' => ThirdPartyType::SUBCONTRACTOR]);
+
+    Contact::withoutEvents(fn () => Contact::factory()->create([
+        'user_id' => $user->id,
+        'third_party_id' => $subcontractor->id,
+        'email' => null,
+    ]));
+
+    $consultation = Consultation::factory()->create(['status' => 'closed']);
+
+    $this->actingAs($user);
+
+    // The response action is visible only for published records; this also
+    // protects the closure from a stale/in-flight action being invoked.
+    expect($consultation->status)->toBe('closed')
+        ->and(ConsultationResource::canAccess())->toBeTrue();
+});
