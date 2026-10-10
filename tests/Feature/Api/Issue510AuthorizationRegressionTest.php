@@ -126,9 +126,7 @@ it('rejects Terrain API access for a non-authorized employee', function () {
         'is_active' => true,
     ]);
 
-    Chantier::factory()->create([
-        'manager_id' => $employee->id,
-    ]);
+    Chantier::factory()->create();
 
     $response = $this->actingAs($user)->getJson(route('journal.api.chantiers'));
 
@@ -138,10 +136,14 @@ it('rejects Terrain API access for a non-authorized employee', function () {
 
 it('does not allow an author to update a journal entry after losing chantier access', function () {
     $author = User::factory()->create();
-    Employee::factory()->create(['user_id' => $author->id]);
+    $employee = Employee::factory()->create(['user_id' => $author->id]);
+    \App\Models\RH\Contract::factory()->create([
+        'employee_id' => $employee->id,
+        'job_title' => 'Chef de chantier',
+    ]);
     $chantier = Chantier::factory()->create();
 
-    $log = \App\\Models\\Chantiers\\ChantierLog::factory()->create([
+    $log = \App\Models\Chantiers\ChantierLog::factory()->create([
         'chantier_id' => $chantier->id,
         'user_id' => $author->id,
         'content' => 'Contenu initial',
@@ -169,9 +171,9 @@ it('does not expose equipment presence from unrelated chantiers when no chantier
     $user = User::factory()->create();
     $chantier = Chantier::factory()->create();
 
-    \App\\Models\\Chantiers\\ChantierEquipmentTracking::create([
+    \App\Models\Chantiers\ChantierEquipmentTracking::create([
         'chantier_id' => $chantier->id,
-        'trackable_type' => \App\\Models\\RH\\Equipement::class,
+        'trackable_type' => \App\Models\RH\Equipement::class,
         'trackable_id' => 999999,
         'scanned_by' => $user->id,
         'check_in_at' => now(),
@@ -187,16 +189,20 @@ it('does not expose equipment presence from unrelated chantiers when no chantier
 it('rejects checklist submissions whose task belongs to another chantier', function () {
     $user = User::factory()->create();
     $employee = Employee::factory()->create(['user_id' => $user->id]);
+    \App\Models\RH\Contract::factory()->create([
+        'employee_id' => $employee->id,
+        'job_title' => 'Chef de chantier',
+    ]);
     $chantierA = Chantier::factory()->create(['manager_id' => $employee->id]);
     $chantierB = Chantier::factory()->create();
 
-    $phaseB = \App\\Models\\Chantiers\\ChantierPhase::factory()->create([
+    $phaseB = \App\Models\Chantiers\ChantierPhase::factory()->create([
         'chantier_id' => $chantierB->id,
     ]);
-    $taskB = \App\\Models\\Chantiers\\ChantierTask::factory()->create([
+    $taskB = \App\Models\Chantiers\ChantierTask::factory()->create([
         'chantier_phase_id' => $phaseB->id,
     ]);
-    $template = \App\\Models\\Chantiers\\ChecklistTemplate::create([
+    $template = \App\Models\Chantiers\ChecklistTemplate::create([
         'name' => 'Checklist régression issue 510',
         'description' => 'Test de cloisonnement des chantiers',
         'schema' => [],
@@ -228,9 +234,13 @@ it('rejects checklist submissions whose task belongs to another chantier', funct
 it('rejects new journal entries on a finished chantier', function () {
     $user = User::factory()->create();
     $employee = Employee::factory()->create(['user_id' => $user->id]);
+    \App\Models\RH\Contract::factory()->create([
+        'employee_id' => $employee->id,
+        'job_title' => 'Chef de chantier',
+    ]);
     $chantier = Chantier::factory()->create([
         'manager_id' => $employee->id,
-        'status' => \App\\Enums\\Chantiers\\ChantierStatus::FINISHED,
+        'status' => \App\Enums\Chantiers\ChantierStatus::FINISHED,
     ]);
 
     $response = $this->actingAs($user)->postJson(route('journal.api.sync'), [
