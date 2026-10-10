@@ -24,6 +24,18 @@ class PrivateDocumentController
         );
     }
 
+    public function previewGeneratedForAdmin(int $document): StreamedResponse
+    {
+        $record = GeneratedDocument::query()->findOrFail($document);
+
+        return $this->streamFromDisk(
+            $record->file_disk,
+            $record->file_path,
+            $record->file_name,
+            'inline'
+        );
+    }
+
     public function downloadGenerated(Request $request, int $document): StreamedResponse
     {
         $record = $this->findGeneratedDocumentForCurrentSubcontractor($request, $document);
