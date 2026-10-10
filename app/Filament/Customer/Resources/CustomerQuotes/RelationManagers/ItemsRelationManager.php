@@ -2,14 +2,6 @@
 
 namespace App\Filament\Customer\Resources\CustomerQuotes\RelationManagers;
 
-use Filament\Actions\AssociateAction;
-use Filament\Actions\BulkActionGroup;
-use Filament\Actions\CreateAction;
-use Filament\Actions\DeleteAction;
-use Filament\Actions\DeleteBulkAction;
-use Filament\Actions\DissociateAction;
-use Filament\Actions\DissociateBulkAction;
-use Filament\Actions\EditAction;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Grouping\Group;
@@ -62,20 +54,7 @@ class ItemsRelationManager extends RelationManager
             ->filters([
                 //
             ])
-            ->headerActions([
-                CreateAction::make(),
-                AssociateAction::make(),
-            ])
-            ->recordActions([
-                EditAction::make(),
-                DissociateAction::make(),
-                DeleteAction::make(),
-            ])
-            ->toolbarActions([
-                BulkActionGroup::make([
-                    DissociateBulkAction::make(),
-                    DeleteBulkAction::make(),
-                ]),
-            ]);
+            // Customer portal is read-only: no write actions are registered.
+            ;
     }
 }
