@@ -1,14 +1,14 @@
 <?php
 
-namespace App\\Observers\\Tiers;
+namespace App\Observers\Tiers;
 
-use App\\Enums\\Tiers\\ThirdPartyType;
-use App\\Models\\Tiers\\Contact;
-use App\\Models\\User;
-use App\\Notifications\\Tiers\\WelcomeCustomerNotification;
-use Illuminate\\Support\\Facades\\DB;
-use Illuminate\\Support\\Str;
-use Illuminate\\Validation\\ValidationException;
+use App\Enums\Tiers\ThirdPartyType;
+use App\Models\Tiers\Contact;
+use App\Models\User;
+use App\Notifications\Tiers\WelcomeCustomerNotification;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 class ContactObserver
 {
@@ -20,7 +20,7 @@ class ContactObserver
             $user = User::create([
                 'name' => $contact->full_name,
                 'email' => $contact->email,
-                'password' => \\Hash::make(Str::random(12)),
+                'password' => \Hash::make(Str::random(12)),
                 'is_admin' => false,
                 'is_tiers' => true,
             ]);
