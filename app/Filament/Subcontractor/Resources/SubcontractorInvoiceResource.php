@@ -8,6 +8,7 @@ use App\Filament\Subcontractor\Resources\SubcontractorInvoiceResource\Pages;
 use App\Models\Chantiers\Chantier;
 use App\Models\Commerce\SubcontractorSituation;
 use App\Models\Tiers\ThirdParty;
+use Closure;
 use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
@@ -17,7 +18,6 @@ use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
-use Closure;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 
