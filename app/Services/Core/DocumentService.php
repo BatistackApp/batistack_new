@@ -99,12 +99,16 @@ class DocumentService
             );
         }
 
-        $relativePath = 'documents/'.$type.'/'.$filename.'.pdf';
         $disk = static::getDisk();
+        $isSubcontractorDocument = $entity instanceof ThirdParty
+            && $entity->type === ThirdPartyType::SUBCONTRACTOR;
 
-        // Les documents du portail sous-traitant doivent rester hors de la racine publique.
-        if ($entity instanceof ThirdParty && $entity->type === ThirdPartyType::SUBCONTRACTOR) {
+        // Les documents du portail sous-traitant doivent rester privés et avoir un chemin isolé.
+        if ($isSubcontractorDocument) {
             $disk = 'local';
+            $relativePath = 'subcontractors/'.$entity->getKey().'/documents/'.$type.'/'.$filename.'.pdf';
+        } else {
+            $relativePath = 'documents/'.$type.'/'.$filename.'.pdf';
         }
 
         Storage::disk($disk)->put($relativePath, $pdfContent);
