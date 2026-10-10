@@ -62,6 +62,12 @@ Route::get('/signature/{token}', [SignatureController::class, 'show'])->name('si
 Route::post('/signature/{token}', [SignatureController::class, 'sign'])->name('signature.sign');
 Route::post('/signature/{token}/refuse', [SignatureController::class, 'refuse'])->name('signature.refuse');
 
+// Aperçu authentifié des documents générés privés depuis le back-office.
+Route::middleware(['auth', EnsureUserIsAdmin::class])
+    ->get('/admin/generated-documents/{document}/preview', [PrivateDocumentController::class, 'previewGeneratedForAdmin'])
+    ->whereNumber('document')
+    ->name('admin.generated-documents.preview');
+
 // Téléchargement du PDF signé (espace admin/signatures)
 Route::middleware(['auth', EnsureUserIsAdmin::class])
     ->get('/signatures/{signature}/download', [SignatureDownloadController::class, 'download'])
