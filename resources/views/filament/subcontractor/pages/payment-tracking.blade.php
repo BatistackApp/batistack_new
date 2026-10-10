@@ -60,7 +60,7 @@
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-200 dark:divide-gray-800">
-                    @forelse ($this->customerInvoices as $invoice)
+                    @forelse ($this->getCustomerInvoices() as $invoice)
                         @php
                             $allocated = (float) ($invoice->allocations_sum_allocated_amount ?? 0);
                             $remaining = max(0, (float) $invoice->total_ttc - $allocated);
