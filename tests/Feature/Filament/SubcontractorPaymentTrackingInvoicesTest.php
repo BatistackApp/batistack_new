@@ -52,7 +52,6 @@ it('does not list customer invoices for a non-subcontractor account', function (
     expect($page->getCustomerInvoices())->toBeEmpty();
 });
 
-
 it('calculates payment tracking widgets from issued customer invoices', function () {
     $user = User::factory()->create(['is_tiers' => true]);
     $company = ThirdParty::factory()->create(['type' => ThirdPartyType::SUBCONTRACTOR]);
