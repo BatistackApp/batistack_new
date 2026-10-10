@@ -23,7 +23,18 @@ it('lists only customer invoices addressed to the authenticated subcontractor', 
         'is_active' => true,
     ]);
 
-    $invoice = CustomerInvoice::factory()->create(['client_id' => $company->id]);
+    $invoice = CustomerInvoice::factory()->create([
+        'client_id' => $company->id,
+        'status' => InvoiceStatus::VALIDATED,
+    ]);
+    $draftInvoice = CustomerInvoice::factory()->create([
+        'client_id' => $company->id,
+        'status' => InvoiceStatus::DRAFT,
+    ]);
+    $canceledInvoice = CustomerInvoice::factory()->create([
+        'client_id' => $company->id,
+        'status' => InvoiceStatus::CANCELED,
+    ]);
     $otherInvoice = CustomerInvoice::factory()->create(['client_id' => $otherCompany->id]);
 
     $this->actingAs($user);
@@ -32,6 +43,8 @@ it('lists only customer invoices addressed to the authenticated subcontractor', 
 
     expect($visibleIds)
         ->toContain($invoice->id)
+        ->not->toContain($draftInvoice->id)
+        ->not->toContain($canceledInvoice->id)
         ->not->toContain($otherInvoice->id);
 });
 
