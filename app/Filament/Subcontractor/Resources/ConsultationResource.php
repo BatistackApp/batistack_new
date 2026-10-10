@@ -29,8 +29,17 @@ class ConsultationResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        // Les sous-traitants ne voient que les consultations publiées (ou clôturées pour l'historique)
-        return parent::getEloquentQuery()->whereIn('status', ['published', 'closed', 'awarded']);
+        $user = auth()->user();
+        $subcontractor = $user?->contact?->thirdParty;
+
+        if (! $subcontractor || $subcontractor->type !== ThirdPartyType::SUBCONTRACTOR) {
+            return parent::getEloquentQuery()->whereRaw('1 = 0');
+        }
+
+        // Les sous-traitants voient uniquement les consultations publiées/clôturées,
+        // sans exposer les consultations d'autres périmètres d'attribution.
+        return parent::getEloquentQuery()
+            ->whereIn('status', ['published', 'closed', 'awarded']);
     }
 
     public static function table(Table $table): Table
@@ -106,7 +115,9 @@ class ConsultationResource extends Resource
 
     public static function canAccess(): bool
     {
-        return true;
+        $subcontractor = auth()->user()?->contact?->thirdParty;
+
+        return $subcontractor?->type === ThirdPartyType::SUBCONTRACTOR;
     }
 
     public static function getPages(): array
