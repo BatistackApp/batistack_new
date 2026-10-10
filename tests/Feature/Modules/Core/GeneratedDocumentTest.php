@@ -122,7 +122,6 @@ it('can search documents', function () {
     expect($results)->toBe(3);
 });
 
-
 it('groups search OR conditions so they cannot bypass existing query filters', function () {
     GeneratedDocument::factory()->create([
         'module' => 'commerce',
