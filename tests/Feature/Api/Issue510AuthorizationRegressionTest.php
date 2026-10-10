@@ -135,6 +135,7 @@ it('rejects Terrain API access for a non-authorized employee', function () {
 it('does not allow an author to update a journal entry after losing chantier access', function () {
     $author = User::factory()->create();
     $employee = Employee::factory()->create(['user_id' => $author->id]);
+    Company::factory()->create();
     \App\Models\RH\Contract::factory()->create([
         'employee_id' => $employee->id,
         'job_title' => 'Chef de chantier',
@@ -168,6 +169,7 @@ it('does not allow an author to update a journal entry after losing chantier acc
 it('does not expose equipment presence from unrelated chantiers when no chantier is selected', function () {
     $user = User::factory()->create();
     $employee = Employee::factory()->create(['user_id' => $user->id]);
+    Company::factory()->create();
     \App\Models\RH\Contract::factory()->create([
         'employee_id' => $employee->id,
         'job_title' => 'Chef de chantier',
@@ -192,6 +194,7 @@ it('does not expose equipment presence from unrelated chantiers when no chantier
 it('rejects checklist submissions whose task belongs to another chantier', function () {
     $user = User::factory()->create();
     $employee = Employee::factory()->create(['user_id' => $user->id]);
+    Company::factory()->create();
     \App\Models\RH\Contract::factory()->create([
         'employee_id' => $employee->id,
         'job_title' => 'Chef de chantier',
@@ -237,6 +240,7 @@ it('rejects checklist submissions whose task belongs to another chantier', funct
 it('rejects new journal entries on a finished chantier', function () {
     $user = User::factory()->create();
     $employee = Employee::factory()->create(['user_id' => $user->id]);
+    Company::factory()->create();
     \App\Models\RH\Contract::factory()->create([
         'employee_id' => $employee->id,
         'job_title' => 'Chef de chantier',
