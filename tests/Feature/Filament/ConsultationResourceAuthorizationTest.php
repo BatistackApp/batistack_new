@@ -38,6 +38,7 @@ it('allows subcontractors to see only published or historical consultations', fu
 
     $published = Consultation::factory()->create(['status' => 'published']);
     $closed = Consultation::factory()->create(['status' => 'closed']);
+    $awarded = Consultation::factory()->create(['status' => 'awarded']);
     $draft = Consultation::factory()->create(['status' => 'draft']);
 
     $this->actingAs($user);
@@ -46,5 +47,6 @@ it('allows subcontractors to see only published or historical consultations', fu
 
     expect($visibleIds)->toContain($published->id)
         ->and($visibleIds)->toContain($closed->id)
+        ->and($visibleIds)->toContain($awarded->id)
         ->and($visibleIds)->not->toContain($draft->id);
 });
