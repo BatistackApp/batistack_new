@@ -8,6 +8,7 @@ use App\Models\Tiers\Contact;
 use App\Models\Tiers\ThirdParty;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\URL;
 
 uses(RefreshDatabase::class);
 
