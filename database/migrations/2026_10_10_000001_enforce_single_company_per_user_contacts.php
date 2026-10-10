@@ -57,7 +57,7 @@ return new class extends Migration
                 'contacts_user_company_fk'
             )->references(
                 ['user_id', 'third_party_id']
-            )->on('user_third_party_accounts')->cascadeOnDelete();
+            )->on('user_third_party_accounts')->restrictOnDelete();
         });
     }
 
