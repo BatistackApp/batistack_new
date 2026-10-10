@@ -28,6 +28,7 @@ it('denies access to assigned tasks for a non-subcontractor account', function (
     $task->allocations()->create([
         'allocatable_type' => ThirdParty::class,
         'allocatable_id' => $client->id,
+        'date' => now()->toDateString(),
     ]);
 
     $this->actingAs($user);
@@ -55,10 +56,12 @@ it('limits assigned tasks to allocations for the authenticated subcontractor', f
     $ownTask->allocations()->create([
         'allocatable_type' => ThirdParty::class,
         'allocatable_id' => $subcontractor->id,
+        'date' => now()->toDateString(),
     ]);
     $otherTask->allocations()->create([
         'allocatable_type' => ThirdParty::class,
         'allocatable_id' => $otherSubcontractor->id,
+        'date' => now()->toDateString(),
     ]);
 
     $this->actingAs($user);
