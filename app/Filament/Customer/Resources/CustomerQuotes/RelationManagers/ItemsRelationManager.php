@@ -51,10 +51,6 @@ class ItemsRelationManager extends RelationManager
                     ->numeric()
                     ->suffix('%'),
             ])
-            ->filters([
-                //
-            ])
-            // Customer portal is read-only: no write actions are registered.
-            ;
+            ->filters([]); // Customer portal is read-only: no write actions are registered.
     }
 }
