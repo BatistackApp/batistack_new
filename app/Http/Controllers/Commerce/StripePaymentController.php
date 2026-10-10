@@ -8,18 +8,25 @@ use App\Models\Commerce\CustomerInvoice;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Stripe\Checkout\Session;
-use Stripe\Customer;
 use Stripe\Stripe;
 
 class StripePaymentController extends Controller
 {
     public function checkout(Request $request, CustomerInvoice $invoice)
     {
-        return DB::transaction(function () use ($invoice) {
+        abort_unless($request->user(), 401);
+
+        return DB::transaction(function () use ($request, $invoice) {
             $invoice = CustomerInvoice::lockForUpdate()->findOrFail($invoice->id);
+            $subcontractor = $request->user()->contact?->thirdParty;
+            abort_unless($subcontractor && (int) $invoice->client_id === (int) $subcontractor->getKey(), 403, 'Cette facture ne vous appartient pas.');
 
             if (! in_array($invoice->status, [InvoiceStatus::VALIDATED, InvoiceStatus::PAYMENT_IN_PROGRESS, InvoiceStatus::PARTIALLY_PAID])) {
                 abort(403, 'Cette facture n\'est pas valide pour le paiement.');
+            }
+
+            if ($invoice->amount_remaining <= 0) {
+                abort(403, 'Cette facture est déjà réglée.');
             }
 
             Stripe::setApiKey(config('services.stripe.secret'));
@@ -36,18 +43,9 @@ class StripePaymentController extends Controller
                 }
             }
 
-            // On utilise amount_remaining pour permettre le paiement partiel s'il y a déjà des paiements
-            $amountToPay = $invoice->amount_remaining > 0 ? $invoice->amount_remaining : $invoice->total_ttc;
-
-            // Configuration des méthodes de paiement selon le montant
-            $paymentMethodTypes = ['sepa_debit'];
-
-            if ($amountToPay <= 2000) {
-                $paymentMethodTypes[] = 'card';
-                $paymentMethodTypes[] = 'link';
-            } else {
-                $paymentMethodTypes[] = 'customer_balance';
-            }
+            // Le sous-traitant règle uniquement le solde restant par carte ou prélèvement SEPA.
+            $amountToPay = (float) $invoice->amount_remaining;
+            $paymentMethodTypes = ['card', 'sepa_debit'];
 
             $sessionData = [
                 'payment_method_types' => $paymentMethodTypes,
@@ -79,27 +77,6 @@ class StripePaymentController extends Controller
                 'cancel_url' => config('app.url').'/payment/cancel',
             ];
 
-            if (in_array('customer_balance', $paymentMethodTypes)) {
-                $stripeCustomer = Customer::create([
-                    'email' => $invoice->client?->email ?? 'contact@batistack.com',
-                    'name' => $invoice->client?->name ?? 'Client Batistack',
-                ]);
-
-                $sessionData['customer'] = $stripeCustomer->id;
-                unset($sessionData['customer_email']);
-
-                $sessionData['payment_method_options'] = [
-                    'customer_balance' => [
-                        'funding_type' => 'bank_transfer',
-                        'bank_transfer' => [
-                            'type' => 'eu_bank_transfer',
-                            'eu_bank_transfer' => [
-                                'country' => 'FR',
-                            ],
-                        ],
-                    ],
-                ];
-            }
 
             $session = Session::create($sessionData);
 
