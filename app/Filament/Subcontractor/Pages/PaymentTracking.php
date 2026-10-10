@@ -163,6 +163,7 @@ class PaymentTracking extends Page implements Tables\Contracts\HasTable
 
         return CustomerInvoice::query()
             ->where('client_id', $subcontractor->getKey())
+            ->whereNotIn('status', [InvoiceStatus::DRAFT->value, InvoiceStatus::CANCELED->value])
             ->withSum('allocations', 'allocated_amount')
             ->orderByDesc('created_at')
             ->get();
