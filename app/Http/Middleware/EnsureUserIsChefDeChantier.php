@@ -41,19 +41,15 @@ class EnsureUserIsChefDeChantier
                 ->with('error', 'Votre compte n\'est pas relié à une fiche employé active.');
         }
 
-        // Les administrateurs ont déjà été autorisés ci-dessus. Les autres comptes
-        // sont autorisés selon leur intitulé de poste.
+        // Les autres comptes sont autorisés selon leur intitulé de poste.
+        $jobTitle = strtolower($employee->currentContract?->job_title ?? '');
+        $allowedKeywords = ['chef', 'conducteur', 'foreman', 'encadrant', 'responsable'];
         $isAuthorized = false;
 
-        if (! $isAuthorized) {
-            $jobTitle = strtolower($employee->currentContract?->job_title ?? '');
-            $allowedKeywords = ['chef', 'conducteur', 'foreman', 'encadrant', 'responsable'];
-
-            foreach ($allowedKeywords as $keyword) {
-                if (str_contains($jobTitle, $keyword)) {
-                    $isAuthorized = true;
-                    break;
-                }
+        foreach ($allowedKeywords as $keyword) {
+            if (str_contains($jobTitle, $keyword)) {
+                $isAuthorized = true;
+                break;
             }
         }
 
