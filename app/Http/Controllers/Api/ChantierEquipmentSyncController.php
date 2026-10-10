@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Enums\Chantiers\ChantierStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Chantiers\Chantier;
 use App\Models\Chantiers\ChantierEquipmentTracking;
@@ -40,13 +41,21 @@ class ChantierEquipmentSyncController extends Controller
     {
         $chantierId = $request->input('chantier_id');
 
+        if (! $chantierId) {
+            return response()->json(['data' => []]);
+        }
+
+        $user = $request->user();
+        $employee = $user->salarie;
+        if (! $user->is_admin && (! $employee || ! Chantier::forEmployee($employee)->whereKey($chantierId)->exists())) {
+            return response()->json(['message' => 'Accès non autorisé à ce chantier.'], 403);
+        }
+
         $query = ChantierEquipmentTracking::query()
             ->with('trackable', 'chantier')
             ->whereDate('check_in_at', today());
 
-        if ($chantierId) {
-            $query->where('chantier_id', $chantierId);
-        }
+        $query->where('chantier_id', $chantierId);
 
         $trackings = $query->latest('check_in_at')->get()
             ->map(fn ($tracking) => [
@@ -83,6 +92,16 @@ class ChantierEquipmentSyncController extends Controller
         $qrToken = $validated['qr_token'];
         $chantierId = $validated['chantier_id'];
         $action = $validated['action'];
+
+        $employee = $user->salarie;
+        if (! $user->is_admin && (! $employee || ! Chantier::forEmployee($employee)->whereKey($chantierId)->exists())) {
+            return response()->json(['success' => false, 'error' => 'Accès non autorisé à ce chantier.'], 403);
+        }
+
+        $chantier = Chantier::findOrFail($chantierId);
+        if (in_array($chantier->status, [ChantierStatus::FINISHED, ChantierStatus::ARCHIVED], true)) {
+            return response()->json(['success' => false, 'error' => 'Ce chantier est en lecture seule.'], 403);
+        }
 
         // Resolve equipment by QR token
         $trackable = FixedAsset::where('qr_token', $qrToken)->first();
@@ -126,7 +145,20 @@ class ChantierEquipmentSyncController extends Controller
                         ]);
                     }
 
-                    // Auto check-out from previous chantier
+                    // Moving equipment must not modify a chantier the user cannot access.
+                    if (! $user->is_admin && (
+                        ! $employee
+                        || ! Chantier::forEmployee($employee)->whereKey($existing->chantier_id)->exists()
+                    )) {
+                        DB::rollBack();
+
+                        return response()->json([
+                            'success' => false,
+                            'error' => 'Accès non autorisé au chantier actuel du matériel.',
+                        ], 403);
+                    }
+
+                    // Auto check-out from previous chantier only when access is authorized.
                     $existing->update(['check_out_at' => now()]);
                 }
 
@@ -153,6 +185,7 @@ class ChantierEquipmentSyncController extends Controller
                 // Check out
                 $tracking = ChantierEquipmentTracking::where('trackable_type', $trackableType)
                     ->where('trackable_id', $trackable->id)
+                    ->where('chantier_id', $chantierId)
                     ->whereNull('check_out_at')
                     ->first();
 
