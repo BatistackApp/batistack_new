@@ -65,8 +65,24 @@ it('does not allow the respond action for a closed consultation', function () {
 
     $this->actingAs($user);
 
-    // The response action is visible only for published records; this also
-    // protects the closure from a stale/in-flight action being invoked.
-    expect($consultation->status)->toBe('closed')
+    // The server-side guard rejects stale requests after the consultation closes.
+    expect(ConsultationResource::canRespondTo($consultation))->toBeFalse()
         ->and(ConsultationResource::canAccess())->toBeTrue();
+});
+
+it('allows a subcontractor to respond to a published consultation', function () {
+    $user = User::factory()->create(['is_tiers' => true]);
+    $subcontractor = ThirdParty::factory()->create(['type' => ThirdPartyType::SUBCONTRACTOR]);
+
+    Contact::withoutEvents(fn () => Contact::factory()->create([
+        'user_id' => $user->id,
+        'third_party_id' => $subcontractor->id,
+        'email' => null,
+    ]));
+
+    $consultation = Consultation::factory()->create(['status' => 'published']);
+
+    $this->actingAs($user);
+
+    expect(ConsultationResource::canRespondTo($consultation))->toBeTrue();
 });
