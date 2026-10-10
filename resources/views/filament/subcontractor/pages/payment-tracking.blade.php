@@ -57,6 +57,7 @@
                         <th class="px-4 py-3 text-right font-medium text-gray-600 dark:text-gray-300">Montant TTC</th>
                         <th class="px-4 py-3 text-right font-medium text-gray-600 dark:text-gray-300">Réglé</th>
                         <th class="px-4 py-3 text-right font-medium text-gray-600 dark:text-gray-300">Reste à encaisser</th>
+                        <th class="px-4 py-3 text-right font-medium text-gray-600 dark:text-gray-300">Action</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-200 dark:divide-gray-800">
@@ -72,10 +73,22 @@
                             <td class="whitespace-nowrap px-4 py-3 text-right">{{ number_format((float) $invoice->total_ttc, 2, ',', ' ') }} €</td>
                             <td class="whitespace-nowrap px-4 py-3 text-right">{{ number_format($allocated, 2, ',', ' ') }} €</td>
                             <td class="whitespace-nowrap px-4 py-3 text-right font-medium">{{ number_format($remaining, 2, ',', ' ') }} €</td>
+                            <td class="whitespace-nowrap px-4 py-3 text-right">
+                                @if ($remaining > 0 && in_array($invoice->status?->value, ['validated', 'partially_paid', 'payment_in_progress'], true))
+                                    <a
+                                        href="{{ URL::temporarySignedRoute('pay.invoice', now()->addMinutes(30), ['invoice' => $invoice->getKey()]) }}"
+                                        class="inline-flex items-center rounded-lg bg-primary-600 px-3 py-2 text-sm font-semibold text-white hover:bg-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+                                    >
+                                        Payer
+                                    </a>
+                                @else
+                                    <span class="text-gray-400 dark:text-gray-500">—</span>
+                                @endif
+                            </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="px-4 py-8 text-center text-gray-500 dark:text-gray-400">Aucune facture client.</td>
+                            <td colspan="7" class="px-4 py-8 text-center text-gray-500 dark:text-gray-400">Aucune facture client.</td>
                         </tr>
                     @endforelse
                 </tbody>
