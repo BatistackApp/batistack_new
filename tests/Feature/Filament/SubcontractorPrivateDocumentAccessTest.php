@@ -88,3 +88,25 @@ it('downloads an invoice only for the authenticated subcontractor company', func
         ->get(route('subcontractor.documents.invoice.download', ['situation' => $otherSituation->id]))
         ->assertNotFound();
 });
+it('lists and serves customer invoices addressed to the authenticated subcontractor', function () {
+    Storage::fake('local');
+    [$user, $company] = createSubcontractorPortalUser();
+    $invoice = CustomerInvoice::factory()->create(['client_id' => $company->id]);
+    $document = GeneratedDocument::factory()->create([
+        'entity_type' => CustomerInvoice::class,
+        'entity_id' => $invoice->id,
+        'file_disk' => 'local',
+        'file_path' => 'subcontractors/'.$company->id.'/documents/commerce/invoice.pdf',
+        'file_name' => $invoice->reference,
+    ]);
+    Storage::disk('local')->put($document->file_path, '%PDF-1.4 customer invoice');
+
+    $this->actingAs($user);
+
+    expect(GeneratedDocumentResource::getEloquentQuery()->pluck('id')->all())
+        ->toContain($document->id);
+
+    $this->get(route('subcontractor.documents.generated.preview', ['document' => $document->id]))
+        ->assertOk()
+        ->assertHeader('Content-Type', 'application/pdf');
+});
