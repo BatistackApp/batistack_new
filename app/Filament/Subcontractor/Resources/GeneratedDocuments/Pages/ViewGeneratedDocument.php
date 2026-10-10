@@ -6,7 +6,6 @@ use App\Filament\Subcontractor\Resources\GeneratedDocuments\GeneratedDocumentRes
 use App\Models\Core\GeneratedDocument;
 use Filament\Actions\Action;
 use Filament\Resources\Pages\ViewRecord;
-use Illuminate\Support\Facades\Storage;
 use ToneGabes\Filament\Icons\Enums\Phosphor;
 
 class ViewGeneratedDocument extends ViewRecord
@@ -24,31 +23,21 @@ class ViewGeneratedDocument extends ViewRecord
                 ->label('Aperçu PDF')
                 ->icon(Phosphor::Eye)
                 ->color('info')
-                ->url(function () {
-                    /** @var GeneratedDocument $record */
-                    $record = $this->record;
-
-                    return route('subcontractor.documents.generated.preview', ['document' => $record->getKey()]);
-                })
+                ->url(fn (GeneratedDocument $record): string => route(
+                    'subcontractor.documents.generated.preview',
+                    ['document' => $record->getKey()]
+                ))
                 ->openUrlInNewTab(),
 
             Action::make('download')
                 ->label('Télécharger')
                 ->icon(Phosphor::DownloadSimple)
                 ->color('success')
-                ->url(fn (GeneratedDocument $record): string => route('subcontractor.documents.generated.download', ['document' => $record->getKey()]))
+                ->url(fn (GeneratedDocument $record): string => route(
+                    'subcontractor.documents.generated.download',
+                    ['document' => $record->getKey()]
+                ))
                 ->openUrlInNewTab(),
-
-            /*->action(function () {
-                    /** @var GeneratedDocument $record */
-                    $record = $this->record;
-
-                    if (! $record->file_path) {
-                        return;
-                    }
-
-                    return Storage::disk($record->file_disk)->download($record->file_path, $record->file_name.'.pdf');
-                }),*/
         ];
     }
 }
