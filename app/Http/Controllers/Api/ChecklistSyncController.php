@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Enums\Chantiers\ChantierStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Chantiers\Chantier;
 use App\Models\Chantiers\ChantierLog;
@@ -164,6 +165,11 @@ class ChecklistSyncController extends Controller
             throw new \InvalidArgumentException('Accès non autorisé à ce chantier');
         }
 
+        $chantier = Chantier::findOrFail($chantierId);
+        if (in_array($chantier->status, [ChantierStatus::FINISHED, ChantierStatus::ARCHIVED], true)) {
+            throw new \InvalidArgumentException('Ce chantier est en lecture seule');
+        }
+
         $template = ChecklistTemplate::findOrFail($templateId);
 
         // Use task ID from payload if provided, otherwise find first task of the chantier
@@ -173,6 +179,20 @@ class ChecklistSyncController extends Controller
                 ->join('chantier_phases', 'chantier_phases.id', '=', 'chantier_tasks.chantier_phase_id')
                 ->where('chantier_phases.chantier_id', $chantierId)
                 ->value('chantier_tasks.id');
+        } else {
+            $taskBelongsToChantier = ChantierTask::query()
+                ->join('chantier_phases', 'chantier_phases.id', '=', 'chantier_tasks.chantier_phase_id')
+                ->where('chantier_tasks.id', $taskId)
+                ->where('chantier_phases.chantier_id', $chantierId)
+                ->exists();
+
+            if (! $taskBelongsToChantier) {
+                throw new \InvalidArgumentException('La tâche ne fait pas partie de ce chantier');
+            }
+        }
+
+        if (! $taskId) {
+            throw new \InvalidArgumentException('Aucune tâche disponible pour ce chantier');
         }
 
         ChecklistSubmission::create([
