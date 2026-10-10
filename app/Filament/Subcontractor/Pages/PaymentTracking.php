@@ -126,7 +126,7 @@ class PaymentTracking extends Page implements Tables\Contracts\HasTable
             ->paginated([10, 25, 50]);
     }
 
-    public function getCustomerInvoices(): \\Illuminate\\Support\\Collection
+    public function getCustomerInvoices(): \Illuminate\Support\Collection
     {
         $subcontractor = $this->getSubcontractor();
 
