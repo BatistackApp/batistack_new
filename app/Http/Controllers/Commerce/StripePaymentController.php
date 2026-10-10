@@ -176,7 +176,6 @@ class StripePaymentController extends Controller
                 'cancel_url' => config('app.url').'/payment/cancel',
             ];
 
-
             $session = Session::create($sessionData);
 
             $invoice->update([

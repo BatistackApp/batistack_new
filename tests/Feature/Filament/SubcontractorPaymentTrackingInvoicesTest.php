@@ -87,7 +87,6 @@ it('calculates payment tracking widgets from issued customer invoices', function
         ->and($stats['reste_a_encaisser'])->toBe(4500.0);
 });
 
-
 it('prevents a subcontractor from paying another company invoice', function () {
     $user = User::factory()->create(['is_tiers' => true]);
     $company = ThirdParty::factory()->create(['type' => ThirdPartyType::SUBCONTRACTOR]);
