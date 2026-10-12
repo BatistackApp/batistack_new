@@ -7,6 +7,7 @@ on:
       - master
       - 'release/**'
       - production
+      - 'split/**'
   push:
     branches:
       - develop
@@ -301,7 +302,7 @@ jobs:
   test-global:
     runs-on: ubuntu-latest
     environment: Testing
-    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    if: github.event_name == 'pull_request' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
