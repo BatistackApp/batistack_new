@@ -121,8 +121,8 @@ describe('ChantierEquipmentSyncController - presence()', function () {
 
         $response = $this->controller->presence($request);
 
-        $data = $response->getData(true);
-        expect($data['data'])->toHaveCount(0);
+        expect($response->getStatusCode())->toBe(403)
+            ->and($response->getData(true)['message'])->toBe('Accès non autorisé à ce chantier.');
     });
 });
 
