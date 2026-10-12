@@ -1,3 +1,4 @@
+# Ensure the API and data-integrity suites run on this stack.
 # Issue 510 stacked-PR regression workflow
 name: tests
 
