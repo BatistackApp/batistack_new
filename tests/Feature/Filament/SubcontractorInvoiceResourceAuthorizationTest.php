@@ -58,5 +58,13 @@ it('rejects a chantier that is not allocated to the subcontractor company', func
         ->and(SubcontractorInvoiceResource::chantierIsAssignedToSubcontractor(
             $unassignedChantier->id,
             null
+        ))->toBeFalse()
+        ->and(SubcontractorInvoiceResource::chantierIsAssignedToSubcontractor(
+            null,
+            $subcontractor->id
+        ))->toBeFalse()
+        ->and(SubcontractorInvoiceResource::chantierIsAssignedToSubcontractor(
+            '',
+            $subcontractor->id
         ))->toBeFalse();
 });
