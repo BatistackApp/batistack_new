@@ -314,6 +314,14 @@ jobs:
           php-version: '8.4'
           tools: composer:v2
 
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+
+      - name: Install Puppeteer browser
+        run: npx puppeteer browsers install chrome-headless-shell
+
       - name: Configure Flux credentials
         run: composer config http-basic.composer.fluxui.dev "${{ secrets.FLUX_USERNAME }}" "${{ secrets.FLUX_LICENSE_KEY }}"
 
@@ -326,11 +334,37 @@ jobs:
           mkdir -p storage/framework/views storage/framework/cache storage/framework/sessions storage/framework/testing storage/logs bootstrap/cache
           php artisan key:generate
 
-      - name: Run focused issue #510 regression tests
+      - name: Run API authorization regression tests
+        id: api-tests
+        continue-on-error: true
+        run: ./vendor/bin/pest tests/Feature/Api/Issue510AuthorizationRegressionTest.php --no-coverage
+
+      - name: Run contact account-company integrity tests
+        id: integrity-tests
+        continue-on-error: true
+        run: ./vendor/bin/pest tests/Feature/Tiers/ContactAccountCompanyIntegrityTest.php --no-coverage
+
+      - name: Run subcontractor invoice authorization tests
+        id: invoice-tests
+        continue-on-error: true
+        run: ./vendor/bin/pest tests/Feature/Filament/SubcontractorInvoiceResourceAuthorizationTest.php --no-coverage
+
+      - name: Fail if any focused test suite failed
+        if: always()
+        env:
+          API_TESTS_OUTCOME: ${{ steps.api-tests.outcome }}
+          INTEGRITY_TESTS_OUTCOME: ${{ steps.integrity-tests.outcome }}
+          INVOICE_TESTS_OUTCOME: ${{ steps.invoice-tests.outcome }}
         run: |
-          ./vendor/bin/pest tests/Feature/Api/Issue510AuthorizationRegressionTest.php --no-coverage
-          ./vendor/bin/pest tests/Feature/Tiers/ContactAccountCompanyIntegrityTest.php --no-coverage
-          ./vendor/bin/pest tests/Feature/Filament/SubcontractorInvoiceResourceAuthorizationTest.php --no-coverage
+          echo "API authorization tests: $API_TESTS_OUTCOME"
+          echo "Contact integrity tests: $INTEGRITY_TESTS_OUTCOME"
+          echo "Subcontractor invoice tests: $INVOICE_TESTS_OUTCOME"
+
+          if [ "$API_TESTS_OUTCOME" != "success" ] || \
+             [ "$INTEGRITY_TESTS_OUTCOME" != "success" ] || \
+             [ "$INVOICE_TESTS_OUTCOME" != "success" ]; then
+            exit 1
+          fi
 
   test-global:
     runs-on: ubuntu-latest
