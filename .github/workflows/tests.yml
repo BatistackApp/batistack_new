@@ -411,7 +411,11 @@ jobs:
 
           if [ "$API_TESTS_OUTCOME" != "success" ] || \
              [ "$INTEGRITY_TESTS_OUTCOME" != "success" ] || \
-             [ "$INVOICE_TESTS_OUTCOME" != "success" ]; then
+             [ "$INVOICE_TESTS_OUTCOME" != "success" ] || \
+             [ "$ASSIGNMENTS_TESTS_OUTCOME" != "success" ] || \
+             [ "$CONSULTATION_TESTS_OUTCOME" != "success" ] || \
+             [ "$ASSIGNED_TASK_TESTS_OUTCOME" != "success" ] || \
+             [ "$ASSIGNED_TASK_READONLY_TESTS_OUTCOME" != "success" ]; then
             exit 1
           fi
 
