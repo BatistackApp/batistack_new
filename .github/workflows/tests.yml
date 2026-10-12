@@ -7,6 +7,7 @@ on:
       - master
       - 'release/**'
       - production
+      - 'split/**'
   push:
     branches:
       - develop
@@ -298,6 +299,91 @@ jobs:
             ./codecov upload-process -t ${{ secrets.CODECOV_TOKEN }} -F $MODULE -f storage/coverage/coverage-$MODULE.xml
           done
 
+
+  test-pr-issue510:
+    runs-on: ubuntu-latest
+    environment: Testing
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          tools: composer:v2
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+
+      - name: Install Node dependencies
+        run: npm ci
+
+      - name: Install Chrome for Browsershot
+        run: |
+          npx puppeteer browsers install chrome
+          CHROME_PATH="$(find "$HOME/.cache/puppeteer" -type f -path '*/chrome-linux64/chrome' -perm -111 -print -quit)"
+          if [ -z "$CHROME_PATH" ]; then
+            CHROME_PATH="$(find "$HOME/.cache/puppeteer" -type f -name chrome -perm -111 -print -quit)"
+          fi
+          test -n "$CHROME_PATH"
+          echo "BROWSERSHOT_CHROME_PATH=$CHROME_PATH" >> "$GITHUB_ENV"
+
+      - name: Configure Flux credentials
+        run: composer config http-basic.composer.fluxui.dev "${{ secrets.FLUX_USERNAME }}" "${{ secrets.FLUX_LICENSE_KEY }}"
+
+      - name: Install PHP dependencies
+        run: composer install --no-interaction --prefer-dist --optimize-autoloader
+
+      - name: Prepare environment
+        run: |
+          cp .env.example .env
+          mkdir -p storage/framework/views storage/framework/cache storage/framework/sessions storage/framework/testing storage/logs bootstrap/cache
+          php artisan key:generate
+          echo "BROWSERSHOT_CHROME_PATH=$BROWSERSHOT_CHROME_PATH" >> .env
+          echo "BROWSERSHOT_NODE_BINARY_PATH=$(command -v node)" >> .env
+          echo "BROWSERSHOT_NPM_BINARY_PATH=$(command -v npm)" >> .env
+
+      - name: Verify Browsershot browser
+        run: |
+          test -x "$BROWSERSHOT_CHROME_PATH"
+          "$BROWSERSHOT_CHROME_PATH" --version
+
+      - name: Run API authorization regression tests
+        id: api-tests
+        continue-on-error: true
+        run: ./vendor/bin/pest tests/Feature/Api/Issue510AuthorizationRegressionTest.php --no-coverage
+
+      - name: Run contact account-company integrity tests
+        id: integrity-tests
+        continue-on-error: true
+        run: ./vendor/bin/pest tests/Feature/Tiers/ContactAccountCompanyIntegrityTest.php --no-coverage
+
+      - name: Run subcontractor invoice authorization tests
+        id: invoice-tests
+        continue-on-error: true
+        run: ./vendor/bin/pest tests/Feature/Filament/SubcontractorInvoiceResourceAuthorizationTest.php --no-coverage
+
+      - name: Fail if any focused test suite failed
+        if: always()
+        env:
+          API_TESTS_OUTCOME: ${{ steps.api-tests.outcome }}
+          INTEGRITY_TESTS_OUTCOME: ${{ steps.integrity-tests.outcome }}
+          INVOICE_TESTS_OUTCOME: ${{ steps.invoice-tests.outcome }}
+        run: |
+          echo "API authorization tests: $API_TESTS_OUTCOME"
+          echo "Contact integrity tests: $INTEGRITY_TESTS_OUTCOME"
+          echo "Subcontractor invoice tests: $INVOICE_TESTS_OUTCOME"
+
+          if [ "$API_TESTS_OUTCOME" != "success" ] || \
+             [ "$INTEGRITY_TESTS_OUTCOME" != "success" ] || \
+             [ "$INVOICE_TESTS_OUTCOME" != "success" ]; then
+            exit 1
+          fi
+
   test-global:
     runs-on: ubuntu-latest
     environment: Testing
@@ -357,55 +443,3 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           slug: BatistackApp/batistack_new
           files: ./storage/coverage/coverage.xml
-
-  test-subcontractor-payment-regressions:
-    name: Subcontractor payment regression tests
-    runs-on: ubuntu-latest
-    environment: Testing
-    if: github.event_name == 'pull_request'
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v7
-
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: '8.4'
-          tools: composer:v2
-
-      - name: Setup Node
-        uses: actions/setup-node@v7
-        with:
-          node-version: '22'
-          cache: npm
-
-      - name: Install Node dependencies
-        run: npm ci
-
-      - name: Install Chrome for PDF generation
-        run: |
-          npx puppeteer browsers install chrome
-          CHROME_PATH="$(find "$HOME/.cache/puppeteer" -type f -path '*/chrome-linux64/chrome' -perm -111 -print -quit)"
-          if [ -z "$CHROME_PATH" ]; then
-            CHROME_PATH="$(find "$HOME/.cache/puppeteer" -type f -name chrome -perm -111 -print -quit)"
-          fi
-          test -n "$CHROME_PATH"
-          echo "BROWSERSHOT_CHROME_PATH=$CHROME_PATH" >> "$GITHUB_ENV"
-
-      - name: Configure Flux credentials
-        run: composer config http-basic.composer.fluxui.dev "${{ secrets.FLUX_USERNAME }}" "${{ secrets.FLUX_LICENSE_KEY }}"
-
-      - name: Install PHP dependencies
-        run: composer install --no-ansi --no-interaction --no-progress --prefer-dist --optimize-autoloader
-
-      - name: Prepare application environment
-        run: |
-          cp .env.example .env
-          mkdir -p storage/framework/views storage/framework/cache storage/framework/sessions storage/framework/testing storage/logs bootstrap/cache
-          php artisan key:generate
-
-      - name: Build frontend assets
-        run: npm run build
-
-      - name: Run subcontractor payment regression tests
-        run: php artisan test tests/Feature/Filament/SubcontractorPaymentTrackingInvoicesTest.php --no-coverage
