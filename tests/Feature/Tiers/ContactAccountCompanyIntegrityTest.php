@@ -60,6 +60,53 @@ it('rejects a contact linked to a different company for the same account at data
     ])))->toThrow(QueryException::class);
 });
 
+it('prevents deleting an account-company mapping while contacts reference it', function () {
+    $user = User::factory()->create();
+    $company = ThirdParty::factory()->create();
+
+    DB::table('user_third_party_accounts')->insert([
+        'user_id' => $user->id,
+        'third_party_id' => $company->id,
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
+
+    $contact = Contact::withoutEvents(fn () => Contact::factory()->create([
+        'user_id' => $user->id,
+        'third_party_id' => $company->id,
+        'email' => null,
+    ]));
+
+    expect(fn () => DB::table('user_third_party_accounts')
+        ->where('user_id', $user->id)
+        ->delete())->toThrow(QueryException::class);
+
+    $this->assertDatabaseHas('contacts', ['id' => $contact->id]);
+});
+
+it('prevents deleting a user or company when its account-company mapping is referenced by contacts', function () {
+    $user = User::factory()->create();
+    $company = ThirdParty::factory()->create();
+
+    DB::table('user_third_party_accounts')->insert([
+        'user_id' => $user->id,
+        'third_party_id' => $company->id,
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
+
+    $contact = Contact::withoutEvents(fn () => Contact::factory()->create([
+        'user_id' => $user->id,
+        'third_party_id' => $company->id,
+        'email' => null,
+    ]));
+
+    expect(fn () => $user->delete())->toThrow(QueryException::class);
+    expect(fn () => $company->delete())->toThrow(QueryException::class);
+
+    $this->assertDatabaseHas('contacts', ['id' => $contact->id]);
+});
+
 it('keeps an existing account link when creating an additional contact for the same company', function () {
     $user = User::factory()->create();
     $company = ThirdParty::factory()->create();

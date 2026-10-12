@@ -17,6 +17,7 @@ it('limits subcontractor invoice queries to the authenticated subcontractor comp
     Contact::factory()->create([
         'user_id' => $user->id,
         'third_party_id' => $subcontractor->id,
+        'email' => null,
     ]);
     $ownInvoice = SubcontractorSituation::factory()->create([
         'subcontractor_id' => $subcontractor->id,
@@ -37,6 +38,7 @@ it('denies access to the subcontractor invoice resource for a non-subcontractor 
     Contact::factory()->create([
         'user_id' => $user->id,
         'third_party_id' => $client->id,
+        'email' => null,
     ]);
 
     $this->actingAs($user);
@@ -56,5 +58,13 @@ it('rejects a chantier that is not allocated to the subcontractor company', func
         ->and(SubcontractorInvoiceResource::chantierIsAssignedToSubcontractor(
             $unassignedChantier->id,
             null
+        ))->toBeFalse()
+        ->and(SubcontractorInvoiceResource::chantierIsAssignedToSubcontractor(
+            null,
+            $subcontractor->id
+        ))->toBeFalse()
+        ->and(SubcontractorInvoiceResource::chantierIsAssignedToSubcontractor(
+            '',
+            $subcontractor->id
         ))->toBeFalse();
 });
