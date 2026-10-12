@@ -299,10 +299,43 @@ jobs:
             ./codecov upload-process -t ${{ secrets.CODECOV_TOKEN }} -F $MODULE -f storage/coverage/coverage-$MODULE.xml
           done
 
+
+  test-pr-issue510:
+    runs-on: ubuntu-latest
+    environment: Testing
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          tools: composer:v2
+
+      - name: Configure Flux credentials
+        run: composer config http-basic.composer.fluxui.dev "${{ secrets.FLUX_USERNAME }}" "${{ secrets.FLUX_LICENSE_KEY }}"
+
+      - name: Install PHP dependencies
+        run: composer install --no-interaction --prefer-dist --optimize-autoloader
+
+      - name: Prepare environment
+        run: |
+          cp .env.example .env
+          mkdir -p storage/framework/views storage/framework/cache storage/framework/sessions storage/framework/testing storage/logs bootstrap/cache
+          php artisan key:generate
+
+      - name: Run focused issue #510 regression tests
+        run: |
+          ./vendor/bin/pest tests/Feature/Api/Issue510AuthorizationRegressionTest.php --no-coverage
+          ./vendor/bin/pest tests/Feature/Tiers/ContactAccountCompanyIntegrityTest.php --no-coverage
+          ./vendor/bin/pest tests/Feature/Filament/SubcontractorInvoiceResourceAuthorizationTest.php --no-coverage
+
   test-global:
     runs-on: ubuntu-latest
     environment: Testing
-    if: github.event_name == 'pull_request' || github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
