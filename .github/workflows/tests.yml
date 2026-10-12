@@ -15,6 +15,7 @@ on:
       - develop
       - master
       - production
+      - 'split/**'
   schedule:
     - cron: '0 2 * * *'
   workflow_dispatch:
@@ -305,7 +306,7 @@ jobs:
   test-pr-issue510:
     runs-on: ubuntu-latest
     environment: Testing
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'pull_request' || (github.event_name == 'push' && startsWith(github.ref, 'refs/heads/split/'))
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
