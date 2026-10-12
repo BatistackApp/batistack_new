@@ -18,7 +18,7 @@ beforeEach(function () {
     $this->employee = Employee::factory()->create([
         'user_id' => $this->user->id,
     ]);
-    $this->chantier = Chantier::factory()->create([
+    $this->chantier = Chantier::factory()->inProgress()->create([
         'manager_id' => $this->employee->id,
     ]);
     $this->category = AssetCategory::factory()->create();
@@ -69,6 +69,8 @@ describe('ChantierEquipmentSyncController - presence()', function () {
         ]);
 
         $request = Request::create("/api/chantier-equipment/presence?chantier_id={$this->chantier->id}", 'GET');
+        $request->setUserResolver(fn () => $this->user);
+
         $response = $this->controller->presence($request);
 
         expect($response->getStatusCode())->toBe(200);
@@ -115,6 +117,8 @@ describe('ChantierEquipmentSyncController - presence()', function () {
         ]);
 
         $request = Request::create("/api/chantier-equipment/presence?chantier_id={$otherChantier->id}", 'GET');
+        $request->setUserResolver(fn () => $this->user);
+
         $response = $this->controller->presence($request);
 
         $data = $response->getData(true);
@@ -219,7 +223,9 @@ describe('ChantierEquipmentSyncController - scan()', function () {
         ]);
 
         // Créer un tracking ouvert sur un autre chantier
-        $otherChantier = Chantier::factory()->create();
+        $otherChantier = Chantier::factory()->inProgress()->create([
+            'manager_id' => $this->employee->id,
+        ]);
         ChantierEquipmentTracking::create([
             'chantier_id' => $otherChantier->id,
             'trackable_type' => FixedAsset::class,
