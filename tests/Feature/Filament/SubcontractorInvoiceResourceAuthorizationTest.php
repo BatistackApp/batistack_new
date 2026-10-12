@@ -14,10 +14,10 @@ uses(RefreshDatabase::class);
 it('limits subcontractor invoice queries to the authenticated subcontractor company', function () {
     $user = User::factory()->create(['is_tiers' => true]);
     $subcontractor = ThirdParty::factory()->create(['type' => ThirdPartyType::SUBCONTRACTOR]);
-    Contact::withoutEvents(fn () => Contact::factory()->create([
+    Contact::factory()->create([
         'user_id' => $user->id,
         'third_party_id' => $subcontractor->id,
-    ]));
+    ]);
     $ownInvoice = SubcontractorSituation::factory()->create([
         'subcontractor_id' => $subcontractor->id,
     ]);
@@ -34,10 +34,10 @@ it('limits subcontractor invoice queries to the authenticated subcontractor comp
 it('denies access to the subcontractor invoice resource for a non-subcontractor contact', function () {
     $user = User::factory()->create(['is_tiers' => true]);
     $client = ThirdParty::factory()->create(['type' => ThirdPartyType::CLIENT]);
-    Contact::withoutEvents(fn () => Contact::factory()->create([
+    Contact::factory()->create([
         'user_id' => $user->id,
         'third_party_id' => $client->id,
-    ]));
+    ]);
 
     $this->actingAs($user);
 
