@@ -323,7 +323,14 @@ jobs:
         run: npm ci
 
       - name: Install Chrome for Browsershot
-        run: npx puppeteer browsers install chrome
+        run: |
+          npx puppeteer browsers install chrome
+          CHROME_PATH="$(find "$HOME/.cache/puppeteer" -type f -path '*/chrome-linux64/chrome' -perm -111 -print -quit)"
+          if [ -z "$CHROME_PATH" ]; then
+            CHROME_PATH="$(find "$HOME/.cache/puppeteer" -type f -name chrome -perm -111 -print -quit)"
+          fi
+          test -n "$CHROME_PATH"
+          echo "BROWSERSHOT_CHROME_PATH=$CHROME_PATH" >> "$GITHUB_ENV"
 
       - name: Configure Flux credentials
         run: composer config http-basic.composer.fluxui.dev "${{ secrets.FLUX_USERNAME }}" "${{ secrets.FLUX_LICENSE_KEY }}"
@@ -336,15 +343,14 @@ jobs:
           cp .env.example .env
           mkdir -p storage/framework/views storage/framework/cache storage/framework/sessions storage/framework/testing storage/logs bootstrap/cache
           php artisan key:generate
-          echo "BROWSERSHOT_CHROME_PATH=$(node -e "console.log(require('puppeteer').executablePath())")" >> .env
+          echo "BROWSERSHOT_CHROME_PATH=$BROWSERSHOT_CHROME_PATH" >> .env
           echo "BROWSERSHOT_NODE_BINARY_PATH=$(command -v node)" >> .env
           echo "BROWSERSHOT_NPM_BINARY_PATH=$(command -v npm)" >> .env
 
       - name: Verify Browsershot browser
         run: |
-          CHROME_PATH="$(node -e "console.log(require('puppeteer').executablePath())")"
-          test -x "$CHROME_PATH"
-          "$CHROME_PATH" --version
+          test -x "$BROWSERSHOT_CHROME_PATH"
+          "$BROWSERSHOT_CHROME_PATH" --version
 
       - name: Run API authorization regression tests
         id: api-tests
