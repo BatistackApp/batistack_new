@@ -326,6 +326,9 @@ it('rejects checklist submissions whose task belongs to another chantier', funct
     Contract::factory()->create([
         'employee_id' => $employee->id,
         'job_title' => 'Chef de chantier',
+        'start_date' => now()->subMonth(),
+        'trial_end_date' => now()->subMonth()->addDays(15),
+        'end_date' => null,
     ]);
     $chantierA = Chantier::factory()->create(['manager_id' => $employee->id]);
     $chantierB = Chantier::factory()->create();
