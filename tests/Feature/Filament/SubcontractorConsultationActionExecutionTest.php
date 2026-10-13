@@ -10,7 +10,7 @@ use App\Models\User;
 use Filament\Actions\Testing\TestAction;
 use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use function Pest\Livewire\livewire;
+use Livewire\Livewire;
 
 uses(RefreshDatabase::class);
 
@@ -38,7 +38,7 @@ it('executes the real response action and persists an offer for the authenticate
     [, $subcontractor] = authenticateIssue510ConsultationSubcontractor();
     $consultation = Consultation::factory()->create(['status' => 'published']);
 
-    livewire(ListConsultations::class)
+    Livewire::test(ListConsultations::class)
         ->assertCanSeeTableRecords([$consultation])
         ->assertActionVisible(TestAction::make('respond')->table($consultation))
         ->callAction(TestAction::make('respond')->table($consultation), [
@@ -69,7 +69,7 @@ it('updates the existing offer instead of creating a duplicate', function () {
         'status' => 'submitted',
     ]);
 
-    livewire(ListConsultations::class)
+    Livewire::test(ListConsultations::class)
         ->callAction(TestAction::make('respond')->table($consultation), [
             'amount' => 1400,
             'message' => 'Offre révisée.',
@@ -87,7 +87,7 @@ it('does not submit an offer if a consultation closes after the action modal is 
     [, $subcontractor] = authenticateIssue510ConsultationSubcontractor();
     $consultation = Consultation::factory()->create(['status' => 'published']);
 
-    $component = livewire(ListConsultations::class)
+    $component = Livewire::test(ListConsultations::class)
         ->mountAction(TestAction::make('respond')->table($consultation))
         ->fillForm([
             'amount' => 1500,
@@ -108,7 +108,7 @@ it('hides the response action for consultations that are no longer published', f
     authenticateIssue510ConsultationSubcontractor();
     $consultation = Consultation::factory()->create(['status' => 'closed']);
 
-    livewire(ListConsultations::class)
+    Livewire::test(ListConsultations::class)
         ->assertCanSeeTableRecords([$consultation])
         ->assertActionHidden(TestAction::make('respond')->table($consultation));
 
