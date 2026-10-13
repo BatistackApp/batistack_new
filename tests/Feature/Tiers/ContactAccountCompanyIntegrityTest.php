@@ -107,9 +107,10 @@ it('prevents deleting a user or company when its account-company mapping is refe
     $this->assertDatabaseHas('contacts', ['id' => $contact->id]);
 });
 
-it('keeps an existing account link when creating an additional contact for the same company', function () {
-    $user = User::factory()->create();
-    $company = ThirdParty::factory()->create();
+it('preserves an existing account when creating another contact for the same company', function () {
+    $user = User::factory()->create(['is_tiers' => true]);
+    $company = ThirdParty::factory()->create(['type' => ThirdPartyType::CLIENT]);
+    $existingUserCount = User::query()->count();
 
     $firstContact = Contact::factory()->create([
         'user_id' => $user->id,
@@ -125,6 +126,9 @@ it('keeps an existing account link when creating an additional contact for the s
 
     expect($firstContact->fresh()->user_id)->toBe($user->id)
         ->and($secondContact->fresh()->user_id)->toBe($user->id)
-        ->and(User::query()->count())->toBe(1)
-        ->and(Contact::query()->where('user_id', $user->id)->count())->toBe(2);
+        ->and(User::query()->count())->toBe($existingUserCount)
+        ->and(Contact::query()->where('user_id', $user->id)->count())->toBe(2)
+        ->and(DB::table('user_third_party_accounts')
+            ->where('user_id', $user->id)
+            ->value('third_party_id'))->toBe($company->id);
 });
