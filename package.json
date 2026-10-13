@@ -8,7 +8,7 @@
     },
     "dependencies": {
         "autoprefixer": "^10.6.1",
-        "concurrently": "^10.0.5",
+        "concurrently": "^10.0.6",
         "dexie": "^4.4.2",
         "dxf-parser": "^1.1.2",
         "dxf-viewer": "^1.0.48",
