@@ -29,7 +29,7 @@ function authenticateConsultationSubcontractor(): array
         'email' => null,
     ]);
 
-    test()->actingAs($user);
+    auth()->login($user);
 
     return [$user, $subcontractor];
 }
