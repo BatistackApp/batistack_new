@@ -12,7 +12,7 @@ use App\Models\User;
 use Filament\Actions\Testing\TestAction;
 use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use function Pest\Livewire\livewire;
+use Livewire\Livewire;
 
 uses(RefreshDatabase::class);
 
@@ -56,7 +56,7 @@ it('executes the real progress action and persists the new percentage', function
     authenticateIssue510Subcontractor($user, $subcontractor);
     $task = createIssue510AssignedTaskForSubcontractor($subcontractor);
 
-    livewire(ListAssignedTasks::class)
+    Livewire::test(ListAssignedTasks::class)
         ->assertCanSeeTableRecords([$task])
         ->assertActionVisible(TestAction::make('update_progress')->table($task))
         ->callAction(TestAction::make('update_progress')->table($task), [
@@ -73,7 +73,7 @@ it('marks a task completed when the real progress action sets progress to 100 pe
     authenticateIssue510Subcontractor($user, $subcontractor);
     $task = createIssue510AssignedTaskForSubcontractor($subcontractor);
 
-    livewire(ListAssignedTasks::class)
+    Livewire::test(ListAssignedTasks::class)
         ->callAction(TestAction::make('update_progress')->table($task), [
             'progress_percentage' => 100,
         ]);
@@ -90,7 +90,7 @@ it('hides the progress action and leaves tasks unchanged on finished and archive
     foreach ([ChantierStatus::FINISHED, ChantierStatus::ARCHIVED] as $status) {
         $task = createIssue510AssignedTaskForSubcontractor($subcontractor, $status);
 
-        livewire(ListAssignedTasks::class)
+        Livewire::test(ListAssignedTasks::class)
             ->assertCanSeeTableRecords([$task])
             ->assertActionHidden(TestAction::make('update_progress')->table($task));
 
@@ -107,7 +107,7 @@ it('does not render another subcontractor task or its progress action', function
     $ownTask = createIssue510AssignedTaskForSubcontractor($subcontractor);
     $otherTask = createIssue510AssignedTaskForSubcontractor($otherSubcontractor);
 
-    livewire(ListAssignedTasks::class)
+    Livewire::test(ListAssignedTasks::class)
         ->assertCanSeeTableRecords([$ownTask])
         ->assertCanNotSeeTableRecords([$otherTask])
         ->assertActionDoesNotExist(TestAction::make('update_progress')->table($otherTask));
@@ -122,7 +122,7 @@ it('refuses a progress update if the chantier is finished after the action modal
     authenticateIssue510Subcontractor($user, $subcontractor);
     $task = createIssue510AssignedTaskForSubcontractor($subcontractor);
 
-    $component = livewire(ListAssignedTasks::class)
+    $component = Livewire::test(ListAssignedTasks::class)
         ->mountAction(TestAction::make('update_progress')->table($task))
         ->fillForm([
             'progress_percentage' => 85,
