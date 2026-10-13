@@ -20,7 +20,7 @@ beforeEach(function (): void {
     Filament::setCurrentPanel('sous-traitant');
 });
 
-function assignedTaskForSubcontractor(ThirdParty $subcontractor, ChantierStatus $status = ChantierStatus::IN_PROGRESS): ChantierTask
+function createIssue510AssignedTaskForSubcontractor(ThirdParty $subcontractor, ChantierStatus $status = ChantierStatus::IN_PROGRESS): ChantierTask
 {
     $chantier = Chantier::factory()->create(['status' => $status]);
     $phase = ChantierPhase::factory()->create(['chantier_id' => $chantier->id]);
@@ -39,7 +39,7 @@ function assignedTaskForSubcontractor(ThirdParty $subcontractor, ChantierStatus 
     return $task;
 }
 
-function authenticateSubcontractor(User $user, ThirdParty $subcontractor): void
+function authenticateIssue510Subcontractor(User $user, ThirdParty $subcontractor): void
 {
     Contact::factory()->create([
         'user_id' => $user->id,
@@ -53,8 +53,8 @@ function authenticateSubcontractor(User $user, ThirdParty $subcontractor): void
 it('executes the real progress action and persists the new percentage', function () {
     $user = User::factory()->create(['is_tiers' => true]);
     $subcontractor = ThirdParty::factory()->create(['type' => ThirdPartyType::SUBCONTRACTOR]);
-    authenticateSubcontractor($user, $subcontractor);
-    $task = assignedTaskForSubcontractor($subcontractor);
+    authenticateIssue510Subcontractor($user, $subcontractor);
+    $task = createIssue510AssignedTaskForSubcontractor($subcontractor);
 
     livewire(ListAssignedTasks::class)
         ->assertCanSeeTableRecords([$task])
@@ -70,8 +70,8 @@ it('executes the real progress action and persists the new percentage', function
 it('marks a task completed when the real progress action sets progress to 100 percent', function () {
     $user = User::factory()->create(['is_tiers' => true]);
     $subcontractor = ThirdParty::factory()->create(['type' => ThirdPartyType::SUBCONTRACTOR]);
-    authenticateSubcontractor($user, $subcontractor);
-    $task = assignedTaskForSubcontractor($subcontractor);
+    authenticateIssue510Subcontractor($user, $subcontractor);
+    $task = createIssue510AssignedTaskForSubcontractor($subcontractor);
 
     livewire(ListAssignedTasks::class)
         ->callAction(TestAction::make('update_progress')->table($task), [
@@ -85,10 +85,10 @@ it('marks a task completed when the real progress action sets progress to 100 pe
 it('hides the progress action and leaves tasks unchanged on finished and archived chantiers', function () {
     $user = User::factory()->create(['is_tiers' => true]);
     $subcontractor = ThirdParty::factory()->create(['type' => ThirdPartyType::SUBCONTRACTOR]);
-    authenticateSubcontractor($user, $subcontractor);
+    authenticateIssue510Subcontractor($user, $subcontractor);
 
     foreach ([ChantierStatus::FINISHED, ChantierStatus::ARCHIVED] as $status) {
-        $task = assignedTaskForSubcontractor($subcontractor, $status);
+        $task = createIssue510AssignedTaskForSubcontractor($subcontractor, $status);
 
         livewire(ListAssignedTasks::class)
             ->assertCanSeeTableRecords([$task])
@@ -103,9 +103,9 @@ it('does not render another subcontractor task or its progress action', function
     $user = User::factory()->create(['is_tiers' => true]);
     $subcontractor = ThirdParty::factory()->create(['type' => ThirdPartyType::SUBCONTRACTOR]);
     $otherSubcontractor = ThirdParty::factory()->create(['type' => ThirdPartyType::SUBCONTRACTOR]);
-    authenticateSubcontractor($user, $subcontractor);
-    $ownTask = assignedTaskForSubcontractor($subcontractor);
-    $otherTask = assignedTaskForSubcontractor($otherSubcontractor);
+    authenticateIssue510Subcontractor($user, $subcontractor);
+    $ownTask = createIssue510AssignedTaskForSubcontractor($subcontractor);
+    $otherTask = createIssue510AssignedTaskForSubcontractor($otherSubcontractor);
 
     livewire(ListAssignedTasks::class)
         ->assertCanSeeTableRecords([$ownTask])
@@ -119,8 +119,8 @@ it('does not render another subcontractor task or its progress action', function
 it('refuses a progress update if the chantier is finished after the action modal opens', function () {
     $user = User::factory()->create(['is_tiers' => true]);
     $subcontractor = ThirdParty::factory()->create(['type' => ThirdPartyType::SUBCONTRACTOR]);
-    authenticateSubcontractor($user, $subcontractor);
-    $task = assignedTaskForSubcontractor($subcontractor);
+    authenticateIssue510Subcontractor($user, $subcontractor);
+    $task = createIssue510AssignedTaskForSubcontractor($subcontractor);
 
     $component = livewire(ListAssignedTasks::class)
         ->mountAction(TestAction::make('update_progress')->table($task))
