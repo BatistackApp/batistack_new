@@ -47,7 +47,7 @@ function authenticateSubcontractor(User $user, ThirdParty $subcontractor): void
         'email' => null,
     ]);
 
-    test()->actingAs($user);
+    auth()->login($user);
 }
 
 it('executes the real progress action and persists the new percentage', function () {
