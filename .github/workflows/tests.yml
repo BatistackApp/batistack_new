@@ -390,6 +390,16 @@ jobs:
         continue-on-error: true
         run: ./vendor/bin/pest tests/Feature/Filament/SubcontractorAssignedTaskReadOnlyTest.php --no-coverage
 
+      - name: Run subcontractor assigned-task action execution tests
+        id: assigned-task-action-tests
+        continue-on-error: true
+        run: ./vendor/bin/pest tests/Feature/Filament/SubcontractorAssignedTaskActionExecutionTest.php --no-coverage
+
+      - name: Run subcontractor consultation action execution tests
+        id: consultation-action-tests
+        continue-on-error: true
+        run: ./vendor/bin/pest tests/Feature/Filament/SubcontractorConsultationActionExecutionTest.php --no-coverage
+
       - name: Fail if any focused test suite failed
         if: always()
         env:
@@ -400,6 +410,8 @@ jobs:
           CONSULTATION_TESTS_OUTCOME: ${{ steps.consultation-tests.outcome }}
           ASSIGNED_TASK_TESTS_OUTCOME: ${{ steps.assigned-task-tests.outcome }}
           ASSIGNED_TASK_READONLY_TESTS_OUTCOME: ${{ steps.assigned-task-readonly-tests.outcome }}
+          ASSIGNED_TASK_ACTION_TESTS_OUTCOME: ${{ steps.assigned-task-action-tests.outcome }}
+          CONSULTATION_ACTION_TESTS_OUTCOME: ${{ steps.consultation-action-tests.outcome }}
         run: |
           echo "API authorization tests: $API_TESTS_OUTCOME"
           echo "Contact integrity tests: $INTEGRITY_TESTS_OUTCOME"
@@ -408,6 +420,8 @@ jobs:
           echo "Consultation authorization tests: $CONSULTATION_TESTS_OUTCOME"
           echo "Subcontractor assigned-task authorization tests: $ASSIGNED_TASK_TESTS_OUTCOME"
           echo "Subcontractor assigned-task read-only tests: $ASSIGNED_TASK_READONLY_TESTS_OUTCOME"
+          echo "Subcontractor assigned-task action tests: $ASSIGNED_TASK_ACTION_TESTS_OUTCOME"
+          echo "Subcontractor consultation action tests: $CONSULTATION_ACTION_TESTS_OUTCOME"
 
           if [ "$API_TESTS_OUTCOME" != "success" ] || \
              [ "$INTEGRITY_TESTS_OUTCOME" != "success" ] || \
@@ -415,7 +429,9 @@ jobs:
              [ "$ASSIGNMENTS_TESTS_OUTCOME" != "success" ] || \
              [ "$CONSULTATION_TESTS_OUTCOME" != "success" ] || \
              [ "$ASSIGNED_TASK_TESTS_OUTCOME" != "success" ] || \
-             [ "$ASSIGNED_TASK_READONLY_TESTS_OUTCOME" != "success" ]; then
+             [ "$ASSIGNED_TASK_READONLY_TESTS_OUTCOME" != "success" ] || \
+             [ "$ASSIGNED_TASK_ACTION_TESTS_OUTCOME" != "success" ] || \
+             [ "$CONSULTATION_ACTION_TESTS_OUTCOME" != "success" ]; then
             exit 1
           fi
 
