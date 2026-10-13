@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Tiers\Contact;
+use App\Enums\Tiers\ThirdPartyType;
 use App\Models\Tiers\ThirdParty;
 use App\Models\User;
 use Illuminate\Database\QueryException;
@@ -105,4 +106,22 @@ it('prevents deleting a user or company when its account-company mapping is refe
     expect(fn () => $company->delete())->toThrow(QueryException::class);
 
     $this->assertDatabaseHas('contacts', ['id' => $contact->id]);
+});
+
+it('preserves an existing account when creating another contact for the same company', function () {
+    $user = User::factory()->create(['is_tiers' => true]);
+    $company = ThirdParty::factory()->create(['type' => ThirdPartyType::CLIENT]);
+    $existingUserCount = User::query()->count();
+
+    $contact = Contact::factory()->create([
+        'user_id' => $user->id,
+        'third_party_id' => $company->id,
+        'email' => 'additional-contact@example.test',
+    ]);
+
+    expect($contact->fresh()->user_id)->toBe($user->id)
+        ->and(User::query()->count())->toBe($existingUserCount)
+        ->and(DB::table('user_third_party_accounts')
+            ->where('user_id', $user->id)
+            ->value('third_party_id'))->toBe($company->id);
 });
