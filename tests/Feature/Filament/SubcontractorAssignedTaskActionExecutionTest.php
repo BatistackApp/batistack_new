@@ -115,3 +115,23 @@ it('does not render another subcontractor task or its progress action', function
     expect($otherTask->fresh()->progress_percentage)->toBe(20)
         ->and($otherTask->fresh()->is_completed)->toBeFalse();
 });
+
+it('refuses a progress update if the chantier is finished after the action modal opens', function () {
+    $user = User::factory()->create(['is_tiers' => true]);
+    $subcontractor = ThirdParty::factory()->create(['type' => ThirdPartyType::SUBCONTRACTOR]);
+    authenticateSubcontractor($user, $subcontractor);
+    $task = assignedTaskForSubcontractor($subcontractor);
+
+    $component = livewire(ListAssignedTasks::class)
+        ->mountAction(TestAction::make('update_progress')->table($task))
+        ->fillForm([
+            'progress_percentage' => 85,
+        ]);
+
+    $task->phase->chantier->update(['status' => ChantierStatus::FINISHED]);
+
+    $component->callMountedAction();
+
+    expect($task->fresh()->progress_percentage)->toBe(20)
+        ->and($task->fresh()->is_completed)->toBeFalse();
+});
