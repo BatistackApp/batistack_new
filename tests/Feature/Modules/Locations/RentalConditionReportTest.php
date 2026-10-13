@@ -185,7 +185,7 @@ it('denies access to the contracts index when the user has no employee record', 
 
 it('indexes contracts when the user is a chantier member (not manager)', function () {
     $member = Employee::factory()->create();
-    $chantier = Chantier::factory()->create();
+    $chantier = Chantier::factory()->inProgress()->create();
     $chantier->members()->attach($member->id);
 
     RentalContract::factory()->create([
@@ -260,7 +260,7 @@ it('returns 500 and rolls back when a sync operation throws', function () {
 
 it('authorizes a chantier member and denies a user without an employee record', function () {
     $member = Employee::factory()->create();
-    $chantier = Chantier::factory()->create();
+    $chantier = Chantier::factory()->inProgress()->create();
     $chantier->members()->attach($member->id);
     $contract = RentalContract::factory()->create([
         'chantier_id' => $chantier->id,
