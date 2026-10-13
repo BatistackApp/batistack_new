@@ -18,7 +18,7 @@ beforeEach(function (): void {
     Filament::setCurrentPanel('sous-traitant');
 });
 
-function authenticateConsultationSubcontractor(): array
+function authenticateIssue510ConsultationSubcontractor(): array
 {
     $user = User::factory()->create(['is_tiers' => true]);
     $subcontractor = ThirdParty::factory()->create(['type' => ThirdPartyType::SUBCONTRACTOR]);
@@ -35,7 +35,7 @@ function authenticateConsultationSubcontractor(): array
 }
 
 it('executes the real response action and persists an offer for the authenticated subcontractor', function () {
-    [, $subcontractor] = authenticateConsultationSubcontractor();
+    [, $subcontractor] = authenticateIssue510ConsultationSubcontractor();
     $consultation = Consultation::factory()->create(['status' => 'published']);
 
     livewire(ListConsultations::class)
@@ -58,7 +58,7 @@ it('executes the real response action and persists an offer for the authenticate
 });
 
 it('updates the existing offer instead of creating a duplicate', function () {
-    [, $subcontractor] = authenticateConsultationSubcontractor();
+    [, $subcontractor] = authenticateIssue510ConsultationSubcontractor();
     $consultation = Consultation::factory()->create(['status' => 'published']);
 
     $existingOffer = ConsultationOffer::query()->create([
@@ -84,7 +84,7 @@ it('updates the existing offer instead of creating a duplicate', function () {
 });
 
 it('does not submit an offer if a consultation closes after the action modal is opened', function () {
-    [, $subcontractor] = authenticateConsultationSubcontractor();
+    [, $subcontractor] = authenticateIssue510ConsultationSubcontractor();
     $consultation = Consultation::factory()->create(['status' => 'published']);
 
     $component = livewire(ListConsultations::class)
@@ -105,7 +105,7 @@ it('does not submit an offer if a consultation closes after the action modal is 
 });
 
 it('hides the response action for consultations that are no longer published', function () {
-    authenticateConsultationSubcontractor();
+    authenticateIssue510ConsultationSubcontractor();
     $consultation = Consultation::factory()->create(['status' => 'closed']);
 
     livewire(ListConsultations::class)
