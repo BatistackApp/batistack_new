@@ -14,6 +14,11 @@ class ContactObserver
 {
     public function created(Contact $contact): void
     {
+        // A contact already linked to an account must not create or replace that account.
+        if ($contact->user_id !== null) {
+            return;
+        }
+
         if (! empty($contact->email)
             && in_array($contact->thirdParty->type, [ThirdPartyType::CLIENT, ThirdPartyType::SUBCONTRACTOR], true)
         ) {
