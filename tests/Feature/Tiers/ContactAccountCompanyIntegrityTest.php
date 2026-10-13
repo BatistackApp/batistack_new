@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\Tiers\ThirdPartyType;
 use App\Models\Tiers\Contact;
 use App\Models\Tiers\ThirdParty;
 use App\Models\User;
