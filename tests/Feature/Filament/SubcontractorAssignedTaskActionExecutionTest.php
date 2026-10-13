@@ -20,7 +20,7 @@ beforeEach(function (): void {
     Filament::setCurrentPanel('sous-traitant');
 });
 
-function createIssue510AssignedTaskForSubcontractor(ThirdParty $subcontractor, ChantierStatus $status = ChantierStatus::IN_PROGRESS): ChantierTask
+function createIssue510AssignedTaskForSubcontractor(ThirdParty $subcontractor, ChantierStatus $status = ChantierStatus::IN_PROGRESS, ?string $allocationDate = null): ChantierTask
 {
     $chantier = Chantier::factory()->create(['status' => $status]);
     $phase = ChantierPhase::factory()->create(['chantier_id' => $chantier->id]);
@@ -33,7 +33,7 @@ function createIssue510AssignedTaskForSubcontractor(ThirdParty $subcontractor, C
     $task->allocations()->create([
         'allocatable_type' => ThirdParty::class,
         'allocatable_id' => $subcontractor->id,
-        'date' => now()->toDateString(),
+        'date' => $allocationDate ?? now()->toDateString(),
     ]);
 
     return $task;
@@ -87,8 +87,10 @@ it('hides the progress action and leaves tasks unchanged on finished and archive
     $subcontractor = ThirdParty::factory()->create(['type' => ThirdPartyType::SUBCONTRACTOR]);
     authenticateIssue510Subcontractor($user, $subcontractor);
 
-    foreach ([ChantierStatus::FINISHED, ChantierStatus::ARCHIVED] as $status) {
-        $task = createIssue510AssignedTaskForSubcontractor($subcontractor, $status);
+    foreach ([ChantierStatus::FINISHED, ChantierStatus::ARCHIVED] as $index => $status) {
+        // resource_allocations requires one allocation per subcontractor and date.
+        $allocationDate = now()->addDays($index)->toDateString();
+        $task = createIssue510AssignedTaskForSubcontractor($subcontractor, $status, $allocationDate);
 
         Livewire::test(ListAssignedTasks::class)
             ->assertCanSeeTableRecords([$task])
