@@ -1,9 +1,9 @@
 <?php
 
-namespace App\\Filament\\Subcontractor\\Resources\\PrivateMediaDocuments\\Pages;
+namespace App\Filament\Subcontractor\Resources\PrivateMediaDocuments\Pages;
 
-use App\\Filament\\Subcontractor\\Resources\\PrivateMediaDocuments\\PrivateMediaDocumentResource;
-use Filament\\Resources\\Pages\\ListRecords;
+use App\Filament\Subcontractor\Resources\PrivateMediaDocuments\PrivateMediaDocumentResource;
+use Filament\Resources\Pages\ListRecords;
 
 class ListPrivateMediaDocuments extends ListRecords
 {
