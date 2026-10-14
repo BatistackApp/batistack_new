@@ -196,3 +196,23 @@ it('does not list or serve private media belonging to another subcontractor', fu
     $this->get(route('subcontractor.documents.media.download', ['media' => $media->id]))
         ->assertNotFound();
 });
+
+
+it('lists media attached directly to the subcontractor and its invoice situations', function () {
+    Storage::fake('local');
+    [$user, $company] = createSubcontractorPortalUser();
+
+    $companyMedia = $company->addMediaFromString('%PDF-company-document')
+        ->usingFileName('company-document.pdf')
+        ->toMediaCollection('company_documents', 'local');
+
+    $situation = SubcontractorSituation::factory()->create(['subcontractor_id' => $company->id]);
+    $invoiceMedia = $situation->addMediaFromString('%PDF-situation-invoice')
+        ->usingFileName('situation-invoice.pdf')
+        ->toMediaCollection('invoice_document');
+
+    $this->actingAs($user);
+
+    expect(PrivateMediaDocumentResource::getEloquentQuery()->pluck('id')->all())
+        ->toContain($companyMedia->id, $invoiceMedia->id);
+});
