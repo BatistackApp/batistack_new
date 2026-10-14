@@ -112,3 +112,42 @@ it('migrates generated invoices linked to a subcontractor customer', function ()
     expect(Storage::disk('local')->get($targetPath))->toBe($contents);
     Storage::disk('public')->assertMissing($sourcePath);
 });
+
+it('preserves the public source and metadata when the copied file fails SHA-256 verification', function () {
+    Storage::fake('public');
+    Storage::fake('local');
+
+    $company = ThirdParty::factory()->create(['type' => ThirdPartyType::SUBCONTRACTOR]);
+    $sourcePath = 'legacy/corrupted-copy.pdf';
+    $targetPath = 'subcontractors/'.$company->id.'/documents/commerce/invoice/corrupted-copy.pdf';
+    Storage::disk('public')->put($sourcePath, '%PDF-original-content');
+
+    $document = GeneratedDocument::factory()->create([
+        'module' => 'commerce',
+        'type' => 'invoice',
+        'entity_type' => ThirdParty::class,
+        'entity_id' => $company->id,
+        'file_disk' => 'public',
+        'file_path' => $sourcePath,
+    ]);
+
+    $sourceDisk = Storage::disk('public');
+    $corruptedStream = fopen('php://temp', 'r+');
+    fwrite($corruptedStream, '%PDF-corrupted-content');
+    rewind($corruptedStream);
+
+    $targetDisk = Mockery::mock();
+    $targetDisk->shouldReceive('exists')->once()->with($targetPath)->andReturnFalse();
+    $targetDisk->shouldReceive('writeStream')->once()->with($targetPath, Mockery::type('resource'))->andReturnTrue();
+    $targetDisk->shouldReceive('readStream')->once()->with($targetPath)->andReturn($corruptedStream);
+    $targetDisk->shouldReceive('delete')->once()->with($targetPath)->andReturnTrue();
+
+    Storage::shouldReceive('disk')->with('public')->andReturn($sourceDisk);
+    Storage::shouldReceive('disk')->with('local')->andReturn($targetDisk);
+
+    expect(Artisan::call('subcontractors:secure-documents'))->toBe(1)
+        ->and($document->fresh()->file_disk)->toBe('public')
+        ->and($document->fresh()->file_path)->toBe($sourcePath);
+
+    expect($sourceDisk->get($sourcePath))->toBe('%PDF-original-content');
+});
