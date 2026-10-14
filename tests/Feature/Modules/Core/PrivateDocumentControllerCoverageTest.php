@@ -63,7 +63,7 @@ it('sanitizes quotes and line breaks from the private document filename header',
         'entity_id' => $company->id,
         'file_disk' => 'local',
         'file_path' => 'private/unsafe-name.pdf',
-        'file_name' => 'bad"'."\\r\\n".'X-Test: injected',
+        'file_name' => 'bad"'."\r\n".'X-Test: injected',
     ]);
     Storage::disk('local')->put($document->file_path, '%PDF-private');
 
