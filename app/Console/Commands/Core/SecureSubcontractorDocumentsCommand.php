@@ -7,6 +7,7 @@ use App\Models\Commerce\CustomerInvoice;
 use App\Models\Commerce\SubcontractorSituation;
 use App\Models\Core\GeneratedDocument;
 use App\Models\Tiers\ThirdParty;
+use App\Models\Tiers\ThirdPartyDocument;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Storage;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
