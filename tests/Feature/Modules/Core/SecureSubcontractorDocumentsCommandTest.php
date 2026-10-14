@@ -45,7 +45,7 @@ it('keeps the public source and metadata unchanged when an existing private copy
 
     $company = ThirdParty::factory()->create(['type' => ThirdPartyType::SUBCONTRACTOR]);
     $sourcePath = 'documents/legacy-invoice.pdf';
-    $privatePath = 'subcontractors/'.$company->id.'/documents/commerce/invoice/legacy-invoice.pdf';
+    $privatePath = 'subcontractors/'.$company->id.'/documents/commerce/invoice/'.substr(hash('sha256', $sourcePath), 0, 12).'/legacy-invoice.pdf';
 
     Storage::disk('public')->put($sourcePath, '%PDF-1.4 original bytes');
     Storage::disk('local')->put($privatePath, '%PDF-1.4 different bytes');
