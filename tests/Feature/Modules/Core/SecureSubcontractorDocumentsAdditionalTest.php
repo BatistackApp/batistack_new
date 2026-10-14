@@ -213,3 +213,43 @@ it('keeps the source and metadata when writing the private copy fails', function
 
     expect($sourceDisk->get($sourcePath))->toBe('%PDF-original-content');
 });
+
+it('migrates same-named source files to distinct private paths', function () {
+    Storage::fake('public');
+    Storage::fake('local');
+
+    $company = ThirdParty::factory()->create(['type' => ThirdPartyType::SUBCONTRACTOR]);
+    $firstSourcePath = 'legacy/first/invoice.pdf';
+    $secondSourcePath = 'legacy/second/invoice.pdf';
+    Storage::disk('public')->put($firstSourcePath, '%PDF-first invoice');
+    Storage::disk('public')->put($secondSourcePath, '%PDF-second invoice');
+
+    $first = GeneratedDocument::factory()->create([
+        'module' => 'commerce',
+        'type' => 'invoice',
+        'entity_type' => ThirdParty::class,
+        'entity_id' => $company->id,
+        'file_disk' => 'public',
+        'file_path' => $firstSourcePath,
+    ]);
+    $second = GeneratedDocument::factory()->create([
+        'module' => 'commerce',
+        'type' => 'invoice',
+        'entity_type' => ThirdParty::class,
+        'entity_id' => $company->id,
+        'file_disk' => 'public',
+        'file_path' => $secondSourcePath,
+    ]);
+
+    expect(Artisan::call('subcontractors:secure-documents'))->toBe(0)
+        ->and($first->fresh()->file_disk)->toBe('local')
+        ->and($second->fresh()->file_disk)->toBe('local')
+        ->and($first->fresh()->file_path)->not->toBe($second->fresh()->file_path);
+
+    Storage::disk('local')->assertExists($first->fresh()->file_path);
+    Storage::disk('local')->assertExists($second->fresh()->file_path);
+    expect(Storage::disk('local')->get($first->fresh()->file_path))->toBe('%PDF-first invoice')
+        ->and(Storage::disk('local')->get($second->fresh()->file_path))->toBe('%PDF-second invoice');
+    Storage::disk('public')->assertMissing($firstSourcePath);
+    Storage::disk('public')->assertMissing($secondSourcePath);
+});
