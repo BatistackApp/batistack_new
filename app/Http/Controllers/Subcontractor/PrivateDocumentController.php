@@ -92,7 +92,7 @@ class PrivateDocumentController
         $belongsToSubcontractor = match (true) {
             $model instanceof ThirdParty => $model->is($thirdParty),
             $model instanceof ThirdPartyDocument => (int) $model->third_party_id === (int) $thirdParty->id,
-            $model instanceof SubcontractorSituation => $model->subcontractor_id === $thirdParty->id,
+            $model instanceof SubcontractorSituation => (int) $model->subcontractor_id === (int) $thirdParty->id,
             default => false,
         };
 
@@ -112,7 +112,7 @@ class PrivateDocumentController
         $stream = $disk->readStream($path);
         abort_unless(is_resource($stream), 404);
 
-        $filename = str_replace(["\\\"", "\\r", "\\n"], '', basename($media->file_name));
+        $filename = str_replace(["\"", "\r", "\n"], '', basename($media->file_name));
 
         return response()->stream(function () use ($stream): void {
             try {
@@ -129,7 +129,8 @@ class PrivateDocumentController
             'X-Content-Type-Options' => 'nosniff',
         ]);
     }
-\n    private function findGeneratedDocumentForCurrentSubcontractor(Request $request, int $document): GeneratedDocument
+
+    private function findGeneratedDocumentForCurrentSubcontractor(Request $request, int $document): GeneratedDocument
     {
         $thirdParty = $this->currentSubcontractor($request);
 
