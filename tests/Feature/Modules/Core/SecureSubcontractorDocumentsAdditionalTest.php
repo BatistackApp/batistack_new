@@ -1,12 +1,12 @@
 <?php
 
-use App\\Enums\\Tiers\\ThirdPartyType;
-use App\\Models\\Commerce\\CustomerInvoice;
-use App\\Models\\Core\\GeneratedDocument;
-use App\\Models\\Tiers\\ThirdParty;
-use Illuminate\\Foundation\\Testing\\RefreshDatabase;
-use Illuminate\\Support\\Facades\\Artisan;
-use Illuminate\\Support\\Facades\\Storage;
+use App\Enums\Tiers\ThirdPartyType;
+use App\Models\Commerce\CustomerInvoice;
+use App\Models\Core\GeneratedDocument;
+use App\Models\Tiers\ThirdParty;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Storage;
 
 uses(RefreshDatabase::class);
 
