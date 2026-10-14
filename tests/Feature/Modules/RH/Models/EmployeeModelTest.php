@@ -105,7 +105,11 @@ describe('Employee - Scopes', function () {
         Employee::factory()->create();
         $emp = Employee::factory()->create();
 
-        Contract::factory()->create(['employee_id' => $emp->id]);
+        Contract::factory()->create([
+            'employee_id' => $emp->id,
+            'start_date' => today()->subDay(),
+            'end_date' => null,
+        ]);
 
         $result = Employee::withoutContract()->get();
 
