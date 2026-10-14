@@ -68,7 +68,8 @@ it('compile les produits alloués aux tâches des phases', function () {
     expect($data['products'])->toHaveCount(1);
     expect($data['phases'])->not->toBeEmpty();
     expect(collect($data['phases'])->contains(fn ($p) => count($p['products']) === 1))->toBeTrue();
-    expect($data['phases'][0]['tasks'])->not->toBeEmpty();
+    $phaseData = collect($data['phases'])->first(fn ($phaseData) => $phaseData['phase']->is($phase));
+    expect($phaseData['tasks'])->not->toBeEmpty();
     expect($data['risks'])->toContain(RiskType::INCENDIE);
 });
 
