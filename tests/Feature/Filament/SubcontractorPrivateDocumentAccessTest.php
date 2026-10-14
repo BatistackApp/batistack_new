@@ -152,3 +152,45 @@ it('lists all generated document modules and types for the subcontractor and its
         ->toContain($thirdPartyDocument->id, $invoiceDocument->id);
 });
 
+
+it('lists and serves private media documents attached to the subcontractor and its contract documents', function () {
+    Storage::fake('local');
+    [$user, $company] = createSubcontractorPortalUser();
+
+    $contractDocument = ThirdPartyDocument::factory()->create(['third_party_id' => $company->id]);
+    $media = $contractDocument->addMediaFromString('%PDF-1.4 signed subcontractor document')
+        ->usingFileName('attestation.pdf')
+        ->toMediaCollection('signed_documents', 'local');
+
+    $this->actingAs($user);
+
+    expect(PrivateMediaDocumentResource::getEloquentQuery()->pluck('id')->all())
+        ->toContain($media->id);
+
+    $this->get(route('subcontractor.documents.media.preview', ['media' => $media->id]))
+        ->assertOk()
+        ->assertHeader('Content-Type', 'application/pdf')
+        ->assertHeader('Cache-Control', 'private, no-store, max-age=0');
+
+    $this->get(route('subcontractor.documents.media.download', ['media' => $media->id]))
+        ->assertOk()
+        ->assertHeader('Content-Disposition', 'attachment; filename="attestation.pdf"');
+});
+
+it('does not list or serve private media belonging to another subcontractor', function () {
+    Storage::fake('local');
+    [$user] = createSubcontractorPortalUser();
+    $otherCompany = ThirdParty::factory()->create(['type' => ThirdPartyType::SUBCONTRACTOR]);
+    $contractDocument = ThirdPartyDocument::factory()->create(['third_party_id' => $otherCompany->id]);
+    $media = $contractDocument->addMediaFromString('%PDF-1.4 other company document')
+        ->usingFileName('other.pdf')
+        ->toMediaCollection('signed_documents', 'local');
+
+    $this->actingAs($user);
+
+    expect(PrivateMediaDocumentResource::getEloquentQuery()->pluck('id')->all())
+        ->not->toContain($media->id);
+
+    $this->get(route('subcontractor.documents.media.download', ['media' => $media->id]))
+        ->assertNotFound();
+});
