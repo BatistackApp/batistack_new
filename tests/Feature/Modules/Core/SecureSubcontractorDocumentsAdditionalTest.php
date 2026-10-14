@@ -16,7 +16,7 @@ it('supports dry-run without moving files or changing document metadata', functi
 
     $company = ThirdParty::factory()->create(['type' => ThirdPartyType::SUBCONTRACTOR]);
     $sourcePath = 'legacy/dry-run.pdf';
-    $targetPath = 'subcontractors/'.$company->id.'/documents/commerce/invoice/dry-run.pdf';
+    $targetPath = 'subcontractors/'.$company->id.'/documents/commerce/invoice/'.substr(hash('sha256', $sourcePath), 0, 12).'/dry-run.pdf';
     Storage::disk('public')->put($sourcePath, '%PDF-dry-run');
 
     $document = GeneratedDocument::factory()->create([
@@ -42,7 +42,7 @@ it('reuses an identical private copy after an interrupted migration', function (
 
     $company = ThirdParty::factory()->create(['type' => ThirdPartyType::SUBCONTRACTOR]);
     $sourcePath = 'legacy/retry.pdf';
-    $targetPath = 'subcontractors/'.$company->id.'/documents/commerce/invoice/retry.pdf';
+    $targetPath = 'subcontractors/'.$company->id.'/documents/commerce/invoice/'.substr(hash('sha256', $sourcePath), 0, 12).'/retry.pdf';
     $contents = '%PDF-identical-copy';
 
     Storage::disk('public')->put($sourcePath, $contents);
@@ -91,7 +91,7 @@ it('migrates generated invoices linked to a subcontractor customer', function ()
     $company = ThirdParty::factory()->create(['type' => ThirdPartyType::SUBCONTRACTOR]);
     $invoice = CustomerInvoice::factory()->create(['client_id' => $company->id]);
     $sourcePath = 'legacy/customer-invoice.pdf';
-    $targetPath = 'subcontractors/'.$company->id.'/documents/commerce/invoice/customer-invoice.pdf';
+    $targetPath = 'subcontractors/'.$company->id.'/documents/commerce/invoice/'.substr(hash('sha256', $sourcePath), 0, 12).'/customer-invoice.pdf';
     $contents = '%PDF-customer-invoice';
     Storage::disk('public')->put($sourcePath, $contents);
 
@@ -119,7 +119,7 @@ it('preserves the public source and metadata when the copied file fails SHA-256 
 
     $company = ThirdParty::factory()->create(['type' => ThirdPartyType::SUBCONTRACTOR]);
     $sourcePath = 'legacy/corrupted-copy.pdf';
-    $targetPath = 'subcontractors/'.$company->id.'/documents/commerce/invoice/corrupted-copy.pdf';
+    $targetPath = 'subcontractors/'.$company->id.'/documents/commerce/invoice/'.substr(hash('sha256', $sourcePath), 0, 12).'/corrupted-copy.pdf';
     Storage::disk('public')->put($sourcePath, '%PDF-original-content');
 
     $document = GeneratedDocument::factory()->create([
@@ -186,7 +186,7 @@ it('keeps the source and metadata when writing the private copy fails', function
 
     $company = ThirdParty::factory()->create(['type' => ThirdPartyType::SUBCONTRACTOR]);
     $sourcePath = 'legacy/unwritable-target.pdf';
-    $targetPath = 'subcontractors/'.$company->id.'/documents/commerce/invoice/unwritable-target.pdf';
+    $targetPath = 'subcontractors/'.$company->id.'/documents/commerce/invoice/'.substr(hash('sha256', $sourcePath), 0, 12).'/unwritable-target.pdf';
     Storage::disk('public')->put($sourcePath, '%PDF-original-content');
 
     $document = GeneratedDocument::factory()->create([
