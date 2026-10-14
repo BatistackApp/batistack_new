@@ -4,6 +4,7 @@ use App\Enums\Tiers\ThirdPartyType;
 use App\Models\Commerce\CustomerInvoice;
 use App\Models\Core\GeneratedDocument;
 use App\Models\Tiers\ThirdParty;
+use App\Models\Tiers\ThirdPartyDocument;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Storage;
@@ -252,4 +253,27 @@ it('migrates same-named source files to distinct private paths', function () {
         ->and(Storage::disk('local')->get($second->fresh()->file_path))->toBe('%PDF-second invoice');
     Storage::disk('public')->assertMissing($firstSourcePath);
     Storage::disk('public')->assertMissing($secondSourcePath);
+});
+
+
+it('migrates subcontractor contract and signed media from public storage to the private disk', function () {
+    Storage::fake('public');
+    Storage::fake('local');
+
+    $company = ThirdParty::factory()->create(['type' => ThirdPartyType::SUBCONTRACTOR]);
+    $document = ThirdPartyDocument::factory()->create(['third_party_id' => $company->id]);
+    $media = $document->addMediaFromString('%PDF-signed-contract')
+        ->usingFileName('signed-contract.pdf')
+        ->toMediaCollection('signed_documents', 'public');
+    $sourcePath = $media->getPathRelativeToRoot();
+
+    expect($media->fresh()->disk)->toBe('public');
+    Storage::disk('public')->assertExists($sourcePath);
+
+    expect(Artisan::call('subcontractors:secure-documents'))->toBe(0);
+
+    expect($media->fresh()->disk)->toBe('local');
+    Storage::disk('local')->assertExists($sourcePath);
+    expect(Storage::disk('local')->get($sourcePath))->toBe('%PDF-signed-contract');
+    Storage::disk('public')->assertMissing($sourcePath);
 });
