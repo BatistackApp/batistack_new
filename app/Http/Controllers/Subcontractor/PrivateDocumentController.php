@@ -6,10 +6,12 @@ use App\Enums\Tiers\ThirdPartyType;
 use App\Models\Commerce\CustomerInvoice;
 use App\Models\Commerce\SubcontractorSituation;
 use App\Models\Core\GeneratedDocument;
-use App\Models\Tiers\ThirdParty;\nuse App\Models\Tiers\ThirdPartyDocument;
+use App\Models\Tiers\ThirdParty;
+use App\Models\Tiers\ThirdPartyDocument;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
-use Symfony\Component\HttpFoundation\StreamedResponse;\nuse Spatie\MediaLibrary\MediaCollections\Models\Media;
+use Symfony\Component\HttpFoundation\StreamedResponse;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 class PrivateDocumentController
 {
@@ -89,7 +91,7 @@ class PrivateDocumentController
 
         $belongsToSubcontractor = match (true) {
             $model instanceof ThirdParty => $model->is($thirdParty),
-            $model instanceof ThirdPartyDocument => $model->third_party_id === $thirdParty->id,
+            $model instanceof ThirdPartyDocument => (int) $model->third_party_id === (int) $thirdParty->id,
             $model instanceof SubcontractorSituation => $model->subcontractor_id === $thirdParty->id,
             default => false,
         };
