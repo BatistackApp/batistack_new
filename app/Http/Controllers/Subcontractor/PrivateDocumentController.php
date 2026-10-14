@@ -106,7 +106,7 @@ class PrivateDocumentController
         $stream = $disk->readStream($path);
         abort_unless(is_resource($stream), 404);
 
-        $safeFilename = str_replace(['"', "\r", "\n"], '', basename($filename));
+        $safeFilename = str_replace(["\"", "\r", "\n"], '', basename($filename));
         if (! str_ends_with(strtolower($safeFilename), '.pdf')) {
             $safeFilename .= '.pdf';
         }
