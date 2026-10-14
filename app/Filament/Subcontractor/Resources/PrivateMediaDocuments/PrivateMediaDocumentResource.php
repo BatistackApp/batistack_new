@@ -1,19 +1,19 @@
 <?php
 
-namespace App\\Filament\\Subcontractor\\Resources\\PrivateMediaDocuments;
+namespace App\Filament\Subcontractor\Resources\PrivateMediaDocuments;
 
-use App\\Enums\\Tiers\\ThirdPartyType;
-use App\\Models\\Commerce\\SubcontractorSituation;
-use App\\Models\\Tiers\\Contact;
-use App\\Models\\Tiers\\ThirdParty;
-use App\\Models\\Tiers\\ThirdPartyDocument;
-use Filament\\Actions\\Action;
-use Filament\\Resources\\Resource;
-use Filament\\Tables\\Columns\\TextColumn;
-use Filament\\Tables\\Table;
-use Illuminate\\Database\\Eloquent\\Builder;
-use Spatie\\MediaLibrary\\MediaCollections\\Models\\Media;
-use ToneGabes\\Filament\\Icons\\Enums\\Phosphor;
+use App\Enums\Tiers\ThirdPartyType;
+use App\Models\Commerce\SubcontractorSituation;
+use App\Models\Tiers\Contact;
+use App\Models\Tiers\ThirdParty;
+use App\Models\Tiers\ThirdPartyDocument;
+use Filament\Actions\Action;
+use Filament\Resources\Resource;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
+use ToneGabes\Filament\Icons\Enums\Phosphor;
 use BackedEnum;
 use UnitEnum;
 
@@ -114,7 +114,7 @@ class PrivateMediaDocumentResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\\ListPrivateMediaDocuments::route('/'),
+            'index' => Pages\ListPrivateMediaDocuments::route('/'),
         ];
     }
 }
