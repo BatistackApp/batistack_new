@@ -16,7 +16,7 @@ it('migrates legacy generated subcontractor documents only after SHA-256 verific
 
     $company = ThirdParty::factory()->create(['type' => ThirdPartyType::SUBCONTRACTOR]);
     $sourcePath = 'documents/legacy-invoice.pdf';
-    $privatePath = 'subcontractors/'.$company->id.'/documents/commerce/invoice/legacy-invoice.pdf';
+    $privatePath = 'subcontractors/'.$company->id.'/documents/commerce/invoice/'.substr(hash('sha256', $sourcePath), 0, 12).'/legacy-invoice.pdf';
     $contents = '%PDF-1.4 legacy invoice bytes';
 
     Storage::disk('public')->put($sourcePath, $contents);
