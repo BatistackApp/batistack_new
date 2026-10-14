@@ -32,7 +32,7 @@ function makeManagedScenario(): array
 {
     $employee = Employee::factory()->create();
     $user = $employee->user;
-    $chantier = Chantier::factory()->create(['manager_id' => $employee->id]);
+    $chantier = Chantier::factory()->inProgress()->create(['manager_id' => $employee->id]);
     $contract = RentalContract::factory()->create([
         'chantier_id' => $chantier->id,
         'supplier_id' => ThirdParty::factory()->state(['type' => ThirdPartyType::SUPPLIER]),
@@ -176,17 +176,16 @@ it('processes sync operations end to end', function () {
         ->and($report->getMedia('photos'))->toHaveCount(1);
 });
 
-it('returns an empty list from the index when the user has no employee record', function () {
+it('denies access to the contracts index when the user has no employee record', function () {
     $user = User::factory()->create();
 
     $this->actingAs($user)->getJson(route('etat-des-lieux.api.contracts'))
-        ->assertOk()
-        ->assertJson(['data' => []]);
+        ->assertForbidden();
 });
 
 it('indexes contracts when the user is a chantier member (not manager)', function () {
     $member = Employee::factory()->create();
-    $chantier = Chantier::factory()->create();
+    $chantier = Chantier::factory()->inProgress()->create();
     $chantier->members()->attach($member->id);
 
     RentalContract::factory()->create([
@@ -261,7 +260,7 @@ it('returns 500 and rolls back when a sync operation throws', function () {
 
 it('authorizes a chantier member and denies a user without an employee record', function () {
     $member = Employee::factory()->create();
-    $chantier = Chantier::factory()->create();
+    $chantier = Chantier::factory()->inProgress()->create();
     $chantier->members()->attach($member->id);
     $contract = RentalContract::factory()->create([
         'chantier_id' => $chantier->id,

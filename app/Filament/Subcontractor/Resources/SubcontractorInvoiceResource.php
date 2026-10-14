@@ -167,9 +167,9 @@ class SubcontractorInvoiceResource extends Resource
         ];
     }
 
-    public static function chantierIsAssignedToSubcontractor(int|string $chantierId, ?int $subcontractorId): bool
+    public static function chantierIsAssignedToSubcontractor(int|string|null $chantierId, ?int $subcontractorId): bool
     {
-        if (! $subcontractorId) {
+        if ($chantierId === null || $chantierId === '' || ! $subcontractorId) {
             return false;
         }
 

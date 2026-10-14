@@ -1,3 +1,5 @@
+# Ensure the API and data-integrity suites run on this stack.
+# Issue 510 stacked-PR regression workflow
 name: tests
 
 on:
@@ -13,6 +15,7 @@ on:
       - develop
       - master
       - production
+      - 'split/**'
   schedule:
     - cron: '0 2 * * *'
   workflow_dispatch:
@@ -303,7 +306,7 @@ jobs:
   test-pr-issue510:
     runs-on: ubuntu-latest
     environment: Testing
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'pull_request' || (github.event_name == 'push' && startsWith(github.ref, 'refs/heads/split/'))
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
@@ -367,20 +370,68 @@ jobs:
         continue-on-error: true
         run: ./vendor/bin/pest tests/Feature/Filament/SubcontractorInvoiceResourceAuthorizationTest.php --no-coverage
 
+      - name: Run chantier assignments authorization tests
+        id: assignments-tests
+        continue-on-error: true
+        run: ./vendor/bin/pest tests/Feature/Filament/ChantierAssignmentsResourceAuthorizationTest.php --no-coverage
+
+      - name: Run consultation authorization tests
+        id: consultation-tests
+        continue-on-error: true
+        run: ./vendor/bin/pest tests/Feature/Filament/ConsultationResourceAuthorizationTest.php --no-coverage
+
+      - name: Run subcontractor assigned-task authorization tests
+        id: assigned-task-tests
+        continue-on-error: true
+        run: ./vendor/bin/pest tests/Feature/Filament/SubcontractorAssignedTaskAuthorizationTest.php --no-coverage
+
+      - name: Run subcontractor assigned-task read-only tests
+        id: assigned-task-readonly-tests
+        continue-on-error: true
+        run: ./vendor/bin/pest tests/Feature/Filament/SubcontractorAssignedTaskReadOnlyTest.php --no-coverage
+
+      - name: Run subcontractor assigned-task action execution tests
+        id: assigned-task-action-tests
+        continue-on-error: true
+        run: ./vendor/bin/pest tests/Feature/Filament/SubcontractorAssignedTaskActionExecutionTest.php --no-coverage
+
+      - name: Run subcontractor consultation action execution tests
+        id: consultation-action-tests
+        continue-on-error: true
+        run: ./vendor/bin/pest tests/Feature/Filament/SubcontractorConsultationActionExecutionTest.php --no-coverage
+
       - name: Fail if any focused test suite failed
         if: always()
         env:
           API_TESTS_OUTCOME: ${{ steps.api-tests.outcome }}
           INTEGRITY_TESTS_OUTCOME: ${{ steps.integrity-tests.outcome }}
           INVOICE_TESTS_OUTCOME: ${{ steps.invoice-tests.outcome }}
+          ASSIGNMENTS_TESTS_OUTCOME: ${{ steps.assignments-tests.outcome }}
+          CONSULTATION_TESTS_OUTCOME: ${{ steps.consultation-tests.outcome }}
+          ASSIGNED_TASK_TESTS_OUTCOME: ${{ steps.assigned-task-tests.outcome }}
+          ASSIGNED_TASK_READONLY_TESTS_OUTCOME: ${{ steps.assigned-task-readonly-tests.outcome }}
+          ASSIGNED_TASK_ACTION_TESTS_OUTCOME: ${{ steps.assigned-task-action-tests.outcome }}
+          CONSULTATION_ACTION_TESTS_OUTCOME: ${{ steps.consultation-action-tests.outcome }}
         run: |
           echo "API authorization tests: $API_TESTS_OUTCOME"
           echo "Contact integrity tests: $INTEGRITY_TESTS_OUTCOME"
           echo "Subcontractor invoice tests: $INVOICE_TESTS_OUTCOME"
+          echo "Chantier assignments tests: $ASSIGNMENTS_TESTS_OUTCOME"
+          echo "Consultation authorization tests: $CONSULTATION_TESTS_OUTCOME"
+          echo "Subcontractor assigned-task authorization tests: $ASSIGNED_TASK_TESTS_OUTCOME"
+          echo "Subcontractor assigned-task read-only tests: $ASSIGNED_TASK_READONLY_TESTS_OUTCOME"
+          echo "Subcontractor assigned-task action tests: $ASSIGNED_TASK_ACTION_TESTS_OUTCOME"
+          echo "Subcontractor consultation action tests: $CONSULTATION_ACTION_TESTS_OUTCOME"
 
           if [ "$API_TESTS_OUTCOME" != "success" ] || \
              [ "$INTEGRITY_TESTS_OUTCOME" != "success" ] || \
-             [ "$INVOICE_TESTS_OUTCOME" != "success" ]; then
+             [ "$INVOICE_TESTS_OUTCOME" != "success" ] || \
+             [ "$ASSIGNMENTS_TESTS_OUTCOME" != "success" ] || \
+             [ "$CONSULTATION_TESTS_OUTCOME" != "success" ] || \
+             [ "$ASSIGNED_TASK_TESTS_OUTCOME" != "success" ] || \
+             [ "$ASSIGNED_TASK_READONLY_TESTS_OUTCOME" != "success" ] || \
+             [ "$ASSIGNED_TASK_ACTION_TESTS_OUTCOME" != "success" ] || \
+             [ "$CONSULTATION_ACTION_TESTS_OUTCOME" != "success" ]; then
             exit 1
           fi
 

@@ -27,8 +27,8 @@ return new class extends Migration
 
         Schema::create('user_third_party_accounts', function (Blueprint $table): void {
             $table->id();
-            $table->foreignId('user_id')->unique()->constrained('users')->cascadeOnDelete();
-            $table->foreignId('third_party_id')->constrained('third_parties')->cascadeOnDelete();
+            $table->foreignId('user_id')->unique()->constrained('users')->restrictOnDelete();
+            $table->foreignId('third_party_id')->constrained('third_parties')->restrictOnDelete();
             $table->unique(['user_id', 'third_party_id'], 'user_third_party_accounts_user_company_unique');
             $table->timestamps();
         });
@@ -49,14 +49,14 @@ return new class extends Migration
             ]);
         }
 
-        // A contact's company must match the single company assigned to its account.
+        // Prevent deleting a mapping from implicitly deleting its contacts.
         Schema::table('contacts', function (Blueprint $table): void {
             $table->foreign(
                 ['user_id', 'third_party_id'],
                 'contacts_user_company_fk'
             )->references(
                 ['user_id', 'third_party_id']
-            )->on('user_third_party_accounts')->cascadeOnDelete();
+            )->on('user_third_party_accounts')->restrictOnDelete();
         });
     }
 

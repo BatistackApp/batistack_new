@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\Tiers\ThirdPartyType;
 use App\Models\Tiers\Contact;
 use App\Models\Tiers\ThirdParty;
 use App\Models\User;
@@ -60,9 +61,57 @@ it('rejects a contact linked to a different company for the same account at data
     ])))->toThrow(QueryException::class);
 });
 
-it('keeps an existing account link when creating an additional contact for the same company', function () {
+it('prevents deleting an account-company mapping while contacts reference it', function () {
     $user = User::factory()->create();
     $company = ThirdParty::factory()->create();
+
+    DB::table('user_third_party_accounts')->insert([
+        'user_id' => $user->id,
+        'third_party_id' => $company->id,
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
+
+    $contact = Contact::withoutEvents(fn () => Contact::factory()->create([
+        'user_id' => $user->id,
+        'third_party_id' => $company->id,
+        'email' => null,
+    ]));
+
+    expect(fn () => DB::table('user_third_party_accounts')
+        ->where('user_id', $user->id)
+        ->delete())->toThrow(QueryException::class);
+
+    $this->assertDatabaseHas('contacts', ['id' => $contact->id]);
+});
+
+it('prevents deleting a user or company when its account-company mapping is referenced by contacts', function () {
+    $user = User::factory()->create();
+    $company = ThirdParty::factory()->create();
+
+    DB::table('user_third_party_accounts')->insert([
+        'user_id' => $user->id,
+        'third_party_id' => $company->id,
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
+
+    $contact = Contact::withoutEvents(fn () => Contact::factory()->create([
+        'user_id' => $user->id,
+        'third_party_id' => $company->id,
+        'email' => null,
+    ]));
+
+    expect(fn () => $user->delete())->toThrow(QueryException::class);
+    expect(fn () => $company->delete())->toThrow(QueryException::class);
+
+    $this->assertDatabaseHas('contacts', ['id' => $contact->id]);
+});
+
+it('preserves an existing account when creating another contact for the same company', function () {
+    $user = User::factory()->create(['is_tiers' => true]);
+    $company = ThirdParty::factory()->create(['type' => ThirdPartyType::CLIENT]);
+    $existingUserCount = User::query()->count();
 
     $firstContact = Contact::factory()->create([
         'user_id' => $user->id,
@@ -78,6 +127,9 @@ it('keeps an existing account link when creating an additional contact for the s
 
     expect($firstContact->fresh()->user_id)->toBe($user->id)
         ->and($secondContact->fresh()->user_id)->toBe($user->id)
-        ->and(User::query()->count())->toBe(1)
-        ->and(Contact::query()->where('user_id', $user->id)->count())->toBe(2);
+        ->and(User::query()->count())->toBe($existingUserCount)
+        ->and(Contact::query()->where('user_id', $user->id)->count())->toBe(2)
+        ->and(DB::table('user_third_party_accounts')
+            ->where('user_id', $user->id)
+            ->value('third_party_id'))->toBe($company->id);
 });

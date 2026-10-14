@@ -234,16 +234,14 @@ describe('Contact - Relations', function () {
     });
 
     test('peut être lié à un User', function () {
-        Contact::withoutEvents(function () {
-            $tp = ThirdParty::factory()->create();
-            $user = User::factory()->create();
-            $contact = Contact::factory()->create([
-                'third_party_id' => $tp->id,
-                'user_id' => $user->id,
-            ]);
+        $tp = ThirdParty::factory()->create();
+        $user = User::factory()->create();
+        $contact = Contact::factory()->create([
+            'third_party_id' => $tp->id,
+            'user_id' => $user->id,
+        ]);
 
-            expect($contact->user->id)->toBe($user->id);
-        });
+        expect($contact->user->id)->toBe($user->id);
     });
 
     test('thirdParty peut avoir plusieurs contacts', function () {
@@ -281,18 +279,16 @@ describe('Contact - Intégration Scopes', function () {
         $tp = ThirdParty::factory()->create();
         $user = User::factory()->create();
 
-        Contact::withoutEvents(function () use ($tp, $user) {
-            Contact::factory()->create([
-                'third_party_id' => $tp->id,
-                'is_primary' => true,
-                'user_id' => $user->id,
-            ]);
-            Contact::factory()->create([
-                'third_party_id' => $tp->id,
-                'is_primary' => false,
-                'user_id' => $user->id,
-            ]);
-        });
+        Contact::factory()->create([
+            'third_party_id' => $tp->id,
+            'is_primary' => true,
+            'user_id' => $user->id,
+        ]);
+        Contact::factory()->create([
+            'third_party_id' => $tp->id,
+            'is_primary' => false,
+            'user_id' => $user->id,
+        ]);
 
         $result = Contact::primary()->linkedToUser()->get();
 
