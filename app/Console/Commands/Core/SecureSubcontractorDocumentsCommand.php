@@ -133,6 +133,100 @@ class SecureSubcontractorDocumentsCommand extends Command
                 }
             });
 
+
+        // Secure every media collection attached directly to the subcontractor
+        // and to its ThirdPartyDocument records (including signed documents).
+        ThirdPartyDocument::query()
+            ->whereIn('third_party_id', $subcontractorIds)
+            ->with('media')
+            ->orderBy('id')
+            ->chunkById(100, function ($documents) use ($dryRun, &$movedInvoices, &$failed): void {
+                foreach ($documents as $document) {
+                    foreach ($document->media as $media) {
+                        $oldDisk = $media->disk;
+                        $path = $media->getPathRelativeToRoot();
+
+                        if (! in_array($oldDisk, ['public', 's3-public'], true)) {
+                            continue;
+                        }
+
+                        if ($dryRun) {
+                            $this->line("[simulation] Document sous-traitant {$document->id}, média {$media->id}: {$oldDisk}:{$path} → local");
+                            $movedInvoices++;
+
+                            continue;
+                        }
+
+                        if (! $this->copyToPrivateDisk($oldDisk, $path)) {
+                            $this->error("Échec du déplacement du média de sous-traitant {$media->id}.");
+                            $failed++;
+
+                            continue;
+                        }
+
+                        Media::query()
+                            ->where('disk', $oldDisk)
+                            ->chunkById(100, function ($mediaRecords) use ($path): void {
+                                foreach ($mediaRecords as $mediaRecord) {
+                                    if ($mediaRecord->getPathRelativeToRoot() === $path) {
+                                        $mediaRecord->disk = 'local';
+                                        $mediaRecord->save();
+                                    }
+                                }
+                            });
+
+                        Storage::disk($oldDisk)->delete($path);
+                        $movedInvoices++;
+                    }
+                }
+            });
+
+        // Also secure media attached directly to the subcontractor record.
+        ThirdParty::query()
+            ->whereIn('id', $subcontractorIds)
+            ->with('media')
+            ->orderBy('id')
+            ->chunkById(100, function ($companies) use ($dryRun, &$movedInvoices, &$failed): void {
+                foreach ($companies as $company) {
+                    foreach ($company->media as $media) {
+                        $oldDisk = $media->disk;
+                        $path = $media->getPathRelativeToRoot();
+
+                        if (! in_array($oldDisk, ['public', 's3-public'], true)) {
+                            continue;
+                        }
+
+                        if ($dryRun) {
+                            $this->line("[simulation] Fiche sous-traitant {$company->id}, média {$media->id}: {$oldDisk}:{$path} → local");
+                            $movedInvoices++;
+
+                            continue;
+                        }
+
+                        if (! $this->copyToPrivateDisk($oldDisk, $path)) {
+                            $this->error("Échec du déplacement du média de fiche sous-traitant {$media->id}.");
+                            $failed++;
+
+                            continue;
+                        }
+
+                        Media::query()
+                            ->where('disk', $oldDisk)
+                            ->chunkById(100, function ($mediaRecords) use ($path): void {
+                                foreach ($mediaRecords as $mediaRecord) {
+                                    if ($mediaRecord->getPathRelativeToRoot() === $path) {
+                                        $mediaRecord->disk = 'local';
+                                        $mediaRecord->save();
+                                    }
+                                }
+                            });
+
+                        Storage::disk($oldDisk)->delete($path);
+                        $movedInvoices++;
+                    }
+                }
+            });
+
         $this->info(($dryRun ? 'Simulation terminée' : 'Migration terminée').": {$movedDocuments} document(s), {$movedInvoices} facture(s), {$failed} erreur(s).");
 
         return $failed === 0 ? self::SUCCESS : self::FAILURE;
