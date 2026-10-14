@@ -55,6 +55,24 @@ it('streams a generated subcontractor document inline and as an attachment', fun
         ->and($download->headers->get('X-Content-Type-Options'))->toBe('nosniff');
 });
 
+it('sanitizes quotes and line breaks from the private document filename header', function () {
+    Storage::fake('local');
+    [, $company, $request] = privateDocumentPortalIdentity();
+    $document = GeneratedDocument::factory()->create([
+        'entity_type' => ThirdParty::class,
+        'entity_id' => $company->id,
+        'file_disk' => 'local',
+        'file_path' => 'private/unsafe-name.pdf',
+        'file_name' => 'bad"'."\\r\\n".'X-Test: injected',
+    ]);
+    Storage::disk('local')->put($document->file_path, '%PDF-private');
+
+    $response = app(PrivateDocumentController::class)->previewGenerated($request, $document->id);
+
+    expect($response->headers->get('Content-Disposition'))
+        ->toBe('inline; filename="badX-Test: injected.pdf"');
+});
+
 it('streams generated documents for an administrator endpoint', function () {
     Storage::fake('local');
     $document = GeneratedDocument::factory()->create([
