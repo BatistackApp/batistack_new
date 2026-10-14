@@ -8,6 +8,7 @@ use App\Models\Core\GeneratedDocument;
 use App\Models\Tiers\Contact;
 use App\Models\Tiers\ThirdParty;
 use App\Models\User;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -50,7 +51,7 @@ it('streams a generated subcontractor document inline and as an attachment', fun
 
     $download = $controller->downloadGenerated($request, $document->id);
     expect($download->headers->get('Content-Disposition'))->toBe('attachment; filename="document.pdf"')
-        ->and($download->headers->get('Cache-Control'))->toBe('private, no-store, max-age=0')
+        ->and(collect(explode(',', (string) $download->headers->get('Cache-Control')))->map(fn (string $directive): string => trim($directive))->sort()->values()->all())->toBe(['max-age=0', 'no-store', 'private'])
         ->and($download->headers->get('X-Content-Type-Options'))->toBe('nosniff');
 });
 
@@ -81,7 +82,7 @@ it('returns not found for a missing private file and for a document owned by ano
     ]);
 
     expect(fn () => app(PrivateDocumentController::class)->previewGenerated($request, $foreignDocument->id))
-        ->toThrow(HttpException::class);
+        ->toThrow(ModelNotFoundException::class);
 
     $missingFile = GeneratedDocument::factory()->create([
         'entity_type' => ThirdParty::class,
