@@ -6,10 +6,10 @@ use App\Enums\Tiers\ThirdPartyType;
 use App\Models\Commerce\CustomerInvoice;
 use App\Models\Commerce\SubcontractorSituation;
 use App\Models\Core\GeneratedDocument;
-use App\Models\Tiers\ThirdParty;
+use App\Models\Tiers\ThirdParty;\nuse App\Models\Tiers\ThirdPartyDocument;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
-use Symfony\Component\HttpFoundation\StreamedResponse;
+use Symfony\Component\HttpFoundation\StreamedResponse;\nuse Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 class PrivateDocumentController
 {
