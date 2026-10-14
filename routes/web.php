@@ -41,7 +41,13 @@ Route::middleware(['auth', EnsureUserIsSubcontractor::class])
         Route::get('/generated/{document}/download', [PrivateDocumentController::class, 'downloadGenerated'])
             ->whereNumber('document')
             ->name('generated.download');
-        Route::get('/media/{media}/preview', [PrivateDocumentController::class, 'previewMedia'])\n            ->whereNumber('media')\n            ->name('media.preview');\n        Route::get('/media/{media}/download', [PrivateDocumentController::class, 'downloadMedia'])\n            ->whereNumber('media')\n            ->name('media.download');\n        Route::get('/situations/{situation}/invoice', [PrivateDocumentController::class, 'downloadInvoice'])
+        Route::get('/media/{media}/preview', [PrivateDocumentController::class, 'previewMedia']) 
+            ->whereNumber('media')
+            ->name('media.preview');
+        Route::get('/media/{media}/download', [PrivateDocumentController::class, 'downloadMedia'])
+            ->whereNumber('media')
+            ->name('media.download');
+        Route::get('/situations/{situation}/invoice', [PrivateDocumentController::class, 'downloadInvoice'])
             ->whereNumber('situation')
             ->name('invoice.download');
     });
