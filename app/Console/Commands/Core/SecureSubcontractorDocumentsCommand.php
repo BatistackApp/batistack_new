@@ -150,8 +150,23 @@ class SecureSubcontractorDocumentsCommand extends Command
             return false;
         }
 
+        $sourceHash = $this->streamSha256($source, $path);
+        if ($sourceHash === null) {
+            $this->warn("Impossible de calculer l'empreinte du fichier source : {$sourceDisk}:{$path}");
+
+            return false;
+        }
+
+        // A previous run may have copied the file before interruption. Accept it
+        // only when the private copy is byte-for-byte identical.
         if ($target->exists($targetPath)) {
-            $this->warn("Le fichier existe déjà sur le disque privé : local:{$targetPath}");
+            $targetHash = $this->streamSha256($target, $targetPath);
+
+            if ($targetHash !== null && hash_equals($sourceHash, $targetHash)) {
+                return true;
+            }
+
+            $this->warn("Le fichier privé existe déjà mais son empreinte diffère : local:{$targetPath}");
 
             return false;
         }
@@ -162,7 +177,40 @@ class SecureSubcontractorDocumentsCommand extends Command
         }
 
         try {
-            return $target->writeStream($targetPath, $stream);
+            if (! $target->writeStream($targetPath, $stream)) {
+                $target->delete($targetPath);
+
+                return false;
+            }
+        } finally {
+            if (is_resource($stream)) {
+                fclose($stream);
+            }
+        }
+
+        $targetHash = $this->streamSha256($target, $targetPath);
+        if ($targetHash === null || ! hash_equals($sourceHash, $targetHash)) {
+            $target->delete($targetPath);
+            $this->warn("Vérification SHA-256 échouée après copie : local:{$targetPath}");
+
+            return false;
+        }
+
+        return true;
+    }
+
+    private function streamSha256($disk, string $path): ?string
+    {
+        $stream = $disk->readStream($path);
+        if (! is_resource($stream)) {
+            return null;
+        }
+
+        try {
+            $context = hash_init('sha256');
+            hash_update_stream($context, $stream);
+
+            return hash_final($context);
         } finally {
             fclose($stream);
         }
