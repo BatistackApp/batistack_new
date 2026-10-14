@@ -2,11 +2,13 @@
 
 use App\Enums\Tiers\ThirdPartyType;
 use App\Filament\Subcontractor\Resources\GeneratedDocuments\GeneratedDocumentResource;
+use App\Filament\Subcontractor\Resources\PrivateMediaDocuments\PrivateMediaDocumentResource;
 use App\Models\Commerce\CustomerInvoice;
 use App\Models\Commerce\SubcontractorSituation;
 use App\Models\Core\GeneratedDocument;
 use App\Models\Tiers\Contact;
 use App\Models\Tiers\ThirdParty;
+use App\Models\Tiers\ThirdPartyDocument;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
