@@ -128,3 +128,27 @@ it('does not serve another subcontractor customer invoice document', function ()
         ->get(route('subcontractor.documents.generated.download', ['document' => $document->id]))
         ->assertNotFound();
 });
+
+it('lists all generated document modules and types for the subcontractor and its invoices', function () {
+    [$user, $company] = createSubcontractorPortalUser();
+    $invoice = CustomerInvoice::factory()->create(['client_id' => $company->id]);
+
+    $thirdPartyDocument = GeneratedDocument::factory()->create([
+        'module' => 'rh',
+        'type' => 'attestation_salaire',
+        'entity_type' => ThirdParty::class,
+        'entity_id' => $company->id,
+    ]);
+    $invoiceDocument = GeneratedDocument::factory()->create([
+        'module' => 'commerce',
+        'type' => 'facture',
+        'entity_type' => CustomerInvoice::class,
+        'entity_id' => $invoice->id,
+    ]);
+
+    $this->actingAs($user);
+
+    expect(GeneratedDocumentResource::getEloquentQuery()->pluck('id')->all())
+        ->toContain($thirdPartyDocument->id, $invoiceDocument->id);
+});
+
