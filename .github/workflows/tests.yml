@@ -400,6 +400,9 @@ jobs:
         continue-on-error: true
         run: ./vendor/bin/pest tests/Feature/Filament/SubcontractorConsultationActionExecutionTest.php --no-coverage
 
+      - name: Run private subcontractor document migration tests
+        run: ./vendor/bin/pest tests/Feature/Modules/Core/SecureSubcontractorDocumentsCommandTest.php --no-coverage
+
       - name: Fail if any focused test suite failed
         if: always()
         env:
