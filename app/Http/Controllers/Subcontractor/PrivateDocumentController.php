@@ -66,7 +66,68 @@ class PrivateDocumentController
         return $this->streamFromDisk($diskName, $path, $media->file_name, 'attachment');
     }
 
-    private function findGeneratedDocumentForCurrentSubcontractor(Request $request, int $document): GeneratedDocument
+
+    public function previewMedia(Request $request, int $media): StreamedResponse
+    {
+        $record = $this->findMediaForCurrentSubcontractor($request, $media);
+
+        return $this->streamMedia($record, 'inline');
+    }
+
+    public function downloadMedia(Request $request, int $media): StreamedResponse
+    {
+        $record = $this->findMediaForCurrentSubcontractor($request, $media);
+
+        return $this->streamMedia($record, 'attachment');
+    }
+
+    private function findMediaForCurrentSubcontractor(Request $request, int $mediaId): Media
+    {
+        $thirdParty = $this->currentSubcontractor($request);
+        $media = Media::query()->findOrFail($mediaId);
+        $model = $media->model;
+
+        $belongsToSubcontractor = match (true) {
+            $model instanceof ThirdParty => $model->is($thirdParty),
+            $model instanceof ThirdPartyDocument => $model->third_party_id === $thirdParty->id,
+            $model instanceof SubcontractorSituation => $model->subcontractor_id === $thirdParty->id,
+            default => false,
+        };
+
+        abort_unless($belongsToSubcontractor, 404);
+        // Never fall back to a public URL or stream a still-public document.
+        abort_unless($media->disk === 'local', 404);
+
+        return $media;
+    }
+
+    private function streamMedia(Media $media, string $disposition): StreamedResponse
+    {
+        $path = $media->getPathRelativeToRoot();
+        $disk = Storage::disk($media->disk);
+        abort_unless($disk->exists($path), 404);
+
+        $stream = $disk->readStream($path);
+        abort_unless(is_resource($stream), 404);
+
+        $filename = str_replace(["\\\"", "\\r", "\\n"], '', basename($media->file_name));
+
+        return response()->stream(function () use ($stream): void {
+            try {
+                fpassthru($stream);
+            } finally {
+                if (is_resource($stream)) {
+                    fclose($stream);
+                }
+            }
+        }, 200, [
+            'Content-Type' => $media->mime_type ?: 'application/octet-stream',
+            'Content-Disposition' => $disposition.'; filename="'.$filename.'"',
+            'Cache-Control' => 'private, no-store, max-age=0',
+            'X-Content-Type-Options' => 'nosniff',
+        ]);
+    }
+\n    private function findGeneratedDocumentForCurrentSubcontractor(Request $request, int $document): GeneratedDocument
     {
         $thirdParty = $this->currentSubcontractor($request);
 
