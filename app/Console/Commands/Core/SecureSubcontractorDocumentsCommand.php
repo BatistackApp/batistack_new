@@ -9,6 +9,7 @@ use App\Models\Core\GeneratedDocument;
 use App\Models\Tiers\ThirdParty;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Storage;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 class SecureSubcontractorDocumentsCommand extends Command
 {
@@ -108,6 +109,22 @@ class SecureSubcontractorDocumentsCommand extends Command
 
                         $media->disk = 'local';
                         $media->save();
+
+                        // Keep any other media records that resolve to the same physical
+                        // source path consistent before deleting that shared public file.
+                        Media::query()
+                            ->where('disk', $oldDisk)
+                            ->whereKeyNot($media->getKey())
+                            ->chunkById(100, function ($otherMediaRecords) use ($path): void {
+                                foreach ($otherMediaRecords as $otherMedia) {
+                                    if ($otherMedia->getPathRelativeToRoot() !== $path) {
+                                        continue;
+                                    }
+
+                                    $otherMedia->disk = 'local';
+                                    $otherMedia->save();
+                                }
+                            });
 
                         Storage::disk($oldDisk)->delete($path);
 
