@@ -135,7 +135,7 @@ class SecureSubcontractorDocumentsCommand extends Command
             throw new \LogicException("Le document {$document->id} n'est pas lié à un sous-traitant.");
         }
 
-        return 'subcontractors/'.$subcontractorId.'/documents/'.$document->module.'/'.$document->type.'/'.basename($document->file_path);
+        return 'subcontractors/'.$subcontractorId.'/documents/'.$document->module.'/'.$document->type.'/'.$document->getKey().'-'.basename($document->file_path);
     }
 
     private function copyToPrivateDisk(string $sourceDisk, string $path, ?string $targetPath = null): bool
