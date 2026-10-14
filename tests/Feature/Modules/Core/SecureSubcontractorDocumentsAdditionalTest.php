@@ -151,3 +151,65 @@ it('preserves the public source and metadata when the copied file fails SHA-256 
 
     expect($sourceDisk->get($sourcePath))->toBe('%PDF-original-content');
 });
+
+it('keeps the source and metadata when reading the source stream fails', function () {
+    Storage::fake('public');
+    Storage::fake('local');
+
+    $company = ThirdParty::factory()->create(['type' => ThirdPartyType::SUBCONTRACTOR]);
+    $sourcePath = 'legacy/unreadable.pdf';
+    $document = GeneratedDocument::factory()->create([
+        'module' => 'commerce',
+        'type' => 'invoice',
+        'entity_type' => ThirdParty::class,
+        'entity_id' => $company->id,
+        'file_disk' => 'public',
+        'file_path' => $sourcePath,
+    ]);
+
+    $sourceDisk = Mockery::mock();
+    $sourceDisk->shouldReceive('exists')->once()->with($sourcePath)->andReturnTrue();
+    $sourceDisk->shouldReceive('readStream')->once()->with($sourcePath)->andReturnFalse();
+    $targetDisk = Mockery::mock();
+
+    Storage::shouldReceive('disk')->with('public')->andReturn($sourceDisk);
+    Storage::shouldReceive('disk')->with('local')->andReturn($targetDisk);
+
+    expect(Artisan::call('subcontractors:secure-documents'))->toBe(1)
+        ->and($document->fresh()->file_disk)->toBe('public')
+        ->and($document->fresh()->file_path)->toBe($sourcePath);
+});
+
+it('keeps the source and metadata when writing the private copy fails', function () {
+    Storage::fake('public');
+    Storage::fake('local');
+
+    $company = ThirdParty::factory()->create(['type' => ThirdPartyType::SUBCONTRACTOR]);
+    $sourcePath = 'legacy/unwritable-target.pdf';
+    $targetPath = 'subcontractors/'.$company->id.'/documents/commerce/invoice/unwritable-target.pdf';
+    Storage::disk('public')->put($sourcePath, '%PDF-original-content');
+
+    $document = GeneratedDocument::factory()->create([
+        'module' => 'commerce',
+        'type' => 'invoice',
+        'entity_type' => ThirdParty::class,
+        'entity_id' => $company->id,
+        'file_disk' => 'public',
+        'file_path' => $sourcePath,
+    ]);
+
+    $sourceDisk = Storage::disk('public');
+    $targetDisk = Mockery::mock();
+    $targetDisk->shouldReceive('exists')->once()->with($targetPath)->andReturnFalse();
+    $targetDisk->shouldReceive('writeStream')->once()->with($targetPath, Mockery::type('resource'))->andReturnFalse();
+    $targetDisk->shouldReceive('delete')->once()->with($targetPath)->andReturnTrue();
+
+    Storage::shouldReceive('disk')->with('public')->andReturn($sourceDisk);
+    Storage::shouldReceive('disk')->with('local')->andReturn($targetDisk);
+
+    expect(Artisan::call('subcontractors:secure-documents'))->toBe(1)
+        ->and($document->fresh()->file_disk)->toBe('public')
+        ->and($document->fresh()->file_path)->toBe($sourcePath);
+
+    expect($sourceDisk->get($sourcePath))->toBe('%PDF-original-content');
+});
