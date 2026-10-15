@@ -12,7 +12,9 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
-    $this->technician = User::factory()->create();
+    $this->technician = User::factory()->create([
+        'access_technique' => true,
+    ]);
     $this->employee = Employee::factory()->create([
         'user_id' => $this->technician->id,
     ]);

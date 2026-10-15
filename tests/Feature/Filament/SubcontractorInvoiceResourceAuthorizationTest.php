@@ -8,12 +8,19 @@ use App\Models\Tiers\Contact;
 use App\Models\Tiers\ThirdParty;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 
 uses(RefreshDatabase::class);
 
 it('limits subcontractor invoice queries to the authenticated subcontractor company', function () {
     $user = User::factory()->create(['is_tiers' => true]);
     $subcontractor = ThirdParty::factory()->create(['type' => ThirdPartyType::SUBCONTRACTOR]);
+    DB::table('user_third_party_accounts')->insert([
+        'user_id' => $user->id,
+        'third_party_id' => $subcontractor->id,
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
     Contact::withoutEvents(fn () => Contact::factory()->create([
         'user_id' => $user->id,
         'third_party_id' => $subcontractor->id,
@@ -34,6 +41,12 @@ it('limits subcontractor invoice queries to the authenticated subcontractor comp
 it('denies access to the subcontractor invoice resource for a non-subcontractor contact', function () {
     $user = User::factory()->create(['is_tiers' => true]);
     $client = ThirdParty::factory()->create(['type' => ThirdPartyType::CLIENT]);
+    DB::table('user_third_party_accounts')->insert([
+        'user_id' => $user->id,
+        'third_party_id' => $client->id,
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
     Contact::withoutEvents(fn () => Contact::factory()->create([
         'user_id' => $user->id,
         'third_party_id' => $client->id,
