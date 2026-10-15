@@ -3,12 +3,12 @@
 namespace App\Http\Controllers\Commerce;
 
 use App\Enums\Commerce\InvoiceStatus;
+use App\Enums\Tiers\ThirdPartyType;
 use App\Http\Controllers\Controller;
 use App\Models\Commerce\CustomerInvoice;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Stripe\Checkout\Session;
-use Stripe\Customer;
 use Stripe\Stripe;
 
 class StripePaymentController extends Controller
@@ -100,6 +100,88 @@ class StripePaymentController extends Controller
                     ],
                 ];
             }
+
+            $session = Session::create($sessionData);
+
+            $invoice->update([
+                'stripe_session_id' => $session->id,
+                'status' => InvoiceStatus::PAYMENT_IN_PROGRESS,
+            ]);
+
+            return redirect()->away($session->url);
+        });
+    }
+
+    public function checkoutSubcontractor(Request $request, CustomerInvoice $invoice)
+    {
+        abort_unless($request->user(), 401);
+
+        return DB::transaction(function () use ($request, $invoice) {
+            $invoice = CustomerInvoice::lockForUpdate()->findOrFail($invoice->id);
+            $subcontractor = $request->user()->contact?->thirdParty;
+            abort_unless(
+                $subcontractor
+                    && $subcontractor->type === ThirdPartyType::SUBCONTRACTOR
+                    && (int) $invoice->client_id === (int) $subcontractor->getKey(),
+                403,
+                'Cette facture ne vous appartient pas.'
+            );
+
+            if (! in_array($invoice->status, [InvoiceStatus::VALIDATED, InvoiceStatus::PAYMENT_IN_PROGRESS, InvoiceStatus::PARTIALLY_PAID])) {
+                abort(403, 'Cette facture n\'est pas valide pour le paiement.');
+            }
+
+            if ($invoice->amount_remaining <= 0) {
+                abort(403, 'Cette facture est déjà réglée.');
+            }
+
+            Stripe::setApiKey(config('services.stripe.secret'));
+
+            // Réutiliser la session existante si elle est toujours ouverte
+            if ($invoice->stripe_session_id) {
+                try {
+                    $existingSession = Session::retrieve($invoice->stripe_session_id);
+                    if ($existingSession->status === 'open') {
+                        return redirect()->away($existingSession->url);
+                    }
+                } catch (\Exception $e) {
+                    // Session introuvable ou expirée, on continue pour en recréer une
+                }
+            }
+
+            // Le sous-traitant règle uniquement le solde restant par carte ou prélèvement SEPA.
+            $amountToPay = (float) $invoice->amount_remaining;
+            $paymentMethodTypes = ['card', 'sepa_debit'];
+
+            $sessionData = [
+                'payment_method_types' => $paymentMethodTypes,
+                'customer_email' => $invoice->client?->email ?? null,
+                'client_reference_id' => $invoice->id,
+                'metadata' => [
+                    'invoice_id' => $invoice->id,
+                    'invoice_number' => $invoice->number,
+                ],
+                'line_items' => [[
+                    'price_data' => [
+                        'currency' => 'eur',
+                        'product_data' => [
+                            'name' => 'Facture '.$invoice->number,
+                            'description' => 'Règlement de la facture pour le chantier : '.($invoice->worksite?->name ?? 'N/A'),
+                        ],
+                        'unit_amount' => (int) round($amountToPay * 100), // En centimes
+                    ],
+                    'quantity' => 1,
+                ]],
+                'payment_intent_data' => [
+                    'metadata' => [
+                        'invoice_id' => $invoice->id,
+                        'invoice_number' => $invoice->number,
+                    ],
+                ],
+                'mode' => 'payment',
+                'success_url' => config('app.url').'/payment/success?session_id={CHECKOUT_SESSION_ID}',
+                'cancel_url' => config('app.url').'/payment/cancel',
+            ];
 
             $session = Session::create($sessionData);
 

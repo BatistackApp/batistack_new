@@ -357,3 +357,55 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           slug: BatistackApp/batistack_new
           files: ./storage/coverage/coverage.xml
+
+  test-subcontractor-payment-regressions:
+    name: Subcontractor payment regression tests
+    runs-on: ubuntu-latest
+    environment: Testing
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          tools: composer:v2
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install Node dependencies
+        run: npm ci
+
+      - name: Install Chrome for PDF generation
+        run: |
+          npx puppeteer browsers install chrome
+          CHROME_PATH="$(find "$HOME/.cache/puppeteer" -type f -path '*/chrome-linux64/chrome' -perm -111 -print -quit)"
+          if [ -z "$CHROME_PATH" ]; then
+            CHROME_PATH="$(find "$HOME/.cache/puppeteer" -type f -name chrome -perm -111 -print -quit)"
+          fi
+          test -n "$CHROME_PATH"
+          echo "BROWSERSHOT_CHROME_PATH=$CHROME_PATH" >> "$GITHUB_ENV"
+
+      - name: Configure Flux credentials
+        run: composer config http-basic.composer.fluxui.dev "${{ secrets.FLUX_USERNAME }}" "${{ secrets.FLUX_LICENSE_KEY }}"
+
+      - name: Install PHP dependencies
+        run: composer install --no-ansi --no-interaction --no-progress --prefer-dist --optimize-autoloader
+
+      - name: Prepare application environment
+        run: |
+          cp .env.example .env
+          mkdir -p storage/framework/views storage/framework/cache storage/framework/sessions storage/framework/testing storage/logs bootstrap/cache
+          php artisan key:generate
+
+      - name: Build frontend assets
+        run: npm run build
+
+      - name: Run subcontractor payment regression tests
+        run: php artisan test tests/Feature/Filament/SubcontractorPaymentTrackingInvoicesTest.php --no-coverage

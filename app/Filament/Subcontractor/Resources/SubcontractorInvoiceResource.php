@@ -3,10 +3,12 @@
 namespace App\Filament\Subcontractor\Resources;
 
 use App\Enums\Commerce\InvoiceStatus;
+use App\Enums\Tiers\ThirdPartyType;
 use App\Filament\Subcontractor\Resources\SubcontractorInvoiceResource\Pages;
 use App\Models\Chantiers\Chantier;
 use App\Models\Commerce\SubcontractorSituation;
 use App\Models\Tiers\ThirdParty;
+use Closure;
 use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
@@ -33,11 +35,13 @@ class SubcontractorInvoiceResource extends Resource
     {
         $user = auth()->user();
 
-        if (! $user || ! $user->contact || ! $user->contact->thirdParty) {
+        $subcontractor = $user?->contact?->thirdParty;
+
+        if (! $subcontractor || $subcontractor->type !== ThirdPartyType::SUBCONTRACTOR) {
             return parent::getEloquentQuery()->where('id', 0);
         }
 
-        $subcontractorId = $user->contact->thirdParty->id;
+        $subcontractorId = $subcontractor->id;
 
         return parent::getEloquentQuery()->where('subcontractor_id', $subcontractorId);
     }
@@ -45,7 +49,10 @@ class SubcontractorInvoiceResource extends Resource
     public static function form(Schema $schema): Schema
     {
         $user = auth()->user();
-        $subcontractorId = $user?->contact?->thirdParty?->id;
+        $subcontractor = $user?->contact?->thirdParty;
+        $subcontractorId = $subcontractor?->type === ThirdPartyType::SUBCONTRACTOR
+            ? $subcontractor->id
+            : null;
 
         return $schema
             ->components([
@@ -63,7 +70,19 @@ class SubcontractorInvoiceResource extends Resource
                         })->pluck('reference', 'id');
                     })
                     ->required()
-                    ->searchable(),
+                    ->searchable()
+                    ->rules([
+                        function (string $attribute, mixed $value, Closure $fail) use ($subcontractorId): void {
+                            $isAssignedToSubcontractor = static::chantierIsAssignedToSubcontractor(
+                                $value,
+                                $subcontractorId
+                            );
+
+                            if (! $isAssignedToSubcontractor) {
+                                $fail('Le chantier sélectionné n’est pas attribué à votre entreprise.');
+                            }
+                        },
+                    ]),
 
                 TextInput::make('reference')->label('Référence')
                     ->label('Numéro de facture')
@@ -148,9 +167,25 @@ class SubcontractorInvoiceResource extends Resource
         ];
     }
 
+    public static function chantierIsAssignedToSubcontractor(int|string $chantierId, ?int $subcontractorId): bool
+    {
+        if (! $subcontractorId) {
+            return false;
+        }
+
+        return Chantier::whereKey($chantierId)
+            ->whereHas('phases.tasks.allocations', function ($query) use ($subcontractorId) {
+                $query->where('allocatable_type', ThirdParty::class)
+                    ->where('allocatable_id', $subcontractorId);
+            })
+            ->exists();
+    }
+
     public static function canAccess(): bool
     {
-        return true;
+        $subcontractor = auth()->user()?->contact?->thirdParty;
+
+        return $subcontractor?->type === ThirdPartyType::SUBCONTRACTOR;
     }
 
     public static function getPages(): array

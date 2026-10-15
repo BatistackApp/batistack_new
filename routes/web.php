@@ -13,9 +13,11 @@ use App\Http\Controllers\Core\SignatureController;
 use App\Http\Controllers\Core\SignatureDownloadController;
 use App\Http\Controllers\Core\SignatureWebhookController;
 use App\Http\Controllers\Public\PublicSafetyPassportController;
+use App\Http\Controllers\Subcontractor\PrivateDocumentController;
 use App\Http\Controllers\WebPushController;
 use App\Http\Middleware\EnsureUserIsAdmin;
 use App\Http\Middleware\EnsureUserIsChefDeChantier;
+use App\Http\Middleware\EnsureUserIsSubcontractor;
 use App\Livewire\Kiosk\BiometricClock;
 use App\Livewire\Kiosk\BiometricEnrollment;
 use App\Livewire\Onboarding\CandidateForm;
@@ -27,6 +29,22 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'welcome')->name('home');
+
+// Les documents du portail sous-traitant sont servis après contrôle d'appartenance.
+Route::middleware(['auth', EnsureUserIsSubcontractor::class])
+    ->prefix('sous-traitant/documents')
+    ->name('subcontractor.documents.')
+    ->group(function () {
+        Route::get('/generated/{document}/preview', [PrivateDocumentController::class, 'previewGenerated'])
+            ->whereNumber('document')
+            ->name('generated.preview');
+        Route::get('/generated/{document}/download', [PrivateDocumentController::class, 'downloadGenerated'])
+            ->whereNumber('document')
+            ->name('generated.download');
+        Route::get('/situations/{situation}/invoice', [PrivateDocumentController::class, 'downloadInvoice'])
+            ->whereNumber('situation')
+            ->name('invoice.download');
+    });
 
 Route::middleware([
     'auth:sanctum',
@@ -44,12 +62,21 @@ Route::get('/signature/{token}', [SignatureController::class, 'show'])->name('si
 Route::post('/signature/{token}', [SignatureController::class, 'sign'])->name('signature.sign');
 Route::post('/signature/{token}/refuse', [SignatureController::class, 'refuse'])->name('signature.refuse');
 
+// Aperçu authentifié des documents générés privés depuis le back-office.
+Route::middleware(['auth', EnsureUserIsAdmin::class])
+    ->get('/admin/generated-documents/{document}/preview', [PrivateDocumentController::class, 'previewGeneratedForAdmin'])
+    ->whereNumber('document')
+    ->name('admin.generated-documents.preview');
+
 // Téléchargement du PDF signé (espace admin/signatures)
 Route::middleware(['auth', EnsureUserIsAdmin::class])
     ->get('/signatures/{signature}/download', [SignatureDownloadController::class, 'download'])
     ->name('signatures.download');
 
 Route::get('/pay/invoice/{invoice}', [StripePaymentController::class, 'checkout'])->name('pay.invoice')->middleware('signed');
+Route::get('/sous-traitant/payer/facture/{invoice}', [StripePaymentController::class, 'checkoutSubcontractor'])
+    ->name('pay.subcontractor.invoice')
+    ->middleware(['auth', EnsureUserIsSubcontractor::class, 'signed']);
 Route::get('/payment/success', [StripePaymentController::class, 'success'])->name('payment.success');
 Route::get('/payment/cancel', [StripePaymentController::class, 'cancel'])->name('payment.cancel');
 

@@ -2,6 +2,8 @@
 
 namespace App\Filament\Subcontractor\Resources;
 
+use App\Enums\Chantiers\ChantierStatus;
+use App\Enums\Tiers\ThirdPartyType;
 use App\Filament\Subcontractor\Resources\AssignedTaskResource\Pages;
 use App\Models\Chantiers\ChantierTask;
 use App\Models\Tiers\ThirdParty;
@@ -26,13 +28,13 @@ class AssignedTaskResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        $user = auth()->user();
+        $subcontractor = auth()->user()?->contact?->thirdParty;
 
-        if (! $user || ! $user->contact || ! $user->contact->thirdParty) {
-            return parent::getEloquentQuery()->where('id', 0); // No access
+        if ($subcontractor?->type !== ThirdPartyType::SUBCONTRACTOR) {
+            return parent::getEloquentQuery()->whereRaw('1 = 0');
         }
 
-        $subcontractorId = $user->contact->thirdParty->id;
+        $subcontractorId = $subcontractor->id;
 
         return parent::getEloquentQuery()->whereHas('allocations', function (Builder $query) use ($subcontractorId) {
             $query->where('allocatable_type', ThirdParty::class)
@@ -98,6 +100,7 @@ class AssignedTaskResource extends Resource
                     ->label('Mettre à jour l\'avancement')
                     ->icon('heroicon-o-arrow-path')
                     ->color('primary')
+                    ->visible(fn (ChantierTask $record): bool => ! static::isReadOnlyChantier($record))
                     ->form([
                         TextInput::make('progress_percentage')
                             ->label('Nouveau pourcentage d\'avancement')
@@ -109,10 +112,31 @@ class AssignedTaskResource extends Resource
                             ->suffix('%'),
                     ])
                     ->action(function (ChantierTask $record, array $data): void {
+                        $user = auth()->user();
+                        $subcontractor = $user?->contact?->thirdParty;
+
+                        $isAllocatedToSubcontractor = $subcontractor
+                            && $subcontractor->type === ThirdPartyType::SUBCONTRACTOR
+                            && $record->allocations()
+                                ->where('allocatable_type', ThirdParty::class)
+                                ->where('allocatable_id', $subcontractor->id)
+                                ->exists();
+
+                        if (! $isAllocatedToSubcontractor || static::isReadOnlyChantier($record)) {
+                            Notification::make()
+                                ->title('Modification refusée')
+                                ->body('Cette tâche n’est plus modifiable pour votre entreprise ou son chantier est terminé/archivé.')
+                                ->danger()
+                                ->send();
+
+                            return;
+                        }
+
                         $record->update([
-                            'progress_percentage' => $data['progress_percentage'],
-                            'is_completed' => $data['progress_percentage'] == 100,
+                            'progress_percentage' => (int) $data['progress_percentage'],
+                            'is_completed' => (int) $data['progress_percentage'] === 100,
                         ]);
+
                         Notification::make()
                             ->title('Avancement mis à jour')
                             ->success()
@@ -138,9 +162,16 @@ class AssignedTaskResource extends Resource
         ];
     }
 
+    public static function isReadOnlyChantier(ChantierTask $task): bool
+    {
+        $status = $task->phase?->chantier?->status;
+
+        return in_array($status, [ChantierStatus::FINISHED, ChantierStatus::ARCHIVED], true);
+    }
+
     public static function canAccess(): bool
     {
-        return true;
+        return auth()->user()?->contact?->thirdParty?->type === ThirdPartyType::SUBCONTRACTOR;
     }
 
     public static function canCreate(): bool

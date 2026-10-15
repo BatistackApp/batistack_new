@@ -55,6 +55,7 @@ class SubcontractorSituation extends Model implements HasMedia
     public function registerMediaCollections(): void
     {
         $this->addMediaCollection('invoice_document')
+            ->useDisk('local')
             ->singleFile();
     }
 }
