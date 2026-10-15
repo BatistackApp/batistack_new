@@ -6,10 +6,21 @@ use App\Models\Core\Company;
 use App\Models\Tiers\Contact;
 use App\Models\Tiers\ThirdParty;
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 
 beforeEach(function () {
     Company::factory()->create();
 });
+
+function linkUserToCompany(User $user, ThirdParty $thirdParty): void
+{
+    DB::table('user_third_party_accounts')->insert([
+        'user_id' => $user->id,
+        'third_party_id' => $thirdParty->id,
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
+}
 
 describe('Contact - Scopes', function () {
     test('scope active() filtre contacts actifs', function () {
@@ -237,6 +248,7 @@ describe('Contact - Relations', function () {
         Contact::withoutEvents(function () {
             $tp = ThirdParty::factory()->create();
             $user = User::factory()->create();
+            linkUserToCompany($user, $tp);
             $contact = Contact::factory()->create([
                 'third_party_id' => $tp->id,
                 'user_id' => $user->id,
@@ -280,6 +292,7 @@ describe('Contact - Intégration Scopes', function () {
     test('primary() + linkedToUser()', function () {
         $tp = ThirdParty::factory()->create();
         $user = User::factory()->create();
+        linkUserToCompany($user, $tp);
 
         Contact::withoutEvents(function () use ($tp, $user) {
             Contact::factory()->create([
