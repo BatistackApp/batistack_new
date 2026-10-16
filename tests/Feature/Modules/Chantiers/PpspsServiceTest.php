@@ -54,7 +54,10 @@ it('compile les produits alloués aux tâches des phases', function () {
         'ghs_pictograms' => ['ghs02'],
     ]);
 
-    $phase = ChantierPhase::factory()->create(['chantier_id' => $chantier->id]);
+    $phase = ChantierPhase::factory()->create([
+        'chantier_id' => $chantier->id,
+        'order' => 5, // avant les phases par défaut (order 10+) créées par l'observateur
+    ]);
     $task = ChantierTask::factory()->create(['chantier_phase_id' => $phase->id]);
     ResourceAllocation::create([
         'chantier_task_id' => $task->id,
