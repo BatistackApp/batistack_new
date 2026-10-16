@@ -2,6 +2,7 @@
 
 namespace App\Services\Locations;
 
+use App\Enums\Chantiers\ChantierStatus;
 use App\Enums\Locations\RentalConditionReportType;
 use App\Models\Locations\RentalConditionReport;
 use App\Models\Locations\RentalContract;
@@ -130,8 +131,13 @@ class RentalConditionReportService
         return RentalContract::query()
             ->where('id', $contractId)
             ->whereHas('chantier', function ($q) use ($employeeId) {
-                $q->where('manager_id', $employeeId)
-                    ->orWhereHas('members', fn ($m) => $m->where('employees.id', $employeeId));
+                $q->whereNotIn('status', [
+                    ChantierStatus::FINISHED->value,
+                    ChantierStatus::ARCHIVED->value,
+                ])->where(function ($access) use ($employeeId) {
+                    $access->where('manager_id', $employeeId)
+                        ->orWhereHas('members', fn ($m) => $m->where('employees.id', $employeeId));
+                });
             })
             ->exists();
     }

@@ -12,7 +12,6 @@ use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Model;
 use ToneGabes\Filament\Icons\Enums\Phosphor;
 
 class CustomerInvoiceResource extends Resource
@@ -59,11 +58,6 @@ class CustomerInvoiceResource extends Resource
     }
 
     public static function canAccess(): bool
-    {
-        return true;
-    }
-
-    public static function canView(Model $record): bool
     {
         return true;
     }

@@ -71,9 +71,11 @@ class GeneratedDocument extends Model
 
     public function scopeSearch(Builder $query, string $term): Builder
     {
-        return $query->where('file_name', 'like', "%{$term}%")
-            ->orWhere('module', 'like', "%{$term}%")
-            ->orWhere('type', 'like', "%{$term}%");
+        return $query->where(function (Builder $search) use ($term): void {
+            $search->where('file_name', 'like', "%{$term}%")
+                ->orWhere('module', 'like', "%{$term}%")
+                ->orWhere('type', 'like', "%{$term}%");
+        });
     }
 
     // ============================================

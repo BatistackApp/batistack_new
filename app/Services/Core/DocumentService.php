@@ -2,7 +2,10 @@
 
 namespace App\Services\Core;
 
+use App\Enums\Tiers\ThirdPartyType;
+use App\Models\Commerce\CustomerInvoice;
 use App\Models\Core\GeneratedDocument;
+use App\Models\Tiers\ThirdParty;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -11,7 +14,7 @@ use Spatie\Browsershot\Browsershot;
 class DocumentService
 {
     /**
-     * Génère un document PDF à partir d'une vue Blade et l'enregistre sur le disque public.
+     * Génère un document PDF à partir d'une vue Blade et l'enregistre sur le disque configuré, privé pour les sous-traitants.
      *
      * @param  string  $view  Le nom de la vue Blade à rendre.
      * @param  array  $data  Les données à passer à la vue.
@@ -39,7 +42,11 @@ class DocumentService
 
     public function download(string $relativePath, ?string $filename = null)
     {
-        return Storage::disk(static::getDisk())->download($relativePath, $filename);
+        $disk = GeneratedDocument::query()
+            ->where('file_path', $relativePath)
+            ->value('file_disk') ?? static::getDisk();
+
+        return Storage::disk($disk)->download($relativePath, $filename);
     }
 
     public function generate(
@@ -93,8 +100,21 @@ class DocumentService
             );
         }
 
-        $relativePath = 'documents/'.$type.'/'.$filename.'.pdf';
         $disk = static::getDisk();
+        $subcontractorId = match (true) {
+            $entity instanceof ThirdParty && $entity->type === ThirdPartyType::SUBCONTRACTOR => $entity->getKey(),
+            $entity instanceof CustomerInvoice && $entity->client?->type === ThirdPartyType::SUBCONTRACTOR => $entity->client_id,
+            default => null,
+        };
+
+        // Les documents du portail sous-traitant, y compris les factures client qui lui sont adressées,
+        // doivent rester privés et être isolés par entreprise.
+        if ($subcontractorId !== null) {
+            $disk = 'local';
+            $relativePath = 'subcontractors/'.$subcontractorId.'/documents/'.$type.'/'.$filename.'.pdf';
+        } else {
+            $relativePath = 'documents/'.$type.'/'.$filename.'.pdf';
+        }
 
         Storage::disk($disk)->put($relativePath, $pdfContent);
 

@@ -229,8 +229,10 @@ class Chantier extends Model implements HasMedia, HasTimeline, Signable
 
     public function scopeForEmployee(Builder $query, Employee $employee): Builder
     {
-        return $query->where('manager_id', $employee->id)
-            ->orWhereHas('members', fn ($q) => $q->where('employees.id', $employee->id));
+        return $query->where(function (Builder $query) use ($employee) {
+            $query->where('manager_id', $employee->id)
+                ->orWhereHas('members', fn ($q) => $q->where('employees.id', $employee->id));
+        });
     }
 
     public function getFullAddressAttribute(): string

@@ -29,7 +29,9 @@ class ViewGeneratedDocument extends ViewRecord
                     /** @var GeneratedDocument $record */
                     $record = $this->record;
 
-                    return $record->temporaryUrl() ?? '#';
+                    return $record->file_disk === 'local'
+                        ? route('admin.generated-documents.preview', ['document' => $record->getKey()])
+                        : ($record->temporaryUrl() ?? '#');
                 })
                 ->openUrlInNewTab(),
 

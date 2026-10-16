@@ -15,11 +15,6 @@ class CustomerSituationsTable
     {
         return $table
             ->defaultSort('number', 'desc')
-            ->query(
-                CustomerSituation::whereHas('order', function ($query) {
-                    $query->where('client_id', auth()->user()->contact->third_party_id);
-                })
-            )
             ->columns([
                 TextColumn::make('number')
                     ->label('N°')

@@ -1,6 +1,20 @@
 codecov:
   require_ci_to_pass: yes
 
+coverage:
+  status:
+    # La couverture projet reste le vrai juge qualité (target auto sur la base).
+    project:
+      default:
+        informational: false
+    # Le patch status est informatif : un gate bloquant sur le % de diff est
+    # contre-productif sur les grosses PR (type release) où migrations, vues
+    # et resources Filament font exploser le diff. Le % reste visible dans les
+    # checks et les commentaires Codecov.
+    patch:
+      default:
+        informational: true
+
 flag_management:
   default_rules:
     carryforward: true

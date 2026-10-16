@@ -29,8 +29,16 @@ class ConsultationResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        // Les sous-traitants ne voient que les consultations publiées (ou clôturées pour l'historique)
-        return parent::getEloquentQuery()->whereIn('status', ['published', 'closed', 'awarded']);
+        $user = auth()->user();
+        $subcontractor = $user?->contact?->thirdParty;
+
+        if (! $subcontractor || $subcontractor->type !== ThirdPartyType::SUBCONTRACTOR) {
+            return parent::getEloquentQuery()->whereRaw('1 = 0');
+        }
+
+        // Keep the existing marketplace visibility statuses.
+        return parent::getEloquentQuery()
+            ->whereIn('status', ['published', 'closed', 'awarded']);
     }
 
     public static function table(Table $table): Table
@@ -65,7 +73,7 @@ class ConsultationResource extends Resource
                     ->label('Répondre (Soumettre Offre)')
                     ->icon(Phosphor::PaperPlaneTilt)
                     ->color('primary')
-                    ->visible(fn (Consultation $record) => $record->status === 'published')
+                    ->visible(fn (Consultation $record): bool => static::canRespondTo($record))
                     ->schema([
                         TextInput::make('amount')->label('Montant')
                             ->label('Montant de votre offre (€ HT)')
@@ -77,18 +85,18 @@ class ConsultationResource extends Resource
                             ->maxLength(1000),
                     ])
                     ->action(function (Consultation $record, array $data) {
-                        $user = auth()->user();
-
-                        if (! $user || ! $user->contact || ! $user->contact->thirdParty || $user->contact->thirdParty->type !== ThirdPartyType::SUBCONTRACTOR) {
+                        // Re-check authorization and publication status server-side.
+                        if (! static::canRespondTo($record)) {
                             Notification::make()
                                 ->title('Identité invalide')
-                                ->body('Impossible de soumettre une offre sans être identifié comme sous-traitant.')
+                                ->body('Votre compte ne peut pas répondre à cette consultation, ou celle-ci n’est plus ouverte.')
                                 ->danger()
                                 ->send();
 
                             return;
                         }
 
+                        $user = auth()->user();
                         $thirdPartyId = $user->contact->third_party_id;
 
                         ConsultationOffer::updateOrCreate(
@@ -104,9 +112,19 @@ class ConsultationResource extends Resource
             ]);
     }
 
+    public static function canRespondTo(Consultation $consultation): bool
+    {
+        $subcontractor = auth()->user()?->contact?->thirdParty;
+
+        return $subcontractor?->type === ThirdPartyType::SUBCONTRACTOR
+            && $consultation->status === 'published';
+    }
+
     public static function canAccess(): bool
     {
-        return true;
+        $subcontractor = auth()->user()?->contact?->thirdParty;
+
+        return $subcontractor?->type === ThirdPartyType::SUBCONTRACTOR;
     }
 
     public static function getPages(): array

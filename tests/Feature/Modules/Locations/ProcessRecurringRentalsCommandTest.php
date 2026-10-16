@@ -9,7 +9,6 @@ use App\Models\Locations\RentalContractLine;
 use App\Models\Tiers\ThirdParty;
 use App\Services\Locations\RentalBillingService;
 use Carbon\Carbon;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Artisan;
 
 beforeEach(function () {

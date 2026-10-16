@@ -30,7 +30,9 @@ beforeEach(function () {
     $this->thirdParty = ThirdParty::factory()->create();
 
     // Create a technician user
-    $this->technician = User::factory()->create();
+    $this->technician = User::factory()->create([
+        'access_technique' => true,
+    ]);
     $this->salarie = Employee::factory()->create([
         'user_id' => $this->technician->id,
         'first_name' => 'Jean',

@@ -99,26 +99,26 @@ class ViewLaserInvoice extends ViewRecord
                 ->visible(fn ($record) => $record->status === InvoiceStatus::VALIDATED
                 && $record->paid_amount < (float) $record->total_ttc)
                 ->form([
-                TextInput::make('amount')
-                    ->label('Montant encaissé')
-                    ->numeric()
-                    ->minValue(0.01)
-                    ->maxValue(fn ($record): float => max(0, (float) $record->total_ttc - (float) $record->payments()->sum('allocated_amount')))
-                    ->required()
-                    ->prefix('€'),
-                Select::make('method')
-                    ->label('Moyen de paiement')
-                    ->options(PaymentMethod::class)
-                    ->required()
-                    ->native(false),
-                TextInput::make('reference')
-                    ->label('Référence du paiement')
-                    ->required(),
-                DatePicker::make('payment_date')
-                    ->label('Date du paiement')
-                    ->default(now())
-                    ->required()
-                    ->native(false),
+                    TextInput::make('amount')
+                        ->label('Montant encaissé')
+                        ->numeric()
+                        ->minValue(0.01)
+                        ->maxValue(fn ($record): float => max(0, (float) $record->total_ttc - (float) $record->payments()->sum('allocated_amount')))
+                        ->required()
+                        ->prefix('€'),
+                    Select::make('method')
+                        ->label('Moyen de paiement')
+                        ->options(PaymentMethod::class)
+                        ->required()
+                        ->native(false),
+                    TextInput::make('reference')
+                        ->label('Référence du paiement')
+                        ->required(),
+                    DatePicker::make('payment_date')
+                        ->label('Date du paiement')
+                        ->default(now())
+                        ->required()
+                        ->native(false),
                 ])
                 ->action(function ($record, array $data) {
                     DB::transaction(function () use ($record, $data): void {

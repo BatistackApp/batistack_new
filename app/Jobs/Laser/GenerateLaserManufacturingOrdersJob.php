@@ -3,6 +3,7 @@
 namespace App\Jobs\Laser;
 
 use App\Enums\Articles\ItemType;
+use App\Enums\Core\UnitType;
 use App\Enums\Gpao\ManufacturingStatus;
 use App\Models\Articles\Item;
 use App\Models\Core\Unit;
@@ -29,7 +30,7 @@ class GenerateLaserManufacturingOrdersJob implements ShouldQueue
 
         $defaultUnit = Unit::firstOrCreate(
             ['symbol' => 'u'],
-            ['name' => 'Unité', 'type' => \App\Enums\Core\UnitType::UNIT, 'is_active' => true]
+            ['name' => 'Unité', 'type' => UnitType::UNIT, 'is_active' => true]
         );
         $defaultVatRate = VatRate::firstOrCreate(
             ['rate' => 20],

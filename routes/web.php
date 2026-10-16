@@ -13,8 +13,11 @@ use App\Http\Controllers\Core\SignatureController;
 use App\Http\Controllers\Core\SignatureDownloadController;
 use App\Http\Controllers\Core\SignatureWebhookController;
 use App\Http\Controllers\Public\PublicSafetyPassportController;
+use App\Http\Controllers\Subcontractor\PrivateDocumentController;
 use App\Http\Controllers\WebPushController;
 use App\Http\Middleware\EnsureUserIsAdmin;
+use App\Http\Middleware\EnsureUserIsChefDeChantier;
+use App\Http\Middleware\EnsureUserIsSubcontractor;
 use App\Livewire\Kiosk\BiometricClock;
 use App\Livewire\Kiosk\BiometricEnrollment;
 use App\Livewire\Onboarding\CandidateForm;
@@ -26,6 +29,22 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'welcome')->name('home');
+
+// Les documents du portail sous-traitant sont servis après contrôle d'appartenance.
+Route::middleware(['auth', EnsureUserIsSubcontractor::class])
+    ->prefix('sous-traitant/documents')
+    ->name('subcontractor.documents.')
+    ->group(function () {
+        Route::get('/generated/{document}/preview', [PrivateDocumentController::class, 'previewGenerated'])
+            ->whereNumber('document')
+            ->name('generated.preview');
+        Route::get('/generated/{document}/download', [PrivateDocumentController::class, 'downloadGenerated'])
+            ->whereNumber('document')
+            ->name('generated.download');
+        Route::get('/situations/{situation}/invoice', [PrivateDocumentController::class, 'downloadInvoice'])
+            ->whereNumber('situation')
+            ->name('invoice.download');
+    });
 
 Route::middleware([
     'auth:sanctum',
@@ -43,12 +62,21 @@ Route::get('/signature/{token}', [SignatureController::class, 'show'])->name('si
 Route::post('/signature/{token}', [SignatureController::class, 'sign'])->name('signature.sign');
 Route::post('/signature/{token}/refuse', [SignatureController::class, 'refuse'])->name('signature.refuse');
 
+// Aperçu authentifié des documents générés privés depuis le back-office.
+Route::middleware(['auth', EnsureUserIsAdmin::class])
+    ->get('/admin/generated-documents/{document}/preview', [PrivateDocumentController::class, 'previewGeneratedForAdmin'])
+    ->whereNumber('document')
+    ->name('admin.generated-documents.preview');
+
 // Téléchargement du PDF signé (espace admin/signatures)
 Route::middleware(['auth', EnsureUserIsAdmin::class])
     ->get('/signatures/{signature}/download', [SignatureDownloadController::class, 'download'])
     ->name('signatures.download');
 
 Route::get('/pay/invoice/{invoice}', [StripePaymentController::class, 'checkout'])->name('pay.invoice')->middleware('signed');
+Route::get('/sous-traitant/payer/facture/{invoice}', [StripePaymentController::class, 'checkoutSubcontractor'])
+    ->name('pay.subcontractor.invoice')
+    ->middleware(['auth', EnsureUserIsSubcontractor::class, 'signed']);
 Route::get('/payment/success', [StripePaymentController::class, 'success'])->name('payment.success');
 Route::get('/payment/cancel', [StripePaymentController::class, 'cancel'])->name('payment.cancel');
 
@@ -118,29 +146,29 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/api/technicien/sync', [TechnicienSyncController::class, 'sync'])->name('technicien.api.sync');
 
     // API Offline État des Lieux (chef de chantier)
-    Route::get('/api/etat-des-lieux/contracts', [EtatDesLieuxSyncController::class, 'index'])->name('etat-des-lieux.api.contracts');
-    Route::post('/api/etat-des-lieux/sync', [EtatDesLieuxSyncController::class, 'sync'])->name('etat-des-lieux.api.sync');
+    Route::get('/api/etat-des-lieux/contracts', [EtatDesLieuxSyncController::class, 'index'])->middleware(EnsureUserIsChefDeChantier::class)->name('etat-des-lieux.api.contracts');
+    Route::post('/api/etat-des-lieux/sync', [EtatDesLieuxSyncController::class, 'sync'])->middleware(EnsureUserIsChefDeChantier::class)->name('etat-des-lieux.api.sync');
 
     // API Offline Journal de Chantier (chef de chantier)
-    Route::get('/api/journal/chantiers', [JournalSyncController::class, 'chantiers'])->name('journal.api.chantiers');
-    Route::get('/api/journal/logs', [JournalSyncController::class, 'index'])->name('journal.api.logs');
-    Route::post('/api/journal/sync', [JournalSyncController::class, 'sync'])->name('journal.api.sync');
+    Route::get('/api/journal/chantiers', [JournalSyncController::class, 'chantiers'])->middleware(EnsureUserIsChefDeChantier::class)->name('journal.api.chantiers');
+    Route::get('/api/journal/logs', [JournalSyncController::class, 'index'])->middleware(EnsureUserIsChefDeChantier::class)->name('journal.api.logs');
+    Route::post('/api/journal/sync', [JournalSyncController::class, 'sync'])->middleware(EnsureUserIsChefDeChantier::class)->name('journal.api.sync');
 
     // API Offline Checklists (chef de chantier)
-    Route::get('/api/checklist/chantiers', [ChecklistSyncController::class, 'chantiers'])->name('checklist.api.chantiers');
-    Route::get('/api/checklist/templates', [ChecklistSyncController::class, 'templates'])->name('checklist.api.templates');
-    Route::get('/api/checklist/submissions', [ChecklistSyncController::class, 'submissions'])->name('checklist.api.submissions');
-    Route::post('/api/checklist/sync', [ChecklistSyncController::class, 'sync'])->name('checklist.api.sync');
+    Route::get('/api/checklist/chantiers', [ChecklistSyncController::class, 'chantiers'])->middleware(EnsureUserIsChefDeChantier::class)->name('checklist.api.chantiers');
+    Route::get('/api/checklist/templates', [ChecklistSyncController::class, 'templates'])->middleware(EnsureUserIsChefDeChantier::class)->name('checklist.api.templates');
+    Route::get('/api/checklist/submissions', [ChecklistSyncController::class, 'submissions'])->middleware(EnsureUserIsChefDeChantier::class)->name('checklist.api.submissions');
+    Route::post('/api/checklist/sync', [ChecklistSyncController::class, 'sync'])->middleware(EnsureUserIsChefDeChantier::class)->name('checklist.api.sync');
 
     // API Offline Réserves (chef de chantier)
-    Route::get('/api/reserves/chantiers', [ReservesSyncController::class, 'chantiers'])->name('reserves.api.chantiers');
-    Route::get('/api/reserves/list', [ReservesSyncController::class, 'list'])->name('reserves.api.list');
-    Route::post('/api/reserves/sync', [ReservesSyncController::class, 'sync'])->name('reserves.api.sync');
+    Route::get('/api/reserves/chantiers', [ReservesSyncController::class, 'chantiers'])->middleware(EnsureUserIsChefDeChantier::class)->name('reserves.api.chantiers');
+    Route::get('/api/reserves/list', [ReservesSyncController::class, 'list'])->middleware(EnsureUserIsChefDeChantier::class)->name('reserves.api.list');
+    Route::post('/api/reserves/sync', [ReservesSyncController::class, 'sync'])->middleware(EnsureUserIsChefDeChantier::class)->name('reserves.api.sync');
 
     // API Equipment Tracking (pointage matériel terrain)
-    Route::get('/api/chantier-equipment/chantiers', [ChantierEquipmentSyncController::class, 'chantiers'])->name('chantier-equipment.api.chantiers');
-    Route::get('/api/chantier-equipment/presence', [ChantierEquipmentSyncController::class, 'presence'])->name('chantier-equipment.api.presence');
-    Route::post('/api/chantier-equipment/scan', [ChantierEquipmentSyncController::class, 'scan'])->name('chantier-equipment.api.scan');
+    Route::get('/api/chantier-equipment/chantiers', [ChantierEquipmentSyncController::class, 'chantiers'])->middleware(EnsureUserIsChefDeChantier::class)->name('chantier-equipment.api.chantiers');
+    Route::get('/api/chantier-equipment/presence', [ChantierEquipmentSyncController::class, 'presence'])->middleware(EnsureUserIsChefDeChantier::class)->name('chantier-equipment.api.presence');
+    Route::post('/api/chantier-equipment/scan', [ChantierEquipmentSyncController::class, 'scan'])->middleware(EnsureUserIsChefDeChantier::class)->name('chantier-equipment.api.scan');
 });
 require __DIR__.'/settings.php';
 // require __DIR__.'/test.php';

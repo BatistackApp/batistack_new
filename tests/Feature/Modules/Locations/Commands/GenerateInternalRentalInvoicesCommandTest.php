@@ -6,7 +6,6 @@ use App\Models\Immobilisation\AssetCategory;
 use App\Models\Immobilisation\FixedAsset;
 use App\Models\Locations\InternalRentalInvoice;
 use Carbon\Carbon;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Artisan;
 
 it('generates internal rental invoices via the command and reports the count', function () {

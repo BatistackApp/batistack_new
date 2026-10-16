@@ -9,6 +9,7 @@ use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class CustomerInvoicesTable
 {
@@ -16,13 +17,14 @@ class CustomerInvoicesTable
     {
         return $table
             ->defaultSort('created_at', 'desc')
-            ->query(
-                CustomerInvoice::where('client_id', auth()->user()->contact->third_party_id)
-                    ->whereIn('status', collect(InvoiceStatus::cases())
-                        ->reject(fn (InvoiceStatus $s) => in_array($s, [InvoiceStatus::DRAFT, InvoiceStatus::CANCELED]))
-                        ->map(fn (InvoiceStatus $s) => $s->value)
+            ->modifyQueryUsing(
+                fn (Builder $query) => $query->whereIn(
+                    'status',
+                    collect(InvoiceStatus::cases())
+                        ->reject(fn (InvoiceStatus $status) => in_array($status, [InvoiceStatus::DRAFT, InvoiceStatus::CANCELED]))
+                        ->map(fn (InvoiceStatus $status) => $status->value)
                         ->all()
-                    )
+                )
             )
             ->columns([
                 TextColumn::make('reference')

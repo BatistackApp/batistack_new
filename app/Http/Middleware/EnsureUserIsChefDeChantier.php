@@ -17,26 +17,35 @@ class EnsureUserIsChefDeChantier
     {
         $user = auth()->user();
 
-        // 1. Vérification de l'authentification de base
+        // Vérification de l'authentification de base
         if (! $user) {
             return redirect()->route('filament.terrain.auth.login');
         }
 
-        // 2. Vérification de la liaison avec la fiche employé RH
-        $employee = $user->salarie; // Relation Employee active issue du module RH
+        // Les administrateurs disposent du contournement validé pour Terrain.
+        if ($user->is_admin) {
+            return $next($request);
+        }
+
+        // Vérification de la liaison avec la fiche employé RH
+        $employee = $user->salarie;
 
         if (! $employee || ! $employee->is_active) {
+            if ($request->expectsJson()) {
+                return response()->json(['message' => 'Votre compte doit être relié à une fiche employé active.'], 403);
+            }
+
             auth()->logout();
 
             return redirect()->route('filament.terrain.auth.login')
                 ->with('error', 'Votre compte n\'est pas relié à une fiche employé active.');
         }
 
-        // 3. Vérification du rôle / poste (ex: Chef d'équipe, Chef de chantier, Conducteur de travaux)
+        // Les autres comptes sont autorisés selon leur intitulé de poste.
         $jobTitle = strtolower($employee->currentContract?->job_title ?? '');
         $allowedKeywords = ['chef', 'conducteur', 'foreman', 'encadrant', 'responsable'];
-
         $isAuthorized = false;
+
         foreach ($allowedKeywords as $keyword) {
             if (str_contains($jobTitle, $keyword)) {
                 $isAuthorized = true;
@@ -44,12 +53,11 @@ class EnsureUserIsChefDeChantier
             }
         }
 
-        // Optionnel : On peut aussi autoriser les super-admins à des fins de test/support
-        if ($user->email === 'admin@admin.com') {
-            $isAuthorized = true;
-        }
-
         if (! $isAuthorized) {
+            if ($request->expectsJson()) {
+                return response()->json(['message' => 'Accès réservé aux chefs de chantier et conducteurs de travaux.'], 403);
+            }
+
             auth()->logout();
 
             return redirect()->route('filament.terrain.auth.login')

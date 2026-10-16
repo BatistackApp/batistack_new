@@ -4,6 +4,7 @@ namespace App\Filament\Subcontractor\Resources;
 
 use App\Enums\Chantiers\ChantierStatus;
 use App\Enums\Commerce\OrderStatus;
+use App\Enums\Tiers\ThirdPartyType;
 use App\Filament\Subcontractor\Resources\ChantierAssignmentsResource\Pages;
 use App\Models\Chantiers\Chantier;
 use App\Models\Commerce\PurchaseOrder;
@@ -29,13 +30,13 @@ class ChantierAssignmentsResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        $user = auth()->user();
+        $subcontractor = auth()->user()?->contact?->thirdParty;
 
-        if (! $user || ! $user->contact || ! $user->contact->thirdParty) {
-            return parent::getEloquentQuery()->where('id', 0);
+        if ($subcontractor?->type !== ThirdPartyType::SUBCONTRACTOR) {
+            return parent::getEloquentQuery()->whereRaw('1 = 0');
         }
 
-        $subcontractorId = $user->contact->thirdParty->id;
+        $subcontractorId = $subcontractor->id;
 
         return parent::getEloquentQuery()
             ->whereHas('subcontractors', function (Builder $query) use ($subcontractorId) {
@@ -150,6 +151,6 @@ class ChantierAssignmentsResource extends Resource
 
     public static function canAccess(): bool
     {
-        return true;
+        return auth()->user()?->contact?->thirdParty?->type === ThirdPartyType::SUBCONTRACTOR;
     }
 }

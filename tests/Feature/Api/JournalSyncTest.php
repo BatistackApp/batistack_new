@@ -1,9 +1,12 @@
 <?php
 
+use App\Enums\Chantiers\ChantierStatus;
 use App\Models\Chantiers\Chantier;
 use App\Models\Chantiers\ChantierLog;
+use App\Models\RH\Contract;
 use App\Models\RH\Employee;
 use App\Models\User;
+use App\Services\RH\RHDocumentService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 use function Pest\Laravel\actingAs;
@@ -11,15 +14,25 @@ use function Pest\Laravel\actingAs;
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
+    // Évite la génération PDF réelle (Chrome) à la création du contrat.
+    $documentService = Mockery::mock(RHDocumentService::class);
+    $documentService->shouldReceive('generateContract')->andReturn('dummy_path');
+    $this->app->instance(RHDocumentService::class, $documentService);
+
     $this->user = User::factory()->create();
     $this->employee = Employee::factory()->create([
         'user_id' => $this->user->id,
+    ]);
+    Contract::factory()->create([
+        'employee_id' => $this->employee->id,
+        'job_title' => 'Chef de chantier',
     ]);
 });
 
 it('can fetch chantiers accessible by the chef de chantier as manager', function () {
     $chantier = Chantier::factory()->create([
         'manager_id' => $this->employee->id,
+        'status' => ChantierStatus::IN_PROGRESS,
     ]);
 
     $response = actingAs($this->user)->getJson(route('journal.api.chantiers'));
@@ -56,6 +69,7 @@ it('returns empty list when user has no chantiers', function () {
 it('can fetch journal logs for a specific chantier and date', function () {
     $chantier = Chantier::factory()->create([
         'manager_id' => $this->employee->id,
+        'status' => ChantierStatus::IN_PROGRESS,
     ]);
 
     $today = now()->toDateString();
@@ -88,6 +102,7 @@ it('can fetch journal logs for a specific chantier and date', function () {
 it('returns empty logs when date does not match', function () {
     $chantier = Chantier::factory()->create([
         'manager_id' => $this->employee->id,
+        'status' => ChantierStatus::IN_PROGRESS,
     ]);
 
     ChantierLog::factory()->create([
@@ -119,6 +134,7 @@ it('returns 403 when accessing unauthorised chantier', function () {
 it('can sync a CREATE_LOG operation', function () {
     $chantier = Chantier::factory()->create([
         'manager_id' => $this->employee->id,
+        'status' => ChantierStatus::IN_PROGRESS,
     ]);
 
     $payload = [
@@ -157,6 +173,7 @@ it('can sync a CREATE_LOG operation', function () {
 it('can sync a CREATE_LOG with incident_reported', function () {
     $chantier = Chantier::factory()->create([
         'manager_id' => $this->employee->id,
+        'status' => ChantierStatus::IN_PROGRESS,
     ]);
 
     $payload = [
@@ -219,6 +236,7 @@ it('fails to sync when chantier is not accessible', function () {
 it('syncs multiple operations in batch', function () {
     $chantier = Chantier::factory()->create([
         'manager_id' => $this->employee->id,
+        'status' => ChantierStatus::IN_PROGRESS,
     ]);
 
     $payload = [
@@ -256,11 +274,11 @@ it('syncs multiple operations in batch', function () {
     $this->assertDatabaseCount('chantier_logs', 2);
 });
 
-it('returns empty chantiers when user has no employee record', function () {
+it('rejects access when user has no employee record', function () {
     $userWithoutEmployee = User::factory()->create();
 
     $response = actingAs($userWithoutEmployee)->getJson(route('journal.api.chantiers'));
 
-    $response->assertStatus(200)
-        ->assertJson(['data' => []]);
+    $response->assertStatus(403)
+        ->assertJson(['message' => 'Votre compte doit être relié à une fiche employé active.']);
 });

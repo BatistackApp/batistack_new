@@ -27,7 +27,8 @@ on:
 permissions:
   issues: write
   pull-requests: write
-  contents: write
+  contents: read
+  security-events: write
 
 env:
   PHP_VERSION: '8.4'

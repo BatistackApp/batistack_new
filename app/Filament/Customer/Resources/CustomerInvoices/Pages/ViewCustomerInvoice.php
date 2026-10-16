@@ -9,6 +9,7 @@ use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
+use Illuminate\Support\Facades\URL;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use ToneGabes\Filament\Icons\Enums\Phosphor;
 
@@ -28,9 +29,9 @@ class ViewCustomerInvoice extends ViewRecord
                     InvoiceStatus::PAYMENT_IN_PROGRESS,
                     InvoiceStatus::PARTIALLY_PAID,
                 ]))
-                ->url(fn () => route('pay.invoice', [
+                ->url(fn () => URL::temporarySignedRoute('pay.invoice', now()->addMinutes(30), [
                     'invoice' => $this->record->id,
-                ], absolute: false))
+                ]))
                 ->openUrlInNewTab(),
 
             ActionGroup::make([

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Commerce;
 
 use App\Enums\Commerce\InvoiceStatus;
 use App\Enums\Commerce\PaymentMethod;
+use App\Enums\Commerce\PaymentStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Commerce\CustomerInvoice;
 use App\Models\Commerce\Payment;
@@ -117,6 +118,7 @@ class StripeWebhookController extends Controller
             'amount' => $amountTotal,
             'payment_date' => now(),
             'method' => $mappedMethod,
+            'status' => PaymentStatus::COMPLETED,
             'notes' => 'Paiement en ligne via Stripe',
         ]);
 

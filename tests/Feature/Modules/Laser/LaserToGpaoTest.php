@@ -1,12 +1,10 @@
 <?php
 
-use App\Enums\Articles\ItemType;
 use App\Enums\Gpao\ManufacturingStatus;
 use App\Enums\Laser\OrderStatus;
 use App\Enums\Laser\QuoteStatus;
 use App\Jobs\Laser\GenerateLaserDocumentJob;
 use App\Jobs\Laser\GenerateLaserManufacturingOrdersJob;
-use App\Models\Articles\Item;
 use App\Models\Gpao\ManufacturingOrder;
 use App\Models\Laser\LaserOrder;
 use App\Models\Laser\LaserOrderLine;
