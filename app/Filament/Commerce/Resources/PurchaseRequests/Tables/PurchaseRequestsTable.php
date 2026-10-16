@@ -13,6 +13,7 @@ use Filament\Actions\EditAction;
 use Filament\Notifications\Notification;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Collection;
 
 class PurchaseRequestsTable
 {
@@ -74,7 +75,24 @@ class PurchaseRequestsTable
                 BulkActionGroup::make([
                     DeleteBulkAction::make()
                         ->requiresConfirmation()
-                        ->check(fn ($records) => $records->every(fn ($r) => $r->canBeDeleted())),
+                        ->action(function (Collection $records) {
+                            if (! $records->every(fn ($r) => $r->canBeDeleted())) {
+                                Notification::make()
+                                    ->danger()
+                                    ->title('Suppression impossible')
+                                    ->body('Seuls les documents en brouillon peuvent être supprimés.')
+                                    ->send();
+
+                                return;
+                            }
+
+                            $records->each->delete();
+
+                            Notification::make()
+                                ->success()
+                                ->title("Demandes d'achat supprimées")
+                                ->send();
+                        }),
                 ]),
             ]);
     }
