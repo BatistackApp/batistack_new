@@ -8,6 +8,7 @@ use App\Services\RH\RHDocumentService;
 use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
 use Filament\Forms\Components\Select;
+use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ListRecords;
 use ToneGabes\Filament\Icons\Enums\Phosphor;
 
@@ -46,10 +47,20 @@ class ListTimeEntries extends ListRecords
                         ->required(),
                 ])
                 ->action(function (array $data, RHDocumentService $service) {
-                    $employee = Employee::findOrFail($data['employee_id']);
-                    $path = $service->generateMonthlyTimesheet($employee, $data['month'], $data['year']);
+                    try {
+                        $employee = Employee::findOrFail($data['employee_id']);
+                        $path = $service->generateMonthlyTimesheet($employee, $data['month'], $data['year']);
 
-                    return response()->download($path);
+                        return $service->download($path);
+                    } catch (\Throwable $e) {
+                        report($e);
+
+                        Notification::make()
+                            ->danger()
+                            ->title('Échec de la génération du relevé')
+                            ->body('Le PDF n\'a pas pu être généré. Veuillez réessayer ou contacter le support.')
+                            ->send();
+                    }
                 }),
         ];
     }

@@ -99,13 +99,19 @@ class VehiclesTable
                         ->icon(Phosphor::Printer)
                         ->color('info')
                         ->action(function (Vehicle $record, FleetDocumentService $service) {
-                            $path = $service->generateVehicleFiche($record);
-                            Notification::make()
-                                ->title('Fiche TCO compilée avec succès')
-                                ->success()
-                                ->send();
+                            try {
+                                $path = $service->generateVehicleFiche($record);
 
-                            return response()->download($path);
+                                return $service->download($path);
+                            } catch (\Throwable $e) {
+                                report($e);
+
+                                Notification::make()
+                                    ->danger()
+                                    ->title('Échec de la génération de la fiche')
+                                    ->body('Le PDF n\'a pas pu être généré. Veuillez réessayer ou contacter le support.')
+                                    ->send();
+                            }
                         }),
                 ]),
             ])

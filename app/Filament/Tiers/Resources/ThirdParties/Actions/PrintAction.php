@@ -21,7 +21,7 @@ class PrintAction
                 ->action(function (TiersDocumentService $service) {
                     $path = $service->generateList(ThirdParty::all());
 
-                    return response()->download($path);
+                    return $service->download($path);
                 }),
 
             'details' => Action::make('print_details')
