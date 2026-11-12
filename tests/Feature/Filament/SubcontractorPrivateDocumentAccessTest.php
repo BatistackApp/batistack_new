@@ -110,6 +110,7 @@ it('lists and serves customer invoices addressed to the authenticated subcontrac
         ->assertOk()
         ->assertHeader('Content-Type', 'application/pdf');
 });
+
 it('does not serve another subcontractor customer invoice document', function () {
     Storage::fake('local');
     [$user] = createSubcontractorPortalUser();
@@ -128,7 +129,6 @@ it('does not serve another subcontractor customer invoice document', function ()
         ->get(route('subcontractor.documents.generated.download', ['document' => $document->id]))
         ->assertNotFound();
 });
-
 
 it('denies private document access when the account has no active contact', function () {
     Storage::fake('local');
