@@ -129,10 +129,15 @@ it('backfills one account mapping per user and enforces the company pair on cont
     expect(DB::table('user_third_party_accounts')->where('user_id', 2)->exists())->toBeFalse()
         ->and(DB::table('contacts')->where('user_id', 2)->exists())->toBeFalse();
 
+    DB::table('third_parties')->where('id', 10)->delete();
+
+    expect(DB::table('user_third_party_accounts')->where('third_party_id', 10)->exists())->toBeFalse()
+        ->and(DB::table('contacts')->where('third_party_id', 10)->exists())->toBeFalse();
+
     $migration->down();
 
     expect(Schema::hasTable('user_third_party_accounts'))->toBeFalse()
-        ->and(DB::table('contacts')->count())->toBe(5);
+        ->and(DB::table('contacts')->count())->toBe(1);
 });
 
 it('aborts account mapping migration when a user is linked to multiple companies', function (): void {
