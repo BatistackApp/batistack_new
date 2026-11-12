@@ -44,9 +44,9 @@ beforeEach(function () {
 });
 
 it('scopes query to authenticated user contact third party', function () {
-    $user = User::factory()->create();
-    $thirdParty = ThirdParty::factory()->create();
-    Contact::withoutEvents(fn () => Contact::factory()->create([
+    $user = User::factory()->create(['is_tiers' => true]);
+    $thirdParty = ThirdParty::factory()->create(['type' => 'client', 'is_active' => true]);
+    Contact::factory()->create([
         'user_id' => $user->id,
         'third_party_id' => $thirdParty->id,
         'is_active' => true,
