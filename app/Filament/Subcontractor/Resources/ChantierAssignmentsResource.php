@@ -9,6 +9,7 @@ use App\Filament\Subcontractor\Resources\ChantierAssignmentsResource\Pages;
 use App\Models\Chantiers\Chantier;
 use App\Models\Commerce\PurchaseOrder;
 use App\Models\Commerce\SubcontractorSituation;
+use App\Models\Tiers\ThirdParty;
 use App\Services\Chantiers\ChantierAnalyticService;
 use App\Services\Tiers\AuthenticatedThirdPartyService;
 use Filament\Actions\ViewAction;
@@ -158,7 +159,7 @@ class ChantierAssignmentsResource extends Resource
         return static::authenticatedSubcontractor() !== null;
     }
 
-    private static function authenticatedSubcontractor(): ?\App\Models\Tiers\ThirdParty
+    private static function authenticatedSubcontractor(): ?ThirdParty
     {
         $user = auth()->user();
 
