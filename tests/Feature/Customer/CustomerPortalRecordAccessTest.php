@@ -3,6 +3,7 @@
 namespace Tests\Feature\Customer;
 
 use App\Enums\Commerce\InvoiceStatus;
+use App\Enums\Commerce\OrderStatus;
 use App\Enums\Commerce\QuoteStatus;
 use App\Filament\Customer\Resources\ClientEquipment\ClientEquipmentResource;
 use App\Filament\Customer\Resources\CustomerDeliveryNotes\CustomerDeliveryNoteResource;
@@ -275,8 +276,14 @@ it('rejects direct access to another customers order page', function () {
     $otherThirdParty = ThirdParty::factory()->create(['type' => 'client']);
     authenticateCustomerForThirdParty($user, $ownThirdParty);
 
-    $ownOrder = CustomerOrder::withoutEvents(fn () => CustomerOrder::factory()->create(['client_id' => $ownThirdParty->id]));
-    $otherOrder = CustomerOrder::withoutEvents(fn () => CustomerOrder::factory()->create(['client_id' => $otherThirdParty->id]));
+    $ownOrder = CustomerOrder::withoutEvents(fn () => CustomerOrder::factory()->create([
+        'client_id' => $ownThirdParty->id,
+        'status' => OrderStatus::CONFIRMED,
+    ]));
+    $otherOrder = CustomerOrder::withoutEvents(fn () => CustomerOrder::factory()->create([
+        'client_id' => $otherThirdParty->id,
+        'status' => OrderStatus::CONFIRMED,
+    ]));
 
     $this->actingAs($user);
     $this->get(CustomerOrderResource::getUrl('view', ['record' => $ownOrder], panel: 'customer'))->assertSuccessful();
