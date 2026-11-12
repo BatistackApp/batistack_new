@@ -1,13 +1,13 @@
 <?php
 
-namespace App\\Filament\\Customer\\Concerns;
+namespace App\Filament\Customer\Concerns;
 
-use App\\Enums\\Tiers\\ThirdPartyType;
-use App\\Models\\Tiers\\ThirdParty;
-use App\\Services\\Tiers\\AuthenticatedThirdPartyService;
-use Illuminate\\Database\\Eloquent\\Builder;
-use Illuminate\\Database\\Eloquent\\Model;
-use Illuminate\\Support\\Facades\\Schema;
+use App\Enums\Tiers\ThirdPartyType;
+use App\Models\Tiers\ThirdParty;
+use App\Services\Tiers\AuthenticatedThirdPartyService;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Schema;
 
 trait ScopesToAuthenticatedThirdParty
 {
