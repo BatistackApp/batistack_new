@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Commerce;
 
 use App\Enums\Commerce\InvoiceStatus;
-use App\Enums\Tiers\ThirdPartyType;
 use App\Http\Controllers\Controller;
 use App\Models\Commerce\CustomerInvoice;
 use App\Services\Tiers\AuthenticatedThirdPartyService;
