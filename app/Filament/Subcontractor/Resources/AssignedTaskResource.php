@@ -7,6 +7,7 @@ use App\Enums\Tiers\ThirdPartyType;
 use App\Filament\Subcontractor\Resources\AssignedTaskResource\Pages;
 use App\Models\Chantiers\ChantierTask;
 use App\Models\Tiers\ThirdParty;
+use App\Services\Tiers\AuthenticatedThirdPartyService;
 use Filament\Actions\Action;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
@@ -28,7 +29,7 @@ class AssignedTaskResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        $subcontractor = auth()->user()?->contact?->thirdParty;
+        $subcontractor = static::authenticatedSubcontractor();
 
         if ($subcontractor?->type !== ThirdPartyType::SUBCONTRACTOR) {
             return parent::getEloquentQuery()->whereRaw('1 = 0');
@@ -112,8 +113,7 @@ class AssignedTaskResource extends Resource
                             ->suffix('%'),
                     ])
                     ->action(function (ChantierTask $record, array $data): void {
-                        $user = auth()->user();
-                        $subcontractor = $user?->contact?->thirdParty;
+                        $subcontractor = static::authenticatedSubcontractor();
 
                         $isAllocatedToSubcontractor = $subcontractor
                             && $subcontractor->type === ThirdPartyType::SUBCONTRACTOR
@@ -171,7 +171,14 @@ class AssignedTaskResource extends Resource
 
     public static function canAccess(): bool
     {
-        return auth()->user()?->contact?->thirdParty?->type === ThirdPartyType::SUBCONTRACTOR;
+        return static::authenticatedSubcontractor() !== null;
+    }
+
+    private static function authenticatedSubcontractor(): ?ThirdParty
+    {
+        $user = auth()->user();
+
+        return $user ? app(AuthenticatedThirdPartyService::class)->subcontractor($user) : null;
     }
 
     public static function canCreate(): bool
