@@ -1,13 +1,13 @@
 <?php
 
-namespace Tests\\Feature\\Services\\Tiers;
+namespace Tests\Feature\Services\Tiers;
 
-use App\\Enums\\Tiers\\ThirdPartyType;
-use App\\Models\\Tiers\\Contact;
-use App\\Models\\Tiers\\ThirdParty;
-use App\\Models\\User;
-use App\\Services\\Tiers\\AuthenticatedThirdPartyService;
-use Illuminate\\Foundation\\Testing\\RefreshDatabase;
+use App\Enums\Tiers\ThirdPartyType;
+use App\Models\Tiers\Contact;
+use App\Models\Tiers\ThirdParty;
+use App\Models\User;
+use App\Services\Tiers\AuthenticatedThirdPartyService;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
