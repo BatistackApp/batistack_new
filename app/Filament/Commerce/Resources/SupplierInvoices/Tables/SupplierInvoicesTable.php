@@ -100,7 +100,24 @@ class SupplierInvoicesTable
                 BulkActionGroup::make([
                     DeleteBulkAction::make()
                         ->requiresConfirmation()
-                        ->check(fn ($records) => $records->every(fn ($r) => $r->canBeDeleted())),
+                        ->action(function (Collection $records) {
+                            if (! $records->every(fn ($r) => $r->canBeDeleted())) {
+                                Notification::make()
+                                    ->danger()
+                                    ->title('Suppression impossible')
+                                    ->body('Seuls les documents en brouillon peuvent être supprimés.')
+                                    ->send();
+
+                                return;
+                            }
+
+                            $records->each->delete();
+
+                            Notification::make()
+                                ->success()
+                                ->title('Factures fournisseur supprimées')
+                                ->send();
+                        }),
                     BulkAction::make('export_sepa')
                         ->label('Payer par virement (SEPA)')
                         ->icon('heroicon-o-currency-euro')

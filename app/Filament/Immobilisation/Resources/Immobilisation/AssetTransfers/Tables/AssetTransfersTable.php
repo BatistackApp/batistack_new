@@ -61,7 +61,7 @@ class AssetTransfersTable
                             $service = new ImmobilisationDocumentService;
                             $path = $service->generateTransferDocument($record);
 
-                            return response()->download($path);
+                            return $service->download($path);
                         }),
                     Action::make('mark_completed')
                         ->label('Marquer comme réceptionné')
