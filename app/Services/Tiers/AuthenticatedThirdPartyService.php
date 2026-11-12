@@ -31,7 +31,7 @@ class AuthenticatedThirdPartyService
 
         return ThirdParty::query()
             ->whereKey($thirdPartyId)
-            ->where('type', $expectedType)
+            ->where('type', $expectedType->value)
             ->where('is_active', true)
             ->whereHas('contacts', fn ($query) => $query
                 ->where('user_id', $user->getKey())
