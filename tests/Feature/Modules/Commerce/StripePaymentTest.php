@@ -27,6 +27,34 @@ it('rejects checkout for non-validated invoices', function () {
     $response->assertStatus(403);
 });
 
+it('rejects checkout when the invoice has no remaining balance', function () {
+    $invoice = CustomerInvoice::factory()->create([
+        'client_id' => $this->client->id,
+        'status' => InvoiceStatus::VALIDATED,
+        'total_ttc' => 1200,
+    ]);
+
+    $payment = Payment::create([
+        'third_party_id' => $this->client->id,
+        'reference' => 'TEST-FULLY-ALLOCATED-001',
+        'type' => 'in',
+        'method' => 'bank_transfer',
+        'status' => 'completed',
+        'amount' => 1200,
+        'payment_date' => now(),
+    ]);
+
+    PaymentAllocation::create([
+        'payment_id' => $payment->id,
+        'payable_type' => CustomerInvoice::class,
+        'payable_id' => $invoice->id,
+        'allocated_amount' => 1200,
+    ]);
+
+    $this->get(URL::signedRoute('pay.invoice', ['invoice' => $invoice->id]))
+        ->assertForbidden();
+});
+
 // Note: Testing actual Stripe Session creation requires mocking Stripe\Checkout\Session.
 // We will test the webhook handler logic directly.
 
