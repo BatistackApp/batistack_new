@@ -7,6 +7,7 @@ use App\Models\Commerce\CustomerInvoice;
 use App\Models\Commerce\SubcontractorSituation;
 use App\Models\Core\GeneratedDocument;
 use App\Models\Tiers\ThirdParty;
+use App\Services\Tiers\AuthenticatedThirdPartyService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -92,8 +93,8 @@ class PrivateDocumentController
         $user = $request->user();
         abort_unless($user, 403);
 
-        $thirdParty = $user->contact?->thirdParty;
-        abort_unless($thirdParty && $thirdParty->type === ThirdPartyType::SUBCONTRACTOR, 403);
+        $thirdParty = app(AuthenticatedThirdPartyService::class)->subcontractor($user);
+        abort_unless($thirdParty, 403);
 
         return $thirdParty;
     }
