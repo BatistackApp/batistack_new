@@ -66,6 +66,53 @@ it('makes vehicle condition report signature fields nullable', function (): void
     expect(DB::table('vehicle_condition_reports')->whereNull('signature_checksum')->count())->toBe(1);
 });
 
+it('refuses to rollback nullable vehicle signatures while NULL values exist', function (): void {
+    Schema::create('vehicle_condition_reports', function (Blueprint $table): void {
+        $table->id();
+        $table->string('signature_checksum');
+        $table->dateTime('signed_at');
+    });
+
+    $migration = require database_path('migrations/2026_10_02_000001_make_vehicle_condition_report_signature_nullable.php');
+    $migration->up();
+
+    DB::table('vehicle_condition_reports')->insert([
+        'signature_checksum' => null,
+        'signed_at' => null,
+    ]);
+
+    expect(fn () => $migration->down())
+        ->toThrow(RuntimeException::class, '1 report(s) contain NULL signature data');
+
+    $columns = collect(DB::select("PRAGMA table_info('vehicle_condition_reports')"))->keyBy('name');
+
+    expect((int) $columns['signature_checksum']->notnull)->toBe(0)
+        ->and((int) $columns['signed_at']->notnull)->toBe(0);
+});
+
+it('rolls back nullable vehicle signatures when all reports contain signature data', function (): void {
+    Schema::create('vehicle_condition_reports', function (Blueprint $table): void {
+        $table->id();
+        $table->string('signature_checksum');
+        $table->dateTime('signed_at');
+    });
+
+    $migration = require database_path('migrations/2026_10_02_000001_make_vehicle_condition_report_signature_nullable.php');
+    $migration->up();
+
+    DB::table('vehicle_condition_reports')->insert([
+        'signature_checksum' => 'sha256:valid-signature',
+        'signed_at' => now(),
+    ]);
+
+    $migration->down();
+
+    $columns = collect(DB::select("PRAGMA table_info('vehicle_condition_reports')"))->keyBy('name');
+
+    expect((int) $columns['signature_checksum']->notnull)->toBe(1)
+        ->and((int) $columns['signed_at']->notnull)->toBe(1);
+});
+
 it('adds a nullable laser order foreign key to manufacturing orders and nulls it on parent deletion', function (): void {
     Schema::create('laser_orders', function (Blueprint $table): void {
         $table->id();
