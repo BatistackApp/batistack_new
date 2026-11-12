@@ -128,3 +128,28 @@ it('does not serve another subcontractor customer invoice document', function ()
         ->get(route('subcontractor.documents.generated.download', ['document' => $document->id]))
         ->assertNotFound();
 });
+
+
+it('denies private document access when the account has no active contact', function () {
+    Storage::fake('local');
+    [$user, $company] = createSubcontractorPortalUser();
+    Contact::query()
+        ->where('user_id', $user->id)
+        ->where('third_party_id', $company->id)
+        ->update(['is_active' => false]);
+
+    $document = GeneratedDocument::factory()->create([
+        'entity_type' => ThirdParty::class,
+        'entity_id' => $company->id,
+        'file_disk' => 'local',
+        'file_path' => 'documents/private/inactive-contact.pdf',
+        'file_name' => 'inactive-contact',
+    ]);
+    Storage::disk('local')->put($document->file_path, '%PDF-1.4 private document');
+
+    $this->actingAs($user)
+        ->get(route('subcontractor.documents.generated.download', ['document' => $document->id]))
+        ->assertForbidden();
+
+    expect(GeneratedDocumentResource::getEloquentQuery()->count())->toBe(0);
+});
