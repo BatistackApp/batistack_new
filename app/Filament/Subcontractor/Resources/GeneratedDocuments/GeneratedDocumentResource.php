@@ -7,8 +7,8 @@ use App\Filament\Subcontractor\Resources\GeneratedDocuments\Pages\ListGeneratedD
 use App\Filament\Subcontractor\Resources\GeneratedDocuments\Pages\ViewGeneratedDocument;
 use App\Models\Commerce\CustomerInvoice;
 use App\Models\Core\GeneratedDocument;
-use App\Services\Tiers\AuthenticatedThirdPartyService;
 use App\Models\Tiers\ThirdParty;
+use App\Services\Tiers\AuthenticatedThirdPartyService;
 use BackedEnum;
 use Filament\Actions\ViewAction;
 use Filament\Infolists\Components\TextEntry;
