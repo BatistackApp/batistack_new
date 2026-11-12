@@ -9,7 +9,9 @@ use App\Filament\Subcontractor\Resources\ChantierAssignmentsResource\Pages;
 use App\Models\Chantiers\Chantier;
 use App\Models\Commerce\PurchaseOrder;
 use App\Models\Commerce\SubcontractorSituation;
+use App\Models\Tiers\ThirdParty;
 use App\Services\Chantiers\ChantierAnalyticService;
+use App\Services\Tiers\AuthenticatedThirdPartyService;
 use Filament\Actions\ViewAction;
 use Filament\Resources\Resource;
 use Filament\Tables;
@@ -30,7 +32,7 @@ class ChantierAssignmentsResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        $subcontractor = auth()->user()?->contact?->thirdParty;
+        $subcontractor = static::authenticatedSubcontractor();
 
         if ($subcontractor?->type !== ThirdPartyType::SUBCONTRACTOR) {
             return parent::getEloquentQuery()->whereRaw('1 = 0');
@@ -94,8 +96,11 @@ class ChantierAssignmentsResource extends Resource
                 Tables\Columns\TextColumn::make('financial_progress')
                     ->label('Progression financière')
                     ->getStateUsing(function (Chantier $record) {
-                        $user = auth()->user();
-                        $subcontractorId = $user->contact->thirdParty->id;
+                        $subcontractor = static::authenticatedSubcontractor();
+                        if (! $subcontractor) {
+                            return 0;
+                        }
+                        $subcontractorId = $subcontractor->id;
 
                         $orderTotal = PurchaseOrder::where('chantier_id', $record->id)
                             ->where('supplier_id', $subcontractorId)
@@ -151,6 +156,13 @@ class ChantierAssignmentsResource extends Resource
 
     public static function canAccess(): bool
     {
-        return auth()->user()?->contact?->thirdParty?->type === ThirdPartyType::SUBCONTRACTOR;
+        return static::authenticatedSubcontractor() !== null;
+    }
+
+    private static function authenticatedSubcontractor(): ?ThirdParty
+    {
+        $user = auth()->user();
+
+        return $user ? app(AuthenticatedThirdPartyService::class)->subcontractor($user) : null;
     }
 }

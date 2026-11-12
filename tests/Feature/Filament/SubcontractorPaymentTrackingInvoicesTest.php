@@ -163,3 +163,35 @@ it('rejects payment attempts for invoices that are not payable', function () {
 
     $this->actingAs($user)->get($url)->assertForbidden();
 });
+
+it('fails closed for payment tracking when all subcontractor contacts are inactive', function () {
+    $user = User::factory()->create(['is_tiers' => true]);
+    $company = ThirdParty::factory()->create(['type' => ThirdPartyType::SUBCONTRACTOR]);
+
+    Contact::factory()->create([
+        'user_id' => $user->id,
+        'third_party_id' => $company->id,
+        'is_active' => true,
+    ]);
+
+    CustomerInvoice::factory()->create([
+        'client_id' => $company->id,
+        'status' => InvoiceStatus::VALIDATED,
+        'total_ttc' => 2500,
+    ]);
+
+    Contact::query()
+        ->where('user_id', $user->id)
+        ->where('third_party_id', $company->id)
+        ->update(['is_active' => false]);
+
+    $this->actingAs($user);
+    $page = app(PaymentTracking::class);
+
+    expect($page->getCustomerInvoices())->toBeEmpty()
+        ->and($page->getCustomerInvoiceStats())->toBe([
+            'total_facture' => 0.0,
+            'total_paye' => 0.0,
+            'reste_a_encaisser' => 0.0,
+        ]);
+});

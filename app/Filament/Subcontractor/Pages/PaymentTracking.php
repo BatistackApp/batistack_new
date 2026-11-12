@@ -7,6 +7,7 @@ use App\Enums\Tiers\ThirdPartyType;
 use App\Models\Commerce\CustomerInvoice;
 use App\Models\Commerce\SubcontractorSituation;
 use App\Models\Tiers\ThirdParty;
+use App\Services\Tiers\AuthenticatedThirdPartyService;
 use Carbon\Carbon;
 use Filament\Actions\Action;
 use Filament\Forms\Components\DatePicker;
@@ -41,11 +42,17 @@ class PaymentTracking extends Page implements Tables\Contracts\HasTable
 
     public function table(Table $table): Table
     {
+        $subcontractor = $this->getSubcontractor();
+        $query = SubcontractorSituation::query();
+
+        if (! $subcontractor) {
+            $query->whereRaw('1 = 0');
+        } else {
+            $query->where('subcontractor_id', $subcontractor->getKey());
+        }
+
         return $table
-            ->query(
-                SubcontractorSituation::query()
-                    ->where('subcontractor_id', $this->getSubcontractor()?->id)
-            )
+            ->query($query)
             ->columns([
                 Tables\Columns\TextColumn::make('reference')
                     ->label('Référence')
@@ -173,11 +180,7 @@ class PaymentTracking extends Page implements Tables\Contracts\HasTable
     {
         $user = auth()->user();
 
-        if (! $user || ! $user->contact || ! $user->contact->thirdParty) {
-            return null;
-        }
-
-        return $user->contact->thirdParty;
+        return $user ? app(AuthenticatedThirdPartyService::class)->subcontractor($user) : null;
     }
 
     private function getChantierOptions(): array

@@ -6,6 +6,8 @@ use App\Enums\Tiers\ThirdPartyType;
 use App\Filament\Subcontractor\Resources\ConsultationResource\Pages;
 use App\Models\Tiers\Consultation;
 use App\Models\Tiers\ConsultationOffer;
+use App\Models\Tiers\ThirdParty;
+use App\Services\Tiers\AuthenticatedThirdPartyService;
 use Filament\Actions\Action;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\Textarea;
@@ -29,8 +31,7 @@ class ConsultationResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        $user = auth()->user();
-        $subcontractor = $user?->contact?->thirdParty;
+        $subcontractor = static::authenticatedSubcontractor();
 
         if (! $subcontractor || $subcontractor->type !== ThirdPartyType::SUBCONTRACTOR) {
             return parent::getEloquentQuery()->whereRaw('1 = 0');
@@ -96,8 +97,16 @@ class ConsultationResource extends Resource
                             return;
                         }
 
-                        $user = auth()->user();
-                        $thirdPartyId = $user->contact->third_party_id;
+                        $subcontractor = static::authenticatedSubcontractor();
+                        if (! $subcontractor) {
+                            Notification::make()
+                                ->title('Identité invalide')
+                                ->danger()
+                                ->send();
+
+                            return;
+                        }
+                        $thirdPartyId = $subcontractor->getKey();
 
                         ConsultationOffer::updateOrCreate(
                             ['consultation_id' => $record->id, 'third_party_id' => $thirdPartyId],
@@ -114,7 +123,7 @@ class ConsultationResource extends Resource
 
     public static function canRespondTo(Consultation $consultation): bool
     {
-        $subcontractor = auth()->user()?->contact?->thirdParty;
+        $subcontractor = static::authenticatedSubcontractor();
 
         return $subcontractor?->type === ThirdPartyType::SUBCONTRACTOR
             && $consultation->status === 'published';
@@ -122,9 +131,16 @@ class ConsultationResource extends Resource
 
     public static function canAccess(): bool
     {
-        $subcontractor = auth()->user()?->contact?->thirdParty;
+        $subcontractor = static::authenticatedSubcontractor();
 
         return $subcontractor?->type === ThirdPartyType::SUBCONTRACTOR;
+    }
+
+    private static function authenticatedSubcontractor(): ?ThirdParty
+    {
+        $user = auth()->user();
+
+        return $user ? app(AuthenticatedThirdPartyService::class)->subcontractor($user) : null;
     }
 
     public static function getPages(): array
