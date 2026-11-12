@@ -159,7 +159,6 @@ it('processes async_payment_succeeded and creates payment', function () {
     $this->assertDatabaseHas('payments', ['reference' => 'STRIPE-pi_125']);
 });
 
-
 it('ignores a successful webhook belonging to an obsolete checkout session', function () {
     $invoice = CustomerInvoice::factory()->create([
         'client_id' => $this->client->id,
