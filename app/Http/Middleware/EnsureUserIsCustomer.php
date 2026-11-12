@@ -14,18 +14,15 @@ class EnsureUserIsCustomer
      *
      * @param  Closure(Request): (Response)  $next
      */
-    public function handle(
-        Request $request,
-        Closure $next,
-        AuthenticatedThirdPartyService $thirdPartyService
-    ): Response {
+    public function handle(Request $request, Closure $next): Response
+    {
         $user = $request->user();
 
         if (! $user) {
             return redirect()->route('filament.customer.auth.login');
         }
 
-        if (! $thirdPartyService->customer($user)) {
+        if (! app(AuthenticatedThirdPartyService::class)->customer($user)) {
             auth()->logout();
 
             return redirect()->route('filament.customer.auth.login')
