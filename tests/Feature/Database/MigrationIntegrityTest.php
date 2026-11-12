@@ -124,6 +124,11 @@ it('backfills one account mapping per user and enforces the company pair on cont
         'third_party_id' => 20,
     ]))->toThrow(QueryException::class);
 
+    DB::table('users')->where('id', 2)->delete();
+
+    expect(DB::table('user_third_party_accounts')->where('user_id', 2)->exists())->toBeFalse()
+        ->and(DB::table('contacts')->where('user_id', 2)->exists())->toBeFalse();
+
     $migration->down();
 
     expect(Schema::hasTable('user_third_party_accounts'))->toBeFalse()
