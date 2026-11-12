@@ -34,6 +34,7 @@ it('processes stripe webhook and creates payment allocation', function () {
         'client_id' => $this->client->id,
         'status' => InvoiceStatus::VALIDATED,
         'total_ttc' => 1200,
+        'stripe_session_id' => 'cs_test_123',
     ]);
 
     // Create a mock Stripe webhook payload
@@ -65,6 +66,11 @@ it('processes stripe webhook and creates payment allocation', function () {
 
     $response->assertStatus(200);
 
+    // Stripe peut renvoyer plusieurs fois le même événement : le traitement doit rester idempotent.
+    $this->postJson(route('webhooks.stripe'), json_decode($payload, true), [
+        'Stripe-Signature' => $header,
+    ])->assertStatus(200);
+
     // Verify payment was created
     $this->assertDatabaseHas('payments', [
         'reference' => 'STRIPE-pi_123',
@@ -73,6 +79,8 @@ it('processes stripe webhook and creates payment allocation', function () {
 
     // Verify payment allocation was created
     $payment = Payment::where('reference', 'STRIPE-pi_123')->first();
+    expect(Payment::where('reference', 'STRIPE-pi_123')->count())->toBe(1);
+
     $this->assertDatabaseHas('payment_allocations', [
         'payment_id' => $payment->id,
         'payable_type' => CustomerInvoice::class,
@@ -120,6 +128,7 @@ it('processes async_payment_succeeded and creates payment', function () {
         'client_id' => $this->client->id,
         'status' => InvoiceStatus::VALIDATED,
         'total_ttc' => 1200,
+        'stripe_session_id' => 'cs_test_125',
     ]);
 
     $payload = json_encode([
