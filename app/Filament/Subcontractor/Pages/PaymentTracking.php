@@ -7,6 +7,7 @@ use App\Enums\Tiers\ThirdPartyType;
 use App\Models\Commerce\CustomerInvoice;
 use App\Models\Commerce\SubcontractorSituation;
 use App\Models\Tiers\ThirdParty;
+use App\Services\Tiers\AuthenticatedThirdPartyService;
 use Carbon\Carbon;
 use Filament\Actions\Action;
 use Filament\Forms\Components\DatePicker;
@@ -173,11 +174,7 @@ class PaymentTracking extends Page implements Tables\Contracts\HasTable
     {
         $user = auth()->user();
 
-        if (! $user || ! $user->contact || ! $user->contact->thirdParty) {
-            return null;
-        }
-
-        return $user->contact->thirdParty;
+        return $user ? app(AuthenticatedThirdPartyService::class)->subcontractor($user) : null;
     }
 
     private function getChantierOptions(): array
