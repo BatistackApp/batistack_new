@@ -50,7 +50,7 @@ it('scopes query to authenticated user contact third party', function () {
         'user_id' => $user->id,
         'third_party_id' => $thirdParty->id,
         'is_active' => true,
-    ]));
+    ]);
 
     $otherThirdParty = ThirdParty::factory()->create();
 
@@ -68,9 +68,9 @@ it('scopes query to authenticated user contact third party', function () {
 });
 
 it('returns empty query if authenticated user has no contact', function () {
-    $user = User::factory()->create();
+    $user = User::factory()->create(['is_tiers' => true]);
 
-    $thirdParty = ThirdParty::factory()->create();
+    $thirdParty = ThirdParty::factory()->create(['type' => 'client', 'is_active' => true]);
     DummyModel::create(['third_party_id' => $thirdParty->id]);
 
     $this->actingAs($user);
@@ -81,13 +81,13 @@ it('returns empty query if authenticated user has no contact', function () {
 });
 
 it('scopes client_id resources and rejects records owned by another client', function () {
-    $user = User::factory()->create();
-    $thirdParty = ThirdParty::factory()->create();
-    Contact::withoutEvents(fn () => Contact::factory()->create([
+    $user = User::factory()->create(['is_tiers' => true]);
+    $thirdParty = ThirdParty::factory()->create(['type' => 'client', 'is_active' => true]);
+    Contact::factory()->create([
         'user_id' => $user->id,
         'third_party_id' => $thirdParty->id,
         'is_active' => true,
-    ]));
+    ]);
 
     $otherThirdParty = ThirdParty::factory()->create();
     $ownRecord = DummyClientModel::create(['client_id' => $thirdParty->id]);
@@ -104,13 +104,13 @@ it('scopes client_id resources and rejects records owned by another client', fun
 });
 
 it('fails closed for inactive customer contacts', function () {
-    $user = User::factory()->create();
-    $thirdParty = ThirdParty::factory()->create();
-    Contact::withoutEvents(fn () => Contact::factory()->create([
+    $user = User::factory()->create(['is_tiers' => true]);
+    $thirdParty = ThirdParty::factory()->create(['type' => 'client', 'is_active' => true]);
+    Contact::factory()->create([
         'user_id' => $user->id,
         'third_party_id' => $thirdParty->id,
         'is_active' => false,
-    ]));
+    ]);
 
     DummyClientModel::create(['client_id' => $thirdParty->id]);
     $this->actingAs($user);
@@ -120,13 +120,13 @@ it('fails closed for inactive customer contacts', function () {
 });
 
 it('scopes customer situations through their order and checks record ownership', function () {
-    $user = User::factory()->create();
-    $thirdParty = ThirdParty::factory()->create();
-    Contact::withoutEvents(fn () => Contact::factory()->create([
+    $user = User::factory()->create(['is_tiers' => true]);
+    $thirdParty = ThirdParty::factory()->create(['type' => 'client', 'is_active' => true]);
+    Contact::factory()->create([
         'user_id' => $user->id,
         'third_party_id' => $thirdParty->id,
         'is_active' => true,
-    ]));
+    ]);
 
     $otherThirdParty = ThirdParty::factory()->create();
     $ownOrder = DummyOrderModel::create(['client_id' => $thirdParty->id]);
