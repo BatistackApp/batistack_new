@@ -468,3 +468,6 @@ jobs:
             tests/Feature/Modules/Customer/ScopesToAuthenticatedThirdPartyTest.php \
             tests/Feature/Customer/CustomerPortalRecordAccessTest.php \
             --no-coverage
+
+      - name: Run private document storage regression tests
+        run: php artisan test tests/Feature/Modules/Core/SecureSubcontractorDocumentsCommandTest.php --no-coverage

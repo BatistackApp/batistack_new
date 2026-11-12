@@ -88,11 +88,14 @@ class GeneratedDocument extends Model
             return null;
         }
 
-        if ($this->file_disk === 's3') {
-            return Storage::disk($this->file_disk)->temporaryUrl($this->file_path, now()->addMinutes(5));
+        $disk = Storage::disk($this->file_disk);
+
+        // Les disques privés doivent fournir une URL temporaire signée, jamais une URL publique.
+        if (in_array($this->file_disk, ['local', 's3', 's3-private'], true)) {
+            return $disk->temporaryUrl($this->file_path, now()->addMinutes(5));
         }
 
-        return Storage::disk($this->file_disk)->url($this->file_path);
+        return $disk->url($this->file_path);
     }
 
     public function deleteFile(): bool
