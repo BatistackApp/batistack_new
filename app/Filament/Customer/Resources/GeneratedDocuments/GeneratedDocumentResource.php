@@ -2,12 +2,12 @@
 
 namespace App\Filament\Customer\Resources\GeneratedDocuments;
 
+use App\Enums\Tiers\ThirdPartyType;
 use App\Filament\Customer\Resources\GeneratedDocuments\Pages\ListGeneratedDocuments;
 use App\Filament\Customer\Resources\GeneratedDocuments\Pages\ViewGeneratedDocument;
 use App\Models\Core\GeneratedDocument;
-use App\Enums\Tiers\ThirdPartyType;
-use App\Services\Tiers\AuthenticatedThirdPartyService;
 use App\Models\Tiers\ThirdParty;
+use App\Services\Tiers\AuthenticatedThirdPartyService;
 use BackedEnum;
 use Filament\Actions\ViewAction;
 use Filament\Infolists\Components\TextEntry;
