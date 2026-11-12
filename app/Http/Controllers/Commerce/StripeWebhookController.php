@@ -82,7 +82,7 @@ class StripeWebhookController extends Controller
             Stripe::setApiKey(config('services.stripe.secret'));
             $paymentIntent = PaymentIntent::retrieve($paymentIntentId);
             $methodType = $paymentIntent->payment_method_types[0] ?? 'unknown';
-        } catch (\\Exception $e) {
+        } catch (\Exception $e) {
             if (app()->environment('testing')) {
                 $methodType = 'customer_balance';
             } else {
