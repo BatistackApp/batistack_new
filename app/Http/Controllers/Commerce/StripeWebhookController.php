@@ -148,16 +148,32 @@ class StripeWebhookController extends Controller
     protected function handleExpiredSession($session)
     {
         $invoiceId = $session->metadata->invoice_id ?? null;
-        if ($invoiceId) {
-            $invoice = CustomerInvoice::find($invoiceId);
-            if ($invoice && $invoice->stripe_session_id === $session->id) {
-                // Reset invoice status so user can retry payment
-                $invoice->update([
-                    'stripe_session_id' => null,
-                    'status' => InvoiceStatus::VALIDATED,
-                ]);
-                Log::info('Stripe Webhook: Reset invoice status for expired session', ['invoice_id' => $invoiceId]);
-            }
+
+        if (! $invoiceId) {
+            return;
         }
+
+        DB::transaction(function () use ($invoiceId, $session): void {
+            $invoice = CustomerInvoice::query()
+                ->whereKey($invoiceId)
+                ->lockForUpdate()
+                ->first();
+
+            if (! $invoice || $invoice->stripe_session_id !== $session->id) {
+                return;
+            }
+
+            $hasAllocations = $invoice->allocations()->exists();
+
+            $invoice->update([
+                'stripe_session_id' => null,
+                'status' => $hasAllocations ? InvoiceStatus::PARTIALLY_PAID : InvoiceStatus::VALIDATED,
+            ]);
+
+            Log::info('Stripe Webhook: Reset invoice status for expired session', [
+                'invoice_id' => $invoiceId,
+                'status' => $invoice->status->value,
+            ]);
+        });
     }
 }
