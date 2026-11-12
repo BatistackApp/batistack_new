@@ -362,6 +362,28 @@ jobs:
     name: Migration integrity tests
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request'
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: batistack_testing
+          MYSQL_USER: laravel
+          MYSQL_PASSWORD: password
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -proot"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+    env:
+      DB_CONNECTION: mysql
+      DB_HOST: 127.0.0.1
+      DB_PORT: 3306
+      DB_DATABASE: batistack_testing
+      DB_USERNAME: laravel
+      DB_PASSWORD: password
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
