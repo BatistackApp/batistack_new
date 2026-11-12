@@ -1,11 +1,11 @@
 <?php
 
-namespace App\\Services\\Tiers;
+namespace App\Services\Tiers;
 
-use App\\Enums\\Tiers\\ThirdPartyType;
-use App\\Models\\Tiers\\ThirdParty;
-use App\\Models\\User;
-use Illuminate\\Support\\Facades\\DB;
+use App\Enums\Tiers\ThirdPartyType;
+use App\Models\Tiers\ThirdParty;
+use App\Models\User;
+use Illuminate\Support\Facades\DB;
 
 class AuthenticatedThirdPartyService
 {
