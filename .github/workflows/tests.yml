@@ -358,6 +358,35 @@ jobs:
           slug: BatistackApp/batistack_new
           files: ./storage/coverage/coverage.xml
 
+  migration-integrity:
+    name: Migration integrity tests
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          tools: composer:v2
+
+      - name: Configure Flux credentials
+        run: composer config http-basic.composer.fluxui.dev "${{ secrets.FLUX_USERNAME }}" "${{ secrets.FLUX_LICENSE_KEY }}"
+
+      - name: Install PHP dependencies
+        run: composer install --no-ansi --no-interaction --no-progress --prefer-dist --optimize-autoloader
+
+      - name: Prepare application environment
+        run: |
+          cp .env.example .env
+          mkdir -p storage/framework/views storage/framework/cache storage/framework/sessions storage/framework/testing storage/logs bootstrap/cache
+          php artisan key:generate
+
+      - name: Run migration integrity tests
+        run: php artisan test tests/Feature/Database/MigrationIntegrityTest.php --no-coverage
+
   test-subcontractor-payment-regressions:
     name: Subcontractor payment regression tests
     runs-on: ubuntu-latest
