@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Services\Tiers\AuthenticatedThirdPartyService;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -15,15 +16,13 @@ class EnsureUserIsCustomer
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $user = auth()->user();
+        $user = $request->user();
 
         if (! $user) {
             return redirect()->route('filament.customer.auth.login');
         }
 
-        $client = $user->contact;
-
-        if (! $client || ! $client->is_active) {
+        if (! app(AuthenticatedThirdPartyService::class)->customer($user)) {
             auth()->logout();
 
             return redirect()->route('filament.customer.auth.login')

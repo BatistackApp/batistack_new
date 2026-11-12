@@ -42,11 +42,11 @@ uses(RefreshDatabase::class);
 
 function authenticateCustomerForThirdParty(User $user, ThirdParty $thirdParty): void
 {
-    Contact::withoutEvents(fn () => Contact::factory()->create([
+    Contact::factory()->create([
         'user_id' => $user->id,
         'third_party_id' => $thirdParty->id,
         'is_active' => true,
-    ]));
+    ]);
 }
 
 it('rejects direct access to another customers quote page', function () {
