@@ -409,3 +409,11 @@ jobs:
 
       - name: Run subcontractor payment regression tests
         run: php artisan test tests/Feature/Filament/SubcontractorPaymentTrackingInvoicesTest.php --no-coverage
+
+      - name: Run portal identity and customer isolation tests
+        run: |
+          php artisan test \
+            tests/Feature/Services/Tiers/AuthenticatedThirdPartyServiceTest.php \
+            tests/Feature/Modules/Customer/ScopesToAuthenticatedThirdPartyTest.php \
+            tests/Feature/Customer/CustomerPortalRecordAccessTest.php \
+            --no-coverage
