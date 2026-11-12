@@ -105,3 +105,21 @@ Batistack privilégie :
 3. **L'expérience utilisateur** (interfaces Filament réactives, portails dédiés).
 
 *Développé pour les constructeurs qui exigent l'excellence opérationnelles.*
+
+---
+
+## 📦 Documentation de release 1.0.0
+
+Les procédures d'exploitation et de validation de la release sont disponibles dans le dossier [docs/1.0.0](./docs/1.0.0/) :
+
+- [Installation](./docs/1.0.0/installation.md)
+- [Déploiement](./docs/1.0.0/deployment.md)
+- [Mise à niveau](./docs/1.0.0/upgrade.md)
+- [Sauvegarde et restauration](./docs/1.0.0/backup-restore.md)
+- [Rollback](./docs/1.0.0/rollback.md)
+- [Limitations connues](./docs/1.0.0/known-limitations.md)
+- [Statut des modules](./docs/1.0.0/module-status.md)
+- [Politique de gel](./docs/1.0.0/release-policy.md)
+- [Décision GO / NO-GO](./docs/avancement/v1.0.0-go-no-go.md)
+
+**Important :** le fichier .env.example est destiné au développement. Ne pas l'utiliser tel quel en production.
