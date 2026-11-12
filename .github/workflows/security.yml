@@ -3,7 +3,8 @@ name: 🔒 Security Deep Scan
 on:
   pull_request:
     branches: [ production ]
-    types: [ opened ]
+    # Relancer l'audit à chaque mise à jour de la PR de release.
+    types: [ opened, synchronize, reopened, ready_for_review ]
   schedule:
     - cron: '0 3 * * *' # Scan quotidien à 3h
   workflow_dispatch:

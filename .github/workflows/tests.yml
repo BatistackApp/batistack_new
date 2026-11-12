@@ -301,7 +301,8 @@ jobs:
   test-global:
     runs-on: ubuntu-latest
     environment: Testing
-    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    # Le run complet reste planifié/manuellement déclenchable, et devient obligatoire sur la PR de release vers production.
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || (github.event_name == 'pull_request' && github.base_ref == 'production')
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
