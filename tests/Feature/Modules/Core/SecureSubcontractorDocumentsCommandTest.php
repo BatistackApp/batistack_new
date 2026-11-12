@@ -1,9 +1,9 @@
 <?php
 
-use App\\Enums\\Tiers\\ThirdPartyType;
-use App\\Models\\Core\\GeneratedDocument;
-use App\\Models\\Tiers\\ThirdParty;
-use Illuminate\\Support\\Facades\\Storage;
+use App\Enums\Tiers\ThirdPartyType;
+use App\Models\Core\GeneratedDocument;
+use App\Models\Tiers\ThirdParty;
+use Illuminate\Support\Facades\Storage;
 
 it('copies subcontractor generated documents to private storage and retains the public source', function () {
     Storage::fake('public');
