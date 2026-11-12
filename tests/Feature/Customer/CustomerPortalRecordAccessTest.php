@@ -46,7 +46,7 @@ function authenticateCustomerForThirdParty(User $user, ThirdParty $thirdParty): 
         'user_id' => $user->id,
         'third_party_id' => $thirdParty->id,
         'is_active' => true,
-    ]));
+    ]);
 }
 
 it('rejects direct access to another customers quote page', function () {
