@@ -10,6 +10,7 @@ use App\Models\Commerce\CustomerInvoice;
 use App\Models\Commerce\Payment;
 use App\Services\Commerce\PaymentService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Stripe\Exception\SignatureVerificationException;
 use Stripe\PaymentIntent;
@@ -61,43 +62,29 @@ class StripeWebhookController extends Controller
     protected function processPayment($session)
     {
         $invoiceId = $session->metadata->invoice_id ?? null;
-        if (! $invoiceId) {
-            Log::error('Stripe Webhook: No invoice_id in metadata', ['session' => $session->id]);
+        $paymentIntentId = $session->payment_intent ?? null;
+        $amountTotal = isset($session->amount_total) ? ((int) $session->amount_total / 100) : 0;
 
-            return;
-        }
-
-        $invoice = CustomerInvoice::find($invoiceId);
-        if (! $invoice) {
-            Log::error('Stripe Webhook: Invoice not found', ['invoice_id' => $invoiceId]);
-
-            return;
-        }
-
-        if ($invoice->stripe_session_id && $invoice->stripe_session_id !== $session->id) {
-            Log::warning('Stripe Webhook: Ignored webhook for unmatching session', ['expected' => $invoice->stripe_session_id, 'actual' => $session->id]);
-
-            return;
-        }
-
-        $amountTotal = $session->amount_total / 100; // En euros
-        $reference = 'STRIPE-'.$session->payment_intent;
-
-        // Vérifier l'idempotence (si l'événement est renvoyé par Stripe)
-        if (Payment::where('reference', $reference)->exists()) {
-            Log::info('Stripe Webhook: Payment already processed', ['reference' => $reference]);
+        if (! $invoiceId || ! $paymentIntentId || $amountTotal <= 0) {
+            Log::error('Stripe Webhook: Missing invoice, payment intent or positive amount', [
+                'session' => $session->id ?? null,
+                'invoice_id' => $invoiceId,
+                'payment_intent' => $paymentIntentId,
+                'amount_total' => $session->amount_total ?? null,
+            ]);
 
             return;
         }
 
         $methodType = 'unknown';
+
         try {
             Stripe::setApiKey(config('services.stripe.secret'));
-            $paymentIntent = PaymentIntent::retrieve($session->payment_intent);
+            $paymentIntent = PaymentIntent::retrieve($paymentIntentId);
             $methodType = $paymentIntent->payment_method_types[0] ?? 'unknown';
         } catch (\Exception $e) {
             if (app()->environment('testing')) {
-                $methodType = 'customer_balance'; // Fallback for tests using fake keys
+                $methodType = 'customer_balance';
             } else {
                 Log::warning('Stripe Webhook: Could not retrieve payment intent', ['error' => $e->getMessage()]);
             }
@@ -110,41 +97,83 @@ class StripeWebhookController extends Controller
             default => PaymentMethod::BANK_TRANSFER,
         };
 
-        // Créer le paiement
-        $payment = Payment::create([
-            'third_party_id' => $invoice->client_id,
-            'reference' => $reference,
-            'type' => 'in',
-            'amount' => $amountTotal,
-            'payment_date' => now(),
-            'method' => $mappedMethod,
-            'status' => PaymentStatus::COMPLETED,
-            'notes' => 'Paiement en ligne via Stripe',
-        ]);
+        $reference = 'STRIPE-'.$paymentIntentId;
 
-        // Créer l'allocation et mettre à jour le statut de la facture via le service
-        app(PaymentService::class)->allocatePayment(
-            $payment,
-            $invoice,
-            $amountTotal
-        );
+        DB::transaction(function () use ($invoiceId, $session, $amountTotal, $mappedMethod, $reference): void {
+            $invoice = CustomerInvoice::query()
+                ->whereKey($invoiceId)
+                ->lockForUpdate()
+                ->first();
 
-        Log::info('Stripe Webhook: Payment processed for invoice '.$invoice->number);
+            if (! $invoice) {
+                Log::error('Stripe Webhook: Invoice not found', ['invoice_id' => $invoiceId]);
+
+                return;
+            }
+
+            if ($invoice->stripe_session_id !== $session->id) {
+                Log::warning('Stripe Webhook: Ignored webhook for unmatching session', [
+                    'expected' => $invoice->stripe_session_id,
+                    'actual' => $session->id,
+                ]);
+
+                return;
+            }
+
+            if (Payment::query()->where('reference', $reference)->exists()) {
+                Log::info('Stripe Webhook: Payment already processed', ['reference' => $reference]);
+
+                return;
+            }
+
+            $payment = Payment::create([
+                'third_party_id' => $invoice->client_id,
+                'reference' => $reference,
+                'type' => 'in',
+                'amount' => $amountTotal,
+                'payment_date' => now(),
+                'method' => $mappedMethod,
+                'status' => PaymentStatus::COMPLETED,
+                'notes' => 'Paiement en ligne via Stripe',
+            ]);
+
+            // Le paiement et son allocation doivent être atomiques : aucune écriture orpheline
+            // ne doit subsister si le montant ne peut pas être affecté à la facture.
+            app(PaymentService::class)->allocatePayment($payment, $invoice, $amountTotal);
+
+            Log::info('Stripe Webhook: Payment processed for invoice '.$invoice->number);
+        });
     }
 
     protected function handleExpiredSession($session)
     {
         $invoiceId = $session->metadata->invoice_id ?? null;
-        if ($invoiceId) {
-            $invoice = CustomerInvoice::find($invoiceId);
-            if ($invoice && $invoice->stripe_session_id === $session->id) {
-                // Reset invoice status so user can retry payment
-                $invoice->update([
-                    'stripe_session_id' => null,
-                    'status' => InvoiceStatus::VALIDATED,
-                ]);
-                Log::info('Stripe Webhook: Reset invoice status for expired session', ['invoice_id' => $invoiceId]);
-            }
+
+        if (! $invoiceId) {
+            return;
         }
+
+        DB::transaction(function () use ($invoiceId, $session): void {
+            $invoice = CustomerInvoice::query()
+                ->whereKey($invoiceId)
+                ->lockForUpdate()
+                ->first();
+
+            if (! $invoice || $invoice->stripe_session_id !== $session->id) {
+                return;
+            }
+
+            $hasAllocations = $invoice->allocations()->exists();
+
+            $invoice->update([
+                'stripe_session_id' => null,
+                'status' => $hasAllocations ? InvoiceStatus::PARTIALLY_PAID : InvoiceStatus::VALIDATED,
+            ]);
+
+            Log::info('Stripe Webhook: Reset invoice status for expired session', [
+                'invoice_id' => $invoiceId,
+                'status' => $invoice->status->value,
+            ]);
+        });
     }
 }

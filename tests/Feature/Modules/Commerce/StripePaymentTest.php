@@ -3,6 +3,7 @@
 use App\Enums\Commerce\InvoiceStatus;
 use App\Models\Commerce\CustomerInvoice;
 use App\Models\Commerce\Payment;
+use App\Models\Commerce\PaymentAllocation;
 use App\Models\Core\Company;
 use App\Models\Tiers\ThirdParty;
 use Illuminate\Support\Facades\Config;
@@ -26,6 +27,34 @@ it('rejects checkout for non-validated invoices', function () {
     $response->assertStatus(403);
 });
 
+it('rejects checkout when the invoice has no remaining balance', function () {
+    $invoice = CustomerInvoice::factory()->create([
+        'client_id' => $this->client->id,
+        'status' => InvoiceStatus::VALIDATED,
+        'total_ttc' => 1200,
+    ]);
+
+    $payment = Payment::create([
+        'third_party_id' => $this->client->id,
+        'reference' => 'TEST-FULLY-ALLOCATED-001',
+        'type' => 'in',
+        'method' => 'bank_transfer',
+        'status' => 'completed',
+        'amount' => 1200,
+        'payment_date' => now(),
+    ]);
+
+    PaymentAllocation::create([
+        'payment_id' => $payment->id,
+        'payable_type' => CustomerInvoice::class,
+        'payable_id' => $invoice->id,
+        'allocated_amount' => 1200,
+    ]);
+
+    $this->get(URL::signedRoute('pay.invoice', ['invoice' => $invoice->id]))
+        ->assertForbidden();
+});
+
 // Note: Testing actual Stripe Session creation requires mocking Stripe\Checkout\Session.
 // We will test the webhook handler logic directly.
 
@@ -34,6 +63,7 @@ it('processes stripe webhook and creates payment allocation', function () {
         'client_id' => $this->client->id,
         'status' => InvoiceStatus::VALIDATED,
         'total_ttc' => 1200,
+        'stripe_session_id' => 'cs_test_123',
     ]);
 
     // Create a mock Stripe webhook payload
@@ -65,6 +95,11 @@ it('processes stripe webhook and creates payment allocation', function () {
 
     $response->assertStatus(200);
 
+    // Stripe peut renvoyer plusieurs fois le même événement : le traitement doit rester idempotent.
+    $this->postJson(route('webhooks.stripe'), json_decode($payload, true), [
+        'Stripe-Signature' => $header,
+    ])->assertStatus(200);
+
     // Verify payment was created
     $this->assertDatabaseHas('payments', [
         'reference' => 'STRIPE-pi_123',
@@ -73,6 +108,8 @@ it('processes stripe webhook and creates payment allocation', function () {
 
     // Verify payment allocation was created
     $payment = Payment::where('reference', 'STRIPE-pi_123')->first();
+    expect(Payment::where('reference', 'STRIPE-pi_123')->count())->toBe(1);
+
     $this->assertDatabaseHas('payment_allocations', [
         'payment_id' => $payment->id,
         'payable_type' => CustomerInvoice::class,
@@ -120,6 +157,7 @@ it('processes async_payment_succeeded and creates payment', function () {
         'client_id' => $this->client->id,
         'status' => InvoiceStatus::VALIDATED,
         'total_ttc' => 1200,
+        'stripe_session_id' => 'cs_test_125',
     ]);
 
     $payload = json_encode([
@@ -147,4 +185,81 @@ it('processes async_payment_succeeded and creates payment', function () {
 
     $response->assertStatus(200);
     $this->assertDatabaseHas('payments', ['reference' => 'STRIPE-pi_125']);
+});
+
+it('ignores a successful webhook belonging to an obsolete checkout session', function () {
+    $invoice = CustomerInvoice::factory()->create([
+        'client_id' => $this->client->id,
+        'status' => InvoiceStatus::PAYMENT_IN_PROGRESS,
+        'total_ttc' => 1200,
+        'stripe_session_id' => 'cs_expected',
+    ]);
+
+    $payload = json_encode([
+        'id' => 'evt_old_session',
+        'type' => 'checkout.session.completed',
+        'data' => [
+            'object' => [
+                'id' => 'cs_obsolete',
+                'amount_total' => 120000,
+                'payment_status' => 'paid',
+                'payment_intent' => 'pi_old_session',
+                'metadata' => ['invoice_id' => (string) $invoice->id],
+            ],
+        ],
+    ]);
+
+    $timestamp = time();
+    $signature = hash_hmac('sha256', $timestamp.'.'.$payload, 'whsec_123');
+    $this->postJson(route('webhooks.stripe'), json_decode($payload, true), [
+        'Stripe-Signature' => "t={$timestamp},v1={$signature}",
+    ])->assertOk();
+
+    $this->assertDatabaseMissing('payments', ['reference' => 'STRIPE-pi_old_session']);
+});
+
+it('restores a partially paid invoice after its checkout session expires', function () {
+    $invoice = CustomerInvoice::factory()->create([
+        'client_id' => $this->client->id,
+        'status' => InvoiceStatus::PAYMENT_IN_PROGRESS,
+        'total_ttc' => 1200,
+        'stripe_session_id' => 'cs_expired_partial',
+    ]);
+
+    $payment = Payment::create([
+        'third_party_id' => $this->client->id,
+        'reference' => 'TEST-PARTIAL-001',
+        'type' => 'in',
+        'method' => 'bank_transfer',
+        'status' => 'completed',
+        'amount' => 300,
+        'payment_date' => now(),
+    ]);
+
+    PaymentAllocation::create([
+        'payment_id' => $payment->id,
+        'payable_type' => CustomerInvoice::class,
+        'payable_id' => $invoice->id,
+        'allocated_amount' => 300,
+    ]);
+
+    $payload = json_encode([
+        'id' => 'evt_expired_partial',
+        'type' => 'checkout.session.expired',
+        'data' => [
+            'object' => [
+                'id' => 'cs_expired_partial',
+                'metadata' => ['invoice_id' => (string) $invoice->id],
+            ],
+        ],
+    ]);
+
+    $timestamp = time();
+    $signature = hash_hmac('sha256', $timestamp.'.'.$payload, 'whsec_123');
+    $this->postJson(route('webhooks.stripe'), json_decode($payload, true), [
+        'Stripe-Signature' => "t={$timestamp},v1={$signature}",
+    ])->assertOk();
+
+    expect($invoice->fresh()->status)->toBe(InvoiceStatus::PARTIALLY_PAID)
+        ->and($invoice->fresh()->stripe_session_id)->toBeNull();
 });

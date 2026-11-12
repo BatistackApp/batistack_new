@@ -6,9 +6,11 @@ use App\Enums\Commerce\InvoiceStatus;
 use App\Enums\Tiers\ThirdPartyType;
 use App\Http\Controllers\Controller;
 use App\Models\Commerce\CustomerInvoice;
+use App\Services\Tiers\AuthenticatedThirdPartyService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Stripe\Checkout\Session;
+use Stripe\Customer;
 use Stripe\Stripe;
 
 class StripePaymentController extends Controller
@@ -36,8 +38,9 @@ class StripePaymentController extends Controller
                 }
             }
 
-            // On utilise amount_remaining pour permettre le paiement partiel s'il y a déjà des paiements
-            $amountToPay = $invoice->amount_remaining > 0 ? $invoice->amount_remaining : $invoice->total_ttc;
+            // Ne jamais recréer un paiement pour une facture dont le solde est nul.
+            $amountToPay = (float) $invoice->amount_remaining;
+            abort_if($amountToPay <= 0, 403, 'Cette facture ne présente aucun solde à régler.');
 
             // Configuration des méthodes de paiement selon le montant
             $paymentMethodTypes = ['sepa_debit'];
@@ -118,7 +121,7 @@ class StripePaymentController extends Controller
 
         return DB::transaction(function () use ($request, $invoice) {
             $invoice = CustomerInvoice::lockForUpdate()->findOrFail($invoice->id);
-            $subcontractor = $request->user()->contact?->thirdParty;
+            $subcontractor = app(AuthenticatedThirdPartyService::class)->subcontractor($request->user());
             abort_unless(
                 $subcontractor
                     && $subcontractor->type === ThirdPartyType::SUBCONTRACTOR
