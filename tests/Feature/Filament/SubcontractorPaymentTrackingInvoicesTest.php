@@ -164,7 +164,6 @@ it('rejects payment attempts for invoices that are not payable', function () {
     $this->actingAs($user)->get($url)->assertForbidden();
 });
 
-
 it('fails closed for payment tracking when all subcontractor contacts are inactive', function () {
     $user = User::factory()->create(['is_tiers' => true]);
     $company = ThirdParty::factory()->create(['type' => ThirdPartyType::SUBCONTRACTOR]);
