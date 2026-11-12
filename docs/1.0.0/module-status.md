@@ -1,11 +1,11 @@
 # Statut des modules pour BATISTACK 1.0.0
 
-> Mise à jour : 01/10/2026. Ce document est la référence synthétique du périmètre fonctionnel de la release candidate.
+> Mise à jour : 12/11/2026. Ce tableau est une synthèse de périmètre, pas une certification de recette fonctionnelle.
 
 ## Légende
 
-- **Validé** : périmètre livré et couvert par les validations disponibles.
-- **À valider** : fonctionnalité livrée, mais preuve de release ou documentation à compléter.
+- **Validé** : périmètre livré et couvert par des preuves de validation représentatives.
+- **À valider** : fonctionnalité présente, mais recette de release ou preuve opérationnelle à compléter.
 - **Reporté** : explicitement hors périmètre 1.0.0.
 
 ## Périmètre
@@ -37,16 +37,15 @@
 - Signature AES / eIDAS avancée.
 - Connexion IoT / OPC-UA.
 
-## Preuves communes
+## Preuves transverses déjà intégrées
 
-- Suite complète de tests validée au vert par l'équipe.
-- CI, lint et Codecov validés après la PR #480.
-- Avertissements PSR-4 corrigés.
-- Tests ciblés de conversion des devis Laser ajoutés.
+Les PR #542 à #547 ont apporté des correctifs ciblés sur l'identité et l'isolation des portails, les migrations, les paiements, le stockage documentaire et les contrôles CI/CD. Les contrôles ciblés exécutés sur ces PR sont référencés dans leurs exécutions GitHub Actions.
+
+Ces validations ciblées ne remplacent pas la recette métier de chaque module, les tests globaux sur le commit candidat, ni les tests des intégrations réelles.
 
 ## Validation restante
 
-Chaque module doit encore être vérifié dans le scénario de release : installation propre, migration, sauvegarde/restauration, rollback, permissions et documentation opérationnelle.
+Chaque module doit encore être vérifié dans le scénario de release : installation propre, migration sur le moteur de production, sauvegarde/restauration, rollback, permissions, intégrations activées et documentation opérationnelle.
 
 ## Documentation opérationnelle
 
@@ -56,3 +55,4 @@ Chaque module doit encore être vérifié dans le scénario de release : install
 - [Rollback](./rollback.md)
 - [Déploiement](./deployment.md)
 - [Limitations connues](./known-limitations.md)
+- [Checklist GO / NO-GO](../avancement/v1.0.0-go-no-go.md)
