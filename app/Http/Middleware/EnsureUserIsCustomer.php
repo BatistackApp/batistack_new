@@ -1,10 +1,11 @@
 <?php
 
-namespace App\Http\Middleware;
+namespace App\\Http\\Middleware;
 
+use App\\Services\\Tiers\\AuthenticatedThirdPartyService;
 use Closure;
-use Illuminate\Http\Request;
-use Symfony\Component\HttpFoundation\Response;
+use Illuminate\\Http\\Request;
+use Symfony\\Component\\HttpFoundation\\Response;
 
 class EnsureUserIsCustomer
 {
@@ -13,17 +14,18 @@ class EnsureUserIsCustomer
      *
      * @param  Closure(Request): (Response)  $next
      */
-    public function handle(Request $request, Closure $next): Response
-    {
-        $user = auth()->user();
+    public function handle(
+        Request $request,
+        Closure $next,
+        AuthenticatedThirdPartyService $thirdPartyService
+    ): Response {
+        $user = $request->user();
 
         if (! $user) {
             return redirect()->route('filament.customer.auth.login');
         }
 
-        $client = $user->contact;
-
-        if (! $client || ! $client->is_active) {
+        if (! $thirdPartyService->customer($user)) {
             auth()->logout();
 
             return redirect()->route('filament.customer.auth.login')
